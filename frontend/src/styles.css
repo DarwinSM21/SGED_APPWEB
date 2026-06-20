@@ -1,1 +1,73 @@
 /* You can add global styles to this file, and also import other style files */
+/* ============================================================
+   ProFútbol — Design tokens globales
+   Paleta inspirada en un estadio con luces nocturnas: verde
+   profundo de cancha, líneas de cal y un acento dorado de trofeo.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* Color */
+  --color-bg-deep: #0e2a1f;
+  --color-turf: #1f6f4a;
+  --color-turf-light: #2d8a5c;
+  --color-gold: #e8b339;
+  --color-gold-dark: #c79527;
+  --color-chalk: #f4f1e8;
+  --color-ink: #10231a;
+  --color-ink-muted: #56685e;
+  --color-red-card: #d6453d;
+
+  /* Tipografía */
+  --font-display: 'Anton', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* Forma */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 20px;
+
+  /* Sombra */
+  --shadow-card: 0 24px 60px -24px rgba(14, 42, 31, 0.45);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--color-ink);
+  background: var(--color-chalk);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
