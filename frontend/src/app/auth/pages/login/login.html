@@ -1,1 +1,169 @@
-<p>login works!</p>
+<main class="login-container">
+  <div class="login-wrapper">
+    <!-- Sección Izquierda - Branding -->
+    <section class="login-branding">
+      <div class="branding-content">
+        <div class="logo-circle">
+          <span class="logo-text">PF</span>
+        </div>
+        <h1 class="branding-title">ProFútbol</h1>
+        <p class="branding-subtitle">Sistema de Gestión Deportiva</p>
+        <p class="branding-description">
+          Administra estudiantes, asistencia, rendimiento y más desde un solo lugar.
+        </p>
+        
+        <div class="features-list">
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>Gestión de estudiantes</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>Control de asistencia</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>Reportes y estadísticas</span>
+          </div>
+          <div class="feature-item">
+            <span class="feature-icon">✓</span>
+            <span>Gestión de rendimiento</span>
+          </div>
+        </div>
+
+        <div class="clock-display">
+          <span class="clock-dot"></span>
+          <span class="clock-label">EN VIVO</span>
+          <span class="clock-time">{{ matchClockLabel() }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección Derecha - Formulario -->
+    <section class="login-form-section">
+      <div class="form-card">
+        <div class="form-header">
+          <h2>Bienvenido</h2>
+          <p>Inicia sesión con tu cuenta</p>
+        </div>
+
+        @if (errorMessage()) {
+          <div class="alert alert-error">
+            <span class="alert-icon">⚠️</span>
+            <span>{{ errorMessage() }}</span>
+          </div>
+        }
+
+        <div class="demo-buttons">
+          <button 
+            type="button" 
+            class="demo-btn demo-btn--admin"
+            (click)="fillDemoAccount('admin')"
+            title="Cargar credenciales de administrador"
+          >
+            <span class="demo-btn-icon">👤</span>
+            Admin
+          </button>
+          <button 
+            type="button" 
+            class="demo-btn demo-btn--trainer"
+            (click)="fillDemoAccount('entrenador')"
+            title="Cargar credenciales de entrenador"
+          >
+            <span class="demo-btn-icon">👨‍🏫</span>
+            Entrenador
+          </button>
+        </div>
+
+        <form class="login-form-fields" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+          <!-- Email Field -->
+          <div class="form-group">
+            <label class="form-label" for="email">
+              <span class="label-text">Correo Electrónico</span>
+              <span class="label-icon">📧</span>
+            </label>
+            <input
+              id="email"
+              class="form-input"
+              type="email"
+              autocomplete="username"
+              formControlName="email"
+              placeholder="tu@profutbol.ec"
+              [class.input-error]="fieldHasError('email')"
+            />
+            @if (fieldHasError('email')) {
+              <span class="field-error">
+                @if (form.get('email')?.errors?.['required']) {
+                  Se requiere un correo electrónico
+                } @else {
+                  Correo electrónico no válido
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Password Field -->
+          <div class="form-group">
+            <label class="form-label" for="password">
+              <span class="label-text">Contraseña</span>
+              <span class="label-icon">🔒</span>
+            </label>
+            <div class="password-wrapper">
+              <input
+                id="password"
+                class="form-input"
+                [type]="showPassword() ? 'text' : 'password'"
+                autocomplete="current-password"
+                formControlName="password"
+                placeholder="••••••••"
+                [class.input-error]="fieldHasError('password')"
+              />
+              <button
+                type="button"
+                class="toggle-password-btn"
+                (click)="togglePasswordVisibility()"
+                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                {{ showPassword() ? '🙈' : '👁️' }}
+              </button>
+            </div>
+            @if (fieldHasError('password')) {
+              <span class="field-error">
+                @if (form.get('password')?.errors?.['required']) {
+                  Se requiere una contraseña
+                } @else {
+                  Mínimo 6 caracteres
+                }
+              </span>
+            }
+          </div>
+
+          <!-- Remember Me -->
+          <label class="checkbox-field">
+            <input type="checkbox" formControlName="remember" />
+            <span>Recordarme en este dispositivo</span>
+          </label>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            class="submit-button"
+            [disabled]="loading()"
+          >
+            @if (loading()) {
+              <span class="spinner"></span>
+              <span>Autenticando...</span>
+            } @else {
+              <span class="button-icon">🚀</span>
+              <span>Iniciar Sesión</span>
+            }
+          </button>
+        </form>
+
+        <p class="form-footer">
+          Acceso restringido a personal autorizado de ProFútbol
+        </p>
+      </div>
+    </section>
+  </div>
+</main>
