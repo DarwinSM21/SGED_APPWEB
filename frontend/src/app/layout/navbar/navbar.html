@@ -1,1 +1,23 @@
-<p>navbar works!</p>
+<nav class="navbar">
+
+  <div class="navbar-brand">
+    <h2>SGED</h2>
+    <span>Sistema de Gestión Escuela Deportiva</span>
+  </div>
+
+  <div class="navbar-user">
+
+    <span class="user-name">
+      {{ username }}
+    </span>
+
+    <button
+      class="logout-btn"
+      (click)="logout()"
+    >
+      Cerrar sesión
+    </button>
+
+  </div>
+
+</nav>

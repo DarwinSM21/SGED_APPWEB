@@ -1,0 +1,11 @@
+.layout-body {
+  display: flex;
+  min-height: calc(100vh - 70px);
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+  background: #F8FAFC;
+  overflow-y: auto;
+}

@@ -1,0 +1,42 @@
+.page-title {
+  margin-bottom: 24px;
+  color: #1F2937;
+}
+
+.cards {
+
+  display: grid;
+
+  grid-template-columns:
+      repeat(auto-fit, minmax(220px, 1fr));
+
+  gap: 20px;
+}
+
+.card {
+
+  background: white;
+
+  border-radius: 12px;
+
+  padding: 24px;
+
+  box-shadow:
+    0 2px 8px rgba(0,0,0,.06);
+
+  text-align: center;
+}
+
+.card h3 {
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.card p {
+
+  font-size: 2rem;
+
+  font-weight: bold;
+
+  color: #2563EB;
+}

@@ -12,6 +12,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.List;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
@@ -30,6 +34,12 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(
                                 SessionCreationPolicy.STATELESS
                         ))
+
+                .cors(cors ->
+                        cors.configurationSource(
+                                corsConfigurationSource()
+                        )
+                )
 
                 .authorizeHttpRequests(auth -> auth
 
@@ -68,4 +78,36 @@ public class SecurityConfig {
     ) throws Exception {
         return config.getAuthenticationManager();
     }
+
+    // Esto se hizo para la comunicacion con el frontend angular
+    @Bean
+    public UrlBasedCorsConfigurationSource corsConfigurationSource() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        
+        // Configuración ESPECÍFICA para login (solo POST)
+        CorsConfiguration loginConfig = new CorsConfiguration();
+        loginConfig.setAllowedOrigins(List.of("http://localhost:4200"));
+        loginConfig.setAllowedMethods(List.of("POST", "OPTIONS"));  // Solo POST para login
+        loginConfig.setAllowedHeaders(List.of("Content-Type", "Authorization"));
+        loginConfig.setAllowCredentials(true);
+        loginConfig.setMaxAge(3600L);
+        source.registerCorsConfiguration("/api/auth/login", loginConfig);
+        
+        // Configuración GENERAL para el resto de endpoints
+        CorsConfiguration otherConfig = new CorsConfiguration();
+        otherConfig.setAllowedOrigins(List.of("http://localhost:4200"));
+        otherConfig.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+        otherConfig.setAllowedHeaders(List.of(
+            "Content-Type", 
+            "Authorization", 
+            "Accept"
+        ));
+        otherConfig.setAllowCredentials(true);
+        otherConfig.setMaxAge(3600L);
+        source.registerCorsConfiguration("/api/**", otherConfig);
+        
+        return source;
+     }
 }

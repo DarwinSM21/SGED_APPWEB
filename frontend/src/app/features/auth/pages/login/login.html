@@ -54,55 +54,34 @@
           </div>
         }
 
-        <div class="demo-buttons">
-          <button 
-            type="button" 
-            class="demo-btn demo-btn--admin"
-            (click)="fillDemoAccount('admin')"
-            title="Cargar credenciales de administrador"
-          >
-            <span class="demo-btn-icon">👤</span>
-            Admin
-          </button>
-          <button 
-            type="button" 
-            class="demo-btn demo-btn--trainer"
-            (click)="fillDemoAccount('entrenador')"
-            title="Cargar credenciales de entrenador"
-          >
-            <span class="demo-btn-icon">👨‍🏫</span>
-            Entrenador
-          </button>
-        </div>
-
         <form class="login-form-fields" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <!-- Email Field -->
+          <!-- Usuario -->
           <div class="form-group">
-            <label class="form-label" for="email">
-              <span class="label-text">Correo Electrónico</span>
-              <span class="label-icon">📧</span>
+            <label class="form-label" for="username">
+              <span class="label-text">Usuario</span>
+              <span class="label-icon">👤</span>
             </label>
             <input
-              id="email"
+              id="username"
               class="form-input"
-              type="email"
+              type="text"
               autocomplete="username"
-              formControlName="email"
-              placeholder="tu@profutbol.ec"
-              [class.input-error]="fieldHasError('email')"
+              formControlName="username"
+              placeholder="Ingresa tu usuario"
+              [class.input-error]="fieldHasError('username')"
             />
-            @if (fieldHasError('email')) {
+            @if (fieldHasError('username')) {
               <span class="field-error">
-                @if (form.get('email')?.errors?.['required']) {
-                  Se requiere un correo electrónico
+                @if (form.get('username')?.errors?.['required']) {
+                  Se requiere un nombre de usuario
                 } @else {
-                  Correo electrónico no válido
+                  Nombre de usuario no válido
                 }
               </span>
             }
           </div>
 
-          <!-- Password Field -->
+          <!-- Contraseña -->
           <div class="form-group">
             <label class="form-label" for="password">
               <span class="label-text">Contraseña</span>
@@ -124,7 +103,7 @@
                 (click)="togglePasswordVisibility()"
                 [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
               >
-                {{ showPassword() ? '🙈' : '👁️' }}
+                {{ showPassword() ? '-' : '👁️' }}
               </button>
             </div>
             @if (fieldHasError('password')) {
@@ -138,13 +117,13 @@
             }
           </div>
 
-          <!-- Remember Me -->
+          <!-- Recordar -->
           <label class="checkbox-field">
             <input type="checkbox" formControlName="remember" />
             <span>Recordarme en este dispositivo</span>
           </label>
 
-          <!-- Submit Button -->
+          <!-- Botón de Envío -->
           <button 
             type="submit" 
             class="submit-button"

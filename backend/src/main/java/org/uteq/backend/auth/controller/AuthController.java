@@ -21,6 +21,7 @@ public class AuthController {
         return "AUTH OK";
     }
 
+    // http://localhost:8080/api/auth/login
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(
             @RequestBody LoginRequest request

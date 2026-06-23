@@ -1,0 +1,437 @@
+:root {
+  --primary-color: #2B6CB0;
+  --primary-hover: #1E40AF;
+  --primary-soft: #DBEAFE;
+
+  --background-color: #ffffff;
+  --card-background: rgba(255,255,255,0.95);
+  --surface-color: #ffffff;
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+
+  --border-color: #E2E8F0;
+  --input-background: #F8FAFC;
+
+  --success-color: #10B981;
+  --danger-color: #EF4444;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background: radial-gradient(circle at top left, rgba(59,130,246,.18), transparent 25%),
+    linear-gradient(180deg, #F8FAFC 0%, #E2E8F0 100%);
+}
+
+.login-container {
+  min-height: 100vh;
+  width: 100%;
+}
+
+.login-wrapper {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 2rem;
+  align-items: stretch;
+  padding: 0;
+}
+
+/* ==========================
+   BRANDING
+========================== */
+
+.login-branding {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1E3A8A 0%, #2563EB 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2.5rem;
+  box-shadow: 0 24px 90px rgba(15, 23, 42, 0.16);
+}
+
+.login-branding::before,
+.login-branding::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.35;
+}
+
+.login-branding::before {
+  width: 220px;
+  height: 220px;
+  background: rgba(255, 255, 255, 0.18);
+  top: -60px;
+  right: -60px;
+}
+
+.login-branding::after {
+  width: 160px;
+  height: 160px;
+  background: rgba(59, 130, 246, 0.18);
+  bottom: -50px;
+  left: -40px;
+}
+
+.branding-content {
+  max-width: 520px;
+  position: relative;
+  z-index: 1;
+}
+
+.logo-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.28);
+  background: rgba(255,255,255,.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 700;
+  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.18);
+}
+
+.branding-title {
+  font-size: clamp(2.5rem, 3vw, 3.5rem);
+  margin-bottom: 0.6rem;
+  line-height: 1.05;
+}
+
+.branding-subtitle {
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+  opacity: 0.9;
+}
+
+.branding-description {
+  line-height: 1.8;
+  margin-bottom: 2rem;
+  color: rgba(255,255,255,.9);
+}
+
+.features-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.feature-item {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(4px);
+}
+
+.feature-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+}
+
+.clock-display {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.2rem;
+  border-radius: 999px;
+  background: rgba(255,255,255,.18);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.clock-label {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.95;
+}
+
+.clock-time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================
+   FORMULARIO
+========================== */
+
+.login-form-section {
+  background: linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(241,245,249,0.98) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  min-height: 100%;
+}
+
+.form-card {
+  width: 100%;
+  max-width: 520px;
+  background: var(--card-background);
+  border-radius: 28px;
+  padding: 2.5rem;
+  border: 1px solid rgba(226,232,240,0.7);
+  box-shadow: 0 34px 90px rgba(15, 23, 42, 0.12);
+}
+
+.form-header {
+  margin-bottom: 1.5rem;
+}
+
+.form-header h2 {
+  color: var(--text-primary);
+  margin-bottom: 0.35rem;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.form-header p {
+  color: var(--text-muted);
+  font-size: 1rem;
+  text-align: center;
+}
+
+.login-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.form-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text-primary);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.label-icon {
+  opacity: 0.8;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--input-background);
+  font-size: 1rem;
+  color: var(--text-primary);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.form-input:hover {
+  transform: translateY(-1px);
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 4px rgba(59,130,246,0.14);
+  background: #ffffff;
+}
+
+.form-input.input-error {
+  border-color: rgba(239,68,68,0.8);
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-input {
+  padding-right: 3.5rem;
+}
+
+.toggle-password-btn {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(30,58,138,0.08);
+  border: 1px solid rgba(30,58,138,0.12);
+  padding: 0.55rem 0.75rem;
+  border-radius: 999px;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.toggle-password-btn:hover {
+  background: rgba(30,58,138,0.14);
+  transform: translateY(-50%) scale(1.03);
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.checkbox-field input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--primary-color);
+}
+
+.submit-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #1E40AF 0%, #2563EB 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  box-shadow: 0 18px 35px rgba(59,130,246,0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 22px 38px rgba(59,130,246,0.24);
+}
+
+.submit-button:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  margin-right: 0.65rem;
+  border: 2px solid rgba(255,255,255,0.6);
+  border-top-color: rgba(255,255,255,1);
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.9s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.field-error {
+  color: var(--danger-color);
+  font-size: 0.9rem;
+}
+
+.alert-error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border-left: 4px solid var(--danger-color);
+  padding: 1rem;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.form-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+/* ==========================
+   RESPONSIVE
+========================== */
+
+@media (max-width: 992px) {
+  .login-wrapper {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .login-branding {
+    min-height: auto;
+    border-radius: 24px;
+  }
+
+  .branding-content {
+    text-align: center;
+  }
+
+  .logo-circle {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-wrapper {
+    gap: 1rem;
+  }
+
+  .login-form-section {
+    padding: 2rem 1rem;
+  }
+
+  .form-card {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .login-branding {
+    padding: 2rem;
+  }
+
+  .login-form-section {
+    padding: 1rem;
+  }
+
+  .form-card {
+    padding: 1.5rem;
+  }
+
+  .branding-title {
+    font-size: 2rem;
+  }
+
+  .features-list {
+    display: none;
+  }
+
+  .clock-display {
+    margin-top: 1rem;
+  }
+}
