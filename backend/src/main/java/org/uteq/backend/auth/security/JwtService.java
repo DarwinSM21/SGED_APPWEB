@@ -19,18 +19,29 @@ public class JwtService {
     @Value("${security.jwt.expiration-ms}")
     private long expirationMs;
 
+    @Value("${security.jwt.refresh-expiration-ms}")
+    private long refreshExpirationMs;
+
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
 
     public String generateToken(String username, String rol) {
-        String jti = UUID.randomUUID().toString();
+        return buildToken(username, rol, expirationMs, "access");
+    }
+
+    public String generateRefreshToken(String username, String rol) {
+        return buildToken(username, rol, refreshExpirationMs, "refresh");
+    }
+
+    private String buildToken(String username, String rol, long expMs, String type) {
         return Jwts.builder()
                 .subject(username)
                 .claim("rol", rol)
-                .claim("jti", jti)
+                .claim("jti", UUID.randomUUID().toString())
+                .claim("type", type)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .expiration(new Date(System.currentTimeMillis() + expMs))
                 .signWith(getKey())
                 .compact();
     }
@@ -41,6 +52,10 @@ public class JwtService {
 
     public String extractJti(String token) {
         return extractClaims(token).get("jti", String.class);
+    }
+
+    public String extractRol(String token) {
+        return extractClaims(token).get("rol", String.class);
     }
 
     public long getExpirationMs() {
