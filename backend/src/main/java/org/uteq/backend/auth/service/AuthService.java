@@ -1,38 +1,76 @@
 package org.uteq.backend.auth.service;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.uteq.backend.auth.dto.LoginRequest;
 import org.uteq.backend.auth.dto.LoginResponse;
+import org.uteq.backend.auth.dto.RegistroRequest;
+import org.uteq.backend.auth.entity.Persona;
+import org.uteq.backend.auth.entity.Rol;
 import org.uteq.backend.auth.entity.Usuario;
+import org.uteq.backend.auth.entity.UsuarioRol;
+import org.uteq.backend.auth.repository.PersonaRepository;
+import org.uteq.backend.auth.repository.RolRepository;
 import org.uteq.backend.auth.repository.UsuarioRepository;
+import org.uteq.backend.auth.repository.UsuarioRolRepository;
 import org.uteq.backend.auth.security.JwtService;
+import org.uteq.backend.auth.security.RedisBlacklistService;
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
     private final UsuarioRepository usuarioRepository;
+    private final PersonaRepository personaRepository;
+    private final RolRepository rolRepository;
+    private final UsuarioRolRepository usuarioRolRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RedisBlacklistService blacklistService;
 
-    public LoginResponse login(LoginRequest request) {
-
-        Usuario usuario = usuarioRepository
-                .findByUsername(request.username()) 
-                .orElseThrow(() ->
-                        new RuntimeException("Usuario no encontrado"));
-
-
-        if (!usuario.getActivo()) {
-                throw new RuntimeException("Usuario inactivo");
+    public Usuario registro(RegistroRequest request) {
+        if (usuarioRepository.findByUsername(request.username()).isPresent()) {
+            throw new RuntimeException("El username ya existe");
         }
 
-        if (!passwordEncoder.matches(
-                request.password(),
-                usuario.getPasswordHash())) {
+        Persona persona = Persona.builder()
+                .nombre(request.nombre())
+                .apellido(request.apellido())
+                .activo(true)
+                .build();
+        personaRepository.save(persona);
 
-                throw new RuntimeException("Credenciales incorrectas");
+        Usuario usuario = Usuario.builder()
+                .persona(persona)
+                .username(request.username())
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .activo(true)
+                .build();
+        usuarioRepository.save(usuario);
+
+        Rol rol = rolRepository.findByNombre("USER")
+                .orElseGet(() -> rolRepository.save(
+                        new Rol(null, "USER", "Usuario estándar")
+                ));
+
+        UsuarioRol usuarioRol = new UsuarioRol(null, usuario, rol);
+        usuarioRolRepository.save(usuarioRol);
+
+        return usuario;
+    }
+
+    public LoginResponse login(LoginRequest request) {
+        Usuario usuario = usuarioRepository
+                .findByUsername(request.username())
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        if (!usuario.getActivo()) {
+            throw new RuntimeException("Usuario inactivo");
+        }
+
+        if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
+            throw new RuntimeException("Credenciales incorrectas");
         }
 
         String rol = usuario.getUsuarioRoles()
@@ -42,20 +80,23 @@ public class AuthService {
                 .getRol()
                 .getNombre();
 
-        String token = jwtService.generateToken(
-                usuario.getUsername(),
-                rol
-        );
+        String token = jwtService.generateToken(usuario.getUsername(), rol);
 
         return LoginResponse.builder()
                 .token(token)
                 .username(usuario.getUsername())
-                .nombre(
-                        usuario.getPersona().getNombre()
-                                + " "
-                                + usuario.getPersona().getApellido()
-                )
+                .nombre(usuario.getPersona().getNombre()
+                        + " " + usuario.getPersona().getApellido())
                 .rol(rol)
                 .build();
+    }
+
+    public void logout(String authHeader) {
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            String jti = jwtService.extractJti(token);
+            long ttl = jwtService.getExpirationMs();
+            blacklistService.revocarToken(jti, ttl);
+        }
     }
 }
