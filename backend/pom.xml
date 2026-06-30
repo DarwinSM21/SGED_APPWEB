@@ -102,10 +102,11 @@
 
 		<!-- Lombok -->
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.34</version>
+    <optional>true</optional>
+</dependency>
 
 		<!-- DevTools -->
 		<dependency>
@@ -148,10 +149,11 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
 					<annotationProcessorPaths>
-						<path>
-							<groupId>org.projectlombok</groupId>
-							<artifactId>lombok</artifactId>
-						</path>
+    				<path>
+   					 <groupId>org.projectlombok</groupId>
+					<artifactId>lombok</artifactId>
+   					 <version>1.18.34</version>
+					</path>
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
