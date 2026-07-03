@@ -23,6 +23,7 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     default-schema: seguridad
+    schemas: seguridad,deportivo
 
   data:
     redis:
