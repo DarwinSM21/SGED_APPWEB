@@ -1,33 +1,32 @@
 <main class="login-container">
   <div class="login-wrapper">
-    <!-- Sección Izquierda - Branding -->
     <section class="login-branding">
       <div class="branding-content">
         <div class="logo-circle">
           <span class="logo-text">PF</span>
         </div>
-        <h1 class="branding-title">ProFútbol</h1>
-        <p class="branding-subtitle">Sistema de Gestión Deportiva</p>
+        <h1 class="branding-title">ProFutbol</h1>
+        <p class="branding-subtitle">Sistema de Gestion Deportiva</p>
         <p class="branding-description">
-          Administra estudiantes, asistencia, rendimiento y más desde un solo lugar.
+          Administra estudiantes, asistencia, rendimiento y mas desde un solo lugar.
         </p>
-        
+
         <div class="features-list">
           <div class="feature-item">
-            <span class="feature-icon">✓</span>
-            <span>Gestión de estudiantes</span>
+            <span class="feature-icon">&#10003;</span>
+            <span>Gestion de estudiantes</span>
           </div>
           <div class="feature-item">
-            <span class="feature-icon">✓</span>
+            <span class="feature-icon">&#10003;</span>
             <span>Control de asistencia</span>
           </div>
           <div class="feature-item">
-            <span class="feature-icon">✓</span>
-            <span>Reportes y estadísticas</span>
+            <span class="feature-icon">&#10003;</span>
+            <span>Reportes y estadisticas</span>
           </div>
           <div class="feature-item">
-            <span class="feature-icon">✓</span>
-            <span>Gestión de rendimiento</span>
+            <span class="feature-icon">&#10003;</span>
+            <span>Gestion de rendimiento</span>
           </div>
         </div>
 
@@ -39,74 +38,44 @@
       </div>
     </section>
 
-    <!-- Sección Derecha - Formulario -->
     <section class="login-form-section">
       <div class="form-card">
         <div class="form-header">
           <h2>Bienvenido</h2>
-          <p>Inicia sesión con tu cuenta</p>
+          <p>Inicia sesion con tu cuenta</p>
         </div>
 
         @if (errorMessage()) {
           <div class="alert alert-error">
-            <span class="alert-icon">⚠️</span>
+            <span class="alert-icon">&#9888;</span>
             <span>{{ errorMessage() }}</span>
           </div>
         }
 
-        <div class="demo-buttons">
-          <button 
-            type="button" 
-            class="demo-btn demo-btn--admin"
-            (click)="fillDemoAccount('admin')"
-            title="Cargar credenciales de administrador"
-          >
-            <span class="demo-btn-icon">👤</span>
-            Admin
-          </button>
-          <button 
-            type="button" 
-            class="demo-btn demo-btn--trainer"
-            (click)="fillDemoAccount('entrenador')"
-            title="Cargar credenciales de entrenador"
-          >
-            <span class="demo-btn-icon">👨‍🏫</span>
-            Entrenador
-          </button>
-        </div>
-
         <form class="login-form-fields" [formGroup]="form" (ngSubmit)="submit()" novalidate>
-          <!-- Email Field -->
           <div class="form-group">
-            <label class="form-label" for="email">
-              <span class="label-text">Correo Electrónico</span>
-              <span class="label-icon">📧</span>
+            <label class="form-label" for="username">
+              <span class="label-text">Usuario</span>
+              <span class="label-icon">&#128100;</span>
             </label>
             <input
-              id="email"
+              id="username"
               class="form-input"
-              type="email"
+              type="text"
               autocomplete="username"
-              formControlName="email"
-              placeholder="tu@profutbol.ec"
-              [class.input-error]="fieldHasError('email')"
+              formControlName="username"
+              placeholder="Ingresa tu usuario"
+              [class.input-error]="fieldHasError('username')"
             />
-            @if (fieldHasError('email')) {
-              <span class="field-error">
-                @if (form.get('email')?.errors?.['required']) {
-                  Se requiere un correo electrónico
-                } @else {
-                  Correo electrónico no válido
-                }
-              </span>
+            @if (fieldHasError('username')) {
+              <span class="field-error">Se requiere un usuario</span>
             }
           </div>
 
-          <!-- Password Field -->
           <div class="form-group">
             <label class="form-label" for="password">
-              <span class="label-text">Contraseña</span>
-              <span class="label-icon">🔒</span>
+              <span class="label-text">Contrasena</span>
+              <span class="label-icon">&#128274;</span>
             </label>
             <div class="password-wrapper">
               <input
@@ -115,53 +84,47 @@
                 [type]="showPassword() ? 'text' : 'password'"
                 autocomplete="current-password"
                 formControlName="password"
-                placeholder="••••••••"
+                placeholder="********"
                 [class.input-error]="fieldHasError('password')"
               />
               <button
                 type="button"
                 class="toggle-password-btn"
                 (click)="togglePasswordVisibility()"
-                [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-label]="showPassword() ? 'Ocultar contrasena' : 'Mostrar contrasena'"
               >
-                {{ showPassword() ? '🙈' : '👁️' }}
+                {{ showPassword() ? '&#128584;' : '&#128065;' }}
               </button>
             </div>
             @if (fieldHasError('password')) {
               <span class="field-error">
                 @if (form.get('password')?.errors?.['required']) {
-                  Se requiere una contraseña
+                  Se requiere una contrasena
                 } @else {
-                  Mínimo 6 caracteres
+                  Minimo 6 caracteres
                 }
               </span>
             }
           </div>
 
-          <!-- Remember Me -->
           <label class="checkbox-field">
             <input type="checkbox" formControlName="remember" />
             <span>Recordarme en este dispositivo</span>
           </label>
 
-          <!-- Submit Button -->
-          <button 
-            type="submit" 
-            class="submit-button"
-            [disabled]="loading()"
-          >
+          <button type="submit" class="submit-button" [disabled]="loading()">
             @if (loading()) {
               <span class="spinner"></span>
               <span>Autenticando...</span>
             } @else {
-              <span class="button-icon">🚀</span>
-              <span>Iniciar Sesión</span>
+              <span class="button-icon">&#128640;</span>
+              <span>Iniciar Sesion</span>
             }
           </button>
         </form>
 
         <p class="form-footer">
-          Acceso restringido a personal autorizado de ProFútbol
+          Acceso restringido a personal autorizado de ProFutbol
         </p>
       </div>
     </section>

@@ -1,86 +1,49 @@
-import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable, tap } from 'rxjs';
+import { environment } from '../../../environments/environments';
 
 export interface LoginRequest {
-  email: string;
+  username: string;
   password: string;
 }
 
 export interface LoginResponse {
   token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-  };
+  refreshToken?: string;
+  username: string;
+  nombre: string;
+  rol: string;
 }
-
-export const DEMO_CREDENTIALS = {
-  admin: {
-    email: 'admin@profutbol.ec',
-    password: 'admin123',
-  },
-  entrenador: {
-    email: 'entrenador@profutbol.ec',
-    password: 'entrenador123',
-  },
-};
-
-const VALID_USERS = [
-  {
-    id: '1',
-    email: 'admin@profutbol.ec',
-    password: 'admin123',
-    name: 'Administrador',
-    role: 'ADMINISTRADOR',
-  },
-  {
-    id: '2',
-    email: 'entrenador@profutbol.ec',
-    password: 'entrenador123',
-    name: 'Entrenador',
-    role: 'ENTRENADOR',
-  },
-];
 
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
+  private readonly http = inject(HttpClient);
+  private readonly apiUrl = environment.apiUrl;
 
-  login(email: string, password: string): Observable<LoginResponse> {
-    // Simular una llamada al backend con delay
-    return new Observable(subscriber => {
-      setTimeout(() => {
-        const user = VALID_USERS.find(u => u.email === email && u.password === password);
-        
-        if (user) {
-          const token = btoa(`${email}:${Date.now()}`);
-          localStorage.setItem('token', token);
-          localStorage.setItem('user', JSON.stringify(user));
-          
-          subscriber.next({
-            token,
-            user: {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-            },
-          });
-          subscriber.complete();
-        } else {
-          subscriber.error(new Error('Credenciales inválidas'));
+  readonly currentUser = signal<LoginResponse | null>(this.loadStoredUser());
+
+  login(username: string, password: string): Observable<LoginResponse> {
+    const body: LoginRequest = { username, password };
+    return this.http.post<LoginResponse>(`${this.apiUrl}/auth/login`, body).pipe(
+      tap((res) => {
+        localStorage.setItem('token', res.token);
+        if (res.refreshToken) {
+          localStorage.setItem('refreshToken', res.refreshToken);
         }
-      }, 800);
-    });
+        localStorage.setItem('user', JSON.stringify(res));
+        this.currentUser.set(res);
+      })
+    );
   }
 
   logout(): void {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    this.currentUser.set(null);
   }
 
   getToken(): string | null {
@@ -91,8 +54,16 @@ export class Auth {
     return !!this.getToken();
   }
 
-  getUser() {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+  getRol(): string | null {
+    return this.currentUser()?.rol ?? null;
+  }
+
+  getUser(): LoginResponse | null {
+    return this.currentUser();
+  }
+
+  private loadStoredUser(): LoginResponse | null {
+    const raw = localStorage.getItem('user');
+    return raw ? JSON.parse(raw) : null;
   }
 }

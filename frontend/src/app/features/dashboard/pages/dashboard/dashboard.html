@@ -1,66 +1,244 @@
-<div class="dashboard-container">
-  <header class="dashboard-header">
-    <h1>Panel de Control - Sistema de Gestión Deportiva</h1>
-    <p>ProFútbol - Escuela Deportiva</p>
-  </header>
+<div class="app">
 
-  <div class="dashboard-grid">
-    <div class="card">
-      <div class="card-icon">👥</div>
-      <div class="card-content">
-        <h3>Estudiantes</h3>
-        <p class="card-number">45</p>
-        <p class="card-subtitle">Activos</p>
+  <!-- ============ SIDEBAR ============ -->
+  <aside class="sidebar" [class.open]="sidebarOpen()">
+    <div class="brand">
+      <div class="crest">PF</div>
+      <div>
+        <b>ProFutbol</b>
+        <small>Gestion deportiva</small>
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-icon">👨‍🏫</div>
-      <div class="card-content">
-        <h3>Entrenadores</h3>
-        <p class="card-number">8</p>
-        <p class="card-subtitle">En el sistema</p>
-      </div>
-    </div>
+    <div class="nav-label">Principal</div>
+    <a class="nav-item active" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+      Dashboard
+    </a>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Estudiantes
+    </a>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Asistencia
+    </a>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Pagos
+      <span class="badge">7</span>
+    </a>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="6"/><path d="M15.5 13.5L17 22l-5-3-5 3 1.5-8.5"/></svg>
+      Rendimiento
+    </a>
 
-    <div class="card">
-      <div class="card-icon">📅</div>
-      <div class="card-content">
-        <h3>Asistencias</h3>
-        <p class="card-number">92%</p>
-        <p class="card-subtitle">Este mes</p>
-      </div>
-    </div>
+    <div class="nav-label">Gestion</div>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendario
+    </a>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      Reportes
+    </a>
+    <a class="nav-item" href="javascript:void(0)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configuracion
+    </a>
 
-    <div class="card">
-      <div class="card-icon">🏆</div>
-      <div class="card-content">
-        <h3>Partidos</h3>
-        <p class="card-number">12</p>
-        <p class="card-subtitle">Registrados</p>
+    <div class="sidebar-foot">
+      <div class="coach-card">
+        <div class="av">{{ userIni }}</div>
+        <div>
+          <b>{{ userName }}</b>
+          <small>{{ userRol }}</small>
+        </div>
       </div>
+      <button class="logout-btn" (click)="logout()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        Cerrar sesion
+      </button>
     </div>
-  </div>
+  </aside>
+  <div class="scrim" [class.show]="sidebarOpen()" (click)="closeSidebar()"></div>
 
-  <div class="dashboard-section">
-    <h2>Acciones Rápidas</h2>
-    <div class="actions-grid">
-      <button class="action-btn">
-        <span class="btn-icon">➕</span>
-        Agregar Estudiante
+  <!-- ============ MAIN ============ -->
+  <div class="main">
+    <header class="topbar">
+      <button class="icon-btn mob-toggle" (click)="toggleSidebar()" aria-label="Abrir menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
-      <button class="action-btn">
-        <span class="btn-icon">📋</span>
-        Ver Asistencias
+      <h1>Dashboard</h1>
+      <div class="spacer"></div>
+      <div class="pill-date">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span>{{ today() }}</span>
+      </div>
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Buscar estudiante..." />
+      </div>
+      <button class="icon-btn" aria-label="Notificaciones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="dot"></span>
       </button>
-      <button class="action-btn">
-        <span class="btn-icon">📊</span>
-        Reportes
-      </button>
-      <button class="action-btn">
-        <span class="btn-icon">⚙️</span>
-        Configuración
-      </button>
+    </header>
+
+    <div class="content">
+
+      <div class="sec-head fade">
+        <div>
+          <h2>Resumen general</h2>
+          <p>Datos consolidados por ano academico</p>
+        </div>
+        <div class="year-nav">
+          <button (click)="prevYear()" aria-label="Ano anterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+          <span class="yr">{{ year() }}</span>
+          <button (click)="nextYear()" aria-label="Ano siguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>
+        </div>
+      </div>
+
+      <!-- KPI cards -->
+      <section class="kpi-grid">
+        <div class="kpi fade" style="--accent:#2563eb;--accent-soft:#eef4ff;animation-delay:.04s">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+            <span class="trend up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>5%</span>
+          </div>
+          <div class="kpi-label">Total estudiantes</div>
+          <div class="kpi-val">115</div>
+          <div class="kpi-sub">Activos este ano academico</div>
+        </div>
+
+        <div class="kpi fade" style="--accent:#059669;--accent-soft:#ecfdf5;animation-delay:.1s">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+            <span class="trend down"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>2%</span>
+          </div>
+          <div class="kpi-label">Ingresos del mes</div>
+          <div class="kpi-val">$3,840</div>
+          <div class="kpi-sub">48 pagos registrados</div>
+        </div>
+
+        <div class="kpi fade" style="--accent:#7c3aed;--accent-soft:#f5f0ff;animation-delay:.16s">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+            <span class="trend up"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>+3</span>
+          </div>
+          <div class="kpi-label">Sesiones esta semana</div>
+          <div class="kpi-val">36</div>
+          <div class="kpi-sub">vs. semana anterior</div>
+        </div>
+
+        <div class="kpi fade" style="--accent:#d97706;--accent-soft:#fffbeb;animation-delay:.22s">
+          <div class="kpi-top">
+            <div class="kpi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg></div>
+            <span class="trend up">3 V</span>
+          </div>
+          <div class="kpi-label">Partidos este mes</div>
+          <div class="kpi-val">8</div>
+          <div class="kpi-sub">3 victorias - 2 empates - 3 derrotas</div>
+        </div>
+      </section>
+
+      <!-- charts -->
+      <section class="row">
+        <div class="card fade" style="animation-delay:.18s">
+          <div class="card-head">
+            <div>
+              <h3>Ingresos mensuales</h3>
+              <span class="muted">Ano {{ year() }} - en miles (USD)</span>
+            </div>
+            <div class="legend-inline"><span><i style="background:var(--blue)"></i>Recaudado</span></div>
+          </div>
+          <div class="bars">
+            @for (v of barData; track $index) {
+              <div class="bar-col" [class.is-active]="$index === currentMonth">
+                <div class="bar-track">
+                  <div class="bar" [class.empty]="v === null" [style.height.%]="barHeight(v)">
+                    @if (v !== null) { <span class="tip">${{ v }}k</span> }
+                  </div>
+                </div>
+                <div class="bar-month">{{ months[$index] }}</div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="card fade" style="animation-delay:.24s">
+          <div class="card-head"><h3>Por categoria</h3></div>
+          <div class="donut-wrap">
+            <div class="donut">
+              <svg viewBox="0 0 42 42" width="168" height="168">
+                <circle cx="21" cy="21" r="15.915" fill="none" stroke="#eef0f7" stroke-width="6"></circle>
+                @for (seg of donutSegments(); track $index) {
+                  <circle cx="21" cy="21" r="15.915" fill="none"
+                    [attr.stroke]="seg.color" stroke-width="6" stroke-linecap="round"
+                    [attr.stroke-dasharray]="seg.dasharray"
+                    [attr.stroke-dashoffset]="seg.dashoffset"
+                    transform="rotate(-90 21 21)"></circle>
+                }
+              </svg>
+              <div class="center"><b>{{ totalJugadores() }}</b><small>jugadores</small></div>
+            </div>
+            <div class="donut-legend">
+              @for (c of cats; track c.name) {
+                <div class="dl-row">
+                  <i [style.background]="c.color"></i>
+                  <span class="name">{{ c.name }}</span>
+                  <span class="val">{{ c.val }}</span>
+                  <span class="pct">{{ pct(c.val) }}%</span>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- alerts -->
+      <section class="alert-grid">
+        <div class="alert fade" style="--a-color:#dc2626;--a-soft:#fef2f2;animation-delay:.2s">
+          <div class="alert-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="alert-body"><div class="t">Pagos vencidos</div><div class="n">7</div><div class="s">estudiantes con deuda</div></div>
+          <span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </div>
+        <div class="alert fade" style="--a-color:#d97706;--a-soft:#fffbeb;animation-delay:.26s">
+          <div class="alert-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+          <div class="alert-body"><div class="t">Lesiones activas</div><div class="n">2</div><div class="s">jugadores en recuperacion</div></div>
+          <span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </div>
+        <div class="alert fade" style="--a-color:#059669;--a-soft:#ecfdf5;animation-delay:.32s">
+          <div class="alert-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="alert-body"><div class="t">Rating promedio</div><div class="n">8.3</div><div class="s">equipo Sub-18 hoy</div></div>
+          <span class="go"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        </div>
+      </section>
+
+      <!-- table -->
+      <section class="table-card fade" style="animation-delay:.3s">
+        <div class="tc-head">
+          <h3>Actividad reciente</h3>
+          <button class="btn-ghost"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>Ver todo</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>Estudiante</th><th>Accion</th><th>Categoria</th><th>Fecha</th><th>Estado</th></tr>
+          </thead>
+          <tbody>
+            @for (r of actividades; track r.name) {
+              <tr>
+                <td><div class="student"><div class="av" [style.background]="r.av">{{ r.ini }}</div><b>{{ r.name }}</b></div></td>
+                <td><span class="action">{{ r.act }}</span></td>
+                <td><span class="cat" [class]="'cat ' + r.cc">{{ r.cat }}</span></td>
+                <td><span class="date">{{ r.date }}</span></td>
+                <td><span class="status" [class]="'status ' + r.sc"><i></i>{{ r.st }}</span></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
     </div>
   </div>
 </div>

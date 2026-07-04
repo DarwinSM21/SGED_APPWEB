@@ -924,3 +924,101 @@
     padding: 36px 24px;
   }
 }
+/* ============================================================
+   MEJORAS DE DISENO - ProFutbol (sin alterar el fondo morado)
+   ============================================================ */
+
+.login-branding {
+  animation: slideInLeft 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.login-form-section {
+  animation: slideInRight 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.logo-circle {
+  animation: floaty 4s ease-in-out infinite;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+
+.form-card {
+  animation: cardUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.15s both;
+  box-shadow:
+    0 24px 70px rgba(76, 29, 149, 0.18),
+    0 4px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(118, 75, 162, 0.08);
+}
+@keyframes cardUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.form-header h2 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  letter-spacing: -0.5px;
+}
+
+.form-input {
+  background: #f8f7fc;
+  border-color: #e7e3f3;
+}
+.form-input:hover {
+  border-color: #cfc6ea;
+  background: #ffffff;
+}
+.form-input:focus {
+  border-color: #764ba2;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(118, 75, 162, 0.12);
+}
+
+.label-icon {
+  opacity: 0.75;
+}
+
+.submit-button {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-size: 200% 200%;
+  letter-spacing: 0.3px;
+  box-shadow: 0 6px 18px rgba(102, 78, 234, 0.28);
+}
+.submit-button:hover:not(:disabled) {
+  background-position: 100% 50%;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(118, 75, 162, 0.38);
+}
+
+.checkbox-field input {
+  accent-color: #764ba2;
+}
+
+.toggle-password-btn {
+  border-radius: 8px;
+}
+.toggle-password-btn:hover {
+  opacity: 1;
+  background: rgba(118, 75, 162, 0.08);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-branding,
+  .login-form-section,
+  .form-card,
+  .logo-circle {
+    animation: none;
+  }
+}

@@ -1,7 +1,7 @@
 import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { Auth, DEMO_CREDENTIALS } from '../../services/auth';
+import { Auth } from '../../services/auth';
 
 @Component({
   selector: 'app-login',
@@ -19,13 +19,12 @@ export class Login implements OnInit, OnDestroy {
   protected readonly errorMessage = signal<string | null>(null);
 
   protected readonly form = this.fb.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
+    username: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(6)]],
     remember: [false],
   });
 
-  /** Reloj de "tiempo añadido" — el partido (y la gestión) nunca se detiene. */
-  private readonly matchSeconds = signal(5400); // arranca en 90:00
+  private readonly matchSeconds = signal(5400);
   private clockHandle?: ReturnType<typeof setInterval>;
 
   protected readonly matchClockLabel = computed(() => {
@@ -49,37 +48,44 @@ export class Login implements OnInit, OnDestroy {
     this.showPassword.update((value) => !value);
   }
 
-  protected fillDemoAccount(role: 'admin' | 'entrenador'): void {
-    this.errorMessage.set(null);
-    this.form.patchValue(DEMO_CREDENTIALS[role]);
-  }
-
   protected submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
-
     this.errorMessage.set(null);
     this.loading.set(true);
-
-    const { email, password } = this.form.getRawValue();
-
-    this.auth.login(email, password).subscribe({
-      next: () => {
+    const { username, password } = this.form.getRawValue();
+    this.auth.login(username, password).subscribe({
+      next: (res) => {
         this.loading.set(false);
-        this.router.navigate(['/dashboard']);
+        this.redirigirPorRol(res.rol);
       },
       error: () => {
         this.loading.set(false);
-        this.errorMessage.set(
-          'Correo o contraseña incorrectos. Verifica tus datos e inténtalo de nuevo.',
-        );
+        this.errorMessage.set('Usuario o contrasena incorrectos. Verifica tus datos e intentalo de nuevo.');
       },
     });
   }
 
-  protected fieldHasError(field: 'email' | 'password'): boolean {
+  private redirigirPorRol(rol: string): void {
+    switch (rol) {
+      case 'ADMINISTRADOR':
+      case 'RECEPCIONISTA':
+        this.router.navigate(['/admin']);
+        break;
+      case 'ENTRENADOR':
+        this.router.navigate(['/entrenador']);
+        break;
+      case 'ESTUDIANTE':
+        this.router.navigate(['/estudiante']);
+        break;
+      default:
+        this.router.navigate(['/dashboard']);
+    }
+  }
+
+  protected fieldHasError(field: 'username' | 'password'): boolean {
     const control = this.form.get(field);
     return !!control && control.invalid && (control.touched || control.dirty);
   }

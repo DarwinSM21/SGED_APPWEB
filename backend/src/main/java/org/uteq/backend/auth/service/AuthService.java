@@ -3,6 +3,7 @@ package org.uteq.backend.auth.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.auth.dto.LoginRequest;
 import org.uteq.backend.auth.dto.LoginResponse;
 import org.uteq.backend.auth.dto.RegistroRequest;
@@ -17,6 +18,8 @@ import org.uteq.backend.auth.repository.UsuarioRolRepository;
 import org.uteq.backend.auth.security.JwtService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -29,6 +32,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RedisBlacklistService blacklistService;
 
+    @Transactional
     public Usuario registro(RegistroRequest request) {
         if (usuarioRepository.findByUsername(request.username()).isPresent()) {
             throw new RuntimeException("El username ya existe");
@@ -60,12 +64,13 @@ public class AuthService {
         return usuario;
     }
 
+    @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository
                 .findByUsername(request.username())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        if (!usuario.getActivo()) {
+        if (usuario.getActivo() == null || !usuario.getActivo()) {
             throw new RuntimeException("Usuario inactivo");
         }
 
@@ -73,12 +78,9 @@ public class AuthService {
             throw new RuntimeException("Credenciales incorrectas");
         }
 
-        String rol = usuario.getUsuarioRoles()
-                .stream()
-                .findFirst()
-                .orElseThrow()
-                .getRol()
-                .getNombre();
+        // Leer el rol desde el repositorio (evita problemas con LAZY)
+        List<UsuarioRol> roles = usuarioRolRepository.findByUsuario(usuario);
+        String rol = roles.isEmpty() ? "USER" : roles.get(0).getRol().getNombre();
 
         String token = jwtService.generateToken(usuario.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(usuario.getUsername(), rol);
@@ -93,6 +95,7 @@ public class AuthService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     public LoginResponse refresh(String refreshToken) {
         if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             throw new RuntimeException("Token de refresco invalido o expirado");
