@@ -38,11 +38,10 @@ public class SecurityConfig {
 
             .headers(headers -> headers
                 .contentTypeOptions(ct -> {})
-                .frameOptions(frame -> frame.deny())
+                .frameOptions(frame -> frame.sameOrigin())
                 .referrerPolicy(ref ->
                     ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                .contentSecurityPolicy(csp ->
-                    csp.policyDirectives("default-src 'self'; frame-ancestors 'none'"))
+                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
             )
 
             .authorizeHttpRequests(auth -> auth
@@ -52,7 +51,9 @@ public class SecurityConfig {
                     "/api/docs/**",
                     "/api/swagger-ui/**",
                     "/api/swagger-ui.html",
-                    "/v3/api-docs/**"
+                    "/v3/api-docs/**",
+                    "/swagger-ui/**",
+                    "/webjars/**"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
                 .anyRequest().authenticated()

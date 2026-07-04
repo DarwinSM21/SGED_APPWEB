@@ -1,4 +1,5 @@
 package org.uteq.backend.auth.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
@@ -27,4 +28,16 @@ public class Persona {
     private LocalDate fechaNacimiento;
 
     private Boolean activo;
+
+    public Long getId() {
+        return idPersona;
+    }
+
+    public String getNombreCompleto() {
+        return nombre + " " + apellido;
+    }
+
+    public String getEmail() {
+        return correo;
+    }
 }

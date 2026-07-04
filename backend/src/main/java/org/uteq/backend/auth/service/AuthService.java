@@ -51,7 +51,7 @@ public class AuthService {
 
         Rol rol = rolRepository.findByNombre("USER")
                 .orElseGet(() -> rolRepository.save(
-                        new Rol(null, "USER", "Usuario estándar")
+                        new Rol(null, "USER", "Usuario estandar")
                 ));
 
         UsuarioRol usuarioRol = new UsuarioRol(null, usuario, rol);
@@ -81,9 +81,35 @@ public class AuthService {
                 .getNombre();
 
         String token = jwtService.generateToken(usuario.getUsername(), rol);
+        String refreshToken = jwtService.generateRefreshToken(usuario.getUsername(), rol);
 
         return LoginResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
+                .username(usuario.getUsername())
+                .nombre(usuario.getPersona().getNombre()
+                        + " " + usuario.getPersona().getApellido())
+                .rol(rol)
+                .build();
+    }
+
+    public LoginResponse refresh(String refreshToken) {
+        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
+            throw new RuntimeException("Token de refresco invalido o expirado");
+        }
+
+        String username = jwtService.extractUsername(refreshToken);
+        String rol = jwtService.extractRol(refreshToken);
+
+        Usuario usuario = usuarioRepository
+                .findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        String nuevoToken = jwtService.generateToken(usuario.getUsername(), rol);
+
+        return LoginResponse.builder()
+                .token(nuevoToken)
+                .refreshToken(refreshToken)
                 .username(usuario.getUsername())
                 .nombre(usuario.getPersona().getNombre()
                         + " " + usuario.getPersona().getApellido())
