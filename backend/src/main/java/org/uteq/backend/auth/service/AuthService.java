@@ -17,6 +17,9 @@ import org.uteq.backend.auth.repository.UsuarioRepository;
 import org.uteq.backend.auth.repository.UsuarioRolRepository;
 import org.uteq.backend.auth.security.JwtService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
+import org.uteq.backend.common.exception.ConflictoException;
+import org.uteq.backend.common.exception.CredencialesInvalidasException;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
@@ -35,7 +38,7 @@ public class AuthService {
     @Transactional
     public Usuario registro(RegistroRequest request) {
         if (usuarioRepository.findByUsername(request.username()).isPresent()) {
-            throw new RuntimeException("El username ya existe");
+            throw new ConflictoException("El username ya existe");
         }
 
         Persona persona = Persona.builder()
@@ -68,14 +71,14 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         Usuario usuario = usuarioRepository
                 .findByUsername(request.username())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new CredencialesInvalidasException("Usuario o contraseña incorrectos"));
 
         if (usuario.getActivo() == null || !usuario.getActivo()) {
-            throw new RuntimeException("Usuario inactivo");
+            throw new CredencialesInvalidasException("El usuario está inactivo");
         }
 
         if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
-            throw new RuntimeException("Credenciales incorrectas");
+            throw new CredencialesInvalidasException("Usuario o contraseña incorrectos");
         }
 
         // Leer el rol desde el repositorio (evita problemas con LAZY)
@@ -98,7 +101,7 @@ public class AuthService {
     @Transactional(readOnly = true)
     public LoginResponse refresh(String refreshToken) {
         if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
-            throw new RuntimeException("Token de refresco invalido o expirado");
+            throw new CredencialesInvalidasException("Token de refresco inválido o expirado");
         }
 
         String username = jwtService.extractUsername(refreshToken);
@@ -106,7 +109,7 @@ public class AuthService {
 
         Usuario usuario = usuarioRepository
                 .findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado"));
 
         String nuevoToken = jwtService.generateToken(usuario.getUsername(), rol);
 
