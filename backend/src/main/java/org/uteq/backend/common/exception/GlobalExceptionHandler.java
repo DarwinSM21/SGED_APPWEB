@@ -3,87 +3,83 @@ package org.uteq.backend.common.exception;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.net.URI;
+import java.time.Instant;
+
 /**
- * Manejador global de excepciones.
- *
- * Antes de esta clase, cualquier RuntimeException lanzada en un servicio
- * terminaba reenviada al endpoint interno /error, que al no estar permitido
- * en SecurityConfig respondía 403 y ocultaba el error real.
- * Con @RestControllerAdvice la excepción se convierte aquí mismo en una
- * respuesta JSON con el código HTTP correcto, sin pasar por /error.
+ * Manejador global de excepciones conforme al RFC 7807 (Problem Details
+ * for HTTP APIs), exigido por el Bloque A.1 de la Tercera Entrega.
+ * Toda respuesta de error incluye: type, title, status, detail e instance,
+ * con Content-Type application/problem+json.
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String BASE_TYPE = "https://sged.uteq.edu.ec/errores/";
+
     /** Excepciones de negocio propias: usan el status que ellas declaran. */
     @ExceptionHandler(ApiException.class)
-    public ResponseEntity<ErrorResponse> handleApiException(
-            ApiException ex, HttpServletRequest request) {
-        return build(ex.getStatus(), ex.getMessage(), request);
+    public ProblemDetail handleApiException(ApiException ex, HttpServletRequest request) {
+        return problema(ex.getStatus(), ex.getClass().getSimpleName(),
+                ex.getMessage(), request);
     }
 
     /** Body inválido o JSON malformado -> 400. */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleBodyInvalido(
-            HttpMessageNotReadableException ex, HttpServletRequest request) {
-        return build(HttpStatus.BAD_REQUEST, "El cuerpo de la petición es inválido", request);
+    public ProblemDetail handleBodyInvalido(HttpMessageNotReadableException ex,
+                                            HttpServletRequest request) {
+        return problema(HttpStatus.BAD_REQUEST, "CuerpoInvalido",
+                "El cuerpo de la petición es inválido", request);
     }
 
-    /** Errores de validación de DTOs (@Valid) -> 400 con el primer campo fallido. */
+    /**
+     * Errores de validación de DTOs (@Valid) -> 422 Unprocessable Entity.
+     * La auditoría OWASP A03 (Bloque C.2) espera exactamente 422 con
+     * ProblemDetails ante payloads maliciosos como ' OR '1'='1.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidacion(
-            MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ProblemDetail handleValidacion(MethodArgumentNotValidException ex,
+                                          HttpServletRequest request) {
         String detalle = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
                 .map(f -> f.getField() + ": " + f.getDefaultMessage())
                 .orElse("Datos de entrada inválidos");
-        return build(HttpStatus.BAD_REQUEST, detalle, request);
+        return problema(HttpStatus.UNPROCESSABLE_ENTITY, "ValidacionFallida",
+                detalle, request);
     }
 
-    /** Usuario autenticado pero sin el rol necesario (@PreAuthorize) -> 403. */
+    /** Autenticado pero sin el rol necesario (@PreAuthorize) -> 403. */
     @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<ErrorResponse> handleAccesoDenegado(
-            AccessDeniedException ex, HttpServletRequest request) {
-        return build(HttpStatus.FORBIDDEN,
+    public ProblemDetail handleAccesoDenegado(AccessDeniedException ex,
+                                              HttpServletRequest request) {
+        return problema(HttpStatus.FORBIDDEN, "AccesoDenegado",
                 "No tiene permisos para realizar esta operación", request);
     }
 
-    /**
-     * Red de seguridad para RuntimeException heredadas que aún no fueron
-     * migradas a ApiException -> 400 (nunca más un 403 engañoso).
-     */
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<ErrorResponse> handleRuntime(
-            RuntimeException ex, HttpServletRequest request) {
-        log.warn("RuntimeException no tipificada en {}: {}",
-                request.getRequestURI(), ex.getMessage());
-        return build(HttpStatus.BAD_REQUEST, ex.getMessage(), request);
-    }
-
-    /** Cualquier otro error inesperado -> 500 sin filtrar detalles internos. */
+    /** Red de seguridad -> 500 sin filtrar detalles internos. */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGeneral(
-            Exception ex, HttpServletRequest request) {
-        log.error("Error no controlado en {}", request.getRequestURI(), ex);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR,
-                "Ocurrió un error interno. Intente nuevamente", request);
+    public ProblemDetail handleGeneral(Exception ex, HttpServletRequest request) {
+        log.error("Error no controlado en {} {}", request.getMethod(),
+                request.getRequestURI(), ex);
+        return problema(HttpStatus.INTERNAL_SERVER_ERROR, "ErrorInterno",
+                "Ocurrió un error interno. Contacte al administrador.", request);
     }
 
-    private ResponseEntity<ErrorResponse> build(
-            HttpStatus status, String mensaje, HttpServletRequest request) {
-        ErrorResponse body = ErrorResponse.of(
-                status.value(),
-                status.getReasonPhrase(),
-                mensaje,
-                request.getRequestURI());
-        return ResponseEntity.status(status).body(body);
+    private ProblemDetail problema(HttpStatus status, String tipo,
+                                   String detalle, HttpServletRequest request) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detalle);
+        pd.setType(URI.create(BASE_TYPE + tipo));
+        pd.setTitle(status.getReasonPhrase());
+        pd.setInstance(URI.create(request.getRequestURI()));
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
     }
 }

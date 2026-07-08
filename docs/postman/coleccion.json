@@ -1,0 +1,635 @@
+{
+  "info": {
+    "name": "SGED API — Tercera Entrega (v0.9.0-rc)",
+    "description": "Colección con casos de éxito (200/201), validación (422), no autorizado (401), prohibido (403), no encontrado (404) y rate limit (429). La autenticación usa cookies HttpOnly: Postman las gestiona automáticamente tras el login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 Auth",
+      "item": [
+        {
+          "name": "Ping (público, 200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/ping",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "ping"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Registro (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/registro",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Suarez\",\n  \"username\": \"pedro01\",\n  \"password\": \"Passw0rd!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Registro duplicado (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/registro",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "registro"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Pedro\",\n  \"apellido\": \"Suarez\",\n  \"username\": \"pedro01\",\n  \"password\": \"Passw0rd!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login admin (200 + cookies HttpOnly)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin2026!\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login credenciales inválidas (401)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"incorrecta\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login x6 fallidos → rate limit (429)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Ejecutar 6 veces seguidas: desde el 6.º intento responde 429 ProblemDetails (OWASP A07).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"incorrecta\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh (200, usa cookie sged_refresh)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Me (200 autenticado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Me sin sesión (401 ProblemDetails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/me",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Logout (200, revoca jti y borra cookies)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/logout",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 Estudiantes CRUD",
+      "item": [
+        {
+          "name": "Listar paginado (200, cache Redis)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes?page=0&size=10",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes?page=0&size=10"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Listar sin sesión (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar por id (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "1"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar inexistente (404 ProblemDetails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/99999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "99999"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Crear (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Lucia\",\n  \"apellido\": \"Andrade\",\n  \"categoria\": \"SUB-14\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear sin nombre (422 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"\",\n  \"apellido\": \"Andrade\",\n  \"categoria\": \"SUB-14\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear con inyección ' OR '1'='1 (422, OWASP A03)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"' OR '1'='1\",\n  \"apellido\": \"x\",\n  \"categoria\": \"' OR '1'='1\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/1",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "1"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan Carlos\",\n  \"apellido\": \"Perez\",\n  \"categoria\": \"SUB-12\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/99999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "99999"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Juan\",\n  \"apellido\": \"Perez\",\n  \"categoria\": \"SUB-12\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar lógico (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/2",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "2"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Eliminar inexistente (404)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/99999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "99999"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 Operaciones con SP/fn (Bloque A.2)",
+      "item": [
+        {
+          "name": "Reporte conteo por categoría (200, fn SQL)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/reportes/conteo-por-categoria?categoria=SUB-12",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "reportes",
+                "conteo-por-categoria?categoria=SUB-12"
+              ]
+            },
+            "description": "Agregado COUNT resuelto en el motor vía fn_contar_estudiantes_activos (@Procedure)."
+          }
+        },
+        {
+          "name": "Reporte con rol USER (403 ProblemDetails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/reportes/conteo-por-categoria?categoria=SUB-12",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "reportes",
+                "conteo-por-categoria?categoria=SUB-12"
+              ]
+            },
+            "description": "Login previo con un usuario de rol USER: acceso denegado (OWASP A01)."
+          }
+        },
+        {
+          "name": "Desactivar categoría (200, SP masivo, solo ADMIN)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/operaciones/desactivar-categoria?categoria=SUB-15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "operaciones",
+                "desactivar-categoria?categoria=SUB-15"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Desactivar categoría con rol USER (403)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiantes/operaciones/desactivar-categoria?categoria=SUB-15",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "estudiantes",
+                "operaciones",
+                "desactivar-categoria?categoria=SUB-15"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 Documentación",
+      "item": [
+        {
+          "name": "OpenAPI 3.0 (200, /api/docs)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/docs",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "docs"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Health (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/actuator/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "actuator",
+                "health"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

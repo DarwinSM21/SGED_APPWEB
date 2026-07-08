@@ -10,7 +10,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -19,16 +21,25 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
+/**
+ * Configuración de seguridad. Cabeceras conforme a OWASP A05 (Bloque C.2):
+ * X-Frame-Options: DENY, X-Content-Type-Options: nosniff,
+ * Strict-Transport-Security y Content-Security-Policy.
+ */
 @Configuration
 @RequiredArgsConstructor
 @EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtFilter;
+    private final AuthenticationEntryPoint problemAuthEntryPoint;
+    private final AccessDeniedHandler problemAccessDeniedHandler;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+            // Stateless con JWT en cookie SameSite=Strict: la propia cookie
+            // mitiga CSRF (decisión documentada en ADR de autenticación).
             .csrf(csrf -> csrf.disable())
 
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -37,12 +48,22 @@ public class SecurityConfig {
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
             .headers(headers -> headers
-                .contentTypeOptions(ct -> {})
-                .frameOptions(frame -> frame.sameOrigin())
+                .contentTypeOptions(ct -> {})                       // nosniff
+                .frameOptions(frame -> frame.deny())                // A05: DENY
+                .httpStrictTransportSecurity(hsts -> hsts           // A05: HSTS
+                    .includeSubDomains(true)
+                    .maxAgeInSeconds(31536000))
                 .referrerPolicy(ref ->
                     ref.policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
-                .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
+                .contentSecurityPolicy(csp -> csp.policyDirectives(
+                    "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+                    + "style-src 'self' 'unsafe-inline'; img-src 'self' data:"))
             )
+
+            // 401 y 403 en formato ProblemDetails RFC 7807 (criterio C1)
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(problemAuthEntryPoint)
+                .accessDeniedHandler(problemAccessDeniedHandler))
 
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
@@ -54,6 +75,7 @@ public class SecurityConfig {
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/webjars/**",
+                    "/actuator/health",
                     "/error"
                 ).permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMINISTRADOR")
@@ -68,10 +90,10 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedOrigins(List.of("http://localhost:4200", "https://localhost:4200"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
-        config.setAllowCredentials(true);
+        config.setAllowCredentials(true); // necesario para cookies HttpOnly
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

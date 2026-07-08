@@ -17,6 +17,7 @@ import org.uteq.backend.auth.repository.UsuarioRolRepository;
 import org.uteq.backend.auth.security.JwtService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
 import org.uteq.backend.auth.service.AuthService;
+import org.uteq.backend.common.exception.CredencialesInvalidasException;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +27,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
+
+    private static final String IP = "127.0.0.1";
 
     @Mock UsuarioRepository usuarioRepository;
     @Mock PersonaRepository personaRepository;
@@ -46,17 +49,19 @@ class AuthServiceTest {
                 .username("test@uteq.edu.ec")
                 .passwordHash("hashedpass")
                 .activo(true)
-                .usuarioRoles(List.of(usuarioRol))
                 .persona(org.uteq.backend.auth.entity.Persona.builder()
                         .nombre("Juan").apellido("Perez").build())
                 .build();
 
         when(usuarioRepository.findByUsername("test@uteq.edu.ec"))
                 .thenReturn(Optional.of(usuario));
+        when(usuarioRolRepository.findByUsuario(usuario))
+                .thenReturn(List.of(usuarioRol));
         when(passwordEncoder.matches("123456", "hashedpass")).thenReturn(true);
         when(jwtService.generateToken("test@uteq.edu.ec", "USER")).thenReturn("jwt-token");
 
-        var response = authService.login(new LoginRequest("test@uteq.edu.ec", "123456"));
+        var response = authService.login(
+                new LoginRequest("test@uteq.edu.ec", "123456"), IP);
 
         assertNotNull(response);
         assertEquals("jwt-token", response.token());
@@ -75,9 +80,8 @@ class AuthServiceTest {
                 .thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("wrongpass", "hashedpass")).thenReturn(false);
 
-        assertThrows(RuntimeException.class, () ->
-                authService.login(new LoginRequest("test@uteq.edu.ec", "wrongpass"))
-        );
+        assertThrows(CredencialesInvalidasException.class, () ->
+                authService.login(new LoginRequest("test@uteq.edu.ec", "wrongpass"), IP));
     }
 
     @Test
@@ -85,9 +89,8 @@ class AuthServiceTest {
         when(usuarioRepository.findByUsername("noexiste@uteq.edu.ec"))
                 .thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () ->
-                authService.login(new LoginRequest("noexiste@uteq.edu.ec", "123456"))
-        );
+        assertThrows(CredencialesInvalidasException.class, () ->
+                authService.login(new LoginRequest("noexiste@uteq.edu.ec", "123456"), IP));
     }
 
     @Test
@@ -97,8 +100,7 @@ class AuthServiceTest {
 
         assertThrows(RuntimeException.class, () ->
                 authService.registro(new org.uteq.backend.auth.dto.RegistroRequest(
-                        "Juan", "Perez", "duplicado", "123456"))
-        );
+                        "Juan", "Perez", "duplicado", "123456")));
     }
 
     @Test
@@ -112,8 +114,18 @@ class AuthServiceTest {
         when(usuarioRepository.findByUsername("inactivo@uteq.edu.ec"))
                 .thenReturn(Optional.of(usuario));
 
-        assertThrows(RuntimeException.class, () ->
-                authService.login(new LoginRequest("inactivo@uteq.edu.ec", "123456"))
-        );
+        assertThrows(CredencialesInvalidasException.class, () ->
+                authService.login(new LoginRequest("inactivo@uteq.edu.ec", "123456"), IP));
+    }
+
+    @Test
+    void logoutRevocaJti() {
+        when(jwtService.extractJti("token-crudo")).thenReturn("jti-123");
+        when(jwtService.getExpirationMs()).thenReturn(3600000L);
+        when(jwtService.extractUsername("token-crudo")).thenReturn("admin");
+
+        authService.logout("token-crudo", IP);
+
+        verify(blacklistService).revocarToken("jti-123", 3600000L);
     }
 }

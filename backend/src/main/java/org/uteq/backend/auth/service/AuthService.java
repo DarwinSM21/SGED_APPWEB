@@ -1,6 +1,7 @@
 package org.uteq.backend.auth.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -61,32 +63,37 @@ public class AuthService {
                         new Rol(null, "USER", "Usuario estandar")
                 ));
 
-        UsuarioRol usuarioRol = new UsuarioRol(null, usuario, rol);
-        usuarioRolRepository.save(usuarioRol);
-
+        usuarioRolRepository.save(new UsuarioRol(null, usuario, rol));
         return usuario;
     }
 
+    /**
+     * Autentica al usuario. El parámetro ip se usa exclusivamente para el
+     * registro de auditoría exigido por OWASP A09 (Bloque C.2): cada login
+     * exitoso o fallido queda en el log con ip, timestamp y sub.
+     */
     @Transactional(readOnly = true)
-    public LoginResponse login(LoginRequest request) {
+    public LoginResponse login(LoginRequest request, String ip) {
         Usuario usuario = usuarioRepository
                 .findByUsername(request.username())
-                .orElseThrow(() -> new CredencialesInvalidasException("Usuario o contraseña incorrectos"));
+                .orElseThrow(() -> loginFallido(ip, request.username()));
 
         if (usuario.getActivo() == null || !usuario.getActivo()) {
-            throw new CredencialesInvalidasException("El usuario está inactivo");
+            throw loginFallido(ip, request.username());
         }
 
         if (!passwordEncoder.matches(request.password(), usuario.getPasswordHash())) {
-            throw new CredencialesInvalidasException("Usuario o contraseña incorrectos");
+            throw loginFallido(ip, request.username());
         }
 
-        // Leer el rol desde el repositorio (evita problemas con LAZY)
         List<UsuarioRol> roles = usuarioRolRepository.findByUsuario(usuario);
         String rol = roles.isEmpty() ? "USER" : roles.get(0).getRol().getNombre();
 
         String token = jwtService.generateToken(usuario.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(usuario.getUsername(), rol);
+
+        // A09: registro de acceso exitoso con ip, timestamp (lo añade el appender) y sub
+        log.info("AUTH_LOGIN_OK ip={} sub={}", ip, usuario.getUsername());
 
         return LoginResponse.builder()
                 .token(token)
@@ -98,9 +105,16 @@ public class AuthService {
                 .build();
     }
 
+    private CredencialesInvalidasException loginFallido(String ip, String username) {
+        // A09: registro de acceso fallido con ip, timestamp y sub intentado
+        log.warn("AUTH_LOGIN_FAIL ip={} sub={}", ip, username);
+        return new CredencialesInvalidasException("Usuario o contraseña incorrectos");
+    }
+
     @Transactional(readOnly = true)
     public LoginResponse refresh(String refreshToken) {
-        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
+        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)
+                || blacklistService.estaRevocado(jwtService.extractJti(refreshToken))) {
             throw new CredencialesInvalidasException("Token de refresco inválido o expirado");
         }
 
@@ -123,12 +137,16 @@ public class AuthService {
                 .build();
     }
 
-    public void logout(String authHeader) {
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            String jti = jwtService.extractJti(token);
-            long ttl = jwtService.getExpirationMs();
-            blacklistService.revocarToken(jti, ttl);
+    /** Revoca el token (por su jti) recibido como valor crudo del JWT. */
+    public void logout(String token, String ip) {
+        if (token != null && !token.isBlank()) {
+            try {
+                String jti = jwtService.extractJti(token);
+                blacklistService.revocarToken(jti, jwtService.getExpirationMs());
+                log.info("AUTH_LOGOUT ip={} sub={}", ip, jwtService.extractUsername(token));
+            } catch (Exception e) {
+                log.warn("AUTH_LOGOUT_TOKEN_INVALIDO ip={}", ip);
+            }
         }
     }
 }
