@@ -26,7 +26,7 @@ Framework full-stack, hosting económico.
 
 Robusto, tipado estático, requiere hosting dedicado.
 
-### Opción C: Java 21 con Spring Boot 4.0.6
+### Opción C: Java 21 con Spring Boot 3.2.5
 
 Ecosistema enterprise, JPA para ORM, Angular se comunica nativamente con backend
 Java por HTTP/JSON.
