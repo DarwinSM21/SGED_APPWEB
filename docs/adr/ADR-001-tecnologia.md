@@ -33,7 +33,7 @@ Java por HTTP/JSON.
 
 ## Decisión
 
-Se elige la **Opción C: Java 21 con Spring Boot 4.0.6**.
+Se elige la **Opción C: Java 21 con Spring Boot 3.2.5**.
 
 Razones:
 
