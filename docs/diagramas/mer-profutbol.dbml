@@ -1,0 +1,286 @@
+// https://dbdiagram.io/d
+// Diagrama MER - ProFútbol SGED
+// Motor: PostgreSQL 16
+
+// ============================================
+// TABLAS BASE
+// ============================================
+
+Table Persona {
+  id_persona INTEGER [pk, increment]
+  nombres VARCHAR(100) [not null]
+  apellidos VARCHAR(100) [not null]
+  cedula CHAR(10) [not null, unique]
+  email VARCHAR(200) [not null]
+  telefono CHAR(10) [not null]
+  direccion VARCHAR(255) [not null]
+  fecha_nacimiento DATE [not null]
+  foto TEXT
+}
+
+Table Roles {
+  id_rol INTEGER [pk, increment]
+  nombre VARCHAR(255) [not null]
+  descripcion TEXT [not null]
+}
+
+Table Posicion {
+  id_posicion INTEGER [pk, increment]
+  nombre VARCHAR(255) [not null]
+  descripcion TEXT [not null]
+}
+
+Table CriterioEvaluacion {
+  id_criterio INTEGER [pk, unique]
+  nombre VARCHAR(255)
+  descripcion TEXT
+  puntaje_maximo INTEGER
+  estado VARCHAR(255)
+}
+
+Table Equipamiento {
+  id_equipamiento INTEGER [pk, increment]
+  nombre VARCHAR(255)
+  categoria VARCHAR(255)
+  cantidad_total INTEGER
+  cantidad_disponible INTEGER
+  estado VARCHAR(255)
+  descripcion TEXT
+}
+
+// ============================================
+// ROLES / PERSONAL
+// ============================================
+
+Table Administrador {
+  id_administrador INTEGER [pk, increment]
+  id_persona INTEGER [not null, ref: > Persona.id_persona]
+  id_rol INTEGER [not null, ref: > Roles.id_rol]
+  fecha_contratacion DATE [not null]
+  estado BOOLEAN
+}
+
+Table Recepcionista {
+  id_recepcionista INTEGER [pk, increment]
+  id_persona INTEGER [not null, ref: > Persona.id_persona]
+  id_rol INTEGER [not null, ref: > Roles.id_rol]
+  fecha_contratacion DATE [not null]
+  estado BOOLEAN [not null]
+}
+
+Table Entrenador {
+  id_entrenador INTEGER [pk, increment]
+  id_persona INTEGER [not null, ref: > Persona.id_persona]
+  id_rol INTEGER [not null, ref: > Roles.id_rol]
+  especialidad VARCHAR(255) [not null]
+}
+
+// ============================================
+// ESTUDIANTES
+// ============================================
+
+Table Estudiante {
+  id_estudiante INTEGER [pk, increment]
+  id_persona INTEGER [not null, ref: > Persona.id_persona]
+  id_posicion INTEGER [not null, ref: > Posicion.id_posicion]
+  categoria VARCHAR(25)
+  fecha_ingreso DATE
+  estado VARCHAR(100)
+  rfid_codigo TEXT
+}
+
+// ============================================
+// ENTRENAMIENTOS
+// ============================================
+
+Table HorarioEntrenamiento {
+  id_horario INTEGER [pk, increment]
+  id_entrenador INTEGER [not null, ref: > Entrenador.id_entrenador]
+  dia_semana VARCHAR(100) [not null]
+  hora_inicio TIME [not null]
+  hora_fin TIME [not null]
+  campo TEXT
+  descripcion TEXT
+  estado BOOLEAN
+}
+
+Table SesionEntrenamiento {
+  id_sesion INTEGER [pk, increment]
+  id_horario INTEGER [ref: > HorarioEntrenamiento.id_horario]
+  id_entrenador INTEGER [ref: > Entrenador.id_entrenador]
+  hora_inicio TIME
+  hora_fin TIME
+  campo TEXT
+  estado VARCHAR(100)
+}
+
+// ============================================
+// ASISTENCIA
+// ============================================
+
+Table Asistencia {
+  id_asistencia INTEGER [pk, increment]
+  id_sesion INTEGER [ref: > SesionEntrenamiento.id_sesion]
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+  hora_entrada TIME
+  metodo VARCHAR(255]
+  estado VARCHAR(55)
+}
+
+// ============================================
+// EVALUACIONES
+// ============================================
+
+Table EvaluacionDiaria {
+  id_evaluacion INTEGER [pk, increment]
+  id_sesion INTEGER [not null, ref: > SesionEntrenamiento.id_sesion]
+  id_entrenador INTEGER [not null, ref: > Entrenador.id_entrenador]
+  fecha DATE [not null]
+  observacion_general TEXT
+}
+
+Table DetalleEvaluacion {
+  id_detalle INTEGER [pk, increment]
+  id_evaluacion INTEGER [ref: > EvaluacionDiaria.id_evaluacion]
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+  id_criterio INTEGER [ref: > CriterioEvaluacion.id_criterio]
+  id_posicion_jugada INTEGER [ref: > Posicion.id_posicion]
+  puntaje INTEGER
+  promedio_total INTEGER
+}
+
+Table ObservacionEstudiante {
+  id_observacion INTEGER [pk, increment]
+  id_detalle INTEGER [ref: > DetalleEvaluacion.id_detalle]
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+  id_entrenador INTEGER [ref: > Entrenador.id_entrenador]
+  texto TEXT
+  fecha DATE
+}
+
+// ============================================
+// LESIONES
+// ============================================
+
+Table Lesion {
+  id_lesion INTEGER [pk, increment]
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+  id_entrenador INTEGER [ref: > Entrenador.id_entrenador]
+  tipo VARCHAR(255)
+  gravedad VARCHAR(255)
+  descripcion TEXT
+  fecha_inicio DATE
+  fecha_fin DATE
+  estado VARCHAR(255)
+}
+
+// ============================================
+// PARTIDOS
+// ============================================
+
+Table Partido {
+  id_partido INTEGER [pk, increment]
+  id_entrenador INTEGER [ref: > Entrenador.id_entrenador]
+  rival VARCHAR(255)
+  fecha DATE
+  hora TIME
+  lugar VARCHAR(255)
+  tipo VARCHAR(255)
+  resultado_propio VARCHAR(255)
+  resultado_rival VARCHAR(255)
+  estado VARCHAR(255)
+}
+
+Table PlantillaPartido {
+  id_plantilla INTEGER [pk, increment]
+  id_partido INTEGER [ref: > Partido.id_partido]
+  id_entrenador INTEGER [ref: > Entrenador.id_entrenador]
+  generada_por_ia BOOLEAN
+  formacion VARCHAR(255)
+  fecha_generacion DATE
+  estado VARCHAR(255)
+}
+
+Table JugadorPlantilla {
+  id_jugador_plantilla INTEGER [pk, increment]
+  id_plantilla INTEGER [ref: > PlantillaPartido.id_plantilla]
+  id_posicion INTEGER [ref: > Posicion.id_posicion]
+  titular BOOLEAN
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+}
+
+Table EstadisticaPartido {
+  id_estadistica INTEGER [pk, increment]
+  id_partido INTEGER [ref: > Partido.id_partido]
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+  goles INTEGER
+  asistencias INTEGER
+  tiros INTEGER
+  faltas INTEGER
+  tarjetas_amarillas BOOLEAN
+  tarjetas_rojas BOOLEAN
+  minutos_jugados DECIMAL
+}
+
+// ============================================
+// MEMBRESÍAS Y PAGOS
+// ============================================
+
+Table Membresia {
+  id_membresia INTEGER [pk, increment]
+  id_estudiante INTEGER [not null, ref: > Estudiante.id_estudiante]
+  fecha_inicio DATE
+  fecha_fin DATE
+  monto_total DECIMAL
+  estado VARCHAR(255)
+}
+
+Table Pagos {
+  id_pago INTEGER [pk, increment]
+  id_membresia INTEGER [ref: > Membresia.id_membresia]
+  id_recepcionista INTEGER [ref: > Recepcionista.id_recepcionista]
+  monto_pagado DECIMAL
+  saldo_pendiente DECIMAL
+  metodo_pago VARCHAR(255)
+  fecha_pago DATE
+  observacion TEXT
+}
+
+// ============================================
+// PRÉSTAMOS DE EQUIPAMIENTO
+// ============================================
+
+Table PrestamoEquipamiento {
+  id_prestamo INTEGER [pk, increment]
+  id_equipamiento INTEGER [ref: > Equipamiento.id_equipamiento]
+  id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
+  id_recepcionista INTEGER [ref: > Recepcionista.id_recepcionista]
+  fecha_prestamo DATE
+  fecha_devolucion_esperada DATE
+  fecha_devolucion_real DATE
+  estado VARCHAR(255)
+  observacion TEXT
+}
+
+// ============================================
+// REPORTES Y NOTIFICACIONES
+// ============================================
+
+Table Reporte {
+  id_reporte INTEGER [pk, increment]
+  id_usuario INTEGER [ref: > Persona.id_persona]
+  tipo VARCHAR(255)
+  fecha_generacion DATE
+  formato TEXT
+  ruta_archivo TEXT
+}
+
+Table Notificacion {
+  id_notificacion INTEGER [pk, increment]
+  id_usuario INTEGER [ref: > Persona.id_persona]
+  titulo VARCHAR(255)
+  mensaje TEXT
+  tipo VARCHAR(255)
+  fecha_envio DATE
+  leida BOOLEAN
+}

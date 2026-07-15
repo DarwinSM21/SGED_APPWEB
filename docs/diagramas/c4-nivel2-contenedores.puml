@@ -1,0 +1,44 @@
+@startuml
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+
+skinparam rectangle {
+  RoundCorner 10
+}
+
+skinparam person {
+  BackgroundColor #08427B
+  FontColor #FFFFFF
+  BorderColor #052E56
+}
+
+title Diagrama C4 Nivel 2 — Contenedores del Sistema ProFútbol
+
+person "Usuario" as USER
+
+rectangle "Navegador Web" as BROWSER {
+  rectangle "Angular 21\n(TypeScript, SPA)\n\nComponentes reactivos\nFormularios reactivos\nRutas internas\nHttpClient" as ANGULAR
+}
+
+rectangle "Backend" as BACKEND {
+  rectangle "Spring Boot 4.0.6\n(Java 21)\n\nAPI REST (Spring MVC)\nAutenticación JWT\nLógica de negocio\nSpring Data JPA" as SPRING
+}
+
+rectangle "Base de Datos" as DATABASE {
+  rectangle "PostgreSQL 16\n\nUsuarios, Estudiantes\nPagos, Evaluaciones\nMembresías\nSoporte JSONB" as PG
+}
+
+rectangle "Sistemas Externos" as EXT {
+  rectangle "Servidor SMTP\n(Gmail/Mailgun)" as SMTP
+  rectangle "Lector RFID\n(Hardware)" as RFID
+}
+
+USER --> ANGULAR : "Interactúa\nHTTPS"
+ANGULAR --> SPRING : "Consume API\nHTTP/JSON\nJWT Auth Header"
+SPRING --> PG : "Consulta y persiste\nJDBC / Spring Data JPA"
+SPRING --> SMTP : "Envía correos\nSMTP/TLS"
+RFID --> SPRING : "Envía presencia\nHTTP POST"
+
+@enduml
