@@ -43,7 +43,7 @@ jobs:
           DB_USER: postgres
           DB_PASSWORD: changeme
           REDIS_HOST: localhost
-        run: ./mvnw -B verify
+        run: bash mvnw -B verify
 
       - name: Publicar reporte JaCoCo
         uses: actions/upload-artifact@v4

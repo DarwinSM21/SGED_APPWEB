@@ -123,7 +123,7 @@ Table Asistencia {
   id_sesion INTEGER [ref: > SesionEntrenamiento.id_sesion]
   id_estudiante INTEGER [ref: > Estudiante.id_estudiante]
   hora_entrada TIME
-  metodo VARCHAR(255]
+  metodo VARCHAR(255)
   estado VARCHAR(55)
 }
 
