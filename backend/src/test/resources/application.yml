@@ -1,0 +1,42 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:sged_test;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+  sql:
+    init:
+      mode: embedded
+
+security:
+  jwt:
+    secret: TEST_SECRET_KEY_FOR_UNIT_TESTS_MINIMO_32_CHARS_2026
+    expiration-ms: 3600000
+    refresh-expiration-ms: 604800000
+    issuer: sged-backend
+    audience: sged-frontend
+  login:
+    max-intentos: 5
+    ventana-minutos: 15
+
+cache:
+  estudiantes:
+    ttl-seconds: 60
