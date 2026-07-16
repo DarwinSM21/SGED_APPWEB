@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,7 +20,9 @@ import org.uteq.backend.auth.repository.PersonaRepository;
 import org.uteq.backend.auth.repository.RolRepository;
 import org.uteq.backend.auth.repository.UsuarioRepository;
 import org.uteq.backend.auth.security.JwtService;
+import org.uteq.backend.auth.security.LoginAttemptService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
+import org.uteq.backend.common.exception.TooManyRequestsException;
 
 import java.time.Instant;
 import java.util.Set;
@@ -36,6 +39,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RedisBlacklistService blacklistService;
+    private final LoginAttemptService loginAttemptService;
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final RolRepository rolRepository;
@@ -77,9 +81,27 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<SesionResponse> login(@Valid @RequestBody LoginRequest request) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+    public ResponseEntity<SesionResponse> login(
+            @Valid @RequestBody LoginRequest request,
+            HttpServletRequest httpRequest) {
+
+        String ip = httpRequest.getRemoteAddr();
+
+        if (loginAttemptService.estaBloqueada(ip)) {
+            throw new TooManyRequestsException(
+                    "Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.");
+        }
+
+        Authentication auth;
+        try {
+            auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        } catch (BadCredentialsException e) {
+            loginAttemptService.registrarFallo(ip);
+            throw e;
+        }
+
+        loginAttemptService.registrarExito(ip);
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String rol = userDetails.getAuthorities().iterator().next().getAuthority();
@@ -87,7 +109,6 @@ public class AuthController {
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
 
-        // Buscar nombre de la persona
         String nombre = usuarioRepository.findByUsername(userDetails.getUsername())
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
                 .orElse(userDetails.getUsername());

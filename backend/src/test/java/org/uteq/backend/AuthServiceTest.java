@@ -26,6 +26,7 @@ import org.uteq.backend.auth.repository.PersonaRepository;
 import org.uteq.backend.auth.repository.RolRepository;
 import org.uteq.backend.auth.repository.UsuarioRepository;
 import org.uteq.backend.auth.security.JwtService;
+import org.uteq.backend.auth.security.LoginAttemptService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 
@@ -56,6 +57,7 @@ class AuthServiceTest {
     @Mock private PersonaRepository personaRepository;
     @Mock private RolRepository rolRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private LoginAttemptService loginAttemptService;
 
     @InjectMocks private AuthController authController;
 
