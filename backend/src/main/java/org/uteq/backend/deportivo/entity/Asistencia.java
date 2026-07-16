@@ -36,6 +36,7 @@ public class Asistencia {
     @Column(name = "hora_entrada")
     private LocalTime horaEntrada;
 
+    @Builder.Default
     @Column(name = "metodo", length = 10, nullable = false)
     @Enumerated(EnumType.STRING)
     private MetodoAsistencia metodo = MetodoAsistencia.MANUAL;

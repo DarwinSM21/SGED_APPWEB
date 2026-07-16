@@ -38,6 +38,7 @@ public class EvaluacionDiaria {
     @Column(name = "observacion_general", columnDefinition = "TEXT")
     private String observacionGeneral;
 
+    @Builder.Default
     @Column(name = "estado", length = 15, nullable = false)
     @Enumerated(EnumType.STRING)
     private EstadoEvaluacion estado = EstadoEvaluacion.BORRADOR;

@@ -3,8 +3,6 @@ package org.uteq.backend.deportivo.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.Instant;
-
 @Entity
 @Table(name = "posiciones", schema = "deportivo")
 @Getter
@@ -28,6 +26,7 @@ public class Posicion {
     @Column(name = "descripcion", length = 255)
     private String descripcion;
 
+    @Builder.Default
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 }

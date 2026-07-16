@@ -31,6 +31,7 @@ public class Entrenador {
     @Column(name = "fecha_contratacion")
     private LocalDate fechaContratacion;
 
+    @Builder.Default
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 

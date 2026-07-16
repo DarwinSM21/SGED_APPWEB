@@ -40,6 +40,7 @@ public class SesionEntrenamiento {
     @Column(name = "campo", length = 100)
     private String campo;
 
+    @Builder.Default
     @Column(name = "estado", length = 20, nullable = false)
     @Enumerated(EnumType.STRING)
     private EstadoSesion estado = EstadoSesion.PROGRAMADA;

@@ -25,9 +25,11 @@ public class CriterioEvaluacion {
     @Column(name = "descripcion", length = 255)
     private String descripcion;
 
+    @Builder.Default
     @Column(name = "puntaje_maximo", nullable = false)
     private Short puntajeMaximo = 10;
 
+    @Builder.Default
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
