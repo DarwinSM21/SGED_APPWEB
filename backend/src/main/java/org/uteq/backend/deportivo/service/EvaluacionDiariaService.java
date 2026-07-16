@@ -18,9 +18,7 @@ import org.uteq.backend.deportivo.repository.*;
 import org.uteq.backend.estudiante.entity.Estudiante;
 import org.uteq.backend.estudiante.repository.EstudianteRepository;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +31,6 @@ public class EvaluacionDiariaService {
     private final SesionEntrenamientoRepository sesionRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final EstudianteRepository estudianteRepository;
-    private final AsistenciaRepository asistenciaRepository;
     private final AsistenciaService asistenciaService;
 
     /**
