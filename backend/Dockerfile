@@ -1,12 +1,15 @@
-FROM eclipse-temurin:21-jdk-alpine AS build
+# Etapa 1: compilar con Maven
+FROM eclipse-temurin:21-jdk AS build
 WORKDIR /app
-COPY .mvn/ .mvn/
-COPY mvnw pom.xml ./
-RUN ./mvnw dependency:go-offline
-COPY src/ src/
-RUN ./mvnw package -DskipTests
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+RUN chmod +x mvnw && ./mvnw dependency:go-offline -B
+COPY src src
+RUN ./mvnw package -DskipTests -B
 
-FROM eclipse-temurin:21-jre-alpine
+# Etapa 2: imagen de produccion con JRE
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080

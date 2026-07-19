@@ -1,4 +1,5 @@
 package org.uteq.backend.auth.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class EstadoGeneral {
 
     @Id
@@ -15,5 +17,6 @@ public class EstadoGeneral {
     @Column(name = "id_estado_general")
     private Long idEstadoGeneral;
 
+    @Column(nullable = false, length = 100)
     private String nombre;
 }

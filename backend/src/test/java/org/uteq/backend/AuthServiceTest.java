@@ -1,119 +1,176 @@
 package org.uteq.backend;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.MediaType;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.uteq.backend.auth.dto.LoginRequest;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.uteq.backend.auth.controller.AuthController;
+import org.uteq.backend.auth.entity.Persona;
 import org.uteq.backend.auth.entity.Rol;
 import org.uteq.backend.auth.entity.Usuario;
-import org.uteq.backend.auth.entity.UsuarioRol;
 import org.uteq.backend.auth.repository.PersonaRepository;
 import org.uteq.backend.auth.repository.RolRepository;
 import org.uteq.backend.auth.repository.UsuarioRepository;
-import org.uteq.backend.auth.repository.UsuarioRolRepository;
 import org.uteq.backend.auth.security.JwtService;
+import org.uteq.backend.auth.security.LoginAttemptService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
-import org.uteq.backend.auth.service.AuthService;
+import org.uteq.backend.common.exception.GlobalExceptionHandler;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+/**
+ * Pruebas unitarias del AuthController.
+ * Usa Mockito + MockMvc standalone (sin contexto Spring completo).
+ */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
-    @Mock UsuarioRepository usuarioRepository;
-    @Mock PersonaRepository personaRepository;
-    @Mock RolRepository rolRepository;
-    @Mock UsuarioRolRepository usuarioRolRepository;
-    @Mock PasswordEncoder passwordEncoder;
-    @Mock JwtService jwtService;
-    @Mock RedisBlacklistService blacklistService;
+    private MockMvc mockMvc;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @InjectMocks AuthService authService;
+    @Mock private AuthenticationManager authenticationManager;
+    @Mock private JwtService jwtService;
+    @Mock private RedisBlacklistService blacklistService;
+    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private PersonaRepository personaRepository;
+    @Mock private RolRepository rolRepository;
+    @Mock private PasswordEncoder passwordEncoder;
+    @Mock private LoginAttemptService loginAttemptService;
 
-    @Test
-    void loginExitoso() {
-        Rol rol = new Rol(1L, "USER", "Usuario");
-        UsuarioRol usuarioRol = new UsuarioRol(1L, null, rol);
-        Usuario usuario = Usuario.builder()
-                .idUsuario(1L)
-                .username("test@uteq.edu.ec")
-                .passwordHash("hashedpass")
-                .activo(true)
-                .usuarioRoles(List.of(usuarioRol))
-                .persona(org.uteq.backend.auth.entity.Persona.builder()
-                        .nombre("Juan").apellido("Perez").build())
+    @InjectMocks private AuthController authController;
+
+    @BeforeEach
+    void setUp() {
+        mockMvc = MockMvcBuilders
+                .standaloneSetup(authController)
+                .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
-
-        when(usuarioRepository.findByUsername("test@uteq.edu.ec"))
-                .thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("123456", "hashedpass")).thenReturn(true);
-        when(jwtService.generateToken("test@uteq.edu.ec", "USER")).thenReturn("jwt-token");
-
-        var response = authService.login(new LoginRequest("test@uteq.edu.ec", "123456"));
-
-        assertNotNull(response);
-        assertEquals("jwt-token", response.token());
-        assertEquals("USER", response.rol());
     }
 
-    @Test
-    void loginClaveIncorrecta() {
-        Usuario usuario = Usuario.builder()
-                .username("test@uteq.edu.ec")
-                .passwordHash("hashedpass")
-                .activo(true)
+    private UserDetails mockUser(String username, String rol) {
+        return User.builder()
+                .username(username)
+                .password("$2a$12$hashedpassword")
+                .authorities(List.of(new SimpleGrantedAuthority(rol)))
                 .build();
-
-        when(usuarioRepository.findByUsername("test@uteq.edu.ec"))
-                .thenReturn(Optional.of(usuario));
-        when(passwordEncoder.matches("wrongpass", "hashedpass")).thenReturn(false);
-
-        assertThrows(RuntimeException.class, () ->
-                authService.login(new LoginRequest("test@uteq.edu.ec", "wrongpass"))
-        );
     }
 
     @Test
-    void loginUsuarioNoEncontrado() {
-        when(usuarioRepository.findByUsername("noexiste@uteq.edu.ec"))
-                .thenReturn(Optional.empty());
+    void loginConCredencialesCorrectas() throws Exception {
+        UserDetails userDetails = mockUser("admin", "ROLE_ADMINISTRADOR");
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
 
-        assertThrows(RuntimeException.class, () ->
-                authService.login(new LoginRequest("noexiste@uteq.edu.ec", "123456"))
-        );
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(auth);
+        when(jwtService.generateToken(anyString(), anyString()))
+                .thenReturn("mock-jwt-token");
+        when(jwtService.generateRefreshToken(anyString(), anyString()))
+                .thenReturn("mock-refresh-token");
+
+        Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
+        Usuario usuario = Usuario.builder().username("admin").persona(persona)
+                .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
+        when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(usuario));
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new java.util.HashMap<>() {{
+                                    put("username", "admin");
+                                    put("password", "Admin2026!");
+                                }})))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("admin"));
     }
 
     @Test
-    void registroUsernameDuplicado() {
-        when(usuarioRepository.findByUsername("duplicado"))
-                .thenReturn(Optional.of(new Usuario()));
+    void loginConContrasenaIncorrecta() throws Exception {
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new BadCredentialsException("Credenciales invalidas"));
 
-        assertThrows(RuntimeException.class, () ->
-                authService.registro(new org.uteq.backend.auth.dto.RegistroRequest(
-                        "Juan", "Perez", "duplicado", "123456"))
-        );
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new java.util.HashMap<>() {{
+                                    put("username", "admin");
+                                    put("password", "WrongPass");
+                                }})))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void loginUsuarioInactivo() {
-        Usuario usuario = Usuario.builder()
-                .username("inactivo@uteq.edu.ec")
-                .passwordHash("hashedpass")
-                .activo(false)
-                .build();
+    void registroEmailDuplicado() throws Exception {
+        when(usuarioRepository.existsByUsername("test@test.com")).thenReturn(true);
 
-        when(usuarioRepository.findByUsername("inactivo@uteq.edu.ec"))
-                .thenReturn(Optional.of(usuario));
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new java.util.HashMap<>() {{
+                                    put("nombre", "Test");
+                                    put("apellido", "User");
+                                    put("username", "test@test.com");
+                                    put("password", "test123");
+                                }})))
+                .andExpect(status().isConflict());
+    }
 
-        assertThrows(RuntimeException.class, () ->
-                authService.login(new LoginRequest("inactivo@uteq.edu.ec", "123456"))
-        );
+    @Test
+    void registroExitoso() throws Exception {
+        when(usuarioRepository.existsByUsername("new@test.com")).thenReturn(false);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
+            Persona p = i.getArgument(0);
+            p.setIdPersona(1L);
+            return p;
+        });
+        when(rolRepository.findByNombre("USER")).thenReturn(
+                Optional.of(Rol.builder().idRol(1L).nombre("USER").build()));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
+            Usuario u = i.getArgument(0);
+            u.setIdUsuario(1L);
+            return u;
+        });
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$12$encoded");
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(
+                                new java.util.HashMap<>() {{
+                                    put("nombre", "Test");
+                                    put("apellido", "User");
+                                    put("username", "new@test.com");
+                                    put("password", "test123");
+                                }})))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.username").value("new@test.com"));
+    }
+
+    @Test
+    void pingRespondePong() throws Exception {
+        mockMvc.perform(get("/api/auth/ping"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("pong"));
     }
 }

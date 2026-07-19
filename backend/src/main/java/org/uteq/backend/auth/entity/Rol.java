@@ -1,4 +1,5 @@
 package org.uteq.backend.auth.entity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -8,6 +9,7 @@ import lombok.*;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Rol {
 
     @Id
@@ -15,7 +17,9 @@ public class Rol {
     @Column(name = "id_rol")
     private Long idRol;
 
+    @Column(nullable = false, length = 50)
     private String nombre;
 
+    @Column(length = 255)
     private String descripcion;
 }

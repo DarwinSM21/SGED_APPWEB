@@ -1,39 +1,12 @@
 import { Routes } from '@angular/router';
-import { authGuard } from './core/guards/auth-guard';
-import { roleGuard } from './core/guards/role-guard';
+import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'login', pathMatch: 'full' },
-  {
-    path: 'login',
-    loadComponent: () => import('./auth/pages/login/login').then((m) => m.Login),
-  },
-  {
-    path: 'admin',
-    loadComponent: () =>
-      import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.Dashboard),
-    canActivate: [roleGuard],
-    data: { roles: ['ADMINISTRADOR', 'RECEPCIONISTA'] },
-  },
-  {
-    path: 'entrenador',
-    loadComponent: () =>
-      import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.Dashboard),
-    canActivate: [roleGuard],
-    data: { roles: ['ENTRENADOR'] },
-  },
-  {
-    path: 'estudiante',
-    loadComponent: () =>
-      import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.Dashboard),
-    canActivate: [roleGuard],
-    data: { roles: ['ESTUDIANTE'] },
-  },
-  {
-    path: 'dashboard',
-    loadComponent: () =>
-      import('./features/dashboard/pages/dashboard/dashboard').then((m) => m.Dashboard),
-    canActivate: [authGuard],
-  },
-  { path: '**', redirectTo: 'login' },
+  { path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
+  { path: 'registro', loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent) },
+  { path: '', canActivate: [authGuard], children: [
+    { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+  ]},
+  { path: '**', redirectTo: '' }
 ];
