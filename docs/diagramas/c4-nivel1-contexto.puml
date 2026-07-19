@@ -1,0 +1,23 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Diagrama C4 Nivel 1 — Contexto del Sistema ProFútbol
+
+Person(athlete, "Estudiante", "Jugador de la escuela; consulta su perfil, evaluaciones y estado de membresía")
+Person(coach, "Entrenador", "Registra asistencia, evaluaciones y plantillas de partido")
+Person(recep, "Recepcionista", "Gestiona estudiantes, pagos, membresías e inventario")
+Person(admin, "Administrador", "Supervisa el sistema, gestiona usuarios, permisos y reportes")
+
+System(sged, "ProFútbol (SGED)", "Sistema de Gestión para Escuela Deportiva. Aplicación web Angular + Spring Boot + PostgreSQL")
+
+System_Ext(smtp, "Servidor SMTP", "Envía correos de notificación (Gmail/Mailgun)")
+System_Ext(rfid, "Lector RFID", "Hardware que envía señal de presencia al endpoint API")
+
+Rel(athlete, sged, "Consulta perfil y evaluaciones", "HTTP/HTTPS")
+Rel(coach, sged, "Registra asistencia, evaluaciones, plantillas", "HTTP/HTTPS")
+Rel(recep, sged, "Gestiona estudiantes, pagos, membresías", "HTTP/HTTPS")
+Rel(admin, sged, "Gestiona usuarios y reportes", "HTTP/HTTPS")
+Rel(sged, smtp, "Envía solicitudes de correo", "SMTP/TLS")
+Rel(rfid, sged, "Envía señal de presencia", "HTTP POST")
+
+@enduml

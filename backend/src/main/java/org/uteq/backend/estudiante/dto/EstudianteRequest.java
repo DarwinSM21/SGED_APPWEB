@@ -1,14 +1,10 @@
 package org.uteq.backend.estudiante.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 public record EstudianteRequest(
-
-        @NotBlank(message = "El nombre es obligatorio")
-        String nombre,
-
-        @NotBlank(message = "El apellido es obligatorio")
-        String apellido,
-
-        String categoria
+        @NotBlank @Size(min = 2, max = 100) String nombre,
+        @NotBlank @Size(min = 2, max = 100) String apellido,
+        @NotBlank @Size(max = 25) String categoria
 ) {}

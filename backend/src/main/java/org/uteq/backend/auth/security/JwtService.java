@@ -1,7 +1,7 @@
 package org.uteq.backend.auth.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,6 +10,10 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Servicio JWT: genera, valida y extrae claims de tokens JWT (RFC 7519).
+ * Usa jjwt 0.12 con HMAC-SHA256 (HS256).
+ */
 @Service
 public class JwtService {
 
@@ -22,9 +26,11 @@ public class JwtService {
     @Value("${security.jwt.refresh-expiration-ms}")
     private long refreshExpirationMs;
 
-    private SecretKey getKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes());
-    }
+    @Value("${security.jwt.issuer:sged-backend}")
+    private String issuer;
+
+    @Value("${security.jwt.audience:sged-frontend}")
+    private String audience;
 
     public String generateToken(String username, String rol) {
         return buildToken(username, rol, expirationMs, "access");
@@ -34,45 +40,58 @@ public class JwtService {
         return buildToken(username, rol, refreshExpirationMs, "refresh");
     }
 
-    private String buildToken(String username, String rol, long expMs, String type) {
-        return Jwts.builder()
-                .subject(username)
-                .claim("rol", rol)
-                .claim("jti", UUID.randomUUID().toString())
-                .claim("type", type)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expMs))
-                .signWith(getKey())
-                .compact();
+    public boolean isTokenValid(String token) {
+        try {
+            Claims claims = parseToken(token).getPayload();
+            java.util.Set<String> aud = claims.getAudience();
+            return aud != null && aud.contains(audience) && !claims.getExpiration().before(new Date());
+        } catch (JwtException | IllegalArgumentException e) {
+            return false;
+        }
     }
 
     public String extractUsername(String token) {
-        return extractClaims(token).getSubject();
-    }
-
-    public String extractJti(String token) {
-        return extractClaims(token).get("jti", String.class);
+        return parseToken(token).getPayload().getSubject();
     }
 
     public String extractRol(String token) {
-        return extractClaims(token).get("rol", String.class);
+        return parseToken(token).getPayload().get("rol", String.class);
+    }
+
+    public String extractJti(String token) {
+        return parseToken(token).getPayload().getId();
     }
 
     public long getExpirationMs() {
         return expirationMs;
     }
 
-    public boolean isTokenValid(String token) {
-        return extractClaims(token)
-                .getExpiration()
-                .after(new Date());
+    private String buildToken(String username, String rol, long ttl, String tokenType) {
+        Date now = new Date();
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .subject(username)
+                .claim("rol", rol)
+                .claim("type", tokenType)
+                .issuer(issuer)
+                .audience().add(audience).and()
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + ttl))
+                .signWith(getSigningKey())
+                .compact();
     }
 
-    private Claims extractClaims(String token) {
+    private Jws<Claims> parseToken(String token) {
         return Jwts.parser()
-                .verifyWith(getKey())
+                .verifyWith(getSigningKey())
+                .requireIssuer(issuer)
                 .build()
-                .parseSignedClaims(token)
-                .getPayload();
+                .parseSignedClaims(token);
+    }
+
+    private SecretKey getSigningKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(
+                java.util.Base64.getEncoder().encodeToString(secret.getBytes()));
+        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

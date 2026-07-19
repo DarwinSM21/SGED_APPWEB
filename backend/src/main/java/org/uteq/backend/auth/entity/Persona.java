@@ -2,7 +2,10 @@ package org.uteq.backend.auth.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDate;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
 
 @Entity
 @Table(name = "personas", schema = "seguridad")
@@ -18,26 +21,25 @@ public class Persona {
     @Column(name = "id_persona")
     private Long idPersona;
 
+    @Column(nullable = false, length = 100)
     private String nombre;
+
+    @Column(nullable = false, length = 100)
     private String apellido;
+
+    @Column(length = 10)
     private String cedula;
+
+    @Column(length = 255)
     private String correo;
+
+    @Column(length = 10)
     private String telefono;
 
     @Column(name = "fecha_nacimiento")
-    private LocalDate fechaNacimiento;
+    private java.time.LocalDate fechaNacimiento;
 
-    private Boolean activo;
-
-    public Long getId() {
-        return idPersona;
-    }
-
-    public String getNombreCompleto() {
-        return nombre + " " + apellido;
-    }
-
-    public String getEmail() {
-        return correo;
-    }
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
 }
