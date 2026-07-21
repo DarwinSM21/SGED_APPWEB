@@ -102,6 +102,12 @@ public class EstudianteService {
         return estudianteRepository.contarActivosPorCategoria(categoria);
     }
 
+    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @Transactional
+    public int desactivarPorCategoria(String categoria) {
+        return estudianteRepository.desactivarPorCategoria(categoria);
+    }
+
     private EstudianteResponse toResponse(Estudiante e) {
         return new EstudianteResponse(
                 e.getIdEstudiante(),
