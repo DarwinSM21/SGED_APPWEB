@@ -1,22 +1,11 @@
 import { HttpInterceptorFn } from '@angular/common/http';
-import { inject } from '@angular/core';
-import { AuthService } from './auth.service';
 
 /**
- * Interceptor JWT: adjunta el accessToken en memoria
- * a cada solicitud HTTP saliente.
- * El accessToken NO se almacena en localStorage (vulnerable a XSS).
+ * Adjunta las cookies de sesion (access_token, refresh_token) a cada
+ * solicitud hacia la API. El JWT viaja en cookies HttpOnly (Bloque A.1),
+ * por lo que JavaScript no lo lee ni lo adjunta manualmente: solo hace
+ * falta pedirle al navegador que envie las cookies con withCredentials.
  */
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
-  const token = authService.getAccessToken();
-
-  if (token) {
-    const cloned = req.clone({
-      setHeaders: { Authorization: `Bearer ${token}` },
-    });
-    return next(cloned);
-  }
-
-  return next(req);
+  return next(req.clone({ withCredentials: true }));
 };
