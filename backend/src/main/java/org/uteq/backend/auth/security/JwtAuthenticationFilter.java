@@ -2,6 +2,7 @@ package org.uteq.backend.auth.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ import java.io.IOException;
 
 /**
  * Filtro JWT que se ejecuta en cada solicitud.
- * 1. Extrae el token del encabezado Authorization: Bearer [token]
+ * 1. Extrae el token de la cookie HttpOnly access_token (Bloque A.1)
  * 2. Valida la firma y expiracion con JwtService
  * 3. Consulta Redis blacklist para verificar que el JTI no este revocado
  * 4. Establece el UsernamePasswordAuthenticationToken en SecurityContextHolder
@@ -25,6 +26,8 @@ import java.io.IOException;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final String ACCESS_COOKIE = "access_token";
 
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
@@ -37,14 +40,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String header = request.getHeader("Authorization");
+        String token = extractAccessToken(request);
 
-        if (header == null || !header.startsWith("Bearer ")) {
+        if (token == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        String token = header.substring(7);
 
         try {
             String username = jwtService.extractUsername(token);
@@ -73,5 +74,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private String extractAccessToken(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
+            if (ACCESS_COOKIE.equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+        return null;
     }
 }

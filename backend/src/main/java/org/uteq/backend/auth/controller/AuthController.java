@@ -1,10 +1,14 @@
 package org.uteq.backend.auth.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,17 +28,22 @@ import org.uteq.backend.auth.security.LoginAttemptService;
 import org.uteq.backend.auth.security.RedisBlacklistService;
 import org.uteq.backend.common.exception.TooManyRequestsException;
 
-import java.time.Instant;
 import java.util.Set;
 
 /**
  * Controlador de autenticacion JWT.
  * Endpoints: registro, login, logout, refresh, /me.
+ * El access token y el refresh token viajan exclusivamente en cookies
+ * HttpOnly + Secure + SameSite=Strict (Bloque A.1 de la guia de la
+ * Tercera Entrega); nunca en el body ni en un header de respuesta.
  */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private static final String ACCESS_COOKIE = "access_token";
+    private static final String REFRESH_COOKIE = "refresh_token";
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -46,6 +55,7 @@ public class AuthController {
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @PostMapping("/registro")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<SesionResponse> registro(@Valid @RequestBody RegisterRequest request) {
         if (usuarioRepository.existsByUsername(request.username())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
@@ -83,7 +93,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<SesionResponse> login(
             @Valid @RequestBody LoginRequest request,
-            HttpServletRequest httpRequest) {
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
 
         String ip = httpRequest.getRemoteAddr();
 
@@ -108,6 +119,7 @@ public class AuthController {
 
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
+        setAuthCookies(httpResponse, accessToken, refreshToken);
 
         String nombre = usuarioRepository.findByUsername(userDetails.getUsername())
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
@@ -121,42 +133,41 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout(HttpServletRequest request) {
-        String header = request.getHeader("Authorization");
-        if (header != null && header.startsWith("Bearer ")) {
-            String token = header.substring(7);
+    public ResponseEntity<Void> logout(
+            @CookieValue(name = ACCESS_COOKIE, required = false) String accessToken,
+            HttpServletResponse httpResponse) {
+
+        if (accessToken != null) {
             try {
-                String jti = jwtService.extractJti(token);
+                String jti = jwtService.extractJti(accessToken);
                 if (jti != null) {
-                    // Calcular tiempo restante de expiracion
-                    long tiempoRestante = jwtService.getExpirationMs() - 1000;
-                    blacklistService.revocar(jti, tiempoRestante);
+                    blacklistService.revocar(jti, jwtService.getExpirationMs());
                 }
             } catch (Exception e) {
                 // Token ya invalido, ignorar
             }
         }
+
+        clearAuthCookies(httpResponse);
         SecurityContextHolder.clearContext();
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<?> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        String refreshToken = request.refreshToken();
+    public ResponseEntity<Void> refresh(
+            @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
+            HttpServletResponse httpResponse) {
 
-        if (!jwtService.isTokenValid(refreshToken)) {
+        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         String username = jwtService.extractUsername(refreshToken);
         String rol = jwtService.extractRol(refreshToken);
-
         String newAccessToken = jwtService.generateToken(username, rol);
+        setAccessCookie(httpResponse, newAccessToken);
 
-        return ResponseEntity.ok(java.util.Map.of(
-                "accessToken", newAccessToken,
-                "tokenType", "Bearer"
-        ));
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/me")
@@ -183,5 +194,31 @@ public class AuthController {
     @GetMapping("/ping")
     public ResponseEntity<String> ping() {
         return ResponseEntity.ok("pong");
+    }
+
+    private void setAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
+        setAccessCookie(response, accessToken);
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                buildCookie(REFRESH_COOKIE, refreshToken, jwtService.getRefreshExpirationMs()).toString());
+    }
+
+    private void setAccessCookie(HttpServletResponse response, String accessToken) {
+        response.addHeader(HttpHeaders.SET_COOKIE,
+                buildCookie(ACCESS_COOKIE, accessToken, jwtService.getExpirationMs()).toString());
+    }
+
+    private void clearAuthCookies(HttpServletResponse response) {
+        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_COOKIE, "", 0).toString());
+        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_COOKIE, "", 0).toString());
+    }
+
+    private ResponseCookie buildCookie(String name, String value, long maxAgeMs) {
+        return ResponseCookie.from(name, value)
+                .httpOnly(true)
+                .secure(true)
+                .sameSite("Strict")
+                .path("/api")
+                .maxAge(maxAgeMs / 1000)
+                .build();
     }
 }
