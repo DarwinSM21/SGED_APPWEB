@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -44,6 +46,7 @@ public class AuthController {
 
     private static final String ACCESS_COOKIE = "sged_access";
     private static final String REFRESH_COOKIE = "sged_refresh";
+    private static final Logger AUTH_AUDIT_LOG = LoggerFactory.getLogger("AUTH_AUDIT");
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -109,6 +112,7 @@ public class AuthController {
                     new UsernamePasswordAuthenticationToken(request.username(), request.password()));
         } catch (BadCredentialsException e) {
             loginAttemptService.registrarFallo(ip);
+            AUTH_AUDIT_LOG.warn("AUTH_LOGIN_FAIL ip={} sub={}", ip, request.username());
             throw e;
         }
 
@@ -116,6 +120,7 @@ public class AuthController {
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String rol = userDetails.getAuthorities().iterator().next().getAuthority();
+        AUTH_AUDIT_LOG.info("AUTH_LOGIN_OK ip={} sub={}", ip, userDetails.getUsername());
 
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
