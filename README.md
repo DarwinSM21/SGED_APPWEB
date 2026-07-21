@@ -32,10 +32,15 @@ En menos de dos minutos:
 
 | Servicio | URL |
 |---|---|
-| Frontend | http://localhost:4200 |
+| Frontend (HTTPS, recomendado) | https://localhost:8443 |
+| Frontend (HTTP, sin cookie de sesion) | http://localhost:4200 |
 | API REST | http://localhost:8080/api |
 | OpenAPI 3.0 | http://localhost:8080/api/docs |
 | Swagger UI | http://localhost:8080/api/swagger-ui.html |
+
+El certificado TLS de `https://localhost:8443` es autofirmado (generado en
+build, solo para desarrollo/evaluacion) — el navegador va a mostrar una
+advertencia de certificado no confiable, es esperado.
 
 **Credenciales semilla** (definidas en `db/seed.sql`):
 
