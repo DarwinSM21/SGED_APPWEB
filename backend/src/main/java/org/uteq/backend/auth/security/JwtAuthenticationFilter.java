@@ -18,7 +18,7 @@ import java.io.IOException;
 
 /**
  * Filtro JWT que se ejecuta en cada solicitud.
- * 1. Extrae el token de la cookie HttpOnly access_token (Bloque A.1)
+ * 1. Extrae el token de la cookie HttpOnly sged_access (Bloque A.1)
  * 2. Valida la firma y expiracion con JwtService
  * 3. Consulta Redis blacklist para verificar que el JTI no este revocado
  * 4. Establece el UsernamePasswordAuthenticationToken en SecurityContextHolder
@@ -27,7 +27,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private static final String ACCESS_COOKIE = "access_token";
+    private static final String ACCESS_COOKIE = "sged_access";
 
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;

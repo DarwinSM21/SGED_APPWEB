@@ -42,8 +42,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private static final String ACCESS_COOKIE = "access_token";
-    private static final String REFRESH_COOKIE = "refresh_token";
+    private static final String ACCESS_COOKIE = "sged_access";
+    private static final String REFRESH_COOKIE = "sged_refresh";
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
