@@ -71,4 +71,14 @@ public class EstudianteController {
     public ResponseEntity<Long> contarActivos(@PathVariable String categoria) {
         return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(categoria));
     }
+
+    /**
+     * Baja logica masiva por categoria (Bloque A.2.2 / auditoria OWASP A01:
+     * solo ADMINISTRADOR, cualquier otro rol debe recibir 403).
+     */
+    @PostMapping("/operaciones/desactivar-categoria")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Integer> desactivarCategoria(@RequestParam String categoria) {
+        return ResponseEntity.ok(estudianteService.desactivarPorCategoria(categoria));
+    }
 }
