@@ -16,10 +16,16 @@ cabecera() {
 }
 
 echo "== A01: control de acceso (usuario sin rol pide recurso de admin -> 403) =="
-# 1. login como usuario básico
-curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/registro" \
+# 0. /api/auth/registro exige rol ADMINISTRADOR (Bloque A.1): iniciamos
+#    sesion con el admin sembrado para poder registrar la cuenta de prueba.
+curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"Admin2026!"}' > /dev/null
+# 1. el admin registra un usuario basico (rol USER por defecto)
+curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
   -H "Content-Type: application/json" \
   -d '{"nombre":"Audit","apellido":"A01","username":"audit_a01","password":"Passw0rd!"}' > /dev/null
+# 2. el usuario basico inicia su propia sesion
 curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"username":"audit_a01","password":"Passw0rd!"}' > /dev/null
@@ -28,6 +34,7 @@ curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
     "$BASE/api/estudiantes/operaciones/desactivar-categoria?categoria=SUB-12"; \
 } > "$OUT/a01-acceso-roto.txt"
 echo "  -> $OUT/a01-acceso-roto.txt"
+rm -f /tmp/sged_admin.jar
 
 echo "== A02: criptografía en tránsito (TLS 1.3) =="
 { cabecera "A02 - Cryptographic Failures";
