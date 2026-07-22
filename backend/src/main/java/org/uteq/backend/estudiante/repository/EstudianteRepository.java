@@ -14,17 +14,17 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
     Page<Estudiante> findByActivoTrue(Pageable pageable);
 
     /**
-     * Agregado COUNT (Bloque A.2.2): obligatoriamente via funcion SQL,
-     * no JPQL. Ver db/procs/fn_contar_estudiantes_activos.sql.
+     * Agregado COUNT (Bloque A.2.2): obligatoriamente via procedimiento
+     * almacenado, no JPQL. Ver db/procs/sp_contar_estudiantes_activos.sql.
      */
-    @Procedure(procedureName = "seguridad.fn_contar_estudiantes_activos")
+    @Procedure(procedureName = "seguridad.sp_contar_estudiantes_activos")
     long contarActivosPorCategoria(@Param("p_categoria") String categoria);
 
     /**
      * Baja logica masiva con criterio de negocio (Bloque A.2.2): update
-     * multi-fila via funcion SQL. Ver
-     * db/procs/fn_desactivar_estudiantes_categoria.sql.
+     * multi-fila via procedimiento almacenado. Ver
+     * db/procs/sp_desactivar_estudiantes_categoria.sql.
      */
-    @Procedure(procedureName = "seguridad.fn_desactivar_estudiantes_categoria")
+    @Procedure(procedureName = "seguridad.sp_desactivar_estudiantes_categoria")
     int desactivarPorCategoria(@Param("p_categoria") String categoria);
 }
