@@ -48,6 +48,9 @@ public class AuthController {
     private static final String REFRESH_COOKIE = "sged_refresh";
     private static final Logger AUTH_AUDIT_LOG = LoggerFactory.getLogger("AUTH_AUDIT");
 
+    @org.springframework.beans.factory.annotation.Value("${security.cookie.secure:true}")
+    private boolean cookieSecure;
+
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final RedisBlacklistService blacklistService;
@@ -119,7 +122,7 @@ public class AuthController {
         loginAttemptService.registrarExito(ip);
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        String rol = userDetails.getAuthorities().iterator().next().getAuthority();
+        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "");
         AUTH_AUDIT_LOG.info("AUTH_LOGIN_OK ip={} sub={}", ip, userDetails.getUsername());
 
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
@@ -178,12 +181,12 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<SesionResponse> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
+        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        String rol = userDetails.getAuthorities().iterator().next().getAuthority();
+        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "");
 
         String nombre = usuarioRepository.findByUsername(userDetails.getUsername())
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
@@ -220,7 +223,7 @@ public class AuthController {
     private ResponseCookie buildCookie(String name, String value, long maxAgeMs) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(true)
+                .secure(cookieSecure)
                 .sameSite("Strict")
                 .path("/api")
                 .maxAge(maxAgeMs / 1000)

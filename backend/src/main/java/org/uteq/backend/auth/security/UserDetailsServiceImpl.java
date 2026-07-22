@@ -33,7 +33,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String rol = usuario.getRoles().stream()
                 .findFirst()
-                .map(r -> r.getNombre())
+                .map(r -> "ROLE_" + r.getNombre())
                 .orElse("ROLE_USER");
 
         List<SimpleGrantedAuthority> autoridades = List.of(
