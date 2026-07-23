@@ -18,17 +18,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.auth.controller.AuthController;
-import org.uteq.backend.auth.entity.Persona;
-import org.uteq.backend.auth.entity.Rol;
-import org.uteq.backend.auth.entity.Usuario;
-import org.uteq.backend.auth.repository.PersonaRepository;
-import org.uteq.backend.auth.repository.RolRepository;
-import org.uteq.backend.auth.repository.UsuarioRepository;
-import org.uteq.backend.auth.security.JwtService;
-import org.uteq.backend.auth.security.LoginAttemptService;
-import org.uteq.backend.auth.security.RedisBlacklistService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
+import org.uteq.backend.seguridad.auth.controller.AuthController;
+import org.uteq.backend.seguridad.auth.entity.Persona;
+import org.uteq.backend.seguridad.auth.entity.Rol;
+import org.uteq.backend.seguridad.auth.entity.UsuarioAuth;
+import org.uteq.backend.seguridad.auth.repository.PersonaRepository;
+import org.uteq.backend.seguridad.auth.repository.RolRepository;
+import org.uteq.backend.seguridad.auth.repository.UsuarioAuthRepository;
+import org.uteq.backend.seguridad.auth.security.JwtService;
+import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
+import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,7 +53,7 @@ class AuthServiceTest {
     @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtService jwtService;
     @Mock private RedisBlacklistService blacklistService;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UsuarioAuthRepository usuarioRepository;
     @Mock private PersonaRepository personaRepository;
     @Mock private RolRepository rolRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -91,7 +91,7 @@ class AuthServiceTest {
                 .thenReturn("mock-refresh-token");
 
         Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
-        Usuario usuario = Usuario.builder().username("admin").persona(persona)
+        UsuarioAuth usuario = UsuarioAuth.builder().username("admin").persona(persona)
                 .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
         when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(usuario));
 
@@ -147,8 +147,8 @@ class AuthServiceTest {
         });
         when(rolRepository.findByNombre("USER")).thenReturn(
                 Optional.of(Rol.builder().idRol(1L).nombre("USER").build()));
-        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
-            Usuario u = i.getArgument(0);
+        when(usuarioRepository.save(any(UsuarioAuth.class))).thenAnswer(i -> {
+            UsuarioAuth u = i.getArgument(0);
             u.setIdUsuario(1L);
             return u;
         });
