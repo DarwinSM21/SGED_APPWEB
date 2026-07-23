@@ -3,7 +3,7 @@ package org.uteq.backend;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.uteq.backend.auth.security.JwtService;
+import org.uteq.backend.seguridad.auth.security.JwtService;
 
 import static org.junit.jupiter.api.Assertions.*;
 
