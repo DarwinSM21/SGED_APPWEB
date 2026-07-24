@@ -14,15 +14,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.auth.dto.*;
-import org.uteq.backend.seguridad.auth.entity.Persona;
-import org.uteq.backend.seguridad.auth.entity.Rol;
-import org.uteq.backend.seguridad.auth.entity.UsuarioAuth;
-import org.uteq.backend.seguridad.auth.repository.PersonaRepository;
-import org.uteq.backend.seguridad.auth.repository.RolRepository;
-import org.uteq.backend.seguridad.auth.repository.UsuarioAuthRepository;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
+import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 
@@ -39,7 +40,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final RedisBlacklistService blacklistService;
     private final LoginAttemptService loginAttemptService;
-    private final UsuarioAuthRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final RolRepository rolRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
@@ -61,10 +62,10 @@ public class AuthController {
                 .orElseGet(() -> rolRepository.save(
                         Rol.builder().nombre("USER").descripcion("Usuario estandar").build()));
 
-        UsuarioAuth usuario = UsuarioAuth.builder()
+        Usuario usuario = Usuario.builder()
                 .persona(persona)
                 .username(request.username())
-                .passwordHash(passwordEncoder.encode(request.password()))
+                .password_Hash(passwordEncoder.encode(request.password()))
                 .activo(true)
                 .roles(Set.of(rolUser))
                 .build();
@@ -80,6 +81,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
+    @Transactional(readOnly = true)
     public ResponseEntity<SesionResponse> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest) {
@@ -108,14 +110,17 @@ public class AuthController {
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
 
-        String nombre = usuarioRepository.findByUsername(userDetails.getUsername())
+        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
                 .orElse(userDetails.getUsername());
 
+        // Asigna el token a la respuesta
         return ResponseEntity.ok(SesionResponse.builder()
                 .username(userDetails.getUsername())
                 .nombre(nombre)
                 .rol(rol)
+                .accessToken(accessToken)   // 👈 AQUÍ USAS LA VARIABLE
+                .refreshToken(refreshToken) // 👈 AQUÍ USAS LA VARIABLE
                 .build());
     }
 

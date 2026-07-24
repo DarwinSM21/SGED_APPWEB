@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.auth.entity;
+package org.uteq.backend.seguridad.rol.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

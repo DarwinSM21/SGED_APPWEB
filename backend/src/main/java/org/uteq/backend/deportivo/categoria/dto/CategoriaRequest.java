@@ -1,5 +1,19 @@
 package org.uteq.backend.deportivo.categoria.dto;
 
-public class CategoriaRequest {
-    
-}
+import jakarta.validation.constraints.*;
+
+public record CategoriaRequest(
+        @NotBlank(message = "El nombre de la categoría es obligatorio")
+        @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
+        String nombre,
+
+        @NotNull(message = "La edad mínima es obligatoria")
+        @Min(value = 4, message = "La edad mínima debe ser al menos 4 años")
+        Short edadMin,
+
+        @NotNull(message = "La edad máxima es obligatoria")
+        Short edadMax,
+
+        @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
+        String descripcion
+) {}

@@ -7,17 +7,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
-import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.config.RedisCacheConfig;
-import org.uteq.backend.seguridad.auth.entity.Persona;
-import org.uteq.backend.seguridad.auth.repository.PersonaRepository;
+import org.uteq.backend.deportivo.categoria.entity.Categoria;
+import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,8 @@ public class EstudianteService {
 
     private final EstudianteRepository estudianteRepository;
     private final PersonaRepository personaRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final EstadoGeneralRepository estadoGeneralRepository;
 
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
@@ -42,28 +48,37 @@ public class EstudianteService {
 
     @Transactional(readOnly = true)
     public EstudianteResponse buscarPorId(Long id) {
-        Estudiante e = estudianteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
-                        "Estudiante no encontrado con id: " + id));
+        Estudiante e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
+            .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + id));
         return toResponse(e);
     }
 
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
-        Persona persona = Persona.builder()
-                .nombre(request.nombre())
-                .apellido(request.apellido())
-                .activo(true)
-                .build();
-        persona = personaRepository.save(persona);
+        // 1. Buscar la Persona existente por su ID
+        Persona persona = personaRepository.findById(request.idPersona())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + request.idPersona()));
 
+        // 2. Buscar Entidades secundarias (Catálogos) 
+        Categoria categoria = categoriaRepository.findById(request.idCategoria())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
+
+        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
+
+        // 3. Crear el Estudiante asignando las relaciones
         Estudiante estudiante = Estudiante.builder()
                 .persona(persona)
-                .categoria(request.categoria())
-                .fechaIngreso(Instant.now())
+                .categoria(categoria)
+                .estadoGeneral(estadoGeneral)
+                .codigoEstudiante(request.codigoEstudiante())
+                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now())
+                .peso(request.peso())
+                .altura(request.altura())
                 .activo(true)
                 .build();
+
         estudiante = estudianteRepository.save(estudiante);
 
         return toResponse(estudiante);
@@ -76,12 +91,35 @@ public class EstudianteService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Estudiante no encontrado con id: " + id));
 
-        Persona persona = estudiante.getPersona();
-        persona.setNombre(request.nombre());
-        persona.setApellido(request.apellido());
-        personaRepository.save(persona);
+        // Reasignar Persona si cambió
+        if (!estudiante.getPersona().getIdPersona().equals(request.idPersona())) {
+            Persona nuevaPersona = personaRepository.findById(request.idPersona())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + request.idPersona()));
+            estudiante.setPersona(nuevaPersona);
+        }
 
-        estudiante.setCategoria(request.categoria());
+        // Reasignar Categoría si cambió
+        if (!estudiante.getCategoria().getIdCategoria().equals(request.idCategoria())) {
+            Categoria categoria = categoriaRepository.findById(request.idCategoria())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
+            estudiante.setCategoria(categoria);
+        }
+
+        // Reasignar Estado General si cambió
+        if (!estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(request.idEstadoGeneral())) {
+            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
+            estudiante.setEstadoGeneral(estadoGeneral);
+        }
+
+        // Actualizar datos propios del estudiante
+        estudiante.setCodigoEstudiante(request.codigoEstudiante());
+        if (request.fechaIngreso() != null) {
+            estudiante.setFechaIngreso(request.fechaIngreso());
+        }
+        estudiante.setPeso(request.peso());
+        estudiante.setAltura(request.altura());
+
         estudiante = estudianteRepository.save(estudiante);
 
         return toResponse(estudiante);
@@ -98,18 +136,24 @@ public class EstudianteService {
     }
 
     @Transactional(readOnly = true)
-    public long contarActivosPorCategoria(String categoria) {
-        return estudianteRepository.contarActivosPorCategoria(categoria);
+    public long contarActivosPorCategoria(Long idCategoria) {
+        return estudianteRepository.countByCategoria_IdCategoriaAndActivoTrue(idCategoria);
     }
 
+    // Mapeador privado Entity -> DTO
     private EstudianteResponse toResponse(Estudiante e) {
         return new EstudianteResponse(
                 e.getIdEstudiante(),
-                e.getPersona().getNombre(),
-                e.getPersona().getApellido(),
-                e.getCategoria(),
+                e.getPersona() != null ? e.getPersona().getNombre() : null,
+                e.getPersona() != null ? e.getPersona().getApellido() : null,
+                e.getCategoria() != null ? e.getCategoria().getNombre() : null,
+                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,
+                e.getCodigoEstudiante(),
+                e.getFechaIngreso(),
+                e.getPeso(),
+                e.getAltura(),
                 e.getActivo(),
-                e.getCreadoEn()
+                e.getCreatedAt() // 👈 Pasa directo e.getCreatedAt()
         );
     }
 }

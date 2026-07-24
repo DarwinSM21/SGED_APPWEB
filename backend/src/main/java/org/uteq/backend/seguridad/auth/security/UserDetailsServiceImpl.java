@@ -8,40 +8,37 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.seguridad.auth.entity.UsuarioAuth;
-import org.uteq.backend.seguridad.auth.repository.UsuarioAuthRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.List;
 
-/**
- * Implementacion de UserDetailsService que consulta la base de datos
- * a traves de UsuarioRepository. Spring Security lo usa en la cadena
- * de autenticacion para cargar el usuario durante el login.
- */
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
 
-    private final UsuarioAuthRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UsuarioAuth usuario = usuarioRepository.findByUsernameAndActivoTrue(username)
+        Usuario usuario = usuarioRepository.findByUsernameAndActivoTrue(username)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Usuario no encontrado: " + username));
 
-        String rol = usuario.getRoles().stream()
-                .findFirst()
-                .map(r -> r.getNombre())
-                .orElse("ROLE_USER");
-
-        List<SimpleGrantedAuthority> autoridades = List.of(
-                new SimpleGrantedAuthority(rol));
+        // 💡 Agregamos "ROLE_" para que reconozca los roles con hasRole(...)
+        List<SimpleGrantedAuthority> autoridades = usuario.getRoles().stream()
+                .map(r -> {
+                    String nombreRol = r.getNombre().startsWith("ROLE_") 
+                            ? r.getNombre() 
+                            : "ROLE_" + r.getNombre();
+                    return new SimpleGrantedAuthority(nombreRol);
+                })
+                .toList();
 
         return User.builder()
                 .username(usuario.getUsername())
-                .password(usuario.getPasswordHash())
+                .password(usuario.getPassword_Hash())
                 .authorities(autoridades)
                 .accountLocked(!usuario.getActivo())
                 .build();

@@ -8,9 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
-import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
 
 /**
@@ -30,10 +30,12 @@ public class EstudianteController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "idEstudiante,asc") String[] sort) {
+        
         String campo = sort[0];
         Sort.Direction dir = sort.length > 1 && "desc".equalsIgnoreCase(sort[1])
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));
+        
         return ResponseEntity.ok(estudianteService.listar(pageRequest));
     }
 
@@ -66,9 +68,10 @@ public class EstudianteController {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/conteo/{categoria}")
+    // Ajustado a Long idCategoria para coincidir con la relación BD/Service
+    @GetMapping("/conteo/categoria/{idCategoria}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<Long> contarActivos(@PathVariable String categoria) {
-        return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(categoria));
+    public ResponseEntity<Long> contarActivos(@PathVariable Long idCategoria) {
+        return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(idCategoria));
     }
 }

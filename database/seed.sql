@@ -29,9 +29,13 @@ WHERE u.username = 'admin' AND r.nombre = 'ADMINISTRADOR';
 
 -- Estudiantes de ejemplo para que el listado y el cache tengan datos
 INSERT INTO seguridad.personas (nombre, apellido, activo)
-VALUES ('Juan', 'Perez', TRUE), ('Maria', 'Lopez', TRUE), ('Carlos', 'Mora', TRUE);
+VALUES ('Admin', 'SGED', TRUE),
+       ('Juan', 'Perez', TRUE), 
+       ('Maria', 'Lopez', TRUE), 
+       ('Carlos', 'Mora', TRUE)
+ON CONFLICT DO NOTHING;
 
-INSERT INTO seguridad.estudiantes (id_persona, categoria, activo)
+INSERT INTO academico.estudiantes (id_persona, categoria, activo)
 SELECT p.id_persona, 'SUB-12', TRUE
 FROM seguridad.personas p
 WHERE p.nombre IN ('Juan', 'Maria', 'Carlos');
