@@ -1,5 +1,11 @@
 package org.uteq.backend.deportivo.entrenador.dto;
 
-public class EntrenadorPageResponse {
-    
-}
+import java.util.List;
+
+public record EntrenadorPageResponse<T>(
+        List<T> content,
+        int pageNumber,
+        int pageSize,
+        long totalElements,
+        int totalPages
+) {}

@@ -4,12 +4,16 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.uteq.backend.seguridad.auth.entity.Persona;
+import org.uteq.backend.deportivo.categoria.entity.Categoria; // Revisa tu paquete de Categoria
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.persona.entity.Persona;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.Instant;
 
 @Entity
-@Table(name = "estudiantes", schema = "seguridad")
+@Table(name = "estudiantes", schema = "academico")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,24 +27,38 @@ public class Estudiante {
     private Long idEstudiante;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_persona")
+    @JoinColumn(name = "id_persona", nullable = false)
     private Persona persona;
 
-    @Column(length = 25)
-    private String categoria;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_categoria", nullable = false)
+    private Categoria categoria;
 
-    @Column(name = "fecha_ingreso")
-    private Instant fechaIngreso;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_estado_general", nullable = false)
+    private EstadoGeneral estadoGeneral;
 
-    @Column(nullable = false)
+    @Column(name = "codigo_estudiante", nullable = false, unique = true, length = 30)
+    private String codigoEstudiante;
+
+    @Column(name = "fecha_ingreso", nullable = false)
+    private LocalDate fechaIngreso;
+
+    @Column(name = "peso", precision = 5, scale = 2)
+    private BigDecimal peso;
+
+    @Column(name = "altura", precision = 5, scale = 2)
+    private BigDecimal altura;
+
+    @Column(name = "activo")
     @Builder.Default
     private Boolean activo = true;
 
     @CreationTimestamp
-    @Column(name = "creado_en", nullable = false, updatable = false)
-    private Instant creadoEn;
+    @Column(name = "created_at", updatable = false)
+    private Instant createdAt;
 
     @UpdateTimestamp
-    @Column(name = "actualizado_en", nullable = false)
-    private Instant actualizadoEn;
-}
+    @Column(name = "updated_at")
+    private Instant updatedAt;
+} 

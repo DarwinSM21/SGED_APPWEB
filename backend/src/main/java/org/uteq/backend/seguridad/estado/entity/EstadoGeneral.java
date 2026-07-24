@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.auth.entity;
+package org.uteq.backend.seguridad.estado.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,10 +13,9 @@ import lombok.*;
 public class EstadoGeneral {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_estado_general")
     private Long idEstadoGeneral;
 
-    @Column(nullable = false, length = 100)
+    @Column(name = "nombre", nullable = false, length = 50)
     private String nombre;
 }

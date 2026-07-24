@@ -1,4 +1,7 @@
 spring:
+  cache:
+    type: redis
+    
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
@@ -39,6 +42,10 @@ security:
 
 cache:
   estudiantes:
+    ttl-seconds: ${CACHE_TTL_SECONDS}
+  entrenadores:
+    ttl-seconds: ${CACHE_TTL_SECONDS}
+  usuarios:
     ttl-seconds: ${CACHE_TTL_SECONDS}
 
 springdoc:

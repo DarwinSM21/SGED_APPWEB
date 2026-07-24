@@ -1,12 +1,15 @@
 package org.uteq.backend.seguridad.auth.dto;
 
-import lombok.Builder;
+import lombok.*;
 
-/**
- * Respuesta de login/refresh desde la Entrega 3: el JWT ya NO viaja en el
- * body sino en cookies HttpOnly (Bloque A.1). El body solo lleva datos
- * de presentación para el frontend.
- */
+@Getter
 @Builder
-public record SesionResponse(String username, String nombre, String rol) {
+@AllArgsConstructor
+@NoArgsConstructor
+public class SesionResponse {
+    private String username;
+    private String nombre;
+    private String rol;
+    private String accessToken;  
+    private String refreshToken; 
 }

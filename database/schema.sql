@@ -63,9 +63,10 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_usuarios_actualizado_en
 BEFORE UPDATE ON seguridad.usuarios
 FOR EACH ROW EXECUTE FUNCTION seguridad.set_actualizado_en();
-CREATE TABLE IF NOT EXISTS seguridad.estudiantes (
+
+CREATE TABLE IF NOT EXISTS deportivo.estudiantes (
     id_estudiante BIGSERIAL PRIMARY KEY,
-    id_persona BIGINT REFERENCES seguridad.personas(id_persona),
+    id_persona BIGINT NOT NULL REFERENCES seguridad.personas(id_persona),
     categoria VARCHAR(25),
     fecha_ingreso TIMESTAMPTZ,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
@@ -73,17 +74,9 @@ CREATE TABLE IF NOT EXISTS seguridad.estudiantes (
     actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE OR REPLACE FUNCTION seguridad.set_estudiante_actualizado_en()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.actualizado_en = NOW();
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
 CREATE TRIGGER trg_estudiantes_actualizado_en
-BEFORE UPDATE ON seguridad.estudiantes
-FOR EACH ROW EXECUTE FUNCTION seguridad.set_estudiante_actualizado_en();
+BEFORE UPDATE ON deportivo.estudiantes
+FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 -- ============================================================
 -- V3: Dominio deportivo
 -- Esquema nuevo "deportivo": entrenadores, posiciones,
@@ -149,12 +142,12 @@ FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 -- ------------------------------------------------------------
 -- Ampliación aditiva de estudiantes: posición y código RFID
 -- ------------------------------------------------------------
-ALTER TABLE seguridad.estudiantes
+ALTER TABLE academico.estudiantes
     ADD COLUMN IF NOT EXISTS id_posicion BIGINT REFERENCES deportivo.posiciones(id_posicion),
     ADD COLUMN IF NOT EXISTS rfid_codigo VARCHAR(100);
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_estudiantes_rfid
-    ON seguridad.estudiantes(rfid_codigo)
+    ON academico.estudiantes(rfid_codigo)
     WHERE rfid_codigo IS NOT NULL;
 
 -- ------------------------------------------------------------
@@ -211,7 +204,7 @@ FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 CREATE TABLE IF NOT EXISTS deportivo.asistencias (
     id_asistencia BIGSERIAL PRIMARY KEY,
     id_sesion BIGINT NOT NULL REFERENCES deportivo.sesiones_entrenamiento(id_sesion),
-    id_estudiante BIGINT NOT NULL REFERENCES seguridad.estudiantes(id_estudiante),
+    id_estudiante BIGINT NOT NULL REFERENCES academico.estudiantes(id_estudiante),
     hora_entrada TIME,
     metodo VARCHAR(10) NOT NULL DEFAULT 'MANUAL'
         CHECK (metodo IN ('RFID', 'MANUAL')),
@@ -291,7 +284,7 @@ FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 CREATE TABLE IF NOT EXISTS deportivo.detalle_evaluacion (
     id_detalle BIGSERIAL PRIMARY KEY,
     id_evaluacion BIGINT NOT NULL REFERENCES deportivo.evaluaciones_diarias(id_evaluacion) ON DELETE CASCADE,
-    id_estudiante BIGINT NOT NULL REFERENCES seguridad.estudiantes(id_estudiante),
+    id_estudiante BIGINT NOT NULL REFERENCES academico.estudiantes(id_estudiante),
     id_criterio BIGINT NOT NULL REFERENCES deportivo.criterios_evaluacion(id_criterio),
     id_posicion_jugada BIGINT REFERENCES deportivo.posiciones(id_posicion),
     puntaje NUMERIC(4,1) NOT NULL CHECK (puntaje >= 0),
@@ -313,7 +306,7 @@ FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 CREATE TABLE IF NOT EXISTS deportivo.observaciones_estudiante (
     id_observacion BIGSERIAL PRIMARY KEY,
     id_evaluacion BIGINT NOT NULL REFERENCES deportivo.evaluaciones_diarias(id_evaluacion) ON DELETE CASCADE,
-    id_estudiante BIGINT NOT NULL REFERENCES seguridad.estudiantes(id_estudiante),
+    id_estudiante BIGINT NOT NULL REFERENCES academico.estudiantes(id_estudiante),
     id_entrenador BIGINT NOT NULL REFERENCES deportivo.entrenadores(id_entrenador),
     texto TEXT NOT NULL,
     creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -347,9 +340,9 @@ GROUP BY d.id_evaluacion, d.id_estudiante, e.fecha;
 --            obligatoriamente en el motor según Bloque A.2.2).
 -- Entrada:  p_categoria VARCHAR
 -- Salida:   BIGINT (total de estudiantes activos de esa categoría)
--- Tablas:   seguridad.estudiantes
+-- Tablas:   academico.estudiantes
 -- Sin SQL dinámico. Parámetros nombrados.
-CREATE OR REPLACE FUNCTION seguridad.fn_contar_estudiantes_activos(
+CREATE OR REPLACE FUNCTION academico.fn_contar_estudiantes_activos(
     p_categoria VARCHAR
 )
 RETURNS BIGINT
@@ -361,7 +354,7 @@ DECLARE
 BEGIN
     SELECT COUNT(*)
       INTO v_total
-      FROM seguridad.estudiantes e
+      FROM academico.estudiantes e
      WHERE e.activo = TRUE
        AND e.categoria = p_categoria;
     RETURN v_total;
@@ -374,9 +367,9 @@ $$;
 --            obligatoriamente en el motor según Bloque A.2.2).
 -- Entrada:  p_categoria VARCHAR
 -- Salida:   INTEGER (número de filas afectadas)
--- Tablas:   seguridad.estudiantes
+-- Tablas:   academico.estudiantes
 -- Sin SQL dinámico. Parámetros nombrados.
-CREATE OR REPLACE FUNCTION seguridad.fn_desactivar_estudiantes_categoria(
+CREATE OR REPLACE FUNCTION academico.fn_desactivar_estudiantes_categoria(
     p_categoria VARCHAR
 )
 RETURNS INTEGER
@@ -385,7 +378,7 @@ AS $$
 DECLARE
     v_afectados INTEGER;
 BEGIN
-    UPDATE seguridad.estudiantes e
+    UPDATE academico.estudiantes e
        SET activo = FALSE
      WHERE e.activo = TRUE
        AND e.categoria = p_categoria;
