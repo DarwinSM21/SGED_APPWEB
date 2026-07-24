@@ -38,9 +38,9 @@ public class GlobalExceptionHandler {
                 .toList();
 
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST, "Errores de validacion");
+                HttpStatus.UNPROCESSABLE_ENTITY, "Errores de validacion");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/Validacion"));
-        pd.setTitle("Bad Request");
+        pd.setTitle("Unprocessable Entity");
         pd.setProperty("errores", errores);
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
