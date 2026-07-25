@@ -1,0 +1,143 @@
+{
+    "metrics": {
+        "http_req_sending": {
+            "avg": 0.03748208861622365,
+            "min": 0.003502,
+            "med": 0.025966,
+            "max": 2.981603,
+            "p(90)": 0.0562024,
+            "p(95)": 0.10982519999999985
+        },
+        "vus": {
+            "value": 5,
+            "min": 5,
+            "max": 50
+        },
+        "iterations": {
+            "count": 16136,
+            "rate": 399.77292139942836
+        },
+        "vus_max": {
+            "value": 50,
+            "min": 50,
+            "max": 50
+        },
+        "http_req_connecting": {
+            "p(95)": 0,
+            "avg": 0.006808296709425545,
+            "min": 0,
+            "med": 0,
+            "max": 5.121464,
+            "p(90)": 0
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "data_sent": {
+            "count": 7503419,
+            "rate": 185898.84321479782
+        },
+        "http_req_duration": {
+            "p(95)": 14.87083179999999,
+            "avg": 7.682809991200359,
+            "min": 1.462696,
+            "med": 7.585951,
+            "max": 344.804678,
+            "p(90)": 12.595701,
+            "thresholds": {
+                "p(95)<200": false
+            }
+        },
+        "iteration_duration": {
+            "p(90)": 113.921436,
+            "p(95)": 116.18507324999999,
+            "avg": 108.71093026580269,
+            "min": 101.662454,
+            "med": 108.64373950000001,
+            "max": 142.319353
+        },
+        "data_received": {
+            "rate": 364293.42147828435,
+            "count": 14703944
+        },
+        "http_req_receiving": {
+            "avg": 0.24779805310776573,
+            "min": 0.015075,
+            "med": 0.144856,
+            "max": 11.390886,
+            "p(90)": 0.502504,
+            "p(95)": 0.7456547999999997
+        },
+        "http_reqs": {
+            "count": 16137,
+            "rate": 399.79769661766085
+        },
+        "http_req_blocked": {
+            "p(90)": 0.0170002,
+            "p(95)": 0.020176199999999988,
+            "avg": 0.020366019954142625,
+            "min": 0.001158,
+            "med": 0.009631,
+            "max": 5.292937
+        },
+        "http_req_duration{expected_response:true}": {
+            "med": 7.585951,
+            "max": 344.804678,
+            "p(90)": 12.595701,
+            "p(95)": 14.87083179999999,
+            "avg": 7.682809991200359,
+            "min": 1.462696
+        },
+        "http_req_failed": {
+            "fails": 16137,
+            "passes": 0,
+            "thresholds": {
+                "rate==0": false
+            },
+            "value": 0
+        },
+        "http_req_waiting": {
+            "avg": 7.3975298494763395,
+            "min": 1.388965,
+            "med": 7.31122,
+            "max": 343.308244,
+            "p(90)": 12.0890826,
+            "p(95)": 14.3491024
+        },
+        "checks": {
+            "passes": 32272,
+            "fails": 0,
+            "value": 1
+        }
+    },
+    "setup_data": {
+        "access": "eyJhbGciOiJIUzM4NCJ9.eyJqdGkiOiJmMjgyNGQ2Yy00Yzc4LTRjZGQtOTA0NS1iZGNhNmE2YTE1ODciLCJzdWIiOiJhZG1pbiIsInJvbCI6IkFETUlOSVNUUkFET1IiLCJ0eXBlIjoiYWNjZXNzIiwiaXNzIjoic2dlZC1iYWNrZW5kIiwiYXVkIjpbInNnZWQtZnJvbnRlbmQiXSwiaWF0IjoxNzg0Njg3OTg5LCJuYmYiOjE3ODQ2ODc5ODksImV4cCI6MTc4NDY5MTU4OX0._RL3iQRTwK6tioZ5UMBwZaIItQWfCuUcwm6WHEl_Ek31EcjtuOc6MkqWHwR3pGdq"
+    },
+    "root_group": {
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {},
+        "checks": {
+                "status 200": {
+                    "path": "::status 200",
+                    "id": "fad9fa412b86fcb03bee97c80dcd61f1",
+                    "passes": 16136,
+                    "fails": 0,
+                    "name": "status 200"
+                },
+                "tiene contenido": {
+                    "fails": 0,
+                    "name": "tiene contenido",
+                    "path": "::tiene contenido",
+                    "id": "7f4d7cc0d98c127e4bc615a103ceed1b",
+                    "passes": 16136
+                }
+            }
+    }
+}
