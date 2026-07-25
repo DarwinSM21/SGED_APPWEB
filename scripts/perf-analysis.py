@@ -60,7 +60,7 @@ def ic95(xs):
     return t * dt(xs) / math.sqrt(len(xs))
 
 reporte = PERF / "REPORT.md"
-with reporte.open("w") as f:
+with reporte.open("w", encoding="utf-8") as f:
     f.write("# Reporte de rendimiento — k6 (Bloque C.1)\n\n")
     f.write(f"- Fecha: {datetime.now(timezone.utc).isoformat()}\n")
     f.write(f"- Commit: {commit_corto()}\n")
