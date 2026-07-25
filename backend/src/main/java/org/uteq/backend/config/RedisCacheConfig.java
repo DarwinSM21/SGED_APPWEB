@@ -1,9 +1,7 @@
 package org.uteq.backend.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
@@ -12,8 +10,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.uteq.backend.estudiante.dto.PageResponse;
 
 import java.time.Duration;
 
@@ -33,20 +32,27 @@ public class RedisCacheConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
-        // GenericJackson2JsonRedisSerializer sin configurar no soporta
-        // java.time.Instant (falla al serializar EstudianteResponse.creadoEn).
+        // GenericJackson2JsonRedisSerializer con default typing NON_FINAL no
+        // agrega @class al objeto raiz cuando este es un record final
+        // (PageResponse lo es): al leer, Jackson no sabe que tipo reconstruir
+        // y falla con "missing type id property '@class'" - error que solo
+        // aparece en el segundo request en adelante (el primero escribe el
+        // cache, nunca lo lee). Como este cache solo guarda un tipo conocido
+        // (PageResponse<EstudianteResponse>), es mas simple y robusto atar el
+        // serializador directamente a esa clase en vez de depender de tipado
+        // polimorfico generico.
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        mapper.activateDefaultTyping(
-                BasicPolymorphicTypeValidator.builder().allowIfSubType(Object.class).build(),
-                ObjectMapper.DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.PROPERTY);
+
+        Jackson2JsonRedisSerializer<PageResponse> serializer =
+                new Jackson2JsonRedisSerializer<>(PageResponse.class);
+        serializer.setObjectMapper(mapper);
 
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofSeconds(ttlSeconds))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair
-                        .fromSerializer(new GenericJackson2JsonRedisSerializer(mapper)));
+                        .fromSerializer(serializer));
 
         return RedisCacheManager.builder(factory)
                 .withCacheConfiguration(CACHE_ESTUDIANTES, config)
