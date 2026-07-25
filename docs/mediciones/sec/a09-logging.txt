@@ -1,11 +1,10 @@
 # Evidencia OWASP A09 - Security Logging and Monitoring Failures
-# Fecha: 2026-07-22T20:36:45Z | Commit: c5aedc7 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-07-25T01:48:23Z | Commit: 3fae486 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
-2026-07-22 20:36:37,869 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
-2026-07-22 20:36:45,482 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
-2026-07-22 20:36:46,003 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_a01@sged.test
-2026-07-22 20:36:47,263 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-07-22 20:36:47,649 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-07-22 20:36:48,055 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-07-22 20:36:48,471 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-07-22 20:36:48,935 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-07-25 01:48:24,704 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
+2026-07-25 01:48:25,427 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_a01@sged.test
+2026-07-25 01:48:26,854 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-07-25 01:48:27,237 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-07-25 01:48:27,636 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-07-25 01:48:28,029 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-07-25 01:48:28,431 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
