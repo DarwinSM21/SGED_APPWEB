@@ -28,6 +28,14 @@ def commit_corto():
     except Exception:
         return "sin-git"
 
+def k6_version():
+    for cmd in (["k6", "version"], ["docker", "run", "--rm", "grafana/k6", "version"]):
+        try:
+            return subprocess.check_output(cmd, text=True, stderr=subprocess.STDOUT).splitlines()[0].strip()
+        except Exception:
+            continue
+    return "k6 version no disponible en este entorno"
+
 filas = []
 for run in RUNS:
     datos = json.loads(run.read_text())
@@ -64,6 +72,7 @@ with reporte.open("w", encoding="utf-8") as f:
     f.write("# Reporte de rendimiento — k6 (Bloque C.1)\n\n")
     f.write(f"- Fecha: {datetime.now(timezone.utc).isoformat()}\n")
     f.write(f"- Commit: {commit_corto()}\n")
+    f.write(f"- Herramienta: {k6_version()}\n")
     f.write(f"- Corridas independientes: {n} (50 VUs, 30 s, seed análisis = 42)\n\n")
     f.write("| Corrida | media (ms) | mediana | p90 | p95 | errores | RPS |\n")
     f.write("|---|---|---|---|---|---|---|\n")

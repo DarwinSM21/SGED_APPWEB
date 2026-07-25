@@ -63,12 +63,16 @@ echo "  -> $OUT/a05-cabeceras.txt"
 
 echo "== A07: 6 intentos fallidos -> 429 =="
 { cabecera "A07 - Identification and Authentication Failures";
-  for i in 1 2 3 4 5 6 7; do
-    echo "--- intento $i ---";
-    curl --include -s -X POST "$BASE/api/auth/login" \
+  for i in 1 2 3 4 5 6; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/auth/login" \
       -H "Content-Type: application/json" \
-      -d '{"username":"admin","password":"incorrecta"}' | head -1;
-  done; \
+      -d '{"username":"admin","password":"incorrecta"}');
+    echo "--- intento $i -> $code ---";
+  done;
+  echo "--- intento 7 (respuesta completa, confirma ProblemDetails en el 429) ---";
+  curl --include -s -X POST "$BASE/api/auth/login" \
+    -H "Content-Type: application/json" \
+    -d '{"username":"admin","password":"incorrecta"}'; \
 } > "$OUT/a07-rate-limit.txt"
 echo "  -> $OUT/a07-rate-limit.txt"
 
