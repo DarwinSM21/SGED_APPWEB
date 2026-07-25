@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GlobalExceptionHandler.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.exception</a> &gt; <span class="el_source">GlobalExceptionHandler.java</span></div><h1>GlobalExceptionHandler.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.exception;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import java.net.URI;
+import java.time.Instant;
+import java.util.List;
+
+/**
+ * Manejador global de excepciones. Todas las respuestas de error
+ * siguen el formato Problem Detail (RFC 7807).
+ */
+@RestControllerAdvice
+<span class="fc" id="L22">public class GlobalExceptionHandler {</span>
+
+<span class="fc" id="L24">    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);</span>
+
+    @ExceptionHandler(ApiException.class)
+    public ProblemDetail handleApiException(ApiException ex) {
+<span class="fc" id="L28">        String tipo = ex.getClass().getSimpleName();</span>
+<span class="fc" id="L29">        ProblemDetail pd = ex.toProblemDetail(tipo, ex.getStatus().getReasonPhrase());</span>
+<span class="fc" id="L30">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L31">        return pd;</span>
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
+<span class="fc" id="L36">        List&lt;String&gt; errores = ex.getBindingResult().getFieldErrors().stream()</span>
+<span class="fc" id="L37">                .map(fe -&gt; fe.getField() + &quot;: &quot; + fe.getDefaultMessage())</span>
+<span class="fc" id="L38">                .toList();</span>
+
+<span class="fc" id="L40">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+                HttpStatus.UNPROCESSABLE_ENTITY, &quot;Errores de validacion&quot;);
+<span class="fc" id="L42">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Validacion&quot;));</span>
+<span class="fc" id="L43">        pd.setTitle(&quot;Unprocessable Entity&quot;);</span>
+<span class="fc" id="L44">        pd.setProperty(&quot;errores&quot;, errores);</span>
+<span class="fc" id="L45">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L46">        return pd;</span>
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
+<span class="fc" id="L51">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+                HttpStatus.UNAUTHORIZED, &quot;Credenciales invalidas&quot;);
+<span class="fc" id="L53">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/NoAutenticado&quot;));</span>
+<span class="fc" id="L54">        pd.setTitle(&quot;Unauthorized&quot;);</span>
+<span class="fc" id="L55">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L56">        return pd;</span>
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+<span class="nc" id="L61">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+                HttpStatus.FORBIDDEN, &quot;No tiene permisos para acceder a este recurso&quot;);
+<span class="nc" id="L63">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/AccesoDenegado&quot;));</span>
+<span class="nc" id="L64">        pd.setTitle(&quot;Forbidden&quot;);</span>
+<span class="nc" id="L65">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="nc" id="L66">        return pd;</span>
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ProblemDetail handleGeneral(Exception ex) {
+<span class="nc" id="L71">        log.error(&quot;Error no controlado&quot;, ex);</span>
+<span class="nc" id="L72">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+                HttpStatus.INTERNAL_SERVER_ERROR, &quot;Error interno del servidor&quot;);
+<span class="nc" id="L74">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Interno&quot;));</span>
+<span class="nc" id="L75">        pd.setTitle(&quot;Internal Server Error&quot;);</span>
+<span class="nc" id="L76">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="nc" id="L77">        return pd;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
