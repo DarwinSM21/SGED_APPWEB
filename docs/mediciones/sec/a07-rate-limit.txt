@@ -1,17 +1,26 @@
 # Evidencia OWASP A07 - Identification and Authentication Failures
-# Fecha: 2026-07-22T20:36:45Z | Commit: c5aedc7 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-07-25T01:48:23Z | Commit: 3fae486 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
---- intento 1 ---
-HTTP/1.1 401 
---- intento 2 ---
-HTTP/1.1 401 
---- intento 3 ---
-HTTP/1.1 401 
---- intento 4 ---
-HTTP/1.1 401 
---- intento 5 ---
-HTTP/1.1 401 
---- intento 6 ---
+--- intento 1 -> 401 ---
+--- intento 2 -> 401 ---
+--- intento 3 -> 401 ---
+--- intento 4 -> 401 ---
+--- intento 5 -> 401 ---
+--- intento 6 -> 429 ---
+--- intento 7 (respuesta completa, confirma ProblemDetails en el 429) ---
 HTTP/1.1 429 
---- intento 7 ---
-HTTP/1.1 429 
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'self'; frame-ancestors 'none'
+Content-Type: application/problem+json
+Transfer-Encoding: chunked
+Date: Sat, 25 Jul 2026 01:48:28 GMT
+
+{"type":"https://sged.uteq.edu.ec/errores/TooManyRequestsException","title":"Too Many Requests","status":429,"detail":"Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.","instance":"/api/auth/login","timestamp":"2026-07-25T01:48:28.586355604Z"}
