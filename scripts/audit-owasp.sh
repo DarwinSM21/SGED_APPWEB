@@ -24,11 +24,11 @@ curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
 # 1. el admin registra un usuario basico (rol USER por defecto)
 curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Audit","apellido":"A01","username":"audit_a01","password":"Passw0rd!"}' > /dev/null
+  -d '{"nombre":"Audit","apellido":"A01","username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
 # 2. el usuario basico inicia su propia sesion
 curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"audit_a01","password":"Passw0rd!"}' > /dev/null
+  -d '{"username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
 { cabecera "A01 - Broken Access Control";
   curl --include -s -b /tmp/sged_a01.jar -X POST \
     "$BASE/api/estudiantes/operaciones/desactivar-categoria?categoria=SUB-12"; \
@@ -53,7 +53,11 @@ echo "  -> $OUT/a03-inyeccion.txt"
 
 echo "== A05: cabeceras de seguridad =="
 { cabecera "A05 - Security Misconfiguration";
-  curl -I -s "$BASE/api/auth/ping"; \
+  echo "-- via HTTP directo al backend ($BASE) --";
+  curl -I -s "$BASE/api/auth/ping";
+  echo "";
+  echo "-- via HTTPS/nginx (HSTS solo aplica sobre conexion segura) --";
+  curl -Ik -s "https://localhost:8443/api/auth/ping"; \
 } > "$OUT/a05-cabeceras.txt"
 echo "  -> $OUT/a05-cabeceras.txt"
 
