@@ -1,0 +1,18 @@
+# Observaciones del Docente y Seguimiento de Cambios
+
+A continuación se presenta la tabla de seguimiento para el control y resolución de las observaciones emitidas por el docente en las entregas 1A y 1B correspondientes al proyecto **SGED / ProFútbol**.
+
+| Código Único | Fuente | Criterio de Rúbrica | Texto de la Observación del Docente | Decisión del Equipo | Hash del Commit |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| OBS-01 | Entrega 1A | D2 Conformidad redacción | La descripción de cada RF es un título ('Registro de estudiantes', etc.); NO usa 'El sistema deberá...'. No conforme (9.4.2). | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-02 | Entrega 1A | E. Arquitectura C4 N1+N2 / G. Modelo datos | C4 N1/N2 y MER contienen texto placeholder '[Reemplazar con PNG]'. Sin diagramas de arquitectura/datos reales. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-03 | Entrega 1A | F. ADR-001 (incoherente con repo) | Incoherencia de stack: documento decide PHP/Laravel/MySQL, pero el repo construye Spring Boot/Angular/PostgreSQL. ADR y capas no corresponden. Reescribir al stack real. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-04 | Entrega 1A | G. Modelo datos (MER+diccionario+DDL) | query.sql con 0 FK y 88 columnas '(PK)/(FK)' literales (export crudo, no funcional). Re-exportar MER limpio con claves foráneas. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-05 | Entrega 1A | I. Cronograma / H. Wireframes / J. Repositorio | Roles sin completar ('Integrante 1/2/3 [Nombre]'); wireframes con marca ajena 'SportPlus'. Falta .env.example, diagramas y PDF en el repo. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-06 | Entrega 1B | C1 Diagramas UML/DER/diccionario | En el repositorio solo consta ADR-003. El diagrama de clases, secuencia y ER aparecen en el informe como texto/tablas; el ER no se adjunta como imagen exportada de pgAdmin. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-07 | Entrega 1B | C2 Autenticacion JWT stateless | AuthController solo expone /login, /me y /ping: NO hay endpoints de registro, logout ni refresh. RedisBlacklistService existe pero no se invoca (logout no expuesto). | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-08 | Entrega 1B | C3 Acceso a datos CRUD+JPA+Flyway | La migración base V1__schema_inicial.sql está VACÍA (0 bytes) y V2 depende del esquema 'seguridad' que ninguna migración crea; con ddl-auto=validate el arranque no es reproducible. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-09 | Entrega 1B | C4 Seguridad OWASP | La blacklist Redis no está cableada a un endpoint y no se aplica @PreAuthorize (solo @EnableMethodSecurity). | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-10 | Entrega 1B | C5 Pruebas JUnit + Postman + metricas | AuthServiceTest.java está VACÍO (0 bytes). La única prueba real es contextLoads(). No se cumple el mínimo de 5 pruebas. La colección Postman no está versionada. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-11 | Entrega 1B | C6 Docker Compose | docker-compose.yml está VACÍO (0 bytes). Existe Dockerfile de backend, pero no hay orquestación de servicios verificable. | *Pendiente / Por revisar* | *Por asignar* |
+| OBS-12 | Entrega 1B | C8 Informe tecnico | Varios contenidos del informe (Docker, pruebas, registro/logout) no se corresponden con lo presente en el repositorio (están vacíos o ausentes). | *Pendiente / Por revisar* | *Por asignar* |

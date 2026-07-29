@@ -5,10 +5,13 @@ server:
   forward-headers-strategy: framework
 
 spring:
+  cache:
+    type: redis
+    
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/sged_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:changeme}
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -22,7 +25,7 @@ spring:
         default_schema: seguridad
 
   flyway:
-    enabled: ${FLYWAY_ENABLED:true}
+    enabled: ${FLYWAY_ENABLED}
     locations: classpath:db/migration
     baseline-on-migrate: true
     schemas: seguridad
@@ -36,18 +39,22 @@ security:
   cookie:
     secure: ${COOKIE_SECURE:true}
   jwt:
-    secret: ${JWT_SECRET:SGED_SUPER_SECRET_KEY_2026_SEGURA_MINIMO_32_CARACTERES}
-    expiration-ms: ${JWT_EXPIRATION_MS:3600000}
-    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
-    issuer: ${JWT_ISSUER:sged-backend}
-    audience: ${JWT_AUDIENCE:sged-frontend}
+    secret: ${JWT_SECRET}
+    expiration-ms: ${JWT_EXPIRATION_MS}
+    refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS}
+    issuer: ${JWT_ISSUER}
+    audience: ${JWT_AUDIENCE}
   login:
-    max-intentos: ${LOGIN_MAX_INTENTOS:5}
-    ventana-minutos: ${LOGIN_VENTANA_MINUTOS:15}
+    max-intentos: ${LOGIN_MAX_INTENTOS}
+    ventana-minutos: ${LOGIN_VENTANA_MINUTOS}
 
 cache:
   estudiantes:
-    ttl-seconds: ${CACHE_TTL_SECONDS:60}
+    ttl-seconds: ${CACHE_TTL_SECONDS}
+  entrenadores:
+    ttl-seconds: ${CACHE_TTL_SECONDS}
+  usuarios:
+    ttl-seconds: ${CACHE_TTL_SECONDS}
 
 springdoc:
   api-docs:
