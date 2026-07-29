@@ -26,7 +26,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Usuario no encontrado: " + username));
 
-<<<<<<< HEAD:backend/src/main/java/org/uteq/backend/seguridad/auth/security/UserDetailsServiceImpl.java
         // 💡 Agregamos "ROLE_" para que reconozca los roles con hasRole(...)
         List<SimpleGrantedAuthority> autoridades = usuario.getRoles().stream()
                 .map(r -> {
@@ -36,16 +35,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     return new SimpleGrantedAuthority(nombreRol);
                 })
                 .toList();
-=======
-        String rol = usuario.getRoles().stream()
-                .findFirst()
-                .map(r -> "ROLE_" + r.getNombre())
-                .orElse("ROLE_USER");
-
-        List<SimpleGrantedAuthority> autoridades = List.of(
-                new SimpleGrantedAuthority(rol));
->>>>>>> origin/main:backend/src/main/java/org/uteq/backend/auth/security/UserDetailsServiceImpl.java
-
         return User.builder()
                 .username(usuario.getUsername())
                 .password(usuario.getPassword_Hash())

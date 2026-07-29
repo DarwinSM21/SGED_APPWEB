@@ -12,17 +12,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
-import org.uteq.backend.estudiante.controller.EstudianteController;
-import org.uteq.backend.estudiante.dto.EstudianteResponse;
-import org.uteq.backend.estudiante.dto.PageResponse;
-import org.uteq.backend.estudiante.service.EstudianteService;
+import org.uteq.backend.academico.estudiante.service.*;
+import org.uteq.backend.academico.estudiante.dto.*;
+import org.uteq.backend.academico.estudiante.controller.*;
 
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -50,13 +50,25 @@ class EstudianteControllerTest {
     }
 
     private EstudianteResponse estudianteResponse() {
-        return new EstudianteResponse(1L, "Juan", "Perez", "SUB-12", true, Instant.now());
+        return new EstudianteResponse(
+                1L,                        
+                "Juan",                    
+                "Perez",                 
+                "SUB-12",                  
+                "ACTIVO",              
+                "EST-001",            
+                LocalDate.now(),           
+                new BigDecimal("60.5"),   
+                new BigDecimal("1.70"),     
+                true,                     
+                Instant.now()          
+        );
     }
 
     @Test
     void listar_devuelve_pagina() throws Exception {
-        PageResponse<EstudianteResponse> pagina =
-                new PageResponse<>(List.of(estudianteResponse()), 0, 10, 1, 1);
+        EstudiantePageResponse<EstudianteResponse> pagina =
+                new EstudiantePageResponse<>(List.of(estudianteResponse()), 0, 10, 1, 1);
         when(estudianteService.listar(any())).thenReturn(pagina);
 
         mockMvc.perform(get("/api/estudiantes"))
@@ -132,20 +144,11 @@ class EstudianteControllerTest {
 
     @Test
     void contarActivos_delega_en_service() throws Exception {
-        when(estudianteService.contarActivosPorCategoria("SUB-12")).thenReturn(3L);
+        when(estudianteService.contarActivosPorCategoria(1L)).thenReturn(3L);
 
-        mockMvc.perform(get("/api/estudiantes/conteo/SUB-12"))
+        mockMvc.perform(get("/api/estudiantes/conteo/1"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("3"));
     }
 
-    @Test
-    void desactivarCategoria_delega_en_service() throws Exception {
-        when(estudianteService.desactivarPorCategoria("SUB-15")).thenReturn(0);
-
-        mockMvc.perform(post("/api/estudiantes/operaciones/desactivar-categoria")
-                        .param("categoria", "SUB-15"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("0"));
-    }
 }
