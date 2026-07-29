@@ -60,4 +60,14 @@ public class GlobalExceptionHandler {
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST, ex.getMessage()); // 👈 ex.getMessage() pasa como el "detail"
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/ReglaDeNegocio"));
+        pd.setTitle("Bad Request");
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
 }

@@ -22,6 +22,9 @@ import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 
 import java.time.LocalDate;
+import java.util.stream.Collectors;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +39,10 @@ public class EstudianteService {
     @Transactional(readOnly = true)
     public EstudiantePageResponse<EstudianteResponse> listar(Pageable pageable) {
         Page<Estudiante> page = estudianteRepository.findByActivoTrue(pageable);
-        var content = page.getContent().stream().map(this::toResponse).toList();
+        // var content = page.getContent().stream().map(this::toResponse).toList();
+        List<EstudianteResponse> content = page.getContent().stream()
+        .map(this::toResponse)
+        .collect(Collectors.toList());
         return new EstudiantePageResponse<>(
                 content,
                 page.getNumber(),
@@ -56,18 +62,50 @@ public class EstudianteService {
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
-        // 1. Buscar la Persona existente por su ID
+        // 1. Buscar si la persona YA tiene un registro como estudiante (activo o inactivo)
+        Optional<Estudiante> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
+
+        if (estudianteExistente.isPresent()) {
+            Estudiante est = estudianteExistente.get();
+            
+            // Si ya está activo, lanzamos la excepción
+            if (Boolean.TRUE.equals(est.getActivo())) {
+                throw new IllegalArgumentException("La persona seleccionada ya cuenta con una ficha de estudiante activa.");
+            }
+
+            // Si estaba inactivo (activo = false), LO REACTIVAMOS Y ACTUALIZAMOS
+            Categoria categoria = categoriaRepository.findById(request.idCategoria())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
+
+            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
+
+            est.setCategoria(categoria);
+            est.setEstadoGeneral(estadoGeneral);
+            est.setCodigoEstudiante(request.codigoEstudiante());
+            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now());
+            est.setPeso(request.peso());
+            est.setAltura(request.altura());
+            est.setActivo(true); // 👈 Re-activación del registro
+
+            est = estudianteRepository.save(est);
+            return toResponse(est);
+        }
+
+        // 2. Si la persona NUNCA ha sido estudiante, procede a crear un nuevo registro desde cero
+        if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {
+            throw new IllegalArgumentException("El código de estudiante '" + request.codigoEstudiante() + "' ya se encuentra en uso.");
+        }
+
         Persona persona = personaRepository.findById(request.idPersona())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + request.idPersona()));
 
-        // 2. Buscar Entidades secundarias (Catálogos) 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
 
         EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
-        // 3. Crear el Estudiante asignando las relaciones
         Estudiante estudiante = Estudiante.builder()
                 .persona(persona)
                 .categoria(categoria)
@@ -80,7 +118,6 @@ public class EstudianteService {
                 .build();
 
         estudiante = estudianteRepository.save(estudiante);
-
         return toResponse(estudiante);
     }
 
@@ -91,8 +128,16 @@ public class EstudianteService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Estudiante no encontrado con id: " + id));
 
-        // Reasignar Persona si cambió
+        // VALIDACIÓN 3: Verificar que si cambia de código, este no le pertenezca a OTRO estudiante
+        if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {
+            throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
+        }
+
+        // Reasignar Persona si cambió (Y validar que la nueva persona tampoco tenga ya una ficha de estudiante)
         if (!estudiante.getPersona().getIdPersona().equals(request.idPersona())) {
+            if (estudianteRepository.existsByPersona_IdPersona(request.idPersona())) {
+                throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
+            }
             Persona nuevaPersona = personaRepository.findById(request.idPersona())
                     .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + request.idPersona()));
             estudiante.setPersona(nuevaPersona);

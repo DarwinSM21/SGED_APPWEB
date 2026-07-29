@@ -10,4 +10,6 @@ public interface EstadoGeneralRepository extends JpaRepository<EstadoGeneral, Lo
     Optional<EstadoGeneral> findByNombre(String nombre);
 
     boolean existsByNombre(String nombre);
+
+
 }
