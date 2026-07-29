@@ -59,6 +59,10 @@ public class SecurityConfig {
                         .authenticationEntryPoint(problemHandlers.problemAuthEntryPoint())
                         .accessDeniedHandler(problemHandlers.problemAccessDeniedHandler())
                 )
+                .headers(headers -> headers
+                        .contentSecurityPolicy(csp ->
+                                csp.policyDirectives("default-src 'self'; frame-ancestors 'none'"))
+                )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

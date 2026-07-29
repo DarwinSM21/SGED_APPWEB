@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- OWASP A09: log de autenticacion con ip, timestamp y sub (username) -->
+    <appender name="AUTH_AUDIT_FILE" class="ch.qos.logback.core.FileAppender">
+        <file>logs/sged-auth.log</file>
+        <append>true</append>
+        <encoder>
+            <pattern>%d{ISO8601} %-5level %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="AUTH_AUDIT" level="INFO" additivity="false">
+        <appender-ref ref="AUTH_AUDIT_FILE"/>
+    </logger>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</configuration>

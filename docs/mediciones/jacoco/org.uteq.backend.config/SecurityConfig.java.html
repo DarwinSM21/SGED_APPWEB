@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.config</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">package org.uteq.backend.config;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.uteq.backend.auth.security.JwtAuthenticationFilter;
+import org.uteq.backend.common.exception.ProblemDetailsAuthHandlers;
+
+import java.util.List;
+
+/**
+ * Configuracion de Spring Security 6.
+ * - CORS para frontend Angular (localhost:4200)
+ * - BCrypt costo 12
+ * - Stateless (sin sesiones HTTP)
+ * - @PreAuthorize habilitado para control por rol
+ * - Filtro JWT en la cadena de filtros
+ */
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final ProblemDetailsAuthHandlers problemHandlers;
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+<span class="fc" id="L45">        return http</span>
+<span class="fc" id="L46">                .cors(cors -&gt; cors.configurationSource(corsConfigurationSource()))</span>
+<span class="fc" id="L47">                .csrf(AbstractHttpConfigurer::disable)</span>
+<span class="fc" id="L48">                .sessionManagement(sm -&gt; sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))</span>
+<span class="fc" id="L49">                .authorizeHttpRequests(auth -&gt; auth</span>
+<span class="fc" id="L50">                        .requestMatchers(&quot;/api/auth/**&quot;).permitAll()</span>
+<span class="fc" id="L51">                        .requestMatchers(&quot;/api/docs/**&quot;, &quot;/api/swagger-ui/**&quot;,</span>
+                                &quot;/api/swagger-ui.html&quot;, &quot;/swagger-ui/**&quot;,
+<span class="fc" id="L53">                                &quot;/v3/api-docs/**&quot;).permitAll()</span>
+<span class="fc" id="L54">                        .requestMatchers(&quot;/actuator/health&quot;, &quot;/actuator/info&quot;).permitAll()</span>
+<span class="fc" id="L55">                        .requestMatchers(HttpMethod.OPTIONS, &quot;/**&quot;).permitAll()</span>
+<span class="fc" id="L56">                        .anyRequest().authenticated()</span>
+                )
+<span class="fc" id="L58">                .exceptionHandling(ex -&gt; ex</span>
+<span class="fc" id="L59">                        .authenticationEntryPoint(problemHandlers.problemAuthEntryPoint())</span>
+<span class="fc" id="L60">                        .accessDeniedHandler(problemHandlers.problemAccessDeniedHandler())</span>
+                )
+<span class="fc" id="L62">                .headers(headers -&gt; headers</span>
+<span class="fc" id="L63">                        .contentSecurityPolicy(csp -&gt;</span>
+<span class="fc" id="L64">                                csp.policyDirectives(&quot;default-src 'self'; frame-ancestors 'none'&quot;))</span>
+                )
+<span class="fc" id="L66">                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)</span>
+<span class="fc" id="L67">                .build();</span>
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+<span class="fc" id="L72">        CorsConfiguration config = new CorsConfiguration();</span>
+<span class="fc" id="L73">        config.setAllowedOrigins(List.of(</span>
+                &quot;http://localhost:4200&quot;,
+                &quot;http://localhost:80&quot;,
+                &quot;http://127.0.0.1:4200&quot;));
+<span class="fc" id="L77">        config.setAllowedMethods(List.of(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, &quot;OPTIONS&quot;));</span>
+<span class="fc" id="L78">        config.setAllowedHeaders(List.of(&quot;Authorization&quot;, &quot;Content-Type&quot;, &quot;Accept&quot;));</span>
+<span class="fc" id="L79">        config.setAllowCredentials(true);</span>
+<span class="fc" id="L80">        config.setMaxAge(3600L);</span>
+
+<span class="fc" id="L82">        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();</span>
+<span class="fc" id="L83">        source.registerCorsConfiguration(&quot;/api/**&quot;, config);</span>
+<span class="fc" id="L84">        return source;</span>
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+<span class="fc" id="L89">        return new BCryptPasswordEncoder(12);</span>
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
+<span class="fc" id="L95">        return config.getAuthenticationManager();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
