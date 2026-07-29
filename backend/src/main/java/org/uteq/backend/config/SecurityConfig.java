@@ -18,8 +18,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.uteq.backend.auth.security.JwtAuthenticationFilter;
 import org.uteq.backend.common.exception.ProblemDetailsAuthHandlers;
+import org.uteq.backend.seguridad.auth.security.JwtAuthenticationFilter;
 
 import java.util.List;
 
@@ -73,7 +73,8 @@ public class SecurityConfig {
         config.setAllowedOrigins(List.of(
                 "http://localhost:4200",
                 "http://localhost:80",
-                "http://127.0.0.1:4200"));
+                "http://127.0.0.1:4200",
+                "http://localhost:5173"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         config.setAllowCredentials(true);

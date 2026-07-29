@@ -18,7 +18,7 @@ services:
       - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
       - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d sged_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -28,6 +28,8 @@ services:
     container_name: sged_redis
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -44,7 +46,7 @@ services:
     env_file:
       - .env
     environment:
-      DB_URL: jdbc:postgresql://postgres:5432/sged_db
+      DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/sged_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
       FLYWAY_ENABLED: "false"
@@ -72,3 +74,4 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
