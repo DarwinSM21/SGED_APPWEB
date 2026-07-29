@@ -90,17 +90,23 @@ public class PersonaService {
     // --- Métodos Privados de Apoyo ---
 
     private void validarUnicidadCedulaYCorreo(String cedula, String correo, Long idActual) {
-        personaRepository.findByCedulaAndActivoTrue(cedula).ifPresent(p -> {
-            if (idActual == null || !p.getIdPersona().equals(idActual)) {
+        if (idActual == null) {
+            // Al CREAR
+            if (personaRepository.existsByCedulaAndActivoTrue(cedula)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }
-        });
-
-        personaRepository.findByCorreo(correo).ifPresent(p -> {
-            if (idActual == null || !p.getIdPersona().equals(idActual)) {
+            if (personaRepository.existsByCorreo(correo)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
             }
-        });
+        } else {
+            // Al EDITAR (Usa las consultas JPQL con != :idPersona)
+            if (personaRepository.existeOtraPersonaConCedula(cedula, idActual)) {
+                throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
+            }
+            if (personaRepository.existeOtraPersonaConCorreo(correo, idActual)) {
+                throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
+            }
+        }
     }
 
     private PersonaResponse toResponse(Persona p) {

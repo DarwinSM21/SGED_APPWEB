@@ -15,7 +15,11 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     Optional<Estudiante> findByIdEstudianteAndActivoTrue(Long idEstudiante);
 
+    boolean existsByPersona_IdPersona(Long idPersona);
+
     boolean existsByCodigoEstudiante(String codigoEstudiante);
 
-    boolean existsByPersona_IdPersona(Long idPersona);
+    Optional<Estudiante> findByPersona_IdPersona(Long idPersona);
+
+    boolean existsByCodigoEstudianteAndIdEstudianteNot(String codigoEstudiante, Long idEstudiante);
 }
