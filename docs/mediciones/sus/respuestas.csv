@@ -1,0 +1,6 @@
+participante,perfil,fecha,p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,t1_completada,t2_completada,t3_completada,t4_completada,t5_completada,t6_completada,t7_completada,observaciones
+# SIN DATOS TODAVIA. Una fila por participante real (minimo 10 externos al equipo).
+# p1..p10 = respuestas del cuestionario SUS en escala 1-5 (ver INSTRUMENTO-SUS.md).
+# t1..t7 = si/no segun si completo cada tarea sin ayuda.
+# perfil = administrativo | entrenador | externo
+# NO INVENTAR FILAS: sus-analysis.py exige >=10 participantes reales y falla si no los hay.
