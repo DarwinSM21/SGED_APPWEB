@@ -1,0 +1,733 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish,es-noindentfirst]{babel}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{tikz}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usetikzlibrary{arrows.meta, positioning, calc, shapes.geometric}
+
+\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{codekeyword}{RGB}{0,0,150}
+\definecolor{codestring}{RGB}{140,0,0}
+\definecolor{codecomment}{RGB}{0,120,0}
+\definecolor{uteqverde}{RGB}{0,90,60}
+\definecolor{alerta}{RGB}{150,30,30}
+\definecolor{okverde}{RGB}{0,110,60}
+
+\lstdefinestyle{codigo}{
+  backgroundcolor=\color{codebg},
+  basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{codekeyword}\bfseries,
+  stringstyle=\color{codestring},
+  commentstyle=\color{codecomment}\itshape,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  breaklines=true,
+  frame=single,
+  rulecolor=\color{black!30},
+  tabsize=2,
+  showstringspaces=false,
+  captionpos=b
+}
+\lstset{style=codigo}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=uteqverde,
+  urlcolor=uteqverde,
+  citecolor=uteqverde,
+  pdftitle={SGED - Informe de la Tercera Entrega},
+  pdfauthor={Arcalle Grefa Darwin Orlando, Pallo Pinto Alejandro Daniel, Velez Lopez Ricardo Elias}
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\setlength{\headheight}{14pt}
+\renewcommand{\headrulewidth}{0.4pt}
+\lhead{SGED --- Tercera Entrega}
+\rhead{Aplicaciones Web --- PPA 2026-2027}
+\cfoot{\thepage}
+
+\newcommand{\ruta}[1]{\texttt{\footnotesize #1}}
+\newcommand{\ok}{\textcolor{okverde}{\textbf{OK}}}
+\newcommand{\pendiente}{\textcolor{alerta}{\textbf{pendiente}}}
+
+\begin{document}
+
+% ============================================================
+% PORTADA
+% ============================================================
+\begin{titlepage}
+\centering
+\vspace*{1cm}
+
+{\LARGE\bfseries UNIVERSIDAD TÉCNICA ESTATAL DE QUEVEDO}\\[0.3cm]
+{\large Facultad de Ciencias de la Ingeniería}\\[0.15cm]
+{\large Carrera de Ingeniería en Software}\\[2cm]
+
+{\Huge\bfseries\color{uteqverde} SGED}\\[0.4cm]
+{\Large Sistema de Gestión para la\\Escuela Deportiva ProFútbol}\\[1.5cm]
+
+{\LARGE\bfseries Informe de la Tercera Entrega}\\[0.4cm]
+{\large Proyecto Fin de Curso --- Aplicaciones Web}\\[2cm]
+
+\begin{tabular}{rl}
+\textbf{Asignatura:} & Aplicaciones Web (Quinto nivel) \\[0.2cm]
+\textbf{Docente:} & Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. \\[0.2cm]
+\textbf{Periodo:} & PPA 2026-2027 \\[0.2cm]
+\textbf{Versión:} & \texttt{v0.9.0-rc} (candidata) \\
+\end{tabular}\\[1.5cm]
+
+{\large\bfseries Integrantes:}\\[0.3cm]
+{\large Arcalle Grefa Darwin Orlando}\\
+{\large Pallo Pinto Alejandro Daniel}\\
+{\large Velez Lopez Ricardo Elias}\\[1.5cm]
+
+{\large\bfseries Repositorio:}\\[0.2cm]
+{\ttfamily\url{https://github.com/DarwinSM21/SGED_APPWEB}}\\[1.5cm]
+
+{\large Quevedo --- Los Ríos --- Ecuador --- 2026}
+
+\vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ============================================================
+\section{Introducción}
+
+Este informe documenta la Tercera Entrega del Proyecto Fin de Curso de la
+asignatura Aplicaciones Web: el sistema \textbf{SGED}, una aplicación web
+para la gestión administrativa y deportiva de la escuela de fútbol formativo
+ProFútbol.
+
+El eje de esta entrega es la \emph{verificabilidad}. Todo lo que se afirma
+aquí puede comprobarse ejecutando el repositorio: cada número proviene de una
+medición archivada en \ruta{docs/mediciones/}, y cada requisito enlaza con el
+archivo que lo implementa y con la prueba que lo cubre.
+
+\subsection{Estado de la entrega: declaración previa}
+
+Antes de exponer los resultados conviene ser explícito sobre dos cosas:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Alcance realmente implementado.} El sistema expone hoy 13
+    \emph{endpoints} REST (autenticación y gestión de estudiantes). El
+    dominio deportivo (entrenadores, horarios, sesiones, asistencias y
+    evaluaciones) está \emph{modelado y migrado} en la base de datos, pero
+    no expuesto vía API. En el documento de requisitos cada elemento indica
+    su estado real, y en este informe se mantiene la misma distinción. No se
+    presenta como entregado nada que no lo esté.
+  \item \textbf{Medición de usabilidad pendiente.} La encuesta SUS exigida
+    por el Bloque~C.3 requiere al menos diez participantes externos. El
+    instrumento y el script de análisis están construidos y versionados,
+    pero \textbf{las respuestas todavía no han sido recolectadas}. No se
+    reportan resultados inventados (sección~\ref{sec:sus}).
+\end{enumerate}
+
+\subsection{Pila tecnológica}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Capa} & \textbf{Tecnología} \\
+\midrule
+Backend & Spring Boot 3.2 (Java 21 LTS), Spring Data JPA, Spring Security \\
+Frontend & Angular, servido por nginx con terminación TLS \\
+Base de datos & PostgreSQL 16 (esquemas \texttt{seguridad} y \texttt{deportivo}) \\
+Caché y revocación & Redis 7 \\
+Migraciones & Flyway (\texttt{V1}--\texttt{V6}) \\
+Orquestación & Docker Compose, imágenes fijadas por digest SHA-256 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+% ============================================================
+\section{Resolución de las observaciones previas (Bloque 0)}
+
+El docente emitió doce observaciones sobre las entregas 1A y 1B. Esta sección
+documenta el estado de cada una con el \emph{commit} que la resuelve, de modo
+que la afirmación sea verificable con \texttt{git show <hash>} y no
+únicamente declarativa.
+
+\renewcommand{\arraystretch}{1.25}
+\begin{longtable}{@{}p{1.3cm}p{6.6cm}p{5.3cm}p{1.6cm}@{}}
+\toprule
+\textbf{Cód.} & \textbf{Observación del docente} & \textbf{Resolución verificable} & \textbf{Commit} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Cód.} & \textbf{Observación} & \textbf{Resolución} & \textbf{Commit} \\
+\midrule
+\endhead
+
+OBS-01 & Los requisitos se redactan como títulos («Registro de
+estudiantes»); no usan «El sistema deberá\ldots». &
+\ruta{docs/requisitos/SRS.md} reescribe los 22 RF y 13 RNF con la forma
+normativa y criterio de verificación~\cite{iso29148}. & \texttt{98bab0d} \\
+
+OBS-02 & Los diagramas C4 N1/N2 y el MER contienen texto marcador
+«[Reemplazar con PNG]». & \ruta{docs/diagramas/} contiene los PNG reales
+más las fuentes \texttt{.puml} y \texttt{.dbml}. & \texttt{bf6ee80} \\
+
+OBS-03 & Incoherencia de pila: el ADR decide PHP/Laravel/MySQL, pero el
+repositorio construye Spring Boot/Angular/PostgreSQL. & ADR-001 reescrito:
+evalúa las tres opciones y decide explícitamente Java 21 con Spring Boot
+3.2.5, coherente con el código. & \texttt{bf6ee80} \\
+
+OBS-04 & \texttt{query.sql} con 0 claves foráneas y 88 columnas
+«(PK)/(FK)» literales; exportación cruda no funcional. & \ruta{db/schema.sql}
+declara 21 restricciones de integridad referencial reales. &
+\texttt{db77ce2} \\
+
+OBS-05 & Roles sin completar («Integrante 1/2/3»); wireframes con marca
+ajena; falta \texttt{.env.example}. & \ruta{CONTRIBUTORS.md} asigna roles
+CRediT por evidencia de \texttt{git log}; \ruta{.env.example} versionado. &
+\texttt{a8d6f18} \\
+
+OBS-06 & En el repositorio solo consta ADR-003; los diagramas aparecen en
+el informe como texto. & Diagramas versionados como archivos; el
+diccionario de datos completo se agrega en
+\ruta{docs/basedatos/DATA-DICTIONARY.md}. & \texttt{98bab0d} \\
+
+OBS-07 & \texttt{AuthController} solo expone \texttt{/login},
+\texttt{/me} y \texttt{/ping}: no hay registro, logout ni refresh.
+\texttt{RedisBlacklistService} existe pero no se invoca. & Seis
+\emph{endpoints} operativos; el logout invoca realmente la lista de
+revocación por \texttt{jti}. & \texttt{b907d10}, \texttt{bcb3642} \\
+
+OBS-08 & La migración \texttt{V1} está vacía (0 bytes) y \texttt{V2}
+depende de un esquema que ninguna migración crea; con
+\texttt{ddl-auto=validate} el arranque no es reproducible. & \texttt{V1}
+crea ambos esquemas y las tablas de identidad; el arranque desde clonación
+limpia se verificó. & \texttt{b907d10} \\
+
+OBS-09 & La lista de revocación no está cableada a ningún
+\emph{endpoint} y no se aplica \texttt{@PreAuthorize}. & Ocho anotaciones
+\texttt{@PreAuthorize} activas; revocación verificada por prueba
+automatizada. & \texttt{688c4be}, \texttt{90c6c57} \\
+
+OBS-10 & \texttt{AuthServiceTest} está vacío (0 bytes); la única prueba
+real es \texttt{contextLoads()}. No se cumple el mínimo de 5 pruebas. La
+colección Postman no está versionada. & 34 pruebas en 7 clases; cobertura
+real 68,1\,\%; \ruta{docs/postman/coleccion.json} versionada. &
+\texttt{1e798bc} \\
+
+OBS-11 & \texttt{docker-compose.yml} está vacío (0 bytes); no hay
+orquestación verificable. & Cuatro servicios orquestados con
+\emph{healthchecks} e imágenes fijadas por digest; \texttt{make up} levanta
+todo. & \texttt{b907d10}, \texttt{17dc5df} \\
+
+OBS-12 & Varios contenidos del informe no se corresponden con lo presente
+en el repositorio (están vacíos o ausentes). & Cada requisito declara su
+estado real (implementado / modelado / planificado); esta entrega no afirma
+nada no verificable. & \texttt{98bab0d} \\
+
+\bottomrule
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+Las doce observaciones tienen resolución trazable. La más costosa de
+resolver no fue una funcionalidad ausente sino OBS-12, porque exigió revisar
+sistemáticamente qué afirmaba el informe anterior frente a lo que el
+repositorio realmente contenía.
+
+% ============================================================
+\section{Arquitectura}
+
+\subsection{Vista de contenedores}
+
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.6cm,
+  caja/.style={draw, rounded corners, fill=codebg, minimum width=3.1cm,
+               minimum height=1.15cm, align=center, font=\small},
+  flecha/.style={-{Latex[length=2.5mm]}, thick, color=uteqverde}
+]
+\node[caja] (nav) {Navegador\\\footnotesize (SPA Angular)};
+\node[caja, right=2.2cm of nav] (ngx) {nginx\\\footnotesize :4200 / :8443 TLS};
+\node[caja, right=2.2cm of ngx] (api) {Spring Boot\\\footnotesize :8080};
+\node[caja, below=1.5cm of api] (pg) {PostgreSQL 16\\\footnotesize esquemas seguridad/deportivo};
+\node[caja, left=2.2cm of pg] (rd) {Redis 7\\\footnotesize caché + revocación JTI};
+
+\draw[flecha] (nav) -- node[above, font=\scriptsize]{HTTPS} (ngx);
+\draw[flecha] (ngx) -- node[above, font=\scriptsize]{HTTP} (api);
+\draw[flecha] (api) -- node[right, font=\scriptsize]{JPA} (pg);
+\draw[flecha] (api) -- node[above, font=\scriptsize, sloped]{cookie JTI} (rd);
+\end{tikzpicture}
+\end{center}
+
+La documentación de arquitectura en el modelo C4~\cite{brown2018c4} y las
+decisiones arquitectónicas (ADR)~\cite{nygard2011adr} se mantienen en
+\ruta{docs/diagramas/} y \ruta{docs/adr/}.
+
+\subsection{Autenticación: JWT en cookie \texttt{HttpOnly}}
+
+El sistema emite el JWT~\cite{rfc7519} exclusivamente en una cookie
+\texttt{HttpOnly}, \texttt{Secure} y \texttt{SameSite=Strict}. El token nunca
+viaja en el cuerpo de la respuesta ni se almacena en \texttt{localStorage},
+de modo que un ataque de \emph{scripting} entre sitios no puede leerlo.
+
+\begin{lstlisting}[caption={Emisión de la cookie de sesión (\ruta{AuthController.java})}]
+ResponseCookie.from("sged_access", token)
+        .httpOnly(true)
+        .secure(cookieSecure)
+        .sameSite("Strict")
+        .path("/")
+        .maxAge(Duration.ofMillis(expiracionMs))
+        .build();
+\end{lstlisting}
+
+Como JWT es \emph{stateless}, cerrar sesión no invalidaría el token por sí
+solo. Por eso el sistema mantiene una lista de revocación en Redis indexada
+por el identificador del token (\texttt{jti}), con tiempo de vida igual al
+tiempo que le restaba al token: un token cerrado deja de ser aceptado
+inmediatamente, aunque su firma siga siendo válida.
+
+% ============================================================
+\section{Estrategia híbrida de acceso a datos}
+
+El Bloque~A.2 de la guía exige una separación explícita entre lo que resuelve
+el ORM y lo que debe resolver el motor de base de datos. La regla adoptada
+es:
+
+\begin{center}
+\begin{tabular}{@{}p{7.3cm}p{7.3cm}@{}}
+\toprule
+\textbf{Spring Data JPA (ORM)} & \textbf{Procedimientos almacenados} \\
+\midrule
+CRUD elemental, consultas paginadas, búsquedas por identificador. &
+Agregaciones, actualizaciones masivas con criterio de negocio, operaciones
+multi-tabla transaccionales. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Los dos procedimientos implementados están versionados en
+\ruta{db/procs/} y creados por migración Flyway~\cite{flyway}:
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\textbf{Procedimiento} & \textbf{Requisito} & \textbf{Motivo} \\
+\midrule
+\texttt{sp\_contar\_estudiantes\_activos} & RF-14 & Agregación \texttt{COUNT} \\
+\texttt{sp\_desactivar\_estudiantes\_categoria} & RF-15 & Actualización masiva transaccional \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Un defecto real: \texttt{FUNCTION} frente a \texttt{PROCEDURE}}
+
+La migración \texttt{V5} creó estos objetos como \texttt{FUNCTION}. Al
+invocarlos desde Java con \texttt{@Procedure}, Spring Data usa
+\texttt{CallableStatement} con sintaxis \texttt{\{call ...\}}, y PostgreSQL
+solo acepta \texttt{CALL} contra procedimientos reales~\cite{postgresql16};
+el error era explícito: \emph{«... is not a procedure. Hint: To call a
+function, use SELECT.»}
+
+La migración \texttt{V6} los convierte en \texttt{PROCEDURE} con parámetro de
+salida. Se documenta porque ilustra la diferencia entre «el procedimiento
+existe» y «el procedimiento se invoca de verdad»: en la versión anterior el
+objeto SQL estaba creado pero quedaba huérfano, y la aplicación seguía
+contando en memoria.
+
+\begin{lstlisting}[caption={Invocación real desde el repositorio (\ruta{EstudianteRepository.java})}]
+@Procedure(procedureName = "seguridad.sp_contar_estudiantes_activos")
+Long contarActivosPorCategoria(@Param("p_categoria") String categoria);
+\end{lstlisting}
+
+\subsection{Ausencia de SQL dinámico}
+
+Ninguna capa construye sentencias SQL por concatenación de cadenas. Toda
+consulta usa parámetros vinculados (JPA) o parámetros nombrados (los
+procedimientos). El repositorio incluye una auditoría automatizada
+(\ruta{scripts/audit-sql-dynamic.sh}) integrada en \texttt{make audit}.
+
+% ============================================================
+\section{Requisitos y modelo de datos}
+
+\subsection{Resumen de requisitos}
+
+La especificación completa está en \ruta{docs/requisitos/SRS.md}. Se resumen
+aquí los requisitos funcionales con su estado real y el \emph{endpoint} o
+esquema que los materializa.
+
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{@{}p{1.3cm}p{7.4cm}p{4.6cm}p{1.7cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Requisito} & \textbf{Implementación} & \textbf{Estado} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{ID} & \textbf{Requisito} & \textbf{Implementación} & \textbf{Estado} \\
+\midrule
+\endhead
+
+RF-01 & Registro de usuarios por administrador & \texttt{POST /api/auth/registro} & \ok \\
+RF-02 & Autenticación con JWT en cookie \texttt{HttpOnly} & \texttt{POST /api/auth/login} & \ok \\
+RF-03 & Cierre de sesión con revocación efectiva por \texttt{jti} & \texttt{POST /api/auth/logout} & \ok \\
+RF-04 & Renovación de sesión sin re-credenciales & \texttt{POST /api/auth/refresh} & \ok \\
+RF-05 & Consulta de la sesión activa & \texttt{GET /api/auth/me} & \ok \\
+RF-06 & Bloqueo tras 5 intentos fallidos en 15 minutos & \texttt{LoginAttemptService} & \ok \\
+RF-07 & Comprobación de disponibilidad & \texttt{GET /api/auth/ping} & \ok \\
+RF-08 & Listado paginado de estudiantes & \texttt{GET /api/estudiantes} & \ok \\
+RF-09 & Consulta por identificador con \texttt{404} tipificado & \texttt{GET /api/estudiantes/\{id\}} & \ok \\
+RF-10 & Registro transaccional de estudiante & \texttt{POST /api/estudiantes} & \ok \\
+RF-11 & Validación del formato de categoría (\texttt{SUB-NN}) & \texttt{EstudianteRequest} & \ok \\
+RF-12 & Actualización de estudiante & \texttt{PUT /api/estudiantes/\{id\}} & \ok \\
+RF-13 & Baja lógica preservando el historial & \texttt{DELETE /api/estudiantes/\{id\}} & \ok \\
+RF-14 & Conteo de activos por categoría (en el motor) & \texttt{sp\_contar\_estudiantes\_activos} & \ok \\
+RF-15 & Desactivación masiva por categoría (en el motor) & \texttt{sp\_desactivar\_estudiantes\_categoria} & \ok \\
+\midrule
+RF-16 & Gestión de entrenadores & \texttt{deportivo.entrenadores} & Modelado \\
+RF-17 & Horarios recurrentes de entrenamiento & \texttt{horarios\_entrenamiento} & Modelado \\
+RF-18 & Sesiones de entrenamiento con ciclo de estados & \texttt{sesiones\_entrenamiento} & Modelado \\
+RF-19 & Asistencia por RFID o manual & \texttt{deportivo.asistencias} & Modelado \\
+RF-20 & Evaluación diaria por criterios & \texttt{detalle\_evaluacion} & Modelado \\
+RF-21 & Promedios de evaluación & \texttt{v\_promedio\_evaluacion} & Modelado \\
+RF-22 & Notificación a representantes & --- & Planificado \\
+\bottomrule
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+Los requisitos no funcionales (RNF-01 a RNF-13) se verifican con las
+mediciones de la sección siguiente. La matriz
+\ruta{docs/trazabilidad/matriz.csv} enlaza cada uno con su prueba y su
+evidencia.
+
+\subsection{Modelo de datos}
+
+El esquema se divide en dos espacios de nombres con responsabilidades
+separadas:
+
+\begin{center}
+\begin{tabular}{@{}llp{7.4cm}@{}}
+\toprule
+\textbf{Esquema} & \textbf{Tablas} & \textbf{Contenido} \\
+\midrule
+\texttt{seguridad} & 6 & Personas, usuarios, roles, relación usuario-rol,
+estados y estudiantes. \\
+\texttt{deportivo} & 9 & Posiciones, entrenadores, horarios, sesiones,
+asistencias, criterios, evaluaciones, detalle y observaciones. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Decisiones de modelado relevantes, todas materializadas como restricciones
+en el motor y no solo como validación en la aplicación:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Baja lógica en lugar de borrado.} Las asistencias y
+    evaluaciones referencian al estudiante por clave foránea; borrarlo
+    físicamente destruiría su historial deportivo.
+  \item \textbf{Unicidad parcial del código RFID.}
+    \texttt{UNIQUE \ldots WHERE rfid\_codigo IS NOT NULL} permite muchos
+    estudiantes sin credencial, pero impide que dos compartan la misma.
+  \item \textbf{Una asistencia por sesión y estudiante.}
+    \texttt{UNIQUE (id\_sesion, id\_estudiante)}.
+  \item \textbf{Posición jugada por evaluación.}
+    \texttt{detalle\_evaluacion} guarda la posición de \emph{ese} día,
+    distinta de la habitual del estudiante, para que el histórico quede
+    correctamente etiquetado cuando alguien juega fuera de su posición.
+  \item \textbf{Coherencia temporal.}
+    \texttt{CHECK (hora\_fin > hora\_inicio)} y
+    \texttt{CHECK (dia\_semana BETWEEN 1 AND 7)} en los horarios.
+\end{itemize}
+
+El diccionario completo, con tipos, restricciones y disparadores, está en
+\ruta{docs/basedatos/DATA-DICTIONARY.md}. El esquema no lo genera el ORM:
+\texttt{ddl-auto} está fijado en \texttt{validate}, de modo que la aplicación
+falla al arrancar si el esquema real y las entidades divergen.
+
+% ============================================================
+\section{Evidencia empírica}
+
+Todas las mediciones de esta sección se generaron ejecutando el sistema real
+levantado con \texttt{make up}, no en simulación, y sus artefactos crudos
+están versionados.
+
+\subsection{Rendimiento (Bloque C.1)}
+
+Tres corridas independientes de k6 con 50 usuarios virtuales durante 30
+segundos contra el \emph{endpoint} protegido \texttt{GET /api/estudiantes}:
+
+\begin{center}
+\begin{tabular}{@{}lrrrrr@{}}
+\toprule
+\textbf{Corrida} & \textbf{Media (ms)} & \textbf{Mediana} & \textbf{p90} & \textbf{p95} & \textbf{RPS} \\
+\midrule
+1 & 6,53 & 5,26 & 11,38 & 14,45 & 404,21 \\
+2 & 6,67 & 5,94 & 11,63 & 15,32 & 403,52 \\
+3 & 6,25 & 5,66 & 10,37 & 12,78 & 405,99 \\
+\midrule
+\textbf{Agregado} & \textbf{6,48} & --- & --- & \textbf{14,18} & \textbf{404,57} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Con intervalo de confianza al 95\,\%: media $6{,}48 \pm 0{,}53$\,ms, p95
+$14{,}18 \pm 3{,}20$\,ms, throughput $404{,}57 \pm 3{,}16$\,RPS, y
+\textbf{0\,\% de errores} en las tres corridas.
+
+El umbral exigido es p95 $<$ 200\,ms con caché caliente~\cite{iso25010}. El
+resultado lo cumple con un margen de más de un orden de magnitud. \ok
+
+\subsection{Seguridad: OWASP Top 10 (Bloque C.4)}
+
+Seis controles verificados con peticiones reales contra el sistema en
+ejecución~\cite{owasp2021}:
+
+\begin{center}
+\begin{tabular}{@{}llp{7.6cm}@{}}
+\toprule
+\textbf{Control} & \textbf{Resultado} & \textbf{Evidencia observada} \\
+\midrule
+A01 Control de acceso & \ok & \texttt{403} al operar sin el rol requerido \\
+A02 Fallos criptográficos & \ok & TLS 1.3 en \texttt{:8443}; BCrypt coste 12 \\
+A03 Inyección & \ok & \texttt{422} ante entrada malformada; sin SQL dinámico \\
+A05 Configuración & \ok & CSP, HSTS, \texttt{nosniff}, \texttt{X-Frame-Options: DENY} \\
+A07 Fallos de autenticación & \ok & Bloqueo exacto en el sexto intento (\texttt{429}) \\
+A09 Registro y monitoreo & \ok & \texttt{AUTH\_LOGIN\_OK/FAIL} con IP, marca de tiempo y sujeto \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Los errores se devuelven como \texttt{ProblemDetail}~\cite{rfc9457}, sin
+trazas de pila ni detalles internos. Ejemplo real capturado para A07:
+
+\begin{lstlisting}[caption={Respuesta al sexto intento de autenticación}]
+HTTP/1.1 429
+Content-Type: application/problem+json
+{
+  "type":   "https://sged.uteq.edu.ec/errores/DemasiadasPeticiones",
+  "title":  "Too Many Requests",
+  "status": 429,
+  "detail": "Demasiados intentos fallidos. Intente mas tarde."
+}
+\end{lstlisting}
+
+\subsection{Cobertura de pruebas}
+
+34 pruebas distribuidas en 7 clases, con \textbf{68,1\,\%} de cobertura de
+instrucciones medida por JaCoCo (1073 cubiertas de 1575). El umbral exigido
+es 60\,\%. \ok
+
+\begin{center}
+\begin{tabular}{@{}lrp{7.6cm}@{}}
+\toprule
+\textbf{Clase de prueba} & \textbf{Nº} & \textbf{Qué verifica} \\
+\midrule
+\texttt{AuthServiceTest} & 5 & Login correcto e incorrecto, registro, registro duplicado, disponibilidad. \\
+\texttt{JwtServiceTest} & 4 & Emisor y audiencia válidos, audiencia distinta rechazada, token manipulado, refresco. \\
+\texttt{LoginAttemptServiceTest} & 6 & Bloqueo al alcanzar el límite, no reinicio del TTL, borrado del contador al acertar. \\
+\texttt{RedisBlacklistServiceTest} & 4 & Revocación con TTL restante, TTL no positivo ignorado, consulta de revocación. \\
+\texttt{EstudianteControllerTest} & 9 & Los siete verbos del recurso más \texttt{404} y \texttt{422}. \\
+\texttt{EstudianteServiceTest} & 5 & Paginación envuelta, baja lógica, persistencia transacional, delegación al procedimiento SQL. \\
+\texttt{BackendApplicationTests} & 1 & Arranque del contexto contra el esquema migrado. \\
+\midrule
+\textbf{Total} & \textbf{34} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Un detalle relevante: durante esta entrega se descubrió que JaCoCo
+\emph{nunca} había generado cobertura real, porque el \texttt{argLine}
+configurado en Surefire sobrescribía el \emph{javaagent} del propio JaCoCo.
+El informe anterior reportaba un valor que el sistema no estaba midiendo.
+
+Las pruebas de \texttt{LoginAttemptServiceTest} merecen mención aparte:
+verifican no solo que el bloqueo ocurra, sino que un fallo posterior
+\emph{no} reinicie la ventana de tiempo. Sin esa segunda propiedad, un
+atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
+—según cómo se implemente— reiniciar el contador y evadir el límite.
+
+\subsection{Calidad web: Lighthouse (Bloque C.5)}
+
+Tres corridas con perfil móvil (Lighthouse v13.4.1):
+
+\begin{center}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+\textbf{Categoría} & \textbf{Media} & \textbf{Umbral} & \textbf{Estado} \\
+\midrule
+Rendimiento & 92,3 & $\geq$ 80 & \ok \\
+Accesibilidad & 100 & $\geq$ 90 & \ok \\
+Buenas prácticas & 96 & $\geq$ 90 & \ok \\
+SEO & 63 & $\geq$ 90 & Ver §\ref{sec:seo} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Métricas Web Vitals: LCP 2,86\,s; FCP 2,43\,s; TBT 25,7\,ms; y CLS
+\textbf{0,000} en las tres corridas (la interfaz no desplaza contenido
+durante la carga).
+
+Esta medición expuso, y permitió corregir, tres defectos reales del
+frontend: el documento declaraba \texttt{lang="en"} en una aplicación
+íntegramente en español; conservaba el título \texttt{Frontend} generado por
+Angular CLI y no tenía descripción; y carecía de un elemento \texttt{<main>},
+lo que hacía fallar la auditoría de puntos de referencia de accesibilidad.
+Corregidos los tres, la accesibilidad pasó de 97 a \textbf{100}.
+
+Se corrigió además un defecto en la propia configuración de medición:
+\ruta{lighthouserc.js} declaraba \texttt{preset: 'mobile'}, un valor que no
+existe en Lighthouse, lo que abortaba toda corrida con código de salida 1.
+Es decir, \textbf{esta medición nunca se había podido ejecutar}.
+
+\subsubsection{Por qué el SEO de 63 es el resultado correcto}
+\label{sec:seo}
+
+El puntaje SEO bajó de 82 a 63 \emph{a causa de una corrección deliberada}.
+Al añadir un \ruta{robots.txt} válido con \texttt{Disallow: /}, Lighthouse
+activa la penalización \texttt{is-crawlable} («página bloqueada para
+indexación»), que por sí sola descuenta 27 puntos, porque su categoría SEO
+asume que el sitio \emph{quiere} ser indexado.
+
+SGED es una aplicación de gestión interna que trata datos personales de
+menores de edad. Que fuese indexable por buscadores sería un defecto de
+privacidad, no una virtud. Elevar el SEO a 90 exigiría eliminar el
+\ruta{robots.txt}: degradar la privacidad del sistema para mejorar una
+métrica. Se optó por lo contrario, se relajó el umbral agregado de esa
+categoría a advertencia con la justificación escrita en el propio archivo de
+configuración, y se mantuvieron como bloqueantes las auditorías SEO que sí
+aplican a una aplicación interna (\texttt{meta-description},
+\texttt{document-title}, \texttt{html-has-lang}, \texttt{viewport}), todas
+ellas en 1,0. \ok
+
+\subsection{Usabilidad: SUS (Bloque C.3)}
+\label{sec:sus}
+
+\textbf{Medición pendiente.} El instrumento
+(\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}) contiene el cuestionario SUS
+de diez ítems~\cite{brooke1996}, el protocolo con siete tareas trazadas a
+requisitos concretos, y la escala adjetival de
+interpretación~\cite{bangor2009}. El script \ruta{scripts/sus-analysis.py}
+calcula media, desviación típica, intervalo de confianza al 95\,\%, mediana y
+tasa de éxito por tarea.
+
+El script se niega deliberadamente a ejecutarse con menos de diez
+participantes. Las respuestas no han sido recolectadas todavía, y una muestra
+fabricada invalidaría la medición. La aritmética del cálculo sí quedó
+verificada contra los cuatro casos de referencia de la literatura (0, 50, 75
+y 100 puntos).
+
+% ============================================================
+\section{Reproducibilidad}
+
+El sistema se levanta completo desde una clonación limpia con un solo
+comando:
+
+\begin{lstlisting}[language=bash,caption={Arranque reproducible}]
+git clone https://github.com/DarwinSM21/SGED_APPWEB.git
+cd SGED_APPWEB
+cp .env.example .env
+make up
+\end{lstlisting}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Objetivo} & \textbf{Acción} \\
+\midrule
+\texttt{make up} & Levanta el sistema completo \\
+\texttt{make test} & JUnit 5 + cobertura JaCoCo \\
+\texttt{make bench} & 3 corridas k6 + análisis con IC 95\,\% \\
+\texttt{make audit} & Auditoría OWASP (6 controles) + SQL dinámico \\
+\texttt{make clean} & Limpia contenedores, volúmenes y compilaciones \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Las imágenes de PostgreSQL y Redis están fijadas por digest SHA-256, no por
+etiqueta móvil: dos construcciones del mismo \emph{commit} usan exactamente
+los mismos binarios. La reproducibilidad se verificó clonando el repositorio
+en un directorio independiente, no solo reiniciando el volumen local.
+
+% ============================================================
+\section{Consideraciones éticas}
+
+El sistema trata datos personales de niños, niñas y adolescentes: nombres,
+cédula, fecha de nacimiento, asistencia con hora y lugar, y evaluaciones
+individuales de desempeño. Esa combinación es sensible porque los titulares
+son menores que no pueden consentir por sí mismos, porque la asistencia es
+información de localización temporal, y porque las evaluaciones constituyen
+perfilado de personas~\cite{lopdp2021,acm2018}.
+
+Se aplicó minimización: se decidió \emph{no} recolectar peso, altura,
+contextura ni datos de alimentación, pese a haber sido considerados en el
+diseño, por tratarse de datos de salud cuya recolección exigiría garantías
+que este proyecto no puede sostener.
+
+\ruta{docs/etica/ETHICS.md} documenta además cinco hallazgos abiertos, en
+lugar de afirmar que todo está resuelto: la cédula se almacena sin validación
+ni cifrado; las observaciones del entrenador son texto libre sin control
+sobre un menor; no existe mecanismo de supresión de datos (la baja lógica
+preserva el historial pero no es un borrado); el consentimiento del
+representante no está modelado, lo que bloquea el módulo de notificaciones; y
+el certificado TLS es autofirmado, adecuado para evaluación pero no para
+producción.
+
+Todos los datos del repositorio son ficticios. No se utilizaron datos reales
+de menores en ninguna etapa del desarrollo ni de las mediciones.
+
+% ============================================================
+\section{Trazabilidad y honestidad académica}
+
+La matriz \ruta{docs/trazabilidad/matriz.csv} enlaza cada requisito con su
+historia de usuario, su caso de uso, su \emph{endpoint}, el archivo que lo
+implementa, la prueba JUnit que lo cubre y la evidencia empírica
+correspondiente.
+
+El historial de \texttt{git} evidencia la autoría de cada integrante. Se
+documenta en \ruta{CONTRIBUTORS.md} que dos \emph{commits} figuran bajo una
+cuenta distinta por haber sido realizados desde un equipo de la universidad
+con otra sesión configurada; la aclaración se hace por escrito en lugar de
+reescribir el historial ya compartido. El mismo archivo declara
+explícitamente el uso de herramientas de asistencia por inteligencia
+artificial, siguiendo la guía de transparencia del SWEBOK
+v4.0~\cite{swebok2024}.
+
+% ============================================================
+\section{Conclusiones}
+
+\begin{enumerate}[leftmargin=*]
+  \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
+    p95 de 14,18\,ms frente a un límite de 200\,ms, 68,1\,\% de cobertura
+    frente a un mínimo de 60\,\%, y 6 de 6 controles OWASP verificados con
+    evidencia reproducible.
+
+  \item El aporte más sustantivo de esta entrega no fue añadir
+    funcionalidad, sino \emph{verificar} lo que ya existía. Ese ejercicio
+    reveló defectos que ninguna revisión de código había detectado: JaCoCo
+    no medía cobertura en absoluto, los procedimientos almacenados estaban
+    creados pero nunca se invocaban, la caché se rompía desde la segunda
+    petición, y la configuración de Lighthouse impedía ejecutar la medición.
+    Todos se corrigieron durante esta entrega.
+
+  \item La distinción entre lo implementado y lo modelado se mantiene
+    explícita en todo el documento. El dominio deportivo tiene su esquema
+    migrado y sus restricciones de integridad definidas, pero no se presenta
+    como funcionalidad entregada.
+
+  \item Quedan abiertos dos frentes: la encuesta SUS, que requiere
+    participantes reales, y la exposición REST del dominio deportivo, que es
+    el objetivo natural de la Entrega Final.
+\end{enumerate}
+
+\newpage
+\bibliographystyle{plain}
+\bibliography{referencias}
+
+\end{document}

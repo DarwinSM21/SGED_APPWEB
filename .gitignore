@@ -26,3 +26,15 @@ server_log.txt
 # Python
 __pycache__/
 *.pyc
+
+# LaTeX (docs/informe/) - binarios generados; las fuentes .tex/.bib SI se versionan
+docs/informe/*.aux
+docs/informe/*.log
+docs/informe/*.out
+docs/informe/*.toc
+docs/informe/*.bbl
+docs/informe/*.blg
+docs/informe/p1.log
+docs/informe/p2.log
+docs/informe/p3.log
+docs/informe/bib.log
