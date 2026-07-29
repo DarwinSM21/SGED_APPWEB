@@ -20,15 +20,17 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.seguridad.auth.controller.AuthController;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.auth.dto.LoginRequest;
+import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.rol.entity.Rol;
 import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -37,11 +39,10 @@ import java.util.Set;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import org.junit.jupiter.api.Disabled;
 
-@Disabled("Tests pendientes de actualizar")
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
@@ -77,45 +78,46 @@ class AuthServiceTest {
 
     @Test
     void loginConCredencialesCorrectas() throws Exception {
-        UserDetails userDetails = mockUser("admin", "ROLE_ADMINISTRADOR");
+        UserDetails userDetails = mockUser("admin@test.com", "ROLE_ADMINISTRADOR");
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
 
+        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(auth);
-        when(jwtService.generateToken(anyString(), anyString()))
-                .thenReturn("mock-jwt-token");
-        when(jwtService.generateRefreshToken(anyString(), anyString()))
-                .thenReturn("mock-refresh-token");
+        when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
+        when(jwtService.generateRefreshToken(anyString(), anyString())).thenReturn("mock-refresh-token");
 
         Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
-        Usuario usuario = Usuario.builder().username("admin").persona(persona)
+        Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
                 .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
-        when(usuarioRepository.findByUsername("admin")).thenReturn(Optional.of(usuario));
+
+        when(usuarioRepository.findByUsernameAndActivoTrue("admin@test.com")).thenReturn(Optional.of(usuario));
+
+        LoginRequest loginRequest = new LoginRequest("admin@test.com", "Admin2026!");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                new java.util.HashMap<>() {{
-                                    put("username", "admin");
-                                    put("password", "Admin2026!");
-                                }})))
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("admin"));
+                .andExpect(jsonPath("$.username").value("admin@test.com"))
+                .andExpect(jsonPath("$.nombre").value("Admin SGED"))
+                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
+                .andExpect(jsonPath("$.accessToken").value("mock-jwt-token"))
+                .andExpect(jsonPath("$.refreshToken").value("mock-refresh-token"));
     }
 
     @Test
     void loginConContrasenaIncorrecta() throws Exception {
+        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Credenciales invalidas"));
 
+        LoginRequest loginRequest = new LoginRequest("admin@test.com", "WrongPass");
+
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                new java.util.HashMap<>() {{
-                                    put("username", "admin");
-                                    put("password", "WrongPass");
-                                }})))
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -123,15 +125,11 @@ class AuthServiceTest {
     void registroEmailDuplicado() throws Exception {
         when(usuarioRepository.existsByUsername("test@test.com")).thenReturn(true);
 
+        RegisterRequest registerRequest = new RegisterRequest("Test", "User", "test@test.com", "test123");
+
         mockMvc.perform(post("/api/auth/registro")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                new java.util.HashMap<>() {{
-                                    put("nombre", "Test");
-                                    put("apellido", "User");
-                                    put("username", "test@test.com");
-                                    put("password", "test123");
-                                }})))
+                        .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isConflict());
     }
 
@@ -152,17 +150,15 @@ class AuthServiceTest {
         });
         when(passwordEncoder.encode(anyString())).thenReturn("$2a$12$encoded");
 
+        RegisterRequest registerRequest = new RegisterRequest("Test", "User", "new@test.com", "password123");
+
         mockMvc.perform(post("/api/auth/registro")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(
-                                new java.util.HashMap<>() {{
-                                    put("nombre", "Test");
-                                    put("apellido", "User");
-                                    put("username", "new@test.com");
-                                    put("password", "test123");
-                                }})))
+                        .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("new@test.com"));
+                .andExpect(jsonPath("$.username").value("new@test.com"))
+                .andExpect(jsonPath("$.nombre").value("Test User"))
+                .andExpect(jsonPath("$.rol").value("USER"));
     }
 
     @Test
