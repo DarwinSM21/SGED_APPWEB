@@ -1,7 +1,10 @@
 package org.uteq.backend.common.exception;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -18,6 +21,8 @@ import java.util.List;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException ex) {
         String tipo = ex.getClass().getSimpleName();
@@ -33,9 +38,9 @@ public class GlobalExceptionHandler {
                 .toList();
 
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST, "Errores de validacion");
+                HttpStatus.UNPROCESSABLE_ENTITY, "Errores de validacion");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/Validacion"));
-        pd.setTitle("Bad Request");
+        pd.setTitle("Unprocessable Entity");
         pd.setProperty("errores", errores);
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
@@ -51,8 +56,19 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.FORBIDDEN, "No tiene permisos para acceder a este recurso");
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/AccesoDenegado"));
+        pd.setTitle("Forbidden");
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
+        log.error("Error no controlado", ex);
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR, "Error interno del servidor");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/Interno"));

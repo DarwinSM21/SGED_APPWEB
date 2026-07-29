@@ -4,7 +4,7 @@
 services:
 
   postgres:
-    image: postgres:16   # PIN_DIGEST
+    image: postgres@sha256:33f923b05f64ca54ac4401c01126a6b92afe839a0aa0a52bc5aeb5cc958e5f20
     container_name: sged_postgres
     environment:
       POSTGRES_DB: sged_db
@@ -15,8 +15,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Bloque B.1: esquema, seed y procedimientos aplicados por initdb
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
-      - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d sged_db"]
       interval: 10s
@@ -24,7 +24,7 @@ services:
       retries: 5
 
   redis:
-    image: redis:7   # PIN_DIGEST
+    image: redis@sha256:a8f08480e1f88f2647fed492d1178c06abb0d0c1fbf02c682a61e2f483fb3954
     container_name: sged_redis
     ports:
       - "6379:6379"
@@ -68,6 +68,7 @@ services:
     container_name: sged_frontend
     ports:
       - "4200:80"
+      - "8443:443"
     depends_on:
       - backend
 

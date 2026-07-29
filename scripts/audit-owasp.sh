@@ -16,18 +16,25 @@ cabecera() {
 }
 
 echo "== A01: control de acceso (usuario sin rol pide recurso de admin -> 403) =="
-# 1. login como usuario básico
-curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/registro" \
+# 0. /api/auth/registro exige rol ADMINISTRADOR (Bloque A.1): iniciamos
+#    sesion con el admin sembrado para poder registrar la cuenta de prueba.
+curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Audit","apellido":"A01","username":"audit_a01","password":"Passw0rd!"}' > /dev/null
+  -d '{"username":"admin","password":"Admin2026!"}' > /dev/null
+# 1. el admin registra un usuario basico (rol USER por defecto)
+curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
+  -H "Content-Type: application/json" \
+  -d '{"nombre":"Audit","apellido":"A01","username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
+# 2. el usuario basico inicia su propia sesion
 curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"audit_a01","password":"Passw0rd!"}' > /dev/null
+  -d '{"username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
 { cabecera "A01 - Broken Access Control";
   curl --include -s -b /tmp/sged_a01.jar -X POST \
     "$BASE/api/estudiantes/operaciones/desactivar-categoria?categoria=SUB-12"; \
 } > "$OUT/a01-acceso-roto.txt"
 echo "  -> $OUT/a01-acceso-roto.txt"
+rm -f /tmp/sged_admin.jar
 
 echo "== A02: criptografía en tránsito (TLS 1.3) =="
 { cabecera "A02 - Cryptographic Failures";
@@ -46,18 +53,26 @@ echo "  -> $OUT/a03-inyeccion.txt"
 
 echo "== A05: cabeceras de seguridad =="
 { cabecera "A05 - Security Misconfiguration";
-  curl -I -s "$BASE/api/auth/ping"; \
+  echo "-- via HTTP directo al backend ($BASE) --";
+  curl -I -s "$BASE/api/auth/ping";
+  echo "";
+  echo "-- via HTTPS/nginx (HSTS solo aplica sobre conexion segura) --";
+  curl -Ik -s "https://localhost:8443/api/auth/ping"; \
 } > "$OUT/a05-cabeceras.txt"
 echo "  -> $OUT/a05-cabeceras.txt"
 
 echo "== A07: 6 intentos fallidos -> 429 =="
 { cabecera "A07 - Identification and Authentication Failures";
-  for i in 1 2 3 4 5 6 7; do
-    echo "--- intento $i ---";
-    curl --include -s -X POST "$BASE/api/auth/login" \
+  for i in 1 2 3 4 5 6; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" -X POST "$BASE/api/auth/login" \
       -H "Content-Type: application/json" \
-      -d '{"username":"admin","password":"incorrecta"}' | head -1;
-  done; \
+      -d '{"username":"admin","password":"incorrecta"}');
+    echo "--- intento $i -> $code ---";
+  done;
+  echo "--- intento 7 (respuesta completa, confirma ProblemDetails en el 429) ---";
+  curl --include -s -X POST "$BASE/api/auth/login" \
+    -H "Content-Type: application/json" \
+    -d '{"username":"admin","password":"incorrecta"}'; \
 } > "$OUT/a07-rate-limit.txt"
 echo "  -> $OUT/a07-rate-limit.txt"
 

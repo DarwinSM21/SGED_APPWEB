@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ApiException.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.exception</a> &gt; <span class="el_source">ApiException.java</span></div><h1>ApiException.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ProblemDetail;
+
+import java.net.URI;
+
+/**
+ * Excepcion base que encapsula un ProblemDetail (RFC 7807).
+ * Todas las excepciones de dominio extienden esta clase.
+ */
+public class ApiException extends RuntimeException {
+
+    private final HttpStatus status;
+
+    public ApiException(HttpStatus status, String mensaje) {
+<span class="fc" id="L17">        super(mensaje);</span>
+<span class="fc" id="L18">        this.status = status;</span>
+<span class="fc" id="L19">    }</span>
+
+    public HttpStatus getStatus() {
+<span class="fc" id="L22">        return status;</span>
+    }
+
+    public ProblemDetail toProblemDetail(String tipo, String titulo) {
+<span class="fc" id="L26">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, getMessage());</span>
+<span class="fc" id="L27">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
+<span class="fc" id="L28">        pd.setTitle(titulo);</span>
+<span class="fc" id="L29">        return pd;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

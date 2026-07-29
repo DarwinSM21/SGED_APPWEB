@@ -11,10 +11,12 @@ up:
 	@until docker inspect --format='{{.State.Health.Status}}' sged_backend 2>/dev/null | grep -q healthy; do sleep 3; printf '.'; done
 	@echo ""
 	@echo "SGED operativo:"
-	@echo "  Frontend : http://localhost:4200"
+	@echo "  Frontend (HTTPS, recomendado): https://localhost:8443"
+	@echo "  Frontend (HTTP, sin cookie de sesion): http://localhost:4200"
 	@echo "  API      : http://localhost:8080/api"
 	@echo "  OpenAPI  : http://localhost:8080/api/docs"
 	@echo "  Credenciales seed: admin / Admin2026!"
+	@echo "  Nota: el certificado TLS es autofirmado (desarrollo); el navegador va a advertir, es esperado."
 
 ## Apaga y elimina contenedores
 down:

@@ -192,7 +192,14 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
+					<!-- @{argLine} (evaluacion tardia) reinyecta el javaagent que pone
+					     jacoco:prepare-agent. Sin esto, este argLine fijo (para los
+					     flags add-opens de Java 21) lo pisaba por completo: no se
+					     generaba target/jacoco.exec y jacoco:report quedaba siempre
+					     en "Skipping JaCoCo execution due to missing execution data
+					     file". -->
 					<argLine>
+						@{argLine}
 						--add-opens java.base/java.lang=ALL-UNNAMED
 						--add-opens java.base/java.lang.reflect=ALL-UNNAMED
 						--add-opens java.base/java.util=ALL-UNNAMED

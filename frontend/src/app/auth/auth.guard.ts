@@ -1,10 +1,13 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { catchError, map, of } from 'rxjs';
 import { AuthService } from './auth.service';
 
 /**
- * Guard de autenticacion: protege rutas que requieren JWT.
- * Redirige al login si no hay sesion activa.
+ * Guard de autenticacion: protege rutas que requieren sesion.
+ * El JWT vive en una cookie HttpOnly que JavaScript no puede leer, asi
+ * que si no hay usuario en memoria (p.ej. tras recargar la pagina) se
+ * confirma la sesion contra /api/auth/me antes de decidir.
  */
 export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
@@ -14,5 +17,8 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  return router.createUrlTree(['/login']);
+  return authService.getProfile().pipe(
+    map(() => true),
+    catchError(() => of(router.createUrlTree(['/login']))),
+  );
 };

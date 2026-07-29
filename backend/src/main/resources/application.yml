@@ -1,3 +1,9 @@
+server:
+  # El TLS real lo termina nginx (Bloque C.2, OWASP A02); el backend recibe
+  # trafico plano dentro de la red de Docker. Sin esto, request.isSecure()
+  # siempre daria false y Spring Security nunca emitiria HSTS.
+  forward-headers-strategy: framework
+
 spring:
   cache:
     type: redis
@@ -30,6 +36,8 @@ spring:
       port: ${REDIS_PORT:6379}
 
 security:
+  cookie:
+    secure: ${COOKIE_SECURE:true}
   jwt:
     secret: ${JWT_SECRET}
     expiration-ms: ${JWT_EXPIRATION_MS}

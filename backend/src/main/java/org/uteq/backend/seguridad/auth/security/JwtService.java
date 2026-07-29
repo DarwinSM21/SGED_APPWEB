@@ -66,6 +66,10 @@ public class JwtService {
         return expirationMs;
     }
 
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
+    }
+
     private String buildToken(String username, String rol, long ttl, String tokenType) {
         Date now = new Date();
         return Jwts.builder()
@@ -76,6 +80,7 @@ public class JwtService {
                 .issuer(issuer)
                 .audience().add(audience).and()
                 .issuedAt(now)
+                .notBefore(now)
                 .expiration(new Date(now.getTime() + ttl))
                 .signWith(getSigningKey())
                 .compact();

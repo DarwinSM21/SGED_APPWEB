@@ -23,13 +23,14 @@ export interface AuthResponse {
 
 /**
  * Servicio de autenticacion.
- * Almacena el accessToken en memoria (no en localStorage).
- * El refreshToken viaja en cookie HttpOnly (manejada por el backend).
+ * El access token y el refresh token viajan en cookies HttpOnly + Secure +
+ * SameSite=Strict que establece el backend (Bloque A.1): este servicio
+ * nunca los lee ni los guarda, solo mantiene en memoria los datos de
+ * presentacion del usuario autenticado.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = '/api/auth';
-  private accessToken: string | null = null;
 
   currentUser = signal<AuthResponse | null>(null);
   isLoggedIn = computed(() => this.currentUser() !== null);
@@ -37,16 +38,8 @@ export class AuthService {
   constructor(private http: HttpClient, private router: Router) {}
 
   login(request: LoginRequest) {
-    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request, {
-      observe: 'response',
-    }).pipe(
-      tap((response) => {
-        const authHeader = response.headers.get('Authorization');
-        if (authHeader) {
-          this.accessToken = authHeader.replace('Bearer ', '');
-        }
-        this.currentUser.set(response.body);
-      })
+    return this.http.post<AuthResponse>(`${this.apiUrl}/login`, request).pipe(
+      tap((response) => this.currentUser.set(response)),
     );
   }
 
@@ -55,26 +48,17 @@ export class AuthService {
   }
 
   logout() {
-    return this.http.post<void>(`${this.apiUrl}/logout`, null, {
-      headers: { Authorization: `Bearer ${this.accessToken}` },
-    }).pipe(
+    return this.http.post<void>(`${this.apiUrl}/logout`, null).pipe(
       tap(() => {
-        this.accessToken = null;
         this.currentUser.set(null);
         this.router.navigate(['/login']);
-      })
+      }),
     );
   }
 
-  getAccessToken(): string | null {
-    return this.accessToken;
-  }
-
   getProfile() {
-    return this.http.get<AuthResponse>(`${this.apiUrl}/me`, {
-      headers: { Authorization: `Bearer ${this.accessToken}` },
-    }).pipe(
-      tap((user) => this.currentUser.set(user))
+    return this.http.get<AuthResponse>(`${this.apiUrl}/me`).pipe(
+      tap((user) => this.currentUser.set(user)),
     );
   }
 }
