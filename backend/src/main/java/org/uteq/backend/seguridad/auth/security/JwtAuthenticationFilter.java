@@ -17,17 +17,20 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Filtro JWT que se ejecuta en cada solicitud.
- * 1. Extrae el token de la cookie HttpOnly sged_access (Bloque A.1)
- * 2. Valida la firma y expiracion con JwtService
- * 3. Consulta Redis blacklist para verificar que el JTI no este revocado
- * 4. Establece el UsernamePasswordAuthenticationToken en SecurityContextHolder
+ * Filtro JWT híbrido.
+ * 1. Intenta extraer el token del encabezado 'Authorization: Bearer <token>' (React / Angular / Mobile).
+ * 2. Si no existe, busca en la cookie HttpOnly 'sged_access'.
+ * 3. Valida la firma y expiración con JwtService.
+ * 4. Consulta Redis blacklist para verificar que el JTI no esté revocado.
+ * 5. Establece el UsernamePasswordAuthenticationToken en SecurityContextHolder.
  */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final String ACCESS_COOKIE = "sged_access";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
 
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
@@ -40,6 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
+        // Extrae el token (Primero prueba por Header Bearer, luego por Cookie)
         String token = extractAccessToken(request);
 
         if (token == null) {
@@ -70,22 +74,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
         } catch (Exception e) {
-            // Token invalido: deja que Spring Security maneje el 401
+            // Token inválido o expirado: deja que Spring Security maneje el 401
+            logger.debug("Error procesando autenticación JWT: " + e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
+    /**
+     * Busca el token JWT de dos formas:
+     * 1. Header 'Authorization: Bearer ...' (Prioridad Alta)
+     * 2. Cookie 'sged_access' (Prioridad Secundaria)
+     */
     private String extractAccessToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (cookies == null) {
-            return null;
-        }
-        for (Cookie cookie : cookies) {
-            if (ACCESS_COOKIE.equals(cookie.getName())) {
-                return cookie.getValue();
+        // 1. Intentar obtener desde el Header Authorization (Bearer)
+        String authHeader = request.getHeader(AUTHORIZATION_HEADER);
+        if (authHeader != null && authHeader.startsWith(BEARER_PREFIX)) {
+            String bearerToken = authHeader.substring(BEARER_PREFIX.length()).trim();
+            if (!bearerToken.isEmpty()) {
+                return bearerToken;
             }
         }
+
+        // 2. Si no hay Header, intentar obtener desde las Cookies
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (ACCESS_COOKIE.equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
         return null;
     }
 }
