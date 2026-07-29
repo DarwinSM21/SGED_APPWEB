@@ -19,3 +19,10 @@ server_log.txt
 
 # Env
 .env
+# Lighthouse: directorio temporal de lhci (los reportes archivados van en
+# docs/mediciones/lighthouse/)
+.lighthouseci/
+
+# Python
+__pycache__/
+*.pyc

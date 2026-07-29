@@ -1,0 +1,6 @@
+# SGED — Escuela Deportiva ProFutbol
+# Aplicacion de gestion interna: no debe indexarse en buscadores.
+# Trata datos personales de menores de edad (ver docs/etica/ETHICS.md).
+
+User-agent: *
+Disallow: /
