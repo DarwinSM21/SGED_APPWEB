@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "Si usás este software, por favor citalo con los siguientes metadatos."
+type: software
+title: "SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol"
+version: 0.1.0-entrega-1b
+date-released: 2026-06-24
+repository-code: "https://github.com/DarwinSM21/SGED_APPWEB"
+license: MIT
+authors:
+  - family-names: Arcalle Grefa
+    given-names: Darwin Orlando
+    affiliation: "Universidad Técnica Estatal de Quevedo"
+  - family-names: Pallo Pinto
+    given-names: Alejandro Daniel
+    email: dpallop@uteq.edu.ec
+    affiliation: "Universidad Técnica Estatal de Quevedo"
+  - family-names: Velez Lopez
+    given-names: Ricardo Elias
+    affiliation: "Universidad Técnica Estatal de Quevedo"
+keywords:
+  - spring-boot
+  - angular
+  - postgresql
+  - jwt
+  - owasp
+  - proyecto-fin-de-curso
