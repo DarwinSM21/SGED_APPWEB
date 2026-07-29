@@ -74,18 +74,4 @@ public class EstudianteController {
     public ResponseEntity<Long> contarActivos(@PathVariable Long idCategoria) {
         return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(idCategoria));
     }
-<<<<<<< HEAD:backend/src/main/java/org/uteq/backend/academico/estudiante/controller/EstudianteController.java
 }
-=======
-
-    /**
-     * Baja logica masiva por categoria (Bloque A.2.2 / auditoria OWASP A01:
-     * solo ADMINISTRADOR, cualquier otro rol debe recibir 403).
-     */
-    @PostMapping("/operaciones/desactivar-categoria")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<Integer> desactivarCategoria(@RequestParam String categoria) {
-        return ResponseEntity.ok(estudianteService.desactivarPorCategoria(categoria));
-    }
-}
->>>>>>> origin/main:backend/src/main/java/org/uteq/backend/estudiante/controller/EstudianteController.java

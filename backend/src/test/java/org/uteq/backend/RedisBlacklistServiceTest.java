@@ -6,7 +6,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.uteq.backend.auth.security.RedisBlacklistService;
+import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
 
 import java.time.Duration;
 
