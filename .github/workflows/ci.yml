@@ -55,4 +55,4 @@ jobs:
         run: bash scripts/audit-sql-dynamic.sh
 
       - name: Validación de trazabilidad
-        run: bash scripts/validate-traceability.sh || true  # estricto cuando exista la matriz
+        run: bash scripts/validate-traceability.sh   # estricto cuando exista la matriz
