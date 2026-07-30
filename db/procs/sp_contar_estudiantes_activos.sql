@@ -1,7 +1,7 @@
 -- sp_contar_estudiantes_activos
 -- Propósito: contar estudiantes activos de una categoría (agregado COUNT,
 --            obligatoriamente en el motor según Bloque A.2.2).
--- Entrada:  p_categoria VARCHAR
+-- Entrada:  p_categoria INT (id_categoria)
 -- Salida:   total BIGINT (parametro OUT)
 -- Tablas:   academico.estudiantes
 -- Sin SQL dinámico. Parámetros nombrados.
@@ -12,7 +12,7 @@
 -- contra funciones (CREATE FUNCTION), incluso si la funcion declara un
 -- parametro OUT.
 CREATE OR REPLACE PROCEDURE academico.sp_contar_estudiantes_activos(
-    IN p_categoria VARCHAR,
+    IN p_categoria INT,
     OUT total BIGINT
 )
 LANGUAGE plpgsql
@@ -21,8 +21,7 @@ BEGIN
     SELECT COUNT(*)
       INTO total
       FROM academico.estudiantes e
-      JOIN deportivo.categorias c ON c.id_categoria = e.id_categoria
      WHERE e.activo = TRUE
-       AND c.nombre = p_categoria;
+       AND e.id_categoria = p_categoria;
 END;
 $$;

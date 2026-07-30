@@ -183,4 +183,15 @@ class EstudianteControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("5"));
     }
+
+    @Test
+    @DisplayName("POST /api/estudiantes/operaciones/desactivar-categoria - Delega en service")
+    void desactivarCategoria_delega_en_service() throws Exception {
+        doNothing().when(estudianteService).desactivarPorCategoria(2L);
+
+        mockMvc.perform(post("/api/estudiantes/operaciones/desactivar-categoria")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("2"))
+                .andExpect(status().isOk());
+    }
 }
