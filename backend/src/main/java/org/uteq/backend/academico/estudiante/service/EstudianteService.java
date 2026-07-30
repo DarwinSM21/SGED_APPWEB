@@ -182,7 +182,14 @@ public class EstudianteService {
 
     @Transactional(readOnly = true)
     public long contarActivosPorCategoria(Long idCategoria) {
-        return estudianteRepository.countByCategoria_IdCategoriaAndActivoTrue(idCategoria);
+        Long resultado = estudianteRepository.contarEstudiantesActivosPorCategoria(idCategoria);
+        return resultado != null ? resultado : 0L;
+    }
+
+    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @Transactional
+    public void desactivarPorCategoria(Long idCategoria) {
+        estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
     }
 
     // Mapeador privado Entity -> DTO
