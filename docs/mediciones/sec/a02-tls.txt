@@ -1,12 +1,22 @@
 # Evidencia OWASP A02 - Cryptographic Failures
-# Fecha: 2026-07-25T01:48:23Z | Commit: 3fae486 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-07-29T23:11:39Z | Commit: dd911e2 | curl: curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.10
 #
-* ALPN: curl offers http/1.1
+* ALPN: curl offers h2,http/1.1
+* TLSv1.3 (OUT), TLS handshake, Client hello (1):
+* TLSv1.3 (IN), TLS handshake, Server hello (2):
+* TLSv1.3 (IN), TLS handshake, Encrypted Extensions (8):
+* TLSv1.3 (IN), TLS handshake, Certificate (11):
+* TLSv1.3 (IN), TLS handshake, CERT verify (15):
+* TLSv1.3 (IN), TLS handshake, Finished (20):
+* TLSv1.3 (OUT), TLS change cipher, Change cipher spec (1):
+* TLSv1.3 (OUT), TLS handshake, Finished (20):
+* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519 / RSASSA-PSS
 * ALPN: server accepted http/1.1
+*  subject: CN=localhost
+*  SSL certificate verify result: self-signed certificate (18), continuing anyway.
 * using HTTP/1.x
 > GET /actuator/health HTTP/1.1
-* schannel: renegotiating SSL/TLS connection
-* schannel: SSL/TLS connection renegotiated
-* schannel: renegotiating SSL/TLS connection
-* schannel: SSL/TLS connection renegotiated
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* TLSv1.3 (IN), TLS handshake, Newsession Ticket (4):
+* old SSL session ID is stale, removing
 < HTTP/1.1 200 

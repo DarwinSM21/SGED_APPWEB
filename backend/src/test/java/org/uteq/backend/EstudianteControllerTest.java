@@ -140,7 +140,7 @@ class EstudianteControllerTest {
 
     @Test
     @DisplayName("POST /api/estudiantes - Falla validación con Request incompleto (Devuelve 400)")
-    void crear_con_datos_invalidos_da_400() throws Exception {
+    void crear_con_datos_invalidos_da_422() throws Exception {
         // Objeto request inválido (campos @NotNull nulos)
         EstudianteRequest requestInvalido = new EstudianteRequest(
                 null, null, null, "", LocalDate.now().plusDays(1), new BigDecimal("0.00"), new BigDecimal("0.00")
@@ -149,7 +149,7 @@ class EstudianteControllerTest {
         mockMvc.perform(post("/api/estudiantes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(requestInvalido)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test

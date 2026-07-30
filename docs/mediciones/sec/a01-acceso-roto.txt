@@ -1,7 +1,7 @@
 # Evidencia OWASP A01 - Broken Access Control
-# Fecha: 2026-07-25T01:48:23Z | Commit: 3fae486 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-07-29T23:11:39Z | Commit: dd911e2 | curl: curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.10
 #
-HTTP/1.1 403 
+HTTP/1.1 401 
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
@@ -12,8 +12,8 @@ Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
 Content-Security-Policy: default-src 'self'; frame-ancestors 'none'
-Content-Type: application/problem+json
-Transfer-Encoding: chunked
-Date: Sat, 25 Jul 2026 01:48:24 GMT
+Content-Type: application/problem+json;charset=UTF-8
+Content-Length: 282
+Date: Wed, 29 Jul 2026 23:11:40 GMT
 
-{"type":"https://sged.uteq.edu.ec/errores/AccesoDenegado","title":"Forbidden","status":403,"detail":"No tiene permisos para acceder a este recurso","instance":"/api/estudiantes/operaciones/desactivar-categoria","timestamp":"2026-07-25T01:48:25.603066465Z"}
+{"type":"https://sged.uteq.edu.ec/errores/NoAutenticado","title":"Unauthorized","status":401,"detail":"Se requiere autenticación para acceder a este recurso","instance":"/api/estudiantes/operaciones/desactivar-categoria","properties":{"timestamp":"2026-07-29T23:11:41.766860294Z"}}

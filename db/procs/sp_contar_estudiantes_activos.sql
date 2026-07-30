@@ -3,7 +3,7 @@
 --            obligatoriamente en el motor según Bloque A.2.2).
 -- Entrada:  p_categoria VARCHAR
 -- Salida:   total BIGINT (parametro OUT)
--- Tablas:   seguridad.estudiantes
+-- Tablas:   academico.estudiantes
 -- Sin SQL dinámico. Parámetros nombrados.
 --
 -- Es un PROCEDURE (no FUNCTION): Spring Data JPA (@Procedure) invoca esto
@@ -11,7 +11,7 @@
 -- solo acepta CALL contra procedimientos reales (CREATE PROCEDURE), no
 -- contra funciones (CREATE FUNCTION), incluso si la funcion declara un
 -- parametro OUT.
-CREATE OR REPLACE PROCEDURE seguridad.sp_contar_estudiantes_activos(
+CREATE OR REPLACE PROCEDURE academico.sp_contar_estudiantes_activos(
     IN p_categoria VARCHAR,
     OUT total BIGINT
 )
@@ -20,8 +20,9 @@ AS $$
 BEGIN
     SELECT COUNT(*)
       INTO total
-      FROM seguridad.estudiantes e
+      FROM academico.estudiantes e
+      JOIN deportivo.categorias c ON c.id_categoria = e.id_categoria
      WHERE e.activo = TRUE
-       AND e.categoria = p_categoria;
+       AND c.nombre = p_categoria;
 END;
 $$;
