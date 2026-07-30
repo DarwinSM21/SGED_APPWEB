@@ -73,6 +73,7 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
 * Video de demostración: PENDIENTE (enlace)
 * DOI Zenodo: PENDIENTE
+* Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
 
 ## Integrantes
 
