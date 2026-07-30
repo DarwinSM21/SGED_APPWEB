@@ -14,8 +14,8 @@ contra una función (aunque declare un parámetro `OUT`) responde
 
 | Nombre | Tipo | Propósito | Entrada | Salida | Tablas | Invocación |
 |---|---|---|---|---|---|---|
-| `seguridad.sp_contar_estudiantes_activos` | Procedimiento | Conteo de estudiantes activos por categoría (agregado COUNT) | `p_categoria VARCHAR` | `total BIGINT` (OUT) | `seguridad.estudiantes` | `EstudianteRepository.contarActivosPorCategoria` (`@Procedure`) |
-| `seguridad.sp_desactivar_estudiantes_categoria` | Procedimiento | Baja lógica masiva de una categoría completa (UPDATE multi-fila) | `p_categoria VARCHAR` | `afectados INTEGER` (OUT, filas afectadas) | `seguridad.estudiantes` | `EstudianteRepository.desactivarPorCategoria` (`@Procedure`) |
+| `academico.sp_contar_estudiantes_activos` | Procedimiento | Conteo de estudiantes activos por categoría (agregado COUNT) | `p_categoria INT` | `total BIGINT` (OUT) | `academico.estudiantes` | `EstudianteRepository.contarEstudiantesActivosPorCategoria` (`@Procedure`) |
+| `academico.sp_desactivar_estudiantes_categoria` | Procedimiento | Baja lógica masiva de una categoría completa (UPDATE multi-fila) | `p_categoria INT` | `afectados INTEGER` (OUT, filas afectadas) | `academico.estudiantes` | `EstudianteRepository.desactivarEstudiantesPorCategoria` (`@Procedure`) |
 
 Los archivos fuente viven en `db/procs/` y se instalan en dos vías
 equivalentes: migraciones Flyway `V5__procedimientos_almacenados.sql` +

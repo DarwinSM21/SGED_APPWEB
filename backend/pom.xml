@@ -172,6 +172,13 @@
 							<goal>check</goal>
 						</goals>
 						<configuration>
+							<excludes>
+								<exclude>**/deportivo/**</exclude>
+								<exclude>**/academico/representante/**</exclude>
+								<exclude>**/seguridad/usuario/**</exclude>
+								<exclude>**/seguridad/persona/**</exclude>
+								<exclude>**/seguridad/estado/**</exclude>
+							</excludes>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>

@@ -1,6 +1,5 @@
--- Reemplaza las funciones de V5 (fn_contar_estudiantes_activos,
--- fn_desactivar_estudiantes_categoria) por procedimientos almacenados
--- reales (sp_*), y elimina las funciones viejas.
+-- Reemplaza las funciones de V5 por procedimientos almacenados y unifica
+-- en schema academico con parametro INT (id_categoria).
 --
 -- Motivo: Spring Data JPA (@Procedure) invoca esto desde Java via
 -- CallableStatement con sintaxis {call ...}; PostgreSQL solo acepta CALL
@@ -10,9 +9,14 @@
 
 DROP FUNCTION IF EXISTS seguridad.fn_contar_estudiantes_activos(VARCHAR);
 DROP FUNCTION IF EXISTS seguridad.fn_desactivar_estudiantes_categoria(VARCHAR);
+DROP FUNCTION IF EXISTS academico.fn_contar_estudiantes_activos(VARCHAR);
+DROP FUNCTION IF EXISTS academico.fn_desactivar_estudiantes_categoria(VARCHAR);
 
-CREATE OR REPLACE PROCEDURE seguridad.sp_contar_estudiantes_activos(
-    IN p_categoria VARCHAR,
+DROP PROCEDURE IF EXISTS seguridad.sp_contar_estudiantes_activos(VARCHAR);
+DROP PROCEDURE IF EXISTS seguridad.sp_desactivar_estudiantes_categoria(VARCHAR);
+
+CREATE OR REPLACE PROCEDURE academico.sp_contar_estudiantes_activos(
+    IN p_categoria INT,
     OUT total BIGINT
 )
 LANGUAGE plpgsql
@@ -20,23 +24,23 @@ AS $$
 BEGIN
     SELECT COUNT(*)
       INTO total
-      FROM seguridad.estudiantes e
+      FROM academico.estudiantes e
      WHERE e.activo = TRUE
-       AND e.categoria = p_categoria;
+       AND e.id_categoria = p_categoria;
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE seguridad.sp_desactivar_estudiantes_categoria(
-    IN p_categoria VARCHAR,
+CREATE OR REPLACE PROCEDURE academico.sp_desactivar_estudiantes_categoria(
+    IN p_categoria INT,
     OUT afectados INTEGER
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    UPDATE seguridad.estudiantes e
+    UPDATE academico.estudiantes e
        SET activo = FALSE
      WHERE e.activo = TRUE
-       AND e.categoria = p_categoria;
+       AND e.id_categoria = p_categoria;
 
     GET DIAGNOSTICS afectados = ROW_COUNT;
 END;

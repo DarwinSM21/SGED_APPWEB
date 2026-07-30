@@ -230,12 +230,20 @@ class EstudianteServiceTest {
     }
 
     @Test
-    @DisplayName("contarActivosPorCategoria - Delega la consulta al repositorio")
+    @DisplayName("contarActivosPorCategoria - Delega al SP via @Procedure")
     void conteo_por_categoria_delega_en_repositorio() {
-        when(estudianteRepository.countByCategoria_IdCategoriaAndActivoTrue(1L)).thenReturn(3L);
+        when(estudianteRepository.contarEstudiantesActivosPorCategoria(1L)).thenReturn(3L);
 
         long conteo = service.contarActivosPorCategoria(1L);
 
         assertEquals(3L, conteo);
+    }
+
+    @Test
+    @DisplayName("desactivarPorCategoria - Delega al SP via @Procedure")
+    void desactivarCategoria_delega_en_sp() {
+        doNothing().when(estudianteRepository).desactivarEstudiantesPorCategoria(1L);
+        service.desactivarPorCategoria(1L);
+        verify(estudianteRepository).desactivarEstudiantesPorCategoria(1L);
     }
 }
