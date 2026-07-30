@@ -4,6 +4,8 @@
 -- Se monta en /docker-entrypoint-initdb.d/ para reproducibilidad
 -- desde clonación limpia. Prohibido ddl-auto=update.
 -- ==============================================================
+CREATE SCHEMA IF NOT EXISTS academico;
+
 CREATE SCHEMA IF NOT EXISTS deportivo;
 
 CREATE SCHEMA IF NOT EXISTS seguridad;
@@ -17,12 +19,18 @@ CREATE TABLE IF NOT EXISTS seguridad.personas (
     id_persona BIGSERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
-    cedula VARCHAR(10),
-    correo VARCHAR(255),
-    telefono VARCHAR(10),
-    fecha_nacimiento DATE,
-    activo BOOLEAN NOT NULL DEFAULT TRUE
+    cedula VARCHAR(10) NOT NULL,
+    correo VARCHAR(200) NOT NULL,
+    telefono VARCHAR(15),
+    foto TEXT,
+    fecha_nacimiento DATE NOT NULL,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_cedula ON seguridad.personas(cedula);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_personas_correo ON seguridad.personas(correo);
 
 CREATE TABLE IF NOT EXISTS seguridad.roles (
     id_rol BIGSERIAL PRIMARY KEY,
@@ -32,19 +40,17 @@ CREATE TABLE IF NOT EXISTS seguridad.roles (
 
 CREATE TABLE IF NOT EXISTS seguridad.usuarios (
     id_usuario BIGSERIAL PRIMARY KEY,
-    id_persona BIGINT REFERENCES seguridad.personas(id_persona),
-    id_estado_general BIGINT REFERENCES seguridad.estados_general(id_estado_general),
-    username VARCHAR(100) NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    id_persona BIGINT NOT NULL REFERENCES seguridad.personas(id_persona),
+    id_estado_general BIGINT NOT NULL REFERENCES seguridad.estados_general(id_estado_general),
+    username VARCHAR(50) NOT NULL,
+    password_hash TEXT NOT NULL,
+    ultimo_acceso TIMESTAMPTZ,
     activo BOOLEAN NOT NULL DEFAULT TRUE,
-    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE UNIQUE INDEX idx_usuarios_username ON seguridad.usuarios(username);
-
-ALTER TABLE seguridad.usuarios
-ADD CONSTRAINT chk_activo CHECK (activo IN (TRUE, FALSE));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_usuarios_username ON seguridad.usuarios(username);
 
 CREATE TABLE IF NOT EXISTS seguridad.usuario_rol (
     id_usuario_rol BIGSERIAL PRIMARY KEY,
@@ -52,40 +58,17 @@ CREATE TABLE IF NOT EXISTS seguridad.usuario_rol (
     id_rol BIGINT NOT NULL REFERENCES seguridad.roles(id_rol)
 );
 
-CREATE OR REPLACE FUNCTION seguridad.set_actualizado_en()
+CREATE OR REPLACE FUNCTION seguridad.set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.actualizado_en = NOW();
+    NEW.updated_at = NOW();
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER trg_usuarios_actualizado_en
+CREATE TRIGGER trg_usuarios_updated_at
 BEFORE UPDATE ON seguridad.usuarios
-FOR EACH ROW EXECUTE FUNCTION seguridad.set_actualizado_en();
-
-CREATE TABLE IF NOT EXISTS deportivo.estudiantes (
-    id_estudiante BIGSERIAL PRIMARY KEY,
-    id_persona BIGINT NOT NULL REFERENCES seguridad.personas(id_persona),
-    categoria VARCHAR(25),
-    fecha_ingreso TIMESTAMPTZ,
-    activo BOOLEAN NOT NULL DEFAULT TRUE,
-    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TRIGGER trg_estudiantes_actualizado_en
-BEFORE UPDATE ON deportivo.estudiantes
-FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
--- ============================================================
--- V3: Dominio deportivo
--- Esquema nuevo "deportivo": entrenadores, posiciones,
--- horarios, sesiones de entrenamiento y asistencias.
--- Aditivo: no modifica ni elimina nada existente en "seguridad".
--- ============================================================
-
-CREATE SCHEMA IF NOT EXISTS deportivo;
-
+FOR EACH ROW EXECUTE FUNCTION seguridad.set_updated_at();
 -- Función genérica reutilizable para mantener actualizado_en
 CREATE OR REPLACE FUNCTION deportivo.set_actualizado_en()
 RETURNS TRIGGER AS $$
@@ -94,6 +77,52 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION academico.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ------------------------------------------------------------
+-- Categorías de jugadores (sub-12, sub-14, etc.)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS deportivo.categorias (
+    id_categoria BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    edad_min SMALLINT NOT NULL,
+    edad_max SMALLINT NOT NULL,
+    descripcion VARCHAR(255),
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS academico.estudiantes (
+    id_estudiante BIGSERIAL PRIMARY KEY,
+    id_persona BIGINT NOT NULL REFERENCES seguridad.personas(id_persona),
+    id_categoria BIGINT NOT NULL REFERENCES deportivo.categorias(id_categoria),
+    id_estado_general BIGINT NOT NULL REFERENCES seguridad.estados_general(id_estado_general),
+    codigo_estudiante VARCHAR(30) NOT NULL,
+    fecha_ingreso DATE NOT NULL,
+    peso NUMERIC(5,2),
+    altura NUMERIC(5,2),
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_estudiantes_codigo
+    ON academico.estudiantes(codigo_estudiante);
+-- ============================================================
+-- V3: Dominio deportivo
+-- Esquema nuevo "deportivo": entrenadores, posiciones,
+-- horarios, sesiones de entrenamiento y asistencias.
+-- Aditivo: no modifica ni elimina nada existente en "seguridad".
+-- ============================================================
+
 
 -- ------------------------------------------------------------
 -- Posiciones de juego (portero, defensa, mediocampista, etc.)
@@ -124,20 +153,15 @@ ON CONFLICT (nombre) DO NOTHING;
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS deportivo.entrenadores (
     id_entrenador BIGSERIAL PRIMARY KEY,
-    id_persona BIGINT NOT NULL REFERENCES seguridad.personas(id_persona),
-    especialidad VARCHAR(100),
-    fecha_contratacion DATE,
+    id_persona BIGINT NOT NULL UNIQUE REFERENCES seguridad.personas(id_persona),
+    id_usuario BIGINT NOT NULL UNIQUE REFERENCES seguridad.usuarios(id_usuario),
+    especialidad VARCHAR(150),
+    experiencia_anios SMALLINT,
+    certificacion VARCHAR(255),
     activo BOOLEAN NOT NULL DEFAULT TRUE,
-    creado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    actualizado_en TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_entrenadores_persona
-    ON deportivo.entrenadores(id_persona);
-
-CREATE TRIGGER trg_entrenadores_actualizado_en
-BEFORE UPDATE ON deportivo.entrenadores
-FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 
 -- ------------------------------------------------------------
 -- Ampliación aditiva de estudiantes: posición y código RFID
@@ -338,21 +362,26 @@ GROUP BY d.id_evaluacion, d.id_estudiante, e.fecha;
 -- sp_contar_estudiantes_activos
 -- Propósito: contar estudiantes activos de una categoría (agregado COUNT,
 --            obligatoriamente en el motor según Bloque A.2.2).
--- Entrada:  p_categoria VARCHAR
+-- Entrada:  p_categoria VARCHAR (nombre de la categoría)
 -- Salida:   BIGINT (total de estudiantes activos de esa categoría)
--- Tablas:   academico.estudiantes
+-- Tablas:   academico.estudiantes, deportivo.categorias
 -- Sin SQL dinámico. Parámetros nombrados.
 CREATE OR REPLACE FUNCTION academico.fn_contar_estudiantes_activos(
     p_categoria VARCHAR
 )
+RETURNS BIGINT
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    v_total BIGINT;
 BEGIN
     SELECT COUNT(*)
       INTO v_total
       FROM academico.estudiantes e
+      JOIN deportivo.categorias c ON c.id_categoria = e.id_categoria
      WHERE e.activo = TRUE
-       AND e.categoria = p_categoria;
+       AND c.nombre = p_categoria;
+    RETURN v_total;
 END;
 $$;
 
@@ -360,21 +389,27 @@ $$;
 -- Propósito: baja lógica masiva de todos los estudiantes activos de una
 --            categoría (actualización masiva con criterio de negocio,
 --            obligatoriamente en el motor según Bloque A.2.2).
--- Entrada:  p_categoria VARCHAR
+-- Entrada:  p_categoria VARCHAR (nombre de la categoría)
 -- Salida:   INTEGER (número de filas afectadas)
--- Tablas:   academico.estudiantes
+-- Tablas:   academico.estudiantes, deportivo.categorias
 -- Sin SQL dinámico. Parámetros nombrados.
 CREATE OR REPLACE FUNCTION academico.fn_desactivar_estudiantes_categoria(
     p_categoria VARCHAR
 )
+RETURNS INTEGER
 LANGUAGE plpgsql
 AS $$
+DECLARE
+    afectados INTEGER;
 BEGIN
     UPDATE academico.estudiantes e
        SET activo = FALSE
-     WHERE e.activo = TRUE
-       AND e.categoria = p_categoria;
+      FROM deportivo.categorias c
+     WHERE e.id_categoria = c.id_categoria
+       AND e.activo = TRUE
+       AND c.nombre = p_categoria;
 
     GET DIAGNOSTICS afectados = ROW_COUNT;
+    RETURN afectados;
 END;
 $$;

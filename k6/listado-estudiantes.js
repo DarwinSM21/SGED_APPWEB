@@ -20,13 +20,13 @@ export const options = {
 const BASE = __ENV.BASE_URL || 'http://localhost:8080';
 
 export function setup() {
-  // k6 mantiene un cookie jar por VU; hacemos login en setup y
-  // propagamos la cookie manualmente para todas las VUs.
   const res = http.post(`${BASE}/api/auth/login`,
     JSON.stringify({ username: 'admin', password: 'Admin2026!' }),
     { headers: { 'Content-Type': 'application/json' } });
-  const cookies = res.cookies['sged_access'];
-  return { access: cookies && cookies.length ? cookies[0].value : '' };
+  // Extraer cookie del header Set-Cookie (Path=/api)
+  const raw = res.headers['Set-Cookie'] || res.headers['set-cookie'] || '';
+  const match = raw.match(/sged_access=([^;]+)/);
+  return { access: match ? match[1] : '' };
 }
 
 export default function (data) {
