@@ -362,26 +362,22 @@ GROUP BY d.id_evaluacion, d.id_estudiante, e.fecha;
 -- sp_contar_estudiantes_activos
 -- Propósito: contar estudiantes activos de una categoría (agregado COUNT,
 --            obligatoriamente en el motor según Bloque A.2.2).
--- Entrada:  p_categoria VARCHAR (nombre de la categoría)
--- Salida:   BIGINT (total de estudiantes activos de esa categoría)
--- Tablas:   academico.estudiantes, deportivo.categorias
+-- Entrada:  p_categoria INT (id_categoria)
+-- Salida:   total BIGINT (parametro OUT)
+-- Tablas:   academico.estudiantes
 -- Sin SQL dinámico. Parámetros nombrados.
-CREATE OR REPLACE FUNCTION academico.fn_contar_estudiantes_activos(
-    p_categoria VARCHAR
+CREATE OR REPLACE PROCEDURE academico.sp_contar_estudiantes_activos(
+    IN p_categoria INT,
+    OUT total BIGINT
 )
-RETURNS BIGINT
 LANGUAGE plpgsql
 AS $$
-DECLARE
-    v_total BIGINT;
 BEGIN
     SELECT COUNT(*)
-      INTO v_total
+      INTO total
       FROM academico.estudiantes e
-      JOIN deportivo.categorias c ON c.id_categoria = e.id_categoria
      WHERE e.activo = TRUE
-       AND c.nombre = p_categoria;
-    RETURN v_total;
+       AND e.id_categoria = p_categoria;
 END;
 $$;
 
@@ -389,27 +385,22 @@ $$;
 -- Propósito: baja lógica masiva de todos los estudiantes activos de una
 --            categoría (actualización masiva con criterio de negocio,
 --            obligatoriamente en el motor según Bloque A.2.2).
--- Entrada:  p_categoria VARCHAR (nombre de la categoría)
--- Salida:   INTEGER (número de filas afectadas)
--- Tablas:   academico.estudiantes, deportivo.categorias
+-- Entrada:  p_categoria INT (id_categoria)
+-- Salida:   afectados INTEGER (parametro OUT, numero de filas afectadas)
+-- Tablas:   academico.estudiantes
 -- Sin SQL dinámico. Parámetros nombrados.
-CREATE OR REPLACE FUNCTION academico.fn_desactivar_estudiantes_categoria(
-    p_categoria VARCHAR
+CREATE OR REPLACE PROCEDURE academico.sp_desactivar_estudiantes_categoria(
+    IN p_categoria INT,
+    OUT afectados INTEGER
 )
-RETURNS INTEGER
 LANGUAGE plpgsql
 AS $$
-DECLARE
-    afectados INTEGER;
 BEGIN
     UPDATE academico.estudiantes e
        SET activo = FALSE
-      FROM deportivo.categorias c
-     WHERE e.id_categoria = c.id_categoria
-       AND e.activo = TRUE
-       AND c.nombre = p_categoria;
+     WHERE e.activo = TRUE
+       AND e.id_categoria = p_categoria;
 
     GET DIAGNOSTICS afectados = ROW_COUNT;
-    RETURN afectados;
 END;
 $$;

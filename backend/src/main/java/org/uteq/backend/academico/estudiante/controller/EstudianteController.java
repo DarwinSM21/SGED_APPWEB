@@ -74,4 +74,11 @@ public class EstudianteController {
     public ResponseEntity<Long> contarActivos(@PathVariable Long idCategoria) {
         return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(idCategoria));
     }
+
+    @PostMapping("/operaciones/desactivar-categoria")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Void> desactivarPorCategoria(@RequestBody Long idCategoria) {
+        estudianteService.desactivarPorCategoria(idCategoria);
+        return ResponseEntity.ok().build();
+    }
 }
