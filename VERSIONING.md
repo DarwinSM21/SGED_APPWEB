@@ -7,24 +7,33 @@ corresponde cada entrega del Proyecto Fin de Curso:
 | Tag | Hito | Estado |
 |---|---|---|
 | `v0.1.0-entrega-1b` | Entrega 1B | ✅ Publicado (2026-06-24) |
-| `v0.9.0-rc` | Tercera Entrega (release candidate) | ⏳ Pendiente |
-| `v1.0.0` | Entrega Final | ⏳ Pendiente |
+| `v0.9.0-rc` | Tercera Entrega (release candidate) | ✅ Publicado (2026-07-30) |
+| `v1.0.0` | Entrega Final | ⏳ Pendiente (2026-08-17) |
 
-## Por qué todavía no existe `v0.9.0-rc`
+## Criterios verificados antes de crear `v0.9.0-rc`
 
-El trabajo técnico de la Tercera Entrega (hardening JWT/cookies, auditoría
-OWASP de 6 controles, evidencia k6, cobertura JaCoCo, procedimientos
-almacenados, pinning por digest) ya está en `main` — ver
-[CHANGELOG.md](CHANGELOG.md#unreleased--hacia-v090-rc-tercera-entrega`). El
-tag no se creó todavía porque la rama `feature/entrega3` (reestructuración
-de paquetes, ADRs adicionales, C4 en Structurizr) está en proceso de
-reconciliarse con `main` antes de cerrar esta entrega. Crear el tag antes de
-esa reconciliación arriesgaría dejar fuera contenido que sí cuenta para la
-evaluación, o taguear una arquitectura que va a cambiar apenas se resuelva
-la reconciliación.
+- `feature/entrega3` (reestructuración de paquetes `academico`/`deportivo`/
+  `seguridad`, ADRs adicionales, C4 en Structurizr) mergeada a `main` (PRs
+  #5–#9).
+- `./mvnw test`: 101 pruebas, 0 fallos, 0 errores.
+- Cobertura JaCoCo: 72,5 % (por encima del umbral del 60 %) — ver
+  `docs/mediciones/jacoco/` y la sección de cobertura del informe.
+- Documentación de arquitectura (ADR-002) corregida para coincidir con el
+  código real (JWT en cookie, no `localStorage`).
+- Datos de salud del estudiante (peso/altura) declarados explícitamente en
+  `docs/etica/ETHICS.md` (hallazgo H-06), no ocultados.
+- Único informe oficial con fuente versionada: `docs/informe/main.tex`.
 
-**Antes de tagear `v0.9.0-rc`:** confirmar que `feature/entrega3` esté
-mergeado (o descartado a propósito), que el árbol de archivos coincida con
-la estructura exigida por la guía de la Tercera Entrega, y que
-`make up && make test && make audit && make bench` corran limpios desde una
-clonación nueva.
+## Advertencias que siguen vigentes al momento de tagear
+
+Taguear no implica que todo esté resuelto — implica que el entregable es
+honesto sobre lo que falta:
+
+- La encuesta SUS (Bloque C.3) no tiene participantes reales todavía.
+- `academico.representante` y `deportivo.equipo` son paquetes vacíos (RF-22
+  y el módulo de equipos), sin esquema de base de datos.
+- El dominio deportivo restante (horarios, sesiones, asistencias,
+  evaluaciones) tiene esquema pero no API REST — objetivo de la Entrega
+  Final.
+- El hallazgo H-06 (peso/altura sin base legal documentada) sigue abierto;
+  taguear no lo resuelve, solo lo deja registrado.

@@ -7,7 +7,75 @@ cuándo y en qué commit), ver
 [`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) —
 complementario a este, no un duplicado.
 
-## [Unreleased] — hacia v0.9.0-rc (Tercera Entrega)
+## [v0.9.0-rc] - 2026-07-30
+
+### Reestructuración (mergeada desde `feature/entrega3`)
+- Backend reorganizado en tres dominios: `academico`, `deportivo`,
+  `seguridad`. `Estudiante` se mueve de `seguridad` a `academico`.
+- Categoría normalizada: de texto libre (`VARCHAR`, patrón `SUB-NN`) a
+  entidad propia `deportivo.categorias` con catálogo y rango de edad.
+- Cinco recursos CRUD nuevos con API REST propia: `Categoria`,
+  `Entrenador`, `Usuario`, `Persona`, `EstadoGeneral`.
+- Procedimientos almacenados movidos a `academico` con parámetro `INT`
+  (`id_categoria`) en vez de `VARCHAR`.
+
+### Correcciones tras la reestructuración
+- `ADR-002` corregido: describía JWT en `localStorage` con header
+  `Authorization: Bearer`; el código real usa cookie `HttpOnly`.
+- `docs/etica/ETHICS.md` corregido: afirmaba que el equipo no recolectaba
+  peso/altura del estudiante; esos campos ya son reales y opcionales en la
+  API (hallazgo H-06, sin base legal documentada todavía).
+- Cobertura de pruebas: regresión detectada a 39,8 % (los 5 recursos nuevos
+  no tenían pruebas propias); corregida a 72,5 % con 57 pruebas nuevas
+  (10 clases).
+- Retirado `docs/informe-entrega-3.pdf` (sin fuente `.tex`/`.docx`
+  versionada); `docs/informe/main.tex` queda como único informe oficial.
+- Colisión de numeración `ADR-003` resuelta (el propio pasa a `ADR-007`).
+
+### Seguridad
+- JWT migrado de header `Authorization` a cookies `HttpOnly` + `Secure` +
+  `SameSite=Strict`; `/api/auth/registro` protegido.
+- Terminación TLS en `:8443` vía nginx con certificado autofirmado (OWASP A02).
+- Content-Security-Policy explícito en `SecurityConfig`.
+- Log de auditoría estructurado A09 (login OK/FAIL con IP y `sub`).
+- `@Valid` responde `422` en vez de `400` (alineado a la auditoría OWASP A03).
+- Auditoría OWASP de 6 controles corregida y regenerada contra el stack real
+  (A01, A02, A03, A05, A07, A09) — `docs/mediciones/sec/`.
+
+### Datos
+- Conversión de consultas JPQL a procedimientos almacenados reales invocados
+  vía `@Procedure` (antes quedaban huérfanos o usaban `FUNCTION` en vez de
+  `PROCEDURE`) — `V5`/`V6` en `db/migration/`.
+- `database/` renombrado a `db/` en la raíz para cumplir la estructura exigida.
+- Postgres y Redis pinados por digest sha256 real en `docker-compose.yml`
+  (Bloque B.1).
+
+### Rendimiento y pruebas
+- Corrección de JaCoCo (el `argLine` de Surefire pisaba el javaagent) —
+  cobertura real ahora medible.
+- Pruebas unitarias e de integración agregadas: `EstudianteController`,
+  `LoginAttemptService`, `RedisBlacklistService`, y 10 clases nuevas para
+  los recursos de la reestructuración.
+- Evidencia empírica real generada contra el stack en vivo: 3 corridas de
+  k6 con análisis de intervalo de confianza 95%, `docs/mediciones/perf/REPORT.md`.
+- Lighthouse: accesibilidad 100/100, rendimiento 92,3; SEO limitado a 63
+  a propósito (`robots.txt` real por tratar datos de menores).
+
+### Correcciones
+- Cache de `Estudiante` rompía desde el segundo request (Jackson no leía el
+  `@class` raíz al usar `GenericJackson2JsonRedisSerializer`).
+- `GenericJackson2JsonRedisSerializer` no soportaba `java.time.Instant`.
+- Bugs de autorización y sesión encontrados corriendo el sistema en vivo.
+
+### Pendiente para la Entrega Final
+- Encuesta SUS con participantes externos reales (instrumento y script
+  listos, sin datos recolectados).
+- API REST del dominio deportivo restante (horarios, sesiones, asistencias,
+  evaluaciones) — esquema ya migrado.
+- `academico.representante` y `deportivo.equipo`: paquetes vacíos, sin
+  esquema.
+
+## [Unreleased]
 
 ### Seguridad
 - JWT migrado de header `Authorization` a cookies `HttpOnly` + `Secure` +
