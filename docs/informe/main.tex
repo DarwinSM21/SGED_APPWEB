@@ -85,7 +85,9 @@
 \textbf{Asignatura:} & Aplicaciones Web (Quinto nivel) \\[0.2cm]
 \textbf{Docente:} & Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. \\[0.2cm]
 \textbf{Periodo:} & PPA 2026-2027 \\[0.2cm]
-\textbf{Versión:} & \texttt{v0.9.0-rc} (candidata) \\
+\textbf{Etiqueta:} & \texttt{v0.9.0-rc} (candidata a versión estable) \\[0.2cm]
+\textbf{\emph{Commit} del corte:} & \texttt{380c388} \\[0.2cm]
+\textbf{DOI:} & \pendiente{} (Zenodo, ver §\ref{sec:amenazas}) \\
 \end{tabular}\\[1.5cm]
 
 {\large\bfseries Integrantes:}\\[0.3cm]
@@ -102,6 +104,53 @@
 \end{titlepage}
 
 \tableofcontents
+\newpage
+
+% ============================================================
+\section*{Resumen ejecutivo}
+\addcontentsline{toc}{section}{Resumen ejecutivo}
+
+La Tercera Entrega no añade funcionalidad: verifica, con evidencia empírica
+reproducible, lo que el proyecto ya afirmaba tener. Este informe documenta
+el estado del sistema SGED en la etiqueta \texttt{v0.9.0-rc}
+(\emph{commit} \texttt{380c388}) y los resultados de las cinco mediciones
+exigidas.
+
+\textbf{Resultados cuantitativos.} El sistema cumple los cinco umbrales:
+rendimiento p95 de 14,18\,ms frente a un límite de 200\,ms (3 corridas k6,
+0\,\% de errores); 6 de 6 controles OWASP evidenciados con peticiones
+verificables; 72,5\,\% de cobertura de instrucciones frente a un mínimo de
+60\,\% (102 pruebas, 0 fallos); accesibilidad Lighthouse de 100/100; y una
+media SUS de 68,25 con 10 participantes reales, que cruza el umbral de la
+media de la industria por 0,25 puntos.
+
+\textbf{Hallazgo principal.} El aporte real de esta entrega fue descubrir
+que \emph{tres de esas mediciones estaban dando resultados válidos en
+apariencia sobre un sistema que no hacía lo que el indicador decía}. La
+cobertura se medía sobre clases compiladas antes de una reestructuración de
+paquetes; la auditoría de control de acceso se bloqueaba a sí misma y
+devolvía un rechazo que probaba autenticación, no autorización; y el
+registro de usuarios llevaba roto desde la reestructuración mientras sus
+pruebas unitarias pasaban, porque usan dobles de prueba y la restricción
+violada la aplica el motor de base de datos. Corregidas las tres
+mediciones, la auditoría destapó una exposición real: los datos
+identificativos de los estudiantes menores de edad —incluida la búsqueda
+por número de cédula— eran accesibles a cualquier cuenta autenticada del
+sistema, por ausencia de anotaciones de autorización en cinco recursos
+nuevos. Está corregido y registrado como hallazgo H-08.
+
+\textbf{Resultado de usabilidad.} La media SUS agregada esconde un patrón
+bimodal nítido por perfil: entrenadores y estudiantes califican el sistema
+como excelente (86,7 y 90,0; grado A), mientras recepcionistas y padres de
+familia lo califican como pobre o inaceptable (51,7 y 43,75; grado F). Se
+reporta el patrón y no solo el promedio, porque es el que orienta el
+trabajo de la Entrega Final.
+
+\textbf{Lo que no está.} El DOI de Zenodo no está asignado, el módulo de
+representantes y el resto del dominio deportivo no están implementados, y
+persisten siete hallazgos éticos abiertos. Todos se declaran en las
+secciones correspondientes en lugar de omitirse.
+
 \newpage
 
 % ============================================================
@@ -270,7 +319,7 @@ actualizaciones de ruta:
 \begin{itemize}[leftmargin=*]
   \item \textbf{Cobertura de pruebas.} La cifra de 68,1\,\% que documentaban
     tanto la versión anterior de este informe como
-    \texttt{docs/observaciones/Observaciones.md} era correcta \emph{en el
+    \texttt{docs/observaciones/OBSERVACIONES.md} era correcta \emph{en el
     momento en que se midió}. Al ejecutar \texttt{./mvnw test} de nuevo tras
     la reestructuración, el resultado real es \textbf{39,8\,\%} — los
     controladores y servicios nuevos no tienen pruebas propias, y diluyeron
@@ -660,11 +709,65 @@ El diccionario completo, con tipos, restricciones y disparadores, está en
 falla al arrancar si el esquema real y las entidades divergen.
 
 % ============================================================
-\section{Evidencia empírica}
+\section{Protocolo experimental}
+\label{sec:protocolo}
 
-Todas las mediciones de esta sección se generaron ejecutando el sistema real
+Todas las mediciones de este informe se generaron ejecutando el sistema real
 levantado con \texttt{make up}, no en simulación, y sus artefactos crudos
-están versionados.
+están versionados sin edición manual. Esta sección declara el procedimiento
+antes de presentar los resultados, para que un tercero pueda repetirlos y
+obtener cifras comparables.
+
+\subsection{Entorno de ejecución}
+
+\begin{center}
+\begin{tabular}{@{}lp{9.2cm}@{}}
+\toprule
+\textbf{Elemento} & \textbf{Valor} \\
+\midrule
+Anfitrión & Windows 11 Pro (10.0.26200), Docker 29.6.1 \\
+Contenedores & \texttt{postgres} y \texttt{redis} fijados por digest \texttt{sha256} en \texttt{docker-compose.yml}; backend y frontend construidos desde el repositorio \\
+Backend & Spring Boot 3.2.5 sobre Temurin JDK 21.0.11 \\
+Estado inicial & Base de datos creada desde cero (\texttt{docker compose down -v}) y sembrada con \ruta{db/seed.sql} \\
+Red & Todas las peticiones contra \texttt{localhost}; sin latencia de red externa \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+El estado inicial no es un detalle menor. Los \emph{scripts} de
+inicialización de PostgreSQL solo se ejecutan cuando el directorio de datos
+está vacío: al reutilizar un volumen anterior, el esquema queda congelado en
+una versión previa y el \emph{backend} no arranca. Toda medición reportada
+aquí parte de volumen limpio.
+
+\subsection{Procedimiento por bloque}
+
+\begin{center}
+\begin{tabular}{@{}llp{6.1cm}@{}}
+\toprule
+\textbf{Bloque} & \textbf{Herramienta} & \textbf{Procedimiento y control de variabilidad} \\
+\midrule
+C.1 Rendimiento & k6 & \texttt{make bench}: 3 corridas independientes de 50 usuarios virtuales durante 30\,s. Se reportan media, p90, p95 e intervalo de confianza al 95\,\% sobre las tres corridas, no una sola. \\
+C.2/C.4 Seguridad & \texttt{curl} & \texttt{make audit}: peticiones reales contra el sistema en ejecución, guardando la respuesta HTTP íntegra con cabeceras. Cada control se contrasta en sus dos direcciones: lo que debe rechazarse y lo que debe seguir permitido. \\
+C.3 Usabilidad & SUS en papel & Cuestionario de Brooke de 10 ítems aplicado a 10 participantes externos; transcripción a CSV y cálculo con \ruta{scripts/sus-analysis.py}, cuya aritmética se validó contra los cuatro casos de referencia de la literatura (0, 50, 75 y 100 puntos). \\
+Cobertura & JaCoCo & \texttt{make test}, que ejecuta \texttt{clean test} para que la instrumentación no alcance clases de compilaciones anteriores. \\
+C.5 Accesibilidad & Lighthouse & 3 corridas mediante \ruta{lighthouserc.js}; se reportan los cuatro puntajes agregados y las métricas Web Vitals. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Determinismo y trazabilidad}
+
+Los archivos crudos (\texttt{.json} de k6 y Lighthouse, \texttt{.txt} de las
+respuestas HTTP, \texttt{.csv} del SUS y de JaCoCo) se conservan tal como los
+produjo cada herramienta; los reportes en Markdown se generan a partir de
+ellos mediante los \emph{scripts} de \ruta{scripts/}, nunca a mano. Cada
+archivo de evidencia lleva en su cabecera la fecha en UTC, el \emph{commit}
+corto y la versión de la herramienta que lo generó, de modo que una cifra del
+informe pueda rastrearse hasta la ejecución concreta que la produjo.
+
+% ============================================================
+\section{Evidencia empírica}
 
 \subsection{Rendimiento (Bloque C.1)}
 
@@ -1075,6 +1178,106 @@ Las imágenes de PostgreSQL y Redis están fijadas por digest SHA-256, no por
 etiqueta móvil: dos construcciones del mismo \emph{commit} usan exactamente
 los mismos binarios. La reproducibilidad se verificó clonando el repositorio
 en un directorio independiente, no solo reiniciando el volumen local.
+
+% ============================================================
+\section{Amenazas a la validez}
+\label{sec:amenazas}
+
+Los resultados de la sección anterior cumplen los umbrales exigidos, pero
+cumplirlos no equivale a ser generalizables. Esta sección declara las
+limitaciones que acotan hasta dónde puede sostenerse cada conclusión,
+siguiendo la clasificación habitual en ingeniería de software
+empírica~\cite{iso25010}.
+
+\subsection{Validez de constructo}
+
+\emph{¿Mide cada indicador lo que se pretende medir?}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{La cobertura de instrucciones no mide calidad de las
+    pruebas.} Un 72,5\,\% indica qué proporción del código se ejecuta
+    durante la suite, no que las aserciones sean pertinentes. El caso del
+    registro de usuarios lo demuestra dentro de este mismo proyecto: el
+    \emph{endpoint} estaba cubierto por dos pruebas que pasaban y aun así
+    fallaba en toda petición real (sección~\ref{sec:defectos-runtime}).
+  \item \textbf{La auditoría OWASP verifica controles, no ausencia de
+    vulnerabilidades.} Comprueba seis controles concretos del Top 10 con
+    peticiones dirigidas. No es una prueba de penetración ni un análisis
+    estático: que los seis den correcto no permite afirmar que el sistema
+    sea seguro, solo que esos seis comportamientos son los esperados.
+  \item \textbf{El SUS mide usabilidad percibida, no desempeño.} No se
+    registraron tiempos ni tasas de finalización por tarea, de modo que un
+    participante pudo puntuar alto sin haber completado las tareas
+    propuestas. Las columnas de completitud del CSV quedaron vacías y se
+    declaran vacías en lugar de rellenarse.
+\end{itemize}
+
+\subsection{Validez interna}
+
+\emph{¿Puede algo distinto de lo declarado explicar los resultados?}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Las mediciones de rendimiento se tomaron en la misma
+    máquina que ejecuta el sistema}, sin latencia de red real. Los
+    14,18\,ms de p95 son un límite inferior optimista: en un despliegue con
+    red de por medio la cifra sería mayor, aunque el margen frente al
+    umbral de 200\,ms es amplio.
+  \item \textbf{Tres corridas son pocas} para caracterizar una
+    distribución. Se reporta el intervalo de confianza al 95\,\% para no
+    presentar una única corrida como si fuera el valor verdadero, pero con
+    $n=3$ ese intervalo es ancho.
+  \item \textbf{La base de datos de las mediciones contiene datos
+    sembrados, no un volumen de producción.} El rendimiento de las
+    consultas paginadas sobre un catálogo pequeño no anticipa el
+    comportamiento con miles de estudiantes.
+\end{itemize}
+
+\subsection{Validez externa}
+
+\emph{¿Hasta dónde se generalizan los resultados?}
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{La muestra del SUS es de 10 participantes}, el mínimo
+    metodológico, y por conveniencia. El intervalo de confianza
+    (54,53--81,97) es lo bastante ancho como para que no pueda afirmarse
+    con confianza estadística que la media poblacional supere el umbral de
+    68: 68,25 es la mejor estimación puntual disponible, no un aprobado
+    consolidado.
+  \item \textbf{Los subgrupos por perfil tienen 2 o 3 personas cada uno.}
+    El patrón bimodal es nítido y tiene una explicación plausible ligada a
+    qué flujos están implementados, pero con esos tamaños no puede
+    descartarse que parte de la diferencia sea variación individual. Se
+    presenta como hipótesis orientadora para la Entrega Final, no como
+    conclusión establecida.
+  \item \textbf{Los resultados describen este sistema en este entorno.} No
+    se comparan contra un sistema de referencia ni contra una versión
+    anterior medida en las mismas condiciones.
+\end{itemize}
+
+\subsection{Validez de conclusión}
+
+El riesgo principal de este informe no es estadístico sino de
+procedimiento, y ya se materializó tres veces: \textbf{un indicador puede
+dar verde sobre un sistema que no hace lo que el indicador afirma}
+(sección~\ref{sec:a01-falso-correcto}). Las tres ocurrencias se corrigieron
+en su origen, pero la lección se declara aquí porque acota la confianza que
+merece cualquier cifra de este documento: son válidas en tanto la medición
+se ejecute contra el sistema real, desde estado limpio, y verificando las
+dos direcciones del comportamiento esperado.
+
+Queda además una divergencia sin resolver que afecta la reproducibilidad a
+futuro: el esquema consolidado que crea la base de datos
+(\ruta{db/schema.sql}) y las migraciones Flyway versionadas describen
+estructuras distintas, porque las segundas no se actualizaron tras la
+reestructuración y hoy no se ejecutan (\texttt{FLYWAY\_ENABLED=false}). El
+sistema arranca de forma reproducible por la primera vía, que es la
+verificada en este informe, pero la decisión sobre cuál de las dos fuentes
+queda como autoritativa está pendiente y se declara abierta.
+
+Finalmente, \textbf{el DOI de Zenodo no está asignado} a la etiqueta
+\texttt{v0.9.0-rc}. Sin él, el archivo permanente exigido por el Bloque E.2
+no está satisfecho y la portada de este informe no puede declararlo. Se
+consigna como incumplimiento, no como omisión.
 
 % ============================================================
 \section{Consideraciones éticas}
