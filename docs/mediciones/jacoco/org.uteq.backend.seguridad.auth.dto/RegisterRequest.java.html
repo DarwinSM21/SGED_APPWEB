@@ -1,13 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RegisterRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.dto</a> &gt; <span class="el_source">RegisterRequest.java</span></div><h1>RegisterRequest.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-<span class="fc" id="L7">public record RegisterRequest(</span>
+import java.time.LocalDate;
+
+/**
+ * Datos para dar de alta una cuenta.
+ *
+ * cedula, correo y fechaNacimiento son obligatorios porque la
+ * reestructuracion los convirtio en columnas NOT NULL de
+ * seguridad.personas. Mientras no estuvieron en este DTO, /api/auth/registro
+ * fallaba siempre con 500 al violar la restriccion de la base de datos.
+ */
+<span class="fc" id="L21">public record RegisterRequest(</span>
         @NotBlank @Size(min = 2, max = 100) String nombre,
         @NotBlank @Size(min = 2, max = 100) String apellido,
-        @NotBlank @Email String username,
+        @NotBlank @Pattern(regexp = &quot;\\d{10}&quot;, message = &quot;La cedula debe tener 10 digitos&quot;) String cedula,
+        @NotBlank @Email @Size(max = 200) String correo,
+        @NotNull @Past @JsonFormat(pattern = &quot;yyyy-MM-dd&quot;) LocalDate fechaNacimiento,
+        @NotBlank @Email @Size(max = 50) String username,
         @NotBlank @Size(min = 6) String password
 
 ) {}

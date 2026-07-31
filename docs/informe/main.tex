@@ -155,6 +155,7 @@ Orquestación & Docker Compose, imágenes fijadas por digest SHA-256 \\
 
 % ============================================================
 \section{Resolución de las observaciones previas (Bloque 0)}
+\label{sec:observaciones}
 
 El docente emitió doce observaciones sobre las entregas 1A y 1B. Esta sección
 documenta el estado de cada una con el \emph{commit} que la resuelve, de modo
@@ -534,6 +535,86 @@ mediciones de la sección siguiente. La matriz
 \ruta{docs/trazabilidad/matriz.csv} enlaza cada uno con su prueba y su
 evidencia.
 
+\subsection{Catálogo de la API REST}
+\label{sec:catalogo-api}
+
+La superficie expuesta es de siete recursos y treinta \emph{endpoints}. Se
+lista completa porque es la forma más directa de contrastar lo que el
+sistema realmente ofrece contra lo que los requisitos declaran, y porque la
+columna de autorización es la que concentró el defecto de la
+sección~\ref{sec:a01-falso-correcto}. \textsc{a} abrevia
+\textsc{administrador}; \textsc{e}, \textsc{entrenador}; \textsc{u}, el rol
+\textsc{user}.
+
+\renewcommand{\arraystretch}{1.15}
+\begin{longtable}{@{}llll@{}}
+\toprule
+\textbf{Método y ruta} & \textbf{Operación} & \textbf{Roles} & \textbf{RF} \\
+\midrule
+\endhead
+\multicolumn{4}{@{}l}{\textit{Autenticación} — \texttt{/api/auth}} \\
+\midrule
+\texttt{POST /login} & Inicia sesión, emite cookies & Público & RF-02 \\
+\texttt{POST /registro} & Alta de cuenta & \textsc{a} & RF-01 \\
+\texttt{POST /logout} & Revoca el token en Redis & Autenticado & RF-03 \\
+\texttt{POST /refresh} & Renueva el \emph{access token} & Autenticado & RF-04 \\
+\texttt{GET /me} & Datos de la sesión actual & Autenticado & RF-05 \\
+\texttt{GET /ping} & Sonda de disponibilidad & Público & --- \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Estudiantes} — \texttt{/api/estudiantes}} \\
+\midrule
+\texttt{GET /} & Listado paginado y ordenable & \textsc{a e u} & RF-08 \\
+\texttt{GET /\{id\}} & Consulta individual & \textsc{a e u} & RF-09 \\
+\texttt{POST /} & Alta & \textsc{a} & RF-10 \\
+\texttt{PUT /\{id\}} & Edición & \textsc{a} & RF-12 \\
+\texttt{DELETE /\{id\}} & Baja lógica & \textsc{a} & RF-13 \\
+\texttt{GET /conteo/categoria/\{id\}} & Conteo por procedimiento & \textsc{a e} & RF-14 \\
+\texttt{POST /operaciones/} & Desactivación masiva por & \textsc{a} & RF-15 \\
+\quad\texttt{desactivar-categoria} & \quad procedimiento & & \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Categorías} — \texttt{/api/categorias}} \\
+\midrule
+\texttt{GET /} & Listado paginado & \textsc{a e u} & RF-23 \\
+\texttt{GET /activas} & Catálogo para formularios & \textsc{a e u} & RF-23 \\
+\texttt{GET /\{id\}} & Consulta individual & \textsc{a e u} & RF-23 \\
+\texttt{POST /} & Alta con rango de edad & \textsc{a} & RF-23 \\
+\texttt{PUT /\{id\}} & Edición & \textsc{a} & RF-23 \\
+\texttt{DELETE /\{id\}} & Baja lógica & \textsc{a} & RF-23 \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Entrenadores} — \texttt{/api/entrenadores}} \\
+\midrule
+\texttt{GET /} & Listado paginado & \textsc{a e} & RF-24 \\
+\texttt{GET /\{id\}} & Consulta individual & \textsc{a e} & RF-24 \\
+\texttt{POST /} & Alta con persona y cuenta & \textsc{a} & RF-24 \\
+\texttt{PUT /\{id\}} & Edición & \textsc{a} & RF-24 \\
+\texttt{DELETE /\{id\}} & Baja lógica & \textsc{a} & RF-24 \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Personas} — \texttt{/api/personas} \quad\small(datos identificativos de menores)} \\
+\midrule
+\texttt{GET /} & Listado paginado & \textsc{a} & RF-25 \\
+\texttt{GET /\{id\}} & Consulta individual & \textsc{a} & RF-25 \\
+\texttt{GET /cedula/\{cedula\}} & Búsqueda por cédula & \textsc{a} & RF-25 \\
+\texttt{POST /} & Alta & \textsc{a} & RF-25 \\
+\texttt{PUT /\{id\}} & Edición & \textsc{a} & RF-25 \\
+\texttt{DELETE /\{id\}} & Baja lógica & \textsc{a} & RF-25 \\
+\midrule
+\multicolumn{4}{@{}l}{\textit{Usuarios y catálogos}} \\
+\midrule
+\texttt{/api/usuarios} (5 verbos) & CRUD de cuentas & \textsc{a} & RF-26 \\
+\texttt{GET /api/estados\_generales} & Catálogo de estados & \textsc{a e u} & RF-26 \\
+\bottomrule
+\end{longtable}
+\renewcommand{\arraystretch}{1}
+
+Dos observaciones que la tabla hace evidentes. La primera es que
+\texttt{/api/personas} es el recurso con la superficie más sensible del
+sistema —seis \emph{endpoints} sobre datos identificativos de menores,
+incluido uno de búsqueda directa por cédula— y es exactamente el que
+estuvo sin control de acceso. La segunda es que el dominio deportivo
+expuesto se limita hoy a categorías y entrenadores: horarios, sesiones,
+asistencias y evaluaciones tienen esquema en la base de datos pero ninguna
+ruta REST, y son el objetivo declarado de la Entrega Final.
+
 \subsection{Modelo de datos}
 
 El esquema se divide en dos espacios de nombres con responsabilidades
@@ -621,7 +702,7 @@ ejecución~\cite{owasp2021}:
 \toprule
 \textbf{Control} & \textbf{Resultado} & \textbf{Evidencia observada} \\
 \midrule
-A01 Control de acceso & \ok & \texttt{403} al operar sin el rol requerido \\
+A01 Control de acceso & \ok & \texttt{403} en las 7 operaciones administrativas y \texttt{200} en las lecturas permitidas — tras corregir un defecto real, §\ref{sec:a01-falso-correcto} \\
 A02 Fallos criptográficos & \ok & TLS 1.3 en \texttt{:8443}; BCrypt coste 12 \\
 A03 Inyección & \ok & \texttt{422} ante entrada malformada; sin SQL dinámico \\
 A05 Configuración & \ok & CSP, HSTS, \texttt{nosniff}, \texttt{X-Frame-Options: DENY} \\
@@ -645,20 +726,140 @@ Content-Type: application/problem+json
 }
 \end{lstlisting}
 
+\subsubsection{Una auditoría que no auditaba lo que decía auditar}
+\label{sec:a01-falso-correcto}
+
+El control A01 merece una sección propia, porque el resultado
+\texttt{403} de la tabla anterior es correcto \emph{ahora}, y no lo era
+cuando este informe lo dio por bueno la primera vez. La corrección de la
+propia herramienta de medición es parte del resultado.
+
+Al ejecutar la auditoría contra el sistema en vivo aparecieron tres
+defectos encadenados en el guion \ruta{scripts/audit-owasp.sh}:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{El guion se bloqueaba a sí mismo.} Su control A07 agota a
+    propósito los intentos de autenticación para comprobar el \texttt{429}.
+    Ese contador se lleva \emph{por dirección IP}, no por usuario: seis
+    fallos dejan bloqueada durante quince minutos a cualquier cuenta que
+    venga de ese equipo, incluida la del administrador que A01 necesita
+    para preparar su usuario de prueba. En una segunda corrida, A01
+    respondía \texttt{401} en todas las peticiones. Un \texttt{401} se
+    parece mucho a un resultado satisfactorio —el acceso fue rechazado—
+    pero prueba algo mucho más débil: que hace falta estar autenticado. No
+    dice nada sobre si se respetan los roles.
+  \item \textbf{Invocaba una forma de la API que ya no existía.} Llamaba a
+    \ruta{/api/estudiantes/operaciones/desactivar-categoria} con
+    \texttt{?categoria=SUB-12}, la forma anterior a la normalización de la
+    categoría. La petición moría al deserializar el cuerpo, antes de
+    alcanzar el control de acceso.
+  \item \textbf{Sus cuerpos de prueba eran inválidos.} \texttt{@Valid} se
+    evalúa al resolver el argumento del método, es decir \emph{antes} que
+    \texttt{@PreAuthorize}. Un payload malformado devuelve \texttt{422} y
+    nunca llega a ejercitar la autorización que se pretendía evidenciar.
+\end{enumerate}
+
+Corregidos los tres, la auditoría comprueba recurso por recurso, y es
+entonces cuando el control A01 encontró un defecto real de seguridad, que
+se documenta en la sección siguiente.
+
+\subsubsection{El defecto que A01 destapó: control de acceso ausente}
+
+Los cinco recursos que introdujo la reestructuración se crearon
+\textbf{sin ninguna anotación \texttt{@PreAuthorize}}, salvo
+\texttt{UsuarioController}. Como \texttt{SecurityConfig} cierra su cadena
+con \texttt{anyRequest().authenticated()}, la única barrera efectiva era
+poseer una sesión válida. En consecuencia, una cuenta con el rol más
+básico del sistema podía listar todas las personas registradas, buscar una
+por número de cédula, y crear, editar o eliminar registros.
+
+La gravedad no es teórica: \texttt{seguridad.personas} es la tabla que
+concentra los datos identificativos de los estudiantes —menores de edad—
+que \ruta{docs/etica/ETHICS.md} se compromete a proteger. Es además una
+regresión de una observación ya emitida y ya dada por aplicada: OBS-09 de
+la Entrega 1B señalaba precisamente la ausencia de \texttt{@PreAuthorize}
+(sección~\ref{sec:observaciones}). El código nuevo reintrodujo el defecto
+sin que nada lo detectara, porque las pruebas de esos controladores usan
+\texttt{MockMvcBuilders.standaloneSetup()}, que no levanta la cadena de
+filtros de Spring Security: verifican el mapeo HTTP, no la autorización.
+
+La corrección no aplica una regla uniforme, sino una por recurso según el
+dato que maneja:
+
+\begin{center}
+\begin{tabular}{@{}llp{6.4cm}@{}}
+\toprule
+\textbf{Recurso} & \textbf{Acceso} & \textbf{Criterio} \\
+\midrule
+\texttt{Persona} & Solo \textsc{administrador} & Concentra la identificación de menores; ningún otro rol necesita operarla. \\
+\texttt{Usuario} & Solo \textsc{administrador} & Ya lo estaba, a nivel de clase. \\
+\texttt{Categoria} & Lectura: 3 roles \newline Escritura: \textsc{administrador} & El formulario de estudiante consulta las categorías activas; escribir altera un catálogo del que dependen por clave foránea. \\
+\texttt{Entrenador} & Lectura: \textsc{admin}, \textsc{entrenador} \newline Escritura: \textsc{administrador} & El alta y la baja crean o retiran el vínculo con una cuenta. \\
+\texttt{EstadoGeneral} & Lectura: 3 roles & Catálogo sin datos personales. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La evidencia regenerada (\ruta{docs/mediciones/sec/a01-acceso-roto.txt})
+comprueba las dos direcciones, que es lo que hace verificable la
+corrección: \texttt{403} en las siete operaciones administrativas
+—incluida la búsqueda por cédula— y \texttt{200} en las dos lecturas que
+un rol \textsc{user} sí debe poder hacer. Sin esa segunda mitad, la
+evidencia sería compatible con haber roto la aplicación en vez de haberla
+asegurado.
+
+\subsection{Dos defectos de funcionamiento encontrados al ejecutar el sistema}
+\label{sec:defectos-runtime}
+
+Ninguno de los dos aparece si el sistema no se levanta y se usa. Se
+documentan porque ilustran una limitación concreta de la estrategia de
+pruebas de este proyecto, no solo porque estaban.
+
+\textbf{El registro de usuarios estaba completamente roto (RF-01).}
+\ruta{POST /api/auth/registro} devolvía \texttt{500} ante \emph{cualquier}
+petición. La reestructuración convirtió \texttt{cedula}, \texttt{correo} y
+\texttt{fecha\_nacimiento} en columnas \texttt{NOT NULL} de
+\texttt{seguridad.personas}, pero \texttt{RegisterRequest} nunca las pidió;
+el alta violaba la restricción de integridad en cada intento. Tampoco se
+asignaba \texttt{id\_estado\_general}, igualmente obligatorio.
+
+Lo relevante para la evaluación es \emph{por qué no lo detectaron las
+pruebas}. \texttt{AuthServiceTest} cubre el registro con dos casos y ambos
+pasaban: los repositorios están mockeados, de modo que
+\texttt{personaRepository.save()} devuelve el objeto que se le pasa sin
+consultar ninguna base de datos. La restricción \texttt{NOT NULL} la aplica
+PostgreSQL, y en una prueba con dobles PostgreSQL no participa. Es el
+límite natural de la prueba unitaria con mocks: verifica la lógica que
+escribimos, no el contrato con el motor de base de datos. La prueba que se
+agregó no finge resolver eso —haría falta una prueba de integración con
+base real—, sino que cubre el flanco que sí es verificable sin ella: que
+una petición sin esos campos no supere la validación y por tanto nunca
+llegue a la base.
+
+\textbf{Un cuerpo mal formado se reportaba como fallo del servidor.}
+\texttt{HttpMessageNotReadableException} no tenía manejador en
+\texttt{GlobalExceptionHandler} y caía en el genérico, devolviendo
+\texttt{500} «Error interno del servidor» ante un error que es del cliente.
+Además de ser semánticamente incorrecto según RFC 9457~\cite{rfc9457},
+ensuciaba el registro con trazas de pila que no corresponden a ningún
+defecto del sistema —ruido que compite con las anomalías reales en A09.
+Ahora responde \texttt{400}.
+
 \subsection{Cobertura de pruebas}
 \label{sec:cobertura}
 
 \textbf{Medido el 2026-07-30 con construcción limpia
-(\texttt{./mvnw clean test}): 72,7\,\% de cobertura de instrucciones
-(2466 cubiertas de 3393). Cumple el umbral del 60\,\%.} El camino hasta
-este número quedó documentado en vez de solo reportar el resultado final:
-al medir por primera vez después de la reestructuración de paquetes
-(sección~\ref{sec:reestructuracion}) el resultado real era
-\textbf{39,8\,\%} — los recursos nuevos (\texttt{Categoria},
-\texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
-\texttt{EstadoGeneral}) no tenían ninguna prueba propia. Se agregaron 57
-pruebas nuevas para esos cinco recursos (10 clases: servicio y controlador
-de cada uno), y la cobertura subió a 72,7\,\%.
+(\texttt{./mvnw clean test}): 72,5\,\% de cobertura de instrucciones
+(2507 cubiertas de 3457), con 102 pruebas y ningún fallo. Cumple el umbral
+del 60\,\%.} El camino hasta este número quedó documentado en vez de solo
+reportar el resultado final: al medir por primera vez después de la
+reestructuración de paquetes (sección~\ref{sec:reestructuracion}) el
+resultado real era \textbf{39,8\,\%} — los recursos nuevos
+(\texttt{Categoria}, \texttt{Entrenador}, \texttt{Usuario},
+\texttt{Persona}, \texttt{EstadoGeneral}) no tenían ninguna prueba propia.
+Se agregaron 57 pruebas nuevas para esos cinco recursos (10 clases:
+servicio y controlador de cada uno), y la cobertura subió por encima del
+70\,\%.
 
 La palabra «limpia» está ahí por una razón concreta. La primera medición
 posterior a la reestructuración se hizo con \texttt{./mvnw test} sobre un
@@ -668,18 +869,21 @@ que se llegó a archivar como evidencia listaba paquetes que ya no existen
 en el código fuente (\texttt{org.uteq.backend.auth.*},
 \texttt{org.uteq.backend.estudiante.*}): JaCoCo instrumenta lo que
 encuentra en \texttt{target/classes}, no lo que hay en \texttt{src/}. La
-cifra publicada aquí proviene de \texttt{clean test} y el reporte
-archivado en \texttt{docs/mediciones/jacoco/} contiene exactamente los 27
-paquetes reales. La diferencia numérica es pequeña (72,5 frente a
-72,7\,\%), pero una evidencia de cobertura que incluye código inexistente
-no es evidencia válida aunque el porcentaje salga parecido.
+cifra publicada aquí proviene de \texttt{clean test} y el reporte archivado
+en \texttt{docs/mediciones/jacoco/} contiene exactamente los 27 paquetes
+reales. La diferencia numérica entre ambas mediciones era de apenas unas
+décimas, y ese es justamente el punto: una evidencia de cobertura que
+incluye código inexistente no es evidencia válida \emph{aunque} el
+porcentaje salga parecido, porque nada garantiza que la próxima vez la
+distorsión sea igual de pequeña. Para que el defecto no pueda repetirse,
+el objetivo \texttt{make test} pasó a ejecutar \texttt{clean test}.
 
 \begin{center}
 \begin{tabular}{@{}lrp{7.4cm}@{}}
 \toprule
 \textbf{Clase de prueba} & \textbf{Nº} & \textbf{Qué verifica} \\
 \midrule
-\texttt{AuthServiceTest} & 5 & Login correcto e incorrecto, registro, registro duplicado, disponibilidad. \\
+\texttt{AuthServiceTest} & 6 & Login correcto e incorrecto, registro, registro duplicado, registro incompleto rechazado con \texttt{422}, disponibilidad. \\
 \texttt{JwtServiceTest} & 6 & Emisor y audiencia válidos, audiencia distinta rechazada, token manipulado, refresco. \\
 \texttt{LoginAttemptServiceTest} & 6 & Bloqueo al alcanzar el límite, no reinicio del TTL, borrado del contador al acertar. \\
 \texttt{RedisBlacklistServiceTest} & 6 & Revocación con TTL restante, TTL no positivo ignorado, consulta de revocación. \\
@@ -697,7 +901,7 @@ no es evidencia válida aunque el porcentaje salga parecido.
 \texttt{EstadoGeneralServiceTest} & 2 & Listado completo y listado vacío. \\
 \texttt{EstadoGeneralControllerTest} & 1 & Mapeo HTTP del único \emph{endpoint}. \\
 \midrule
-\textbf{Total} & \textbf{101} & \\
+\textbf{Total} & \textbf{102} & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -882,19 +1086,34 @@ son menores que no pueden consentir por sí mismos, porque la asistencia es
 información de localización temporal, y porque las evaluaciones constituyen
 perfilado de personas~\cite{lopdp2021,acm2018}.
 
-Se aplicó minimización: se decidió \emph{no} recolectar peso, altura,
-contextura ni datos de alimentación, pese a haber sido considerados en el
-diseño, por tratarse de datos de salud cuya recolección exigiría garantías
-que este proyecto no puede sostener.
+El principio de minimización se aplicó al diseño original —se descartaron
+contextura y datos de alimentación—, pero conviene ser preciso sobre su
+alcance real, porque la versión anterior de este informe afirmaba que
+tampoco se recolectaban peso y altura y \textbf{esa afirmación ya no es
+cierta}: la reestructuración incorporó ambas columnas a
+\texttt{academico.estudiantes} y son exponibles por la API. El documento de
+ética se corrigió (hallazgo H-06) en lugar de mantener la declaración
+cómoda, y este informe se corrige aquí por la misma razón: una declaración
+de minimización que no coincide con el esquema no protege a nadie.
 
-\ruta{docs/etica/ETHICS.md} documenta además cinco hallazgos abiertos, en
-lugar de afirmar que todo está resuelto: la cédula se almacena sin validación
-ni cifrado; las observaciones del entrenador son texto libre sin control
-sobre un menor; no existe mecanismo de supresión de datos (la baja lógica
-preserva el historial pero no es un borrado); el consentimiento del
-representante no está modelado, lo que bloquea el módulo de notificaciones; y
-el certificado TLS es autofirmado, adecuado para evaluación pero no para
-producción.
+\ruta{docs/etica/ETHICS.md} documenta ocho hallazgos, en lugar de afirmar
+que todo está resuelto: la cédula se almacena sin validación ni cifrado
+(H-01); las observaciones del entrenador son texto libre sin control sobre
+un menor (H-02); no existe mecanismo de supresión de datos —la baja lógica
+preserva el historial pero no es un borrado— (H-03); el consentimiento del
+representante no está modelado, lo que bloquea el módulo de notificaciones
+(H-04); el certificado TLS es autofirmado, adecuado para evaluación pero no
+para producción (H-05); peso y altura se agregaron sin base legal
+documentada (H-06); y la plantilla de consentimiento cubre a los
+evaluadores del SUS, no a los representantes de los menores (H-07).
+
+El octavo, \textbf{H-08}, se registra ya corregido, y se deja escrito
+justamente porque corregirlo en silencio habría sido lo fácil: los datos
+identificativos de los estudiantes estuvieron accesibles a cualquier cuenta
+autenticada del sistema, incluida la búsqueda por número de cédula
+(sección~\ref{sec:a01-falso-correcto}). Un documento de ética que solo
+enumera riesgos hipotéticos y omite la exposición concreta que sí ocurrió
+sería un documento de imagen, no de rendición de cuentas.
 
 Todos los datos del repositorio son ficticios. No se utilizaron datos reales
 de menores en ninguna etapa del desarrollo ni de las mediciones.
@@ -923,11 +1142,27 @@ v4.0~\cite{swebok2024}.
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
     p95 de 14,18\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{72,7\,\%} de cobertura de pruebas frente a un mínimo
+    100/100, y \textbf{72,5\,\%} de cobertura de pruebas frente a un mínimo
     de 60\,\% (sección~\ref{sec:cobertura}) — cifra alcanzada después de
     detectar y corregir una regresión real a 39,8\,\% causada por los
     recursos nuevos de la reestructuración, no reportando directamente un
     número cómodo.
+
+  \item \textbf{Una medición que no se ejecuta contra el sistema real no es
+    evidencia.} Es la lección transversal de esta entrega, y aparece tres
+    veces con la misma forma. La cobertura de JaCoCo se midió sobre un
+    \texttt{target/} con clases previas a la reestructuración e incluía
+    paquetes que ya no existen. La auditoría OWASP A01 devolvía
+    \texttt{401} en todo y eso se parecía a un resultado correcto, cuando en
+    realidad su propio control A07 la había dejado bloqueada. Y el registro
+    de usuarios (RF-01) estaba roto contra la base de datos desde la
+    reestructuración mientras sus dos pruebas unitarias pasaban, porque
+    mockean el repositorio y la restricción la aplica PostgreSQL. En los
+    tres casos el indicador era verde y el sistema no hacía lo que el
+    indicador decía. Las tres mediciones se corrigieron en su origen —
+    \texttt{make test} pasa a \texttt{clean test}, la auditoría limpia su
+    propio contador y comprueba recurso por recurso— para que el defecto no
+    pueda repetirse sin ser visible.
 
   \item El aporte más sustantivo de esta entrega no fue añadir
     funcionalidad, sino \emph{verificar} lo que ya existía, dos veces: una
@@ -937,9 +1172,11 @@ v4.0~\cite{swebok2024}.
     detectado — desde que JaCoCo no medía cobertura en absoluto, hasta que
     un ADR de arquitectura describía un mecanismo de autenticación
     (JWT en \texttt{localStorage}) distinto del que el código realmente usa
-    (cookie \texttt{HttpOnly}). Todos los defectos encontrados se corrigieron
-    y quedan documentados en la sección~\ref{sec:reestructuracion} en vez de
-    ocultarse.
+    (cookie \texttt{HttpOnly}), pasando por el control de acceso ausente en
+    los cinco recursos nuevos (H-08). Todos los defectos encontrados se
+    corrigieron y quedan documentados en las
+    secciones~\ref{sec:reestructuracion} y~\ref{sec:defectos-runtime} en vez
+    de ocultarse.
 
   \item La distinción entre lo implementado y lo modelado se mantiene
     explícita en todo el documento. En el caso de \texttt{Representante} y

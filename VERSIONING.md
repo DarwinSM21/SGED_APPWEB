@@ -17,10 +17,14 @@ corresponde cada entrega del Proyecto Fin de Curso:
   #5–#9).
 - `./mvnw test`: 101 pruebas, 0 fallos, 0 errores.
 - Cobertura JaCoCo: 72,5 % al momento de taguear (por encima del umbral del
-  60 %). **Corregida después a 72,7 %**: la medición del tag se hizo con
-  `./mvnw test` sobre un `target/` que conservaba `.class` previos a la
-  reestructuración. La cifra vigente proviene de `./mvnw clean test` — ver
-  `docs/mediciones/jacoco/` y la sección de cobertura del informe.
+  60 %). **La cifra era correcta, pero la medición no era válida:** se hizo
+  con `./mvnw test` sobre un `target/` que conservaba `.class` previos a la
+  reestructuración, y el reporte archivado llegó a listar paquetes que ya no
+  existen en el código fuente. Vuelta a medir con `./mvnw clean test` sobre
+  el estado actual: 72,5 % (2507 de 3457 instrucciones), 102 pruebas. Que el
+  porcentaje coincida es casualidad aritmética, no confirmación: por eso
+  `make test` pasó a ejecutar `clean test`. Ver `docs/mediciones/jacoco/` y
+  la sección de cobertura del informe.
 - Documentación de arquitectura (ADR-002) corregida para coincidir con el
   código real (JWT en cookie, no `localStorage`).
 - Datos de salud del estudiante (peso/altura) declarados explícitamente en
