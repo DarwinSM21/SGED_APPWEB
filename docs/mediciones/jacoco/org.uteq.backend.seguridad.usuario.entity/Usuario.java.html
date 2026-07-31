@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Usuario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.entity</a> &gt; <span class="el_source">Usuario.java</span></div><h1>Usuario.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.rol.entity.Rol;
+
+import java.time.OffsetDateTime;
+import java.util.Set;
+
+@Entity
+@Table(name = &quot;usuarios&quot;, schema = &quot;seguridad&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Usuario {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_usuario&quot;)
+    private Long idUsuario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;id_persona&quot;, nullable = false)
+    private Persona persona;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;id_estado_general&quot;, nullable = false)
+    private EstadoGeneral estadoGeneral;
+
+    @Column(name = &quot;username&quot;, nullable = false, unique = true, length = 50)
+    private String username;
+
+    @Column(name = &quot;password_hash&quot;, nullable = false, columnDefinition = &quot;text&quot;)
+    private String password_Hash;
+
+    @Column(name = &quot;ultimo_acceso&quot;)
+    private OffsetDateTime ultimoAcceso;
+
+    @Column(name = &quot;activo&quot;)
+    private Boolean activo;
+
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = &quot;updated_at&quot;)
+    private OffsetDateTime updatedAt;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = &quot;usuario_rol&quot;,
+        schema = &quot;seguridad&quot;,
+        joinColumns = @JoinColumn(name = &quot;id_usuario&quot;),
+        inverseJoinColumns = @JoinColumn(name = &quot;id_rol&quot;)
+    )
+    private Set&lt;Rol&gt; roles;
+
+    @PrePersist
+    protected void onCreate() {
+<span class="nc" id="L63">        this.createdAt = OffsetDateTime.now();</span>
+<span class="nc" id="L64">        this.updatedAt = OffsetDateTime.now();</span>
+<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (this.activo == null) this.activo = true;</span>
+<span class="nc" id="L66">    }</span>
+
+    @PreUpdate
+    protected void onUpdate() {
+<span class="nc" id="L70">        this.updatedAt = OffsetDateTime.now();</span>
+<span class="nc" id="L71">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

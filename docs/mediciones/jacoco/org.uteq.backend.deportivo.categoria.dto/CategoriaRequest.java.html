@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.dto</a> &gt; <span class="el_source">CategoriaRequest.java</span></div><h1>CategoriaRequest.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.dto;
+
+import jakarta.validation.constraints.*;
+
+<span class="fc" id="L5">public record CategoriaRequest(</span>
+        @NotBlank(message = &quot;El nombre de la categoría es obligatorio&quot;)
+        @Size(max = 100, message = &quot;El nombre no puede superar los 100 caracteres&quot;)
+        String nombre,
+
+        @NotNull(message = &quot;La edad mínima es obligatoria&quot;)
+        @Min(value = 4, message = &quot;La edad mínima debe ser al menos 4 años&quot;)
+        Short edadMin,
+
+        @NotNull(message = &quot;La edad máxima es obligatoria&quot;)
+        Short edadMax,
+
+        @Size(max = 255, message = &quot;La descripción no puede superar los 255 caracteres&quot;)
+        String descripcion
+) {}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

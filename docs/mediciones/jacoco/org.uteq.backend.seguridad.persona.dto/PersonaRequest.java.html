@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersonaRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.persona.dto</a> &gt; <span class="el_source">PersonaRequest.java</span></div><h1>PersonaRequest.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.persona.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+
+import java.time.LocalDate;
+
+<span class="fc" id="L12">public record PersonaRequest(</span>
+
+        @NotBlank(message = &quot;El nombre es obligatorio&quot;)
+        @Size(max = 100, message = &quot;El nombre no puede superar los 100 caracteres&quot;)
+        String nombre,
+
+        @NotBlank(message = &quot;El apellido es obligatorio&quot;)
+        @Size(max = 100, message = &quot;El apellido no puede superar los 100 caracteres&quot;)
+        String apellido,
+
+        @NotBlank(message = &quot;La cédula es obligatoria&quot;)
+        @Pattern(regexp = &quot;^[0-9]{10}$&quot;, message = &quot;La cédula debe contener exactamente 10 dígitos numéricos&quot;)
+        String cedula,
+
+        @NotBlank(message = &quot;El correo es obligatorio&quot;)
+        @Email(message = &quot;Debe ingresar un correo electrónico válido&quot;)
+        @Size(max = 200, message = &quot;El correo no puede superar los 200 caracteres&quot;)
+        String correo,
+
+        @Size(max = 15, message = &quot;El teléfono no puede superar los 15 caracteres&quot;)
+        String telefono,
+
+        String foto,
+
+        @NotNull(message = &quot;La fecha de nacimiento es obligatoria&quot;)
+        @Past(message = &quot;La fecha de nacimiento debe ser una fecha pasada&quot;)
+        LocalDate fechaNacimiento
+) {}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

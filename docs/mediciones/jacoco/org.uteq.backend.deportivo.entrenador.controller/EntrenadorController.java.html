@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntrenadorController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.entrenador.controller</a> &gt; <span class="el_source">EntrenadorController.java</span></div><h1>EntrenadorController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.entrenador.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.deportivo.entrenador.dto.EntrenadorPageResponse;
+import org.uteq.backend.deportivo.entrenador.dto.EntrenadorRequest;
+import org.uteq.backend.deportivo.entrenador.dto.EntrenadorResponse;
+import org.uteq.backend.deportivo.entrenador.service.EntrenadorService;
+
+@RestController
+@RequestMapping(&quot;/api/entrenadores&quot;)
+@RequiredArgsConstructor
+public class EntrenadorController {
+
+    private final EntrenadorService entrenadorService;
+
+    @GetMapping
+    public ResponseEntity&lt;EntrenadorPageResponse&lt;EntrenadorResponse&gt;&gt; listar(
+            @PageableDefault(size = 10) Pageable pageable) {
+<span class="fc" id="L25">        return ResponseEntity.ok(entrenadorService.listar(pageable));</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;EntrenadorResponse&gt; buscarPorId(@PathVariable Long id) {
+<span class="nc" id="L30">        return ResponseEntity.ok(entrenadorService.buscarPorId(id));</span>
+    }
+
+    @PostMapping
+    public ResponseEntity&lt;EntrenadorResponse&gt; crear(@Valid @RequestBody EntrenadorRequest request) {
+<span class="fc" id="L35">        return ResponseEntity.status(HttpStatus.CREATED).body(entrenadorService.crear(request));</span>
+    }
+
+    @PutMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;EntrenadorResponse&gt; editar(
+            @PathVariable Long id,
+            @Valid @RequestBody EntrenadorRequest request) {
+<span class="nc" id="L42">        return ResponseEntity.ok(entrenadorService.editar(id, request));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+<span class="fc" id="L47">        entrenadorService.eliminar(id);</span>
+<span class="fc" id="L48">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
