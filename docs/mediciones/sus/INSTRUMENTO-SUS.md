@@ -7,17 +7,23 @@
 
 ---
 
-## ⚠️ Estado de esta medición
+## Estado de esta medición
 
-**Las respuestas todavía NO han sido recolectadas.** Este archivo contiene el
-instrumento, el protocolo y las herramientas de análisis, listos para
-aplicarse. El archivo `respuestas.csv` contiene únicamente la cabecera y una
-fila de ejemplo comentada.
+**Recolectada el 2026-07-30, en papel, y transcrita a
+[`respuestas.csv`](respuestas.csv).** 10 participantes: 3 entrenadores, 3
+recepcionistas, 2 estudiantes, 2 padres de familia. Resultado:
+[`REPORT.md`](REPORT.md) — media SUS 68,25 (grado C, Aceptable), con un
+patrón bimodal marcado por perfil que vale más que el promedio agregado.
+
+Los formularios en papel originales son la fuente de verdad; este CSV es su
+transcripción. No se registran nombres, solo un código de participante
+(`ENC-01`…`ENC-10`) y su perfil, siguiendo el mismo principio de anonimato
+del consentimiento informado (`docs/etica/consentimiento/plantilla.md`).
 
 **No se deben inventar respuestas.** Una muestra fabricada invalida la
 medición y constituye falta de honestidad académica. El análisis
 (`scripts/sus-analysis.py`) rechaza deliberadamente ejecutarse con menos de
-10 participantes reales.
+10 participantes reales — la muestra actual cumple ese mínimo exactamente.
 
 ---
 
