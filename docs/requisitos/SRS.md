@@ -388,8 +388,9 @@ categorías deportivas, cada una definida por un nombre y un rango de edad
 - **Prioridad:** Alta (bloquea RF-10/RF-11) · **Estado:** ✅ Implementado
 - **Origen:** `CategoriaController` (`/api/categorias`, 6 endpoints) —
   `deportivo/categoria/controller/CategoriaController.java`
-- **Verificación:** sin prueba automatizada dedicada todavía — ver
-  seguimiento de cobertura en RNF-09.
+- **Verificación:** `CategoriaServiceTest` (9 pruebas: paginación, alta,
+  edición, baja lógica, validación de rango de edad), `CategoriaControllerTest`
+  (7 pruebas: 200/201/204/400/404/422).
 
 ---
 
@@ -400,7 +401,9 @@ alta hecha en `POST /api/auth/registro`) de forma independiente.*
 - **Prioridad:** Media · **Estado:** ✅ Implementado
 - **Origen:** `UsuarioController` (`/api/usuarios`, 5 endpoints) —
   `seguridad/usuario/controller/UsuarioController.java`
-- **Verificación:** sin prueba automatizada dedicada todavía.
+- **Verificación:** `UsuarioServiceTest` (6 pruebas: paginación, username
+  duplicado, alta con contraseña codificada, persona inexistente, baja
+  lógica), `UsuarioControllerTest` (6 pruebas: 200/201/204/400/422).
 
 ---
 
@@ -412,7 +415,9 @@ del rol que la persona tenga en el sistema.*
 - **Prioridad:** Media · **Estado:** ✅ Implementado
 - **Origen:** `PersonaController` (`/api/personas`, 6 endpoints) —
   `seguridad/persona/controller/PersonaController.java`
-- **Verificación:** sin prueba automatizada dedicada todavía.
+- **Verificación:** `PersonaServiceTest` (8 pruebas: paginación, búsqueda por
+  cédula, unicidad de cédula/correo al crear y al editar, baja lógica),
+  `PersonaControllerTest` (6 pruebas: 200/201/204/400/422).
 
 ---
 
@@ -423,6 +428,8 @@ usuarios y estudiantes.*
 - **Prioridad:** Baja · **Estado:** ✅ Implementado (solo lectura — 1 endpoint)
 - **Origen:** `EstadoGeneralController` —
   `seguridad/estado/controller/EstadoGeneralController.java`
+- **Verificación:** `EstadoGeneralServiceTest` (2 pruebas),
+  `EstadoGeneralControllerTest` (1 prueba).
 
 ---
 
@@ -449,7 +456,10 @@ registrarse dos veces como entrenador.*
 - **Esquema:** `deportivo.entrenadores`, con `UNIQUE` sobre `id_persona` **e**
   `id_usuario` (el vínculo con `Usuario` es nuevo respecto a la v1.0 de este
   documento).
-- **Verificación:** sin prueba automatizada dedicada todavía.
+- **Verificación:** `EntrenadorServiceTest` (6 pruebas: paginación con
+  mapeo de persona/usuario, persona duplicada, usuario duplicado, alta
+  válida, baja lógica), `EntrenadorControllerTest` (5 pruebas:
+  200/201/204/404/422).
 
 ---
 
@@ -592,23 +602,19 @@ Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
 al 60 %, verificada automáticamente en la construcción.*
 
 - **Medido el 2026-07-30 (`./mvnw test`, 60 clases analizadas):
-  39,8 % — NO CUMPLE el umbral de 60 %.**
-- 44 pruebas en 7 clases, **todas pasan** (0 fallos, 0 errores); el
-  problema no es que las pruebas fallen, es que los ~11 controladores,
-  servicios y entidades nuevos de la reestructuración (Categoria,
-  Entrenador, Usuario, Persona, EstadoGeneral, más los stubs de
-  Representante/Equipo) no tienen ninguna prueba propia, y diluyeron el
-  porcentaje agregado.
-- **Esto es una regresión real, no un error de medición**, respecto a la
-  cifra de 68 % que documentaban tanto la v1.0 de este SRS como
-  `docs/observaciones/Observaciones.md` (OBS-10) — ambas correctas *en el
-  momento en que se midieron*, antes de que se agregara el código nuevo.
-- Evidencia: `docs/mediciones/jacoco/` (pendiente de regenerar el reporte
-  HTML con la nueva ejecución; el `.csv` usado para este cálculo se generó
-  localmente el 2026-07-30 y no está commiteado todavía).
-- **Pendiente antes de tagear `v0.9.0-rc`:** agregar pruebas mínimas para
-  los controladores/servicios nuevos, o decidir conscientemente no tagear
-  hasta subir la cobertura de vuelta por encima del 60 %.
+  72,5 % (2488 instrucciones cubiertas de 3432) — CUMPLE el umbral de 60 %.**
+- 101 pruebas en 17 clases, **todas pasan** (0 fallos, 0 errores).
+- **Historial de esta cifra en la misma jornada**, para que quede trazable:
+  primero se detectó una regresión real a 39,8 % (los 5 recursos nuevos de
+  la reestructuración — Categoria, Entrenador, Usuario, Persona,
+  EstadoGeneral — no tenían ninguna prueba propia); se agregaron 57 pruebas
+  nuevas (`CategoriaServiceTest`, `CategoriaControllerTest`,
+  `EntrenadorServiceTest`, `EntrenadorControllerTest`, `UsuarioServiceTest`,
+  `UsuarioControllerTest`, `PersonaServiceTest`, `PersonaControllerTest`,
+  `EstadoGeneralServiceTest`, `EstadoGeneralControllerTest`) y la cobertura
+  subió a 72,5 %.
+- Evidencia: `docs/mediciones/jacoco/` (reporte regenerado con la
+  ejecución que incluye las 101 pruebas).
 
 **RNF-10 — Tipificación de errores**
 *El sistema deberá responder los errores en formato `ProblemDetail`

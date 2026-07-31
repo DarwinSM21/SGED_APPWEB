@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.service</a> &gt; <span class="el_source">CategoriaService.java</span></div><h1>CategoriaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.categoria.dto.CategoriaRequest;
+import org.uteq.backend.deportivo.categoria.dto.CategoriaResponse;
+import org.uteq.backend.deportivo.categoria.entity.Categoria;
+import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CategoriaService {
+
+    private final CategoriaRepository categoriaRepository;
+
+    @Transactional(readOnly = true)
+    public Page&lt;CategoriaResponse&gt; listarPaginado(Pageable pageable) {
+<span class="fc" id="L24">        return categoriaRepository.findByActivoTrue(pageable)</span>
+<span class="fc" id="L25">                .map(this::toResponse);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;CategoriaResponse&gt; listarTodasActivas() {
+<span class="fc" id="L30">        return categoriaRepository.findByActivoTrue().stream()</span>
+<span class="fc" id="L31">                .map(this::toResponse)</span>
+<span class="fc" id="L32">                .toList();</span>
+    }
+
+    @Transactional(readOnly = true)
+    public CategoriaResponse buscarPorId(Long id) {
+<span class="fc" id="L37">        Categoria c = categoriaRepository.findById(id)</span>
+<span class="fc" id="L38">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L39">        return toResponse(c);</span>
+    }
+
+    @Transactional
+    public CategoriaResponse crear(CategoriaRequest request) {
+<span class="fc" id="L44">        validarEdades(request.edadMin(), request.edadMax());</span>
+
+<span class="fc" id="L46">        Categoria categoria = Categoria.builder()</span>
+<span class="fc" id="L47">                .nombre(request.nombre())</span>
+<span class="fc" id="L48">                .edadMin(request.edadMin())</span>
+<span class="fc" id="L49">                .edadMax(request.edadMax())</span>
+<span class="fc" id="L50">                .descripcion(request.descripcion())</span>
+<span class="fc" id="L51">                .activo(true)</span>
+<span class="fc" id="L52">                .build();</span>
+
+<span class="fc" id="L54">        return toResponse(categoriaRepository.save(categoria));</span>
+    }
+
+    @Transactional
+    public CategoriaResponse editar(Long id, CategoriaRequest request) {
+<span class="fc" id="L59">        validarEdades(request.edadMin(), request.edadMax());</span>
+
+<span class="fc" id="L61">        Categoria categoria = categoriaRepository.findById(id)</span>
+<span class="pc" id="L62">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+
+<span class="fc" id="L64">        categoria.setNombre(request.nombre());</span>
+<span class="fc" id="L65">        categoria.setEdadMin(request.edadMin());</span>
+<span class="fc" id="L66">        categoria.setEdadMax(request.edadMax());</span>
+<span class="fc" id="L67">        categoria.setDescripcion(request.descripcion());</span>
+
+<span class="fc" id="L69">        return toResponse(categoriaRepository.save(categoria));</span>
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+<span class="fc" id="L74">        Categoria categoria = categoriaRepository.findById(id)</span>
+<span class="pc" id="L75">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L76">        categoria.setActivo(false);</span>
+<span class="fc" id="L77">        categoriaRepository.save(categoria);</span>
+<span class="fc" id="L78">    }</span>
+
+    private void validarEdades(Short edadMin, Short edadMax) {
+<span class="pc bpc" id="L81" title="2 of 4 branches missed.">        if (edadMin == null || edadMax == null) {</span>
+<span class="nc" id="L82">            throw new IllegalArgumentException(&quot;Las edades mínima y máxima son obligatorias&quot;);</span>
+        }
+
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (edadMax &lt;= edadMin) {</span>
+<span class="fc" id="L86">            throw new IllegalArgumentException(&quot;La edad máxima debe ser mayor a la edad mínima&quot;);</span>
+        }
+<span class="fc" id="L88">    }</span>
+
+    private CategoriaResponse toResponse(Categoria c) {
+<span class="fc" id="L91">        return new CategoriaResponse(</span>
+<span class="fc" id="L92">                c.getIdCategoria(),</span>
+<span class="fc" id="L93">                c.getNombre(),</span>
+<span class="fc" id="L94">                c.getEdadMin(),</span>
+<span class="fc" id="L95">                c.getEdadMax(),</span>
+<span class="fc" id="L96">                c.getDescripcion(),</span>
+<span class="fc" id="L97">                c.getActivo(),</span>
+<span class="fc" id="L98">                c.getCreatedAt()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

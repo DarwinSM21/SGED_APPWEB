@@ -576,20 +576,20 @@ Content-Type: application/problem+json
 \subsection{Cobertura de pruebas}
 \label{sec:cobertura}
 
-\textbf{Medido de nuevo el 2026-07-30, tras la reestructuración de paquetes
-(\texttt{./mvnw test}, 60 clases analizadas): 39,8\,\% de cobertura de
-instrucciones (1367 cubiertas de 3432). NO cumple el umbral del
-60\,\%.} Las 44 pruebas existentes pasan todas (0 fallos, 0 errores); el
-problema no es que algo esté roto, es que los recursos nuevos
-(\texttt{Categoria}, \texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
-\texttt{EstadoGeneral}, más los paquetes vacíos de \texttt{Representante} y
-\texttt{Equipo}) no tienen ninguna prueba propia y diluyeron el porcentaje
-agregado. Ver sección~\ref{sec:reestructuracion} para el porqué de este
-número frente a la cifra de 68,1\,\% que documentaba la versión anterior de
-este informe.
+\textbf{Medido el 2026-07-30 tras cerrar la brecha de pruebas
+(\texttt{./mvnw test}, 60 clases analizadas): 72,5\,\% de cobertura de
+instrucciones (2488 cubiertas de 3432). Cumple el umbral del 60\,\%.} El
+camino hasta este número quedó documentado en vez de solo reportar el
+resultado final: al medir por primera vez después de la reestructuración de
+paquetes (sección~\ref{sec:reestructuracion}) el resultado real era
+\textbf{39,8\,\%} — los recursos nuevos (\texttt{Categoria},
+\texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
+\texttt{EstadoGeneral}) no tenían ninguna prueba propia. Se agregaron 57
+pruebas nuevas para esos cinco recursos (10 clases: servicio y controlador
+de cada uno), y la cobertura subió a 72,5\,\%.
 
 \begin{center}
-\begin{tabular}{@{}lrp{7.6cm}@{}}
+\begin{tabular}{@{}lrp{7.4cm}@{}}
 \toprule
 \textbf{Clase de prueba} & \textbf{Nº} & \textbf{Qué verifica} \\
 \midrule
@@ -600,23 +600,37 @@ este informe.
 \texttt{EstudianteControllerTest} & 9 & Los siete verbos del recurso más \texttt{404} y \texttt{422}. \\
 \texttt{EstudianteServiceTest} & 11 & Paginación envuelta, baja lógica, persistencia transacional, delegación al procedimiento SQL. \\
 \texttt{BackendApplicationTests} & 1 & Arranque del contexto contra el esquema migrado. \\
+\texttt{CategoriaServiceTest} & 9 & Paginación, alta, edición, baja lógica, validación de rango de edad. \\
+\texttt{CategoriaControllerTest} & 7 & Mapeo HTTP: \texttt{200/201/204/400/404/422}. \\
+\texttt{EntrenadorServiceTest} & 6 & Paginación con mapeo persona/usuario, persona o usuario duplicados, alta, baja lógica. \\
+\texttt{EntrenadorControllerTest} & 5 & Mapeo HTTP: \texttt{200/201/204/404/422}. \\
+\texttt{UsuarioServiceTest} & 6 & Paginación, username duplicado, alta con contraseña codificada, persona inexistente, baja lógica. \\
+\texttt{UsuarioControllerTest} & 6 & Mapeo HTTP: \texttt{200/201/204/400/422}. \\
+\texttt{PersonaServiceTest} & 8 & Paginación, búsqueda por cédula, unicidad de cédula/correo al crear y editar, baja lógica. \\
+\texttt{PersonaControllerTest} & 6 & Mapeo HTTP: \texttt{200/201/204/400/422}. \\
+\texttt{EstadoGeneralServiceTest} & 2 & Listado completo y listado vacío. \\
+\texttt{EstadoGeneralControllerTest} & 1 & Mapeo HTTP del único \emph{endpoint}. \\
 \midrule
-\textbf{Total} & \textbf{44} & \\
+\textbf{Total} & \textbf{101} & \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-\emph{Ningún recurso nuevo (Categoria, Entrenador, Usuario, Persona,
-EstadoGeneral) tiene fila en esta tabla porque ninguno tiene prueba
-dedicada todavía} — es, junto con la encuesta SUS pendiente
-(sección~\ref{sec:sus}), el trabajo más urgente antes de tagear
-\texttt{v0.9.0-rc}.
+Un detalle técnico real que surgió al escribir estas pruebas: los cuatro
+controladores que reciben \texttt{Pageable} como parámetro
+(\texttt{Categoria}, \texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona})
+fallaban con \texttt{500} bajo \texttt{MockMvcBuilders.standaloneSetup()},
+porque ese modo de arranque no registra el
+\texttt{PageableHandlerMethodArgumentResolver} que sí provee el contexto
+completo de Spring — \texttt{EstudianteController} no lo sufre porque usa
+\texttt{@RequestParam} planos en vez de \texttt{Pageable}. Se resolvió
+registrando el resolutor explícitamente en cada prueba.
 
-Un detalle relevante: en una entrega anterior se descubrió que JaCoCo
-\emph{nunca} había generado cobertura real, porque el \texttt{argLine}
-configurado en Surefire sobrescribía el \emph{javaagent} del propio JaCoCo.
-Ese defecto está corregido; la medición actual sí es real, y por eso puede
-mostrar honestamente una regresión.
+Un detalle relevante de una entrega anterior: se había descubierto que
+JaCoCo \emph{nunca} había generado cobertura real, porque el
+\texttt{argLine} configurado en Surefire sobrescribía el \emph{javaagent}
+del propio JaCoCo. Ese defecto está corregido; por eso esta medición pudo
+mostrar honestamente primero una regresión y después la mejora real.
 
 Las pruebas de \texttt{LoginAttemptServiceTest} merecen mención aparte:
 verifican no solo que el bloqueo ocurra, sino que un fallo posterior
@@ -774,13 +788,14 @@ v4.0~\cite{swebok2024}.
 \section{Conclusiones}
 
 \begin{enumerate}[leftmargin=*]
-  \item El sistema cumple con holgura la mayoría de los umbrales
-    cuantitativos exigidos: p95 de 14,18\,ms frente a un límite de 200\,ms,
-    6 de 6 controles OWASP verificados con evidencia reproducible, y
-    accesibilidad Lighthouse de 100/100. \textbf{La cobertura de pruebas no
-    cumple} (39,8\,\% medido hoy frente a un mínimo de 60\,\%) — se reporta
-    así deliberadamente en vez de repetir la cifra de una medición anterior
-    a la reestructuración de paquetes (sección~\ref{sec:cobertura}).
+  \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
+    p95 de 14,18\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
+    verificados con evidencia reproducible, accesibilidad Lighthouse de
+    100/100, y \textbf{72,5\,\%} de cobertura de pruebas frente a un mínimo
+    de 60\,\% (sección~\ref{sec:cobertura}) — cifra alcanzada después de
+    detectar y corregir una regresión real a 39,8\,\% causada por los
+    recursos nuevos de la reestructuración, no reportando directamente un
+    número cómodo.
 
   \item El aporte más sustantivo de esta entrega no fue añadir
     funcionalidad, sino \emph{verificar} lo que ya existía, dos veces: una
@@ -799,12 +814,11 @@ v4.0~\cite{swebok2024}.
     Java existe pero está vacío (\texttt{Representante}, \texttt{Equipo}):
     no se cuentan como funcionalidad entregada solo porque el archivo exista.
 
-  \item Quedan abiertos tres frentes, en orden de urgencia: subir la
-    cobertura de pruebas de vuelta por encima del 60\,\% antes de tagear
-    \texttt{v0.9.0-rc}; la encuesta SUS, que requiere participantes reales
-    y no puede fabricarse; y la exposición REST del dominio deportivo
-    restante (horarios, sesiones, asistencias, evaluaciones), que es el
-    objetivo natural de la Entrega Final.
+  \item Queda abierto un frente que no puede resolverse escribiendo código:
+    la encuesta SUS (sección~\ref{sec:sus}) requiere participantes externos
+    reales y no se fabrica. La exposición REST del dominio deportivo
+    restante (horarios, sesiones, asistencias, evaluaciones) es el objetivo
+    natural de la Entrega Final.
 \end{enumerate}
 
 \newpage

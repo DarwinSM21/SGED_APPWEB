@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.service</a> &gt; <span class="el_source">UsuarioService.java</span></div><h1>UsuarioService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.config.RedisCacheConfig;
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
+import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
+import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+@Service
+@RequiredArgsConstructor
+public class UsuarioService {
+
+    private final UsuarioRepository usuarioRepository;
+    private final PersonaRepository personaRepository;
+    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    @Cacheable(value = RedisCacheConfig.CACHE_USUARIOS, key = &quot;#pageable.pageNumber + '-' + #pageable.pageSize&quot;)
+    @Transactional(readOnly = true)
+    public UsuarioPageResponse&lt;UsuarioResponse&gt; listar(Pageable pageable) {
+<span class="fc" id="L35">        Page&lt;Usuario&gt; page = usuarioRepository.findByActivoTrue(pageable);</span>
+<span class="fc" id="L36">        var content = page.getContent().stream().map(this::toResponse).toList();</span>
+<span class="fc" id="L37">        return new UsuarioPageResponse&lt;&gt;(</span>
+                content,
+<span class="fc" id="L39">                page.getNumber(),</span>
+<span class="fc" id="L40">                page.getSize(),</span>
+<span class="fc" id="L41">                page.getTotalElements(),</span>
+<span class="fc" id="L42">                page.getTotalPages()</span>
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioResponse buscarPorId(Long id) {
+<span class="fc" id="L48">        Usuario u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)</span>
+<span class="pc" id="L49">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L50">        return toResponse(u);</span>
+ }
+
+    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @Transactional
+    public UsuarioResponse crear(UsuarioRequest request) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (usuarioRepository.existsByUsername(request.username())) {</span>
+<span class="fc" id="L57">            throw new IllegalArgumentException(&quot;El nombre de usuario ya se encuentra registrado&quot;);</span>
+        }
+
+<span class="fc" id="L60">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="fc" id="L61">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
+
+<span class="fc" id="L63">        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
+<span class="pc" id="L64">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
+
+<span class="fc" id="L66">        Usuario usuario = Usuario.builder()</span>
+<span class="fc" id="L67">                .persona(persona)</span>
+<span class="fc" id="L68">                .estadoGeneral(estado)</span>
+<span class="fc" id="L69">                .username(request.username())</span>
+<span class="fc" id="L70">                .password_Hash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L71">                .activo(true)</span>
+<span class="fc" id="L72">                .build();</span>
+
+<span class="fc" id="L74">        usuario = usuarioRepository.save(usuario);</span>
+<span class="fc" id="L75">        return toResponse(usuario);</span>
+    }
+
+    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @Transactional
+    public UsuarioResponse editar(Long id, UsuarioRequest request) {
+<span class="nc" id="L81">        Usuario usuario = usuarioRepository.findById(id)</span>
+<span class="nc" id="L82">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+
+<span class="nc bnc" id="L84" title="All 4 branches missed.">        if (!usuario.getUsername().equals(request.username()) &amp;&amp; usuarioRepository.existsByUsername(request.username())) {</span>
+<span class="nc" id="L85">            throw new IllegalArgumentException(&quot;El nombre de usuario ya está ocupado&quot;);</span>
+        }
+
+<span class="nc" id="L88">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="nc" id="L89">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
+
+<span class="nc" id="L91">        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
+<span class="nc" id="L92">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
+
+<span class="nc" id="L94">        usuario.setPersona(persona);</span>
+<span class="nc" id="L95">        usuario.setEstadoGeneral(estado);</span>
+<span class="nc" id="L96">        usuario.setUsername(request.username());</span>
+        // Se codifica directamente ya que la validación @NotBlank en el DTO asegura que no viene vacía
+<span class="nc" id="L98">        usuario.setPassword_Hash(passwordEncoder.encode(request.password()));</span>
+
+<span class="nc" id="L100">        usuario = usuarioRepository.save(usuario);</span>
+<span class="nc" id="L101">        return toResponse(usuario);</span>
+    }
+
+    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @Transactional
+    public void eliminar(Long id) {
+<span class="fc" id="L107">        Usuario usuario = usuarioRepository.findById(id)</span>
+<span class="pc" id="L108">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L109">        usuario.setActivo(false);</span>
+<span class="fc" id="L110">        usuarioRepository.save(usuario);</span>
+<span class="fc" id="L111">    }</span>
+
+    private UsuarioResponse toResponse(Usuario u) {
+<span class="fc" id="L114">        return new UsuarioResponse(</span>
+<span class="fc" id="L115">                u.getIdUsuario(),</span>
+<span class="fc" id="L116">                u.getPersona().getIdPersona(),</span>
+<span class="fc" id="L117">                u.getPersona().getNombre(),</span>
+<span class="fc" id="L118">                u.getPersona().getApellido(),</span>
+<span class="fc" id="L119">                u.getPersona().getCorreo(),</span>
+<span class="fc" id="L120">                u.getEstadoGeneral().getIdEstadoGeneral(),</span>
+<span class="fc" id="L121">                u.getEstadoGeneral().getNombre(),</span>
+<span class="fc" id="L122">                u.getUsername(),</span>
+<span class="fc" id="L123">                u.getUltimoAcceso(),</span>
+<span class="fc" id="L124">                u.getActivo(),</span>
+<span class="fc" id="L125">                u.getCreatedAt()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

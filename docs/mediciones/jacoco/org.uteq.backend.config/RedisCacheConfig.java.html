@@ -4,59 +4,60 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.uteq.backend.estudiante.dto.PageResponse;
+import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 
 import java.time.Duration;
 
-/**
- * Cache Redis del endpoint de listado (Bloque A.1).
- * El TTL se declara en configuración externa (application.yml / variable
- * de entorno CACHE_TTL_SECONDS), nunca en código, como exige la guía.
- */
 @Configuration
-@EnableCaching
-<span class="fc" id="L26">public class RedisCacheConfig {</span>
+<span class="fc" id="L18">public class RedisCacheConfig {</span>
 
     public static final String CACHE_ESTUDIANTES = &quot;estudiantes&quot;;
+    public static final String CACHE_ENTRENADORES = &quot;entrenadores&quot;;
+    public static final String CACHE_USUARIOS = &quot;usuarios&quot;;
 
     @Value(&quot;${cache.estudiantes.ttl-seconds:60}&quot;)
-    private long ttlSeconds;
+    private long ttlEstudiantesSeconds;
+
+    @Value(&quot;${cache.entrenadores.ttl-seconds:60}&quot;)
+    private long ttlEntrenadoresSeconds;
+
+    @Value(&quot;${cache.usuarios.ttl-seconds:60}&quot;)
+    private long ttlUsuariosSeconds;
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
-        // GenericJackson2JsonRedisSerializer con default typing NON_FINAL no
-        // agrega @class al objeto raiz cuando este es un record final
-        // (PageResponse lo es): al leer, Jackson no sabe que tipo reconstruir
-        // y falla con &quot;missing type id property '@class'&quot; - error que solo
-        // aparece en el segundo request en adelante (el primero escribe el
-        // cache, nunca lo lee). Como este cache solo guarda un tipo conocido
-        // (PageResponse&lt;EstudianteResponse&gt;), es mas simple y robusto atar el
-        // serializador directamente a esa clase en vez de depender de tipado
-        // polimorfico generico.
-<span class="fc" id="L44">        ObjectMapper mapper = new ObjectMapper();</span>
-<span class="fc" id="L45">        mapper.registerModule(new JavaTimeModule());</span>
-<span class="fc" id="L46">        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);</span>
+        // 1. Configuramos un ObjectMapper limpio con módulo de fechas
+<span class="fc" id="L36">        ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="fc" id="L37">        objectMapper.registerModule(new JavaTimeModule());</span>
+<span class="fc" id="L38">        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);</span>
 
-<span class="fc" id="L48">        Jackson2JsonRedisSerializer&lt;PageResponse&gt; serializer =</span>
-                new Jackson2JsonRedisSerializer&lt;&gt;(PageResponse.class);
-<span class="fc" id="L50">        serializer.setObjectMapper(mapper);</span>
+        // 2. Creamos el serializador pasando directamente este ObjectMapper (sin activateDefaultTyping)
+<span class="fc" id="L41">        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);</span>
 
-<span class="fc" id="L52">        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()</span>
-<span class="fc" id="L53">                .entryTtl(Duration.ofSeconds(ttlSeconds))</span>
-<span class="fc" id="L54">                .serializeValuesWith(RedisSerializationContext.SerializationPair</span>
-<span class="fc" id="L55">                        .fromSerializer(serializer));</span>
+        // 3. Configuraciones de caché
+<span class="fc" id="L44">        RedisCacheConfiguration configEstudiantes = RedisCacheConfiguration.defaultCacheConfig()</span>
+<span class="fc" id="L45">                .entryTtl(Duration.ofSeconds(ttlEstudiantesSeconds))</span>
+<span class="fc" id="L46">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
 
-<span class="fc" id="L57">        return RedisCacheManager.builder(factory)</span>
-<span class="fc" id="L58">                .withCacheConfiguration(CACHE_ESTUDIANTES, config)</span>
-<span class="fc" id="L59">                .build();</span>
+<span class="fc" id="L48">        RedisCacheConfiguration configEntrenadores = RedisCacheConfiguration.defaultCacheConfig()</span>
+<span class="fc" id="L49">                .entryTtl(Duration.ofSeconds(ttlEntrenadoresSeconds))</span>
+<span class="fc" id="L50">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
+
+<span class="fc" id="L52">        RedisCacheConfiguration configUsuarios = RedisCacheConfiguration.defaultCacheConfig()</span>
+<span class="fc" id="L53">                .entryTtl(Duration.ofSeconds(ttlUsuariosSeconds))</span>
+<span class="fc" id="L54">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
+
+<span class="fc" id="L56">        return RedisCacheManager.builder(factory)</span>
+<span class="fc" id="L57">                .withCacheConfiguration(CACHE_ESTUDIANTES, configEstudiantes)</span>
+<span class="fc" id="L58">                .withCacheConfiguration(CACHE_ENTRENADORES, configEntrenadores)</span>
+<span class="fc" id="L59">                .withCacheConfiguration(CACHE_USUARIOS, configUsuarios)</span>
+<span class="fc" id="L60">                .build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
