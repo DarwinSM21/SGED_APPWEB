@@ -37,7 +37,19 @@ complementario a este, no un duplicado.
 - Reporte JaCoCo archivado regenerado con `clean test`: el anterior se midió
   sobre un `target/` con `.class` de antes de la reestructuración e incluía
   paquetes inexistentes (`org.uteq.backend.auth.*`,
-  `org.uteq.backend.estudiante.*`).
+  `org.uteq.backend.estudiante.*`). El objetivo `make test` pasa a usar
+  `clean test` para que el defecto no pueda repetirse.
+- Modelo C4 actualizado al estado real: el nivel 3 pasa de 2 a 20
+  componentes (los tres dominios, no solo `auth` y `estudiante`), y la
+  descripción de PostgreSQL corrige el esquema `academico` y los
+  procedimientos `sp_*` reales. Nuevo `L3-componentes.png`.
+- Eliminados los `.puml` de `docs/diagramas/` que duplicaban el modelo C4
+  con contenido previo a la reestructuración; `workspace.dsl` queda como
+  fuente única y `docs/diagramas/` conserva solo el MER.
+- Nuevo objetivo `make diagrams`: regenera los PNG del C4 desde el DSL con
+  `structurizr/structurizr` y `plantuml/plantuml` en contenedores. Se
+  documenta que la imagen `structurizr/cli` quedó deprecada y su entrypoint
+  ya no exporta nada.
 - Retirado `docs/informe-entrega-3.pdf` (sin fuente `.tex`/`.docx`
   versionada); `docs/informe/main.tex` queda como único informe oficial.
 - Colisión de numeración `ADR-003` resuelta (el propio pasa a `ADR-007`).

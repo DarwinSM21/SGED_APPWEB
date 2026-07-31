@@ -178,8 +178,9 @@ estudiantes»); no usan «El sistema deberá\ldots». &
 normativa y criterio de verificación~\cite{iso29148}. & \texttt{98bab0d} \\
 
 OBS-02 & Los diagramas C4 N1/N2 y el MER contienen texto marcador
-«[Reemplazar con PNG]». & \ruta{docs/diagramas/} contiene los PNG reales
-más las fuentes \texttt{.puml} y \texttt{.dbml}. & \texttt{bf6ee80} \\
+«[Reemplazar con PNG]». & \ruta{docs/arquitectura/} contiene los C4 de
+niveles 1--3 en PNG, generados desde \texttt{workspace.dsl}; el MER queda
+en \ruta{docs/diagramas/}. & \texttt{bf6ee80} \\
 
 OBS-03 & Incoherencia de pila: el ADR decide PHP/Laravel/MySQL, pero el
 repositorio construye Spring Boot/Angular/PostgreSQL. & ADR-001 reescrito:
@@ -352,7 +353,44 @@ el código no es evidencia, es motivo de observación.
 
 La documentación de arquitectura en el modelo C4~\cite{brown2018c4} y las
 decisiones arquitectónicas (ADR)~\cite{nygard2011adr} se mantienen en
-\ruta{docs/diagramas/} y \ruta{docs/adr/}.
+\ruta{docs/arquitectura/} y \ruta{docs/adr/}.
+
+El modelo C4 completo (niveles 1 a 3) vive en un único archivo
+\ruta{docs/arquitectura/workspace.dsl} escrito en Structurizr DSL. Los tres
+PNG del mismo directorio son artefactos derivados: se regeneran con
+\texttt{make diagrams}, que exporta el DSL a PlantUML y lo renderiza, ambos
+pasos en contenedores. Esto cierra un problema real de esta entrega: antes
+coexistían dos modelos C4 —el DSL y unos \texttt{.puml} sueltos en
+\ruta{docs/diagramas/}— y los \texttt{.puml} habían quedado congelados en
+la arquitectura anterior a la reestructuración de paquetes. Se eliminaron
+en favor del DSL, por la misma razón por la que se retiró el informe en PDF
+sin fuente y se renumeró el ADR duplicado: dos versiones de la misma verdad
+garantizan que al menos una esté equivocada.
+\ruta{docs/diagramas/} conserva únicamente el MER, que no se modela en C4.
+
+\subsection{Vista de componentes (C4 nivel 3)}
+\label{sec:c4n3}
+
+El nivel 3 es el que hace visible la reestructuración descrita en la
+sección~\ref{sec:reestructuracion}: los veinte componentes del contenedor
+\emph{API Spring Boot} agrupados por dominio. Cada controlador delega en un
+servicio, cada servicio accede a datos por un repositorio JPA, y ningún
+controlador toca un repositorio directamente — la disciplina de capas es
+verificable en el diagrama, no solo declarada en el texto.
+
+\begin{center}
+\includegraphics[width=\textwidth]{../arquitectura/L3-componentes.png}
+\end{center}
+
+Dos detalles del diagrama merecen lectura explícita. Primero,
+\texttt{EstudianteRepository} es el único repositorio que invoca
+procedimientos almacenados (sección~\ref{sec:acceso-datos}): el resto usa
+Spring Data JPA puro, que es exactamente el reparto que exige la estrategia
+híbrida. Segundo, \texttt{EstudianteService} depende del repositorio del
+dominio deportivo para resolver la categoría por clave foránea; esa flecha
+cruzando de \texttt{academico} a \texttt{deportivo} es la consecuencia
+directa de haber normalizado la categoría, y es la clase de acoplamiento
+que conviene tener dibujado antes de que crezca.
 
 \subsection{Autenticación: JWT en cookie \texttt{HttpOnly}}
 
@@ -379,6 +417,7 @@ inmediatamente, aunque su firma siga siendo válida.
 
 % ============================================================
 \section{Estrategia híbrida de acceso a datos}
+\label{sec:acceso-datos}
 
 El Bloque~A.2 de la guía exige una separación explícita entre lo que resuelve
 el ORM y lo que debe resolver el motor de base de datos. La regla adoptada
