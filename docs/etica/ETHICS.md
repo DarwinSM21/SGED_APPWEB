@@ -177,6 +177,42 @@ sistema en producción. H-04 sigue abierto y ahora es más urgente por H-06:
 cuantos más datos sensibles trate el sistema, más pesa no tener resuelto el
 consentimiento de quien sí puede otorgarlo legalmente.
 
+### H-08 — Los datos personales quedaron accesibles a cualquier cuenta autenticada (corregido el 2026-07-30)
+
+Este hallazgo se registra **ya corregido**, porque describe una exposición
+real que estuvo presente en el código de la Tercera Entrega y su corrección
+solo tiene valor documentada.
+
+Los cinco recursos que agregó la reestructuración
+(`Categoria`, `Entrenador`, `Usuario`, `Persona`, `EstadoGeneral`) se
+crearon sin ninguna anotación `@PreAuthorize`. Como `SecurityConfig`
+termina la cadena con `anyRequest().authenticated()`, la única barrera era
+tener una sesión válida: **cualquier usuario autenticado, incluido el rol
+`USER` más básico, podía listar todas las personas registradas, buscar una
+por número de cédula, y crear, editar o eliminar registros.** Como
+`seguridad.personas` concentra la identificación de los estudiantes
+menores de edad (nombre, apellido, cédula, correo, fecha de nacimiento),
+la exposición alcanzaba justamente a los titulares que este documento se
+compromete a proteger. `UsuarioController` era el único de los cinco que
+sí tenía control de acceso, a nivel de clase.
+
+Es además una regresión de una observación ya emitida: OBS-09 de la
+Entrega 1B señalaba que no se aplicaba `@PreAuthorize`, y se había dado
+por aplicada. La reestructuración reintrodujo el defecto en el código
+nuevo sin que nada lo detectara, porque las pruebas de esos controladores
+usan `standaloneSetup`, que no levanta la cadena de seguridad.
+
+**Corrección aplicada.** Se restringió cada recurso según el dato que
+maneja, no de forma uniforme: `Persona` queda íntegramente reservado a
+`ADMINISTRADOR` (ningún otro rol necesita operar sobre datos
+identificativos de un menor); la escritura sobre `Categoria` y
+`Entrenador` también, por alterar catálogos de los que dependen los
+estudiantes; y la lectura del catálogo de categorías y de estados se
+mantiene abierta a los tres roles para no romper el uso legítimo. La
+evidencia está en `docs/mediciones/sec/a01-acceso-roto.txt`, que ahora
+comprueba recurso por recurso —incluida la búsqueda por cédula— y verifica
+también que las lecturas permitidas siguen respondiendo `200`.
+
 ---
 
 ## 5. Ética en el desarrollo del proyecto

@@ -15,6 +15,18 @@ cabecera() {
   echo "#"
 }
 
+# El control A07 de este mismo script agota a proposito los intentos de login.
+# El contador de LoginAttemptService se lleva por IP de origen
+# (login_attempts:<ip>), no por usuario: seis fallos dejan bloqueado durante 15
+# minutos a *cualquier* cuenta que venga de ese equipo, incluida la de admin.
+# Sin limpiarlo, una segunda corrida de la auditoria no logra autenticarse y
+# A01 devuelve 401 en todo. Ese resultado parece correcto y no lo es: probaria
+# que hace falta autenticacion, no que se respetan los roles.
+docker exec sged_redis sh -c \
+  'redis-cli --scan --pattern "login_attempts:*" | xargs -r redis-cli DEL' \
+  > /dev/null 2>&1 \
+  || echo "AVISO: no se pudo limpiar el contador de intentos; si A01 sale 401, esa es la causa."
+
 echo "== A01: control de acceso (usuario sin rol pide recurso de admin -> 403) =="
 # 0. /api/auth/registro exige rol ADMINISTRADOR (Bloque A.1): iniciamos
 #    sesion con el admin sembrado para poder registrar la cuenta de prueba.
@@ -24,14 +36,54 @@ curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
 # 1. el admin registra un usuario basico (rol USER por defecto)
 curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Audit","apellido":"A01","username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
+  -d '{"nombre":"Audit","apellido":"A01","cedula":"0912345678","correo":"audit.a01@sged.test","fechaNacimiento":"2000-01-01","username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
 # 2. el usuario basico inicia su propia sesion
 curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
 { cabecera "A01 - Broken Access Control";
+  echo "-- 1. operacion administrativa sobre estudiantes (esperado 403) --";
+  # El cuerpo debe ser un id numerico: la reestructuracion cambio la categoria
+  # de texto libre (?categoria=SUB-12) a clave foranea. Con el cuerpo mal
+  # formado la peticion moria antes de llegar al control de acceso.
   curl --include -s -b /tmp/sged_a01.jar -X POST \
-    "$BASE/api/estudiantes/operaciones/desactivar-categoria?categoria=SUB-12"; \
+    "$BASE/api/estudiantes/operaciones/desactivar-categoria" \
+    -H "Content-Type: application/json" -d '1';
+  echo "";
+  echo "";
+  # Los cinco recursos que agrego la reestructuracion no tenian @PreAuthorize:
+  # con anyRequest().authenticated() bastaba una sesion valida de rol USER para
+  # leer y modificar personas, categorias y entrenadores. Se comprueba recurso
+  # por recurso para que la regresion no pueda repetirse sin que la auditoria
+  # lo muestre.
+  echo "-- 2. lectura de datos personales de terceros (esperado 403) --";
+  curl -s -o /dev/null -w "GET  /api/personas                 -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar "$BASE/api/personas";
+  curl -s -o /dev/null -w "GET  /api/personas/cedula/0000000000 -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar "$BASE/api/personas/cedula/0000000000";
+  echo "";
+  echo "-- 3. escritura sobre catalogos y cuentas (esperado 403) --";
+  # Los cuerpos deben ser validos: @Valid se evalua al resolver el argumento,
+  # antes que @PreAuthorize, asi que un payload invalido devuelve 422 y tapa
+  # el resultado del control de acceso que se quiere evidenciar.
+  curl -s -o /dev/null -w "POST   /api/categorias   -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar -X POST "$BASE/api/categorias" \
+    -H "Content-Type: application/json" \
+    -d '{"nombre":"AUDIT-A01","edadMin":10,"edadMax":12,"descripcion":"alta no autorizada"}';
+  curl -s -o /dev/null -w "DELETE /api/categorias/1 -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar -X DELETE "$BASE/api/categorias/1";
+  curl -s -o /dev/null -w "PUT    /api/personas/1   -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar -X PUT "$BASE/api/personas/1" \
+    -H "Content-Type: application/json" \
+    -d '{"nombre":"Alterado","apellido":"PorUsuario","cedula":"0999999999","correo":"alterado@sged.test","fechaNacimiento":"1990-01-01"}';
+  curl -s -o /dev/null -w "GET    /api/usuarios     -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar "$BASE/api/usuarios";
+  echo "";
+  echo "-- 4. lectura permitida al rol USER (esperado 200: no se rompio el uso legitimo) --";
+  curl -s -o /dev/null -w "GET /api/categorias/activas -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar "$BASE/api/categorias/activas";
+  curl -s -o /dev/null -w "GET /api/estados_generales  -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar "$BASE/api/estados_generales"; \
 } > "$OUT/a01-acceso-roto.txt"
 echo "  -> $OUT/a01-acceso-roto.txt"
 rm -f /tmp/sged_admin.jar

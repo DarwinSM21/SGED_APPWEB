@@ -55,6 +55,13 @@ complementario a este, no un duplicado.
 - Colisión de numeración `ADR-003` resuelta (el propio pasa a `ADR-007`).
 
 ### Seguridad
+- **Control de acceso restablecido en los 5 recursos de la reestructuración.**
+  `Categoria`, `Entrenador`, `Persona` y `EstadoGeneral` no tenían ninguna
+  anotación `@PreAuthorize`: con `anyRequest().authenticated()`, cualquier
+  cuenta con rol `USER` podía listar personas, buscarlas por cédula y
+  crear/editar/eliminar registros. Es una regresión de OBS-09. Registrado
+  como hallazgo H-08 en `docs/etica/ETHICS.md` y verificado con evidencia
+  por recurso en `docs/mediciones/sec/a01-acceso-roto.txt`.
 - JWT migrado de header `Authorization` a cookies `HttpOnly` + `Secure` +
   `SameSite=Strict`; `/api/auth/registro` protegido.
 - Terminación TLS en `:8443` vía nginx con certificado autofirmado (OWASP A02).
@@ -63,6 +70,22 @@ complementario a este, no un duplicado.
 - `@Valid` responde `422` en vez de `400` (alineado a la auditoría OWASP A03).
 - Auditoría OWASP de 6 controles corregida y regenerada contra el stack real
   (A01, A02, A03, A05, A07, A09) — `docs/mediciones/sec/`.
+
+### Correcciones de funcionamiento
+- **`POST /api/auth/registro` estaba roto (RF-01).** Devolvía `500` en toda
+  petición: la reestructuración volvió `cedula`, `correo` y
+  `fecha_nacimiento` columnas `NOT NULL`, pero `RegisterRequest` no las
+  pedía y el alta violaba la restricción. Tampoco se asignaba
+  `id_estado_general`, también `NOT NULL`. Las pruebas no lo detectaron
+  porque mockean el repositorio y la restricción la aplica PostgreSQL.
+- Un cuerpo de petición ausente o mal formado devolvía `500`
+  ("Error interno del servidor") en vez de `400`: faltaba el manejador de
+  `HttpMessageNotReadableException` en `GlobalExceptionHandler`.
+- `scripts/audit-owasp.sh` invocaba `desactivar-categoria` con
+  `?categoria=SUB-12`, forma anterior a la normalización de la categoría, y
+  no limpiaba el contador de intentos de login —que se lleva por IP, no por
+  usuario—, de modo que su propio control A07 dejaba las corridas siguientes
+  bloqueadas y A01 devolvía `401` en todo, un falso correcto.
 
 ### Datos
 - Conversión de consultas JPQL a procedimientos almacenados reales invocados
