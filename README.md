@@ -68,11 +68,14 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 
 ## Evidencia y reproducibilidad
 
-* Informe de la Tercera Entrega: [`docs/informe/main.tex`](docs/informe/main.tex)
-  (compilar con `pdflatex→bibtex→pdflatex→pdflatex`; el PDF no se versiona,
-  ver `.gitignore`). Es el **único** informe oficial de esta entrega — tiene
-  fuente versionada y es reproducible, a diferencia de un PDF suelto sin
-  `.tex`/`.docx`, que no sería evidencia verificable (Bloque 0 / P4).
+* **Informe de la Tercera Entrega (PDF):**
+  [`docs/informe-entrega-3.pdf`](docs/informe-entrega-3.pdf) — 26 páginas,
+  es la ruta que exige la guía.
+* Fuente del informe: [`docs/informe/main.tex`](docs/informe/main.tex),
+  compilable con `pdflatex→bibtex→pdflatex→pdflatex`. El PDF de arriba se
+  genera de aquí: existe fuente versionada y es reproducible, a diferencia
+  de un PDF suelto sin `.tex`/`.docx`, que no sería evidencia verificable
+  (Bloque 0 / P4).
 * Mediciones crudas: `docs/mediciones/` (perf, sec, sus, lighthouse, jacoco)
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
