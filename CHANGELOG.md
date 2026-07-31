@@ -68,8 +68,10 @@ complementario a este, no un duplicado.
 - Bugs de autorización y sesión encontrados corriendo el sistema en vivo.
 
 ### Pendiente para la Entrega Final
-- Encuesta SUS con participantes externos reales (instrumento y script
-  listos, sin datos recolectados).
+- ~~Encuesta SUS con participantes externos reales~~ — completada el
+  2026-07-30 (commit posterior a este tag): 10 participantes, media 68,25
+  (grado C), patrón bimodal por perfil. Ver
+  `docs/mediciones/sus/REPORT.md`.
 - API REST del dominio deportivo restante (horarios, sesiones, asistencias,
   evaluaciones) — esquema ya migrado.
 - `academico.representante` y `deportivo.equipo`: paquetes vacíos, sin
