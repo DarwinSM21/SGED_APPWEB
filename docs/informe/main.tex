@@ -244,6 +244,55 @@ sistemáticamente qué afirmaba el informe anterior frente a lo que el
 repositorio realmente contenía.
 
 % ============================================================
+\section{Reestructuración de paquetes y reconciliación de documentación}
+\label{sec:reestructuracion}
+
+Entre la primera versión de este informe y esta revisión, el equipo
+reestructuró el backend en tres dominios (\texttt{academico}, \texttt{deportivo},
+\texttt{seguridad}) y normalizó la categoría del estudiante: dejó de ser un
+texto libre validado por patrón (\texttt{VARCHAR}, \texttt{SUB-NN}) para
+convertirse en una entidad propia (\texttt{deportivo.categorias}) referenciada
+por clave foránea. Aparecieron además cinco recursos CRUD nuevos
+(\texttt{Categoria}, \texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
+\texttt{EstadoGeneral}) que no tenían requisito documentado, y dos paquetes
+reservados sin contenido (\texttt{Representante}, \texttt{Equipo} — clases
+vacías, sin tabla en el esquema).
+
+Este informe, el SRS (\texttt{docs/requisitos/SRS.md}) y la matriz de
+trazabilidad se actualizaron para reflejar ese estado, verificando cada
+afirmación contra el código real en vez de copiar lo que decía la versión
+anterior. Dos correcciones merecen mención explícita porque no son solo
+actualizaciones de ruta:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Cobertura de pruebas.} La cifra de 68,1\,\% que documentaban
+    tanto la versión anterior de este informe como
+    \texttt{docs/observaciones/Observaciones.md} era correcta \emph{en el
+    momento en que se midió}. Al ejecutar \texttt{./mvnw test} de nuevo tras
+    la reestructuración, el resultado real es \textbf{39,8\,\%} — los
+    controladores y servicios nuevos no tienen pruebas propias, y diluyeron
+    el porcentaje agregado sobre 60 clases analizadas (antes eran menos).
+    Es una regresión real por debajo del umbral del 60\,\% exigido, no un
+    error de medición, y se reporta como tal en la
+    sección~\ref{sec:cobertura} en vez de repetir la cifra anterior.
+  \item \textbf{Datos de salud sin resolución ética.} La reestructuración
+    agregó campos \texttt{peso} y \texttt{altura} al estudiante, exponibles
+    por API. \texttt{docs/etica/ETHICS.md} documentaba explícitamente que el
+    equipo había decidido \emph{no} recolectar esos datos; esa afirmación ya
+    no era cierta y se corrigió en el propio documento de ética (hallazgo
+    H-06) en vez de dejarla como estaba.
+\end{itemize}
+
+También se corrigió una inconsistencia en \texttt{ADR-002} (autenticación):
+describía JWT almacenado en \texttt{localStorage} con un interceptor
+agregando \texttt{Authorization: Bearer}, cuando el código real —y el
+ADR-007 de este mismo informe— usa cookies \texttt{HttpOnly}. Es el mismo
+patrón que ya había observado el docente en la Entrega 1A (OBS-03: un ADR
+describía PHP/Laravel mientras el repositorio construía Spring Boot). Se
+corrige por la misma razón: un documento de arquitectura que no coincide con
+el código no es evidencia, es motivo de observación.
+
+% ============================================================
 \section{Arquitectura}
 
 \subsection{Vista de contenedores}
@@ -343,10 +392,16 @@ existe» y «el procedimiento se invoca de verdad»: en la versión anterior el
 objeto SQL estaba creado pero quedaba huérfano, y la aplicación seguía
 contando en memoria.
 
-\begin{lstlisting}[caption={Invocación real desde el repositorio (\ruta{EstudianteRepository.java})}]
-@Procedure(procedureName = "seguridad.sp_contar_estudiantes_activos")
-Long contarActivosPorCategoria(@Param("p_categoria") String categoria);
+\begin{lstlisting}[caption={Invocación real desde el repositorio (\ruta{academico/estudiante/repository/EstudianteRepository.java})}]
+@Procedure(procedureName = "academico.sp_contar_estudiantes_activos")
+Long contarEstudiantesActivosPorCategoria(@Param("p_categoria") Long idCategoria);
 \end{lstlisting}
+
+\emph{Nota sobre esta segunda versión del informe:} el procedimiento se
+movió del esquema \texttt{seguridad} a \texttt{academico} y su parámetro
+cambió de \texttt{VARCHAR} (nombre de categoría) a \texttt{Long}
+(\texttt{id\_categoria}) cuando la categoría se normalizó como entidad
+propia — ver sección~\ref{sec:reestructuracion}.
 
 \subsection{Ausencia de SQL dinámico}
 
@@ -519,10 +574,19 @@ Content-Type: application/problem+json
 \end{lstlisting}
 
 \subsection{Cobertura de pruebas}
+\label{sec:cobertura}
 
-34 pruebas distribuidas en 7 clases, con \textbf{68,1\,\%} de cobertura de
-instrucciones medida por JaCoCo (1073 cubiertas de 1575). El umbral exigido
-es 60\,\%. \ok
+\textbf{Medido de nuevo el 2026-07-30, tras la reestructuración de paquetes
+(\texttt{./mvnw test}, 60 clases analizadas): 39,8\,\% de cobertura de
+instrucciones (1367 cubiertas de 3432). NO cumple el umbral del
+60\,\%.} Las 44 pruebas existentes pasan todas (0 fallos, 0 errores); el
+problema no es que algo esté roto, es que los recursos nuevos
+(\texttt{Categoria}, \texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
+\texttt{EstadoGeneral}, más los paquetes vacíos de \texttt{Representante} y
+\texttt{Equipo}) no tienen ninguna prueba propia y diluyeron el porcentaje
+agregado. Ver sección~\ref{sec:reestructuracion} para el porqué de este
+número frente a la cifra de 68,1\,\% que documentaba la versión anterior de
+este informe.
 
 \begin{center}
 \begin{tabular}{@{}lrp{7.6cm}@{}}
@@ -530,22 +594,29 @@ es 60\,\%. \ok
 \textbf{Clase de prueba} & \textbf{Nº} & \textbf{Qué verifica} \\
 \midrule
 \texttt{AuthServiceTest} & 5 & Login correcto e incorrecto, registro, registro duplicado, disponibilidad. \\
-\texttt{JwtServiceTest} & 4 & Emisor y audiencia válidos, audiencia distinta rechazada, token manipulado, refresco. \\
+\texttt{JwtServiceTest} & 6 & Emisor y audiencia válidos, audiencia distinta rechazada, token manipulado, refresco. \\
 \texttt{LoginAttemptServiceTest} & 6 & Bloqueo al alcanzar el límite, no reinicio del TTL, borrado del contador al acertar. \\
-\texttt{RedisBlacklistServiceTest} & 4 & Revocación con TTL restante, TTL no positivo ignorado, consulta de revocación. \\
+\texttt{RedisBlacklistServiceTest} & 6 & Revocación con TTL restante, TTL no positivo ignorado, consulta de revocación. \\
 \texttt{EstudianteControllerTest} & 9 & Los siete verbos del recurso más \texttt{404} y \texttt{422}. \\
-\texttt{EstudianteServiceTest} & 5 & Paginación envuelta, baja lógica, persistencia transacional, delegación al procedimiento SQL. \\
+\texttt{EstudianteServiceTest} & 11 & Paginación envuelta, baja lógica, persistencia transacional, delegación al procedimiento SQL. \\
 \texttt{BackendApplicationTests} & 1 & Arranque del contexto contra el esquema migrado. \\
 \midrule
-\textbf{Total} & \textbf{34} & \\
+\textbf{Total} & \textbf{44} & \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Un detalle relevante: durante esta entrega se descubrió que JaCoCo
+\emph{Ningún recurso nuevo (Categoria, Entrenador, Usuario, Persona,
+EstadoGeneral) tiene fila en esta tabla porque ninguno tiene prueba
+dedicada todavía} — es, junto con la encuesta SUS pendiente
+(sección~\ref{sec:sus}), el trabajo más urgente antes de tagear
+\texttt{v0.9.0-rc}.
+
+Un detalle relevante: en una entrega anterior se descubrió que JaCoCo
 \emph{nunca} había generado cobertura real, porque el \texttt{argLine}
 configurado en Surefire sobrescribía el \emph{javaagent} del propio JaCoCo.
-El informe anterior reportaba un valor que el sistema no estaba midiendo.
+Ese defecto está corregido; la medición actual sí es real, y por eso puede
+mostrar honestamente una regresión.
 
 Las pruebas de \texttt{LoginAttemptServiceTest} merecen mención aparte:
 verifican no solo que el bloqueo ocurra, sino que un fallo posterior
@@ -575,8 +646,8 @@ Métricas Web Vitals: LCP 2,86\,s; FCP 2,43\,s; TBT 25,7\,ms; y CLS
 durante la carga).
 
 Esta medición expuso, y permitió corregir, tres defectos reales del
-frontend: el documento declaraba \texttt{lang="en"} en una aplicación
-íntegramente en español; conservaba el título \texttt{Frontend} generado por
+frontend: el documento declaraba \texttt{lang=\textquotedbl{}en\textquotedbl{}}
+en una aplicación íntegramente en español; conservaba el título \texttt{Frontend} generado por
 Angular CLI y no tenía descripción; y carecía de un elemento \texttt{<main>},
 lo que hacía fallar la auditoría de puntos de referencia de accesibilidad.
 Corregidos los tres, la accesibilidad pasó de 97 a \textbf{100}.
@@ -703,27 +774,37 @@ v4.0~\cite{swebok2024}.
 \section{Conclusiones}
 
 \begin{enumerate}[leftmargin=*]
-  \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
-    p95 de 14,18\,ms frente a un límite de 200\,ms, 68,1\,\% de cobertura
-    frente a un mínimo de 60\,\%, y 6 de 6 controles OWASP verificados con
-    evidencia reproducible.
+  \item El sistema cumple con holgura la mayoría de los umbrales
+    cuantitativos exigidos: p95 de 14,18\,ms frente a un límite de 200\,ms,
+    6 de 6 controles OWASP verificados con evidencia reproducible, y
+    accesibilidad Lighthouse de 100/100. \textbf{La cobertura de pruebas no
+    cumple} (39,8\,\% medido hoy frente a un mínimo de 60\,\%) — se reporta
+    así deliberadamente en vez de repetir la cifra de una medición anterior
+    a la reestructuración de paquetes (sección~\ref{sec:cobertura}).
 
   \item El aporte más sustantivo de esta entrega no fue añadir
-    funcionalidad, sino \emph{verificar} lo que ya existía. Ese ejercicio
-    reveló defectos que ninguna revisión de código había detectado: JaCoCo
-    no medía cobertura en absoluto, los procedimientos almacenados estaban
-    creados pero nunca se invocaban, la caché se rompía desde la segunda
-    petición, y la configuración de Lighthouse impedía ejecutar la medición.
-    Todos se corrigieron durante esta entrega.
+    funcionalidad, sino \emph{verificar} lo que ya existía, dos veces: una
+    vez contra el código de la entrega original, y una segunda vez después
+    de que otros dos integrantes reestructuraran el backend en paralelo.
+    Ambas rondas revelaron defectos que ninguna revisión superficial había
+    detectado — desde que JaCoCo no medía cobertura en absoluto, hasta que
+    un ADR de arquitectura describía un mecanismo de autenticación
+    (JWT en \texttt{localStorage}) distinto del que el código realmente usa
+    (cookie \texttt{HttpOnly}). Todos los defectos encontrados se corrigieron
+    y quedan documentados en la sección~\ref{sec:reestructuracion} en vez de
+    ocultarse.
 
   \item La distinción entre lo implementado y lo modelado se mantiene
-    explícita en todo el documento. El dominio deportivo tiene su esquema
-    migrado y sus restricciones de integridad definidas, pero no se presenta
-    como funcionalidad entregada.
+    explícita en todo el documento, incluyendo los casos donde un paquete
+    Java existe pero está vacío (\texttt{Representante}, \texttt{Equipo}):
+    no se cuentan como funcionalidad entregada solo porque el archivo exista.
 
-  \item Quedan abiertos dos frentes: la encuesta SUS, que requiere
-    participantes reales, y la exposición REST del dominio deportivo, que es
-    el objetivo natural de la Entrega Final.
+  \item Quedan abiertos tres frentes, en orden de urgencia: subir la
+    cobertura de pruebas de vuelta por encima del 60\,\% antes de tagear
+    \texttt{v0.9.0-rc}; la encuesta SUS, que requiere participantes reales
+    y no puede fabricarse; y la exposición REST del dominio deportivo
+    restante (horarios, sesiones, asistencias, evaluaciones), que es el
+    objetivo natural de la Entrega Final.
 \end{enumerate}
 
 \newpage
