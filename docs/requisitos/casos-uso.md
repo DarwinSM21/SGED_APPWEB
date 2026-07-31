@@ -172,18 +172,23 @@ graph LR
 | **Endpoint** | `POST /api/estudiantes` |
 
 **Flujo principal**
-1. El administrador envía nombre, apellido y categoría.
-2. El sistema valida la longitud de los campos y el formato de la categoría
-   (`SUB-NN`).
-3. El sistema crea de forma transaccional el registro en
-   `seguridad.personas` y en `seguridad.estudiantes`.
+1. El administrador envía `idPersona`, `idCategoria`, `idEstadoGeneral`,
+   `codigoEstudiante` y `fechaIngreso` (opcionalmente `peso`/`altura`).
+2. El sistema valida que la persona, la categoría y el estado general
+   referenciados existan.
+3. El sistema crea el registro en `academico.estudiantes`.
 4. El sistema invalida la caché del listado.
 5. El sistema responde `201 Created` con el recurso.
 
 **Flujos alternativos**
-- **2a. Categoría con formato inválido.** El sistema responde `422` con el
-  campo y el motivo, sin persistir nada.
+- **2a. Categoría, persona o estado inexistentes.** El sistema responde
+  `422` con el campo y el motivo, sin persistir nada.
 - **1a. Rol insuficiente.** El sistema responde `403`.
+
+> **Corrección (2026-07-30):** este caso de uso describía nombre/apellido
+> directos y una categoría de texto validada por patrón `SUB-NN`. Tras la
+> reestructuración de paquetes, el estudiante referencia una `Persona` y una
+> `Categoria` ya existentes por clave foránea — ver RF-10/RF-11 en el SRS.
 
 ---
 

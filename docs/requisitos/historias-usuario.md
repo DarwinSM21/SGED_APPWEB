@@ -107,18 +107,21 @@ datos de una vez.
 
 ### HU-06 · Registrar un nuevo estudiante ✅
 **Como** administrador,
-**quiero** registrar a un estudiante con su nombre, apellido y categoría,
+**quiero** registrar a un estudiante asociándolo a una persona y una
+categoría ya existentes,
 **para** incorporarlo formalmente a la escuela.
 
-> Cubre RF-10, RF-11.
+> Cubre RF-10, RF-11. Reescrita el 2026-07-30: la categoría dejó de ser un
+> texto validado por patrón y pasó a ser una referencia a
+> `deportivo.categorias`.
 
 **Criterios de aceptación**
-- **Dado** que envío datos válidos, **cuando** registro al estudiante,
-  **entonces** el sistema responde `201` con el recurso creado y su
-  identificador.
-- **Dado** que envío una categoría que no cumple el formato `SUB-NN`,
-  **cuando** intento registrarlo, **entonces** el sistema responde `422`
-  indicando el campo y el motivo del rechazo.
+- **Dado** que envío datos válidos (persona, categoría y estado general
+  existentes), **cuando** registro al estudiante, **entonces** el sistema
+  responde `201` con el recurso creado y su identificador.
+- **Dado** que la categoría indicada no existe, **cuando** intento
+  registrarlo, **entonces** el sistema responde `422` indicando el campo y
+  el motivo del rechazo.
 - **Dado** que mi rol es ENTRENADOR o USER, **cuando** intento registrar un
   estudiante, **entonces** el sistema responde `403`.
 
@@ -193,11 +196,19 @@ operación,
 
 ---
 
-## Épica 3 — Operación deportiva 🟡
+## Épica 3 — Operación deportiva
 
-> Historias con modelo de datos migrado y versionado, pero **sin API REST
-> expuesta** todavía. Se documentan porque justifican el diseño del esquema
-> entregado y ordenan la siguiente iteración.
+> **Actualizado 2026-07-30:** HU-10b (entrenadores) pasó a ✅ con la
+> reestructuración de paquetes. El resto sigue con modelo de datos migrado
+> y versionado, pero **sin API REST expuesta** todavía.
+
+### HU-10b · Registrar entrenadores del equipo ✅
+**Como** administrador,
+**quiero** registrar entrenadores vinculando su persona y su cuenta de
+usuario, con especialidad y experiencia,
+**para** poder asignarlos a horarios y evaluaciones más adelante.
+> Cubre RF-16. El esquema impide que la misma persona o la misma cuenta se
+> registren dos veces como entrenador.
 
 ### HU-11 · Programar los entrenamientos de la semana 🟡
 **Como** entrenador,
@@ -238,5 +249,10 @@ sufre una lesión,
 |---|---|---|---|---|
 | 1 — Acceso seguro | HU-01…HU-04 | 4 | 0 | 0 |
 | 2 — Gestión de estudiantes | HU-05…HU-10 | 6 | 0 | 0 |
-| 3 — Operación deportiva | HU-11…HU-14 | 0 | 3 | 1 |
+| 3 — Operación deportiva | HU-10b…HU-14 | 1 | 3 | 1 |
+
+No incluye HU dedicadas a los recursos nuevos RF-23…RF-26 (categorías,
+usuarios, personas, estados) — se documentan directamente en el SRS por
+haber aparecido como CRUD administrativo, no como una necesidad de un actor
+específico articulada previamente.
 | **Total** | **14** | **10** | **3** | **1** |
