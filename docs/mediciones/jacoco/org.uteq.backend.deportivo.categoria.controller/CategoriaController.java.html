@@ -6,6 +6,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaRequest;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaResponse;
@@ -13,6 +14,12 @@ import org.uteq.backend.deportivo.categoria.service.CategoriaService;
 
 import java.util.List;
 
+/**
+ * CRUD del catalogo de categorias. La lectura la necesitan todos los roles
+ * (el formulario de estudiante ofrece las categorias activas); la escritura
+ * altera un catalogo del que dependen los estudiantes por clave foranea, y
+ * queda restringida a ADMINISTRADOR.
+ */
 @RestController
 @RequestMapping(&quot;/api/categorias&quot;)
 @RequiredArgsConstructor
@@ -21,34 +28,40 @@ public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @GetMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
     public ResponseEntity&lt;Page&lt;CategoriaResponse&gt;&gt; listarPaginado(Pageable pageable) {
-<span class="fc" id="L25">        return ResponseEntity.ok(categoriaService.listarPaginado(pageable));</span>
+<span class="fc" id="L33">        return ResponseEntity.ok(categoriaService.listarPaginado(pageable));</span>
     }
 
     @GetMapping(&quot;/activas&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
     public ResponseEntity&lt;List&lt;CategoriaResponse&gt;&gt; listarActivas() {
-<span class="fc" id="L30">        return ResponseEntity.ok(categoriaService.listarTodasActivas());</span>
+<span class="fc" id="L39">        return ResponseEntity.ok(categoriaService.listarTodasActivas());</span>
     }
 
     @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L35">        return ResponseEntity.ok(categoriaService.buscarPorId(id));</span>
+<span class="nc" id="L45">        return ResponseEntity.ok(categoriaService.buscarPorId(id));</span>
     }
 
     @PostMapping
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; crear(@Valid @RequestBody CategoriaRequest request) {
-<span class="fc" id="L40">        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crear(request));</span>
+<span class="fc" id="L51">        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crear(request));</span>
     }
 
     @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; editar(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
-<span class="fc" id="L45">        return ResponseEntity.ok(categoriaService.editar(id, request));</span>
+<span class="fc" id="L57">        return ResponseEntity.ok(categoriaService.editar(id, request));</span>
     }
 
     @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L50">        categoriaService.eliminar(id);</span>
-<span class="fc" id="L51">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L63">        categoriaService.eliminar(id);</span>
+<span class="fc" id="L64">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

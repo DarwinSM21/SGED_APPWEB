@@ -26,7 +26,7 @@ complementario a este, no un duplicado.
   peso/altura del estudiante; esos campos ya son reales y opcionales en la
   API (hallazgo H-06, sin base legal documentada todavía).
 - Cobertura de pruebas: regresión detectada a 39,8 % (los 5 recursos nuevos
-  no tenían pruebas propias); corregida a 72,7 % con 57 pruebas nuevas
+  no tenían pruebas propias); corregida a 72,5 % con 57 pruebas nuevas
   (10 clases).
 - Eliminadas 14 clases stub sin implementación de `academico.representante`
   y `deportivo.equipo` — 13 con cuerpo vacío y una de 0 bytes
@@ -119,8 +119,10 @@ complementario a este, no un duplicado.
   `docs/mediciones/sus/REPORT.md`.
 - API REST del dominio deportivo restante (horarios, sesiones, asistencias,
   evaluaciones) — esquema ya migrado.
-- `academico.representante` y `deportivo.equipo`: paquetes vacíos, sin
-  esquema.
+- ~~`academico.representante` y `deportivo.equipo`: paquetes vacíos, sin
+  esquema.~~ Las 14 clases stub se eliminaron el 2026-07-30 (commit
+  posterior a este tag). Ambos módulos siguen pendientes, pero ahora constan
+  solo en la documentación, no como código que aparenta existir.
 
 ## [Unreleased]
 

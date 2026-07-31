@@ -6,11 +6,11 @@ backend,org.uteq.backend.deportivo.entrenador.dto,EntrenadorPageResponse,0,18,0,
 backend,org.uteq.backend.seguridad.usuario.dto,UsuarioPageResponse,0,18,0,0,0,1,0,1,0,1
 backend,org.uteq.backend.seguridad.usuario.dto,UsuarioResponse,0,36,0,0,0,1,0,1,0,1
 backend,org.uteq.backend.seguridad.usuario.dto,UsuarioRequest,0,15,0,0,0,1,0,1,0,1
-backend,org.uteq.backend.seguridad.auth.controller,AuthController,155,246,15,3,34,67,14,9,6,8
+backend,org.uteq.backend.seguridad.auth.controller,AuthController,160,278,17,5,34,75,17,9,7,8
 backend,org.uteq.backend.seguridad.persona.controller,PersonaController,13,29,0,0,2,6,2,4,2,4
 backend,org.uteq.backend.seguridad.persona.entity,Persona,18,0,2,0,6,0,3,0,2,0
 backend,org.uteq.backend.seguridad.usuario.service,UsuarioService,113,156,4,2,15,41,8,8,6,7
-backend,org.uteq.backend.common.exception,GlobalExceptionHandler,40,98,0,0,11,26,2,7,2,7
+backend,org.uteq.backend.common.exception,GlobalExceptionHandler,58,98,0,0,16,26,3,7,3,7
 backend,org.uteq.backend.common.exception,RecursoNoEncontradoException,0,5,0,0,0,2,0,1,0,1
 backend,org.uteq.backend.common.exception,ProblemDetailsAuthHandlers,56,14,0,0,12,4,3,4,3,4
 backend,org.uteq.backend.common.exception,ApiException,0,26,0,0,0,8,0,3,0,3
@@ -31,7 +31,7 @@ backend,org.uteq.backend.academico.estudiante.dto,EstudiantePageResponse,0,18,0,
 backend,org.uteq.backend.deportivo.entrenador.controller,EntrenadorController,13,21,0,0,2,4,2,3,2,3
 backend,org.uteq.backend.seguridad.auth.dto,RefreshTokenRequest,6,0,0,0,1,0,1,0,1,0
 backend,org.uteq.backend.seguridad.auth.dto,LoginRequest,0,9,0,0,0,1,0,1,0,1
-backend,org.uteq.backend.seguridad.auth.dto,RegisterRequest,0,15,0,0,0,1,0,1,0,1
+backend,org.uteq.backend.seguridad.auth.dto,RegisterRequest,0,24,0,0,0,1,0,1,0,1
 backend,org.uteq.backend.seguridad.estado.controller,EstadoGeneralController,0,5,0,0,0,1,0,1,0,1
 backend,org.uteq.backend.seguridad.auth.security,JwtService,0,145,2,4,0,34,2,13,0,12
 backend,org.uteq.backend.seguridad.auth.security,RedisBlacklistService,0,32,0,2,0,7,0,4,0,3

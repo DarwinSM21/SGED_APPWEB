@@ -602,8 +602,8 @@ Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
 al 60 %, verificada automáticamente en la construcción.*
 
 - **Medido el 2026-07-30 con construcción limpia (`./mvnw clean test`):
-  72,7 % (2466 instrucciones cubiertas de 3393) — CUMPLE el umbral de 60 %.**
-- 101 pruebas en 17 clases, **todas pasan** (0 fallos, 0 errores).
+  72,5 % (2507 instrucciones cubiertas de 3457) — CUMPLE el umbral de 60 %.**
+- 102 pruebas en 17 clases, **todas pasan** (0 fallos, 0 errores).
 - **Por qué "construcción limpia" aparece explícito aquí:** la primera
   medición de esta jornada se hizo con `./mvnw test` sobre un `target/`
   que aún conservaba `.class` de antes de la reestructuración de paquetes.
@@ -619,7 +619,7 @@ al 60 %, verificada automáticamente en la construcción.*
   `EntrenadorServiceTest`, `EntrenadorControllerTest`, `UsuarioServiceTest`,
   `UsuarioControllerTest`, `PersonaServiceTest`, `PersonaControllerTest`,
   `EstadoGeneralServiceTest`, `EstadoGeneralControllerTest`) y la cobertura
-  subió a 72,7 %.
+  subió a 72,5 %.
 - Evidencia: `docs/mediciones/jacoco/` (reporte regenerado con la
   ejecución que incluye las 101 pruebas).
 
