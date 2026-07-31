@@ -8,6 +8,18 @@ Este documento describe el esquema **realmente migrado**, generado a partir
 de las migraciones versionadas. Los procedimientos almacenados se detallan
 aparte en [`CATALOGO-SP.md`](CATALOGO-SP.md).
 
+> No confundir con [`docs/mediciones/DATA-DICTIONARY.md`](../mediciones/DATA-DICTIONARY.md),
+> que documenta las variables de los **archivos de medición** (k6, OWASP,
+> etc.), no el esquema de base de datos. Alcance distinto, no es un
+> duplicado.
+>
+> **Nota (2026-07-30):** este documento describe el esquema previo a la
+> reestructuración de paquetes (`seguridad.estudiantes`, categoría como
+> texto). Pendiente de actualizar a `academico`/`deportivo`/`seguridad` con
+> la entidad `Categoria` normalizada — ver
+> [docs/basedatos/CATALOGO-SP.md](CATALOGO-SP.md) y `db/schema.sql` para el
+> estado actual mientras tanto.
+
 ## Convenciones
 
 - Claves primarias: `BIGSERIAL` con nombre `id_<entidad>`.

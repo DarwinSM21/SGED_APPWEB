@@ -2,6 +2,10 @@
 
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/).
 Ver [VERSIONING.md](VERSIONING.md) para el esquema de versiones/tags.
+Para el historial cronológico específico de cada requisito (qué RF cambió,
+cuándo y en qué commit), ver
+[`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) —
+complementario a este, no un duplicado.
 
 ## [Unreleased] — hacia v0.9.0-rc (Tercera Entrega)
 

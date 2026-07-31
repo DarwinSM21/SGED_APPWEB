@@ -1,10 +1,13 @@
-# ADR-003: JWT en cookie HttpOnly y blacklist de revocacion en Redis
+# ADR-007: JWT en cookie HttpOnly y blacklist de revocacion en Redis
 
 ## Estado
 Aceptado
 
 ## Contexto
-JWT es stateless: el servidor no almacena el token, y si viaja accesible desde
+[ADR-002](ADR-002-autentificacion.md) ya establece que la autenticación es
+JWT stateless emitido en `POST /api/auth/login`. Este ADR cubre la parte que
+ADR-002 deja abierta: **cómo** viaja ese token y **cómo se revoca**. JWT es
+stateless: el servidor no almacena el token, y si viaja accesible desde
 JavaScript (localStorage, header manejado a mano) queda expuesto a robo por
 XSS. Ademas, sin una lista de revocacion, el servidor no tiene forma de
 invalidar un token antes de su expiracion natural cuando el usuario cierra
