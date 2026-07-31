@@ -1,7 +1,9 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.0 (Tercera Entrega)
+**Versión del documento:** 1.1 (Tercera Entrega — revisado tras la
+reestructuración de paquetes `academico`/`deportivo`/`seguridad` del
+2026-07-29)
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
 
@@ -53,7 +55,7 @@ entregada.
 
 | Término | Definición |
 |---|---|
-| **Categoría** | Grupo etario de competencia (SUB-12, SUB-15, SUB-17, SUB-20). |
+| **Categoría** | Grupo etario de competencia, definido por un rango de edad (p. ej. "Sub-12"). Desde la reestructuración de paquetes es una entidad propia (`deportivo.categorias`) con `edad_min`/`edad_max`, no un texto libre. |
 | **Baja lógica** | Marcar un registro como inactivo (`activo = FALSE`) sin borrarlo físicamente. |
 | **JWT** | JSON Web Token (RFC 7519), credencial de sesión firmada. |
 | **JTI** | Identificador único de un JWT, usado para revocarlo. |
@@ -80,8 +82,8 @@ SGED es un sistema cliente-servidor de tres capas:
 
 - **Frontend:** Angular (SPA), servido por nginx con terminación TLS en `:8443`.
 - **Backend:** API REST en Spring Boot 3.2 (Java 21), puerto `:8080`.
-- **Persistencia:** PostgreSQL 16 (esquemas `seguridad` y `deportivo`) y
-  Redis 7 (caché y lista de revocación de tokens).
+- **Persistencia:** PostgreSQL 16 (esquemas `seguridad`, `academico` y
+  `deportivo`) y Redis 7 (caché y lista de revocación de tokens).
 
 Orquestación reproducible vía Docker Compose con imágenes fijadas por digest
 SHA-256.
@@ -220,7 +222,8 @@ paginada, indicando en la respuesta el número de página, el tamaño, el total
 de elementos y el total de páginas.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
-- **Origen:** `GET /api/estudiantes` — `EstudianteController.java:27`
+- **Origen:** `GET /api/estudiantes` —
+  `academico/estudiante/controller/EstudianteController.java`
 - **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`, `USER`
 - **Verificación:** pruebas `EstudianteControllerTest.listar_devuelve_pagina`,
   `EstudianteServiceTest.listar_devuelve_pagina_envuelta`.
@@ -233,7 +236,8 @@ deberá responder `404` con cuerpo `ProblemDetail` cuando el identificador no
 corresponda a ningún registro.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
-- **Origen:** `GET /api/estudiantes/{id}` — `EstudianteController.java:40`
+- **Origen:** `GET /api/estudiantes/{id}` —
+  `academico/estudiante/controller/EstudianteController.java`
 - **Verificación:** pruebas `EstudianteControllerTest.buscarPorId_existente`,
   `EstudianteControllerTest.buscarPorId_inexistente_da_404`,
   `EstudianteServiceTest.buscar_inexistente_lanza_404`.
@@ -242,39 +246,76 @@ corresponda a ningún registro.*
 
 **RF-10 — Registro de estudiante**
 *El sistema deberá permitir que un usuario con rol ADMINISTRADOR registre un
-nuevo estudiante con nombre, apellido y categoría, creando de forma
-transaccional el registro de persona asociado.*
+nuevo estudiante asociado a una persona, una categoría y un estado general
+existentes, con un código de estudiante único y fecha de ingreso, creando de
+forma transaccional el registro correspondiente.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
-- **Origen:** `POST /api/estudiantes` — `EstudianteController.java:46`
+- **Origen:** `POST /api/estudiantes` —
+  `academico/estudiante/controller/EstudianteController.java`
 - **Acceso:** `@PreAuthorize("hasRole('ADMINISTRADOR')")`
 - **Verificación:** deberá responder `201` con el recurso creado. Pruebas:
   `EstudianteControllerTest.crear_devuelve_201`,
   `EstudianteServiceTest.crear_persiste_persona_y_estudiante`.
+- **Cambio respecto a la v1.0 de este documento:** el estudiante ya no se
+  crea con nombre/apellido propios (esos viven en `Persona`, referenciada
+  por `idPersona`); `EstudianteRequest` exige `idPersona`, `idCategoria`,
+  `idEstadoGeneral`, `codigoEstudiante` y `fechaIngreso`, y admite
+  opcionalmente `peso` y `altura` (ver hallazgo H-06 en `ETHICS.md`).
 
 ---
 
-**RF-11 — Validación del formato de categoría**
-*El sistema deberá rechazar toda categoría que no cumpla el patrón
-`SUB-NN` (donde NN es un número de una o dos cifras), y deberá responder
-`422 Unprocessable Entity` con un cuerpo `ProblemDetail` que identifique el
-campo inválido y el motivo.*
+**RF-11 — Validación de la categoría del estudiante**
+*El sistema deberá exigir que todo estudiante esté asociado a una categoría
+existente en el catálogo, mediante una clave foránea válida, y deberá
+responder `422 Unprocessable Entity` si la categoría indicada no existe o si
+falta.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
-- **Origen:** `EstudianteRequest.java` (anotación de patrón);
-  `GlobalExceptionHandler.java`
+- **Prioridad:** Alta · **Estado:** ✅ Implementado — **contenido reescrito
+  el 2026-07-30**
+- **Origen:** `EstudianteRequest.idCategoria` (`@NotNull`);
+  `deportivo.categorias` como catálogo referenciado.
 - **Verificación:** prueba
-  `EstudianteControllerTest.crear_con_categoria_invalida_da_422`.
-  Evidencia OWASP A03: `docs/mediciones/sec/a03-inyeccion.txt`.
+  `EstudianteControllerTest.crear_con_categoria_invalida_da_422`
+  (pendiente de re-ejecutar contra el nuevo DTO — ver nota de cobertura en
+  RNF-09).
+
+> **Por qué cambió.** La versión anterior de este requisito describía una
+> validación de patrón de texto (`SUB-NN`) sobre un campo `VARCHAR`. Ese
+> campo ya no existe: la categoría es ahora una entidad normalizada
+> (`deportivo.categorias`, con `edad_min`/`edad_max`) referenciada por
+> `idCategoria`. Se corrige el requisito para no describir una validación
+> que el código ya no hace.
+
+---
+
+**RF-11b — Registro de peso y altura del estudiante** ⚠️ Implementado sin
+resolución ética
+*El sistema permite registrar opcionalmente el peso y la altura de un
+estudiante al crearlo o actualizarlo, validando que sean valores positivos
+con hasta 3 dígitos enteros y 2 decimales.*
+
+- **Prioridad:** No priorizado formalmente — apareció en la
+  reestructuración de paquetes, no en un requisito previamente especificado.
+- **Origen:** `EstudianteRequest.peso`, `.altura`
+  (`@DecimalMin`, `@Digits`); columnas `academico.estudiantes.peso/altura`.
+- **Alerta:** este requisito se documenta pero **no se recomienda
+  mantenerlo habilitado** sin resolver antes el hallazgo H-06 de
+  `docs/etica/ETHICS.md` (dato de salud de un menor, sin finalidad ni base
+  legal documentada). Ningún caso de uso ni historia de usuario de este
+  documento describía esta funcionalidad antes de que apareciera en el
+  código.
 
 ---
 
 **RF-12 — Actualización de estudiante**
 *El sistema deberá permitir que un usuario con rol ADMINISTRADOR actualice
-el nombre, apellido y categoría de un estudiante existente.*
+los datos propios de un estudiante existente (categoría, estado, código,
+fecha de ingreso, peso y altura).*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
-- **Origen:** `PUT /api/estudiantes/{id}` — `EstudianteController.java:54`
+- **Origen:** `PUT /api/estudiantes/{id}` —
+  `academico/estudiante/controller/EstudianteController.java`
 - **Verificación:** prueba `EstudianteControllerTest.editar_actualiza_estudiante`.
 
 ---
@@ -285,7 +326,8 @@ no deberá eliminar físicamente el registro, con el fin de preservar el
 historial deportivo asociado.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
-- **Origen:** `DELETE /api/estudiantes/{id}` — `EstudianteController.java:62`
+- **Origen:** `DELETE /api/estudiantes/{id}` —
+  `academico/estudiante/controller/EstudianteController.java`
 - **Verificación:** deberá responder `204` y el registro deberá permanecer en
   la tabla con `activo = FALSE`. Pruebas:
   `EstudianteControllerTest.eliminar_devuelve_204`,
@@ -295,19 +337,23 @@ historial deportivo asociado.*
 
 **RF-14 — Conteo de estudiantes activos por categoría**
 *El sistema deberá informar el número de estudiantes activos de una
-categoría, y dicho conteo deberá calcularse en el motor de base de datos
-mediante un procedimiento almacenado versionado, no en la capa de
-aplicación.*
+categoría, identificada por su clave, y dicho conteo deberá calcularse en el
+motor de base de datos mediante un procedimiento almacenado versionado, no
+en la capa de aplicación.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado
-- **Origen:** `GET /api/estudiantes/conteo/{categoria}` —
-  `EstudianteController.java:69`; `seguridad.sp_contar_estudiantes_activos`
-  (migración `V6`)
+- **Origen:** `GET /api/estudiantes/conteo/categoria/{idCategoria}` —
+  `academico/estudiante/controller/EstudianteController.java`;
+  `academico.sp_contar_estudiantes_activos(p_categoria INT)`
 - **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`
 - **Verificación:** pruebas
   `EstudianteControllerTest.contarActivos_delega_en_service`,
   `EstudianteServiceTest.conteo_por_categoria_delega_en_funcion_sql`.
 - **Justificación:** cumple RD-02 (agregación obligatoriamente en el motor).
+- **Cambio respecto a la v1.0:** la ruta y el parámetro cambiaron de
+  `/conteo/{categoria}` (texto) a `/conteo/categoria/{idCategoria}`
+  (entero); el procedimiento se movió del esquema `seguridad` a `academico`
+  y su parámetro de `VARCHAR` a `INT`.
 
 ---
 
@@ -319,29 +365,91 @@ un procedimiento almacenado versionado.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado
 - **Origen:** `POST /api/estudiantes/operaciones/desactivar-categoria` —
-  `EstudianteController.java:79`;
-  `seguridad.sp_desactivar_estudiantes_categoria` (migración `V6`)
+  `academico/estudiante/controller/EstudianteController.java`;
+  `academico.sp_desactivar_estudiantes_categoria(p_categoria INT)`
 - **Acceso:** `@PreAuthorize("hasRole('ADMINISTRADOR')")`
 - **Verificación:** prueba
   `EstudianteControllerTest.desactivarCategoria_delega_en_service`.
 
 ---
 
-### 3.3 Módulo deportivo
+### 3.2b Módulo de catálogos y cuentas (nuevo en esta revisión)
 
-> Los requisitos de esta sección tienen su **esquema de datos migrado y
-> versionado** (`V3__dominio_deportivo.sql`, `V4__evaluaciones.sql`), pero
-> **aún no se exponen mediante API REST**. Se documentan aquí porque
-> condicionan el modelo de datos entregado y el diseño de la siguiente
-> iteración.
+Recursos con CRUD propio que aparecieron con la reestructuración de
+paquetes y no tenían requisito documentado hasta ahora.
 
 ---
 
-**RF-16 — Gestión de entrenadores** 🟡 Modelado
-*El sistema deberá permitir registrar entrenadores asociados a una persona,
-con especialidad y fecha de contratación, garantizando que una misma persona
-no pueda registrarse dos veces como entrenador.*
-Esquema: `deportivo.entrenadores` con índice único sobre `id_persona`.
+**RF-23 — Gestión del catálogo de categorías**
+*El sistema deberá permitir crear, listar, consultar, actualizar y eliminar
+categorías deportivas, cada una definida por un nombre y un rango de edad
+(mínima y máxima).*
+
+- **Prioridad:** Alta (bloquea RF-10/RF-11) · **Estado:** ✅ Implementado
+- **Origen:** `CategoriaController` (`/api/categorias`, 6 endpoints) —
+  `deportivo/categoria/controller/CategoriaController.java`
+- **Verificación:** sin prueba automatizada dedicada todavía — ver
+  seguimiento de cobertura en RNF-09.
+
+---
+
+**RF-24 — Gestión de cuentas de usuario como recurso propio**
+*El sistema deberá permitir administrar cuentas de usuario (más allá del
+alta hecha en `POST /api/auth/registro`) de forma independiente.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Origen:** `UsuarioController` (`/api/usuarios`, 5 endpoints) —
+  `seguridad/usuario/controller/UsuarioController.java`
+- **Verificación:** sin prueba automatizada dedicada todavía.
+
+---
+
+**RF-25 — Gestión de personas**
+*El sistema deberá permitir administrar los datos personales base
+(nombre, cédula, correo, teléfono, fecha de nacimiento) independientemente
+del rol que la persona tenga en el sistema.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Origen:** `PersonaController` (`/api/personas`, 6 endpoints) —
+  `seguridad/persona/controller/PersonaController.java`
+- **Verificación:** sin prueba automatizada dedicada todavía.
+
+---
+
+**RF-26 — Consulta de estados generales**
+*El sistema deberá exponer el catálogo de estados generales utilizables por
+usuarios y estudiantes.*
+
+- **Prioridad:** Baja · **Estado:** ✅ Implementado (solo lectura — 1 endpoint)
+- **Origen:** `EstadoGeneralController` —
+  `seguridad/estado/controller/EstadoGeneralController.java`
+
+---
+
+### 3.3 Módulo deportivo
+
+> **Actualizado 2026-07-30.** RF-16 (entrenadores) pasó de 🟡 Modelado a
+> ✅ Implementado con la reestructuración de paquetes. RF-17 a RF-21 siguen
+> con su **esquema de datos migrado y versionado**
+> (`V3__dominio_deportivo.sql`, `V4__evaluaciones.sql`) pero **sin API REST
+> propia todavía**. RF-22 (representantes) y el módulo de equipos no tienen
+> ni esquema: son paquetes Java vacíos (ver nota al final de esta sección).
+
+---
+
+**RF-16 — Gestión de entrenadores**
+*El sistema deberá permitir registrar entrenadores asociados a una persona
+y a una cuenta de usuario, con especialidad, años de experiencia y
+certificación, garantizando que una misma persona o cuenta no pueda
+registrarse dos veces como entrenador.*
+
+- **Prioridad:** Alta · **Estado:** ✅ Implementado (cambió de Modelado)
+- **Origen:** `EntrenadorController` (`/api/entrenadores`, 5 endpoints) —
+  `deportivo/entrenador/controller/EntrenadorController.java`
+- **Esquema:** `deportivo.entrenadores`, con `UNIQUE` sobre `id_persona` **e**
+  `id_usuario` (el vínculo con `Usuario` es nuevo respecto a la v1.0 de este
+  documento).
+- **Verificación:** sin prueba automatizada dedicada todavía.
 
 ---
 
@@ -396,7 +504,17 @@ Esquema: vista `deportivo.v_promedio_evaluacion`.
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*
 Sin esquema ni implementación. Requiere resolver previamente el consentimiento
-del representante (ver `docs/etica/ETHICS.md`).
+del representante (ver `docs/etica/ETHICS.md`, hallazgo H-04).
+
+> **Precisión sobre "sin esquema" (2026-07-30).** Existe un paquete
+> `academico.representante` en el código (`RepresentanteController` y sus
+> DTOs), pero **todos sus archivos están vacíos** (0 bytes) — es una
+> carpeta reservada para la Entrega Final, no una implementación parcial.
+> Lo mismo aplica a `deportivo.equipo` (`EquipoController` es una clase
+> vacía de 5 líneas). Ninguno de los dos tiene tabla en `db/schema.sql`.
+> Se documenta para que no se confunda "el paquete existe" con
+> "está implementado" — exactamente el tipo de brecha que OBS-12 pidió
+> dejar de repetir.
 
 ---
 
@@ -472,8 +590,25 @@ Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
 **RNF-09 — Cobertura de pruebas**
 *El sistema deberá mantener una cobertura de instrucciones igual o superior
 al 60 %, verificada automáticamente en la construcción.*
-Medido: **68 %** (JaCoCo), con 34 pruebas en 7 clases.
-Evidencia: `docs/mediciones/jacoco/`.
+
+- **Medido el 2026-07-30 (`./mvnw test`, 60 clases analizadas):
+  39,8 % — NO CUMPLE el umbral de 60 %.**
+- 44 pruebas en 7 clases, **todas pasan** (0 fallos, 0 errores); el
+  problema no es que las pruebas fallen, es que los ~11 controladores,
+  servicios y entidades nuevos de la reestructuración (Categoria,
+  Entrenador, Usuario, Persona, EstadoGeneral, más los stubs de
+  Representante/Equipo) no tienen ninguna prueba propia, y diluyeron el
+  porcentaje agregado.
+- **Esto es una regresión real, no un error de medición**, respecto a la
+  cifra de 68 % que documentaban tanto la v1.0 de este SRS como
+  `docs/observaciones/Observaciones.md` (OBS-10) — ambas correctas *en el
+  momento en que se midieron*, antes de que se agregara el código nuevo.
+- Evidencia: `docs/mediciones/jacoco/` (pendiente de regenerar el reporte
+  HTML con la nueva ejecución; el `.csv` usado para este cálculo se generó
+  localmente el 2026-07-30 y no está commiteado todavía).
+- **Pendiente antes de tagear `v0.9.0-rc`:** agregar pruebas mínimas para
+  los controladores/servicios nuevos, o decidir conscientemente no tagear
+  hasta subir la cobertura de vuelta por encima del 60 %.
 
 **RNF-10 — Tipificación de errores**
 *El sistema deberá responder los errores en formato `ProblemDetail`
