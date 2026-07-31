@@ -6,9 +6,34 @@ del historial de `git log` (no auto-declarados).
 
 | Integrante | Correo institucional | Roles (CRediT) |
 |---|---|---|
-| Pallo Pinto Alejandro Daniel | dpallop@uteq.edu.ec | Software, Seguridad (JWT/cookies/OWASP), Validación (pruebas, cobertura JaCoCo, k6), Curación de datos (migraciones Flyway, procedimientos almacenados), Redacción (documentación de evidencia) |
-| Velez Lopez Ricardo Elias | _(commits con correo no institucional — ver nota)_ | Conceptualización, Software (arranque inicial de Angular, módulo de autenticación JWT, CRUD de Estudiante), Metodología |
-| Arcalle Grefa Darwin Orlando | _(commits con correo no institucional — ver nota)_ | Conceptualización, Software (estructura inicial del repositorio), Documentación de arquitectura (ADRs, diagramas C4) |
+| Pallo Pinto Alejandro Daniel | dpallop@uteq.edu.ec | Software, Seguridad (JWT/cookies/OWASP), Validación (pruebas, cobertura JaCoCo, k6, SUS), Curación de datos (procedimientos almacenados, esquema), Redacción (borrador original), Visualización |
+| Velez Lopez Ricardo Elias | _(commits con correo no institucional — ver nota)_ | Conceptualización, Software (arranque de Angular, módulo de autenticación JWT, CRUD de Estudiante, reestructuración en dominios), Metodología |
+| Arcalle Grefa Darwin Orlando | _(commits con correo no institucional — ver nota)_ | Conceptualización, Software (estructura inicial del repositorio, modelo de datos, frontend), Administración del proyecto |
+
+## Evidencia cuantitativa (derivada de `git log`, no autodeclarada)
+
+Medido sobre la rama `main`. Se separa lo **escrito** de lo **generado**
+(reportes JaCoCo/Lighthouse, salidas crudas de k6, `package-lock.json`,
+PDF), porque contar un reporte HTML como autoría inflaría la cifra sin
+reflejar trabajo real.
+
+| Integrante | Commits | Líneas escritas | Archivos escritos |
+|---|---:|---:|---:|
+| Pallo Pinto Alejandro Daniel | 72 | 17 760 | 374 |
+| Arcalle Grefa Darwin Orlando | 17 | 5 429 | 303 |
+| Velez Lopez Ricardo Elias | 32 | 4 077 | 108 |
+| **Total** | **121** | **27 266** | — |
+
+Reproducible con:
+
+```bash
+git log --pretty="AUTOR:%an" --numstat main
+```
+
+> **El volumen no es la contribución.** Estas cifras miden actividad, no
+> valor: un cambio de dos líneas que corrige un fallo de control de acceso
+> pesa más que dos mil líneas de documentación. La tabla existe porque la
+> evaluación exige autoría verificable, no para jerarquizar al equipo.
 
 ## Nota de trazabilidad: commits de "DannaN24"
 

@@ -1322,6 +1322,102 @@ Todos los datos del repositorio son ficticios. No se utilizaron datos reales
 de menores en ninguna etapa del desarrollo ni de las mediciones.
 
 % ============================================================
+\section{Declaración de contribuciones (CRediT)}
+\label{sec:credit}
+
+Los roles siguientes no son autodeclarados: se derivan del historial de
+\texttt{git} del repositorio y cada uno puede verificarse con
+\texttt{git log --author}. Las cifras provienen de \texttt{git log
+--numstat} sobre la rama \texttt{main} y separan lo \emph{escrito} de lo
+\emph{generado} (reportes de JaCoCo y Lighthouse, salidas crudas de k6,
+\texttt{package-lock.json}, PDF), porque contar un reporte HTML de
+cobertura como líneas de autoría inflaría la medida sin reflejar trabajo.
+
+\begin{center}
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+\textbf{Integrante} & \textbf{\emph{Commits}} & \textbf{Líneas escritas} & \textbf{Archivos} \\
+\midrule
+Pallo Pinto Alejandro Daniel & 72 & 17\,760 & 374 \\
+Arcalle Grefa Darwin Orlando & 17 & 5\,429 & 303 \\
+Velez Lopez Ricardo Elias & 32 & 4\,077 & 108 \\
+\midrule
+\textbf{Total en \texttt{main}} & \textbf{121} & \textbf{27\,266} & --- \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Roles por integrante}
+
+\textbf{Pallo Pinto Alejandro Daniel} — \emph{Software}, \emph{Validación},
+\emph{Curación de datos}, \emph{Redacción (borrador original)},
+\emph{Visualización}.
+
+Responsable de la totalidad del eje de verificación que define esta
+entrega. En seguridad: migración del JWT de \texttt{localStorage} a cookie
+\texttt{HttpOnly}+\texttt{Secure}+\texttt{SameSite}, terminación TLS,
+CSP explícito, registro de auditoría A09, y la corrección del control de
+acceso ausente en los cinco recursos nuevos (H-08,
+sección~\ref{sec:a01-falso-correcto}). En datos: conversión de las
+funciones PL/pgSQL a procedimientos reales invocables con
+\texttt{@Procedure} (sección~\ref{sec:acceso-datos}) y fijación de
+imágenes por digest. En validación: las 102 pruebas actuales —incluidas
+las 57 que cerraron la regresión de cobertura—, la corrección del defecto
+por el que JaCoCo nunca había medido cobertura real, y las tres campañas
+de medición empírica (k6, OWASP, Lighthouse) junto con sus \emph{scripts}
+de análisis. En usabilidad: instrumento SUS, \emph{script} de cálculo
+validado contra los casos de referencia de la literatura, y transcripción
+de las diez encuestas. En redacción: este informe y el corpus documental
+(SRS, casos de uso, historias, matriz de trazabilidad, ADR, ética,
+diccionario de datos, gobernanza del repositorio).
+
+\textbf{Arcalle Grefa Darwin Orlando} — \emph{Conceptualización},
+\emph{Software}, \emph{Administración del proyecto}.
+
+Estructura inicial del repositorio y del modelo de datos
+(\texttt{DataBase/}), trabajo sobre el \emph{frontend} Angular
+(componentes, \emph{Dockerfile} y configuración de formato), y
+administración del repositorio remoto, del que es propietario.
+Participación en la reestructuración en dominios
+\texttt{academico}/\texttt{deportivo}/\texttt{seguridad} descrita en la
+sección~\ref{sec:reestructuracion}.
+
+\textbf{Velez Lopez Ricardo Elias} — \emph{Conceptualización},
+\emph{Software}, \emph{Metodología}.
+
+Arranque del \emph{frontend} Angular y del módulo de autenticación, CRUD
+inicial de \texttt{Estudiante}, y aportes a \ruta{docs/requisitos/} y
+\ruta{docs/observaciones/}. Autor principal de la reestructuración en tres
+dominios y de los cinco recursos CRUD nuevos, que es el cambio estructural
+sobre el que se apoya esta entrega.
+
+\subsection{Dos advertencias sobre la medida}
+
+\textbf{El volumen no es la contribución.} Las líneas escritas miden
+actividad, no valor: un cambio de dos líneas que corrige un fallo de
+control de acceso pesa más que dos mil líneas de documentación. La tabla
+se incluye porque el criterio de evaluación exige autoría verificable, no
+para establecer una jerarquía entre integrantes.
+
+\textbf{Dos \emph{commits} figuran bajo la cuenta \texttt{DannaN24}}
+(\texttt{dninasuntar@uteq.edu.ec}), del 2026-06-29, y son trabajo de
+\textbf{Pallo Pinto Alejandro Daniel}: esa era la sesión configurada en el
+equipo de la universidad que utilizó ese día. Ya quedaba insinuado en el
+propio historial (\emph{commit} \texttt{a456255}, del mismo día). Están
+sumados a su fila en la tabla anterior. No se reescribió el historial de
+\texttt{git} —hacerlo sobre ramas ya compartidas con el equipo habría
+roto sus copias locales—; la aclaración se hace por escrito aquí y en
+\ruta{CONTRIBUTORS.md}, que es el mecanismo apropiado para una corrección
+de autoría a posteriori.
+
+Adicionalmente, varios \emph{commits} de Ricardo y Darwin usan correos
+personales en vez del institucional, y la cuenta de Ricardo aparece con
+dos identidades (\texttt{ricardoforever@outlook.es} y
+\texttt{ricardo@email.com}). Las cifras de la tabla las consolidan como
+una sola persona. Se recomienda unificar \texttt{git config user.email}
+antes de la Entrega Final.
+
+% ============================================================
 \section{Trazabilidad y honestidad académica}
 
 La matriz \ruta{docs/trazabilidad/matriz.csv} enlaza cada requisito con su
