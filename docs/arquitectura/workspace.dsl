@@ -46,7 +46,7 @@ workspace "SGED - ProFútbol" "Sistema de Gestión para la Escuela Deportiva Pro
                 authController = component "AuthController" "Endpoints /api/auth: login, registro, logout, refresh, me." "Spring MVC REST Controller"
                 usuarioController = component "UsuarioController" "CRUD de cuentas de usuario (/api/usuarios), con paginación y baja lógica." "Spring MVC REST Controller"
                 personaController = component "PersonaController" "CRUD de datos personales (/api/personas); unicidad de cédula y correo." "Spring MVC REST Controller"
-                estadoGeneralController = component "EstadoGeneralController" "Catálogo de estados administrativos (/api/estados-general)." "Spring MVC REST Controller"
+                estadoGeneralController = component "EstadoGeneralController" "Catálogo de estados administrativos (/api/estados_generales), de solo lectura." "Spring MVC REST Controller"
 
                 jwtAuthFilter = component "JwtAuthenticationFilter" "Filtro que valida el JWT de la cookie en cada petición y puebla el contexto de seguridad." "Spring Security Filter"
                 jwtService = component "JwtService" "Emisión y validación de tokens JWT (jjwt 0.12), con claims iss/aud/nbf." "Servicio"

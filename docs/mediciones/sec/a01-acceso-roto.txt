@@ -1,7 +1,8 @@
 # Evidencia OWASP A01 - Broken Access Control
-# Fecha: 2026-07-29T23:11:39Z | Commit: dd911e2 | curl: curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.10
+# Fecha: 2026-07-31T02:22:01Z | Commit: 4b82959 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
-HTTP/1.1 401 
+-- 1. operacion administrativa sobre estudiantes (esperado 403) --
+HTTP/1.1 403 
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
@@ -12,8 +13,22 @@ Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
 Content-Security-Policy: default-src 'self'; frame-ancestors 'none'
-Content-Type: application/problem+json;charset=UTF-8
-Content-Length: 282
-Date: Wed, 29 Jul 2026 23:11:40 GMT
+Content-Type: application/problem+json
+Transfer-Encoding: chunked
+Date: Fri, 31 Jul 2026 02:22:02 GMT
 
-{"type":"https://sged.uteq.edu.ec/errores/NoAutenticado","title":"Unauthorized","status":401,"detail":"Se requiere autenticación para acceder a este recurso","instance":"/api/estudiantes/operaciones/desactivar-categoria","properties":{"timestamp":"2026-07-29T23:11:41.766860294Z"}}
+{"type":"https://sged.uteq.edu.ec/errores/AccesoDenegado","title":"Forbidden","status":403,"detail":"No tiene permisos para acceder a este recurso","instance":"/api/estudiantes/operaciones/desactivar-categoria","timestamp":"2026-07-31T02:22:03.556376142Z"}
+
+-- 2. lectura de datos personales de terceros (esperado 403) --
+GET  /api/personas                 -> 403
+GET  /api/personas/cedula/0000000000 -> 403
+
+-- 3. escritura sobre catalogos y cuentas (esperado 403) --
+POST   /api/categorias   -> 403
+DELETE /api/categorias/1 -> 403
+PUT    /api/personas/1   -> 403
+GET    /api/usuarios     -> 403
+
+-- 4. lectura permitida al rol USER (esperado 200: no se rompio el uso legitimo) --
+GET /api/categorias/activas -> 200
+GET /api/estados_generales  -> 200

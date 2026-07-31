@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -62,6 +63,23 @@ public class GlobalExceptionHandler {
                 HttpStatus.FORBIDDEN, "No tiene permisos para acceder a este recurso");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/AccesoDenegado"));
         pd.setTitle("Forbidden");
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
+    /**
+     * Cuerpo de peticion ausente o mal formado. Sin este manejador cae en el
+     * handler generico y responde 500 "Error interno del servidor": un error
+     * del cliente reportado como fallo del servidor, que ademas ensucia el log
+     * con trazas que no corresponden a un defecto del sistema.
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ProblemDetail handleCuerpoIlegible(HttpMessageNotReadableException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "El cuerpo de la peticion falta o no tiene el formato esperado");
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/CuerpoIlegible"));
+        pd.setTitle("Bad Request");
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
     }

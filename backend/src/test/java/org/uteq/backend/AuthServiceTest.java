@@ -25,6 +25,8 @@ import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.rol.entity.Rol;
@@ -32,6 +34,7 @@ import org.uteq.backend.seguridad.rol.repository.RolRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -47,7 +50,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class AuthServiceTest {
 
     private MockMvc mockMvc;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    // JavaTimeModule: RegisterRequest incluye una LocalDate (fechaNacimiento).
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
     @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtService jwtService;
@@ -55,6 +60,7 @@ class AuthServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PersonaRepository personaRepository;
     @Mock private RolRepository rolRepository;
+    @Mock private EstadoGeneralRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private LoginAttemptService loginAttemptService;
 
@@ -125,12 +131,36 @@ class AuthServiceTest {
     void registroEmailDuplicado() throws Exception {
         when(usuarioRepository.existsByUsername("test@test.com")).thenReturn(true);
 
-        RegisterRequest registerRequest = new RegisterRequest("Test", "User", "test@test.com", "test123");
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345678", "test@test.com",
+                LocalDate.of(2000, 1, 1), "test@test.com", "test123");
 
         mockMvc.perform(post("/api/auth/registro")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isConflict());
+    }
+
+    /**
+     * Regresion: la reestructuracion volvio cedula, correo y fecha_nacimiento
+     * columnas NOT NULL de seguridad.personas, pero RegisterRequest no las
+     * pedia, asi que /api/auth/registro fallaba siempre con 500 contra la base
+     * real. Las pruebas con repositorio mockeado no podian detectarlo, porque
+     * la restriccion la aplica PostgreSQL y no el codigo Java. Esta prueba
+     * cubre el hueco por el lado que si es verificable sin base de datos:
+     * que la peticion sin esos campos ni siquiera pase la validacion.
+     */
+    @Test
+    void registroSinCedulaNiFechaNacimientoNoLlegaALaBaseDeDatos() throws Exception {
+        String cuerpoIncompleto = """
+                {"nombre":"Test","apellido":"User",
+                 "username":"nuevo@test.com","password":"password123"}
+                """;
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoIncompleto))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
@@ -143,6 +173,8 @@ class AuthServiceTest {
         });
         when(rolRepository.findByNombre("USER")).thenReturn(
                 Optional.of(Rol.builder().idRol(1L).nombre("USER").build()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(
+                Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
             Usuario u = i.getArgument(0);
             u.setIdUsuario(1L);
@@ -150,7 +182,9 @@ class AuthServiceTest {
         });
         when(passwordEncoder.encode(anyString())).thenReturn("$2a$12$encoded");
 
-        RegisterRequest registerRequest = new RegisterRequest("Test", "User", "new@test.com", "password123");
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345678", "nuevo.correo@test.com",
+                LocalDate.of(2000, 1, 1), "new@test.com", "password123");
 
         mockMvc.perform(post("/api/auth/registro")
                         .contentType(MediaType.APPLICATION_JSON)

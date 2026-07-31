@@ -29,6 +29,8 @@ import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
 import org.uteq.backend.seguridad.rol.entity.Rol;
 import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
@@ -59,18 +61,24 @@ public class AuthController {
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final RolRepository rolRepository;
+    private final EstadoGeneralRepository estadoGeneralRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     @PostMapping("/registro")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<SesionResponse> registro(@Valid @RequestBody RegisterRequest request) {
-        if (usuarioRepository.existsByUsername(request.username())) {
+        if (usuarioRepository.existsByUsername(request.username())
+                || personaRepository.existsByCedulaAndActivoTrue(request.cedula())
+                || personaRepository.existsByCorreo(request.correo())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         Persona persona = Persona.builder()
                 .nombre(request.nombre())
                 .apellido(request.apellido())
+                .cedula(request.cedula())
+                .correo(request.correo())
+                .fechaNacimiento(request.fechaNacimiento())
                 .activo(true)
                 .build();
         persona = personaRepository.save(persona);
@@ -79,8 +87,15 @@ public class AuthController {
                 .orElseGet(() -> rolRepository.save(
                         Rol.builder().nombre("USER").descripcion("Usuario estandar").build()));
 
+        // id_estado_general es NOT NULL: sin esto el alta tambien falla en base
+        // de datos aunque la persona ya se haya podido insertar.
+        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
+
         Usuario usuario = Usuario.builder()
                 .persona(persona)
+                .estadoGeneral(estadoActivo)
                 .username(request.username())
                 .password_Hash(passwordEncoder.encode(request.password()))
                 .activo(true)

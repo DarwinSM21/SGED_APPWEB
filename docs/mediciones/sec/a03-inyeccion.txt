@@ -1,7 +1,7 @@
 # Evidencia OWASP A03 - Injection
-# Fecha: 2026-07-29T23:11:39Z | Commit: dd911e2 | curl: curl 8.5.0 (x86_64-pc-linux-gnu) libcurl/8.5.0 OpenSSL/3.0.13 zlib/1.3 brotli/1.1.0 zstd/1.5.5 libidn2/2.3.7 libpsl/0.21.2 (+libidn2/2.3.7) libssh/0.10.6/openssl/zlib nghttp2/1.59.0 librtmp/2.3 OpenLDAP/2.6.10
+# Fecha: 2026-07-31T02:22:01Z | Commit: 4b82959 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
-HTTP/1.1 401 
+HTTP/1.1 422 
 Vary: Origin
 Vary: Access-Control-Request-Method
 Vary: Access-Control-Request-Headers
@@ -12,8 +12,8 @@ Pragma: no-cache
 Expires: 0
 X-Frame-Options: DENY
 Content-Security-Policy: default-src 'self'; frame-ancestors 'none'
-Content-Type: application/problem+json;charset=UTF-8
-Content-Length: 249
-Date: Wed, 29 Jul 2026 23:11:40 GMT
+Content-Type: application/problem+json
+Transfer-Encoding: chunked
+Date: Fri, 31 Jul 2026 02:22:03 GMT
 
-{"type":"https://sged.uteq.edu.ec/errores/NoAutenticado","title":"Unauthorized","status":401,"detail":"Se requiere autenticación para acceder a este recurso","instance":"/api/estudiantes","properties":{"timestamp":"2026-07-29T23:11:41.927439923Z"}}
+{"type":"https://sged.uteq.edu.ec/errores/Validacion","title":"Unprocessable Entity","status":422,"detail":"Errores de validacion","instance":"/api/estudiantes","errores":["idCategoria: El ID de la categoría es obligatorio","idEstadoGeneral: El ID del estado general es obligatorio","idPersona: El ID de la persona es obligatorio","codigoEstudiante: El código de estudiante es obligatorio","fechaIngreso: La fecha de ingreso es obligatoria"],"timestamp":"2026-07-31T02:22:04.560293736Z"}
