@@ -26,8 +26,18 @@ complementario a este, no un duplicado.
   peso/altura del estudiante; esos campos ya son reales y opcionales en la
   API (hallazgo H-06, sin base legal documentada todavía).
 - Cobertura de pruebas: regresión detectada a 39,8 % (los 5 recursos nuevos
-  no tenían pruebas propias); corregida a 72,5 % con 57 pruebas nuevas
+  no tenían pruebas propias); corregida a 72,7 % con 57 pruebas nuevas
   (10 clases).
+- Eliminadas 14 clases stub sin implementación de `academico.representante`
+  y `deportivo.equipo` — 13 con cuerpo vacío y una de 0 bytes
+  (`RepresentanteController.java`). Nada las referenciaba. Los archivos de
+  0 bytes son el defecto que el docente ya observó tres veces en la Entrega
+  1B (OBS-08, OBS-10, OBS-11); ambos módulos siguen documentados como
+  pendientes para la Entrega Final.
+- Reporte JaCoCo archivado regenerado con `clean test`: el anterior se midió
+  sobre un `target/` con `.class` de antes de la reestructuración e incluía
+  paquetes inexistentes (`org.uteq.backend.auth.*`,
+  `org.uteq.backend.estudiante.*`).
 - Retirado `docs/informe-entrega-3.pdf` (sin fuente `.tex`/`.docx`
   versionada); `docs/informe/main.tex` queda como único informe oficial.
 - Colisión de numeración `ADR-003` resuelta (el propio pasa a `ADR-007`).

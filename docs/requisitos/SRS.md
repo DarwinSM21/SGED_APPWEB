@@ -601,9 +601,16 @@ Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
 *El sistema deberá mantener una cobertura de instrucciones igual o superior
 al 60 %, verificada automáticamente en la construcción.*
 
-- **Medido el 2026-07-30 (`./mvnw test`, 60 clases analizadas):
-  72,5 % (2488 instrucciones cubiertas de 3432) — CUMPLE el umbral de 60 %.**
+- **Medido el 2026-07-30 con construcción limpia (`./mvnw clean test`):
+  72,7 % (2466 instrucciones cubiertas de 3393) — CUMPLE el umbral de 60 %.**
 - 101 pruebas en 17 clases, **todas pasan** (0 fallos, 0 errores).
+- **Por qué "construcción limpia" aparece explícito aquí:** la primera
+  medición de esta jornada se hizo con `./mvnw test` sobre un `target/`
+  que aún conservaba `.class` de antes de la reestructuración de paquetes.
+  El reporte archivado llegó a listar paquetes que ya no existen en el
+  código fuente (`org.uteq.backend.auth.*`, `org.uteq.backend.estudiante.*`).
+  La cifra publicada ahora proviene de `clean test`, y el reporte de
+  `docs/mediciones/jacoco/` contiene solo los 27 paquetes reales.
 - **Historial de esta cifra en la misma jornada**, para que quede trazable:
   primero se detectó una regresión real a 39,8 % (los 5 recursos nuevos de
   la reestructuración — Categoria, Entrenador, Usuario, Persona,
@@ -612,7 +619,7 @@ al 60 %, verificada automáticamente en la construcción.*
   `EntrenadorServiceTest`, `EntrenadorControllerTest`, `UsuarioServiceTest`,
   `UsuarioControllerTest`, `PersonaServiceTest`, `PersonaControllerTest`,
   `EstadoGeneralServiceTest`, `EstadoGeneralControllerTest`) y la cobertura
-  subió a 72,5 %.
+  subió a 72,7 %.
 - Evidencia: `docs/mediciones/jacoco/` (reporte regenerado con la
   ejecución que incluye las 101 pruebas).
 
