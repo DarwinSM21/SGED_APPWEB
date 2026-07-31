@@ -129,11 +129,11 @@ Antes de exponer los resultados conviene ser explícito sobre dos cosas:
     no expuesto vía API. En el documento de requisitos cada elemento indica
     su estado real, y en este informe se mantiene la misma distinción. No se
     presenta como entregado nada que no lo esté.
-  \item \textbf{Medición de usabilidad pendiente.} La encuesta SUS exigida
-    por el Bloque~C.3 requiere al menos diez participantes externos. El
-    instrumento y el script de análisis están construidos y versionados,
-    pero \textbf{las respuestas todavía no han sido recolectadas}. No se
-    reportan resultados inventados (sección~\ref{sec:sus}).
+  \item \textbf{Medición de usabilidad completada, con un resultado que no
+    se suaviza.} La encuesta SUS (Bloque~C.3, sección~\ref{sec:sus}) se
+    aplicó a 10 participantes reales: media SUS 68,25, apenas por encima
+    del umbral de 68, y con un patrón bimodal marcado por perfil que la
+    media agregada esconde.
 \end{enumerate}
 
 \subsection{Pila tecnológica}
@@ -694,19 +694,65 @@ ellas en 1,0. \ok
 \subsection{Usabilidad: SUS (Bloque C.3)}
 \label{sec:sus}
 
-\textbf{Medición pendiente.} El instrumento
-(\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}) contiene el cuestionario SUS
-de diez ítems~\cite{brooke1996}, el protocolo con siete tareas trazadas a
-requisitos concretos, y la escala adjetival de
+El instrumento (\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}) es el
+cuestionario SUS de diez ítems~\cite{brooke1996} con la escala adjetival de
 interpretación~\cite{bangor2009}. El script \ruta{scripts/sus-analysis.py}
-calcula media, desviación típica, intervalo de confianza al 95\,\%, mediana y
-tasa de éxito por tarea.
+calcula media, desviación típica, intervalo de confianza al 95\,\%, mediana
+y grado por participante; se niega deliberadamente a ejecutarse con menos
+de diez participantes, y su aritmética quedó verificada contra los cuatro
+casos de referencia de la literatura (0, 50, 75 y 100 puntos) antes de
+usarlo con datos reales.
 
-El script se niega deliberadamente a ejecutarse con menos de diez
-participantes. Las respuestas no han sido recolectadas todavía, y una muestra
-fabricada invalidaría la medición. La aritmética del cálculo sí quedó
-verificada contra los cuatro casos de referencia de la literatura (0, 50, 75
-y 100 puntos).
+\textbf{Aplicado el 2026-07-30 a 10 participantes} (formularios en papel,
+transcritos a \ruta{docs/mediciones/sus/respuestas.csv} sin registrar
+nombres, solo un código de participante y su perfil): 3 entrenadores, 3
+recepcionistas, 2 estudiantes, 2 padres de familia.
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Métrica} & \textbf{Valor} \\
+\midrule
+Media SUS & 68,25 \\
+Desviación típica & 22,14 \\
+IC 95\,\% & 68,25 $\pm$ 13,72 \quad (54,53 -- 81,97) \\
+Mediana & 73,75 \\
+Grado & C --- Aceptable \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+La media cruza el umbral de 68 por apenas 0,25 puntos, y el intervalo de
+confianza es ancho: con esta muestra no puede afirmarse con confianza
+estadística que la media poblacional real supere 68, solo que 68,25 es la
+mejor estimación puntual disponible. No se presenta como un resultado
+cómodo.
+
+\textbf{El hallazgo más informativo no es la media, es su distribución
+bimodal por perfil}, que la agregación esconde:
+
+\begin{center}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Perfil} & \textbf{Promedio SUS} & \textbf{Grado} \\
+\midrule
+Entrenador (n=3) & 86,7 & A \\
+Estudiante (n=2) & 90,0 & A \\
+Recepcionista (n=3) & 51,7 & F \\
+Padre de familia (n=2) & 43,75 & F \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Entrenadores y estudiantes calificaron el sistema como excelente;
+recepcionistas y padres de familia, como inaceptable. El CRUD de
+estudiantes implementado hasta esta entrega (RF-08 a RF-15) es exactamente
+el flujo operado por un rol administrativo — no el de un entrenador
+consultando información, ni el de un padre buscando visibilidad sobre su
+representado —, lo que sugiere que la interfaz actual está más pulida para
+un caso de uso que no es el de quienes peor la calificaron. Es una pista
+concreta de dónde enfocar el trabajo de usabilidad antes de la Entrega
+Final, no solo un número que aprobó por poco.
 
 % ============================================================
 \section{Reproducibilidad}
@@ -814,11 +860,14 @@ v4.0~\cite{swebok2024}.
     Java existe pero está vacío (\texttt{Representante}, \texttt{Equipo}):
     no se cuentan como funcionalidad entregada solo porque el archivo exista.
 
-  \item Queda abierto un frente que no puede resolverse escribiendo código:
-    la encuesta SUS (sección~\ref{sec:sus}) requiere participantes externos
-    reales y no se fabrica. La exposición REST del dominio deportivo
-    restante (horarios, sesiones, asistencias, evaluaciones) es el objetivo
-    natural de la Entrega Final.
+  \item La encuesta SUS (sección~\ref{sec:sus}) ya no es un frente abierto,
+    pero su resultado abre uno nuevo: el sistema es excelente para
+    entrenadores y estudiantes (grado A) e inaceptable para recepcionistas
+    y padres de familia (grado F). Mejorar la usabilidad del flujo
+    administrativo y del futuro módulo de representantes es, con evidencia
+    real detrás, más urgente que subir la media agregada. La exposición
+    REST del dominio deportivo restante (horarios, sesiones, asistencias,
+    evaluaciones) sigue siendo el objetivo natural de la Entrega Final.
 \end{enumerate}
 
 \newpage
