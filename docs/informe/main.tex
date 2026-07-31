@@ -256,7 +256,8 @@ por clave foránea. Aparecieron además cinco recursos CRUD nuevos
 (\texttt{Categoria}, \texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
 \texttt{EstadoGeneral}) que no tenían requisito documentado, y dos paquetes
 reservados sin contenido (\texttt{Representante}, \texttt{Equipo} — clases
-vacías, sin tabla en el esquema).
+vacías, sin tabla en el esquema) que después se eliminaron por las razones
+que se explican más abajo.
 
 Este informe, el SRS (\texttt{docs/requisitos/SRS.md}) y la matriz de
 trazabilidad se actualizaron para reflejar ese estado, verificando cada
@@ -282,6 +283,38 @@ actualizaciones de ruta:
     no era cierta y se corrigió en el propio documento de ética (hallazgo
     H-06) en vez de dejarla como estaba.
 \end{itemize}
+
+\subsection{Los paquetes reservados vacíos: por qué se eliminaron}
+
+Los dos paquetes reservados merecen una decisión explícita y no un
+comentario al margen. \texttt{academico.representante} y
+\texttt{deportivo.equipo} contenían catorce clases —controlador, servicio,
+repositorio, entidad y DTO de cada módulo— con la declaración de paquete,
+la firma de la clase y el cuerpo vacío. Una de ellas,
+\texttt{RepresentanteController.java}, era literalmente un archivo de
+\textbf{cero bytes}.
+
+Ese detalle no es cosmético en el contexto de este proyecto. El docente
+había emitido tres observaciones distintas en la Entrega 1B por exactamente
+el mismo defecto: \texttt{V1\_\_schema\_inicial.sql} vacía (OBS-08),
+\texttt{AuthServiceTest.java} vacío (OBS-10) y \texttt{docker-compose.yml}
+vacío (OBS-11). Conservar un archivo de cero bytes después de que ese
+patrón ya fuera observado tres veces habría sido repetir un defecto
+conocido, y además tenía un efecto medible: las clases vacías aportaban
+constructores por defecto no cubiertos que contaban como instrucciones
+perdidas en JaCoCo.
+
+Había dos salidas honestas: implementar los dos módulos, o eliminarlos. Con
+el esquema de base de datos aún sin las tablas \texttt{representantes} y
+\texttt{equipos}, implementarlos en esta entrega habría significado
+inventar un modelo de datos sin requisito validado. Se optó por eliminar
+las catorce clases —ninguna estaba referenciada desde el resto del
+código, lo que confirma que no eran un punto de extensión en uso— y dejar
+ambos módulos declarados como pendientes únicamente en la documentación
+(RF-22 en el SRS, la matriz de trazabilidad y este informe). La diferencia
+es relevante para la evaluación: un módulo pendiente documentado es
+planificación; un paquete de clases vacías en el repositorio aparenta una
+implementación que no existe.
 
 También se corrigió una inconsistencia en \texttt{ADR-002} (autenticación):
 describía JWT almacenado en \texttt{localStorage} con un interceptor
@@ -576,17 +609,31 @@ Content-Type: application/problem+json
 \subsection{Cobertura de pruebas}
 \label{sec:cobertura}
 
-\textbf{Medido el 2026-07-30 tras cerrar la brecha de pruebas
-(\texttt{./mvnw test}, 60 clases analizadas): 72,5\,\% de cobertura de
-instrucciones (2488 cubiertas de 3432). Cumple el umbral del 60\,\%.} El
-camino hasta este número quedó documentado en vez de solo reportar el
-resultado final: al medir por primera vez después de la reestructuración de
-paquetes (sección~\ref{sec:reestructuracion}) el resultado real era
+\textbf{Medido el 2026-07-30 con construcción limpia
+(\texttt{./mvnw clean test}): 72,7\,\% de cobertura de instrucciones
+(2466 cubiertas de 3393). Cumple el umbral del 60\,\%.} El camino hasta
+este número quedó documentado en vez de solo reportar el resultado final:
+al medir por primera vez después de la reestructuración de paquetes
+(sección~\ref{sec:reestructuracion}) el resultado real era
 \textbf{39,8\,\%} — los recursos nuevos (\texttt{Categoria},
 \texttt{Entrenador}, \texttt{Usuario}, \texttt{Persona},
 \texttt{EstadoGeneral}) no tenían ninguna prueba propia. Se agregaron 57
 pruebas nuevas para esos cinco recursos (10 clases: servicio y controlador
-de cada uno), y la cobertura subió a 72,5\,\%.
+de cada uno), y la cobertura subió a 72,7\,\%.
+
+La palabra «limpia» está ahí por una razón concreta. La primera medición
+posterior a la reestructuración se hizo con \texttt{./mvnw test} sobre un
+directorio \texttt{target/} que todavía conservaba archivos
+\texttt{.class} compilados \emph{antes} del cambio de paquetes. El reporte
+que se llegó a archivar como evidencia listaba paquetes que ya no existen
+en el código fuente (\texttt{org.uteq.backend.auth.*},
+\texttt{org.uteq.backend.estudiante.*}): JaCoCo instrumenta lo que
+encuentra en \texttt{target/classes}, no lo que hay en \texttt{src/}. La
+cifra publicada aquí proviene de \texttt{clean test} y el reporte
+archivado en \texttt{docs/mediciones/jacoco/} contiene exactamente los 27
+paquetes reales. La diferencia numérica es pequeña (72,5 frente a
+72,7\,\%), pero una evidencia de cobertura que incluye código inexistente
+no es evidencia válida aunque el porcentaje salga parecido.
 
 \begin{center}
 \begin{tabular}{@{}lrp{7.4cm}@{}}
@@ -837,7 +884,7 @@ v4.0~\cite{swebok2024}.
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
     p95 de 14,18\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{72,5\,\%} de cobertura de pruebas frente a un mínimo
+    100/100, y \textbf{72,7\,\%} de cobertura de pruebas frente a un mínimo
     de 60\,\% (sección~\ref{sec:cobertura}) — cifra alcanzada después de
     detectar y corregir una regresión real a 39,8\,\% causada por los
     recursos nuevos de la reestructuración, no reportando directamente un
@@ -856,9 +903,14 @@ v4.0~\cite{swebok2024}.
     ocultarse.
 
   \item La distinción entre lo implementado y lo modelado se mantiene
-    explícita en todo el documento, incluyendo los casos donde un paquete
-    Java existe pero está vacío (\texttt{Representante}, \texttt{Equipo}):
-    no se cuentan como funcionalidad entregada solo porque el archivo exista.
+    explícita en todo el documento. En el caso de \texttt{Representante} y
+    \texttt{Equipo} se llevó un paso más allá: en vez de dejar catorce
+    clases vacías —una de ellas de cero bytes, el mismo defecto que motivó
+    tres observaciones del docente en la Entrega 1B— se eliminaron del
+    código y ambos módulos quedan declarados como pendientes solo en la
+    documentación (sección~\ref{sec:reestructuracion}). Un archivo vacío no
+    cuenta como funcionalidad entregada, y tampoco debería quedarse en el
+    repositorio aparentando que sí.
 
   \item La encuesta SUS (sección~\ref{sec:sus}) ya no es un frente abierto,
     pero su resultado abre uno nuevo: el sistema es excelente para
