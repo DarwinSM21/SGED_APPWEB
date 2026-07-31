@@ -1,7 +1,8 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.0 (Tercera Entrega)
+**Versión:** 1.1 (Tercera Entrega — revisado tras la reestructuración de
+paquetes `academico`/`deportivo`/`seguridad`)
 
 ---
 
@@ -35,9 +36,11 @@ Extraído directamente del esquema versionado, no de una descripción genérica.
 | Nombre y apellido | `seguridad.personas.nombre`, `.apellido` | Identificativo | Identificar al deportista y al personal. |
 | Cédula | `seguridad.personas.cedula` | Identificativo — **alto riesgo** | Identificación unívoca ante federaciones. **Ver hallazgo H-01.** |
 | Correo y teléfono | `seguridad.personas.correo`, `.telefono` | Contacto | Comunicación con el representante. |
-| Fecha de nacimiento | `seguridad.personas.fecha_nacimiento` | Identificativo — **revela minoría de edad** | Determinar la categoría por edad (SUB-12…SUB-20). |
-| Categoría | `seguridad.estudiantes.categoria` | Derivado de la edad | Agrupación deportiva. |
-| Código RFID | `seguridad.estudiantes.rfid_codigo` | Identificador de dispositivo | Marcaje de asistencia sin fricción. |
+| Fecha de nacimiento | `seguridad.personas.fecha_nacimiento` | Identificativo — **revela minoría de edad** | Determinar la categoría deportiva. |
+| Código de estudiante | `academico.estudiantes.codigo_estudiante` | Identificativo | Identificación interna única. |
+| Categoría | `academico.estudiantes.id_categoria` → `deportivo.categorias` | Derivado de la edad | Agrupación deportiva por rango etario (`edad_min`/`edad_max`). |
+| Peso y altura | `academico.estudiantes.peso`, `.altura` | **Dato de salud — riesgo alto** | Seguimiento físico-deportivo. **Ver hallazgo H-06 — no estaba en el alcance original.** |
+| Código RFID | `academico.estudiantes.rfid_codigo` | Identificador de dispositivo | Marcaje de asistencia sin fricción. |
 | Asistencia con hora | `deportivo.asistencias` (`hora_entrada`, `estado`, `metodo`) | **Localización temporal** | Control de asistencia y seguridad del menor. |
 | Puntajes por criterio | `deportivo.detalle_evaluacion.puntaje` | **Perfilado de desempeño** | Seguimiento formativo del deportista. |
 | Observaciones libres | `deportivo.observaciones_estudiante.texto` | **Texto libre — riesgo alto** | Notas cualitativas del entrenador. **Ver hallazgo H-02.** |
@@ -49,12 +52,20 @@ Extraído directamente del esquema versionado, no de una descripción genérica.
 
 ### 3.1 Minimización
 
-El sistema **no** recolecta datos que no usa. Concretamente, se decidió
-**no** incorporar (aunque fueron discutidos en el diseño del módulo de
-entrenador): peso, altura, contextura corporal ni datos de alimentación de
-los menores. Son datos de salud, cuya recolección exigiría una base legal y
-unas garantías que este proyecto académico no puede sostener, y su utilidad
-para el alcance actual no lo justifica.
+> **Corrección respecto a una versión anterior de este documento.** Esta
+> sección afirmaba que el equipo había decidido **no** incorporar peso ni
+> altura. Eso dejó de ser cierto: `academico.estudiantes` (esquema
+> actualizado tras la reestructuración de paquetes) **sí** tiene columnas
+> `peso` y `altura`. Se corrige aquí en vez de mantener una afirmación falsa
+> en un documento de honestidad académica. El hallazgo correspondiente es
+> **H-06**.
+
+El principio de minimización sigue aplicando a lo que el sistema **no**
+recolecta: no hay contextura corporal, ni datos de alimentación, ni
+historial médico. Esa línea se mantuvo. Lo que cambió es que peso y altura
+cruzaron esa línea sin que este documento se actualizara a tiempo — motivo
+por el cual ahora se revisa cada vez que cambia el esquema, no solo al
+redactar la primera versión.
 
 ### 3.2 Limitación de la finalidad
 
@@ -135,6 +146,36 @@ El despliegue actual usa un certificado autofirmado, adecuado para
 desarrollo y evaluación pero **no** para producción con datos reales de
 menores. Un despliegue real exige certificado emitido por una autoridad
 reconocida.
+
+### H-06 — Peso y altura se agregaron sin base legal documentada
+
+`academico.estudiantes.peso` y `.altura` son datos de salud de un menor.
+Ninguna base legal para tratarlos (finalidad concreta, quién los usa, cuánto
+se conservan) está documentada, y ni el SRS ni las historias de usuario
+describen una funcionalidad que los use todavía — están en el esquema pero
+no aparecen en ningún endpoint de escritura verificado. Es exactamente el
+patrón de riesgo que la minimización busca evitar: un dato sensible se
+incorpora primero, y su justificación se piensa después.
+
+**Mitigación propuesta:** o (a) se documenta la finalidad concreta (por
+ejemplo, seguimiento nutricional-deportivo por un profesional habilitado) y
+se le aplica el mismo tratamiento de H-04 (consentimiento explícito del
+representante, separado del consentimiento general de inscripción), o (b)
+si no hay una funcionalidad concreta que los use en esta entrega, se
+recomienda no exponerlos todavía por API y reconsiderar si deben persistir
+en el esquema.
+
+### H-07 — La plantilla de consentimiento cubre a los evaluadores del SUS, no a los representantes de los menores
+
+`docs/etica/consentimiento/plantilla.md` es un consentimiento informado
+bien construido para adultos que participan en la encuesta de usabilidad
+(Bloque C.3) — resuelve el consentimiento de *ese* estudio, no el de H-04.
+Son dos cosas distintas: uno es el consentimiento de un adulto para
+evaluar el sistema; el otro es el consentimiento de un representante para
+que los datos de **su hijo o hija menor de edad** sean tratados por el
+sistema en producción. H-04 sigue abierto y ahora es más urgente por H-06:
+cuantos más datos sensibles trate el sistema, más pesa no tener resuelto el
+consentimiento de quien sí puede otorgarlo legalmente.
 
 ---
 
