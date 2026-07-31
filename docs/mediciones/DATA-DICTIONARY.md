@@ -1,5 +1,9 @@
 # Diccionario de datos de mediciones — SGED ProFútbol
 
+> No confundir con [`docs/basedatos/DATA-DICTIONARY.md`](../basedatos/DATA-DICTIONARY.md),
+> que documenta el **esquema de base de datos** (tablas/columnas), no los
+> archivos de medición. Alcance distinto, no es un duplicado.
+
 ## 1. Rendimiento (`docs/mediciones/perf/`)
 
 ### Archivos: `k6-run1.json`, `k6-run2.json`, `k6-run3.json`

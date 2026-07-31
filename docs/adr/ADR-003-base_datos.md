@@ -1,7 +1,19 @@
 # ADR-003: Motor de Base de Datos y Aislamiento de Datos
 
 ## Estado
-Aprobado
+Aprobado — con dos precisiones (2026-07-30):
+
+1. **Hospedaje real.** El entorno reproducible de esta entrega (`make up`,
+   `docker-compose.yml`) usa **PostgreSQL 16 auto-hospedado** en contenedor,
+   con la imagen fijada por digest SHA-256. Supabase es una opción de
+   conexión alternativa ya soportada en `.env.example` (`DB_URL` apuntando a
+   `*.pooler.supabase.com`), pero no es el entorno que se evalúa ni el que
+   verifican los scripts de `make bench`/`make audit`.
+2. **Esquemas realmente migrados.** De los 5 esquemas descritos abajo, hoy
+   existen 3 en `db/schema.sql`: `seguridad`, `academico`, `deportivo`.
+   `inventario` y `auditoria` son diseño a futuro, sin migración Flyway
+   todavía — no se presentan como implementados en el SRS
+   (`docs/requisitos/SRS.md`).
 
 ## Contexto
 El Sistema de Gestión para Escuela Deportiva (SGED) maneja información con una alta integridad relacional (relaciones complejas entre estudiantes, representantes, asistencias, cobros, inventario y entrenamientos). Se requiere un motor de base de datos robusto, con soporte maduro para transacciones ACID, y que permita organizar de manera limpia los diferentes dominios del sistema para evitar que el crecimiento de la aplicación genere un esquema masivo y difícil de mantener.
