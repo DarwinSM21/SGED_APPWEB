@@ -7,6 +7,11 @@ export const routes: Routes = [
   { path: '', canActivate: [authGuard], children: [
     { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+    {
+      path: 'entrenador/sesion/:idSesion',
+      loadComponent: () => import('./features/entrenador/evaluacion-diaria.component')
+        .then(m => m.EvaluacionDiariaComponent),
+    },
   ]},
   { path: '**', redirectTo: '' }
 ];

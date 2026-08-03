@@ -21,7 +21,21 @@ import { AuthService } from '../auth.service';
           <input id="apellido" type="text" [(ngModel)]="apellido" name="apellido" required />
         </div>
         <div>
-          <label for="username">Email</label>
+          <label for="cedula">Cédula</label>
+          <input id="cedula" type="text" [(ngModel)]="cedula" name="cedula"
+                 required pattern="\\d{10}" inputmode="numeric" maxlength="10" />
+        </div>
+        <div>
+          <label for="correo">Correo de contacto</label>
+          <input id="correo" type="email" [(ngModel)]="correo" name="correo" required />
+        </div>
+        <div>
+          <label for="fechaNacimiento">Fecha de nacimiento</label>
+          <input id="fechaNacimiento" type="date" [(ngModel)]="fechaNacimiento"
+                 name="fechaNacimiento" required />
+        </div>
+        <div>
+          <label for="username">Usuario (correo de acceso)</label>
           <input id="username" type="email" [(ngModel)]="username" name="username" required />
         </div>
         <div>
@@ -49,6 +63,9 @@ import { AuthService } from '../auth.service';
 export class RegisterComponent {
   nombre = '';
   apellido = '';
+  cedula = '';
+  correo = '';
+  fechaNacimiento = '';
   username = '';
   password = '';
   loading = false;
@@ -62,6 +79,9 @@ export class RegisterComponent {
     this.authService.register({
       nombre: this.nombre,
       apellido: this.apellido,
+      cedula: this.cedula,
+      correo: this.correo,
+      fechaNacimiento: this.fechaNacimiento,
       username: this.username,
       password: this.password,
     }).subscribe({
@@ -70,8 +90,17 @@ export class RegisterComponent {
       },
       error: (err) => {
         this.loading = false;
-        this.error = err.status === 409 ? 'El email ya esta registrado' : 'Error del servidor';
+        this.error = this.mensajeDeError(err.status);
       }
     });
+  }
+
+  private mensajeDeError(status: number): string {
+    switch (status) {
+      case 409: return 'Ya existe una cuenta con ese usuario, cédula o correo';
+      case 422: return 'Revisa los datos: la cédula debe tener 10 dígitos y la fecha de nacimiento ser pasada';
+      case 403: return 'Solo un administrador puede registrar cuentas';
+      default: return 'Error del servidor';
+    }
   }
 }
