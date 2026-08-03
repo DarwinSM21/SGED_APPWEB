@@ -35,6 +35,16 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
 
+# Generacion de texto con modelo de lenguaje (modulo Entrenador).
+# Deshabilitada por defecto: el sistema debe funcionar completo sin ella.
+# Solo se envian datos seudonimizados (ver PerfilJugadorAnonimo).
+ia:
+  gemini:
+    habilitado: ${IA_HABILITADO:false}
+    api-key: ${GEMINI_API_KEY:}
+    modelo: ${GEMINI_MODELO:gemini-2.0-flash}
+    timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:8}
+
 security:
   cookie:
     secure: ${COOKIE_SECURE:true}
