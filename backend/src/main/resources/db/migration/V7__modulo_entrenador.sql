@@ -107,6 +107,13 @@ FOR EACH ROW EXECUTE FUNCTION deportivo.set_actualizado_en();
 -- El estudiante, su categoria del dia y la posicion jugada suben
 -- un nivel y dejan de repetirse por criterio.
 -- ------------------------------------------------------------
+-- La vista v_promedio_evaluacion lee id_evaluacion e id_estudiante
+-- directamente de detalle_evaluacion, que es justo lo que esta migracion
+-- mueve un nivel arriba. PostgreSQL impide alterar una columna de la que
+-- depende una vista, asi que se retira aqui y se vuelve a crear al final
+-- leyendo desde evaluacion_estudiante.
+DROP VIEW IF EXISTS deportivo.v_promedio_evaluacion;
+
 ALTER TABLE deportivo.detalle_evaluacion
     ADD COLUMN IF NOT EXISTS id_evaluacion_estudiante BIGINT
         REFERENCES deportivo.evaluacion_estudiante(id_evaluacion_estudiante) ON DELETE CASCADE;
@@ -126,6 +133,26 @@ ALTER TABLE deportivo.detalle_evaluacion
 ALTER TABLE deportivo.detalle_evaluacion
     ADD CONSTRAINT uq_detalle_evaluacion_criterio
         UNIQUE (id_evaluacion_estudiante, id_criterio);
+
+-- Vista reconstruida sobre la nueva estructura. Gana una columna:
+-- id_categoria_dia permite promediar el historial por la categoria en la
+-- que el estudiante estaba en cada fecha, no por la que tiene hoy. Ese es
+-- justamente el caso que el documento del modulo pide resolver cuando un
+-- jugador cambia de categoria a mitad de temporada.
+CREATE OR REPLACE VIEW deportivo.v_promedio_evaluacion AS
+SELECT
+    ee.id_evaluacion,
+    ee.id_estudiante,
+    ee.id_categoria_dia,
+    e.fecha,
+    ROUND(AVG(d.puntaje), 1) AS promedio,
+    COUNT(*) AS criterios_evaluados
+FROM deportivo.detalle_evaluacion d
+JOIN deportivo.evaluacion_estudiante ee
+    ON ee.id_evaluacion_estudiante = d.id_evaluacion_estudiante
+JOIN deportivo.evaluaciones_diarias e
+    ON e.id_evaluacion = ee.id_evaluacion
+GROUP BY ee.id_evaluacion, ee.id_estudiante, ee.id_categoria_dia, e.fecha;
 
 
 -- ------------------------------------------------------------
