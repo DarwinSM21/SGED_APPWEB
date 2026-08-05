@@ -45,6 +45,14 @@ ia:
     modelo: ${GEMINI_MODELO:gemini-2.0-flash}
     timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:8}
 
+asistencia:
+  qr:
+    ttl-segundos: ${ASISTENCIA_QR_TTL_SEGUNDOS:60}
+  # Minutos de gracia despues de hora_inicio antes de marcar TARDE en vez de
+  # PRESENTE. Sin hora_inicio programada (sesion sin horario fijo), siempre
+  # se marca PRESENTE: no hay contra que medir la tardanza.
+  tolerancia-tarde-minutos: ${ASISTENCIA_TOLERANCIA_TARDE_MINUTOS:10}
+
 security:
   cookie:
     secure: ${COOKIE_SECURE:true}

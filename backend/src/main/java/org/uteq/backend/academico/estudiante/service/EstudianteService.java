@@ -5,11 +5,13 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
+import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
@@ -20,8 +22,13 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.time.LocalDate;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +41,9 @@ public class EstudianteService {
     private final PersonaRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
@@ -190,6 +200,46 @@ public class EstudianteService {
     @Transactional
     public void desactivarPorCategoria(Long idCategoria) {
         estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
+    }
+
+    /**
+     * Habilita el acceso propio de un estudiante que ya existe en el
+     * sistema: crea un Usuario nuevo (rol ESTUDIANTE) sobre la Persona que
+     * el estudiante YA tiene, sin duplicarla. Es distinto del alta de
+     * Representante, que si crea una Persona nueva porque el tutor no
+     * estaba antes en el sistema.
+     */
+    @Transactional
+    public EstudianteResponse habilitarAcceso(Long idEstudiante, HabilitarAccesoRequest request) {
+        Estudiante estudiante = estudianteRepository.findById(idEstudiante)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante));
+
+        if (estudiante.getUsuario() != null) {
+            throw new IllegalArgumentException("Este estudiante ya tiene una cuenta de acceso");
+        }
+        if (usuarioRepository.existsByUsername(request.username())) {
+            throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
+        }
+
+        Rol rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
+                .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));
+        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
+
+        Usuario usuario = Usuario.builder()
+                .persona(estudiante.getPersona())
+                .estadoGeneral(estadoActivo)
+                .username(request.username())
+                .password_Hash(passwordEncoder.encode(request.password()))
+                .activo(true)
+                .roles(Set.of(rolEstudiante))
+                .build();
+        usuario = usuarioRepository.save(usuario);
+
+        estudiante.setUsuario(usuario);
+        estudiante = estudianteRepository.save(estudiante);
+        return toResponse(estudiante);
     }
 
     // Mapeador privado Entity -> DTO
