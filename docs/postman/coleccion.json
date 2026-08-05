@@ -591,7 +591,455 @@
       ]
     },
     {
-      "name": "04 Documentación",
+      "name": "05 Representantes CRUD",
+      "item": [
+        {
+          "name": "Listar paginado (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/representantes?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes?page=0&size=10"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar por id (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/representantes/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes", "1"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar inexistente (404 ProblemDetails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/representantes/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes", "99999"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Crear (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/representantes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idPersona\": 4,\n  \"ocupacion\": \"Comerciante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear sin idPersona (422 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/representantes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ocupacion\": \"Comerciante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear persona ya representante (400 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/representantes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes"]
+            },
+            "description": "Ejecutar dos veces con el mismo idPersona: la segunda responde 400 (regla de negocio).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idPersona\": 4,\n  \"ocupacion\": \"Comerciante\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar (200)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/representantes/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes", "1"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idPersona\": 4,\n  \"ocupacion\": \"Ingeniero\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar inexistente (404)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/representantes/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes", "99999"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idPersona\": 4,\n  \"ocupacion\": \"Ingeniero\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar lógico (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/representantes/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "representantes", "2"]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 EstudianteRepresentante CRUD",
+      "item": [
+        {
+          "name": "Listar paginado (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante?page=0&size=10"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Listar por estudiante (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante/estudiante/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante", "estudiante", "1"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar por id (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante", "1"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar inexistente (404 ProblemDetails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante", "99999"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Crear (201)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEstudiante\": 1,\n  \"idRepresentante\": 1,\n  \"relacion\": \"Madre\",\n  \"contactoPrincipal\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear sin relacion (422 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEstudiante\": 1,\n  \"idRepresentante\": 1,\n  \"relacion\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear relación duplicada (400 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante"]
+            },
+            "description": "Ejecutar dos veces con el mismo par idEstudiante/idRepresentante: la segunda responde 400.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEstudiante\": 1,\n  \"idRepresentante\": 1,\n  \"relacion\": \"Madre\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar (200)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante", "1"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idEstudiante\": 1,\n  \"idRepresentante\": 1,\n  \"relacion\": \"Tía\",\n  \"contactoPrincipal\": false\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar físico (204, sin columna activo)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/estudiante-representante/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "estudiante-representante", "2"]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 Asistencia CRUD",
+      "item": [
+        {
+          "name": "Listar paginado (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias?page=0&size=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias?page=0&size=10"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Listar por estudiante (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias/estudiante/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias", "estudiante", "1"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Listar por sesión (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias/sesion/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias", "sesion", "1"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar por id (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias", "1"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Buscar inexistente (404 ProblemDetails)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias/99999",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias", "99999"]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Crear (201, rol ADMIN o ENTRENADOR)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSesionEntrenamiento\": 1,\n  \"idEstudiante\": 1,\n  \"idEstadoAsistencia\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear sin idEstudiante (422 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSesionEntrenamiento\": 1,\n  \"idEstadoAsistencia\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear sesión inexistente (404 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSesionEntrenamiento\": 99999,\n  \"idEstudiante\": 1,\n  \"idEstadoAsistencia\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Crear con rol USER (403 ProblemDetails)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias"]
+            },
+            "description": "Login previo con un usuario de rol USER: solo ADMINISTRADOR y ENTRENADOR pueden registrar asistencia.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSesionEntrenamiento\": 1,\n  \"idEstudiante\": 1,\n  \"idEstadoAsistencia\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Actualizar (200)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias/1",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias", "1"]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idSesionEntrenamiento\": 1,\n  \"idEstudiante\": 1,\n  \"idEstadoAsistencia\": 2\n}"
+            }
+          }
+        },
+        {
+          "name": "Eliminar físico (204, solo ADMIN)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/asistencias/2",
+              "host": ["{{base_url}}"],
+              "path": ["api", "asistencias", "2"]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 Documentación",
       "item": [
         {
           "name": "OpenAPI 3.0 (200, /api/docs)",
