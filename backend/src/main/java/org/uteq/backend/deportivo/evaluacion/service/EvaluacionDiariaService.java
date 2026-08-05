@@ -134,6 +134,7 @@ public class EvaluacionDiariaService {
                 idEstudiante, nombre,
                 estudiante.getCategoria().getNombre(),
                 idPosicion, posicion,
+                asistencia.getEstado(),
                 puntajes, precargado,
                 lesionados.contains(idEstudiante),
                 puedeEvaluarse, motivo);

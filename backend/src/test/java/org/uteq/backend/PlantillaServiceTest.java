@@ -10,12 +10,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.common.ia.GeneradorFeedbackIA;
+import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.evaluacion.service.PlantillaService;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -24,16 +26,15 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.*;
 
 /**
- * La propiedad central que se verifica aqui: <b>la seleccion de la alineacion
- * es deterministica y no depende del modelo de lenguaje</b>. Si algun dia
- * alguien mueve el ranking a la IA, estas pruebas fallan, que es justo lo que
- * se quiere: esa decision tiene que poder explicarsele a un padre que pregunte
- * por que su hijo no jugo.
+ * `sugerir()` (calculo de la alineacion) y `feedback()` (comentario de IA) se
+ * separaron a proposito: el primero es gratis y determinista, el segundo
+ * llama a un servicio externo solo cuando el entrenador lo pide (boton
+ * "Feedback IA" en la pantalla de plantilla). Las pruebas verifican esa
+ * separacion explicitamente, no solo el resultado final.
  */
 @ExtendWith(MockitoExtension.class)
 class PlantillaServiceTest {
@@ -60,10 +61,15 @@ class PlantillaServiceTest {
     }
 
     private Asistencia asistencia(long idEstudiante) {
+        return asistencia(idEstudiante, null);
+    }
+
+    private Asistencia asistencia(long idEstudiante, Posicion posicion) {
         return Asistencia.builder()
                 .estado(Asistencia.ESTADO_PRESENTE)
                 .estudiante(Estudiante.builder()
                         .idEstudiante(idEstudiante)
+                        .posicion(posicion)
                         .persona(Persona.builder()
                                 .nombre("Jugador").apellido(String.valueOf(idEstudiante)).build())
                         .build())
@@ -83,8 +89,6 @@ class PlantillaServiceTest {
                         new Object[]{1L, 5.0},
                         new Object[]{2L, 9.0},
                         new Object[]{3L, 7.0}));
-        when(generadorFeedback.generarComentarioPlantilla(anyList()))
-                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.noDisponible("sin IA"));
 
         var r = servicio.sugerir(ID_SESION);
 
@@ -104,8 +108,6 @@ class PlantillaServiceTest {
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(2L));
         when(evaluacionEstudianteRepository.promedioGeneralPorEstudiante(anyList()))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 4.0}));
-        when(generadorFeedback.generarComentarioPlantilla(anyList()))
-                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.noDisponible("sin IA"));
 
         var r = servicio.sugerir(ID_SESION);
 
@@ -123,8 +125,6 @@ class PlantillaServiceTest {
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         when(evaluacionEstudianteRepository.promedioGeneralPorEstudiante(anyList()))
                 .thenReturn(List.<Object[]>of(new Object[]{7L, 8.0}, new Object[]{3L, 8.0}));
-        when(generadorFeedback.generarComentarioPlantilla(anyList()))
-                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.noDisponible("sin IA"));
 
         var primera = servicio.sugerir(ID_SESION);
         var segunda = servicio.sugerir(ID_SESION);
@@ -135,8 +135,41 @@ class PlantillaServiceTest {
     }
 
     @Test
-    @DisplayName("Sin asistencias no se arma plantilla ni se llama al modelo")
-    void sinAsistenciasNoLlamaAlModelo() {
+    @DisplayName("La posicion que se muestra es la nominal del estudiante")
+    void incluyeLaPosicionNominal() {
+        titularesConfigurados(11);
+        var extremo = Posicion.builder().idPosicion(5L).nombre("Extremo derecho").abreviatura("ED").build();
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
+        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
+                .thenReturn(List.of(asistencia(1L, extremo)));
+        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
+        when(evaluacionEstudianteRepository.promedioGeneralPorEstudiante(anyList()))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, 7.0}));
+
+        var r = servicio.sugerir(ID_SESION);
+
+        assertEquals("ED", r.titulares().get(0).posicion());
+    }
+
+    @Test
+    @DisplayName("sugerir() nunca llama al modelo de lenguaje")
+    void sugerirNuncaLlamaAlModelo() {
+        titularesConfigurados(11);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
+        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
+                .thenReturn(List.of(asistencia(1L)));
+        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
+        when(evaluacionEstudianteRepository.promedioGeneralPorEstudiante(anyList()))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, 6.0}));
+
+        servicio.sugerir(ID_SESION);
+
+        verifyNoInteractions(generadorFeedback);
+    }
+
+    @Test
+    @DisplayName("Sin asistencias, sugerir() no arma plantilla ni consulta promedios")
+    void sinAsistenciasListaVacia() {
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
         when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION)).thenReturn(List.of());
 
@@ -144,11 +177,32 @@ class PlantillaServiceTest {
 
         assertTrue(r.titulares().isEmpty());
         verifyNoInteractions(generadorFeedback);
+        verifyNoInteractions(evaluacionEstudianteRepository);
     }
 
     @Test
-    @DisplayName("Si la IA no responde, la alineacion se entrega igual")
-    void alineacionSobreviveSinIa() {
+    @DisplayName("feedback() calcula la misma alineacion y ademas pide el comentario")
+    void feedbackUsaLaMismaAlineacion() {
+        titularesConfigurados(11);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
+        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
+                .thenReturn(List.of(asistencia(1L)));
+        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
+        when(evaluacionEstudianteRepository.promedioGeneralPorEstudiante(anyList()))
+                .thenReturn(List.<Object[]>of(new Object[]{1L, 6.0}));
+        when(generadorFeedback.generarComentarioPlantilla(anyList()))
+                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.ok("Buen bloque."));
+
+        var r = servicio.feedback(ID_SESION);
+
+        assertTrue(r.generadoPorIa());
+        assertEquals("Buen bloque.", r.comentario());
+        verify(generadorFeedback).generarComentarioPlantilla(anyList());
+    }
+
+    @Test
+    @DisplayName("Si la IA no responde, feedback() no lanza excepcion")
+    void feedbackSobreviveSinIa() {
         titularesConfigurados(11);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
         when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
@@ -159,10 +213,22 @@ class PlantillaServiceTest {
         when(generadorFeedback.generarComentarioPlantilla(anyList()))
                 .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.noDisponible("Servicio caido"));
 
-        var r = servicio.sugerir(ID_SESION);
+        var r = assertDoesNotThrow(() -> servicio.feedback(ID_SESION));
 
-        assertEquals(1, r.titulares().size());
-        assertFalse(r.comentarioGeneradoPorIa());
+        assertFalse(r.generadoPorIa());
+        assertNotNull(r.motivoNoDisponible());
+    }
+
+    @Test
+    @DisplayName("feedback() con plantilla vacia no llama al modelo")
+    void feedbackConPlantillaVaciaNoLlamaAlModelo() {
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
+        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION)).thenReturn(List.of());
+
+        var r = servicio.feedback(ID_SESION);
+
+        assertFalse(r.generadoPorIa());
+        verifyNoInteractions(generadorFeedback);
     }
 
     @Test
@@ -178,12 +244,13 @@ class PlantillaServiceTest {
         when(generadorFeedback.generarComentarioPlantilla(anyList()))
                 .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.ok("Buen bloque defensivo."));
 
-        servicio.sugerir(ID_SESION);
+        servicio.feedback(ID_SESION);
 
         var captor = org.mockito.ArgumentCaptor.forClass(List.class);
         verify(generadorFeedback).generarComentarioPlantilla(captor.capture());
 
-        var enviados = (List<org.uteq.backend.common.ia.PerfilJugadorAnonimo>) captor.getValue();
+        @SuppressWarnings("unchecked")
+        var enviados = (List<PerfilJugadorAnonimo>) captor.getValue();
         assertEquals("Jugador 1", enviados.get(0).referencia());
         // El apellido real del mock es "1"; la referencia enviada es posicional
         // y no permite reconstruir a la persona.

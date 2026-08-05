@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import {
-  EvaluacionSesion, GuardarJugadorRequest, Plantilla, EstadoGuardado,
+  EvaluacionSesion, GuardarJugadorRequest, EstadoGuardado,
 } from './evaluacion.models';
 
 /**
@@ -49,9 +49,8 @@ export class EvaluacionService {
     return this.http.get<EvaluacionSesion>(`${this.apiUrl}/sesion/${idSesion}`);
   }
 
-  plantilla(idSesion: number): Observable<Plantilla> {
-    return this.http.get<Plantilla>(`${this.apiUrl}/sesion/${idSesion}/plantilla`);
-  }
+  // La alineacion/plantilla vive en PlantillaService, no aqui: tiene su
+  // propia llamada de IA a demanda que no pertenece a este servicio.
 
   finalizar(idSesion: number, observacionGeneral: string): Observable<void> {
     return this.http.post<void>(

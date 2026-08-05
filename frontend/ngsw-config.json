@@ -1,0 +1,66 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/media/**",
+          "/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "comment": "Catalogos que casi nunca cambian (criterios de evaluacion, posiciones, categorias). Se sirven de cache primero para que la pantalla abra al instante y siga funcionando sin red.",
+      "name": "catalogos",
+      "urls": [
+        "/api/categorias/activas",
+        "/api/estados_generales"
+      ],
+      "cacheConfig": {
+        "strategy": "performance",
+        "maxSize": 20,
+        "maxAge": "1d"
+      }
+    },
+    {
+      "comment": "Datos de la sesion de entrenamiento. Se intenta la red primero porque la asistencia cambia durante el entrenamiento, pero con un timeout corto: si la red esta lenta, es preferible mostrar lo ultimo conocido a dejar al entrenador esperando en la cancha.",
+      "name": "sesiones",
+      "urls": [
+        "/api/evaluaciones/sesion/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "timeout": "3s",
+        "maxSize": 30,
+        "maxAge": "12h"
+      }
+    }
+  ],
+  "navigationRequestStrategy": "performance",
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**",
+    "!/api/**"
+  ]
+}

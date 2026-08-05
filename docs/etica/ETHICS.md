@@ -132,13 +132,33 @@ Ver §3.4. **Mitigación propuesta:** procedimiento almacenado de anonimización
 foráneas y las estadísticas agregadas), invocable solo por
 `ADMINISTRADOR` y registrado en auditoría.
 
-### H-04 — El consentimiento del representante no está modelado
+### H-04 — El consentimiento del representante no está modelado (resuelto parcialmente el 2026-08-03)
 
 El sistema no registra si el representante legal autorizó el tratamiento de
 los datos del menor, ni la fecha de esa autorización. RF-22 (notificaciones
 al representante) **no debe implementarse** antes de resolver esto.
 **Mitigación propuesta:** tabla de consentimientos con fecha, alcance y
 representante otorgante, como precondición del módulo de notificaciones.
+
+**Resolución parcial (2026-08-03).** Se agregó `academico.consentimientos`
+(migración `V9__representante_recepcionista.sql`): fecha de otorgamiento,
+alcance, quién lo registró y quién lo revocó, con índice único parcial que
+permite revocar y volver a otorgar sin perder el historial. El rol
+REPRESENTANTE y el vínculo `academico.representante_estudiante` (con su
+propio `activo`, para poder cortar el acceso de un tutor puntual sin tocar
+su cuenta ni sus otros representados) también se implementaron.
+
+Sigue **parcial** a propósito: lo que queda abierto es la mitad que este
+mismo hallazgo prohíbe construir sin la otra — el envío real de
+notificaciones (RF-22 propiamente dicho, push/email/SMS) no está
+implementado. La lectura de informes (evaluación diaria y lesiones) por
+parte del representante SÍ está disponible, pero se autoriza únicamente por
+el vínculo activo `representante_estudiante` (creado por un administrador),
+no por un consentimiento vigente: un guardián consultando los datos del hijo
+que él mismo matriculó es uso ordinario esperado, categóricamente distinto
+del envío proactivo del sistema que este hallazgo señala como el riesgo real
+(ver también H-07). La tabla de consentimientos queda reservada
+exclusivamente para gatear esa notificación cuando se construya.
 
 ### H-05 — Certificado TLS autofirmado
 

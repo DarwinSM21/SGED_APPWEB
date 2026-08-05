@@ -28,10 +28,11 @@ import java.util.*;
  * sugerencia.
  *
  * <p>El modelo de lenguaje solo redacta un comentario sobre una alineacion ya
- * decidida. Esa separacion es deliberada: dejar que un modelo generativo
- * decida quien juega haria la decision inauditable, irreproducible y
- * dificilmente explicable a un padre de familia que pregunte por que su hijo
- * quedo fuera.
+ * decidida, y solo cuando se le pide explicitamente ({@link #feedback}): dejar
+ * que un modelo generativo decida quien juega haria la decision inauditable,
+ * irreproducible y dificilmente explicable a un padre de familia que pregunte
+ * por que su hijo quedo fuera; y llamarlo automaticamente en cada apertura de
+ * pantalla gastaria cuota de un servicio externo sin que nadie lo pidiera.
  */
 @Service
 @RequiredArgsConstructor
@@ -48,15 +49,31 @@ public class PlantillaService {
 
     @Transactional(readOnly = true)
     public PlantillaResponse sugerir(Long idSesion) {
+        var r = calcular(idSesion);
+        return new PlantillaResponse(idSesion, r.categoria(), r.titulares(), r.suplentes(), r.excluidos());
+    }
+
+    /** Recalcula la misma alineacion y, sobre ella, pide el comentario a la IA. */
+    @Transactional(readOnly = true)
+    public FeedbackPlantillaResponse feedback(Long idSesion) {
+        var r = calcular(idSesion);
+        if (r.titulares().isEmpty()) {
+            return new FeedbackPlantillaResponse(null, false, "No hay alineacion que comentar");
+        }
+        var resultado = comentarDe(r.titulares(), r.categoria());
+        return new FeedbackPlantillaResponse(resultado.texto(), resultado.disponible(), resultado.motivo());
+    }
+
+    private ResultadoCalculo calcular(Long idSesion) {
         var sesion = sesionRepository.findById(idSesion)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe la sesion " + idSesion));
+
+        String categoria = sesion.getCategoria().getNombre();
 
         // Solo entran quienes asistieron a la sesion.
         var asistencias = asistenciaRepository.listarHabilitadosParaEvaluar(idSesion);
         if (asistencias.isEmpty()) {
-            return new PlantillaResponse(idSesion, sesion.getCategoria().getNombre(),
-                    List.of(), List.of(), List.of(),
-                    "No hay asistencias registradas en esta sesion.", false);
+            return new ResultadoCalculo(categoria, List.of(), List.of(), List.of());
         }
 
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
@@ -93,12 +110,7 @@ public class PlantillaService {
             }
         }
 
-        var comentario = comentarDe(titulares, sesion.getCategoria().getNombre(), promedios, disponibles);
-
-        return new PlantillaResponse(idSesion, sesion.getCategoria().getNombre(),
-                titulares, suplentes, excluidos,
-                comentario.texto() != null ? comentario.texto() : comentario.motivo(),
-                comentario.disponible());
+        return new ResultadoCalculo(categoria, titulares, suplentes, excluidos);
     }
 
     private Map<Long, BigDecimal> promediosDe(List<Estudiante> estudiantes) {
@@ -117,10 +129,14 @@ public class PlantillaService {
 
     private JugadorPlantillaResponse aResponse(Estudiante e, Map<Long, BigDecimal> promedios) {
         var p = e.getPersona();
+        // Posicion nominal del estudiante (academico.estudiantes.id_posicion),
+        // no la jugada en un dia concreto: es la mejor aproximacion disponible
+        // sin pedirle al entrenador que la tag ee cada vez que evalua.
+        String posicion = e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null;
         return new JugadorPlantillaResponse(
                 e.getIdEstudiante(),
                 p.getNombre() + " " + p.getApellido(),
-                null,
+                posicion,
                 promedios.getOrDefault(e.getIdEstudiante(), BigDecimal.ZERO));
     }
 
@@ -129,14 +145,7 @@ public class PlantillaService {
      * "Jugador 1", su categoria y su promedio. Ningun nombre sale del sistema.
      */
     private GeneradorFeedbackIA.ResultadoFeedback comentarDe(
-            List<JugadorPlantillaResponse> titulares,
-            String categoria,
-            Map<Long, BigDecimal> promedios,
-            List<Estudiante> disponibles) {
-
-        if (titulares.isEmpty()) {
-            return GeneradorFeedbackIA.ResultadoFeedback.noDisponible("Alineacion vacia");
-        }
+            List<JugadorPlantillaResponse> titulares, String categoria) {
 
         List<PerfilJugadorAnonimo> perfiles = new ArrayList<>();
         for (int i = 0; i < titulares.size(); i++) {
@@ -152,4 +161,11 @@ public class PlantillaService {
         }
         return generadorFeedback.generarComentarioPlantilla(perfiles);
     }
+
+    private record ResultadoCalculo(
+            String categoria,
+            List<JugadorPlantillaResponse> titulares,
+            List<JugadorPlantillaResponse> suplentes,
+            List<Long> excluidos
+    ) {}
 }

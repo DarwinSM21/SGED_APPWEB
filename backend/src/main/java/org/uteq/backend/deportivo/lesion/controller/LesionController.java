@@ -8,6 +8,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.deportivo.lesion.dto.LesionDtos.*;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -19,6 +20,13 @@ import org.uteq.backend.deportivo.lesion.service.LesionService;
  * <p>La descripcion es un dato de salud de un menor, asi que la lectura queda
  * restringida a entrenador y administrador. Un rol USER no tiene por que ver
  * el historial medico de nadie.
+ *
+ * <p>Los cuatro metodos llevan {@code @Transactional} propio: aResponse()
+ * navega Lesion -&gt; Estudiante -&gt; Persona (ambas relaciones LAZY), y
+ * open-in-view esta deshabilitado en este proyecto (application.yml), asi
+ * que sin una transaccion activa en el momento de mapear, esa navegacion
+ * lanza LazyInitializationException. El propio LesionService ya es
+ * transaccional, pero esa transaccion se cierra al volver aqui.
  */
 @RestController
 @RequestMapping("/api/lesiones")
@@ -29,6 +37,7 @@ public class LesionController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<LesionResponse>> listarActivas(
             @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(lesionService.listarActivas(pageable).map(this::aResponse));
@@ -36,6 +45,7 @@ public class LesionController {
 
     @GetMapping("/estudiante/{idEstudiante}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional(readOnly = true)
     public ResponseEntity<Page<LesionResponse>> historial(
             @PathVariable Long idEstudiante,
             @PageableDefault(size = 20) Pageable pageable) {
@@ -44,6 +54,7 @@ public class LesionController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional
     public ResponseEntity<LesionResponse> registrar(@Valid @RequestBody RegistrarLesionRequest request) {
         var lesion = lesionService.registrar(
                 request.idEstudiante(), request.idEntrenador(), request.descripcion(),
@@ -53,6 +64,7 @@ public class LesionController {
 
     @PostMapping("/{idLesion}/alta")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional
     public ResponseEntity<LesionResponse> darDeAlta(@PathVariable Long idLesion,
                                                     @RequestBody(required = false) DarDeAltaRequest request) {
         var fecha = request == null ? null : request.fechaAlta();

@@ -123,13 +123,67 @@ en la reestructuración de paquetes; la categoría dejó de ser texto libre.
 > estudiantes sin credencial RFID (`NULL`) pero impide que dos compartan el
 > mismo código.
 
-## `academico.representantes` — ⬜ no existe todavía
+## `academico.representantes` — implementada (2026-08-03)
 
-`RepresentanteController`, sus DTOs y su `entity` están creados en el código
-(`backend/src/main/java/org/uteq/backend/academico/representante/`) pero
-**todos los archivos están vacíos** (0 bytes) — es un paquete reservado, no
-una funcionalidad parcial. No hay tabla `academico.representantes` en
-`db/schema.sql`. No confundir "el paquete existe" con "está implementado".
+Padre, madre o tutor legal con cuenta propia de acceso. Mismo patrón que
+`deportivo.entrenadores`: persona y usuario son relaciones 1:1 separadas.
+Migración `V9__representante_recepcionista.sql`.
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_representante` | BIGSERIAL | No | PK | Identificador. |
+| `id_persona` | BIGINT | No | FK → `seguridad.personas`, UNIQUE | Persona. |
+| `id_usuario` | BIGINT | No | FK → `seguridad.usuarios`, UNIQUE | Cuenta de acceso, rol `REPRESENTANTE`. |
+| `parentesco` | VARCHAR(30) | Sí | — | Madre, padre, tutor… |
+| `telefono_contacto` | VARCHAR(20) | Sí | — | Teléfono de contacto. |
+| `activo` | BOOLEAN | No | DEFAULT TRUE | Baja lógica. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila (disparador `academico.set_updated_at()`). |
+
+Expuesta como recurso CRUD propio (`RepresentanteController`,
+`/api/representantes`, ADMINISTRADOR únicamente — no compartido con
+ENTRENADOR como sí lo está `entrenadores`, porque un coach no tiene motivo
+operativo para ver datos de contacto de tutores).
+
+## `academico.representante_estudiante`
+
+Vínculo representante↔estudiante como **entidad de primera clase**, no una
+tabla puente plana: necesita su propio `activo` para que un administrador
+pueda cortar el acceso de un tutor puntual (p. ej. disputa de custodia) sin
+tocar su cuenta ni sus otros representados. Un representante puede tener
+varios representados; en principio un estudiante también podría tener más
+de un representante (madre y padre, por ejemplo).
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_representante_estudiante` | BIGSERIAL | No | PK | Identificador propio (no PK compuesta). |
+| `id_representante` | BIGINT | No | FK → `academico.representantes` | — |
+| `id_estudiante` | BIGINT | No | FK → `academico.estudiantes` | — |
+| `activo` | BOOLEAN | No | DEFAULT TRUE, UNIQUE junto con las dos FK | Es el único dato que autoriza `GET /api/representante/estudiantes/{id}/informe` — no el consentimiento (ver más abajo). |
+| `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
+
+## `academico.consentimientos`
+
+Registro de que un representante autorizó el tratamiento de los datos de un
+representado: resuelve el hallazgo H-04 de `docs/etica/ETHICS.md`.
+**Deliberadamente no gatea la lectura de informes** (eso lo autoriza solo el
+vínculo activo de arriba); queda reservada para cuando exista el envío real
+de notificaciones (RF-22), que todavía no está construido.
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_consentimiento` | BIGSERIAL | No | PK | Identificador. |
+| `id_representante` | BIGINT | No | FK → `academico.representantes` | — |
+| `id_estudiante` | BIGINT | No | FK → `academico.estudiantes` | — |
+| `alcance` | VARCHAR(50) | No | — | Texto libre a propósito (sin `CHECK`): `Consentimiento.ALCANCE_INFORMES`, `ALCANCE_NOTIFICACIONES_ASISTENCIA`, `ALCANCE_NOTIFICACIONES_LESION` son constantes de aplicación, no un catálogo cerrado en base. |
+| `otorgado_en` | TIMESTAMPTZ | No | DEFAULT NOW() | — |
+| `registrado_por_id_usuario` | BIGINT | Sí | FK → `seguridad.usuarios` | Qué administrador lo registró (el consentimiento se recoge fuera de la app en esta iteración). |
+| `revocado_en` | TIMESTAMPTZ | Sí | — | NULL mientras esté vigente. |
+| `revocado_por_id_usuario` | BIGINT | Sí | FK → `seguridad.usuarios` | — |
+
+> Único vigente por `(id_representante, id_estudiante, alcance)`
+> (`idx_consentimiento_vigente`, índice único parcial `WHERE revocado_en IS
+> NULL`) — mismo patrón que `idx_lesion_activa_por_estudiante`: revocar y
+> volver a otorgar deja historial en vez de pisarlo.
 
 ---
 

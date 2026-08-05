@@ -21,12 +21,17 @@ export interface RegisterRequest {
   fechaNacimiento: string;
   username: string;
   password: string;
+  /** Opcional: en blanco crea un USER, como siempre. Solo ADMINISTRADOR puede pedir otro. */
+  rol?: string;
 }
 
 export interface AuthResponse {
   username: string;
   nombre: string;
   rol: string;
+  /** Solo vienen poblados en la respuesta de register(); login()/getProfile() no los mandan. */
+  idPersona?: number;
+  idUsuario?: number;
 }
 
 /**
