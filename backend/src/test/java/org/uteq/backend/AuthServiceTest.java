@@ -41,6 +41,8 @@ import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -109,8 +111,12 @@ class AuthServiceTest {
                 .andExpect(jsonPath("$.username").value("admin@test.com"))
                 .andExpect(jsonPath("$.nombre").value("Admin SGED"))
                 .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
-                .andExpect(jsonPath("$.accessToken").value("mock-jwt-token"))
-                .andExpect(jsonPath("$.refreshToken").value("mock-refresh-token"));
+                // El JWT viaja solo en la cookie HttpOnly (ADR-002/ADR-007).
+                // Si algun dia vuelve a aparecer aqui, esta prueba debe
+                // fallar: un token en el cuerpo es legible por cualquier
+                // fetch/axios del frontend y anula esa proteccion.
+                .andExpect(jsonPath("$.accessToken").doesNotExist())
+                .andExpect(jsonPath("$.refreshToken").doesNotExist());
     }
 
     @Test
@@ -193,6 +199,62 @@ class AuthServiceTest {
                 .andExpect(jsonPath("$.username").value("new@test.com"))
                 .andExpect(jsonPath("$.nombre").value("Test User"))
                 .andExpect(jsonPath("$.rol").value("USER"));
+    }
+
+    /**
+     * rol es opcional en RegisterRequest desde que se agrego para poder crear
+     * cuentas REPRESENTANTE/RECEPCIONISTA con el mismo endpoint que ya crea
+     * ENTRENADOR/USER. Este caso prueba que, cuando SI viene informado, se usa
+     * tal cual en vez de caer siempre en "USER".
+     */
+    @Test
+    void registroConRolExplicitoUsaElRolPedido() throws Exception {
+        when(usuarioRepository.existsByUsername("rep@test.com")).thenReturn(false);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
+            Persona p = i.getArgument(0);
+            p.setIdPersona(2L);
+            return p;
+        });
+        when(rolRepository.findByNombre("REPRESENTANTE")).thenReturn(
+                Optional.of(Rol.builder().idRol(4L).nombre("REPRESENTANTE").build()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(
+                Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
+            Usuario u = i.getArgument(0);
+            u.setIdUsuario(2L);
+            return u;
+        });
+        when(passwordEncoder.encode(anyString())).thenReturn("$2a$12$encoded");
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Ana", "Vera", "0912345679", "ana@test.com",
+                LocalDate.of(1985, 1, 1), "rep@test.com", "password123", "REPRESENTANTE");
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.rol").value("REPRESENTANTE"))
+                .andExpect(jsonPath("$.idPersona").value(2))
+                .andExpect(jsonPath("$.idUsuario").value(2));
+    }
+
+    /** Un rol que no existe en seguridad.roles responde 400, no crea nada a medias. */
+    @Test
+    void registroConRolInexistenteDa400() throws Exception {
+        when(usuarioRepository.existsByUsername("otro@test.com")).thenReturn(false);
+        when(rolRepository.findByNombre("SUPERADMIN")).thenReturn(Optional.empty());
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345680", "otro.correo@test.com",
+                LocalDate.of(2000, 1, 1), "otro@test.com", "password123", "SUPERADMIN");
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isBadRequest());
+
+        verify(personaRepository, never()).save(any());
     }
 
     @Test

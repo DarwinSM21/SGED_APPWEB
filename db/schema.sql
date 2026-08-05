@@ -612,3 +612,92 @@ ALTER TABLE deportivo.sesiones_entrenamiento
 
 CREATE INDEX IF NOT EXISTS idx_sesiones_categoria_fecha
     ON deportivo.sesiones_entrenamiento(id_categoria, fecha);
+
+-- ============================================================
+-- V8: Quinto criterio de evaluacion - Velocidad
+-- ============================================================
+INSERT INTO deportivo.criterios_evaluacion (nombre, descripcion, puntaje_maximo) VALUES
+    ('Velocidad', 'Explosividad y rapidez en el terreno de juego', 10)
+ON CONFLICT (nombre) DO NOTHING;
+
+-- ============================================================
+-- V9: Representante y Recepcionista
+--
+-- representante_estudiante es una entidad de vinculo de primera
+-- clase (con su propio "activo"), no una tabla puente plana: un
+-- administrador debe poder cortar el acceso de un tutor puntual
+-- sin tocar su cuenta ni sus otros hijos.
+--
+-- consentimientos resuelve el hallazgo H-04 de docs/etica/ETHICS.md.
+-- Deliberado: NO gatea la lectura de informes (eso lo autoriza solo
+-- el vinculo activo de arriba); queda reservada para cuando exista
+-- el envio real de notificaciones (RF-22). Ver la nota de resolucion
+-- bajo H-04 en ETHICS.md.
+--
+-- RECEPCIONISTA (rol sembrado en db/seed.sql) no necesita tabla
+-- propia: solo le falta permiso sobre AsistenciaQrController.
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS academico.representantes (
+    id_representante BIGSERIAL PRIMARY KEY,
+    id_persona BIGINT NOT NULL UNIQUE REFERENCES seguridad.personas(id_persona),
+    id_usuario BIGINT NOT NULL UNIQUE REFERENCES seguridad.usuarios(id_usuario),
+    parentesco VARCHAR(30),
+    telefono_contacto VARCHAR(20),
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER trg_representantes_updated_at
+BEFORE UPDATE ON academico.representantes
+FOR EACH ROW EXECUTE FUNCTION academico.set_updated_at();
+
+CREATE TABLE IF NOT EXISTS academico.representante_estudiante (
+    id_representante_estudiante BIGSERIAL PRIMARY KEY,
+    id_representante BIGINT NOT NULL REFERENCES academico.representantes(id_representante),
+    id_estudiante BIGINT NOT NULL REFERENCES academico.estudiantes(id_estudiante),
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (id_representante, id_estudiante)
+);
+
+CREATE TRIGGER trg_representante_estudiante_updated_at
+BEFORE UPDATE ON academico.representante_estudiante
+FOR EACH ROW EXECUTE FUNCTION academico.set_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_representante_estudiante_estudiante
+    ON academico.representante_estudiante(id_estudiante);
+
+CREATE TABLE IF NOT EXISTS academico.consentimientos (
+    id_consentimiento BIGSERIAL PRIMARY KEY,
+    id_representante BIGINT NOT NULL REFERENCES academico.representantes(id_representante),
+    id_estudiante BIGINT NOT NULL REFERENCES academico.estudiantes(id_estudiante),
+    alcance VARCHAR(50) NOT NULL,
+    otorgado_en TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    registrado_por_id_usuario BIGINT REFERENCES seguridad.usuarios(id_usuario),
+    revocado_en TIMESTAMPTZ,
+    revocado_por_id_usuario BIGINT REFERENCES seguridad.usuarios(id_usuario)
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_consentimiento_vigente
+    ON academico.consentimientos(id_representante, id_estudiante, alcance)
+    WHERE revocado_en IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_consentimientos_estudiante
+    ON academico.consentimientos(id_estudiante);
+
+-- ============================================================
+-- V10: Acceso de estudiante
+--
+-- Cierra el ciclo del QR de asistencia: RECEPCIONISTA ya podia emitir un
+-- token real, pero nadie podia canjearlo porque un Estudiante no tenia
+-- forma de autenticarse. id_usuario es NULLABLE y UNIQUE: la mayoria de
+-- estudiantes no necesita login, solo los que un administrador habilita
+-- explicitamente (POST /api/estudiantes/{id}/acceso, sobre la Persona ya
+-- existente del estudiante, sin duplicarla).
+-- ============================================================
+
+ALTER TABLE academico.estudiantes
+    ADD COLUMN IF NOT EXISTS id_usuario BIGINT UNIQUE REFERENCES seguridad.usuarios(id_usuario);

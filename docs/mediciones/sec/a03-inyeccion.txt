@@ -1,5 +1,5 @@
 # Evidencia OWASP A03 - Injection
-# Fecha: 2026-07-31T02:22:01Z | Commit: 4b82959 | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-08-03T20:24:15Z | Commit: 42c5dad | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
 HTTP/1.1 422 
 Vary: Origin
@@ -14,6 +14,6 @@ X-Frame-Options: DENY
 Content-Security-Policy: default-src 'self'; frame-ancestors 'none'
 Content-Type: application/problem+json
 Transfer-Encoding: chunked
-Date: Fri, 31 Jul 2026 02:22:03 GMT
+Date: Mon, 03 Aug 2026 20:24:21 GMT
 
-{"type":"https://sged.uteq.edu.ec/errores/Validacion","title":"Unprocessable Entity","status":422,"detail":"Errores de validacion","instance":"/api/estudiantes","errores":["idCategoria: El ID de la categoría es obligatorio","idEstadoGeneral: El ID del estado general es obligatorio","idPersona: El ID de la persona es obligatorio","codigoEstudiante: El código de estudiante es obligatorio","fechaIngreso: La fecha de ingreso es obligatoria"],"timestamp":"2026-07-31T02:22:04.560293736Z"}
+{"type":"https://sged.uteq.edu.ec/errores/Validacion","title":"Unprocessable Entity","status":422,"detail":"Errores de validacion","instance":"/api/estudiantes","errores":["idEstadoGeneral: El ID del estado general es obligatorio","idPersona: El ID de la persona es obligatorio","fechaIngreso: La fecha de ingreso es obligatoria","codigoEstudiante: El código de estudiante es obligatorio","idCategoria: El ID de la categoría es obligatorio"],"timestamp":"2026-08-03T20:24:22.540870010Z"}

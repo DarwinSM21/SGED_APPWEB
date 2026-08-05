@@ -36,6 +36,8 @@ public final class EvaluacionDtos {
             String categoria,
             Long idPosicion,
             String posicion,
+            /** PRESENTE, TARDE, AUSENTE o JUSTIFICADO (deportivo.asistencias.estado). */
+            String estadoAsistencia,
             Map<String, BigDecimal> puntajes,
             boolean precargado,
             boolean lesionado,
@@ -89,15 +91,26 @@ public final class EvaluacionDtos {
             String motivoNoDisponible
     ) {}
 
-    /** Alineacion sugerida. */
+    /**
+     * Alineacion sugerida. Deliberadamente sin comentario de IA: ese texto se
+     * pide aparte, con el endpoint de feedback, solo cuando el entrenador lo
+     * toca. Calcular la alineacion es gratis y determinista; llamar al
+     * modelo de lenguaje no lo es, y no hay razon para pagarlo en cada
+     * apertura de pantalla si nadie va a leer el comentario.
+     */
     public record PlantillaResponse(
             Long idSesion,
             String categoria,
             List<JugadorPlantillaResponse> titulares,
             List<JugadorPlantillaResponse> suplentes,
-            List<Long> excluidosPorLesion,
+            List<Long> excluidosPorLesion
+    ) {}
+
+    /** Comentario de IA sobre una alineacion ya calculada, pedido a demanda. */
+    public record FeedbackPlantillaResponse(
             String comentario,
-            boolean comentarioGeneradoPorIa
+            boolean generadoPorIa,
+            String motivoNoDisponible
     ) {}
 
     public record JugadorPlantillaResponse(

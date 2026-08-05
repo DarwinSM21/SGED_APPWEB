@@ -55,12 +55,23 @@ public class EvaluacionDiariaController {
     }
 
     /**
-     * Alineacion sugerida. El orden lo decide una regla deterministica; el
-     * modelo de lenguaje solo comenta el resultado.
+     * Alineacion sugerida. El orden lo decide una regla deterministica; no
+     * llama a la IA (ver {@link #feedbackPlantilla}).
      */
     @GetMapping("/sesion/{idSesion}/plantilla")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<PlantillaResponse> plantilla(@PathVariable Long idSesion) {
         return ResponseEntity.ok(plantillaService.sugerir(idSesion));
+    }
+
+    /**
+     * Comentario de IA sobre la alineacion, a demanda ("Feedback IA"). Se
+     * separa de {@link #plantilla} para no llamar al modelo en cada apertura
+     * de la pantalla: el entrenador lo pide cuando quiere leerlo.
+     */
+    @PostMapping("/sesion/{idSesion}/plantilla/feedback")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    public ResponseEntity<FeedbackPlantillaResponse> feedbackPlantilla(@PathVariable Long idSesion) {
+        return ResponseEntity.ok(plantillaService.feedback(idSesion));
     }
 }

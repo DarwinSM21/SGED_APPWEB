@@ -510,11 +510,17 @@ Esquema: vista `deportivo.v_promedio_evaluacion`.
 
 ---
 
-**RF-22 — Notificación a representantes** ⬜ Planificado
+**RF-22 — Notificación a representantes** 🟡 Modelo de datos resuelto, notificación pendiente
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*
-Sin esquema ni implementación. Requiere resolver previamente el consentimiento
-del representante (ver `docs/etica/ETHICS.md`, hallazgo H-04).
+El rol REPRESENTANTE, el vínculo con sus representados y la tabla de
+consentimientos que este requisito exige como precondición (hallazgo H-04 de
+`docs/etica/ETHICS.md`) ya existen (2026-08-03). El representante puede
+consultar informes de lectura de sus representados (evaluación y lesiones).
+Lo que sigue sin implementar es el envío proactivo de la notificación en sí
+(push/email/SMS) cuando el estudiante marca asistencia o se le registra una
+lesión — esa parte queda deliberadamente para una siguiente iteración, ya
+gateada por el consentimiento que este mismo cambio dejó listo.
 
 > **Precisión sobre "sin esquema" (2026-07-30).** Existe un paquete
 > `academico.representante` en el código (`RepresentanteController` y sus

@@ -16,6 +16,8 @@ export interface JugadorEvaluable {
   categoria: string;
   idPosicion: number | null;
   posicion: string | null;
+  /** PRESENTE, TARDE, AUSENTE o JUSTIFICADO. */
+  estadoAsistencia: string;
   /** Clave = nombre del criterio. */
   puntajes: Record<string, number>;
   /**
@@ -52,22 +54,7 @@ export interface GuardarJugadorRequest {
   puntajes: PuntajeCriterio[];
 }
 
-export interface JugadorPlantilla {
-  idEstudiante: number;
-  nombreCompleto: string;
-  posicion: string | null;
-  promedioAcumulado: number;
-}
-
-export interface Plantilla {
-  idSesion: number;
-  categoria: string;
-  titulares: JugadorPlantilla[];
-  suplentes: JugadorPlantilla[];
-  excluidosPorLesion: number[];
-  comentario: string | null;
-  comentarioGeneradoPorIa: boolean;
-}
+// Plantilla/alineacion: ver plantilla.models.ts (dueño de ese contrato).
 
 export interface Lesion {
   idLesion: number;
