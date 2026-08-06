@@ -4,15 +4,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
+import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
@@ -23,6 +26,10 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -41,6 +48,9 @@ class EstudianteServiceTest {
     @Mock private PersonaRepository personaRepository;
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private EstadoGeneralRepository estadoGeneralRepository;
+    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private RolRepository rolRepository;
+    @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks private EstudianteService service;
 
@@ -245,5 +255,64 @@ class EstudianteServiceTest {
         doNothing().when(estudianteRepository).desactivarEstudiantesPorCategoria(1L);
         service.desactivarPorCategoria(1L);
         verify(estudianteRepository).desactivarEstudiantesPorCategoria(1L);
+    }
+
+    // --- PRUEBAS DE HABILITAR ACCESO (rol ESTUDIANTE) ---
+
+    @Test
+    @DisplayName("habilitarAcceso - Crea el usuario sobre la Persona YA existente, no una nueva")
+    void habilitarAcceso_crea_usuario_sobre_persona_existente() {
+        HabilitarAccesoRequest request = new HabilitarAccesoRequest("andres@sged.test", "password123");
+        Rol rolEstudiante = Rol.builder().idRol(6L).nombre("ESTUDIANTE").build();
+
+        when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
+        when(usuarioRepository.existsByUsername("andres@sged.test")).thenReturn(false);
+        when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
+        when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
+            Usuario u = i.getArgument(0);
+            u.setIdUsuario(9L);
+            return u;
+        });
+        when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
+
+        EstudianteResponse resp = service.habilitarAcceso(1L, request);
+
+        assertNotNull(resp);
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(usuarioRepository).save(captor.capture());
+        assertSame(personaDummy, captor.getValue().getPersona());
+        verify(personaRepository, never()).save(any());
+        assertSame(estudianteDummy.getUsuario(), captor.getValue());
+    }
+
+    @Test
+    @DisplayName("habilitarAcceso - Rechaza si el estudiante ya tiene una cuenta")
+    void habilitarAcceso_rechaza_si_ya_tiene_cuenta() {
+        estudianteDummy.setUsuario(Usuario.builder().idUsuario(5L).build());
+        when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.habilitarAcceso(1L, new HabilitarAccesoRequest("x@sged.test", "password123")));
+    }
+
+    @Test
+    @DisplayName("habilitarAcceso - Rechaza si el username ya esta en uso")
+    void habilitarAcceso_rechaza_username_duplicado() {
+        when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
+        when(usuarioRepository.existsByUsername("dup@sged.test")).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.habilitarAcceso(1L, new HabilitarAccesoRequest("dup@sged.test", "password123")));
+    }
+
+    @Test
+    @DisplayName("habilitarAcceso - Lanza RecursoNoEncontradoException si el estudiante no existe")
+    void habilitarAcceso_estudiante_inexistente_lanza_404() {
+        when(estudianteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> service.habilitarAcceso(99L, new HabilitarAccesoRequest("x@sged.test", "password123")));
     }
 }

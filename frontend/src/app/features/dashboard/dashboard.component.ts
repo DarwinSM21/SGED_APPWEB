@@ -1,41 +1,249 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AuthService, AuthResponse } from '../../auth/auth.service';
+import { HttpClient } from '@angular/common/http';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../auth/auth.service';
+import { homeRouteForRole } from '../../auth/home-route';
+import { SesionHoy } from './dashboard.models';
+import { inicialesDe } from '../entrenador/plantilla.models';
 
+/** Forma minima de una pagina de Spring Data que interesa aqui. */
+interface PaginaLigera {
+  totalElements: number;
+}
+
+/**
+ * Punto de entrada tras iniciar sesion para ADMINISTRADOR/ENTRENADOR/USER.
+ * RECEPCIONISTA y REPRESENTANTE nunca deberian quedarse aqui -Login ya los
+ * manda directo a su propia pantalla-, pero un refresh, el boton atras o
+ * un marcador guardado en /dashboard si puede traerlos: el primer paso de
+ * ngOnInit los redirige a su lugar real en cuanto se confirma el rol.
+ *
+ * La marca/usuario/logout ahora viven en AppShellComponent (la sidebar),
+ * no aqui: esta pantalla solo dibuja su propio contenido.
+ *
+ * La tira de KPIs no agrega ninguna llamada nueva al backend: son conteos
+ * derivados de `sesiones()` (ya cargado para la lista) y de
+ * `lesionesActivas()` (ya cargado para el indicador). No hay tarjetas de
+ * Pagos/Calendario/Reportes/Partidos: esos dominios todavia no existen en el
+ * backend y el usuario pidio explicitamente dejarlos para mas adelante.
+ *
+ * El indicador de lesiones es informativo, no un enlace: todavia no existe
+ * una pantalla de lesiones en el frontend (el backend si la expone,
+ * GET /api/lesiones), asi que un enlace ahi seria una promesa rota.
+ *
+ * Todo el estado que cambia tras la carga inicial vive en signals, no en
+ * propiedades sueltas: este proyecto no incluye zone.js
+ * (no esta en package.json ni en los polyfills de angular.json), asi que una
+ * propiedad plana mutada dentro de un subscribe de HttpClient no dispara un
+ * repintado. Sin esto, la seccion de sesiones se quedaba mostrando "cargando"
+ * para siempre aunque la peticion ya hubiera respondido.
+ */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   template: `
-    <div class="dashboard">
-      <h1>SGED - Sistema de Gestion para Escuela Deportiva</h1>
-      <div *ngIf="user" class="user-info">
-        <p>Bienvenido, <strong>{{ user.nombre }}</strong></p>
-        <p>Rol: {{ user.rol }}</p>
-      </div>
-      <button (click)="logout()">Cerrar sesion</button>
+    <div class="contenido">
+      @if (esOperativo()) {
+        <section class="kpis">
+          <div class="kpi">
+            <span class="kpi__icono kpi__icono--info">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </span>
+            <div>
+              <p class="kpi__valor">{{ totalSesiones() }}</p>
+              <p class="kpi__etiqueta">Sesiones hoy</p>
+            </div>
+          </div>
+          <div class="kpi">
+            <span class="kpi__icono kpi__icono--warning">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </span>
+            <div>
+              <p class="kpi__valor">{{ sesionesEnEvaluacion() }}</p>
+              <p class="kpi__etiqueta">En evaluación</p>
+            </div>
+          </div>
+          <div class="kpi">
+            <span class="kpi__icono kpi__icono--neutral">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle></svg>
+            </span>
+            <div>
+              <p class="kpi__valor">{{ sesionesSinIniciar() }}</p>
+              <p class="kpi__etiqueta">Sin iniciar</p>
+            </div>
+          </div>
+          <div class="kpi">
+            <span class="kpi__icono" [class.kpi__icono--danger]="(lesionesActivas() ?? 0) > 0" [class.kpi__icono--neutral]="!(lesionesActivas() ?? 0)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+            </span>
+            <div>
+              <p class="kpi__valor">{{ lesionesActivas() ?? '—' }}</p>
+              <p class="kpi__etiqueta">Lesiones activas</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="card lista">
+          <div class="lista__cabecera">
+            <h2>Sesiones de hoy</h2>
+          </div>
+
+          @if (cargandoSesiones()) {
+            <p class="aviso">Cargando…</p>
+          } @else if (sesiones().length === 0) {
+            <div class="vacio">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              <p>No hay entrenamientos programados para hoy.</p>
+            </div>
+          } @else {
+            @for (s of sesiones(); track s.idSesion) {
+              <a class="sesion" [routerLink]="['/entrenador/sesion', s.idSesion]">
+                <span class="avatar avatar--muted">{{ iniciales(s.entrenador) }}</span>
+                <div class="sesion-info">
+                  <span class="categoria">{{ s.categoria }}</span>
+                  <span class="detalle">
+                    {{ s.entrenador }}
+                    @if (s.horaInicio) { · {{ s.horaInicio }} }
+                    @if (s.campo) { · {{ s.campo }} }
+                  </span>
+                </div>
+                <span class="badge" [class.badge--warning]="s.tieneEvaluacion" [class.badge--info]="!s.tieneEvaluacion">
+                  {{ s.tieneEvaluacion ? 'En evaluación' : 'Sin iniciar' }}
+                </span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+            }
+          }
+        </section>
+      } @else if (usuario()) {
+        <div class="card vacio vacio--pagina">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          <p>Tu cuenta consulta información básica. Contacta a un administrador si necesitas más acceso.</p>
+        </div>
+      }
     </div>
   `,
   styles: [`
-    .dashboard { max-width: 800px; margin: 40px auto; padding: 2rem; }
-    .user-info { margin: 1rem 0; padding: 1rem; background: #f5f5f5; border-radius: 8px; }
-    button { padding: 0.5rem 1rem; background: #d32f2f; color: white; border: none; border-radius: 4px; cursor: pointer; }
+    .contenido { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+    .kpis {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: .9rem; margin-bottom: 1.5rem;
+    }
+    .kpi {
+      display: flex; align-items: center; gap: .75rem;
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 1rem; box-shadow: var(--shadow-sm);
+    }
+    .kpi__icono {
+      width: 42px; height: 42px; border-radius: var(--radius-sm); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .kpi__icono svg { width: 22px; height: 22px; }
+    .kpi__icono--info { background: var(--color-info-bg); color: var(--color-info); }
+    .kpi__icono--warning { background: var(--color-warning-bg); color: var(--color-warning); }
+    .kpi__icono--danger { background: var(--color-danger-bg); color: var(--color-danger); }
+    .kpi__icono--neutral { background: var(--color-neutral-bg); color: var(--color-text-faint); }
+    .kpi__valor { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
+    .kpi__etiqueta { font-size: .78rem; color: var(--color-text-muted); margin-top: .15rem; }
+
+    .lista { padding: 1.25rem; }
+    .lista__cabecera { margin-bottom: .9rem; }
+    .lista__cabecera h2 { font-size: 1rem; }
+
+    .aviso { color: var(--color-text-muted); font-size: .9rem; padding: .5rem 0; }
+
+    .vacio {
+      display: flex; flex-direction: column; align-items: center; gap: .75rem;
+      color: var(--color-text-faint); text-align: center; padding: 2rem 1rem;
+    }
+    .vacio svg { width: 36px; height: 36px; opacity: .6; }
+    .vacio p { font-size: .88rem; color: var(--color-text-muted); max-width: 32ch; }
+    .vacio--pagina { margin-top: .5rem; padding: 3rem 1.5rem; }
+
+    .sesion {
+      display: flex; align-items: center; gap: .8rem;
+      padding: .8rem .9rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm);
+      margin-bottom: .5rem; text-decoration: none; color: inherit;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .sesion:last-child { margin-bottom: 0; }
+    .sesion:hover { background: var(--color-primary-50); border-color: var(--color-primary-100); }
+    .sesion-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .categoria { font-weight: 600; font-size: .92rem; }
+    .detalle { font-size: .78rem; color: var(--color-text-muted); }
+    .chevron { width: 18px; height: 18px; color: var(--color-text-faint); flex-shrink: 0; }
   `]
 })
 export class DashboardComponent implements OnInit {
-  user: AuthResponse | null = null;
 
-  constructor(private authService: AuthService) {}
+  private readonly authService = inject(AuthService);
+  private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
+
+  /** Referencia directa al signal del servicio: siempre en sincronia, sin copia local que se pueda desactualizar. */
+  readonly usuario = this.authService.currentUser;
+
+  readonly sesiones = signal<SesionHoy[]>([]);
+  readonly cargandoSesiones = signal(false);
+  readonly lesionesActivas = signal<number | null>(null);
+
+  /** ADMINISTRADOR y ENTRENADOR tienen acceso operativo; USER solo consulta. */
+  readonly esOperativo = computed(() => {
+    const rol = this.usuario()?.rol;
+    return rol === 'ADMINISTRADOR' || rol === 'ENTRENADOR';
+  });
+
+  readonly totalSesiones = computed(() => this.sesiones().length);
+  readonly sesionesEnEvaluacion = computed(() => this.sesiones().filter((s) => s.tieneEvaluacion).length);
+  readonly sesionesSinIniciar = computed(() => this.totalSesiones() - this.sesionesEnEvaluacion());
 
   ngOnInit() {
     this.authService.getProfile().subscribe({
-      next: (user) => this.user = user,
-      error: () => {}
+      next: () => {
+        const rolActual = this.usuario()?.rol;
+        // Deriva de homeRouteForRole en vez de listar roles a mano: la ultima
+        // vez que hubo una lista aparte aqui, agregar ESTUDIANTE a
+        // home-route.ts no alcanzo para que este guardian tambien lo supiera,
+        // y una cuenta de estudiante se quedaba varada en el mensaje
+        // generico de "cuenta basica" en vez de ir a su pantalla real.
+        const destinoPropio = homeRouteForRole(rolActual);
+        if (destinoPropio !== '/dashboard') {
+          this.router.navigate([destinoPropio], { replaceUrl: true });
+          return;
+        }
+        if (this.esOperativo()) {
+          this.cargarSesionesDeHoy();
+          this.cargarConteoDeLesiones();
+        }
+      },
+      error: () => {},
     });
-    this.user = this.authService.currentUser();
   }
 
-  logout() {
-    this.authService.logout().subscribe();
+  private cargarSesionesDeHoy(): void {
+    this.cargandoSesiones.set(true);
+    this.http.get<SesionHoy[]>('/api/sesiones/hoy').subscribe({
+      next: (sesiones) => {
+        this.sesiones.set(sesiones);
+        this.cargandoSesiones.set(false);
+      },
+      error: () => {
+        this.cargandoSesiones.set(false);
+      },
+    });
+  }
+
+  private cargarConteoDeLesiones(): void {
+    this.http.get<PaginaLigera>('/api/lesiones?size=1').subscribe({
+      next: (pagina) => { this.lesionesActivas.set(pagina.totalElements); },
+      error: () => {},
+    });
+  }
+
+  iniciales(nombre: string): string {
+    return inicialesDe(nombre);
   }
 }

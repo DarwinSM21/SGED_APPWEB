@@ -1,6 +1,5 @@
 package org.uteq.backend;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,19 +9,28 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.dto.RepresentantePageResponse;
 import org.uteq.backend.academico.representante.dto.RepresentanteRequest;
 import org.uteq.backend.academico.representante.dto.RepresentanteResponse;
 import org.uteq.backend.academico.representante.entity.Representante;
+import org.uteq.backend.academico.representante.entity.RepresentanteEstudiante;
+import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.RepresentanteService;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -30,56 +38,53 @@ import static org.mockito.Mockito.*;
 class RepresentanteServiceTest {
 
     @Mock private RepresentanteRepository representanteRepository;
+    @Mock private RepresentanteEstudianteRepository vinculoRepository;
     @Mock private PersonaRepository personaRepository;
+    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private EstudianteRepository estudianteRepository;
 
-    @InjectMocks private RepresentanteService service;
+    @InjectMocks
+    private RepresentanteService representanteService;
 
-    private Persona personaDummy;
-    private Representante representanteDummy;
+    private Persona persona() {
+        return Persona.builder().idPersona(1L).nombre("Ana").apellido("Vera")
+                .cedula("1234567890").correo("ana@sged.test").build();
+    }
 
-    @BeforeEach
-    void setUp() {
-        personaDummy = Persona.builder()
-                .idPersona(1L)
-                .nombre("Rosa")
-                .apellido("Vera")
-                .telefono("0999999999")
-                .activo(true)
-                .build();
+    private Usuario usuario() {
+        return Usuario.builder().idUsuario(1L).username("ana.vera@sged.test").build();
+    }
 
-        representanteDummy = Representante.builder()
+    private Representante representante() {
+        return Representante.builder()
                 .idRepresentante(1L)
-                .persona(personaDummy)
-                .ocupacion("Comerciante")
+                .persona(persona())
+                .usuario(usuario())
+                .parentesco("Madre")
                 .activo(true)
                 .build();
     }
 
-    private RepresentanteRequest requestValido() {
-        return new RepresentanteRequest(1L, "Comerciante");
+    private Estudiante estudiante(long id, String nombre) {
+        return Estudiante.builder()
+                .idEstudiante(id)
+                .persona(Persona.builder().nombre(nombre).apellido("Hijo").build())
+                .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
+                .build();
     }
 
     @Test
-    @DisplayName("listar devuelve pagina mapeada de representantes activos")
+    @DisplayName("listar delega en el repositorio y mapea persona/usuario")
     void listar_devuelve_pagina_mapeada() {
-        Page<Representante> pagina = new PageImpl<>(List.of(representanteDummy), PageRequest.of(0, 10), 1);
+        Page<Representante> pagina = new PageImpl<>(List.of(representante()), PageRequest.of(0, 10), 1);
         when(representanteRepository.findByActivoTrue(any())).thenReturn(pagina);
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
 
-        Page<RepresentanteResponse> resultado = service.listar(PageRequest.of(0, 10));
+        RepresentantePageResponse<RepresentanteResponse> resultado = representanteService.listar(PageRequest.of(0, 10));
 
-        assertEquals(1, resultado.getTotalElements());
-        assertEquals("Rosa", resultado.getContent().get(0).nombrePersona());
-    }
-
-    @Test
-    @DisplayName("buscarPorId devuelve el representante cuando existe")
-    void buscarPorId_existente() {
-        when(representanteRepository.findById(1L)).thenReturn(Optional.of(representanteDummy));
-
-        RepresentanteResponse resultado = service.buscarPorId(1L);
-
-        assertEquals(1L, resultado.idRepresentante());
-        assertEquals("Comerciante", resultado.ocupacion());
+        assertThat(resultado.totalElements()).isEqualTo(1);
+        assertThat(resultado.content().get(0).nombre()).isEqualTo("Ana");
+        assertThat(resultado.content().get(0).username()).isEqualTo("ana.vera@sged.test");
     }
 
     @Test
@@ -87,71 +92,113 @@ class RepresentanteServiceTest {
     void buscarPorId_inexistente_lanza_excepcion() {
         when(representanteRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.buscarPorId(99L));
+        assertThatThrownBy(() -> representanteService.buscarPorId(99L))
+                .isInstanceOf(RecursoNoEncontradoException.class);
     }
 
     @Test
-    @DisplayName("crear persiste el representante cuando la persona no tiene ficha previa")
-    void crear_persiste_representante_valido() {
-        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
-        when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
-        when(representanteRepository.save(any(Representante.class))).thenAnswer(i -> i.getArgument(0));
-
-        RepresentanteResponse resultado = service.crear(requestValido());
-
-        assertEquals("Rosa", resultado.nombrePersona());
-        assertTrue(resultado.activo());
-        verify(representanteRepository).save(any(Representante.class));
-    }
-
-    @Test
-    @DisplayName("crear lanza excepcion si la persona ya es representante")
-    void crear_persona_ya_representante_lanza_excepcion() {
+    @DisplayName("crear rechaza cuando la persona ya es representante")
+    void crear_persona_duplicada_lanza_excepcion() {
+        RepresentanteRequest request = new RepresentanteRequest(1L, 2L, "Madre", "0999999999", null);
         when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> service.crear(requestValido()));
+        assertThatThrownBy(() -> representanteService.crear(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ya está registrada");
+
         verify(representanteRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("crear lanza excepcion si la persona no existe")
-    void crear_persona_inexistente_lanza_excepcion() {
+    @DisplayName("crear rechaza cuando el usuario ya esta asignado a otro representante")
+    void crear_usuario_duplicado_lanza_excepcion() {
+        RepresentanteRequest request = new RepresentanteRequest(1L, 2L, "Madre", "0999999999", null);
         when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
-        when(personaRepository.findById(1L)).thenReturn(Optional.empty());
+        when(representanteRepository.existsByUsuario_IdUsuario(2L)).thenReturn(true);
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.crear(requestValido()));
+        assertThatThrownBy(() -> representanteService.crear(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ya está asignado");
     }
 
     @Test
-    @DisplayName("editar actualiza la ocupacion del representante")
-    void editar_actualiza_representante() {
-        when(representanteRepository.findById(1L)).thenReturn(Optional.of(representanteDummy));
-        when(representanteRepository.save(any(Representante.class))).thenAnswer(i -> i.getArgument(0));
+    @DisplayName("crear vincula de una vez los estudiantes iniciales pedidos")
+    void crear_vincula_estudiantes_iniciales() {
+        RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Madre", "0999999999", List.of(10L, 20L));
+        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
+        when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
+        when(representanteRepository.save(any(Representante.class))).thenAnswer(inv -> {
+            Representante r = inv.getArgument(0);
+            r.setIdRepresentante(5L);
+            return r;
+        });
+        when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante(10L, "Juan")));
+        when(estudianteRepository.findById(20L)).thenReturn(Optional.of(estudiante(20L, "Maria")));
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(anyLong(), anyLong()))
+                .thenReturn(Optional.empty());
+        when(vinculoRepository.save(any(RepresentanteEstudiante.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(5L)).thenReturn(List.of());
 
-        RepresentanteResponse resultado = service.editar(1L, new RepresentanteRequest(1L, "Ingeniero"));
+        RepresentanteResponse resultado = representanteService.crear(request);
 
-        assertEquals("Ingeniero", resultado.ocupacion());
+        assertThat(resultado.idRepresentante()).isEqualTo(5L);
+        verify(vinculoRepository, times(2)).save(any(RepresentanteEstudiante.class));
     }
 
     @Test
-    @DisplayName("editar lanza excepcion si la nueva persona ya es representante")
-    void editar_reasigna_persona_ya_representante_lanza_excepcion() {
-        when(representanteRepository.findById(1L)).thenReturn(Optional.of(representanteDummy));
-        when(representanteRepository.existsByPersona_IdPersona(2L)).thenReturn(true);
+    @DisplayName("crear lanza RecursoNoEncontradoException si un estudiante inicial no existe")
+    void crear_falla_si_estudiante_inicial_no_existe() {
+        RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Madre", null, List.of(999L));
+        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
+        when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
+        when(representanteRepository.save(any(Representante.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(estudianteRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class,
-                () -> service.editar(1L, new RepresentanteRequest(2L, "Ingeniero")));
+        assertThatThrownBy(() -> representanteService.crear(request))
+                .isInstanceOf(RecursoNoEncontradoException.class);
     }
 
     @Test
-    @DisplayName("eliminar hace baja logica en vez de borrar el registro")
+    @DisplayName("eliminar hace baja logica del representante, no de sus vinculos")
     void eliminar_hace_baja_logica() {
-        when(representanteRepository.findById(1L)).thenReturn(Optional.of(representanteDummy));
-        when(representanteRepository.save(any(Representante.class))).thenAnswer(i -> i.getArgument(0));
+        Representante existente = representante();
+        when(representanteRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(representanteRepository.save(any(Representante.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        service.eliminar(1L);
+        representanteService.eliminar(1L);
 
-        assertFalse(representanteDummy.getActivo());
-        verify(representanteRepository).save(representanteDummy);
+        assertThat(existente.getActivo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("desvincularEstudiante desactiva el vinculo sin tocar la cuenta")
+    void desvincular_desactiva_el_vinculo() {
+        RepresentanteEstudiante vinculo = RepresentanteEstudiante.builder()
+                .idRepresentanteEstudiante(7L)
+                .representante(representante())
+                .estudiante(estudiante(10L, "Juan"))
+                .activo(true)
+                .build();
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+                .thenReturn(Optional.of(vinculo));
+        when(vinculoRepository.save(any(RepresentanteEstudiante.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        representanteService.desvincularEstudiante(1L, 10L);
+
+        assertThat(vinculo.getActivo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("desvincularEstudiante lanza RecursoNoEncontradoException si no habia vinculo")
+    void desvincular_sin_vinculo_lanza_excepcion() {
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> representanteService.desvincularEstudiante(1L, 10L))
+                .isInstanceOf(RecursoNoEncontradoException.class);
     }
 }

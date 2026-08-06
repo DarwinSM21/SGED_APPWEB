@@ -8,17 +8,30 @@ export interface LoginRequest {
   password: string;
 }
 
+/**
+ * cedula, correo y fechaNacimiento son obligatorios: son columnas NOT NULL de
+ * seguridad.personas desde la reestructuracion. Mientras el formulario no los
+ * enviaba, el alta fallaba siempre.
+ */
 export interface RegisterRequest {
   nombre: string;
   apellido: string;
+  cedula: string;
+  correo: string;
+  fechaNacimiento: string;
   username: string;
   password: string;
+  /** Opcional: en blanco crea un USER, como siempre. Solo ADMINISTRADOR puede pedir otro. */
+  rol?: string;
 }
 
 export interface AuthResponse {
   username: string;
   nombre: string;
   rol: string;
+  /** Solo vienen poblados en la respuesta de register(); login()/getProfile() no los mandan. */
+  idPersona?: number;
+  idUsuario?: number;
 }
 
 /**

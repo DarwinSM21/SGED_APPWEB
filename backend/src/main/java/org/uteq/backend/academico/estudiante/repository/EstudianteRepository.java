@@ -25,6 +25,11 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     boolean existsByCodigoEstudianteAndIdEstudianteNot(String codigoEstudiante, Long idEstudiante);
 
+    /** Resuelve el estudiante a partir del usuario autenticado (JWT -> username). */
+    Optional<Estudiante> findByUsuario_Username(String username);
+
+    boolean existsByUsuario_IdUsuario(Long idUsuario);
+
     @Procedure(procedureName = "academico.sp_contar_estudiantes_activos")
         Long contarEstudiantesActivosPorCategoria(@Param("p_categoria") Long idCategoria);
 

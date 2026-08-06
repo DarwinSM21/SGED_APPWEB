@@ -1,6 +1,5 @@
 package org.uteq.backend;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CategoriaControllerTest {
 
     private MockMvc mockMvc;
-    private ObjectMapper objectMapper;
 
     @Mock
     private CategoriaService categoriaService;
@@ -45,7 +43,6 @@ class CategoriaControllerTest {
 
     @BeforeEach
     void setUp() {
-        objectMapper = new ObjectMapper();
         mockMvc = MockMvcBuilders.standaloneSetup(categoriaController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())

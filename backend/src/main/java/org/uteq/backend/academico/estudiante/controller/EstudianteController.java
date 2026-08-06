@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
+import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
 
 /**
@@ -80,5 +81,19 @@ public class EstudianteController {
     public ResponseEntity<Void> desactivarPorCategoria(@RequestBody Long idCategoria) {
         estudianteService.desactivarPorCategoria(idCategoria);
         return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Habilita el acceso propio de un estudiante que ya existe (rol
+     * ESTUDIANTE), para que pueda marcar su propia asistencia por QR.
+     * Distinto de {@code crear}: no crea una Persona nueva, usa la que el
+     * estudiante ya tiene.
+     */
+    @PostMapping("/{id}/acceso")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<EstudianteResponse> habilitarAcceso(
+            @PathVariable Long id, @Valid @RequestBody HabilitarAccesoRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(estudianteService.habilitarAcceso(id, request));
     }
 }

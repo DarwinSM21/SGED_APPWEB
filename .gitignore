@@ -38,3 +38,6 @@ docs/informe/p1.log
 docs/informe/p2.log
 docs/informe/p3.log
 docs/informe/bib.log
+
+#ignore resumen backend.md
+RESUMEN-BACKEND.md

@@ -64,14 +64,32 @@ public class AuthController {
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
+    /**
+     * rol es opcional (default "USER"); quien llama ya es ADMINISTRADOR, asi
+     * que puede pedir cualquier rol existente en seguridad.roles (p.ej.
+     * ENTRENADOR, RECEPCIONISTA, REPRESENTANTE) - un nombre que no exista
+     * responde 400 via RolRepository.findByNombre.
+     *
+     * @Transactional: antes guardaba Persona y Usuario en dos pasos sueltos,
+     * sin transaccion propia. Con un tercer guardado (la fila de dominio de
+     * Entrenador/Representante) encadenado desde el frontend justo despues,
+     * una falla a mitad de camino dejaria una Persona sin Usuario o un
+     * Usuario sin rol asignado. Ya estaba senalado como pendiente; se
+     * corrige de una vez al tocar este metodo por otra razon.
+     */
     @PostMapping("/registro")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @Transactional
     public ResponseEntity<SesionResponse> registro(@Valid @RequestBody RegisterRequest request) {
         if (usuarioRepository.existsByUsername(request.username())
                 || personaRepository.existsByCedulaAndActivoTrue(request.cedula())
                 || personaRepository.existsByCorreo(request.correo())) {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
+
+        String nombreRol = (request.rol() == null || request.rol().isBlank()) ? "USER" : request.rol();
+        Rol rol = rolRepository.findByNombre(nombreRol)
+                .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + nombreRol));
 
         Persona persona = Persona.builder()
                 .nombre(request.nombre())
@@ -82,10 +100,6 @@ public class AuthController {
                 .activo(true)
                 .build();
         persona = personaRepository.save(persona);
-
-        Rol rolUser = rolRepository.findByNombre("USER")
-                .orElseGet(() -> rolRepository.save(
-                        Rol.builder().nombre("USER").descripcion("Usuario estandar").build()));
 
         // id_estado_general es NOT NULL: sin esto el alta tambien falla en base
         // de datos aunque la persona ya se haya podido insertar.
@@ -99,7 +113,7 @@ public class AuthController {
                 .username(request.username())
                 .password_Hash(passwordEncoder.encode(request.password()))
                 .activo(true)
-                .roles(Set.of(rolUser))
+                .roles(Set.of(rol))
                 .build();
         usuario = usuarioRepository.save(usuario);
 
@@ -108,7 +122,9 @@ public class AuthController {
                 .body(SesionResponse.builder()
                         .username(usuario.getUsername())
                         .nombre(nombreCompleto)
-                        .rol("USER")
+                        .rol(rol.getNombre())
+                        .idPersona(persona.getIdPersona())
+                        .idUsuario(usuario.getIdUsuario())
                         .build());
     }
 
@@ -150,13 +166,14 @@ public class AuthController {
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
                 .orElse(userDetails.getUsername());
 
-        // Asigna el token a la respuesta
+        // El token ya viajo en la cookie HttpOnly (setAuthCookies, arriba).
+        // No se repite aqui: un campo de token en el cuerpo seria legible por
+        // cualquier fetch/axios del frontend, anulando la proteccion HttpOnly
+        // que ADR-002 y ADR-007 declaran como el mecanismo de defensa.
         return ResponseEntity.ok(SesionResponse.builder()
                 .username(userDetails.getUsername())
                 .nombre(nombre)
                 .rol(rol)
-                .accessToken(accessToken)   // 👈 AQUÍ USAS LA VARIABLE
-                .refreshToken(refreshToken) // 👈 AQUÍ USAS LA VARIABLE
                 .build());
     }
 
@@ -199,6 +216,7 @@ public class AuthController {
     }
 
     @GetMapping("/me")
+    @Transactional(readOnly = true)
     public ResponseEntity<SesionResponse> me() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails)) {
