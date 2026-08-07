@@ -1,6 +1,7 @@
 package org.uteq.backend.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -38,6 +39,14 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
+
+    /**
+     * Patrones (no origenes exactos: admiten "*", p.ej. para probar desde un
+     * celular en la misma red LAN sin fijar una IP en el codigo fuente).
+     * Cada quien agrega la suya en su propio .env, nunca en este archivo.
+     */
+    @Value("#{'${cors.allowed-origin-patterns:http://localhost:4200,http://localhost:80,http://127.0.0.1:4200,http://localhost:5173}'.split(',')}")
+    private List<String> corsAllowedOriginPatterns;
     private final ProblemDetailsAuthHandlers problemHandlers;
 
     @Bean
@@ -70,11 +79,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of(
-                "http://localhost:4200",
-                "http://localhost:80",
-                "http://127.0.0.1:4200",
-                "http://localhost:5173"));
+        // setAllowedOriginPatterns (no setAllowedOrigins): admite "*" en un
+        // segmento, necesario para permitir la LAN entera sin fijar una IP.
+        // Sigue siendo compatible con allowCredentials=true porque Spring
+        // igual refleja el origen puntual que hizo match, nunca "*" literal.
+        config.setAllowedOriginPatterns(corsAllowedOriginPatterns);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
         config.setAllowCredentials(true);
