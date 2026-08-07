@@ -10,6 +10,11 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
       {
+        path: 'entrenador/sesiones',
+        canActivate: [roleGuard(['ENTRENADOR'])],
+        loadComponent: () => import('./features/entrenador/sesiones.component').then(m => m.SesionesComponent),
+      },
+      {
         path: 'entrenador/sesion/:idSesion',
         loadComponent: () => import('./features/entrenador/evaluacion-diaria.component')
           .then(m => m.EvaluacionDiariaComponent),

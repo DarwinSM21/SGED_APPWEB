@@ -2,6 +2,7 @@ export interface SesionHoy {
   idSesion: number;
   categoria: string;
   entrenador: string;
+  fecha: string;
   horaInicio: string | null;
   horaFin: string | null;
   campo: string | null;
