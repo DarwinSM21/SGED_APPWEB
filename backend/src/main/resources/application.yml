@@ -42,7 +42,8 @@ ia:
   gemini:
     habilitado: ${IA_HABILITADO:false}
     api-key: ${GEMINI_API_KEY:}
-    modelo: ${GEMINI_MODELO:gemini-2.0-flash}
+    # gemini-2.0-flash ya no tiene nivel gratuito para keys nuevas (ver .env.example).
+    modelo: ${GEMINI_MODELO:gemini-flash-latest}
     timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:8}
 
 asistencia:
