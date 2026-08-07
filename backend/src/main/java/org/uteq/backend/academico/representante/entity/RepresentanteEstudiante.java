@@ -40,6 +40,18 @@ public class RepresentanteEstudiante {
     @Builder.Default
     private Boolean activo = true;
 
+    /** Texto libre: "Padre", "Madre", "Tutor legal", etc. Opcional. */
+    @Column(name = "relacion", length = 50)
+    private String relacion;
+
+    /**
+     * Cuando un estudiante tiene mas de un representante activo, distingue
+     * a quien contactar primero (p.ej. para notificaciones de lesion).
+     */
+    @Column(name = "contacto_principal", nullable = false)
+    @Builder.Default
+    private Boolean contactoPrincipal = false;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

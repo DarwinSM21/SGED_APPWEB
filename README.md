@@ -1,7 +1,7 @@
 # SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
 
 [![CI](https://github.com/DarwinSM21/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinSM21/SGED_APPWEB/actions)
-[![DOI](https://zenodo.org/badge/DOI/PENDIENTE.svg)](https://doi.org/PENDIENTE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.21713240.svg)](https://doi.org/10.5281/zenodo.21713240)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Aplicación web para la gestión administrativa y deportiva de la escuela

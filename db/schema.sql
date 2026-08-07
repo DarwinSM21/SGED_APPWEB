@@ -821,3 +821,36 @@ BEGIN
     END IF;
 END;
 $$;
+
+-- ============================================================
+-- V12: fusion con feature/moduloacademico (Darwin, PR #10 a main).
+--
+-- Ese trabajo construyo, en paralelo y sin saberlo (su propia
+-- migracion lo declara: "esas tablas nunca tuvieron codigo Java"),
+-- un segundo sistema de representante/asistencia/sesion sobre
+-- tablas nuevas (academico.representantes con "ocupacion" en vez
+-- de login, academico.estudiante_representante, academico.asistencia,
+-- deportivo.sesion_entrenamiento, deportivo.entrenador_categoria,
+-- deportivo.estado_asistencia). Se resuelve asi:
+--   - representante/asistencia/sesion de ESTE archivo (V7/V9/V10)
+--     se mantienen como el sistema unico: tienen login+consentimiento
+--     para representante y marcado QR con tolerancia para asistencia,
+--     capacidades que la version paralela no tenia.
+--   - Las tablas nuevas de la version paralela NO se crean aqui: el
+--     codigo Java correspondiente se retira en el mismo commit.
+--   - Se rescatan las dos mejoras aditivas que si valen la pena:
+--     las validaciones de datos sobre estudiantes, y los campos
+--     relacion/contacto_principal del vinculo representante-estudiante
+--     (utiles para cuando un estudiante tiene mas de un tutor).
+-- ============================================================
+
+ALTER TABLE academico.estudiantes
+    ADD CONSTRAINT estudiantes_id_persona_key UNIQUE (id_persona);
+
+ALTER TABLE academico.estudiantes
+    ADD CONSTRAINT estudiantes_peso_check CHECK (peso > 0),
+    ADD CONSTRAINT estudiantes_altura_check CHECK (altura > 0);
+
+ALTER TABLE academico.representante_estudiante
+    ADD COLUMN IF NOT EXISTS relacion VARCHAR(50),
+    ADD COLUMN IF NOT EXISTS contacto_principal BOOLEAN NOT NULL DEFAULT FALSE;

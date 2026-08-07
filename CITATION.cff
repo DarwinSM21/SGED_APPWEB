@@ -6,6 +6,7 @@ version: 0.9.0-rc
 date-released: 2026-07-30
 repository-code: "https://github.com/DarwinSM21/SGED_APPWEB"
 license: MIT
+doi: 10.5281/zenodo.21713240
 authors:
   - family-names: Arcalle Grefa
     given-names: Darwin Orlando
