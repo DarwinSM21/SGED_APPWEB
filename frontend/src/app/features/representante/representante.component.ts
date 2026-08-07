@@ -49,6 +49,17 @@ import { inicialesDe } from '../entrenador/plantilla.models';
               <h2>{{ inf.nombreCompleto }}</h2>
               <p class="categoria-detalle">{{ inf.categoria }}</p>
 
+              <div class="asistencia-resumen">
+                <span class="asistencia-etiqueta">Asistencia (últimos 30 días)</span>
+                @if (inf.porcentajeAsistencia === null) {
+                  <span class="badge badge--info">Sin sesiones en el rango</span>
+                } @else {
+                  <span class="badge" [class.badge--success]="inf.porcentajeAsistencia >= 75" [class.badge--warning]="inf.porcentajeAsistencia < 75">
+                    {{ inf.porcentajeAsistencia | number: '1.0-0' }}%
+                  </span>
+                }
+              </div>
+
               <h3>Promedio histórico por criterio</h3>
               @if (inf.promediosPorCriterio.length === 0) {
                 <p class="aviso">Todavía no hay evaluaciones registradas.</p>
@@ -113,6 +124,12 @@ import { inicialesDe } from '../entrenador/plantilla.models';
     .detalle { flex: 2 1 380px; min-width: 300px; padding: 1.5rem; }
     .detalle h2 { font-size: 1.1rem; margin-bottom: .2rem; }
     .categoria-detalle { color: var(--color-text-muted); font-size: .85rem; margin-bottom: 1.25rem; }
+    .asistencia-resumen {
+      display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+      padding: .7rem .85rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm);
+      margin-bottom: 1.1rem; background: var(--color-neutral-bg);
+    }
+    .asistencia-etiqueta { font-size: .85rem; color: var(--color-text-muted); }
     .detalle h3 { font-size: .88rem; color: var(--color-text-muted); margin: 1.1rem 0 .6rem; text-transform: uppercase; letter-spacing: .03em; }
     .detalle h3:first-of-type { margin-top: 0; }
 
