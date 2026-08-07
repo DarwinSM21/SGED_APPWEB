@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { homeRouteForRole } from '../home-route';
 
@@ -15,7 +15,7 @@ import { homeRouteForRole } from '../home-route';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="auth-shell">
       <aside class="auth-brand">
@@ -109,7 +109,6 @@ import { homeRouteForRole } from '../home-route';
             }
           </button>
 
-          <p class="auth-card__footer">¿No tienes cuenta? <a routerLink="/registro">Regístrate</a></p>
         </form>
       </main>
     </div>
