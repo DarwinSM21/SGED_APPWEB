@@ -26,4 +26,6 @@ export interface InformeEstudiante {
   categoria: string;
   promediosPorCriterio: PromedioCriterio[];
   historialLesiones: LesionResumen[];
+  /** Ultimos 30 dias; null si su categoria no tuvo sesiones programadas en ese rango. */
+  porcentajeAsistencia: number | null;
 }
