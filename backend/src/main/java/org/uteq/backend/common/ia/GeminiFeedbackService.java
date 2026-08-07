@@ -140,8 +140,10 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     private String construirPromptPlantilla(List<PerfilJugadorAnonimo> alineacion) {
         var sb = new StringBuilder();
         sb.append("Comenta brevemente esta alineacion, ya seleccionada por el sistema ")
-          .append("segun puntaje acumulado. No propongas cambios de jugadores: ")
-          .append("explica que fortalezas tiene el once planteado.\n\n");
+          .append("segun puntaje acumulado. No propongas cambios de jugadores ni de posiciones: ")
+          .append("eso ya lo decidio el algoritmo. Basandote solo en los puntajes dados, ")
+          .append("señala una fortaleza del once planteado y un aspecto a vigilar ")
+          .append("(por ejemplo un puntaje mas bajo en alguna posicion o criterio).\n\n");
         for (var p : alineacion) {
             sb.append("- ").append(p.referencia())
               .append(" (").append(p.posicion() == null ? "sin posicion" : p.posicion()).append("): ")
@@ -173,7 +175,11 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
                             "parts", List.of(Map.of("text", prompt)))),
                     "generationConfig", Map.of(
                             "temperature", 0.4,
-                            "maxOutputTokens", 200));
+                            // Los modelos "-latest" actuales razonan antes de responder y ese
+                            // pensamiento interno tambien consume maxOutputTokens (~600-700
+                            // tokens tipicos vistos en pruebas reales); con un limite bajo la
+                            // respuesta visible quedaba cortada a mitad de frase.
+                            "maxOutputTokens", 2048));
 
             JsonNode respuesta = restClient.post()
                     .uri("/models/{modelo}:generateContent", modelo)

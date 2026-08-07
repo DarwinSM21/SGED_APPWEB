@@ -44,7 +44,8 @@ ia:
     api-key: ${GEMINI_API_KEY:}
     # gemini-2.0-flash ya no tiene nivel gratuito para keys nuevas (ver .env.example).
     modelo: ${GEMINI_MODELO:gemini-flash-latest}
-    timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:8}
+    # Los modelos "-latest" piensan antes de responder (~5s medidos); 8s quedaba ajustado.
+    timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:15}
 
 asistencia:
   qr:
