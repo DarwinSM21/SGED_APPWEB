@@ -76,7 +76,7 @@ class InformeRepresentanteControllerTest {
     @DisplayName("GET /api/representante/estudiantes/{id}/informe - informe de un representado propio")
     void informe_de_representado_propio_devuelve_200() throws Exception {
         when(informeService.informeDe("marta.representante@sged.test", 6L)).thenReturn(
-                new InformeEstudianteResponse(6L, "Andres Rivas", "SUB-14", List.of(), List.of()));
+                new InformeEstudianteResponse(6L, "Andres Rivas", "SUB-14", List.of(), List.of(), null));
 
         mockMvc.perform(get("/api/representante/estudiantes/6/informe"))
                 .andExpect(status().isOk())

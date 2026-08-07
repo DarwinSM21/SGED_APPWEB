@@ -44,6 +44,12 @@ public class AsistenciaService {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Sesión no encontrada con id: " + idSesion));
 
+        Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(
+                estudiante.getIdEstudiante(), idSesion);
+        if (categoriaCoincide == null || !categoriaCoincide) {
+            throw new IllegalArgumentException("Esta sesión no corresponde a tu categoría");
+        }
+
         LocalTime ahora = LocalTime.now();
         Asistencia asistencia = Asistencia.builder()
                 .sesion(sesion)

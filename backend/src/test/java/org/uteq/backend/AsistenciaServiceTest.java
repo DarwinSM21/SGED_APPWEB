@@ -79,6 +79,7 @@ class AsistenciaServiceTest {
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
+        when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
         when(asistenciaRepository.save(org.mockito.ArgumentMatchers.any(Asistencia.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -93,11 +94,18 @@ class AsistenciaServiceTest {
     @DisplayName("marcarPorQr marca TARDE fuera de la tolerancia")
     void marcarPorQr_marca_tarde_fuera_de_tolerancia() {
         Estudiante e = estudiante();
-        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().minusHours(1));
+        // LocalTime no tiene fecha: si "ahora" cae en la primera hora del dia,
+        // restar 1h cruzaria medianoche hacia "ayer" e invertiria la
+        // comparacion de calcularEstado (daria PRESENTE en vez de TARDE). Se
+        // ancla a medianoche en ese caso puntual en vez de envolver.
+        LocalTime ahora = LocalTime.now();
+        LocalTime horaInicio = ahora.isBefore(LocalTime.of(1, 0)) ? LocalTime.MIDNIGHT : ahora.minusHours(1);
+        SesionEntrenamiento sesion = sesionConHoraInicio(horaInicio);
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
+        when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
         when(asistenciaRepository.save(org.mockito.ArgumentMatchers.any(Asistencia.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -115,6 +123,7 @@ class AsistenciaServiceTest {
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
+        when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
         when(asistenciaRepository.save(org.mockito.ArgumentMatchers.any(Asistencia.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
@@ -129,16 +138,52 @@ class AsistenciaServiceTest {
         ReflectionTestUtils.setField(asistenciaService, "toleranciaTardeMinutos", 1);
         Estudiante e = estudiante();
         // 5 minutos despues del inicio, con solo 1 minuto de tolerancia -> TARDE.
-        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().minusMinutes(5));
+        // Mismo cuidado de medianoche que en marcarPorQr_marca_tarde_fuera_de_tolerancia.
+        LocalTime ahoraTolerancia = LocalTime.now();
+        LocalTime horaInicioTolerancia = ahoraTolerancia.isBefore(LocalTime.of(0, 5))
+                ? LocalTime.MIDNIGHT : ahoraTolerancia.minusMinutes(5);
+        SesionEntrenamiento sesion = sesionConHoraInicio(horaInicioTolerancia);
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
+        when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
         when(asistenciaRepository.save(org.mockito.ArgumentMatchers.any(Asistencia.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
 
         Asistencia resultado = asistenciaService.marcarPorQr("andres@sged.test", 1L);
 
         assertThat(resultado.getEstado()).isEqualTo(Asistencia.ESTADO_TARDE);
+    }
+
+    @Test
+    @DisplayName("marcarPorQr rechaza una sesion que no es de la categoria del estudiante")
+    void marcarPorQr_rechaza_categoria_no_coincidente() {
+        Estudiante e = estudiante();
+        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().plusHours(1));
+
+        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
+        when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
+        when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> asistenciaService.marcarPorQr("andres@sged.test", 1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("categoría");
+    }
+
+    @Test
+    @DisplayName("marcarPorQr rechaza si el procedimiento no puede determinar la categoria (null)")
+    void marcarPorQr_rechaza_categoria_indeterminada() {
+        Estudiante e = estudiante();
+        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().plusHours(1));
+
+        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
+        when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
+        when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(null);
+
+        assertThatThrownBy(() -> asistenciaService.marcarPorQr("andres@sged.test", 1L))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

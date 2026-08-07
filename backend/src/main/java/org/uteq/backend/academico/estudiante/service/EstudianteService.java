@@ -14,6 +14,7 @@ import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
 import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -44,6 +45,7 @@ public class EstudianteService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
+    private final RepresentanteEstudianteRepository representanteEstudianteRepository;
 
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
@@ -200,6 +202,21 @@ public class EstudianteService {
     @Transactional
     public void desactivarPorCategoria(Long idCategoria) {
         estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
+    }
+
+    /** Sugerencia de siguiente codigo_estudiante para un anio; no reserva nada, solo propone. */
+    @Transactional(readOnly = true)
+    public String generarSiguienteCodigo(int anio) {
+        return estudianteRepository.generarSiguienteCodigo(anio);
+    }
+
+    /** "Nombre Apellido - telefono" del representante activo del estudiante, o null si no tiene. */
+    @Transactional(readOnly = true)
+    public String contactoDeEmergencia(Long idEstudiante) {
+        if (!estudianteRepository.existsById(idEstudiante)) {
+            throw new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante);
+        }
+        return representanteEstudianteRepository.contactoDe(idEstudiante);
     }
 
     /**

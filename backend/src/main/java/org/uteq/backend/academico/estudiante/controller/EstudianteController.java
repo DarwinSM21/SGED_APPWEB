@@ -83,6 +83,20 @@ public class EstudianteController {
         return ResponseEntity.ok().build();
     }
 
+    /** Propone el siguiente codigo_estudiante del anio (no lo reserva: el alta sigue validando unicidad). */
+    @GetMapping("/operaciones/siguiente-codigo")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<String> siguienteCodigo(@RequestParam int anio) {
+        return ResponseEntity.ok(estudianteService.generarSiguienteCodigo(anio));
+    }
+
+    /** Contacto rapido del representante del estudiante, para un entrenador ante una emergencia/lesion. */
+    @GetMapping("/{id}/contacto-emergencia")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    public ResponseEntity<String> contactoEmergencia(@PathVariable Long id) {
+        return ResponseEntity.ok(estudianteService.contactoDeEmergencia(id));
+    }
+
     /**
      * Habilita el acceso propio de un estudiante que ya existe (rol
      * ESTUDIANTE), para que pueda marcar su propia asistencia por QR.
