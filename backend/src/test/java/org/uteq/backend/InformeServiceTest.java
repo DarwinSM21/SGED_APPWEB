@@ -17,12 +17,14 @@ import org.uteq.backend.academico.representante.repository.RepresentanteEstudian
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.InformeService;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -30,6 +32,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -48,6 +51,7 @@ class InformeServiceTest {
     @Mock private RepresentanteEstudianteRepository vinculoRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+    @Mock private AsistenciaRepository asistenciaRepository;
 
     @InjectMocks
     private InformeService informeService;
@@ -138,6 +142,8 @@ class InformeServiceTest {
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
         when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
                 .thenReturn((Page<Lesion>) new PageImpl<>(List.of(lesion)));
+        when(asistenciaRepository.calcularPorcentajeAsistencia(eq(10L), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(new BigDecimal("85.71"));
 
         InformeEstudianteResponse informe = informeService.informeDe("ana.vera@sged.test", 10L);
 
@@ -147,5 +153,6 @@ class InformeServiceTest {
         assertThat(informe.promediosPorCriterio().get(0).promedio()).isEqualTo(7.5);
         assertThat(informe.historialLesiones()).hasSize(1);
         assertThat(informe.historialLesiones().get(0).activa()).isTrue();
+        assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
     }
 }

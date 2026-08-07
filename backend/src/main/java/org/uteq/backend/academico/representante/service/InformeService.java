@@ -10,10 +10,13 @@ import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -41,6 +44,7 @@ public class InformeService {
     private final RepresentanteEstudianteRepository vinculoRepository;
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+    private final AsistenciaRepository asistenciaRepository;
 
     @Transactional(readOnly = true)
     public List<EstudianteResumenResponse> misRepresentados(String username) {
@@ -85,12 +89,17 @@ public class InformeService {
                 .map(this::aLesionResumen)
                 .toList();
 
+        LocalDate hoy = LocalDate.now();
+        BigDecimal porcentajeAsistencia = asistenciaRepository
+                .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);
+
         return new InformeEstudianteResponse(
                 estudiante.getIdEstudiante(),
                 estudiante.getPersona().getNombre() + " " + estudiante.getPersona().getApellido(),
                 estudiante.getCategoria().getNombre(),
                 promedios,
-                lesiones);
+                lesiones,
+                porcentajeAsistencia);
     }
 
     private Representante representanteDe(String username) {

@@ -1,6 +1,6 @@
 # Observaciones del Docente y Seguimiento de Cambios
 
-A continuación se presenta la tabla de seguimiento para el control y resolución de las observaciones emitidas por el docente en las entregas 1A y 1B correspondientes al proyecto **SGED / ProFútbol**.
+A continuación se presenta la tabla de seguimiento para el control y resolución de las observaciones emitidas por el docente en las entregas 1A, 1B y 3 correspondientes al proyecto **SGED / ProFútbol**.
 
 | Código Único | Fuente | Criterio de Rúbrica | Texto de la Observación del Docente | Decisión del Equipo | Hash del Commit |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -16,3 +16,4 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 | OBS-10 | Entrega 1B | C5 Pruebas JUnit + Postman + metricas | AuthServiceTest.java está VACÍO (0 bytes). La única prueba real es contextLoads(). No se cumple el mínimo de 5 pruebas. La colección Postman no está versionada. | Aplicada — 42 pruebas en 7 clases, JaCoCo 68%, Postman versionado | 1e798bc, 50f8b13, a2c3d53, 83d8a65 |
 | OBS-11 | Entrega 1B | C6 Docker Compose | docker-compose.yml está VACÍO (0 bytes). Existe Dockerfile de backend, pero no hay orquestación de servicios verificable. | Aplicada — docker-compose.yml con 4 servicios, healthchecks, digests SHA-256 | b907d10, 17dc5df, 767ad92 |
 | OBS-12 | Entrega 1B | C8 Informe tecnico | Varios contenidos del informe (Docker, pruebas, registro/logout) no se corresponden con lo presente en el repositorio (están vacíos o ausentes). | Aplicada — SRS.md con estado honesto por RF, informe LaTeX traza a commits reales | 98bab0d, 3788fcd |
+| OBS-13 | Entrega 3 | Autenticación stateless / cookie HttpOnly (retroalimentación individual del docente sobre `v0.9.0-rc`) | "El método de login además devuelve los tokens en el cuerpo de la respuesta, lo que contradice su propio diseño de cookie HttpOnly, elimina esa devolución para no debilitar la protección." | Aplicada, con historial: el campo ya se había quitado de `SesionResponse` el 23-jul, pero un merge de ramas el 24-jul (día de cierre) lo reintrodujo sin que se notara, y así quedó en el commit evaluado. Se corrigió de nuevo el 04-ago: `SesionResponse` ya no tiene `accessToken`/`refreshToken`, el JWT viaja solo en la cookie `HttpOnly+Secure+SameSite=Strict`. Pendiente: la rama `main` (con el módulo académico ya mergeado) todavía tiene la regresión — falta llevar este fix ahí antes del cierre de la Entrega Final. | e9e5ba7 (fix), ad2fec0 (regresión), 62183d8 (fix definitivo) |

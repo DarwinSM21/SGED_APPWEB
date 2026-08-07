@@ -19,6 +19,7 @@ import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
+import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
@@ -51,6 +52,7 @@ class EstudianteServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private RolRepository rolRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private RepresentanteEstudianteRepository representanteEstudianteRepository;
 
     @InjectMocks private EstudianteService service;
 
@@ -255,6 +257,36 @@ class EstudianteServiceTest {
         doNothing().when(estudianteRepository).desactivarEstudiantesPorCategoria(1L);
         service.desactivarPorCategoria(1L);
         verify(estudianteRepository).desactivarEstudiantesPorCategoria(1L);
+    }
+
+    @Test
+    @DisplayName("generarSiguienteCodigo - Delega al SP via @Procedure")
+    void generarSiguienteCodigo_delega_en_sp() {
+        when(estudianteRepository.generarSiguienteCodigo(2026)).thenReturn("EST-2026-0007");
+
+        String codigo = service.generarSiguienteCodigo(2026);
+
+        assertEquals("EST-2026-0007", codigo);
+    }
+
+    @Test
+    @DisplayName("contactoDeEmergencia - Delega al SP via @Procedure cuando el estudiante existe")
+    void contactoDeEmergencia_delega_en_sp() {
+        when(estudianteRepository.existsById(1L)).thenReturn(true);
+        when(representanteEstudianteRepository.contactoDe(1L)).thenReturn("Maria Perez - 0991234567");
+
+        String contacto = service.contactoDeEmergencia(1L);
+
+        assertEquals("Maria Perez - 0991234567", contacto);
+    }
+
+    @Test
+    @DisplayName("contactoDeEmergencia - Lanza RecursoNoEncontradoException si el estudiante no existe")
+    void contactoDeEmergencia_estudiante_inexistente_lanza_404() {
+        when(estudianteRepository.existsById(99L)).thenReturn(false);
+
+        assertThrows(RecursoNoEncontradoException.class, () -> service.contactoDeEmergencia(99L));
+        verify(representanteEstudianteRepository, never()).contactoDe(any());
     }
 
     // --- PRUEBAS DE HABILITAR ACCESO (rol ESTUDIANTE) ---

@@ -35,4 +35,8 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     @Procedure(procedureName = "academico.sp_desactivar_estudiantes_categoria")
         void desactivarEstudiantesPorCategoria(@Param("p_categoria") Long idCategoria);
+
+    /** Propone el siguiente codigo_estudiante consecutivo del anio dado (formato EST-<anio>-0000). */
+    @Procedure(procedureName = "academico.sp_generar_codigo_estudiante")
+        String generarSiguienteCodigo(@Param("p_anio") Integer anio);
 }
