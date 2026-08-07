@@ -8,12 +8,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
+import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
@@ -29,10 +34,12 @@ import java.util.Optional;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /**
@@ -46,6 +53,7 @@ class SesionEntrenamientoControllerTest {
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private EntrenadorRepository entrenadorRepository;
     @Mock private EvaluacionDiariaRepository evaluacionRepository;
+    @Mock private CategoriaRepository categoriaRepository;
 
     @InjectMocks private SesionEntrenamientoController controller;
 
@@ -53,7 +61,9 @@ class SesionEntrenamientoControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(controller)
+                .setControllerAdvice(new GlobalExceptionHandler())
+                .build();
     }
 
     @AfterEach
@@ -172,5 +182,80 @@ class SesionEntrenamientoControllerTest {
         mockMvc.perform(get("/api/sesiones/hoy"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].tieneEvaluacion").value(true));
+    }
+
+    // --- POST /api/sesiones ---
+
+    @Test
+    @DisplayName("crear persiste la sesion a nombre del entrenador autenticado, no de uno enviado en el body")
+    void crear_usa_el_entrenador_autenticado() throws Exception {
+        var yo = entrenador(1L, "Carlos");
+        var categoria = Categoria.builder().idCategoria(5L).nombre("SUB-15").build();
+
+        autenticarComo("carlos@sged.test", "ENTRENADOR");
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(categoriaRepository.findById(5L)).thenReturn(Optional.of(categoria));
+        when(evaluacionRepository.existsBySesionIdSesion(any())).thenReturn(false);
+        when(sesionRepository.save(any(SesionEntrenamiento.class))).thenAnswer(inv -> {
+            SesionEntrenamiento s = inv.getArgument(0);
+            s.setIdSesion(99L);
+            return s;
+        });
+
+        mockMvc.perform(post("/api/sesiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idCategoria\":5,\"fecha\":\"2026-08-10\",\"horaInicio\":\"16:00:00\",\"horaFin\":\"17:30:00\",\"campo\":\"Cancha 1\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.categoria").value("SUB-15"))
+                .andExpect(jsonPath("$.entrenador").value("Carlos Apellido"));
+    }
+
+    @Test
+    @DisplayName("crear rechaza una hora de fin que no es posterior a la de inicio")
+    void crear_rechaza_horaFin_no_posterior() throws Exception {
+        var yo = entrenador(1L, "Carlos");
+        autenticarComo("carlos@sged.test", "ENTRENADOR");
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+
+        mockMvc.perform(post("/api/sesiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idCategoria\":5,\"fecha\":\"2026-08-10\",\"horaInicio\":\"17:00:00\",\"horaFin\":\"16:00:00\"}"))
+                .andExpect(status().isBadRequest());
+
+        verify(sesionRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("crear responde 404 si la categoria no existe")
+    void crear_categoria_inexistente_lanza_404() throws Exception {
+        var yo = entrenador(1L, "Carlos");
+        autenticarComo("carlos@sged.test", "ENTRENADOR");
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(categoriaRepository.findById(999L)).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/sesiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idCategoria\":999,\"fecha\":\"2026-08-10\",\"horaInicio\":\"16:00:00\",\"horaFin\":\"17:00:00\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    // --- GET /api/sesiones/mias ---
+
+    @Test
+    @DisplayName("mias devuelve el historial completo del entrenador autenticado, no solo las de hoy")
+    void mias_devuelve_historial_completo() throws Exception {
+        var yo = entrenador(1L, "Carlos");
+        var pasada = sesionDe(yo);
+        pasada.setFecha(LocalDate.now().minusDays(4));
+
+        autenticarComo("carlos@sged.test", "ENTRENADOR");
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(sesionRepository.findByEntrenadorIdEntrenadorOrderByFechaDesc(eq(1L), any(PageRequest.class)))
+                .thenReturn(new PageImpl<>(List.of(pasada)));
+        when(evaluacionRepository.existsBySesionIdSesion(any())).thenReturn(false);
+
+        mockMvc.perform(get("/api/sesiones/mias"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)));
     }
 }
