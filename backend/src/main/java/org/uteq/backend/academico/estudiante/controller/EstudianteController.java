@@ -26,7 +26,7 @@ public class EstudianteController {
     private final EstudianteService estudianteService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'RECEPCIONISTA')")
     public ResponseEntity<EstudiantePageResponse<EstudianteResponse>> listar(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -41,13 +41,13 @@ public class EstudianteController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'RECEPCIONISTA')")
     public ResponseEntity<EstudianteResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(estudianteService.buscarPorId(id));
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EstudianteResponse> crear(
             @Valid @RequestBody EstudianteRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -55,7 +55,7 @@ public class EstudianteController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EstudianteResponse> editar(
             @PathVariable Long id,
             @Valid @RequestBody EstudianteRequest request) {
@@ -85,7 +85,7 @@ public class EstudianteController {
 
     /** Propone el siguiente codigo_estudiante del anio (no lo reserva: el alta sigue validando unicidad). */
     @GetMapping("/operaciones/siguiente-codigo")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<String> siguienteCodigo(@RequestParam int anio) {
         return ResponseEntity.ok(estudianteService.generarSiguienteCodigo(anio));
     }

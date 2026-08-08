@@ -15,9 +15,12 @@ import org.uteq.backend.seguridad.persona.service.PersonaService;
 
 /**
  * CRUD de Persona. Concentra los datos identificativos (cedula, correo)
- * de estudiantes menores de edad, por lo que todos los endpoints quedan
- * restringidos a ADMINISTRADOR: no hay ninguna operacion de este recurso
- * que un rol ENTRENADOR o USER necesite ejercer directamente.
+ * de estudiantes menores de edad, por lo que la mayoria de endpoints queda
+ * restringida a ADMINISTRADOR. La excepcion es {@code crear}: la
+ * recepcionista tambien la necesita para poder registrar un estudiante
+ * nuevo (Estudiante siempre cuelga de una Persona ya existente, asi que
+ * ese es el primer paso del alta). Leer/editar/eliminar el catalogo
+ * completo de personas sigue siendo solo de ADMINISTRADOR.
  */
 @RestController
 @RequestMapping("/api/personas")
@@ -46,7 +49,7 @@ public class PersonaController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<PersonaResponse> crear(@Valid @RequestBody PersonaRequest request) {
         PersonaResponse personaCreada = personaService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(personaCreada);

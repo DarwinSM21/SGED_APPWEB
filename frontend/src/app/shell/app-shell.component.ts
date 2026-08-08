@@ -4,7 +4,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { inicialesDe } from '../features/entrenador/plantilla.models';
 
-type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario';
+type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago';
 
 interface NavItem {
   etiqueta: string;
@@ -16,9 +16,9 @@ const CLAVE_COLAPSADA = 'sged.sidebar.colapsada';
 
 /**
  * Entradas de navegacion por rol. Deliberadamente solo destinos reales:
- * nada de Pagos/Calendario/Reportes/Partidos (sin backend todavia, ver
- * memoria del proyecto) ni un listado de representantes (el backend ya
- * tiene el CRUD, pero esta iteracion solo construyo la pantalla de alta,
+ * nada de Calendario/Reportes/Partidos (sin backend todavia, ver memoria
+ * del proyecto) ni un listado de representantes (el backend ya tiene el
+ * CRUD, pero esta iteracion solo construyo la pantalla de alta,
  * encadenada desde "Crear usuario").
  */
 const NAV_POR_ROL: Record<string, NavItem[]> = {
@@ -26,6 +26,8 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Crear usuario', ruta: '/admin/crear-usuario', icono: 'usuario-mas' },
     { etiqueta: 'Recepción', ruta: '/recepcion', icono: 'qr' },
+    { etiqueta: 'Estudiantes', ruta: '/estudiantes/registrar', icono: 'familia' },
+    { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
   ],
   ENTRENADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
@@ -36,6 +38,8 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
   ],
   RECEPCIONISTA: [
     { etiqueta: 'Mostrar QR', ruta: '/recepcion', icono: 'qr' },
+    { etiqueta: 'Estudiantes', ruta: '/estudiantes/registrar', icono: 'familia' },
+    { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
   ],
   REPRESENTANTE: [
     { etiqueta: 'Mis representados', ruta: '/representante', icono: 'familia' },
@@ -93,6 +97,9 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
                   }
                   @case ('calendario') {
                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line>
+                  }
+                  @case ('pago') {
+                    <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line>
                   }
                 }
               </svg>

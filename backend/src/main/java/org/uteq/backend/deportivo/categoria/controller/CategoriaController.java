@@ -34,7 +34,7 @@ public class CategoriaController {
     }
 
     @GetMapping("/activas")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'RECEPCIONISTA')")
     public ResponseEntity<List<CategoriaResponse>> listarActivas() {
         return ResponseEntity.ok(categoriaService.listarTodasActivas());
     }

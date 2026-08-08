@@ -263,6 +263,9 @@ public class EstudianteService {
     private EstudianteResponse toResponse(Estudiante e) {
         return new EstudianteResponse(
                 e.getIdEstudiante(),
+                e.getPersona() != null ? e.getPersona().getIdPersona() : null,
+                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,
+                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,
                 e.getPersona() != null ? e.getPersona().getNombre() : null,
                 e.getPersona() != null ? e.getPersona().getApellido() : null,
                 e.getCategoria() != null ? e.getCategoria().getNombre() : null,

@@ -35,6 +35,16 @@ export const routes: Routes = [
         loadComponent: () => import('./features/recepcion/recepcion.component').then(m => m.RecepcionComponent),
       },
       {
+        path: 'estudiantes/registrar',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA'])],
+        loadComponent: () => import('./features/estudiantes/registrar-estudiante.component').then(m => m.RegistrarEstudianteComponent),
+      },
+      {
+        path: 'pagos',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA'])],
+        loadComponent: () => import('./features/pagos/pagos.component').then(m => m.PagosComponent),
+      },
+      {
         path: 'representante',
         canActivate: [roleGuard(['REPRESENTANTE'])],
         loadComponent: () => import('./features/representante/representante.component').then(m => m.RepresentanteComponent),

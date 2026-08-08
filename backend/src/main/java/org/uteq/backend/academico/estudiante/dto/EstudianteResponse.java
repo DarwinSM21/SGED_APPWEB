@@ -6,6 +6,9 @@ import java.time.LocalDate;
 
 public record EstudianteResponse(
         Long idEstudiante,
+        Long idPersona,
+        Long idCategoria,
+        Long idEstadoGeneral,
         String nombrePersona,
         String apellidoPersona,
         String nombreCategoria,

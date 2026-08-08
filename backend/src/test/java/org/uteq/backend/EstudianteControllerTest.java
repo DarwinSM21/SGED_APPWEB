@@ -60,6 +60,9 @@ class EstudianteControllerTest {
     private EstudianteResponse crearEstudianteResponse() {
         return new EstudianteResponse(
                 1L,
+                1L,
+                1L,
+                1L,
                 "Juan",
                 "Perez",
                 "SUB-12",
