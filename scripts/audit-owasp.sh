@@ -154,7 +154,104 @@ curl -s -c /tmp/sged_representante.jar -X POST "$BASE/api/auth/login" \
     -b /tmp/sged_representante.jar "$BASE/api/estudiantes"; \
 } > "$OUT/a01-roles-nuevos.txt"
 echo "  -> $OUT/a01-roles-nuevos.txt"
-rm -f /tmp/sged_admin.jar /tmp/sged_recepcion.jar /tmp/sged_representante.jar
+
+echo "== A01 (Pagos y alta de estudiante): matriz completa por rol =="
+# Extiende el bloque anterior con lo que se agrego junto al modulo de Pagos:
+# RECEPCIONISTA ahora puede registrar personas/estudiantes y cobrar, asi que
+# hay que probar tanto que SI puede (uso legitimo) como que sigue sin poder
+# tocar lo que no es suyo (personas/usuarios/representantes). ENTRENADOR,
+# ESTUDIANTE, REPRESENTANTE y USER nunca deberian llegar a /api/pagos ni
+# /api/personas: se prueba explicitamente porque nada de esto pasa por
+# standaloneSetup (ver nota de arriba, mismo motivo).
+RANDSUF=$(printf "%05d" $((RANDOM % 100000)))
+curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
+  -H "Content-Type: application/json" \
+  -d "{\"nombre\":\"Audit\",\"apellido\":\"Entrenador\",\"cedula\":\"09777${RANDSUF:0:5}\",\"correo\":\"audit.entrenador.${RANDSUF}@sged.test\",\"fechaNacimiento\":\"1985-01-01\",\"username\":\"audit_entrenador_${RANDSUF}@sged.test\",\"password\":\"Passw0rd!\",\"rol\":\"ENTRENADOR\"}" > /dev/null
+curl -s -c /tmp/sged_entrenador.jar -X POST "$BASE/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"audit_entrenador_${RANDSUF}@sged.test\",\"password\":\"Passw0rd!\"}" > /dev/null
+
+curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
+  -H "Content-Type: application/json" \
+  -d "{\"nombre\":\"Audit\",\"apellido\":\"Estudiante\",\"cedula\":\"09888${RANDSUF:0:5}\",\"correo\":\"audit.estudiante.${RANDSUF}@sged.test\",\"fechaNacimiento\":\"2010-01-01\",\"username\":\"audit_estudiante_${RANDSUF}@sged.test\",\"password\":\"Passw0rd!\",\"rol\":\"ESTUDIANTE\"}" > /dev/null
+curl -s -c /tmp/sged_estudiante.jar -X POST "$BASE/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"username\":\"audit_estudiante_${RANDSUF}@sged.test\",\"password\":\"Passw0rd!\"}" > /dev/null
+
+# Categoria real para el alta de RECEPCIONISTA (cualquiera activa sirve).
+ID_CATEGORIA=$(docker exec sged_postgres psql -U postgres -d sged_db -tAc \
+  "SELECT id_categoria FROM deportivo.categorias WHERE activo LIMIT 1;" 2>/dev/null)
+
+{ cabecera "A01 (Pagos y alta de estudiante) - Broken Access Control";
+  echo "-- RECEPCIONISTA: registrar persona + estudiante (esperado 201, uso legitimo) --";
+  PERSONA_RECEP=$(curl -s -b /tmp/sged_recepcion.jar -X POST "$BASE/api/personas" \
+    -H "Content-Type: application/json" \
+    -d "{\"nombre\":\"Audit\",\"apellido\":\"Pagos${RANDSUF}\",\"cedula\":\"09666${RANDSUF:0:5}\",\"correo\":\"audit.pagos.${RANDSUF}@sged.test\",\"telefono\":null,\"foto\":null,\"fechaNacimiento\":\"2011-06-15\"}" \
+    -w "\nHTTP:%{http_code}")
+  echo "POST /api/personas -> $(echo "$PERSONA_RECEP" | grep -o 'HTTP:[0-9]*')";
+  ID_PERSONA_RECEP=$(echo "$PERSONA_RECEP" | grep -o '"idPersona":[0-9]*' | grep -o '[0-9]*');
+  ID_EST_RECEP=$(curl -s -b /tmp/sged_recepcion.jar -X POST "$BASE/api/estudiantes" \
+    -H "Content-Type: application/json" \
+    -d "{\"idPersona\":$ID_PERSONA_RECEP,\"idCategoria\":${ID_CATEGORIA:-1},\"idEstadoGeneral\":1,\"codigoEstudiante\":\"AUDIT-PAGOS-${RANDSUF}\",\"fechaIngreso\":\"$(date +%F)\",\"peso\":null,\"altura\":null}" \
+    -w "\nHTTP:%{http_code}")
+  echo "POST /api/estudiantes -> $(echo "$ID_EST_RECEP" | grep -o 'HTTP:[0-9]*')";
+  ID_EST_RECEP=$(echo "$ID_EST_RECEP" | grep -o '"idEstudiante":[0-9]*' | grep -o '[0-9]*');
+  echo "";
+  echo "-- RECEPCIONISTA: cobrar (esperado 201/200, uso legitimo) --";
+  ID_HIST="${ID_EST_RECEP:-$EST_PROPIO}";
+  curl -s -o /dev/null -w "POST /api/pagos/diario              -> %{http_code}\n" \
+    -b /tmp/sged_recepcion.jar -X POST "$BASE/api/pagos/diario" \
+    -H "Content-Type: application/json" -d "{\"idEstudiante\":$ID_HIST,\"monto\":5.00,\"fechaPago\":null}";
+  curl -s -o /dev/null -w "GET  /api/pagos/estudiante/$ID_HIST -> %{http_code}\n" \
+    -b /tmp/sged_recepcion.jar "$BASE/api/pagos/estudiante/$ID_HIST";
+  echo "";
+  echo "-- RECEPCIONISTA: sigue sin poder gestionar personas/usuarios (esperado 403) --";
+  curl -s -o /dev/null -w "GET    /api/personas       -> %{http_code}\n" \
+    -b /tmp/sged_recepcion.jar "$BASE/api/personas";
+  curl -s -o /dev/null -w "DELETE /api/estudiantes/1  -> %{http_code}\n" \
+    -b /tmp/sged_recepcion.jar -X DELETE "$BASE/api/estudiantes/1";
+  echo "";
+  echo "-- ENTRENADOR: sus sesiones (esperado 200) pero nunca Pagos/Personas (esperado 403) --";
+  curl -s -o /dev/null -w "GET  /api/sesiones/mias    -> %{http_code}\n" \
+    -b /tmp/sged_entrenador.jar "$BASE/api/sesiones/mias";
+  curl -s -o /dev/null -w "POST /api/pagos/diario     -> %{http_code}\n" \
+    -b /tmp/sged_entrenador.jar -X POST "$BASE/api/pagos/diario" \
+    -H "Content-Type: application/json" -d "{\"idEstudiante\":$EST_PROPIO,\"monto\":5.00,\"fechaPago\":null}";
+  curl -s -o /dev/null -w "POST /api/personas         -> %{http_code}\n" \
+    -b /tmp/sged_entrenador.jar -X POST "$BASE/api/personas" \
+    -H "Content-Type: application/json" -d '{"nombre":"X","apellido":"Y","cedula":"0900000000","correo":"x@sged.test","fechaNacimiento":"2000-01-01"}';
+  curl -s -o /dev/null -w "POST /api/estudiantes      -> %{http_code}\n" \
+    -b /tmp/sged_entrenador.jar -X POST "$BASE/api/estudiantes" \
+    -H "Content-Type: application/json" -d '{"idPersona":1,"idCategoria":1,"idEstadoGeneral":1,"codigoEstudiante":"X","fechaIngreso":"2026-01-01"}';
+  echo "";
+  echo "-- ESTUDIANTE: no es personal de la escuela (esperado 403 en todo esto) --";
+  curl -s -o /dev/null -w "GET  /api/estudiantes      -> %{http_code}\n" \
+    -b /tmp/sged_estudiante.jar "$BASE/api/estudiantes";
+  curl -s -o /dev/null -w "POST /api/pagos/diario     -> %{http_code}\n" \
+    -b /tmp/sged_estudiante.jar -X POST "$BASE/api/pagos/diario" \
+    -H "Content-Type: application/json" -d "{\"idEstudiante\":$EST_PROPIO,\"monto\":5.00,\"fechaPago\":null}";
+  curl -s -o /dev/null -w "POST /api/personas         -> %{http_code}\n" \
+    -b /tmp/sged_estudiante.jar -X POST "$BASE/api/personas" \
+    -H "Content-Type: application/json" -d '{"nombre":"X","apellido":"Y","cedula":"0900000001","correo":"y@sged.test","fechaNacimiento":"2000-01-01"}';
+  echo "";
+  echo "-- REPRESENTANTE: tampoco Pagos/Personas (esperado 403) --";
+  curl -s -o /dev/null -w "POST /api/pagos/diario     -> %{http_code}\n" \
+    -b /tmp/sged_representante.jar -X POST "$BASE/api/pagos/diario" \
+    -H "Content-Type: application/json" -d "{\"idEstudiante\":$EST_PROPIO,\"monto\":5.00,\"fechaPago\":null}";
+  curl -s -o /dev/null -w "POST /api/personas         -> %{http_code}\n" \
+    -b /tmp/sged_representante.jar -X POST "$BASE/api/personas" \
+    -H "Content-Type: application/json" -d '{"nombre":"X","apellido":"Y","cedula":"0900000002","correo":"z@sged.test","fechaNacimiento":"2000-01-01"}';
+  echo "";
+  echo "-- USER (sin rol operativo): tampoco Pagos/Personas (esperado 403) --";
+  curl -s -o /dev/null -w "POST /api/pagos/diario     -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar -X POST "$BASE/api/pagos/diario" \
+    -H "Content-Type: application/json" -d "{\"idEstudiante\":$EST_PROPIO,\"monto\":5.00,\"fechaPago\":null}";
+  curl -s -o /dev/null -w "POST /api/personas         -> %{http_code}\n" \
+    -b /tmp/sged_a01.jar -X POST "$BASE/api/personas" \
+    -H "Content-Type: application/json" -d '{"nombre":"X","apellido":"Y","cedula":"0900000003","correo":"w@sged.test","fechaNacimiento":"2000-01-01"}'; \
+} > "$OUT/a01-pagos-y-estudiante.txt"
+echo "  -> $OUT/a01-pagos-y-estudiante.txt"
+rm -f /tmp/sged_admin.jar /tmp/sged_recepcion.jar /tmp/sged_representante.jar /tmp/sged_entrenador.jar /tmp/sged_estudiante.jar
 
 echo "== A02: criptografía en tránsito (TLS 1.3) =="
 { cabecera "A02 - Cryptographic Failures";

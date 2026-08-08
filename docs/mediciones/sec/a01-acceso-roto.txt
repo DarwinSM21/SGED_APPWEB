@@ -1,5 +1,5 @@
 # Evidencia OWASP A01 - Broken Access Control
-# Fecha: 2026-08-03T20:24:15Z | Commit: 42c5dad | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-08-08T20:49:24Z | Commit: 4bc5a3d | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
 -- 1. operacion administrativa sobre estudiantes (esperado 403) --
 HTTP/1.1 403 
@@ -15,9 +15,9 @@ X-Frame-Options: DENY
 Content-Security-Policy: default-src 'self'; frame-ancestors 'none'
 Content-Type: application/problem+json
 Transfer-Encoding: chunked
-Date: Mon, 03 Aug 2026 20:24:17 GMT
+Date: Sat, 08 Aug 2026 20:49:25 GMT
 
-{"type":"https://sged.uteq.edu.ec/errores/AccesoDenegado","title":"Forbidden","status":403,"detail":"No tiene permisos para acceder a este recurso","instance":"/api/estudiantes/operaciones/desactivar-categoria","timestamp":"2026-08-03T20:24:17.400235648Z"}
+{"type":"https://sged.uteq.edu.ec/errores/AccesoDenegado","title":"Forbidden","status":403,"detail":"No tiene permisos para acceder a este recurso","instance":"/api/estudiantes/operaciones/desactivar-categoria","timestamp":"2026-08-08T20:49:26.042908672Z"}
 
 -- 2. lectura de datos personales de terceros (esperado 403) --
 GET  /api/personas                 -> 403

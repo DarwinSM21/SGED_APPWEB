@@ -1,0 +1,33 @@
+# Evidencia OWASP A01 (Pagos y alta de estudiante) - Broken Access Control
+# Fecha: 2026-08-08T20:49:24Z | Commit: 4bc5a3d | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+#
+-- RECEPCIONISTA: registrar persona + estudiante (esperado 201, uso legitimo) --
+POST /api/personas -> HTTP:201
+POST /api/estudiantes -> HTTP:201
+
+-- RECEPCIONISTA: cobrar (esperado 201/200, uso legitimo) --
+POST /api/pagos/diario              -> 201
+GET  /api/pagos/estudiante/10 -> 200
+
+-- RECEPCIONISTA: sigue sin poder gestionar personas/usuarios (esperado 403) --
+GET    /api/personas       -> 403
+DELETE /api/estudiantes/1  -> 403
+
+-- ENTRENADOR: sus sesiones (esperado 200) pero nunca Pagos/Personas (esperado 403) --
+GET  /api/sesiones/mias    -> 200
+POST /api/pagos/diario     -> 403
+POST /api/personas         -> 403
+POST /api/estudiantes      -> 403
+
+-- ESTUDIANTE: no es personal de la escuela (esperado 403 en todo esto) --
+GET  /api/estudiantes      -> 403
+POST /api/pagos/diario     -> 403
+POST /api/personas         -> 403
+
+-- REPRESENTANTE: tampoco Pagos/Personas (esperado 403) --
+POST /api/pagos/diario     -> 403
+POST /api/personas         -> 403
+
+-- USER (sin rol operativo): tampoco Pagos/Personas (esperado 403) --
+POST /api/pagos/diario     -> 403
+POST /api/personas         -> 403

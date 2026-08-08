@@ -1,18 +1,23 @@
 # Evidencia OWASP A09 - Security Logging and Monitoring Failures
-# Fecha: 2026-08-03T20:24:15Z | Commit: 42c5dad | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+# Fecha: 2026-08-08T20:49:24Z | Commit: 4bc5a3d | curl: curl 8.19.0 (x86_64-w64-mingw32) libcurl/8.19.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
 #
-2026-08-03 15:55:53,520 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
-2026-08-03 15:56:06,455 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=lucia.recepcion@sged.test
-2026-08-03 15:56:19,724 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=marta.representante@sged.test
-2026-08-03 15:57:11,114 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=lucia.recepcion@sged.test
-2026-08-03 15:59:06,840 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=marta.representante@sged.test
-2026-08-03 20:24:16,374 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
-2026-08-03 20:24:17,206 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_a01@sged.test
-2026-08-03 20:24:18,430 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
-2026-08-03 20:24:19,777 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_recepcion@sged.test
-2026-08-03 20:24:20,867 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_representante@sged.test
-2026-08-03 20:24:23,254 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-08-03 20:24:23,620 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-08-03 20:24:23,990 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-08-03 20:24:24,364 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
-2026-08-03 20:24:24,742 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:48:32,175 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
+2026-08-08 20:48:33,202 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_recepcion@sged.test
+2026-08-08 20:48:34,228 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_representante@sged.test
+2026-08-08 20:48:36,386 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=audit_entrenador_1012@sged.test
+2026-08-08 20:48:36,911 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=audit_estudiante_1012@sged.test
+2026-08-08 20:48:41,585 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:48:42,041 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:48:42,450 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:49:25,389 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
+2026-08-08 20:49:25,885 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_a01@sged.test
+2026-08-08 20:49:27,033 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=admin
+2026-08-08 20:49:27,938 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_recepcion@sged.test
+2026-08-08 20:49:28,600 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_representante@sged.test
+2026-08-08 20:49:30,544 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_entrenador_10619@sged.test
+2026-08-08 20:49:31,318 INFO  AUTH_LOGIN_OK ip=172.18.0.1 sub=audit_estudiante_10619@sged.test
+2026-08-08 20:49:34,769 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:49:35,149 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:49:35,558 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:49:35,949 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
+2026-08-08 20:49:36,334 WARN  AUTH_LOGIN_FAIL ip=172.18.0.1 sub=admin
