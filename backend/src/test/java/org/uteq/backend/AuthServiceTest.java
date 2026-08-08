@@ -139,7 +139,7 @@ class AuthServiceTest {
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "test@test.com",
-                LocalDate.of(2000, 1, 1), "test@test.com", "test123");
+                LocalDate.of(2000, 1, 1), "test@test.com", "test123", "ENTRENADOR");
 
         mockMvc.perform(post("/api/auth/registro")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -177,8 +177,8 @@ class AuthServiceTest {
             p.setIdPersona(1L);
             return p;
         });
-        when(rolRepository.findByNombre("USER")).thenReturn(
-                Optional.of(Rol.builder().idRol(1L).nombre("USER").build()));
+        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
+                Optional.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(
                 Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
@@ -190,7 +190,7 @@ class AuthServiceTest {
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "nuevo.correo@test.com",
-                LocalDate.of(2000, 1, 1), "new@test.com", "password123");
+                LocalDate.of(2000, 1, 1), "new@test.com", "password123", "ENTRENADOR");
 
         mockMvc.perform(post("/api/auth/registro")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -198,14 +198,31 @@ class AuthServiceTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("new@test.com"))
                 .andExpect(jsonPath("$.nombre").value("Test User"))
-                .andExpect(jsonPath("$.rol").value("USER"));
+                .andExpect(jsonPath("$.rol").value("ENTRENADOR"));
+    }
+
+    /** rol es obligatorio en RegisterRequest: en blanco o ausente responde 422, nunca cae a un rol por defecto. */
+    @Test
+    void registroSinRolDa422() throws Exception {
+        String cuerpoSinRol = """
+                {"nombre":"Test","apellido":"User","cedula":"0912345678",
+                 "correo":"sinrol@test.com","fechaNacimiento":"2000-01-01",
+                 "username":"sinrol@test.com","password":"password123"}
+                """;
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(cuerpoSinRol))
+                .andExpect(status().isUnprocessableEntity());
+
+        verify(personaRepository, never()).save(any());
     }
 
     /**
-     * rol es opcional en RegisterRequest desde que se agrego para poder crear
-     * cuentas REPRESENTANTE/RECEPCIONISTA con el mismo endpoint que ya crea
-     * ENTRENADOR/USER. Este caso prueba que, cuando SI viene informado, se usa
-     * tal cual en vez de caer siempre en "USER".
+     * rol permite crear cuentas de cualquiera de los roles reales del
+     * sistema (REPRESENTANTE/RECEPCIONISTA/ENTRENADOR/ESTUDIANTE/
+     * ADMINISTRADOR) con el mismo endpoint. Este caso prueba que se usa el
+     * valor pedido tal cual, sin transformarlo.
      */
     @Test
     void registroConRolExplicitoUsaElRolPedido() throws Exception {

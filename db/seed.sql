@@ -14,7 +14,6 @@ ON CONFLICT (id_estado_general) DO NOTHING;
 INSERT INTO seguridad.roles (nombre, descripcion)
 VALUES ('ADMINISTRADOR', 'Administrador del sistema'),
        ('ENTRENADOR', 'Entrenador de la escuela'),
-       ('USER', 'Usuario estandar'),
        ('RECEPCIONISTA', 'Encargado de emitir el codigo QR de asistencia'),
        ('REPRESENTANTE', 'Padre, madre o tutor legal de uno o mas estudiantes'),
        ('ESTUDIANTE', 'Deportista inscrito, con acceso propio para marcar su asistencia por QR')

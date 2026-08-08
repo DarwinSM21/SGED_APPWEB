@@ -28,19 +28,19 @@ public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<Page<CategoriaResponse>> listarPaginado(Pageable pageable) {
         return ResponseEntity.ok(categoriaService.listarPaginado(pageable));
     }
 
     @GetMapping("/activas")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<List<CategoriaResponse>> listarActivas() {
         return ResponseEntity.ok(categoriaService.listarTodasActivas());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<CategoriaResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(categoriaService.buscarPorId(id));
     }

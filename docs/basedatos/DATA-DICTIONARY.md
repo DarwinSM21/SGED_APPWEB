@@ -63,7 +63,10 @@ Datos personales base. Compartida por usuarios, estudiantes y entrenadores.
 > menores de edad. Ver `docs/etica/ETHICS.md` §2.
 
 ## `seguridad.roles`
-Catálogo de roles del sistema. Sembrados: `ADMINISTRADOR`, `ENTRENADOR`, `USER`.
+Catálogo de roles del sistema. Sembrados: `ADMINISTRADOR`, `ENTRENADOR`,
+`RECEPCIONISTA`, `REPRESENTANTE`, `ESTUDIANTE`. No existe un rol genérico
+"USER": cada cuenta se crea con uno de estos roles reales desde el alta
+(`rol` es obligatorio en `POST /api/auth/registro`).
 
 | Columna | Tipo | Nulo | Restricción | Descripción |
 |---|---|---|---|---|

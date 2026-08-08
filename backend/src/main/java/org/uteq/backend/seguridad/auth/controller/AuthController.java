@@ -65,7 +65,8 @@ public class AuthController {
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
     /**
-     * rol es opcional (default "USER"); quien llama ya es ADMINISTRADOR, asi
+     * rol es obligatorio (@NotBlank en RegisterRequest): no existe un rol
+     * generico al que caer por defecto. Quien llama ya es ADMINISTRADOR, asi
      * que puede pedir cualquier rol existente en seguridad.roles (p.ej.
      * ENTRENADOR, RECEPCIONISTA, REPRESENTANTE) - un nombre que no exista
      * responde 400 via RolRepository.findByNombre.
@@ -87,9 +88,8 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
-        String nombreRol = (request.rol() == null || request.rol().isBlank()) ? "USER" : request.rol();
-        Rol rol = rolRepository.findByNombre(nombreRol)
-                .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + nombreRol));
+        Rol rol = rolRepository.findByNombre(request.rol())
+                .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.rol()));
 
         Persona persona = Persona.builder()
                 .nombre(request.nombre())

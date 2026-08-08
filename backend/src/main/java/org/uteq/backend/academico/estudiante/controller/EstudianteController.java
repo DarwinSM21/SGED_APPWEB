@@ -26,7 +26,7 @@ public class EstudianteController {
     private final EstudianteService estudianteService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EstudiantePageResponse<EstudianteResponse>> listar(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -41,7 +41,7 @@ public class EstudianteController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'RECEPCIONISTA')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EstudianteResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(estudianteService.buscarPorId(id));
     }

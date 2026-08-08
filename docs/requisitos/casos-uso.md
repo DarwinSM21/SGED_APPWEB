@@ -5,7 +5,7 @@
 flujos alternativos.
 
 Actores: **Administrador** (`ADMINISTRADOR`), **Entrenador** (`ENTRENADOR`),
-**Usuario estándar** (`USER`), **Sistema** (procesos automáticos).
+**Sistema** (procesos automáticos).
 
 ---
 
@@ -15,7 +15,6 @@ Actores: **Administrador** (`ADMINISTRADOR`), **Entrenador** (`ENTRENADOR`),
 graph LR
     ADMIN["👤 Administrador"]
     ENTR["👤 Entrenador"]
-    USER["👤 Usuario estándar"]
 
     CU01["CU-01<br/>Iniciar sesión"]
     CU02["CU-02<br/>Cerrar sesión"]
@@ -41,10 +40,6 @@ graph LR
     ENTR --> CU02
     ENTR --> CU04
     ENTR --> CU08
-
-    USER --> CU01
-    USER --> CU02
-    USER --> CU04
 ```
 
 ---

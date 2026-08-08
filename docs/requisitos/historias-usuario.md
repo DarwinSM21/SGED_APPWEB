@@ -122,7 +122,7 @@ categoría ya existentes,
 - **Dado** que la categoría indicada no existe, **cuando** intento
   registrarlo, **entonces** el sistema responde `422` indicando el campo y
   el motivo del rechazo.
-- **Dado** que mi rol es ENTRENADOR o USER, **cuando** intento registrar un
+- **Dado** que mi rol es ENTRENADOR, **cuando** intento registrar un
   estudiante, **entonces** el sistema responde `403`.
 
 ---

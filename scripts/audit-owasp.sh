@@ -27,17 +27,20 @@ docker exec sged_redis sh -c \
   > /dev/null 2>&1 \
   || echo "AVISO: no se pudo limpiar el contador de intentos; si A01 sale 401, esa es la causa."
 
-echo "== A01: control de acceso (usuario sin rol pide recurso de admin -> 403) =="
+echo "== A01: control de acceso (rol no-admin pide recurso de admin -> 403) =="
 # 0. /api/auth/registro exige rol ADMINISTRADOR (Bloque A.1): iniciamos
 #    sesion con el admin sembrado para poder registrar la cuenta de prueba.
 curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"Admin2026!"}' > /dev/null
-# 1. el admin registra un usuario basico (rol USER por defecto)
+# 1. el admin registra una cuenta ENTRENADOR: personal real de la escuela,
+#    pero sin ningun privilegio administrativo. Ya no existe un rol generico
+#    "sin privilegios" al que registrar sin pedirlo (rol es obligatorio en
+#    RegisterRequest), asi que se usa el rol real menos privilegiado.
 curl -s -b /tmp/sged_admin.jar -X POST "$BASE/api/auth/registro" \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Audit","apellido":"A01","cedula":"0912345678","correo":"audit.a01@sged.test","fechaNacimiento":"2000-01-01","username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
-# 2. el usuario basico inicia su propia sesion
+  -d '{"nombre":"Audit","apellido":"A01","cedula":"0912345678","correo":"audit.a01@sged.test","fechaNacimiento":"2000-01-01","username":"audit_a01@sged.test","password":"Passw0rd!","rol":"ENTRENADOR"}' > /dev/null
+# 2. esa cuenta ENTRENADOR inicia su propia sesion
 curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
   -d '{"username":"audit_a01@sged.test","password":"Passw0rd!"}' > /dev/null
@@ -52,7 +55,7 @@ curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   echo "";
   echo "";
   # Los cinco recursos que agrego la reestructuracion no tenian @PreAuthorize:
-  # con anyRequest().authenticated() bastaba una sesion valida de rol USER para
+  # con anyRequest().authenticated() bastaba cualquier sesion valida para
   # leer y modificar personas, categorias y entrenadores. Se comprueba recurso
   # por recurso para que la regresion no pueda repetirse sin que la auditoria
   # lo muestre.
@@ -79,7 +82,7 @@ curl -s -c /tmp/sged_a01.jar -X POST "$BASE/api/auth/login" \
   curl -s -o /dev/null -w "GET    /api/usuarios     -> %{http_code}\n" \
     -b /tmp/sged_a01.jar "$BASE/api/usuarios";
   echo "";
-  echo "-- 4. lectura permitida al rol USER (esperado 200: no se rompio el uso legitimo) --";
+  echo "-- 4. lectura permitida a ENTRENADOR (esperado 200: no se rompio el uso legitimo) --";
   curl -s -o /dev/null -w "GET /api/categorias/activas -> %{http_code}\n" \
     -b /tmp/sged_a01.jar "$BASE/api/categorias/activas";
   curl -s -o /dev/null -w "GET /api/estados_generales  -> %{http_code}\n" \
@@ -241,17 +244,11 @@ ID_CATEGORIA=$(docker exec sged_postgres psql -U postgres -d sged_db -tAc \
   curl -s -o /dev/null -w "POST /api/personas         -> %{http_code}\n" \
     -b /tmp/sged_representante.jar -X POST "$BASE/api/personas" \
     -H "Content-Type: application/json" -d '{"nombre":"X","apellido":"Y","cedula":"0900000002","correo":"z@sged.test","fechaNacimiento":"2000-01-01"}';
-  echo "";
-  echo "-- USER (sin rol operativo): tampoco Pagos/Personas (esperado 403) --";
-  curl -s -o /dev/null -w "POST /api/pagos/diario     -> %{http_code}\n" \
-    -b /tmp/sged_a01.jar -X POST "$BASE/api/pagos/diario" \
-    -H "Content-Type: application/json" -d "{\"idEstudiante\":$EST_PROPIO,\"monto\":5.00,\"fechaPago\":null}";
-  curl -s -o /dev/null -w "POST /api/personas         -> %{http_code}\n" \
-    -b /tmp/sged_a01.jar -X POST "$BASE/api/personas" \
-    -H "Content-Type: application/json" -d '{"nombre":"X","apellido":"Y","cedula":"0900000003","correo":"w@sged.test","fechaNacimiento":"2000-01-01"}'; \
 } > "$OUT/a01-pagos-y-estudiante.txt"
 echo "  -> $OUT/a01-pagos-y-estudiante.txt"
-rm -f /tmp/sged_admin.jar /tmp/sged_recepcion.jar /tmp/sged_representante.jar /tmp/sged_entrenador.jar /tmp/sged_estudiante.jar
+# sged_recepcion.jar se conserva un poco mas: A03 (abajo) tambien la usa,
+# porque es el unico rol de prueba con permiso para llegar a POST /api/estudiantes.
+rm -f /tmp/sged_admin.jar /tmp/sged_representante.jar /tmp/sged_entrenador.jar /tmp/sged_estudiante.jar
 
 echo "== A02: criptografía en tránsito (TLS 1.3) =="
 { cabecera "A02 - Cryptographic Failures";
@@ -261,12 +258,16 @@ echo "== A02: criptografía en tránsito (TLS 1.3) =="
 echo "  -> $OUT/a02-tls.txt"
 
 echo "== A03: inyección (payload ' OR '1'='1 -> 422 ProblemDetails) =="
+# RECEPCIONISTA (no ENTRENADOR): es el unico rol de prueba con permiso para
+# llegar a POST /api/estudiantes hoy, asi que es el unico desde el que este
+# payload puede demostrar rechazo por VALIDACION (422) en vez de por rol (403).
 { cabecera "A03 - Injection";
-  curl --include -s -b /tmp/sged_a01.jar -X POST "$BASE/api/estudiantes" \
+  curl --include -s -b /tmp/sged_recepcion.jar -X POST "$BASE/api/estudiantes" \
     -H "Content-Type: application/json" \
     -d "{\"nombre\":\"' OR '1'='1\",\"apellido\":\"\",\"categoria\":\"' OR '1'='1\"}"; \
 } > "$OUT/a03-inyeccion.txt"
 echo "  -> $OUT/a03-inyeccion.txt"
+rm -f /tmp/sged_recepcion.jar
 
 echo "== A05: cabeceras de seguridad =="
 { cabecera "A05 - Security Misconfiguration";

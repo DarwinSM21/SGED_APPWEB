@@ -51,7 +51,7 @@ public class AsistenciaQrController {
      * AsistenciaService para decidir PRESENTE/TARDE y persistir.
      */
     @PostMapping("/marcar")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER', 'ESTUDIANTE')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'ESTUDIANTE')")
     public ResponseEntity<MarcarQrResponse> marcar(@Valid @RequestBody MarcarQrRequest request) {
         var idSesion = qrService.canjear(request.token());
         if (idSesion.isEmpty()) {

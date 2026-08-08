@@ -5,7 +5,7 @@ import { AuthService } from '../../auth/auth.service';
 import { AdminService } from './admin.service';
 import { EstudianteOpcion } from './admin.models';
 
-const ROLES = ['USER', 'ENTRENADOR', 'RECEPCIONISTA', 'REPRESENTANTE', 'ESTUDIANTE', 'ADMINISTRADOR'] as const;
+const ROLES = ['ENTRENADOR', 'RECEPCIONISTA', 'REPRESENTANTE', 'ESTUDIANTE', 'ADMINISTRADOR'] as const;
 
 /**
  * Alta de cuentas por un administrador: mismo criterio ya usado para
@@ -215,7 +215,7 @@ export class CrearUsuarioComponent implements OnInit {
    * zoneless -a diferencia de un callback de HttpClient.subscribe(), que no
    * pasa por el sistema de eventos de Angular y si necesita un signal-.
    */
-  rol = 'USER';
+  rol: string = ROLES[0];
 
   readonly guardando = signal(false);
   readonly error = signal('');
@@ -330,7 +330,7 @@ export class CrearUsuarioComponent implements OnInit {
     this.parentesco = '';
     this.telefonoContacto = '';
     this.idEstudianteSeleccionado = '';
-    this.rol = 'USER';
+    this.rol = ROLES[0];
     this.idsSeleccionados.set(new Set());
   }
 

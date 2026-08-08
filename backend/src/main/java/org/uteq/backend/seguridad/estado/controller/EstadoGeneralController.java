@@ -24,7 +24,7 @@ public class EstadoGeneralController {
     private final EstadoGeneralService estadoGeneralService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<List<EstadoGeneralResponse>> listarTodos() {
         return ResponseEntity.ok(estadoGeneralService.listarTodos());
     }

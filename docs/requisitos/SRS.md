@@ -94,11 +94,14 @@ SHA-256.
 |---|---|---|
 | **Administrador** | Gestiona usuarios, estudiantes y configuración. Único actor con permisos de escritura sobre estudiantes. | `ADMINISTRADOR` |
 | **Entrenador** | Consulta estudiantes de sus categorías, registra asistencia y evaluación diaria. | `ENTRENADOR` |
-| **Usuario estándar** | Consulta de solo lectura sobre estudiantes. | `USER` |
-| **Representante** | Tutor legal del estudiante; receptor de notificaciones. | ⬜ No implementado |
+| **Recepcionista** | Registra estudiantes, cobra membresías/pagos diarios y emite el QR de asistencia. | `RECEPCIONISTA` |
+| **Representante** | Tutor legal del estudiante; consulta informes de sus representados. | `REPRESENTANTE` |
+| **Estudiante** | Marca su propia asistencia escaneando el QR. | `ESTUDIANTE` |
 
-Los tres primeros roles están sembrados en `db/seed.sql` y son los que
-evalúan las anotaciones `@PreAuthorize` del código.
+No existe un rol genérico de "usuario estándar": cada cuenta se crea con
+uno de estos roles reales (`rol` es obligatorio en `POST /api/auth/registro`).
+Los cinco están sembrados en `db/seed.sql` y son los que evalúan las
+anotaciones `@PreAuthorize` del código.
 
 ### 2.3 Restricciones de diseño
 
@@ -224,7 +227,7 @@ de elementos y el total de páginas.*
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
 - **Origen:** `GET /api/estudiantes` —
   `academico/estudiante/controller/EstudianteController.java`
-- **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`, `USER`
+- **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`, `RECEPCIONISTA`
 - **Verificación:** pruebas `EstudianteControllerTest.listar_devuelve_pagina`,
   `EstudianteServiceTest.listar_devuelve_pagina_envuelta`.
 
