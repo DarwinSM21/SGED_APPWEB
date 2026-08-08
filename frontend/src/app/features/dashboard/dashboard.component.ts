@@ -19,14 +19,19 @@ interface PaginaLigera {
  * un marcador guardado en /dashboard si puede traerlos: el primer paso de
  * ngOnInit los redirige a su lugar real en cuanto se confirma el rol.
  *
- * La marca/usuario/logout ahora viven en AppShellComponent (la sidebar),
- * no aqui: esta pantalla solo dibuja su propio contenido.
+ * La marca/usuario/logout/saludo/reloj ahora viven en AppShellComponent (la
+ * sidebar y el topbar), no aqui: esta pantalla solo dibuja su propio
+ * contenido, distinto por rol -ADMINISTRADOR ve conteos globales y accesos
+ * rapidos a Crear usuario/Estudiantes/Pagos/Recepcion; ENTRENADOR ve solo
+ * sus propias sesiones de hoy (el backend ya filtra en /api/sesiones/hoy)-.
  *
- * La tira de KPIs no agrega ninguna llamada nueva al backend: son conteos
- * derivados de `sesiones()` (ya cargado para la lista) y de
- * `lesionesActivas()` (ya cargado para el indicador). No hay tarjetas de
- * Pagos/Calendario/Reportes/Partidos: esos dominios todavia no existen en el
- * backend y el usuario pidio explicitamente dejarlos para mas adelante.
+ * La mayoria de la tira de KPIs no agrega llamadas nuevas al backend: son
+ * conteos derivados de `sesiones()` (ya cargado para la lista) y de
+ * `lesionesActivas()` (ya cargado para el indicador). La excepcion es
+ * `estudiantesActivos()`, solo para ADMINISTRADOR, via /api/estudiantes?size=1
+ * (mismo truco de leer totalElements sin traer el contenido). Sigue sin
+ * haber tarjetas de Calendario/Reportes/Partidos: esos dominios todavia no
+ * existen en el backend.
  *
  * El indicador de lesiones es informativo, no un enlace: todavia no existe
  * una pantalla de lesiones en el frontend (el backend si la expone,
@@ -46,7 +51,20 @@ interface PaginaLigera {
   template: `
     <div class="contenido">
       @if (esOperativo()) {
+        <h1 class="titulo-panel">{{ esAdministrador() ? 'Panel general' : 'Mi día' }}</h1>
+
         <section class="kpis">
+          @if (esAdministrador()) {
+            <div class="kpi">
+              <span class="kpi__icono kpi__icono--success">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              </span>
+              <div>
+                <p class="kpi__valor">{{ estudiantesActivos() ?? '—' }}</p>
+                <p class="kpi__etiqueta">Estudiantes activos</p>
+              </div>
+            </div>
+          }
           <div class="kpi">
             <span class="kpi__icono kpi__icono--info">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -85,9 +103,37 @@ interface PaginaLigera {
           </div>
         </section>
 
+        @if (esAdministrador()) {
+          <section class="accesos">
+            <a class="acceso" routerLink="/admin/crear-usuario">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="19" y2="14"></line><line x1="22" y1="11" x2="16" y2="11"></line></svg>
+              Crear usuario
+            </a>
+            <a class="acceso" routerLink="/estudiantes/registrar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+              Estudiantes
+            </a>
+            <a class="acceso" routerLink="/pagos">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line></svg>
+              Pagos
+            </a>
+            <a class="acceso" routerLink="/recepcion">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              Recepción
+            </a>
+          </section>
+        } @else if (esEntrenador()) {
+          <section class="accesos">
+            <a class="acceso" routerLink="/entrenador/sesiones">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+              Ver todas mis sesiones
+            </a>
+          </section>
+        }
+
         <section class="card lista">
           <div class="lista__cabecera">
-            <h2>Sesiones de hoy</h2>
+            <h2>{{ esAdministrador() ? 'Sesiones de hoy' : 'Mis sesiones de hoy' }}</h2>
           </div>
 
           @if (cargandoSesiones()) {
@@ -120,13 +166,25 @@ interface PaginaLigera {
       } @else if (usuario()) {
         <div class="card vacio vacio--pagina">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-          <p>Tu cuenta consulta información básica. Contacta a un administrador si necesitas más acceso.</p>
+          <p>Tu cuenta de consulta no tiene pantallas propias todavía. Contacta a un administrador si necesitas más acceso.</p>
         </div>
       }
     </div>
   `,
   styles: [`
     .contenido { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+
+    .titulo-panel { font-size: 1.2rem; margin-bottom: 1.1rem; }
+
+    .accesos { display: flex; flex-wrap: wrap; gap: .7rem; margin-bottom: 1.5rem; }
+    .acceso {
+      display: flex; align-items: center; gap: .55rem; padding: .7rem 1rem;
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      background: var(--color-surface); color: var(--color-text); text-decoration: none;
+      font-size: .85rem; font-weight: 600; transition: border-color var(--transition), background var(--transition);
+    }
+    .acceso:hover { border-color: var(--color-primary-500); background: var(--color-primary-50); }
+    .acceso svg { width: 17px; height: 17px; color: var(--color-primary-600); flex-shrink: 0; }
 
     .kpis {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -142,6 +200,7 @@ interface PaginaLigera {
       display: flex; align-items: center; justify-content: center;
     }
     .kpi__icono svg { width: 22px; height: 22px; }
+    .kpi__icono--success { background: var(--color-success-bg); color: var(--color-success-text); }
     .kpi__icono--info { background: var(--color-info-bg); color: var(--color-info); }
     .kpi__icono--warning { background: var(--color-warning-bg); color: var(--color-warning); }
     .kpi__icono--danger { background: var(--color-danger-bg); color: var(--color-danger); }
@@ -189,12 +248,15 @@ export class DashboardComponent implements OnInit {
   readonly sesiones = signal<SesionHoy[]>([]);
   readonly cargandoSesiones = signal(false);
   readonly lesionesActivas = signal<number | null>(null);
+  readonly estudiantesActivos = signal<number | null>(null);
 
   /** ADMINISTRADOR y ENTRENADOR tienen acceso operativo; USER solo consulta. */
   readonly esOperativo = computed(() => {
     const rol = this.usuario()?.rol;
     return rol === 'ADMINISTRADOR' || rol === 'ENTRENADOR';
   });
+  readonly esAdministrador = computed(() => this.usuario()?.rol === 'ADMINISTRADOR');
+  readonly esEntrenador = computed(() => this.usuario()?.rol === 'ENTRENADOR');
 
   readonly totalSesiones = computed(() => this.sesiones().length);
   readonly sesionesEnEvaluacion = computed(() => this.sesiones().filter((s) => s.tieneEvaluacion).length);
@@ -217,6 +279,9 @@ export class DashboardComponent implements OnInit {
         if (this.esOperativo()) {
           this.cargarSesionesDeHoy();
           this.cargarConteoDeLesiones();
+          if (this.esAdministrador()) {
+            this.cargarConteoDeEstudiantes();
+          }
         }
       },
       error: () => {},
@@ -239,6 +304,13 @@ export class DashboardComponent implements OnInit {
   private cargarConteoDeLesiones(): void {
     this.http.get<PaginaLigera>('/api/lesiones?size=1').subscribe({
       next: (pagina) => { this.lesionesActivas.set(pagina.totalElements); },
+      error: () => {},
+    });
+  }
+
+  private cargarConteoDeEstudiantes(): void {
+    this.http.get<PaginaLigera>('/api/estudiantes?size=1').subscribe({
+      next: (pagina) => { this.estudiantesActivos.set(pagina.totalElements); },
       error: () => {},
     });
   }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
@@ -136,6 +136,13 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
       </aside>
 
       <main class="shell__contenido">
+        <header class="topbar">
+          <div class="topbar__saludo">
+            <span class="topbar__hola">{{ saludo() }}@if (primerNombre()) {, {{ primerNombre() }}}</span>
+            <span class="topbar__fecha">{{ fechaHoy() }}</span>
+          </div>
+          <span class="topbar__reloj">{{ horaActual() }}</span>
+        </header>
         <router-outlet></router-outlet>
       </main>
     </div>
@@ -185,6 +192,24 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
 
     .shell__contenido { flex: 1; min-width: 0; }
 
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+      padding: 1.1rem 1.5rem; border-bottom: 1px solid var(--color-border-light);
+    }
+    .topbar__saludo { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+    .topbar__hola { font-weight: 700; font-size: 1.05rem; }
+    .topbar__fecha { font-size: .8rem; color: var(--color-text-muted); }
+    .topbar__fecha::first-letter { text-transform: uppercase; }
+    .topbar__reloj {
+      font-variant-numeric: tabular-nums; font-size: 1.1rem; font-weight: 600;
+      color: var(--color-primary-700); background: var(--color-primary-50);
+      padding: .4rem .8rem; border-radius: var(--radius-sm); flex-shrink: 0;
+    }
+    @media (max-width: 480px) {
+      .topbar { padding: .9rem 1rem; flex-wrap: wrap; }
+      .topbar__hola { font-size: .92rem; }
+    }
+
     /* Recogida manual con el boton de flechas: mismo look que el breakpoint de abajo.
        Selector compuesto (.sidebar.sidebar--colapsada) a proposito: necesita mas
        especificidad que la regla base .sidebar para ganarle sin depender del orden
@@ -208,13 +233,37 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     }
   `]
 })
-export class AppShellComponent {
+export class AppShellComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
 
   readonly usuario = this.authService.currentUser;
   readonly navItems = computed<NavItem[]>(() => NAV_POR_ROL[this.usuario()?.rol ?? ''] ?? []);
 
   readonly colapsada = signal(localStorage.getItem(CLAVE_COLAPSADA) === 'true');
+
+  /** Reloj en vivo del topbar: un signal con la hora actual, refrescado cada segundo. */
+  readonly ahora = signal(new Date());
+  private intervaloReloj?: ReturnType<typeof setInterval>;
+
+  readonly primerNombre = computed(() => this.usuario()?.nombre?.split(' ')[0] ?? '');
+  readonly horaActual = computed(() =>
+    this.ahora().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+  readonly fechaHoy = computed(() =>
+    this.ahora().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }));
+  readonly saludo = computed(() => {
+    const hora = this.ahora().getHours();
+    if (hora < 12) return 'Buenos días';
+    if (hora < 19) return 'Buenas tardes';
+    return 'Buenas noches';
+  });
+
+  ngOnInit(): void {
+    this.intervaloReloj = setInterval(() => this.ahora.set(new Date()), 1000);
+  }
+
+  ngOnDestroy(): void {
+    clearInterval(this.intervaloReloj);
+  }
 
   iniciales(nombre: string): string {
     return inicialesDe(nombre);
