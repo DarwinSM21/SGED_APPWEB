@@ -7,7 +7,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.academico.representante.dto.InformeDtos.*;
+import org.uteq.backend.academico.representante.dto.NotificacionDtos.*;
 import org.uteq.backend.academico.representante.service.InformeService;
+import org.uteq.backend.academico.representante.service.NotificacionService;
 
 import java.util.List;
 
@@ -32,6 +34,7 @@ import java.util.List;
 public class InformeRepresentanteController {
 
     private final InformeService informeService;
+    private final NotificacionService notificacionService;
 
     @GetMapping("/estudiantes")
     @Transactional(readOnly = true)
@@ -43,6 +46,26 @@ public class InformeRepresentanteController {
     @Transactional(readOnly = true)
     public ResponseEntity<InformeEstudianteResponse> informe(@PathVariable Long idEstudiante) {
         return ResponseEntity.ok(informeService.informeDe(usernameAutenticado(), idEstudiante));
+    }
+
+    /** RF-22: notificaciones en-app, mas recientes primero. */
+    @GetMapping("/notificaciones")
+    @Transactional(readOnly = true)
+    public ResponseEntity<List<NotificacionResponse>> misNotificaciones() {
+        return ResponseEntity.ok(notificacionService.misNotificaciones(usernameAutenticado()));
+    }
+
+    @GetMapping("/notificaciones/no-leidas")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ConteoNoLeidasResponse> conteoNoLeidas() {
+        return ResponseEntity.ok(new ConteoNoLeidasResponse(notificacionService.conteoNoLeidas(usernameAutenticado())));
+    }
+
+    @PostMapping("/notificaciones/{idNotificacion}/leida")
+    @Transactional
+    public ResponseEntity<Void> marcarLeida(@PathVariable Long idNotificacion) {
+        notificacionService.marcarLeida(usernameAutenticado(), idNotificacion);
+        return ResponseEntity.noContent().build();
     }
 
     private String usernameAutenticado() {

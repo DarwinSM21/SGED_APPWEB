@@ -513,17 +513,20 @@ Esquema: vista `deportivo.v_promedio_evaluacion`.
 
 ---
 
-**RF-22 — Notificación a representantes** 🟡 Modelo de datos resuelto, notificación pendiente
+**RF-22 — Notificación a representantes** ✅ Implementado (2026-08-09)
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*
 El rol REPRESENTANTE, el vínculo con sus representados y la tabla de
 consentimientos que este requisito exige como precondición (hallazgo H-04 de
-`docs/etica/ETHICS.md`) ya existen (2026-08-03). El representante puede
-consultar informes de lectura de sus representados (evaluación y lesiones).
-Lo que sigue sin implementar es el envío proactivo de la notificación en sí
-(push/email/SMS) cuando el estudiante marca asistencia o se le registra una
-lesión — esa parte queda deliberadamente para una siguiente iteración, ya
-gateada por el consentimiento que este mismo cambio dejó listo.
+`docs/etica/ETHICS.md`) existen desde 2026-08-03. La notificación en sí es
+**en-app** (tabla `academico.notificaciones`, `NotificacionService`): al
+marcar asistencia (`AsistenciaService.marcarPorQr`) o registrar una lesión
+(`LesionService.registrar`) se crea una fila por cada representante con
+vínculo activo, visible en `GET /api/representante/notificaciones` y
+marcable como leída. No es correo/SMS/push — este proyecto no tiene
+infraestructura de envío externo, y agregarla requeriría credenciales que
+nadie tiene todavía; una notificación en-app satisface el requisito sin
+esa dependencia.
 
 > **Precisión sobre "sin esquema" (2026-07-30).** Existe un paquete
 > `academico.representante` en el código (`RepresentanteController` y sus

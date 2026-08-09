@@ -29,3 +29,14 @@ export interface InformeEstudiante {
   /** Ultimos 30 dias; null si su categoria no tuvo sesiones programadas en ese rango. */
   porcentajeAsistencia: number | null;
 }
+
+/** Espeja NotificacionDtos.NotificacionResponse del backend (RF-22). */
+export interface Notificacion {
+  idNotificacion: number;
+  idEstudiante: number;
+  estudiante: string;
+  tipo: 'ASISTENCIA' | 'LESION';
+  mensaje: string;
+  leida: boolean;
+  creadaEn: string;
+}

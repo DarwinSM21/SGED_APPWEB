@@ -1,7 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RepresentanteService } from './representante.service';
-import { EstudianteResumen, InformeEstudiante } from './representante.models';
+import { EstudianteResumen, InformeEstudiante, Notificacion } from './representante.models';
 import { inicialesDe } from '../entrenador/plantilla.models';
 
 /**
@@ -17,6 +17,33 @@ import { inicialesDe } from '../entrenador/plantilla.models';
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Mis representados</h1>
+
+      @if (notificaciones().length > 0) {
+        <div class="card panel-notificaciones">
+          <div class="panel-notificaciones__cabecera">
+            <h2>Notificaciones</h2>
+            @if (noLeidas() > 0) {
+              <span class="badge badge--warning">{{ noLeidas() }} sin leer</span>
+            }
+          </div>
+          @for (n of notificaciones(); track n.idNotificacion) {
+            <button type="button" class="notificacion-fila" [class.no-leida]="!n.leida" (click)="marcarLeida(n)">
+              <span class="notificacion-icono" [class.notificacion-icono--lesion]="n.tipo === 'LESION'">
+                @if (n.tipo === 'LESION') {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                } @else {
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                }
+              </span>
+              <span class="notificacion-texto">
+                <span class="notificacion-mensaje">{{ n.mensaje }}</span>
+                <span class="notificacion-fecha">{{ n.creadaEn | date: 'medium' }}</span>
+              </span>
+              @if (!n.leida) { <span class="punto-no-leida" title="Sin leer"></span> }
+            </button>
+          }
+        </div>
+      }
 
       @if (cargando()) {
         <p class="aviso">Cargando…</p>
@@ -102,6 +129,29 @@ import { inicialesDe } from '../entrenador/plantilla.models';
 
     .aviso { color: var(--color-text-muted); font-size: .9rem; }
 
+    .panel-notificaciones { padding: 1.1rem 1.25rem; margin-bottom: 1.1rem; max-height: 280px; overflow-y: auto; }
+    .panel-notificaciones__cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
+    .panel-notificaciones__cabecera h2 { font-size: .95rem; }
+    .notificacion-fila {
+      display: flex; align-items: center; gap: .7rem; width: 100%; padding: .6rem .5rem;
+      border: none; border-top: 1px solid var(--color-border-light); background: none; cursor: pointer;
+      text-align: left; font: inherit; color: inherit; transition: background var(--transition);
+    }
+    .notificacion-fila:first-of-type { border-top: none; }
+    .notificacion-fila:hover { background: var(--color-neutral-bg); }
+    .notificacion-fila.no-leida { background: var(--color-primary-50); }
+    .notificacion-icono {
+      width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--color-success-bg); color: var(--color-success);
+    }
+    .notificacion-icono--lesion { background: var(--color-danger-bg); color: var(--color-danger); }
+    .notificacion-icono svg { width: 17px; height: 17px; }
+    .notificacion-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: .1rem; }
+    .notificacion-mensaje { font-size: .87rem; }
+    .notificacion-fecha { font-size: .75rem; color: var(--color-text-faint); }
+    .punto-no-leida { width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary-500); flex-shrink: 0; }
+
     .vacio { display: flex; flex-direction: column; align-items: center; gap: .65rem; text-align: center; color: var(--color-text-faint); padding: 2.5rem 1rem; }
     .vacio svg { width: 34px; height: 34px; opacity: .6; }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); }
@@ -159,6 +209,9 @@ export class RepresentanteComponent implements OnInit {
   readonly informe = signal<InformeEstudiante | null>(null);
   readonly cargandoInforme = signal(false);
 
+  readonly notificaciones = signal<Notificacion[]>([]);
+  readonly noLeidas = computed(() => this.notificaciones().filter((n) => !n.leida).length);
+
   ngOnInit(): void {
     this.servicio.misRepresentados().subscribe({
       next: (representados) => {
@@ -173,6 +226,19 @@ export class RepresentanteComponent implements OnInit {
         this.error.set('No se pudo cargar la lista de representados.');
       },
     });
+
+    this.servicio.misNotificaciones().subscribe({
+      next: (notificaciones) => this.notificaciones.set(notificaciones),
+      error: () => {},
+    });
+  }
+
+  /** Marcar como leida es "al tocarla": no hace falta un boton aparte para algo tan liviano. */
+  marcarLeida(n: Notificacion): void {
+    if (n.leida) return;
+    this.notificaciones.update((actuales) =>
+      actuales.map((x) => (x.idNotificacion === n.idNotificacion ? { ...x, leida: true } : x)));
+    this.servicio.marcarLeida(n.idNotificacion).subscribe({ error: () => {} });
   }
 
   seleccionar(idEstudiante: number): void {

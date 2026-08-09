@@ -20,6 +20,9 @@ public interface RepresentanteEstudianteRepository extends JpaRepository<Represe
 
     List<RepresentanteEstudiante> findByRepresentante_IdRepresentanteAndActivoTrue(Long idRepresentante);
 
+    /** Los representantes vigentes de un estudiante (puede tener mas de uno: madre y padre, por ejemplo). */
+    List<RepresentanteEstudiante> findByEstudiante_IdEstudianteAndActivoTrue(Long idEstudiante);
+
     Optional<RepresentanteEstudiante> findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(
             Long idRepresentante, Long idEstudiante);
 

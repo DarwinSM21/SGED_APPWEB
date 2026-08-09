@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.service.NotificacionService;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -29,6 +30,7 @@ public class LesionService {
     private final LesionRepository lesionRepository;
     private final EstudianteRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
+    private final NotificacionService notificacionService;
 
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
@@ -56,13 +58,15 @@ public class LesionService {
                     "La fecha estimada de retorno no puede ser anterior a la de la lesion");
         }
 
-        return lesionRepository.save(Lesion.builder()
+        Lesion lesion = lesionRepository.save(Lesion.builder()
                 .estudiante(estudiante)
                 .entrenador(entrenador)
                 .descripcion(descripcion)
                 .fechaLesion(fecha)
                 .fechaEstimadaRetorno(fechaEstimadaRetorno)
                 .build());
+        notificacionService.notificarLesion(estudiante, descripcion);
+        return lesion;
     }
 
     /** Cierra una lesion: el jugador vuelve a entrar en las plantillas. */

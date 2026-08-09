@@ -32,6 +32,15 @@ import { MarcarAsistenciaResponse } from './marcar-asistencia.models';
           <p class="resultado__detalle">Tu asistencia quedó registrada.</p>
           <button class="btn btn--secondary" (click)="reiniciar()">Escanear otro código</button>
         </div>
+      } @else if (fallo(); as mensaje) {
+        <div class="card resultado resultado--fallo">
+          <span class="resultado__icono resultado__icono--fallo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+          </span>
+          <p class="resultado__estado">No se pudo marcar</p>
+          <p class="resultado__detalle">{{ mensaje }}</p>
+          <button class="btn btn--secondary" (click)="reintentar()">Reintentar</button>
+        </div>
       } @else {
         <div class="card camara-tarjeta">
           <div class="camara-envoltura" [class.oculta]="!camaraActiva()">
@@ -89,6 +98,7 @@ import { MarcarAsistenciaResponse } from './marcar-asistencia.models';
       display: flex; align-items: center; justify-content: center; margin-bottom: .5rem;
     }
     .resultado--tarde .resultado__icono { background: var(--color-warning-bg); color: var(--color-warning); }
+    .resultado__icono--fallo { background: var(--color-danger-bg); color: var(--color-danger); }
     .resultado__icono svg { width: 30px; height: 30px; }
     .resultado__estado { font-size: 1.2rem; font-weight: 700; }
     .resultado__detalle { color: var(--color-text-muted); font-size: .88rem; margin-bottom: 1rem; }
@@ -104,12 +114,14 @@ export class MarcarAsistenciaComponent implements OnDestroy {
   readonly enviando = signal(false);
   readonly error = signal('');
   readonly resultado = signal<MarcarAsistenciaResponse | null>(null);
+  readonly fallo = signal<string | null>(null);
 
   private stream: MediaStream | null = null;
   private cuadroAnimacion = 0;
 
   async iniciarCamara(): Promise<void> {
     this.error.set('');
+    this.fallo.set(null);
     try {
       this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       this.videoRef.nativeElement.srcObject = this.stream;
@@ -158,10 +170,18 @@ export class MarcarAsistenciaComponent implements OnDestroy {
       },
       error: (err) => {
         this.enviando.set(false);
-        this.error.set(this.mensajeDeError(err.status));
-        this.iniciarCamara();
+        // No se reactiva la camara aqui: si el QR sigue a la vista, jsQR lo
+        // volveria a leer en el siguiente cuadro y dispararia el mismo error
+        // en loop antes de que el estudiante alcance a leerlo. Se queda en
+        // esta pantalla de fallo hasta que el toca "Reintentar" a proposito.
+        this.fallo.set(this.mensajeDeError(err.status));
       },
     });
+  }
+
+  reintentar(): void {
+    this.fallo.set(null);
+    this.iniciarCamara();
   }
 
   reiniciar(): void {

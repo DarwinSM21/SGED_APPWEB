@@ -8,6 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.service.NotificacionService;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -28,6 +29,7 @@ class LesionServiceTest {
     @Mock private LesionRepository lesionRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private EntrenadorRepository entrenadorRepository;
+    @Mock private NotificacionService notificacionService;
 
     @InjectMocks private LesionService servicio;
 
