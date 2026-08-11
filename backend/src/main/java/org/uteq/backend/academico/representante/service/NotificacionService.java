@@ -1,6 +1,8 @@
 package org.uteq.backend.academico.representante.service;
 
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
@@ -32,21 +34,59 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificacionService {
 
+    private static final Logger log = LoggerFactory.getLogger(NotificacionService.class);
+
     private final NotificacionRepository notificacionRepository;
     private final RepresentanteEstudianteRepository vinculoRepository;
     private final RepresentanteRepository representanteRepository;
 
     @Transactional
     public void notificarAsistencia(Estudiante estudiante, String estadoAsistencia) {
-        String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
-        crearParaCadaRepresentante(estudiante, Tipo.ASISTENCIA,
-                nombreCompleto(estudiante) + " marcó asistencia hoy (" + estado + ").");
+        sinTumbarElFlujoPrincipal("asistencia", () -> {
+            String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
+            crearParaCadaRepresentante(estudiante, Tipo.ASISTENCIA,
+                    nombreCompleto(estudiante) + " marcó asistencia hoy (" + estado + ").");
+        });
     }
 
     @Transactional
     public void notificarLesion(Estudiante estudiante, String descripcionLesion) {
-        crearParaCadaRepresentante(estudiante, Tipo.LESION,
-                "Se registró una lesión para " + nombreCompleto(estudiante) + ": " + descripcionLesion);
+        sinTumbarElFlujoPrincipal("lesion", () ->
+                crearParaCadaRepresentante(estudiante, Tipo.LESION,
+                        "Se registró una lesión para " + nombreCompleto(estudiante) + ": " + descripcionLesion));
+    }
+
+    /**
+     * Ejecuta el efecto de notificacion sin dejar que su fallo se propague.
+     *
+     * <p>La captura tiene que estar <b>aqui dentro</b> y no en quien llama.
+     * Estos metodos son {@code @Transactional} y se invocan desde
+     * {@code AsistenciaService}/{@code LesionService}, que ya estan dentro de
+     * una transaccion: con propagacion REQUIRED se unen a la misma. Si la
+     * excepcion saliera del metodo, el proxy de Spring marcaria la
+     * transaccion como {@code rollback-only} y el {@code try/catch} del
+     * llamador no serviria de nada -al confirmar saltaria
+     * {@code UnexpectedRollbackException} y se perderia la asistencia que el
+     * estudiante ya habia marcado-.
+     *
+     * <p>Limite conocido: esto cubre los fallos de nivel de aplicacion, que
+     * son los realistas aqui (un estudiante sin persona asociada, un vinculo
+     * inconsistente). Un fallo de nivel de base -por ejemplo, violacion de
+     * clave foranea al insertar- aborta la transaccion en el propio
+     * PostgreSQL y ya no hay captura en Java que la rescate. Aislarlo por
+     * completo exigiria mover esto a REQUIRES_NEW o a un
+     * {@code @TransactionalEventListener(AFTER_COMMIT)}; se deja anotado
+     * como trabajo futuro y no se hace ahora para no reestructurar un flujo
+     * ya probado.
+     */
+    private void sinTumbarElFlujoPrincipal(String contexto, Runnable efecto) {
+        try {
+            efecto.run();
+        } catch (RuntimeException e) {
+            log.warn("No se pudo notificar a los representantes ({}): {}. "
+                            + "El registro principal se conserva.",
+                    contexto, e.getClass().getSimpleName());
+        }
     }
 
     @Transactional(readOnly = true)
