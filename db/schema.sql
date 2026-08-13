@@ -10,6 +10,8 @@ CREATE SCHEMA IF NOT EXISTS deportivo;
 
 CREATE SCHEMA IF NOT EXISTS seguridad;
 
+CREATE SCHEMA IF NOT EXISTS inventario;
+
 CREATE TABLE IF NOT EXISTS seguridad.estados_general (
     id_estado_general BIGSERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL
@@ -149,13 +151,33 @@ INSERT INTO deportivo.posiciones (nombre, abreviatura, descripcion) VALUES
 ON CONFLICT (nombre) DO NOTHING;
 
 -- ------------------------------------------------------------
+-- Especialidades de entrenador (catalogo, reemplaza el texto libre)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS deportivo.especialidades (
+    id_especialidad BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL UNIQUE,
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO deportivo.especialidades (nombre) VALUES
+    ('Preparador físico'),
+    ('Técnico'),
+    ('Táctico'),
+    ('Porteros'),
+    ('Fuerza y acondicionamiento'),
+    ('Físico')
+ON CONFLICT (nombre) DO NOTHING;
+
+-- ------------------------------------------------------------
 -- Entrenadores (vinculados a personas del esquema seguridad)
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS deportivo.entrenadores (
     id_entrenador BIGSERIAL PRIMARY KEY,
     id_persona BIGINT NOT NULL UNIQUE REFERENCES seguridad.personas(id_persona),
     id_usuario BIGINT NOT NULL UNIQUE REFERENCES seguridad.usuarios(id_usuario),
-    especialidad VARCHAR(150),
+    id_especialidad BIGINT REFERENCES deportivo.especialidades(id_especialidad),
     experiencia_anios SMALLINT,
     certificacion VARCHAR(255),
     activo BOOLEAN NOT NULL DEFAULT TRUE,
@@ -913,3 +935,159 @@ CREATE TABLE IF NOT EXISTS academico.notificaciones (
 
 CREATE INDEX IF NOT EXISTS idx_notificaciones_representante
     ON academico.notificaciones(id_representante, created_at DESC);
+
+-- ============================================================
+-- V15: Modulo Inventario (RF-27 a RF-30)
+--
+-- Cierra el schema "inventario" que ADR-003 dejo reservado como diseno a
+-- futuro. Stock por cantidad agregada: cada articulo tiene un
+-- stock_actual que los movimientos y las asignaciones ajustan.
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION inventario.set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TABLE IF NOT EXISTS inventario.articulos (
+    id_articulo BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    tipo VARCHAR(20) NOT NULL CHECK (tipo IN ('UNIFORME', 'BALON', 'IMPLEMENTO', 'OTRO')),
+    talla VARCHAR(20),
+    descripcion VARCHAR(255),
+    stock_actual INTEGER NOT NULL DEFAULT 0 CHECK (stock_actual >= 0),
+    stock_minimo INTEGER NOT NULL DEFAULT 0 CHECK (stock_minimo >= 0),
+    unidad_medida VARCHAR(20) NOT NULL DEFAULT 'unidad',
+    activo BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TRIGGER trg_articulos_updated_at
+BEFORE UPDATE ON inventario.articulos
+FOR EACH ROW EXECUTE FUNCTION inventario.set_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_articulos_tipo ON inventario.articulos(tipo);
+
+CREATE TABLE IF NOT EXISTS inventario.movimientos_stock (
+    id_movimiento BIGSERIAL PRIMARY KEY,
+    id_articulo BIGINT NOT NULL REFERENCES inventario.articulos(id_articulo),
+    tipo_movimiento VARCHAR(10) NOT NULL CHECK (tipo_movimiento IN ('ENTRADA', 'SALIDA', 'AJUSTE')),
+    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+    motivo VARCHAR(255),
+    registrado_por_id_usuario BIGINT NOT NULL REFERENCES seguridad.usuarios(id_usuario),
+    fecha_movimiento TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_movimientos_articulo
+    ON inventario.movimientos_stock(id_articulo, fecha_movimiento DESC);
+
+CREATE TABLE IF NOT EXISTS inventario.asignaciones (
+    id_asignacion BIGSERIAL PRIMARY KEY,
+    id_articulo BIGINT NOT NULL REFERENCES inventario.articulos(id_articulo),
+    cantidad INTEGER NOT NULL CHECK (cantidad > 0),
+    tipo_destinatario VARCHAR(15) NOT NULL CHECK (tipo_destinatario IN ('ESTUDIANTE', 'ENTRENADOR')),
+    id_estudiante BIGINT REFERENCES academico.estudiantes(id_estudiante),
+    id_entrenador BIGINT REFERENCES deportivo.entrenadores(id_entrenador),
+    fecha_asignacion DATE NOT NULL DEFAULT CURRENT_DATE,
+    fecha_devolucion_esperada DATE,
+    fecha_devolucion_real DATE,
+    estado VARCHAR(15) NOT NULL DEFAULT 'ASIGNADO' CHECK (estado IN ('ASIGNADO', 'DEVUELTO', 'PERDIDO')),
+    registrado_por_id_usuario BIGINT NOT NULL REFERENCES seguridad.usuarios(id_usuario),
+    observaciones VARCHAR(255),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_asignacion_destinatario CHECK (
+        (tipo_destinatario = 'ESTUDIANTE' AND id_estudiante IS NOT NULL AND id_entrenador IS NULL)
+        OR (tipo_destinatario = 'ENTRENADOR' AND id_entrenador IS NOT NULL AND id_estudiante IS NULL)
+    )
+);
+
+CREATE TRIGGER trg_asignaciones_updated_at
+BEFORE UPDATE ON inventario.asignaciones
+FOR EACH ROW EXECUTE FUNCTION inventario.set_updated_at();
+
+CREATE INDEX IF NOT EXISTS idx_asignaciones_estudiante
+    ON inventario.asignaciones(id_estudiante) WHERE id_estudiante IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_asignaciones_entrenador
+    ON inventario.asignaciones(id_entrenador) WHERE id_entrenador IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_asignaciones_estado
+    ON inventario.asignaciones(estado);
+
+CREATE OR REPLACE PROCEDURE inventario.sp_reporte_stock_bajo(
+    OUT total_bajo_stock BIGINT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    SELECT COUNT(*)
+      INTO total_bajo_stock
+      FROM inventario.articulos
+     WHERE activo = TRUE
+       AND stock_actual <= stock_minimo;
+END;
+$$;
+
+-- ============================================================
+-- V16: Documenta el esquema de equipos/partidos/ejercicios que ya
+-- existia fuera de control de versiones (descubierto 2026-08-12 al
+-- reconciliar el modulo Inventario). Sin entidades JPA ni API REST
+-- todavia -- planificado, ver docs/requisitos/SRS.md. Completa en la
+-- base de datos la limpieza de 2026-07-30 que solo elimino el paquete
+-- Java vacio EquipoController (ver docs/trazabilidad/matriz.csv).
+-- ============================================================
+
+CREATE TABLE IF NOT EXISTS deportivo.ejercicios (
+    id_ejercicio BIGSERIAL PRIMARY KEY,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    duracion_min SMALLINT NOT NULL,
+    nivel VARCHAR(50)
+);
+
+CREATE TABLE IF NOT EXISTS deportivo.entrenamiento_ejercicios (
+    id_entrenamiento_ejercicio BIGSERIAL PRIMARY KEY,
+    id_sesion_entrenamiento BIGINT REFERENCES deportivo.sesiones_entrenamiento(id_sesion),
+    id_ejercicio BIGINT REFERENCES deportivo.ejercicios(id_ejercicio),
+    observaciones TEXT
+);
+
+CREATE TABLE IF NOT EXISTS deportivo.equipos (
+    id_equipo BIGSERIAL PRIMARY KEY,
+    id_categoria BIGINT REFERENCES deportivo.categorias(id_categoria),
+    id_estado_general BIGINT REFERENCES seguridad.estados_general(id_estado_general),
+    nombre_equipo VARCHAR(100) NOT NULL,
+    siglas VARCHAR(10),
+    logo_url TEXT,
+    activo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- id_equipo_local / id_equipo_visitante SIN foreign key hacia
+-- deportivo.equipos: asi esta la tabla real, se documenta tal cual.
+CREATE TABLE IF NOT EXISTS deportivo.partidos (
+    id_partido BIGSERIAL PRIMARY KEY,
+    id_equipo_local BIGINT,
+    id_equipo_visitante BIGINT,
+    fecha_partido DATE NOT NULL,
+    ubicacion VARCHAR(255),
+    goles_local SMALLINT DEFAULT 0,
+    goles_visitante SMALLINT DEFAULT 0
+);
+
+-- id_estudiante SIN foreign key hacia academico.estudiantes: mismo caso.
+CREATE TABLE IF NOT EXISTS deportivo.estadistica_partidos (
+    id_estadistica_partido BIGSERIAL PRIMARY KEY,
+    id_partido BIGINT REFERENCES deportivo.partidos(id_partido),
+    id_estudiante BIGINT,
+    goles SMALLINT DEFAULT 0,
+    asistencias SMALLINT DEFAULT 0,
+    tarjetas_amarillas SMALLINT DEFAULT 0,
+    tarjetas_rojas SMALLINT DEFAULT 0,
+    minutos_jugados SMALLINT DEFAULT 0
+);

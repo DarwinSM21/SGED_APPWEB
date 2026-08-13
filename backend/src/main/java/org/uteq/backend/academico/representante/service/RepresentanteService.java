@@ -11,6 +11,7 @@ import org.uteq.backend.academico.representante.dto.RepresentantePageResponse;
 import org.uteq.backend.academico.representante.dto.RepresentanteRequest;
 import org.uteq.backend.academico.representante.dto.RepresentanteResponse;
 import org.uteq.backend.academico.representante.dto.RepresentanteResponse.EstudianteVinculadoResponse;
+import org.uteq.backend.academico.representante.dto.VinculoRequest;
 import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.entity.RepresentanteEstudiante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
@@ -68,6 +69,13 @@ public class RepresentanteService {
         Usuario usuario = usuarioRepository.findById(request.idUsuario())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + request.idUsuario()));
 
+        boolean tieneRolRepresentante = usuario.getRoles().stream()
+                .anyMatch(r -> "REPRESENTANTE".equals(r.getNombre()));
+        if (!tieneRolRepresentante) {
+            throw new IllegalArgumentException(
+                    "El usuario debe tener el rol REPRESENTANTE para registrarse como representante");
+        }
+
         Representante representante = Representante.builder()
                 .persona(persona)
                 .usuario(usuario)
@@ -106,10 +114,12 @@ public class RepresentanteService {
     }
 
     @Transactional
-    public RepresentanteResponse vincularEstudiante(Long idRepresentante, Long idEstudiante) {
+    public RepresentanteResponse vincularEstudiante(Long idRepresentante, Long idEstudiante, VinculoRequest request) {
         Representante representante = representanteRepository.findById(idRepresentante)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + idRepresentante));
-        vincular(representante, idEstudiante);
+        String relacion = request == null ? null : request.relacion();
+        boolean contactoPrincipal = request != null && Boolean.TRUE.equals(request.contactoPrincipal());
+        vincular(representante, idEstudiante, relacion, contactoPrincipal);
         return toResponse(representante);
     }
 
@@ -124,20 +134,41 @@ public class RepresentanteService {
     }
 
     private void vincular(Representante representante, Long idEstudiante) {
+        vincular(representante, idEstudiante, null, false);
+    }
+
+    private void vincular(Representante representante, Long idEstudiante,
+                          String relacion, boolean contactoPrincipal) {
         Estudiante estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante));
+
+        // Un estudiante tiene un solo contacto principal: designar uno nuevo
+        // desplaza al anterior en vez de dejar dos marcados.
+        if (contactoPrincipal) {
+            vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(idEstudiante).stream()
+                    .filter(v -> !v.getRepresentante().getIdRepresentante().equals(representante.getIdRepresentante()))
+                    .filter(v -> Boolean.TRUE.equals(v.getContactoPrincipal()))
+                    .forEach(v -> {
+                        v.setContactoPrincipal(false);
+                        vinculoRepository.save(v);
+                    });
+        }
 
         vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(
                         representante.getIdRepresentante(), idEstudiante)
                 .ifPresentOrElse(
                         existente -> {
                             existente.setActivo(true);
+                            existente.setRelacion(relacion);
+                            existente.setContactoPrincipal(contactoPrincipal);
                             vinculoRepository.save(existente);
                         },
                         () -> vinculoRepository.save(RepresentanteEstudiante.builder()
                                 .representante(representante)
                                 .estudiante(estudiante)
                                 .activo(true)
+                                .relacion(relacion)
+                                .contactoPrincipal(contactoPrincipal)
                                 .build())
                 );
     }
@@ -148,7 +179,9 @@ public class RepresentanteService {
                         .map(v -> new EstudianteVinculadoResponse(
                                 v.getEstudiante().getIdEstudiante(),
                                 v.getEstudiante().getPersona().getNombre() + " " + v.getEstudiante().getPersona().getApellido(),
-                                v.getEstudiante().getCategoria().getNombre()))
+                                v.getEstudiante().getCategoria().getNombre(),
+                                v.getRelacion(),
+                                v.getContactoPrincipal()))
                         .toList();
 
         return new RepresentanteResponse(

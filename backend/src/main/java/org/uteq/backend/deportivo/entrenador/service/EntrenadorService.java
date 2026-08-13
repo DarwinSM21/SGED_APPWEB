@@ -14,6 +14,8 @@ import org.uteq.backend.deportivo.entrenador.dto.EntrenadorRequest;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorResponse;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
+import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -26,6 +28,7 @@ public class EntrenadorService {
     private final EntrenadorRepository entrenadorRepository;
     private final PersonaRepository personaRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EspecialidadRepository especialidadRepository;
 
     @Cacheable(value = RedisCacheConfig.CACHE_ENTRENADORES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
@@ -64,10 +67,17 @@ public class EntrenadorService {
         Usuario usuario = usuarioRepository.findById(request.idUsuario())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + request.idUsuario()));
 
+        boolean tieneRolEntrenador = usuario.getRoles().stream()
+                .anyMatch(r -> "ENTRENADOR".equals(r.getNombre()));
+        if (!tieneRolEntrenador) {
+            throw new IllegalArgumentException(
+                    "El usuario debe tener el rol ENTRENADOR para registrarse como entrenador");
+        }
+
         Entrenador entrenador = Entrenador.builder()
                 .persona(persona)
                 .usuario(usuario)
-                .especialidad(request.especialidad())
+                .especialidad(resolverEspecialidad(request.idEspecialidad()))
                 .experienciaAnios(request.experienciaAnios())
                 .certificacion(request.certificacion())
                 .activo(true)
@@ -83,7 +93,7 @@ public class EntrenadorService {
         Entrenador entrenador = entrenadorRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
 
-        entrenador.setEspecialidad(request.especialidad());
+        entrenador.setEspecialidad(resolverEspecialidad(request.idEspecialidad()));
         entrenador.setExperienciaAnios(request.experienciaAnios());
         entrenador.setCertificacion(request.certificacion());
 
@@ -100,6 +110,12 @@ public class EntrenadorService {
         entrenadorRepository.save(entrenador);
     }
 
+    private Especialidad resolverEspecialidad(Long idEspecialidad) {
+        if (idEspecialidad == null) return null;
+        return especialidadRepository.findById(idEspecialidad)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Especialidad no encontrada con id: " + idEspecialidad));
+    }
+
     private EntrenadorResponse toResponse(Entrenador e) {
         return new EntrenadorResponse(
                 e.getIdEntrenador(),
@@ -111,7 +127,8 @@ public class EntrenadorService {
                 e.getPersona().getTelefono(),
                 e.getUsuario().getIdUsuario(),
                 e.getUsuario().getUsername(),
-                e.getEspecialidad(),
+                e.getEspecialidad() != null ? e.getEspecialidad().getIdEspecialidad() : null,
+                e.getEspecialidad() != null ? e.getEspecialidad().getNombre() : null,
                 e.getExperienciaAnios(),
                 e.getCertificacion(),
                 e.getActivo(),

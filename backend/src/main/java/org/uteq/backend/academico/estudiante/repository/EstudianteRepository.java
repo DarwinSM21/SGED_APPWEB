@@ -19,6 +19,9 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     boolean existsByPersona_IdPersona(Long idPersona);
 
+    /** Coherencia rol-ficha: solo una ficha vigente condiciona el rol de la cuenta. */
+    boolean existsByPersona_IdPersonaAndActivoTrue(Long idPersona);
+
     boolean existsByCodigoEstudiante(String codigoEstudiante);
 
     Optional<Estudiante> findByPersona_IdPersona(Long idPersona);

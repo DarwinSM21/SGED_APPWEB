@@ -53,7 +53,7 @@ class UsuarioControllerTest {
 
     private UsuarioResponse respuesta() {
         return new UsuarioResponse(1L, 1L, "Ana", "Torres", "ana@sged.test", 1L, "ACTIVO",
-                "ana.torres", null, true, OffsetDateTime.now());
+                "ana.torres", List.of(), null, true, OffsetDateTime.now());
     }
 
     @Test

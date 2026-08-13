@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 public record EntrenadorRequest(
         @NotNull(message = "El ID de persona es obligatorio") Long idPersona,
         @NotNull(message = "El ID de usuario es obligatorio") Long idUsuario,
-        String especialidad,
+        Long idEspecialidad,
         @Min(value = 0, message = "Años de experiencia no pueden ser negativos") Short experienciaAnios,
         String certificacion
 ) {}

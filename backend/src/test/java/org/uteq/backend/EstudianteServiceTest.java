@@ -37,6 +37,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -174,6 +175,42 @@ class EstudianteServiceTest {
         when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.of(estudianteDummy));
 
         assertThrows(IllegalArgumentException.class, () -> service.crear(request));
+    }
+
+    @Test
+    @DisplayName("crear - Lanza IllegalArgumentException si la persona ya tiene cuenta con otro rol")
+    void crear_persona_con_cuenta_de_otro_rol_lanza_excepcion() {
+        EstudianteRequest request = crearRequestValido();
+        Usuario cuentaEntrenador = Usuario.builder()
+                .idUsuario(9L)
+                .username("otro.rol")
+                .roles(Set.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()))
+                .build();
+        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
+
+        assertThrows(IllegalArgumentException.class, () -> service.crear(request));
+
+        verify(estudianteRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("crear - Acepta a la persona cuya cuenta ya tiene rol ESTUDIANTE")
+    void crear_persona_con_cuenta_de_estudiante_pasa() {
+        EstudianteRequest request = crearRequestValido();
+        Usuario cuentaEstudiante = Usuario.builder()
+                .idUsuario(9L)
+                .username("ana.e")
+                .roles(Set.of(Rol.builder().idRol(5L).nombre("ESTUDIANTE").build()))
+                .build();
+        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
+        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
+        when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
+        when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertNotNull(service.crear(request));
     }
 
     @Test

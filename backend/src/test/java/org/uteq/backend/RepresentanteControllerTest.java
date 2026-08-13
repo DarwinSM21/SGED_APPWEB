@@ -24,6 +24,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -105,7 +106,18 @@ class RepresentanteControllerTest {
     @Test
     @DisplayName("POST /api/representantes/{id}/estudiantes/{idEstudiante} - vincula y devuelve 200")
     void vincularEstudiante_devuelve_200() throws Exception {
-        when(representanteService.vincularEstudiante(1L, 10L)).thenReturn(respuesta());
+        when(representanteService.vincularEstudiante(eq(1L), eq(10L), any())).thenReturn(respuesta());
+
+        mockMvc.perform(post("/api/representantes/1/estudiantes/10")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"relacion\":\"Madre\",\"contactoPrincipal\":true}"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("POST /api/representantes/{id}/estudiantes/{idEstudiante} - sin cuerpo tambien vincula")
+    void vincularEstudiante_sin_cuerpo_devuelve_200() throws Exception {
+        when(representanteService.vincularEstudiante(eq(1L), eq(10L), any())).thenReturn(respuesta());
 
         mockMvc.perform(post("/api/representantes/1/estudiantes/10"))
                 .andExpect(status().isOk());

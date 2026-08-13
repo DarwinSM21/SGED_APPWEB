@@ -22,4 +22,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByUsername(String username);
 
     boolean existsByPersona_IdPersona(Long idPersona);
+
+    /** Coherencia rol-ficha vista desde el otro lado: que rol tiene ya la cuenta de esta persona. */
+    @EntityGraph(attributePaths = {"roles"})
+    Optional<Usuario> findByPersona_IdPersonaAndActivoTrue(Long idPersona);
 }

@@ -4,7 +4,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { inicialesDe } from '../features/entrenador/plantilla.models';
 
-type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago';
+type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago' | 'inventario';
 
 interface NavItem {
   etiqueta: string;
@@ -24,22 +24,24 @@ const CLAVE_COLAPSADA = 'sged.sidebar.colapsada';
 const NAV_POR_ROL: Record<string, NavItem[]> = {
   ADMINISTRADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
-    { etiqueta: 'Crear usuario', ruta: '/admin/crear-usuario', icono: 'usuario-mas' },
+    { etiqueta: 'Personas', ruta: '/personas', icono: 'usuario-mas' },
     { etiqueta: 'Recepción', ruta: '/recepcion', icono: 'qr' },
-    { etiqueta: 'Estudiantes', ruta: '/estudiantes/registrar', icono: 'familia' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
+    { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
   ],
   ENTRENADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Mis sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
+    { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
   ],
   USER: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
   ],
   RECEPCIONISTA: [
     { etiqueta: 'Mostrar QR', ruta: '/recepcion', icono: 'qr' },
-    { etiqueta: 'Estudiantes', ruta: '/estudiantes/registrar', icono: 'familia' },
+    { etiqueta: 'Personas', ruta: '/personas', icono: 'familia' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
+    { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
   ],
   REPRESENTANTE: [
     { etiqueta: 'Mis representados', ruta: '/representante', icono: 'familia' },
@@ -100,6 +102,9 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
                   }
                   @case ('pago') {
                     <rect x="2" y="5" width="20" height="14" rx="2" ry="2"></rect><line x1="2" y1="10" x2="22" y2="10"></line>
+                  }
+                  @case ('inventario') {
+                    <path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>
                   }
                 }
               </svg>

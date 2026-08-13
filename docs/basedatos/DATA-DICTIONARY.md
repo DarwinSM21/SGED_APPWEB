@@ -29,7 +29,8 @@ catálogo). Esta versión del documento refleja ese esquema.
   real, no un error de este documento.
 - Baja lógica: columna `activo BOOLEAN NOT NULL DEFAULT TRUE`.
 - Esquemas: `seguridad` (identidad y acceso), `academico` (estudiantes),
-  `deportivo` (operación deportiva).
+  `deportivo` (operación deportiva), `inventario` (artículos, stock y
+  asignaciones — migrado en `V15`, 2026-08-12).
 
 ---
 
@@ -162,7 +163,15 @@ de un representante (madre y padre, por ejemplo).
 | `id_representante` | BIGINT | No | FK → `academico.representantes` | — |
 | `id_estudiante` | BIGINT | No | FK → `academico.estudiantes` | — |
 | `activo` | BOOLEAN | No | DEFAULT TRUE, UNIQUE junto con las dos FK | Es el único dato que autoriza `GET /api/representante/estudiantes/{id}/informe` — no el consentimiento (ver más abajo). |
+| `relacion` | VARCHAR(50) | Sí | — | Parentesco **de este vínculo**, no del representante: la misma persona puede ser madre de un estudiante y tía de otro. |
+| `contacto_principal` | BOOLEAN | No | DEFAULT FALSE | A quién contactar primero (p. ej. notificación de lesión). Un solo vínculo activo por estudiante puede tenerlo en `TRUE`: designar uno nuevo desmarca al anterior (`RepresentanteService.vincular`). |
 | `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
+
+> **Actualizado 2026-08-12.** `relacion` y `contacto_principal` existían en
+> el esquema pero eran columnas muertas: el backend nunca las escribía ni
+> las devolvía. Ahora se cargan desde
+> `POST /api/representantes/{id}/estudiantes/{idEstudiante}` y viajan en
+> `RepresentanteResponse.representados`.
 
 ## `academico.consentimientos`
 
@@ -221,6 +230,24 @@ este documento.
 | `descripcion` | VARCHAR(255) | Sí | — | Descripción funcional. |
 | `activo` | BOOLEAN | No | DEFAULT TRUE | Baja lógica. |
 
+## `deportivo.especialidades` — **nueva tabla de esta entrega**
+Reemplaza el campo de texto libre `especialidad` de `entrenadores` por un
+catálogo normalizado — mismo criterio ya aplicado antes con
+`deportivo.categorias` para `academico.estudiantes.categoria`.
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_especialidad` | BIGSERIAL | No | PK | Identificador. |
+| `nombre` | VARCHAR(100) | No | UNIQUE | Nombre de la especialidad (p. ej. "Preparador físico"). |
+| `activo` | BOOLEAN | No | DEFAULT TRUE | Baja lógica. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
+
+Sembrada con 6 especialidades genéricas de fútbol formativo (Preparador
+físico, Técnico, Táctico, Porteros, Fuerza y acondicionamiento, Físico).
+Expuesta como recurso CRUD propio: `EspecialidadController`
+(`/api/especialidades`, 6 endpoints) — sin pantalla de gestión dedicada en
+el frontend por ahora, mismo criterio que `categorias`.
+
 ## `deportivo.entrenadores`
 Ahora vinculada también a una cuenta de usuario, no solo a una persona.
 
@@ -229,7 +256,7 @@ Ahora vinculada también a una cuenta de usuario, no solo a una persona.
 | `id_entrenador` | BIGSERIAL | No | PK | Identificador. |
 | `id_persona` | BIGINT | No | FK → `seguridad.personas`, UNIQUE | Persona. |
 | `id_usuario` | BIGINT | No | FK → `seguridad.usuarios`, UNIQUE | **Nuevo.** Cuenta de acceso asociada — antes un entrenador no tenía login propio necesariamente ligado 1:1. |
-| `especialidad` | VARCHAR(150) | Sí | — | Especialidad. |
+| `id_especialidad` | BIGINT | Sí | FK → `deportivo.especialidades` | **Cambio de tipo (2026-08-12):** antes `VARCHAR(150)` de texto libre; ahora clave foránea a un catálogo normalizado. |
 | `experiencia_anios` | SMALLINT | Sí | — | **Nuevo**, reemplaza a `fecha_contratacion`. |
 | `certificacion` | VARCHAR(255) | Sí | — | **Nuevo.** |
 | `activo` | BOOLEAN | No | DEFAULT TRUE | Baja lógica. |
@@ -331,6 +358,69 @@ el motor.
 | `fecha` | `evaluaciones_diarias.fecha` |
 | `promedio` | `ROUND(AVG(puntaje), 1)` |
 | `criterios_evaluados` | `COUNT(*)` |
+
+---
+
+# Esquema `inventario`
+
+Migrado en `V15__inventario.sql` (2026-08-12, RF-27 a RF-30). Stock por
+cantidad agregada: `articulos.stock_actual` es la única fuente de verdad
+del disponible, ajustada transaccionalmente por `movimientos_stock` y por
+`asignaciones` — nunca puede quedar negativa (`CHECK (stock_actual >= 0)`
+más la validación de servicio antes de escribir).
+
+## `inventario.articulos`
+Catálogo de artículos deportivos (uniformes, balones, implementos, otro).
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_articulo` | BIGSERIAL | No | PK | Identificador. |
+| `nombre` | VARCHAR(150) | No | — | Nombre del artículo. |
+| `tipo` | VARCHAR(20) | No | CHECK IN (UNIFORME, BALON, IMPLEMENTO, OTRO) | Clasificación. |
+| `talla` | VARCHAR(20) | Sí | — | Aplica principalmente a UNIFORME. |
+| `descripcion` | VARCHAR(255) | Sí | — | Descripción libre. |
+| `stock_actual` | INTEGER | No | DEFAULT 0, CHECK `>= 0` | Disponible actual; lo ajustan movimientos y asignaciones, nunca se edita a mano. |
+| `stock_minimo` | INTEGER | No | DEFAULT 0, CHECK `>= 0` | Umbral para el reporte de stock bajo (RF-30). |
+| `unidad_medida` | VARCHAR(20) | No | DEFAULT 'unidad' | Unidad de conteo. |
+| `activo` | BOOLEAN | No | DEFAULT TRUE | Baja lógica. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
+
+## `inventario.movimientos_stock`
+Ledger de entradas/salidas/ajustes, independiente de a quién se le
+entrega algo (eso lo cubre `asignaciones`).
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_movimiento` | BIGSERIAL | No | PK | Identificador. |
+| `id_articulo` | BIGINT | No | FK → `articulos` | Artículo afectado. |
+| `tipo_movimiento` | VARCHAR(10) | No | CHECK IN (ENTRADA, SALIDA, AJUSTE) | ENTRADA/AJUSTE suman a `stock_actual`, SALIDA resta. |
+| `cantidad` | INTEGER | No | CHECK `> 0` | Magnitud del movimiento (siempre positiva; el signo lo da `tipo_movimiento`). |
+| `motivo` | VARCHAR(255) | Sí | — | Motivo libre. |
+| `registrado_por_id_usuario` | BIGINT | No | FK → `seguridad.usuarios` | Quién lo registró. |
+| `fecha_movimiento` | TIMESTAMPTZ | No | DEFAULT NOW() | Momento del movimiento. |
+| `created_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
+
+## `inventario.asignaciones`
+Entrega/devolución de un artículo a un estudiante o entrenador.
+
+| Columna | Tipo | Nulo | Restricción | Descripción |
+|---|---|---|---|---|
+| `id_asignacion` | BIGSERIAL | No | PK | Identificador. |
+| `id_articulo` | BIGINT | No | FK → `articulos` | Artículo asignado. |
+| `cantidad` | INTEGER | No | CHECK `> 0` | Cantidad entregada; resta de `stock_actual` al crear. |
+| `tipo_destinatario` | VARCHAR(15) | No | CHECK IN (ESTUDIANTE, ENTRENADOR) | Define cuál de las dos FK de destinatario debe estar llena. |
+| `id_estudiante` | BIGINT | Sí | FK → `academico.estudiantes` | Lleno solo si `tipo_destinatario = ESTUDIANTE`. |
+| `id_entrenador` | BIGINT | Sí | FK → `deportivo.entrenadores` | Lleno solo si `tipo_destinatario = ENTRENADOR`. |
+| `fecha_asignacion` | DATE | No | DEFAULT CURRENT_DATE | Fecha de entrega. |
+| `fecha_devolucion_esperada` | DATE | Sí | — | Fecha planeada de devolución. |
+| `fecha_devolucion_real` | DATE | Sí | — | Se llena al marcar DEVUELTO o PERDIDO. |
+| `estado` | VARCHAR(15) | No | DEFAULT 'ASIGNADO', CHECK IN (ASIGNADO, DEVUELTO, PERDIDO) | DEVUELTO repone `stock_actual`; PERDIDO no. |
+| `registrado_por_id_usuario` | BIGINT | No | FK → `seguridad.usuarios` | Quién la registró. |
+| `observaciones` | VARCHAR(255) | Sí | — | Observaciones libres. |
+| `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
+
+`CONSTRAINT chk_asignacion_destinatario` exige exactamente un destinatario
+no nulo, coherente con `tipo_destinatario` — ver `db/schema.sql`.
 
 ---
 

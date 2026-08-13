@@ -13,6 +13,9 @@ public interface EntrenadorRepository extends JpaRepository<Entrenador, Long> {
 
     boolean existsByPersona_IdPersona(Long idPersona);
 
+    /** Coherencia rol-ficha: solo una ficha vigente condiciona el rol de la cuenta. */
+    boolean existsByPersona_IdPersonaAndActivoTrue(Long idPersona);
+
     boolean existsByUsuario_IdUsuario(Long idUsuario);
 
     /** Resuelve el entrenador a partir del usuario autenticado (JWT -> username). */

@@ -2,6 +2,7 @@ package org.uteq.backend.deportivo.entrenador.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -29,8 +30,9 @@ public class Entrenador {
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)
     private Usuario usuario;
 
-    @Column(name = "especialidad", length = 150)
-    private String especialidad;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_especialidad")
+    private Especialidad especialidad;
 
     @Column(name = "experiencia_anios")
     private Short experienciaAnios;

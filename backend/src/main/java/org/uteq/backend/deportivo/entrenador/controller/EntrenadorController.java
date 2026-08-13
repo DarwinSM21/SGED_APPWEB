@@ -16,7 +16,9 @@ import org.uteq.backend.deportivo.entrenador.service.EntrenadorService;
 /**
  * CRUD de Entrenador. El alta y la baja crean o retiran el vinculo con una
  * cuenta de usuario, por lo que son operaciones administrativas; la consulta
- * la comparten ADMINISTRADOR y ENTRENADOR.
+ * la comparten ADMINISTRADOR, ENTRENADOR y RECEPCIONISTA (esta ultima
+ * necesita listar entrenadores para asignarles articulos de inventario,
+ * ver org.uteq.backend.inventario.asignacion).
  */
 @RestController
 @RequestMapping("/api/entrenadores")
@@ -26,14 +28,14 @@ public class EntrenadorController {
     private final EntrenadorService entrenadorService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EntrenadorPageResponse<EntrenadorResponse>> listar(
             @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.ok(entrenadorService.listar(pageable));
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EntrenadorResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(entrenadorService.buscarPorId(id));
     }

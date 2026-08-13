@@ -74,6 +74,8 @@ public class EstudianteService {
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
+        validarCuentaCoherente(request.idPersona());
+
         // 1. Buscar si la persona YA tiene un registro como estudiante (activo o inactivo)
         Optional<Estudiante> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
 
@@ -257,6 +259,24 @@ public class EstudianteService {
         estudiante.setUsuario(usuario);
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
+    }
+
+    /**
+     * Guarda simetrica a UsuarioService.validarRolCoherente: si la persona
+     * ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin cuenta
+     * no hay nada que validar -- lo normal es que un estudiante no tenga
+     * acceso al sistema, y si despues se le habilita, habilitarAcceso() ya
+     * fija el rol ESTUDIANTE.
+     */
+    private void validarCuentaCoherente(Long idPersona) {
+        usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -> {
+            boolean esEstudiante = usuario.getRoles() != null && usuario.getRoles().stream()
+                    .anyMatch(r -> "ESTUDIANTE".equals(r.getNombre()));
+            if (!esEstudiante) {
+                throw new IllegalArgumentException(
+                        "La persona tiene una cuenta con otro rol: no se le puede crear una ficha de estudiante");
+            }
+        });
     }
 
     // Mapeador privado Entity -> DTO

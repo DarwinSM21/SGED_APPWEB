@@ -10,11 +10,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.rol.repository.RolRepository;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
@@ -24,6 +29,7 @@ import org.uteq.backend.seguridad.usuario.service.UsuarioService;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -40,7 +46,15 @@ class UsuarioServiceTest {
     @Mock
     private EstadoGeneralRepository estadoGeneralRepository;
     @Mock
+    private RolRepository rolRepository;
+    @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private EntrenadorRepository entrenadorRepository;
+    @Mock
+    private RepresentanteRepository representanteRepository;
+    @Mock
+    private EstudianteRepository estudianteRepository;
 
     @InjectMocks
     private UsuarioService usuarioService;
@@ -90,7 +104,7 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("crear rechaza username duplicado")
     void crear_username_duplicado_lanza_excepcion() {
-        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", "clave123");
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", "clave123", null);
         when(usuarioRepository.existsByUsername("ana.torres")).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.crear(request))
@@ -103,7 +117,7 @@ class UsuarioServiceTest {
     @Test
     @DisplayName("crear persiste el usuario con la contrasena codificada")
     void crear_persiste_usuario_valido() {
-        UsuarioRequest request = new UsuarioRequest(1L, 1L, "nuevo.usuario", "clave123");
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "nuevo.usuario", "clave123", null);
         when(usuarioRepository.existsByUsername("nuevo.usuario")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
@@ -118,13 +132,51 @@ class UsuarioServiceTest {
 
         assertThat(resultado.idUsuario()).isEqualTo(2L);
         assertThat(resultado.username()).isEqualTo("nuevo.usuario");
+        assertThat(resultado.roles()).isEmpty();
         verify(passwordEncoder).encode("clave123");
+    }
+
+    @Test
+    @DisplayName("crear con rol lo busca y lo asigna al usuario nuevo")
+    void crear_con_rol_asigna_el_rol() {
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "coach.nuevo", "clave123", "ENTRENADOR");
+        Rol entrenador = Rol.builder().idRol(2L).nombre("ENTRENADOR").build();
+        when(usuarioRepository.existsByUsername("coach.nuevo")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(Optional.of(entrenador));
+        when(passwordEncoder.encode("clave123")).thenReturn("hash-codificado");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> {
+            Usuario u = inv.getArgument(0);
+            u.setIdUsuario(3L);
+            return u;
+        });
+
+        UsuarioResponse resultado = usuarioService.crear(request);
+
+        assertThat(resultado.roles()).containsExactly("ENTRENADOR");
+    }
+
+    @Test
+    @DisplayName("crear con un rol inexistente lanza IllegalArgumentException")
+    void crear_con_rol_inexistente_lanza_excepcion() {
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "nuevo", "clave123", "NO_EXISTE");
+        when(usuarioRepository.existsByUsername("nuevo")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(rolRepository.findByNombre("NO_EXISTE")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> usuarioService.crear(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Rol inexistente");
+
+        verify(usuarioRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("crear lanza RecursoNoEncontradoException si la persona no existe")
     void crear_persona_inexistente_lanza_excepcion() {
-        UsuarioRequest request = new UsuarioRequest(99L, 1L, "nuevo", "clave123");
+        UsuarioRequest request = new UsuarioRequest(99L, 1L, "nuevo", "clave123", null);
         when(usuarioRepository.existsByUsername("nuevo")).thenReturn(false);
         when(personaRepository.findById(99L)).thenReturn(Optional.empty());
 
@@ -142,5 +194,143 @@ class UsuarioServiceTest {
         usuarioService.eliminar(1L);
 
         assertThat(existente.getActivo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("crear sin contrasena lanza IllegalArgumentException")
+    void crear_sin_password_lanza_excepcion() {
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "nuevo", null, null);
+
+        assertThatThrownBy(() -> usuarioService.crear(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("contraseña es obligatoria");
+
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("editar con contrasena en blanco no toca el hash existente")
+    void editar_con_password_en_blanco_no_cambia_hash() {
+        Usuario existente = usuario();
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", null, null);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        usuarioService.editar(1L, request);
+
+        assertThat(existente.getPassword_Hash()).isEqualTo("hash-existente");
+        verify(passwordEncoder, never()).encode(any());
+    }
+
+    @Test
+    @DisplayName("editar con contrasena nueva la re-hashea")
+    void editar_con_password_nuevo_la_rehashea() {
+        Usuario existente = usuario();
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", "nuevaClave1", null);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(passwordEncoder.encode("nuevaClave1")).thenReturn("hash-nuevo");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        usuarioService.editar(1L, request);
+
+        assertThat(existente.getPassword_Hash()).isEqualTo("hash-nuevo");
+    }
+
+    @Test
+    @DisplayName("editar cambia el rol cuando la persona no tiene ninguna ficha activa")
+    void editar_cambia_el_rol_sin_ficha_activa() {
+        Usuario existente = usuario();
+        existente.setRoles(Set.of(Rol.builder().idRol(1L).nombre("RECEPCIONISTA").build()));
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", null, "ENTRENADOR");
+        Rol entrenador = Rol.builder().idRol(2L).nombre("ENTRENADOR").build();
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(representanteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(Optional.of(entrenador));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UsuarioResponse resultado = usuarioService.editar(1L, request);
+
+        assertThat(resultado.roles()).containsExactly("ENTRENADOR");
+    }
+
+    @Test
+    @DisplayName("editar rechaza el cambio de rol cuando la persona tiene ficha de entrenador activa")
+    void editar_rechaza_cambio_de_rol_con_ficha_entrenador() {
+        Usuario existente = usuario();
+        existente.setRoles(Set.of(Rol.builder().idRol(1L).nombre("ENTRENADOR").build()));
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", null, "RECEPCIONISTA");
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> usuarioService.editar(1L, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ficha de entrenador activa");
+
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("crear rechaza un rol que no corresponde a la ficha de estudiante de la persona")
+    void crear_con_rol_incoherente_con_ficha_estudiante_lanza_excepcion() {
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "fernanda.c", "clave123", "ENTRENADOR");
+        when(usuarioRepository.existsByUsername("fernanda.c")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> usuarioService.crear(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ficha de estudiante activa");
+
+        verify(usuarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("crear acepta el rol que si corresponde a la ficha de la persona")
+    void crear_con_rol_coherente_persiste() {
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "fernanda.c", "clave123", "ESTUDIANTE");
+        Rol estudiante = Rol.builder().idRol(5L).nombre("ESTUDIANTE").build();
+        when(usuarioRepository.existsByUsername("fernanda.c")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(representanteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(estudiante));
+        when(passwordEncoder.encode("clave123")).thenReturn("hash");
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UsuarioResponse resultado = usuarioService.crear(request);
+
+        assertThat(resultado.roles()).containsExactly("ESTUDIANTE");
+    }
+
+    @Test
+    @DisplayName("crear rechaza un rol que no corresponde a la ficha de representante de la persona")
+    void crear_con_rol_incoherente_con_ficha_representante_lanza_excepcion() {
+        UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.t", "clave123", "ADMINISTRADOR");
+        when(usuarioRepository.existsByUsername("ana.t")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
+        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(representanteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> usuarioService.crear(request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ficha de representante activa");
+
+        verify(usuarioRepository, never()).save(any());
     }
 }

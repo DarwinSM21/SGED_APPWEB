@@ -29,6 +29,16 @@ spring:
     locations: classpath:db/migration
     baseline-on-migrate: true
     schemas: seguridad
+    # Conexion propia para migrar, separada de spring.datasource. Por
+    # defecto son la misma (Docker/Postgres local: no hace falta nada
+    # mas). En Supabase, DB_URL apunta al Transaction Pooler (6543) para
+    # el uso normal de la app, pero ese modo de PgBouncer no sostiene
+    # advisory locks de sesion -lo que Flyway necesita para migrar-, asi
+    # que ahi conviene apuntar FLYWAY_DB_URL al Session Pooler (mismo
+    # host, puerto 5432) o a la conexion directa. Ver .env.example.
+    url: ${FLYWAY_DB_URL:${DB_URL}}
+    user: ${FLYWAY_DB_USER:${DB_USER}}
+    password: ${FLYWAY_DB_PASSWORD:${DB_PASSWORD}}
 
   data:
     redis:

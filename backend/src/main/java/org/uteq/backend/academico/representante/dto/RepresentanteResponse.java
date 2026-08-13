@@ -18,5 +18,11 @@ public record RepresentanteResponse(
         Instant createdAt,
         List<EstudianteVinculadoResponse> representados
 ) {
-    public record EstudianteVinculadoResponse(Long idEstudiante, String nombreCompleto, String categoria) {}
+    public record EstudianteVinculadoResponse(
+            Long idEstudiante,
+            String nombreCompleto,
+            String categoria,
+            String relacion,
+            Boolean contactoPrincipal
+    ) {}
 }

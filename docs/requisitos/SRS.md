@@ -27,13 +27,16 @@ desarrollo y al docente evaluador del Proyecto Fin de Curso.
 
 ### 1.2 Alcance
 
-SGED cubre tres dominios:
+SGED cubre cuatro dominios:
 
 1. **Seguridad y acceso** — personas, usuarios, roles y autenticación.
 2. **Gestión académica/administrativa** — registro y mantenimiento de
    estudiantes y sus categorías.
 3. **Dominio deportivo** — entrenadores, horarios, sesiones de
    entrenamiento, asistencia y evaluación diaria del desempeño.
+4. **Inventario** — catálogo de artículos deportivos (uniformes, balones,
+   implementos), control de stock por movimientos y asignación de
+   artículos a estudiantes o entrenadores (RF-27 a RF-30, ver ADR-003).
 
 ### 1.3 Estado de implementación (declaración de honestidad)
 
@@ -256,7 +259,9 @@ forma transaccional el registro correspondiente.*
 - **Prioridad:** Alta · **Estado:** ✅ Implementado
 - **Origen:** `POST /api/estudiantes` —
   `academico/estudiante/controller/EstudianteController.java`
-- **Acceso:** `@PreAuthorize("hasRole('ADMINISTRADOR')")`
+- **Acceso:** `@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")`
+  (esta nota decía solo ADMINISTRADOR; corregido 2026-08-12 para reflejar
+  el código real — RECEPCIONISTA siempre pudo registrar estudiantes).
 - **Verificación:** deberá responder `201` con el recurso creado. Pruebas:
   `EstudianteControllerTest.crear_devuelve_201`,
   `EstudianteServiceTest.crear_persiste_persona_y_estudiante`.
@@ -265,6 +270,10 @@ forma transaccional el registro correspondiente.*
   por `idPersona`); `EstudianteRequest` exige `idPersona`, `idCategoria`,
   `idEstadoGeneral`, `codigoEstudiante` y `fechaIngreso`, y admite
   opcionalmente `peso` y `altura` (ver hallazgo H-06 en `ETHICS.md`).
+- **Frontend (2026-08-12):** se sirve desde la pantalla unificada
+  `/personas` (`frontend/src/app/features/personas/`), que reemplaza a
+  las antiguas `/estudiantes/registrar` y `/admin/crear-usuario` — ver
+  `docs/superpowers/specs/2026-08-12-personas-unificado-design.md`.
 
 ---
 
@@ -404,9 +413,28 @@ alta hecha en `POST /api/auth/registro`) de forma independiente.*
 - **Prioridad:** Media · **Estado:** ✅ Implementado
 - **Origen:** `UsuarioController` (`/api/usuarios`, 5 endpoints) —
   `seguridad/usuario/controller/UsuarioController.java`
-- **Verificación:** `UsuarioServiceTest` (6 pruebas: paginación, username
-  duplicado, alta con contraseña codificada, persona inexistente, baja
-  lógica), `UsuarioControllerTest` (6 pruebas: 200/201/204/400/422).
+- **Verificación:** `UsuarioServiceTest` (paginación, username duplicado,
+  alta con contraseña codificada, alta con rol asignado, rol inexistente
+  da error, persona inexistente, baja lógica, edición de rol/usuario/
+  contraseña, coherencia rol↔ficha), `UsuarioControllerTest`
+  (200/201/204/400/422).
+- **Cambio 2026-08-12:** `UsuarioRequest` agrega un campo `rol` opcional
+  — si viene, se valida contra `seguridad.roles` y se asigna al crear
+  (mismo criterio que `AuthController.registro`, pero sin forzar una
+  `Persona` nueva). Permite darle acceso con cualquier rol a una Persona
+  ya existente, no solo a las recién registradas. Frontend: pantalla
+  unificada `/personas` (ver RF-10 y
+  `docs/superpowers/specs/2026-08-12-personas-unificado-design.md`).
+- **Cambio 2026-08-12 (edición y coherencia).** `PUT /api/usuarios/{id}`
+  ahora sí aplica el cambio de `rol` (antes lo ignoraba) y la contraseña
+  pasa a ser opcional: en blanco significa "no cambiarla". Además se
+  valida la **coherencia rol↔ficha**: si la Persona tiene una ficha
+  activa de Estudiante/Entrenador/Representante, su cuenta solo admite
+  el rol correspondiente; sin fichas activas admite cualquiera (lo que
+  permite crear la cuenta ENTRENADOR antes de la ficha). La guarda
+  simétrica vive en `EstudianteService.crear`. Ver
+  `docs/superpowers/specs/2026-08-12-validaciones-rol-usuario-design.md`
+  y `2026-08-12-coherencia-rol-y-vinculo-representante-design.md`.
 
 ---
 
@@ -421,6 +449,12 @@ del rol que la persona tenga en el sistema.*
 - **Verificación:** `PersonaServiceTest` (8 pruebas: paginación, búsqueda por
   cédula, unicidad de cédula/correo al crear y al editar, baja lógica),
   `PersonaControllerTest` (6 pruebas: 200/201/204/400/422).
+- **Frontend (2026-08-12):** `Persona` es la raíz de la que cuelgan
+  `Usuario`/`Estudiante`/`Entrenador`/`Representante`; la pantalla
+  `/personas` refleja esa jerarquía en vez de crear la Persona por
+  separado en cada flujo. `RepresentanteController` también se abrió a
+  RECEPCIONISTA para crear/vincular representantes (editar/eliminar
+  sigue exclusivo de ADMINISTRADOR) — ver spec de diseño.
 
 ---
 
@@ -459,10 +493,17 @@ registrarse dos veces como entrenador.*
 - **Esquema:** `deportivo.entrenadores`, con `UNIQUE` sobre `id_persona` **e**
   `id_usuario` (el vínculo con `Usuario` es nuevo respecto a la v1.0 de este
   documento).
-- **Verificación:** `EntrenadorServiceTest` (6 pruebas: paginación con
+- **Verificación:** `EntrenadorServiceTest` (7 pruebas: paginación con
   mapeo de persona/usuario, persona duplicada, usuario duplicado, alta
-  válida, baja lógica), `EntrenadorControllerTest` (5 pruebas:
-  200/201/204/404/422).
+  válida, especialidad inexistente, baja lógica), `EntrenadorControllerTest`
+  (5 pruebas: 200/201/204/404/422).
+
+> **Actualizado 2026-08-12.** `especialidad` pasó de texto libre a un
+> catálogo (`deportivo.especialidades`, FK `id_especialidad`, nullable) —
+> ver `EspecialidadController`/`EspecialidadService` y
+> `EspecialidadServiceTest`. El formulario de alta de entrenador en el
+> frontend pasó de un input de texto a un `<select>` poblado desde
+> `GET /api/especialidades/activas`.
 
 ---
 
@@ -528,6 +569,15 @@ infraestructura de envío externo, y agregarla requeriría credenciales que
 nadie tiene todavía; una notificación en-app satisface el requisito sin
 esa dependencia.
 
+> **Actualización 2026-08-12 (asignación de representados).** Hasta ahora
+> el vínculo representante↔estudiante solo existía en el backend: no
+> había forma en la interfaz de ver ni asignar quién representa a un
+> estudiante. La ficha de estudiante de `/personas` ahora lista los
+> representantes vinculados y permite agregar y quitar, indicando la
+> `relacion` del vínculo y cuál es el `contacto_principal` — que es
+> justamente a quien apunta esta notificación. Ver
+> `docs/superpowers/specs/2026-08-12-coherencia-rol-y-vinculo-representante-design.md`.
+
 > **Precisión sobre "sin esquema" (2026-07-30).** Existe un paquete
 > `academico.representante` en el código (`RepresentanteController` y sus
 > DTOs), pero **todos sus archivos están vacíos** (0 bytes) — es una
@@ -537,6 +587,92 @@ esa dependencia.
 > Se documenta para que no se confunda "el paquete existe" con
 > "está implementado" — exactamente el tipo de brecha que OBS-12 pidió
 > dejar de repetir.
+>
+> **Actualización 2026-08-12.** Al reconciliar la base de Supabase para
+> el módulo Inventario se descubrió que sí existía, creado a mano y
+> fuera de control de versiones, un esquema de tablas para equipos,
+> partidos y ejercicios (`deportivo.equipos`, `deportivo.partidos`,
+> `deportivo.estadistica_partidos`, `deportivo.ejercicios`,
+> `deportivo.entrenamiento_ejercicios`), todas vacías. Se versionó en
+> `V16__equipos_partidos_ejercicios.sql` para que exista igual en
+> cualquier entorno — es la mitad de base de datos de la limpieza de
+> 2026-07-30 que en su momento solo tocó el código. Sigue sin
+> `EquipoController` ni API REST: el esquema existe, la funcionalidad
+> no. Estado: 🟡 solo esquema, no implementado.
+
+---
+
+### 3.4 Módulo de inventario (nuevo en esta revisión)
+
+> **Cierra el schema `inventario`** que `ADR-003` había reservado como
+> diseño a futuro. Stock por cantidad agregada (no serializado por unidad
+> individual): cada artículo tiene un `stock_actual` que los movimientos y
+> las asignaciones ajustan, nunca por debajo de cero.
+
+---
+
+**RF-27 — Gestión del catálogo de artículos de inventario**
+*El sistema deberá permitir crear, listar, consultar, actualizar y dar de
+baja artículos de inventario (uniformes, balones, implementos u otro),
+cada uno con un stock mínimo configurable para alertas de reposición.*
+
+- **Prioridad:** Alta (bloquea RF-28/RF-29) · **Estado:** ✅ Implementado
+- **Origen:** `ArticuloController` (`/api/inventario/articulos`, 6
+  endpoints) — `inventario/articulo/controller/ArticuloController.java`
+- **Esquema:** `inventario.articulos`, con `CHECK` sobre `tipo` y
+  `CHECK (stock_actual >= 0)`.
+- **Verificación:** `ArticuloServiceTest` (6 pruebas: alta con stock en
+  cero, edición sin tocar el stock, baja lógica, paginación, stock bajo).
+
+---
+
+**RF-28 — Registro de movimientos de stock**
+*El sistema deberá registrar entradas, salidas y ajustes de stock por
+artículo, y deberá impedir cualquier salida que deje el stock por debajo
+de cero.*
+
+- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Origen:** `MovimientoStockController`
+  (`/api/inventario/movimientos`, 3 endpoints) —
+  `inventario/movimiento/controller/MovimientoStockController.java`
+- **Esquema:** `inventario.movimientos_stock`, con
+  `CHECK (cantidad > 0)` y `CHECK` sobre `tipo_movimiento`.
+- **Verificación:** `MovimientoStockServiceTest` (4 pruebas: entrada,
+  ajuste y salida ajustan el stock correctamente; salida que dejaría el
+  stock negativo se rechaza sin persistir nada).
+
+---
+
+**RF-29 — Asignación y devolución de artículos**
+*El sistema deberá permitir asignar artículos a un estudiante o a un
+entrenador (nunca a ambos en la misma asignación), descontando el stock
+disponible, y deberá permitir marcar la devolución como DEVUELTO
+(repone el stock) o PERDIDO (no lo repone).*
+
+- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Origen:** `AsignacionController` (`/api/inventario/asignaciones`, 5
+  endpoints) — `inventario/asignacion/controller/AsignacionController.java`
+- **Esquema:** `inventario.asignaciones`, con
+  `CONSTRAINT chk_asignacion_destinatario` (exactamente un destinatario
+  según `tipo_destinatario`) y `CHECK` sobre `estado`.
+- **Verificación:** `AsignacionServiceTest` (9 pruebas: asignación a
+  estudiante y a entrenador, stock insuficiente, destinatario faltante,
+  devolución que repone stock, pérdida que no lo repone, doble
+  resolución, transición inválida a ASIGNADO, asignación inexistente).
+
+---
+
+**RF-30 — Reporte de artículos con stock bajo**
+*El sistema deberá reportar, como cálculo agregado en el motor de base de
+datos, el total de artículos activos cuyo stock actual esté en o por
+debajo de su stock mínimo.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Origen:** `GET /api/inventario/articulos/stock-bajo` — combina el
+  listado (JPA) con el conteo agregado del procedimiento almacenado
+  `inventario.sp_reporte_stock_bajo` (ver
+  `docs/basedatos/CATALOGO-SP.md`).
+- **Verificación:** `ArticuloServiceTest.stockBajo_combina_listado_y_total_del_procedimiento`.
 
 ---
 

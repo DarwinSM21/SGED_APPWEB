@@ -25,24 +25,24 @@ export const routes: Routes = [
           .then(m => m.PlantillaComponent),
       },
       {
-        path: 'admin/crear-usuario',
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
-        loadComponent: () => import('./features/admin/crear-usuario.component').then(m => m.CrearUsuarioComponent),
-      },
-      {
         path: 'recepcion',
         canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA'])],
         loadComponent: () => import('./features/recepcion/recepcion.component').then(m => m.RecepcionComponent),
       },
       {
-        path: 'estudiantes/registrar',
+        path: 'personas',
         canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA'])],
-        loadComponent: () => import('./features/estudiantes/registrar-estudiante.component').then(m => m.RegistrarEstudianteComponent),
+        loadComponent: () => import('./features/personas/personas.component').then(m => m.PersonasComponent),
       },
       {
         path: 'pagos',
         canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA'])],
         loadComponent: () => import('./features/pagos/pagos.component').then(m => m.PagosComponent),
+      },
+      {
+        path: 'inventario',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR'])],
+        loadComponent: () => import('./features/inventario/inventario.component').then(m => m.InventarioComponent),
       },
       {
         path: 'representante',

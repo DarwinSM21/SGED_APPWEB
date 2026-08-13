@@ -50,7 +50,7 @@ class EntrenadorControllerTest {
 
     private EntrenadorResponse respuesta() {
         return new EntrenadorResponse(1L, 1L, "Carlos", "Mora", "1234567890", "carlos@sged.test",
-                "0999999999", 1L, "carlos.mora", "Fisica", (short) 5, null, true, OffsetDateTime.now());
+                "0999999999", 1L, "carlos.mora", 1L, "Física", (short) 5, null, true, OffsetDateTime.now());
     }
 
     @Test
@@ -79,7 +79,7 @@ class EntrenadorControllerTest {
 
         mockMvc.perform(post("/api/entrenadores")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":1,\"idUsuario\":1,\"especialidad\":\"Fisica\",\"experienciaAnios\":5}"))
+                        .content("{\"idPersona\":1,\"idUsuario\":1,\"idEspecialidad\":1,\"experienciaAnios\":5}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nombre").value("Carlos"));
     }

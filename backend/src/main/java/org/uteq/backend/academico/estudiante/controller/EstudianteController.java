@@ -101,10 +101,12 @@ public class EstudianteController {
      * Habilita el acceso propio de un estudiante que ya existe (rol
      * ESTUDIANTE), para que pueda marcar su propia asistencia por QR.
      * Distinto de {@code crear}: no crea una Persona nueva, usa la que el
-     * estudiante ya tiene.
+     * estudiante ya tiene. RECEPCIONISTA la necesita desde la pantalla
+     * unificada de Personas (solo puede habilitar acceso de estudiantes,
+     * no crear cuentas de otros roles).
      */
     @PostMapping("/{id}/acceso")
-    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<EstudianteResponse> habilitarAcceso(
             @PathVariable Long id, @Valid @RequestBody HabilitarAccesoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
