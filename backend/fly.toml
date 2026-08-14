@@ -1,0 +1,41 @@
+# Fly.io — backend SGED (Bloque A.4). No es un despliegue automático:
+# hay que correr `fly launch --no-deploy --copy-config` (o `fly apps create`)
+# una vez, autenticado con `fly auth login`, para que Fly asocie este
+# archivo a una app real. Si "sged-profutbol-api" ya está tomado (los
+# nombres de app en Fly son globales), Fly va a pedir uno distinto.
+app = "sged-profutbol-api"
+primary_region = "gru"  # São Paulo — la región de Fly más cercana a Ecuador; confirmar disponibilidad al momento del despliegue, `fly platform regions` lista las vigentes
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Variables NO sensibles solamente. Todo lo que sea secreto (DB_URL,
+# DB_PASSWORD, JWT_SECRET, REDIS_HOST/PORT si Upstash los da con
+# credenciales embebidas, GEMINI_API_KEY, CONTRASENA_ADMIN) se define con
+# `fly secrets set` (ver DEPLOYMENT.md sección 4) — nunca en este archivo,
+# que sí se commitea al repo público.
+[env]
+  FLYWAY_ENABLED = "true"
+  COOKIE_SECURE = "true"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  # min_machines_running=1 a propósito, no el default 0: con 0 la máquina
+  # se apaga por inactividad y el primer request del tribunal durante la
+  # evaluación pagaría un "cold start" — riesgo directo contra la regla
+  # transversal 8 (URL que no responde a tiempo => P5 a Insuficiente).
+
+  [[http_service.checks]]
+    path = "/actuator/health"
+    method = "GET"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "30s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

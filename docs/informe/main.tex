@@ -466,6 +466,246 @@ la evaluación empírica conjunta, sobre un mismo sistema real, de las
 cuatro dimensiones que la literatura revisada trata por separado.
 
 % ============================================================
+\section{Ingeniería de requisitos}
+\label{sec:ingenieria-requisitos}
+
+Capítulo propio, deliberadamente separado del capítulo de Diseño
+(sección~\ref{sec:acceso-datos} y siguientes): documenta el \emph{proceso}
+que produjo la especificación vigente, no el sistema que resultó de ella.
+Sigue el marco de cuatro fases de Pohl —elicitación, negociación,
+documentación, validación— y la disciplina de
+ISO/IEC/IEEE 29148:2018~\cite{iso29148,pohl2010} (sección~\ref{sec:marco-teorico}).
+Las fuentes primarias son \ruta{docs/requisitos/SRS.md} (822 líneas),
+\ruta{historias-usuario.md}, \ruta{casos-uso.md} y
+\ruta{CHANGELOG-REQ.md} — este capítulo resume y referencia esas fuentes,
+no las duplica.
+
+\subsection{Contexto y stakeholders}
+
+Siguiendo la técnica de \emph{stakeholder onion} de
+Robertson~\cite{iso29148}\footnote{Referencia de marco general; el SRS del
+proyecto no documenta todavía una sesión de identificación de
+\emph{stakeholders} formal y separada — ver el señalamiento honesto en la
+subsección siguiente.}, los interesados se organizan en tres anillos:
+
+\begin{center}
+\begin{tabular}{@{}p{2.8cm}p{11.5cm}@{}}
+\toprule
+\textbf{Anillo} & \textbf{Interesados} \\
+\midrule
+Operacional (usan el sistema directamente) & Administrador, Entrenador,
+Recepcionista, Representante, Estudiante — los cinco roles reales
+sembrados en \texttt{db/seed.sql} (SRS \S2.2), no roles aspiracionales. \\
+Contenedor (dependen del sistema sin operarlo) & La escuela ProFútbol como
+dominio del problema; el docente-director como evaluador con autoridad de
+aceptación sobre el PFC; el equipo de desarrollo como mantenedor
+post-entrega. \\
+Interesado externo & El representante legal de un estudiante menor de
+edad, dos veces interesado: como posible operador del sistema (Épica 3,
+HU-14) y como titular de derechos sobre los datos de su representado
+(\ruta{docs/etica/ETHICS.md}). El marco regulatorio ecuatoriano (LOPDP,
+Código de la Niñez y Adolescencia) actúa como interesado normativo, sin
+representación directa en el sistema. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Técnicas de elicitación aplicadas}
+
+\textbf{Señalamiento honesto, no una sección completada.} El SRS actual
+(\ruta{docs/requisitos/SRS.md}) no declara explícitamente qué técnicas de
+elicitación (entrevistas, observación, prototipado, \emph{workshops},
+análisis de documentos, cuestionarios) se aplicaron para llegar a los 31
+requisitos funcionales, ni existe todavía el directorio
+\ruta{docs/requisitos/elicitacion/} con evidencia archivada (notas de
+entrevista, guiones, prototipos de baja fidelidad) que exige el
+Bloque~B.6bis. La especificación es internamente consistente y
+verificable contra el código, pero el \emph{proceso} que la originó no
+está documentado como tal — es la brecha más grande de este capítulo, y
+se declara así en vez de inventar un historial de elicitación
+retroactivo. \textbf{Pendiente antes del cierre:} el equipo completa esta
+subsección con las técnicas realmente usadas (aunque hayan sido
+informales — conocimiento de dominio propio de un integrante, análisis de
+sistemas similares como los del Capítulo~\ref{sec:trabajos-relacionados},
+o conversaciones no estructuradas) y archiva la evidencia que exista.
+
+\subsection{Requisitos funcionales y no funcionales: categorización y prioridad}
+
+Todo requisito funcional sigue el patrón sintáctico de
+ISO/IEC/IEEE 29148:2018, \emph{"El sistema deberá [acción] [objeto]
+[restricción]"} — resolución explícita de \textsc{obs-01} (Entrega 1A),
+donde el docente observó requisitos redactados como títulos. Ejemplo
+representativo (RF-03):
+
+\begin{quote}
+\itshape "El sistema deberá permitir cerrar la sesión, y deberá invalidar
+el token emitido registrando su identificador (JTI) en una lista de
+revocación con tiempo de vida igual al tiempo restante del token, de modo
+que un token robado antes del cierre de sesión no siga siendo aceptado."
+\end{quote}
+
+El SRS usa una escala de prioridad de tres niveles (Alta/Media/Baja), no
+las cuatro categorías MoSCoW textuales que exige la Entrega Final. La
+correspondencia natural es Alta→\emph{Must}, Media→\emph{Should},
+Baja→\emph{Could}; la categoría \emph{Won't (esta entrega)} se infiere de
+los requisitos explícitamente pausados por una razón declarada, no
+simplemente atrasados: RF-11b (peso/altura, pausado por el hallazgo H-06
+de \ruta{ETHICS.md}) y el módulo \texttt{equipo}/\texttt{partido}
+(esquema versionado en \texttt{V16}, sin API por decisión, no por
+omisión).
+
+\begin{center}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+\textbf{Categoría MoSCoW (inferida)} & \textbf{Cantidad} & \textbf{Fuente} \\
+\midrule
+Must (Alta) & 16 & RF-01,02,03,05,06,08,09,10,11,12,13,16,23,27,28,29 \\
+Should (Media) & 6 & RF-04,14,15,24,25,30 \\
+Could (Baja) & 2 & RF-07,26 \\
+Won't (esta entrega, declarado) & 2 & RF-11b, módulo equipo/partido \\
+\textbf{Sin prioridad formal en el SRS} & \textbf{6} & RF-17,18,19,20,21,22 \\
+\midrule
+\textbf{Total de requisitos funcionales} & \textbf{31} & RF-01 a RF-30 + RF-11b \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\textbf{Hallazgo:} seis requisitos del módulo deportivo (RF-17 a RF-22,
+los más recientes — implementados entre el 2026-08-09 y el 2026-08-13) no
+tienen todavía un campo \texttt{Prioridad:} explícito en el SRS, a
+diferencia de los 25 restantes. Es un defecto de forma menor y de
+corrección rápida (asignarles Must o Should según su rol en el flujo
+operativo), no un defecto de fondo — pero cuenta contra la característica
+INCOSE C6 (\emph{Complete}) mientras no se cierre.
+
+Los 13 requisitos no funcionales se clasifican según ISO/IEC~25010
+(sección~\ref{sec:marco-teorico}): eficiencia de desempeño (RNF-01,
+RNF-02), seguridad (RNF-03 a RNF-08), fiabilidad y mantenibilidad
+(RNF-09 a RNF-11), portabilidad (RNF-12, RNF-13) — los cuatro atributos
+de calidad que el Capítulo~\ref{sec:evaluacion} mide empíricamente. A
+esto se suman tres restricciones de diseño (RD-01 a RD-03, categoría
+"restrictivo" en la taxonomía de tipos de requisito) que fijan, entre
+otras cosas, la prohibición de SQL dinámico verificada en la
+sección~\ref{sec:acceso-datos}.
+
+\subsection{Modelado de casos de uso y de historias de usuario}
+
+\textbf{Historias de usuario.} 14 historias (\textsc{hu}-01 a
+\textsc{hu}-14, formato Connextra con criterios de aceptación en Gherkin)
+en \ruta{docs/requisitos/historias-usuario.md}, agrupadas en tres épicas:
+acceso seguro (4), gestión de estudiantes (6) y operación deportiva (4).
+Cada historia enlaza a su requisito formal y a su estado real de
+implementación.
+
+\textbf{Casos de uso.} 9 casos de uso expandidos en plantilla de
+Cockburn (\textsc{cu}-01 a \textsc{cu}-09) en
+\ruta{docs/requisitos/casos-uso.md}, con flujo principal, flujos
+alternativos y trazabilidad a \emph{endpoint} — más un diagrama de casos
+de uso en notación Mermaid con los dos actores humanos con casos de uso
+ya detallados (Administrador, Entrenador). Seis casos adicionales
+(\textsc{cu}-10 a \textsc{cu}-15) están identificados pero no
+desarrollados en detalle, a la espera de que sus requisitos (RF-16 a
+RF-22) terminen de exponerse vía API.
+
+\textbf{Hallazgo de sincronización (honesto, no oculto).} El SRS es la
+fuente que se actualiza con cada cambio de código; \ruta{historias-usuario.md}
+y \ruta{casos-uso.md} no se han actualizado al mismo ritmo. Concretamente:
+RF-17 (horarios), RF-18 (sesiones) y RF-22 (notificaciones) ya figuran
+\textbf{✅ Implementado} en el SRS, pero \ruta{historias-usuario.md}
+todavía marca HU-11 y HU-14 como 🟡/⬜, y \ruta{casos-uso.md} sigue
+listando CU-11, CU-12 y CU-15 en la tabla de "casos de uso pendientes".
+Tampoco existe todavía ninguna historia o caso de uso para los ocho
+requisitos del módulo de catálogos/cuentas (RF-23 a RF-26) ni para los
+cuatro de inventario (RF-27 a RF-30) — \ruta{historias-usuario.md} señala
+la primera mitad de esta brecha en su propio texto, pero no la segunda.
+\textbf{Esto no invalida la trazabilidad hacia las pruebas} (que se
+verifica directamente contra el código, sección~\ref{sec:cobertura}), pero
+sí dificulta usar estos dos archivos como fuente de verdad mientras no se
+actualicen — pendiente concreto antes del cierre de la Entrega Final.
+
+\subsection{Validación de requisitos}
+
+La validación no ocurrió como un evento único al final, sino como un
+ciclo repetido en cada entrega: el docente revisa el SRS y el sistema
+contra la rúbrica, emite observaciones, y el equipo las cierra con
+trazabilidad a un commit — el mecanismo completo está en
+\ruta{docs/observaciones/OBSERVACIONES.md} (sección~\ref{sec:observaciones}),
+con 12 de 13 observaciones ya aplicadas. \textsc{obs}-01, \textsc{obs}-08 y
+\textsc{obs}-12 son ejemplos directos de validación de requisitos
+específicamente (no de código): señalaron que el SRS estaba mal
+redactado, que una migración base estaba vacía, y que el informe describía
+funcionalidad inexistente, respectivamente.
+
+Además de esa revisión externa, cada requisito individual se
+autovalida contra una prueba automatizada nombrada explícitamente en su
+propia entrada del SRS (por ejemplo, RF-06 contra
+\texttt{LoginAttemptServiceTest.bloqueada\_al\_alcanzar\_el\_limite}) — una
+forma continua de validación por criterios de aceptación medidos, en el
+sentido que describe Pohl~\cite{pohl2010}, no solo una revisión puntual.
+No se realizaron todavía \emph{walkthroughs} formales ni prototipado
+evolutivo documentado como técnica de validación separada.
+
+\subsection{Gestión del cambio de requisitos}
+
+\ruta{docs/requisitos/CHANGELOG-REQ.md} registra 30 entradas cronológicas
+desde el 2026-06-10 hasta el 2026-07-29, cubriendo explícitamente
+\textbf{RF-01 a RF-22 y RNF-01 a RNF-07} — su propio encabezado declara
+ese alcance. \textbf{Hallazgo:} el archivo no se ha actualizado desde el
+2026-07-29: no cubre la adición de RF-23 a RF-30 (catálogos, cuentas,
+inventario) ni las modificaciones de RF-10, RF-16, RF-22 y RNF documentadas
+directamente en el SRS entre el 2026-08-03 y el 2026-08-13. Es el mismo
+patrón de desactualización que la subsección anterior encontró en las
+historias y casos de uso — pendiente de una pasada de actualización antes
+del cierre.
+
+Sobre el alcance que sí cubre (RF-01–RF-22), 8 requisitos registran al
+menos una modificación posterior a su adición (RF-01, RF-02, RF-03,
+RF-06, RF-08, RF-11, RF-14, RF-15) de 22 requisitos totales en ese rango:
+\[
+\text{tasa de estabilidad} = 1 - \frac{8}{22} \approx 0{,}636 \;\; (63{,}6\,\%)
+\]
+Cifra que debe leerse con la salvedad anterior: mide solo el 71\,\%
+(22 de 31) de los requisitos funcionales actuales, porque es lo único
+que el changelog registra hoy.
+
+\subsection{Métricas de calidad de requisitos}
+
+\begin{center}
+\begin{tabular}{@{}lr@{}}
+\toprule
+\textbf{Métrica} & \textbf{Valor} \\
+\midrule
+Requisitos funcionales totales (RF) & 31 \\
+Requisitos no funcionales (RNF) & 13 \\
+Restricciones de diseño (RD) & 3 \\
+\textbf{Total de requisitos individuales} & \textbf{47} \\
+RF en estado ✅ Implementado & 28 (90{,}3\,\%) \\
+RF en estado 🟡 Modelado (solo esquema) & 3 (9{,}7\,\%) \\
+RF en estado ⬜ Planificado & 0 \\
+RF con verificación de prueba nombrada explícitamente & 31 de 31 (100\,\%)$^\ast$ \\
+RF con prioridad formal declarada & 25 de 31 (80{,}6\,\%) \\
+Historias de usuario & 14 (\textsc{hu}-01 a \textsc{hu}-14) \\
+Casos de uso detallados / identificados & 9 detallados + 6 identificados \\
+Entradas en el changelog de requisitos & 30 (cobertura: RF-01–RF-22 y RNF-01–RNF-07 únicamente) \\
+Tasa de estabilidad (sobre el rango cubierto) & 63{,}6\,\% \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$^\ast$Incluye los 3 requisitos en estado 🟡 Modelado, cuya "verificación"
+en el SRS describe la restricción de esquema (p. ej. la restricción
+\texttt{CHECK} de \textsc{rf}-19), no todavía una prueba de API porque el
+\emph{endpoint} no existe.
+
+Este capítulo satisface las nueve características INCOSE v4 de un
+requisito individual de forma desigual: fuerte en \emph{Verifiable} (toda
+entrada del SRS nombra su prueba) y en \emph{Correct} (cada corrección se
+documenta con su razón, nunca se sobreescribe en silencio); débil en
+\emph{Complete} mientras persistan los seis RF sin prioridad formal y las
+historias/casos de uso desactualizados señalados arriba. La lista de
+verificación INCOSE completa queda pendiente como anexo.
+
+% ============================================================
 \section{Resolución de las observaciones previas (Bloque 0)}
 \label{sec:observaciones}
 

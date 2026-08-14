@@ -1,0 +1,31 @@
+# Fly.io — frontend SGED (Bloque A.4). Igual que backend/fly.toml: hace
+# falta `fly launch --no-deploy --copy-config` una vez, autenticado, antes
+# de que este archivo apunte a una app real.
+#
+# Esta es la ÚNICA de las dos apps que el navegador del tribunal toca
+# directo — nginx hace de proxy hacia el backend (ver nginx.fly.conf), así
+# que las cookies HttpOnly/SameSite=Strict siguen viajando en el mismo
+# origen aunque backend y frontend sean dos apps de Fly distintas.
+app = "sged-profutbol-web"
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile.fly"
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    path = "/"
+    method = "GET"
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "30s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

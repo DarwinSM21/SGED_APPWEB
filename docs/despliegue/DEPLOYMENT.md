@@ -16,8 +16,8 @@ Bloque A.4.1:
 |---|---|---|
 | Base de datos | Contenedor `postgres` propio | **Supabase** (Postgres gestionado — ya configurado, ver `.env.example`, sección "Opción 2") |
 | Caché / blacklist JWT | Contenedor `redis` propio | **Upstash Redis** (capa gratuita, protocolo Redis estándar — no depende del proveedor de cómputo elegido) |
-| Backend (Spring Boot) | Contenedor `backend` propio | Proveedor de cómputo — **pendiente de confirmar** (candidato: Fly.io, despliega directo desde `backend/Dockerfile`) |
-| Frontend (Angular + nginx) | Contenedor `frontend` propio | Mismo proveedor de cómputo, o Vercel si se separa (Vercel es opción válida solo para frontend según A.4.1) |
+| Backend (Spring Boot) | Contenedor `backend` propio | **Fly.io**, app separada (`backend/fly.toml`), despliega directo desde `backend/Dockerfile` — sin exponer necesariamente al tribunal, se llega a través del proxy del frontend |
+| Frontend (Angular + nginx) | Contenedor `frontend` propio | **Fly.io**, app separada (`frontend/fly.toml` + `frontend/Dockerfile.fly`) — es la única URL que el navegador del tribunal toca directo |
 
 **Por qué esta separación no rompe la reproducibilidad (Bloque D.1):** el
 camino de `make all` / `make up` sigue siendo 100% autocontenido con la
@@ -27,15 +27,21 @@ cuenta externa para reproducir los resultados — Supabase/Upstash son
 solo la infraestructura del despliegue público, no un requisito para
 reproducir localmente.
 
-## 2. Pendiente de decisión (bloqueante)
+## 2. Pendiente de ejecutar (decidido, falta hacerlo)
 
-- [ ] **Proveedor de cómputo para backend + frontend.** Candidato
-  propuesto: Fly.io (despliega directo desde los `Dockerfile` existentes,
-  registro rápido, capa gratuita). Alternativa si UTEQ ofrece un servidor
-  institucional: usar ese en su lugar y simplificar toda esta sección.
+- [x] **Proveedor de cómputo:** Fly.io, confirmado. `backend/fly.toml` y
+  `frontend/fly.toml` ya están en el repo.
+- [ ] Crear cuenta en Fly.io (`fly auth login`, requiere `flyctl`
+  instalado) y en Upstash (Redis).
+- [ ] `fly launch --no-deploy --copy-config` en `backend/` y en
+  `frontend/` — si los nombres de app (`sged-profutbol-api`,
+  `sged-profutbol-web`) ya están tomados, Fly pide uno distinto; si eso
+  pasa, actualizar también `frontend/nginx.fly.conf` (el `proxy_pass`
+  apunta al nombre del backend por dominio completo).
 - [ ] **Dominio / subdominio** para la URL pública declarada en el README
-  y en la portada del PDF.
-- [ ] **Cuenta de Upstash** (o Redis Cloud) para el Redis de producción.
+  y en la portada del PDF — el subdominio `*.fly.dev` que asigna Fly por
+  defecto ya cumple el requisito (HTTPS válido, sin advertencias); un
+  dominio propio es opcional, no bloqueante.
 
 ## 3. Variables de entorno que cambian respecto al `.env` local
 
@@ -53,14 +59,65 @@ tipo de defecto que este proyecto ya encontró y corrigió una vez
 | `JWT_SECRET` | Valor de ejemplo, público en el repo | Uno nuevo generado solo para producción, **nunca** el mismo que aparece en `.env.example`. |
 | `USUARIO_ADMIN` / `CONTRASENA_ADMIN` | `admin` / `Admin2026!` (documentado a propósito en el README para el tribunal) | Se mantiene igual **a propósito** — el Bloque A.4.1 exige un usuario demo con credenciales publicadas, así que este es el único secreto de la lista que no se rota para producción. |
 
-## 4. Procedimiento de despliegue (a completar cuando se confirme el proveedor)
+## 4. Procedimiento de despliegue
 
-Placeholder hasta cerrar el punto 2. Una vez elegido el proveedor de
-cómputo, esta sección documenta paso a paso: comando o consola de
-despliegue, cómo se inyectan las variables de la sección 3, y cómo se
-verifica `/actuator/health` después de cada despliegue — sin eso, este
-archivo no cumple todavía lo que exige A.4.2 ("procedimiento paso a paso
-para reproducir el despliegue").
+Todos los comandos requieren estar autenticados (`fly auth login`, abre
+el navegador) y se corren desde la carpeta de cada app (`backend/` o
+`frontend/`), donde vive su respectivo `fly.toml`.
+
+### 4.1 Una sola vez (creación de las apps)
+
+```bash
+# instalar flyctl si no está: https://fly.io/docs/flyctl/install/
+fly auth login
+
+cd backend
+fly launch --no-deploy --copy-config     # crea la app sged-profutbol-api en Fly
+fly redis create                          # si el complemento gestionado de Fly (Upstash) está disponible; si no, crear el Redis directo en upstash.com y usar esa URL como secreto
+
+cd ../frontend
+fly launch --no-deploy --copy-config     # crea la app sged-profutbol-web
+```
+
+Si Fly asigna un nombre de app distinto al de `fly.toml` (nombre
+ocupado), actualizar `app = "..."` en ambos `fly.toml` y el
+`proxy_pass`/`Host` en `frontend/nginx.fly.conf` para que apunten al
+nombre real del backend.
+
+### 4.2 Secretos (una vez, o cuando se rotan — ver `RUNBOOK.md`)
+
+```bash
+cd backend
+fly secrets set \
+  DB_URL="jdbc:postgresql://<host-supabase>:6543/postgres?prepareThreshold=0&preparedStatementCacheQueries=0" \
+  DB_USER="<usuario-supabase-produccion>" \
+  DB_PASSWORD="<password-supabase-produccion>" \
+  REDIS_HOST="<host-upstash>" \
+  REDIS_PORT="6379" \
+  JWT_SECRET="<nuevo-secreto-solo-de-produccion>" \
+  USUARIO_ADMIN="admin" \
+  CONTRASENA_ADMIN="Admin2026!" \
+  CORS_ALLOWED_ORIGIN_PATTERNS="https://sged-profutbol-web.fly.dev" \
+  IA_HABILITADO="false"
+```
+
+(`GEMINI_API_KEY` solo si `IA_HABILITADO=true`.)
+
+### 4.3 Despliegue
+
+```bash
+cd backend  && fly deploy
+cd ../frontend && fly deploy
+```
+
+### 4.4 Verificación (repetir después de cada despliegue, no solo el primero)
+
+```bash
+curl -I https://sged-profutbol-web.fly.dev/                 # 200, certificado válido
+curl https://sged-profutbol-web.fly.dev/actuator/health     # {"status":"UP",...}
+```
+
+Ver la checklist completa en la sección 5.
 
 ## 5. Verificación posterior al despliegue
 
