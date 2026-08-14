@@ -56,6 +56,13 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());
     }
 
+    @GetMapping("/ingresos-mes")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<IngresosMesResponse> ingresosDelMes() {
+        return ResponseEntity.ok(pagoService.ingresosDelMes());
+    }
+
     private String usernameAutenticado() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }

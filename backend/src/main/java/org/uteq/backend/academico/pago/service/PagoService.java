@@ -8,12 +8,15 @@ import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 
 /**
@@ -44,7 +47,7 @@ public class PagoService {
             }
         }
 
-        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now();
+        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR);
         List<Pago> pagos = mesesUnicos.stream()
                 .map(mes -> Pago.builder()
                         .estudiante(estudiante)
@@ -68,7 +71,7 @@ public class PagoService {
                 .estudiante(estudiante)
                 .tipo(TipoPago.DIARIO)
                 .monto(monto)
-                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now())
+                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR))
                 .registradoPor(registrador)
                 .build());
     }
@@ -79,6 +82,18 @@ public class PagoService {
             throw new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante);
         }
         return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);
+    }
+
+    /** Cuanto entro en caja este mes calendario (Ecuador), sin importar que mes cubre cada pago. */
+    @Transactional(readOnly = true)
+    public IngresosMesResponse ingresosDelMes() {
+        YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);
+        LocalDate inicio = mesActual.atDay(1);
+        LocalDate fin = mesActual.atEndOfMonth();
+
+        BigDecimal total = pagoRepository.sumarMontoEntreFechas(inicio, fin);
+        long cantidad = pagoRepository.countByFechaPagoBetween(inicio, fin);
+        return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
     }
 
     private Estudiante buscarEstudiante(Long id) {

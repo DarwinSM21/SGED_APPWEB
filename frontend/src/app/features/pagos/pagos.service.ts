@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { map } from 'rxjs';
-import { EstudianteOpcionPago, PagoResponse, RegistrarDiarioRequest, RegistrarMembresiaRequest } from './pagos.models';
+import { EstudianteOpcionPago, IngresosMes, PagoResponse, RegistrarDiarioRequest, RegistrarMembresiaRequest } from './pagos.models';
 
 interface EstudiantePagina {
   content: { idEstudiante: number; nombrePersona: string; apellidoPersona: string; nombreCategoria: string }[];
@@ -35,5 +35,9 @@ export class PagosService {
 
   historialDe(idEstudiante: number) {
     return this.http.get<PagoResponse[]>(`/api/pagos/estudiante/${idEstudiante}`);
+  }
+
+  ingresosDelMes() {
+    return this.http.get<IngresosMes>('/api/pagos/ingresos-mes');
   }
 }

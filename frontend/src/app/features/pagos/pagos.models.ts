@@ -33,3 +33,10 @@ export interface PagoResponse {
   fechaPago: string;
   registradoPor: string;
 }
+
+export interface IngresosMes {
+  anio: number;
+  mes: number;
+  total: number;
+  cantidadPagos: number;
+}

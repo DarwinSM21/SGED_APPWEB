@@ -40,4 +40,11 @@ public final class PagoDtos {
             LocalDate fechaPago,
             String registradoPor
     ) {}
+
+    public record IngresosMesResponse(
+            Integer anio,
+            Integer mes,
+            BigDecimal total,
+            Long cantidadPagos
+    ) {}
 }

@@ -2,7 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PagosService } from './pagos.service';
-import { EstudianteOpcionPago, PagoResponse } from './pagos.models';
+import { EstudianteOpcionPago, IngresosMes, PagoResponse } from './pagos.models';
 
 const NOMBRES_MES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -24,6 +24,22 @@ const NOMBRES_MES = [
       <div class="encabezado">
         <h1 class="titulo-pantalla">Gestión de Pagos</h1>
         <p class="subtitulo-pantalla">Administra las membresías y pagos mensuales de los estudiantes de forma rápida y segura.</p>
+      </div>
+
+      <div class="kpi-ingresos">
+        <span class="kpi-ingresos__icono">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/>
+            <path d="M12 7v10M9.5 9.5c0-1.1 1.12-2 2.5-2s2.5.9 2.5 2-1.12 2-2.5 2-2.5.9-2.5 2 1.12 2 2.5 2 2.5-.9 2.5-2"/>
+          </svg>
+        </span>
+        <div class="kpi-ingresos__info">
+          <span class="kpi-ingresos__etiqueta">
+            @if (ingresosMes(); as ing) { Ingresos de {{ nombreMes(ing.mes) }} } @else { Ingresos del mes }
+          </span>
+          <strong class="kpi-ingresos__monto">{{ (ingresosMes()?.total ?? 0) | number: '1.2-2' }}</strong>
+          <span class="kpi-ingresos__caption">{{ ingresosMes()?.cantidadPagos ?? 0 }} pagos registrados</span>
+        </div>
       </div>
 
       <div class="layout">
@@ -182,6 +198,21 @@ const NOMBRES_MES = [
     .subtitulo-pantalla { color: var(--color-text-muted); font-size: .92rem; max-width: 640px; }
     .titulo-card { font-size: 1.05rem; margin-bottom: 1.1rem; }
 
+    .kpi-ingresos {
+      display: flex; align-items: center; gap: 1rem;
+      background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm); padding: 1.1rem 1.3rem; max-width: 320px;
+    }
+    .kpi-ingresos__icono {
+      width: 44px; height: 44px; border-radius: 50%; background: var(--color-success-bg); color: var(--color-success-text);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .kpi-ingresos__icono svg { width: 22px; height: 22px; }
+    .kpi-ingresos__info { display: flex; flex-direction: column; gap: .1rem; min-width: 0; }
+    .kpi-ingresos__etiqueta { font-size: .78rem; color: var(--color-text-muted); }
+    .kpi-ingresos__monto { font-size: 1.4rem; color: var(--color-text); }
+    .kpi-ingresos__caption { font-size: .75rem; color: var(--color-text-faint); }
+
     .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.25rem; align-items: start; }
     @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
 
@@ -285,10 +316,20 @@ export class PagosComponent implements OnInit {
   readonly historial = signal<PagoResponse[]>([]);
   readonly cargandoHistorial = signal(false);
 
+  readonly ingresosMes = signal<IngresosMes | null>(null);
+
   ngOnInit(): void {
     this.servicio.listarEstudiantes().subscribe({
       next: (estudiantes) => { this.estudiantes.set(estudiantes); this.cargandoEstudiantes.set(false); },
       error: () => this.cargandoEstudiantes.set(false),
+    });
+    this.cargarIngresosMes();
+  }
+
+  private cargarIngresosMes(): void {
+    this.servicio.ingresosDelMes().subscribe({
+      next: (ingresos) => this.ingresosMes.set(ingresos),
+      error: () => {},
     });
   }
 
@@ -360,6 +401,7 @@ export class PagosComponent implements OnInit {
         this.exito.set('Membresía registrada');
         this.mesesSeleccionados.set(new Set());
         this.cargarHistorial(idEstudiante);
+        this.cargarIngresosMes();
       },
       error: (err) => { this.guardando.set(false); this.error.set(this.mensajeDeError(err)); },
     });
@@ -378,6 +420,7 @@ export class PagosComponent implements OnInit {
         this.exito.set('Pago diario registrado');
         this.montoDiario = null;
         this.cargarHistorial(idEstudiante);
+        this.cargarIngresosMes();
       },
       error: (err) => { this.guardando.set(false); this.error.set(this.mensajeDeError(err)); },
     });
