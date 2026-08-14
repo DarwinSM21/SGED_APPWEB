@@ -15,6 +15,7 @@ import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -97,7 +98,7 @@ public class EstudianteService {
             est.setCategoria(categoria);
             est.setEstadoGeneral(estadoGeneral);
             est.setCodigoEstudiante(request.codigoEstudiante());
-            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now());
+            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR));
             est.setPeso(request.peso());
             est.setAltura(request.altura());
             est.setActivo(true); // 👈 Re-activación del registro
@@ -125,7 +126,7 @@ public class EstudianteService {
                 .categoria(categoria)
                 .estadoGeneral(estadoGeneral)
                 .codigoEstudiante(request.codigoEstudiante())
-                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now())
+                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR))
                 .peso(request.peso())
                 .altura(request.altura())
                 .activo(true)

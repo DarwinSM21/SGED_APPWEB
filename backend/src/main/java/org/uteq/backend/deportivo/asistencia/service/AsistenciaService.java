@@ -59,7 +59,7 @@ public class AsistenciaService {
             throw new IllegalArgumentException("Esta sesión no corresponde a tu categoría");
         }
 
-        LocalTime ahora = LocalTime.now();
+        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
         Asistencia asistencia = Asistencia.builder()
                 .sesion(sesion)
                 .estudiante(estudiante)

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SesionesService } from './sesiones.service';
 import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models';
-import { inicialesDe } from './plantilla.models';
+import { horaCorta, inicialesDe } from './plantilla.models';
 
 /**
  * Historial completo de sesiones del entrenador autenticado (pasadas y
@@ -92,7 +92,7 @@ import { inicialesDe } from './plantilla.models';
             @for (h of horarios(); track h.idHorario) {
               <div class="fila-horario">
                 <span class="badge badge--info">{{ nombreDia(h.diaSemana) }}</span>
-                <span class="horario-info">{{ h.categoria }} · {{ h.horaInicio }}–{{ h.horaFin }}{{ h.campo ? ' · ' + h.campo : '' }}</span>
+                <span class="horario-info">{{ h.categoria }} · {{ horaCorta(h.horaInicio) }}–{{ horaCorta(h.horaFin) }}{{ h.campo ? ' · ' + h.campo : '' }}</span>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="onDesactivarHorario(h.idHorario)">Quitar</button>
               </div>
             }
@@ -169,7 +169,7 @@ import { inicialesDe } from './plantilla.models';
               <div class="sesion-info">
                 <span class="categoria">{{ s.categoria }} · {{ s.fecha }}</span>
                 <span class="detalle">
-                  @if (s.horaInicio) { {{ s.horaInicio }} }
+                  @if (s.horaInicio) { {{ horaCorta(s.horaInicio) }} }
                   @if (s.campo) { · {{ s.campo }} }
                 </span>
               </div>
@@ -231,6 +231,8 @@ import { inicialesDe } from './plantilla.models';
 })
 export class SesionesComponent implements OnInit {
   private readonly sesionesService = inject(SesionesService);
+
+  readonly horaCorta = horaCorta;
 
   readonly sesiones = signal<Sesion[]>([]);
   readonly categorias = signal<CategoriaOpcion[]>([]);

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -74,7 +75,7 @@ public class AsignacionService {
                 .articulo(articulo)
                 .cantidad(request.cantidad())
                 .tipoDestinatario(request.tipoDestinatario())
-                .fechaAsignacion(LocalDate.now())
+                .fechaAsignacion(LocalDate.now(Zonas.ECUADOR))
                 .fechaDevolucionEsperada(request.fechaDevolucionEsperada())
                 .estado(EstadoAsignacion.ASIGNADO)
                 .registradoPor(registrador)
@@ -110,7 +111,7 @@ public class AsignacionService {
         }
 
         asignacion.setEstado(request.estado());
-        asignacion.setFechaDevolucionReal(LocalDate.now());
+        asignacion.setFechaDevolucionReal(LocalDate.now(Zonas.ECUADOR));
         if (request.observaciones() != null && !request.observaciones().isBlank()) {
             asignacion.setObservaciones(request.observaciones());
         }

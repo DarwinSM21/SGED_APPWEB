@@ -3,6 +3,7 @@ package org.uteq.backend.seguridad.usuario.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -62,7 +63,14 @@ public class UsuarioService {
         return toResponse(u);
  }
 
-    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
+    // no tiene cache propia todavia): sin evictar esas listas quedarian con
+    // el dato viejo -sin cuenta vinculada- hasta que expire el TTL.
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
+    })
     @Transactional
     public UsuarioResponse crear(UsuarioRequest request) {
         if (request.password() == null || request.password().isBlank()) {
@@ -91,10 +99,19 @@ public class UsuarioService {
         }
 
         Usuario usuario = usuarioRepository.save(builder.build());
+
+        if (request.rol() != null) {
+            vincularFichaExistente(request.idPersona(), request.rol(), usuario);
+        }
+
         return toResponse(usuario);
     }
 
-    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @Caching(evict = {
+            @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
+    })
     @Transactional
     public UsuarioResponse editar(Long id, UsuarioRequest request) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -132,6 +149,11 @@ public class UsuarioService {
         }
 
         usuario = usuarioRepository.save(usuario);
+
+        if (request.rol() != null) {
+            vincularFichaExistente(persona.getIdPersona(), request.rol(), usuario);
+        }
+
         return toResponse(usuario);
     }
 
@@ -179,6 +201,33 @@ public class UsuarioService {
                 && !"REPRESENTANTE".equals(rol)) {
             throw new IllegalArgumentException(
                     "La persona tiene una ficha de representante activa: su cuenta solo puede tener el rol REPRESENTANTE");
+        }
+    }
+
+    /**
+     * Si la persona ya tenia una ficha de dominio activa creada ANTES que
+     * esta cuenta -caso tipico: alumno inscrito primero, acceso habilitado
+     * despues desde la pantalla de Personas del administrador-, la ficha
+     * queda sin vincular porque se creo con id_usuario nulo. Sin este
+     * respaldo la cuenta inicia sesion con normalidad pero cada endpoint
+     * "propio" (mi historial, marcar asistencia, mis sesiones, mis
+     * representados) resuelve la ficha por username y no la encuentra.
+     * validarRolCoherente ya garantizo que, si existe una ficha, es de este
+     * mismo rol -- por eso alcanza con mirar el rol nuevo, sin repetir esa
+     * validacion aqui.
+     */
+    private void vincularFichaExistente(Long idPersona, String rol, Usuario usuario) {
+        switch (rol) {
+            case "ESTUDIANTE" -> estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
+                    .filter(e -> e.getUsuario() == null)
+                    .ifPresent(e -> { e.setUsuario(usuario); estudianteRepository.save(e); });
+            case "ENTRENADOR" -> entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
+                    .filter(e -> e.getUsuario() == null)
+                    .ifPresent(e -> { e.setUsuario(usuario); entrenadorRepository.save(e); });
+            case "REPRESENTANTE" -> representanteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
+                    .filter(r -> r.getUsuario() == null)
+                    .ifPresent(r -> { r.setUsuario(usuario); representanteRepository.save(r); });
+            default -> { }
         }
     }
 

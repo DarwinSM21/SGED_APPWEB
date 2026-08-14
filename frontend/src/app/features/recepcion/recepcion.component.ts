@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { toDataURL } from 'qrcode';
 import { RecepcionService } from './recepcion.service';
 import { SesionHoy } from '../dashboard/dashboard.models';
+import { horaCorta } from '../entrenador/plantilla.models';
 
 /**
  * Pantalla de recepcion: elegir una sesion de hoy y mostrar su QR de
@@ -37,7 +38,7 @@ import { SesionHoy } from '../dashboard/dashboard.models';
           <select [ngModel]="idSesionSeleccionada()" (ngModelChange)="seleccionar($event)" name="sesion">
             @for (s of sesiones(); track s.idSesion) {
               <option [value]="s.idSesion">
-                {{ s.categoria }} · {{ s.entrenador }}{{ s.horaInicio ? ' · ' + s.horaInicio : '' }}
+                {{ s.categoria }} · {{ s.entrenador }}{{ s.horaInicio ? ' · ' + horaCorta(s.horaInicio) : '' }}
               </option>
             }
           </select>
@@ -83,6 +84,8 @@ import { SesionHoy } from '../dashboard/dashboard.models';
 export class RecepcionComponent implements OnInit, OnDestroy {
 
   private readonly servicio = inject(RecepcionService);
+
+  readonly horaCorta = horaCorta;
 
   readonly sesiones = signal<SesionHoy[]>([]);
   readonly cargandoSesiones = signal(true);

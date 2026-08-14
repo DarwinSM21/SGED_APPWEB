@@ -38,7 +38,9 @@ const NOMBRES_MES = [
             @if (ingresosMes(); as ing) { Ingresos de {{ nombreMes(ing.mes) }} } @else { Ingresos del mes }
           </span>
           <strong class="kpi-ingresos__monto">{{ (ingresosMes()?.total ?? 0) | number: '1.2-2' }}</strong>
-          <span class="kpi-ingresos__caption">{{ ingresosMes()?.cantidadPagos ?? 0 }} pagos registrados</span>
+          <span class="kpi-ingresos__caption">
+            @if ((ingresosMes()?.cantidadPagos ?? 0) === 1) { 1 pago registrado } @else { {{ ingresosMes()?.cantidadPagos ?? 0 }} pagos registrados }
+          </span>
         </div>
       </div>
 

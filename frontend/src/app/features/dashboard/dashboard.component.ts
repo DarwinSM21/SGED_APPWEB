@@ -5,7 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { homeRouteForRole } from '../../auth/home-route';
 import { SesionHoy } from './dashboard.models';
-import { inicialesDe } from '../entrenador/plantilla.models';
+import { horaCorta, inicialesDe } from '../entrenador/plantilla.models';
 
 /** Forma minima de una pagina de Spring Data que interesa aqui. */
 interface PaginaLigera {
@@ -147,7 +147,7 @@ interface PaginaLigera {
                   <span class="categoria">{{ s.categoria }}</span>
                   <span class="detalle">
                     {{ s.entrenador }}
-                    @if (s.horaInicio) { · {{ s.horaInicio }} }
+                    @if (s.horaInicio) { · {{ horaCorta(s.horaInicio) }} }
                     @if (s.campo) { · {{ s.campo }} }
                   </span>
                 </div>
@@ -253,6 +253,9 @@ export class DashboardComponent implements OnInit {
   });
   readonly esAdministrador = computed(() => this.usuario()?.rol === 'ADMINISTRADOR');
   readonly esEntrenador = computed(() => this.usuario()?.rol === 'ENTRENADOR');
+
+  /** Expuesta tal cual al template: "HH:mm:ss" del backend recortado a "HH:mm". */
+  readonly horaCorta = horaCorta;
 
   readonly totalSesiones = computed(() => this.sesiones().length);
   readonly sesionesEnEvaluacion = computed(() => this.sesiones().filter((s) => s.tieneEvaluacion).length);

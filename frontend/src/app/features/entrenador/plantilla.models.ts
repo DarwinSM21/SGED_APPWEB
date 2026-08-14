@@ -51,3 +51,8 @@ export function apellidoDe(nombreCompleto: string): string {
   const partes = nombreCompleto.trim().split(/\s+/);
   return partes[partes.length - 1] ?? nombreCompleto;
 }
+
+/** El backend manda LocalTime como "HH:mm:ss"; a nadie le interesan los segundos en pantalla. */
+export function horaCorta(hora: string | null): string | null {
+  return hora ? hora.slice(0, 5) : hora;
+}

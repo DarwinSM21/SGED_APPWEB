@@ -449,11 +449,13 @@ export class InventarioComponent implements OnInit {
   }
 
   devolver(a: AsignacionResponse, estado: EstadoAsignacion & ('DEVUELTO' | 'PERDIDO')): void {
+    this.errorAsignacion.set('');
     this.servicio.devolverAsignacion(a.idAsignacion, { estado, observaciones: null }).subscribe({
       next: (actualizada) => {
         this.asignaciones.set(this.asignaciones().map((x) => x.idAsignacion === actualizada.idAsignacion ? actualizada : x));
         if (estado === 'DEVUELTO') this.actualizarStockLocal(a.idArticulo, a.cantidad);
       },
+      error: (err) => this.errorAsignacion.set(this.mensajeDeError(err)),
     });
   }
 

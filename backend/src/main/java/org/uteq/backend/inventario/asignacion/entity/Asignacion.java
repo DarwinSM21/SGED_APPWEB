@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -55,7 +56,7 @@ public class Asignacion {
 
     @Column(name = "fecha_asignacion", nullable = false)
     @Builder.Default
-    private LocalDate fechaAsignacion = LocalDate.now();
+    private LocalDate fechaAsignacion = LocalDate.now(Zonas.ECUADOR);
 
     @Column(name = "fecha_devolucion_esperada")
     private LocalDate fechaDevolucionEsperada;

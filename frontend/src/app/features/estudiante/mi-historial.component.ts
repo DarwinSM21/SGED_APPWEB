@@ -17,6 +17,8 @@ import { MiHistorial } from './mi-historial.models';
 
       @if (cargando()) {
         <p class="aviso">Cargando…</p>
+      } @else if (error()) {
+        <p class="alert alert--danger">{{ error() }}</p>
       } @else if (historial(); as h) {
         <div class="card resumen">
           <span class="resumen__etiqueta">Asistencia últimos 30 días</span>
@@ -87,11 +89,15 @@ export class MiHistorialComponent implements OnInit {
 
   readonly historial = signal<MiHistorial | null>(null);
   readonly cargando = signal(true);
+  readonly error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.servicio.miHistorial().subscribe({
       next: (h) => { this.historial.set(h); this.cargando.set(false); },
-      error: () => this.cargando.set(false),
+      error: () => {
+        this.cargando.set(false);
+        this.error.set('No se pudo cargar tu historial de asistencia. Contacta a un administrador si el problema continúa.');
+      },
     });
   }
 

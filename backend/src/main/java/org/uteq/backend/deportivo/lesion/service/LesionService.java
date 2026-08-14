@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -52,7 +53,7 @@ public class LesionService {
                             + l.getFechaLesion() + ". Da de alta esa antes de registrar otra.");
         });
 
-        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now();
+        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now(Zonas.ECUADOR);
         if (fechaEstimadaRetorno != null && fechaEstimadaRetorno.isBefore(fecha)) {
             throw new IllegalArgumentException(
                     "La fecha estimada de retorno no puede ser anterior a la de la lesion");
@@ -80,7 +81,7 @@ public class LesionService {
             throw new IllegalArgumentException("Esa lesion ya tiene fecha de alta");
         }
 
-        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now();
+        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now(Zonas.ECUADOR);
         if (fecha.isBefore(lesion.getFechaLesion())) {
             throw new IllegalArgumentException(
                     "El alta no puede ser anterior a la fecha de la lesion");

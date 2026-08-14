@@ -26,6 +26,9 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     Optional<Estudiante> findByPersona_IdPersona(Long idPersona);
 
+    /** Vincula una cuenta nueva a una ficha que ya existia (ver UsuarioService.crear). */
+    Optional<Estudiante> findByPersona_IdPersonaAndActivoTrue(Long idPersona);
+
     boolean existsByCodigoEstudianteAndIdEstudianteNot(String codigoEstudiante, Long idEstudiante);
 
     /** Resuelve el estudiante a partir del usuario autenticado (JWT -> username). */
