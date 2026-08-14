@@ -235,6 +235,113 @@ Orquestación & Docker Compose, imágenes fijadas por digest SHA-256 \\
 \end{center}
 
 % ============================================================
+\section{Marco teórico}
+\label{sec:marco-teorico}
+
+Este capítulo se limita a los fundamentos estrictamente necesarios para
+comprender las decisiones del resto del documento — no es un compendio
+general de teoría de aplicaciones web. Cada concepto invocado en otras
+secciones se define aquí una sola vez y se cita a su fuente autoritativa.
+
+\subsection{Ingeniería de requisitos}
+
+El proceso de requisitos de este proyecto sigue el ciclo de vida definido
+por la norma ISO/IEC/IEEE 29148:2018~\cite{iso29148} y el marco de cuatro
+fases de Pohl~\cite{pohl2010}: \emph{elicitación} (obtener el conocimiento
+de los interesados), \emph{negociación} (resolver conflictos entre
+requisitos), \emph{documentación} (especificarlos de forma verificable) y
+\emph{validación} (confirmar que el conjunto especificado es el correcto).
+La sección~\ref{sec:requisitos} aplica este ciclo al SRS del proyecto.
+
+\subsection{Calidad de un requisito bien formado (INCOSE v4)}
+
+INCOSE~\cite{incose2023} define nueve características de calidad para un
+requisito individual (necesario, apropiado, no ambiguo, completo, singular,
+factible, verificable, correcto, conforme) y seis para un conjunto de
+requisitos (completo, consistente, factible, comprensible, validable,
+correcto). Estas características son el criterio contra el que se evalúa
+cada requisito funcional y no funcional del sistema, no una lista de
+buenas intenciones.
+
+\subsection{Historias de usuario y casos de uso}
+
+El proyecto usa ambas técnicas de especificación como complementarias, no
+como alternativas. Las historias de usuario siguen el criterio
+INVEST~\cite{cohn2004} (independiente, negociable, valiosa, estimable,
+pequeña, verificable) para los flujos orientados a un rol concreto; los
+casos de uso siguen la plantilla de Cockburn~\cite{cockburn2001} en los
+flujos con múltiples caminos alternativos y de excepción, donde una
+historia corta pierde información necesaria para la implementación.
+
+\subsection{Modelo arquitectónico C4}
+
+El modelo C4 de Brown~\cite{brown2018c4} describe la arquitectura en
+niveles de abstracción sucesivos —contexto, contenedores, componentes,
+código— cada uno dirigido a una audiencia distinta. Se eligió sobre UML
+clásico por su curva de aprendizaje más baja para un equipo pequeño y por
+generarse desde una fuente textual versionable (\texttt{workspace.dsl}) en
+vez de diagramas editados a mano que se desactualizan silenciosamente —
+justamente el defecto que \textsc{obs-02} encontró en la Entrega 1A
+(sección~\ref{sec:observaciones}).
+
+\subsection{Calidad de software: ISO/IEC 25010}
+
+De las ocho características de calidad de ISO/IEC 25010~\cite{iso25010}
+(adecuación funcional, eficiencia de desempeño, compatibilidad, usabilidad,
+fiabilidad, seguridad, mantenibilidad, portabilidad), este proyecto mide
+empíricamente cuatro de forma directa: seguridad (Bloque de controles
+OWASP), eficiencia de desempeño (k6), usabilidad (SUS) y mantenibilidad
+(cobertura de pruebas como indicador indirecto). Las cuatro restantes se
+declaran por diseño, no por medición, y quedan fuera del alcance empírico
+de este documento.
+
+\subsection{Arquitecturas orientadas a recursos (REST)}
+
+La API sigue las restricciones arquitectónicas que Fielding
+identificó~\cite{fielding2000} para sistemas distribuidos orientados a
+recursos: interfaz uniforme, \emph{statelessness} del lado del servidor
+por petición, cacheable, sistema en capas. La \emph{statelessness} de REST
+es la misma razón de fondo por la que la autenticación se resuelve con JWT
+en vez de sesiones de servidor (subsección siguiente).
+
+\subsection{Autenticación stateless: JWT y su ubicación en cookie \texttt{HttpOnly}}
+
+JWT~\cite{rfc7519} permite verificar la identidad del solicitante sin que
+el servidor mantenga estado de sesión, coherente con la restricción REST
+anterior. La decisión de transportarlo en una cookie \texttt{HttpOnly} en
+vez de en \texttt{localStorage} o un header manejado por JavaScript
+—documentada con sus alternativas descartadas en
+ADR-002~\cite{nygard2011adr}— responde a que un token accesible desde
+JavaScript queda expuesto a robo por \emph{Cross-Site Scripting}; una
+cookie \texttt{HttpOnly} no es legible por script del lado del cliente
+bajo ninguna circunstancia.
+
+\subsection{OWASP Top 10}
+
+El catálogo OWASP Top 10:2021~\cite{owasp2021} ordena los diez riesgos de
+seguridad más críticos en aplicaciones web por prevalencia e impacto
+observados en la industria. Este proyecto verifica con evidencia
+reproducible los controles A01 (control de acceso roto), A02 (fallas
+criptográficas), A03 (inyección), A05 (configuración de seguridad
+incorrecta), A07 (fallas de identificación y autenticación) y A09
+(fallas de registro y monitoreo) — sección~\ref{sec:a01-falso-correcto}.
+
+\subsection{Patrones de acceso a datos y modelos de consistencia}
+
+La separación entre CRUD elemental vía ORM y operaciones complejas vía
+procedimientos almacenados (sección~\ref{sec:acceso-datos}) se apoya en
+dos ideas de la literatura de arquitectura de datos: el patrón
+\emph{Repository}, que encapsula el acceso a un agregado detrás de una
+interfaz orientada a colecciones~\cite{fowler2002}, y la observación de
+que un motor relacional ofrece garantías de consistencia fuerte
+(transacciones ACID) que una capa de ORM genérica no puede replicar de
+forma eficiente para operaciones multi-fila o multi-tabla sin ceder
+control explícito al motor~\cite{kleppmann2017}. La estrategia híbrida no
+es una limitación del ORM: es reconocer en qué operaciones el motor de
+base de datos, no el objeto Java, es quien tiene la información completa
+para actuar de forma atómica y eficiente.
+
+% ============================================================
 \section{Resolución de las observaciones previas (Bloque 0)}
 \label{sec:observaciones}
 
@@ -566,6 +673,7 @@ procedimientos). El repositorio incluye una auditoría automatizada
 
 % ============================================================
 \section{Requisitos y modelo de datos}
+\label{sec:requisitos}
 
 \subsection{Resumen de requisitos}
 
