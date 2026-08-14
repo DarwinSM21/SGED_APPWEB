@@ -6,6 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
@@ -17,6 +19,7 @@ import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.lesion.service.LesionService;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -94,6 +97,19 @@ class LesionServiceTest {
     }
 
     @Test
+    @DisplayName("Entrenador inexistente da 404")
+    void entrenadorInexistente() {
+        when(estudianteRepository.findById(ID_EST))
+                .thenReturn(Optional.of(Estudiante.builder().idEstudiante(ID_EST).build()));
+        when(entrenadorRepository.findById(ID_ENT)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> servicio.registrar(ID_EST, ID_ENT, "x", null, null));
+
+        verify(lesionRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Dar de alta cierra la lesion y el jugador vuelve a estar disponible")
     void altaCierraLaLesion() {
         var lesion = Lesion.builder()
@@ -130,5 +146,42 @@ class LesionServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> servicio.darDeAlta(9L, LocalDate.of(2026, 8, 1)));
+    }
+
+    @Test
+    @DisplayName("Dar de alta una lesion inexistente da 404")
+    void darDeAltaLesionInexistente() {
+        when(lesionRepository.findById(9L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class, () -> servicio.darDeAlta(9L, null));
+    }
+
+    @Test
+    @DisplayName("listarActivas delega la paginacion al repositorio")
+    void listarActivasDelegaAlRepositorio() {
+        var pageable = PageRequest.of(0, 20);
+        var pagina = new PageImpl<Lesion>(List.of());
+        when(lesionRepository.listarActivas(pageable)).thenReturn(pagina);
+
+        assertEquals(pagina, servicio.listarActivas(pageable));
+    }
+
+    @Test
+    @DisplayName("historialDe delega la paginacion al repositorio, filtrando por estudiante")
+    void historialDeDelegaAlRepositorio() {
+        var pageable = PageRequest.of(0, 20);
+        var pagina = new PageImpl<Lesion>(List.of());
+        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(ID_EST, pageable))
+                .thenReturn(pagina);
+
+        assertEquals(pagina, servicio.historialDe(ID_EST, pageable));
+    }
+
+    @Test
+    @DisplayName("idsLesionados delega en el repositorio")
+    void idsLesionadosDelegaAlRepositorio() {
+        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(ID_EST));
+
+        assertEquals(List.of(ID_EST), servicio.idsLesionados());
     }
 }
