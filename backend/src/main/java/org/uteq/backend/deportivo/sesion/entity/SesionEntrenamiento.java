@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.horario.entity.Horario;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -30,8 +31,14 @@ public class SesionEntrenamiento {
     @Column(name = "id_sesion")
     private Long idSesion;
 
-    @Column(name = "id_horario")
-    private Long idHorario;
+    /**
+     * Horario fijo que origino esta sesion (null si es una jornada extra
+     * creada a mano, fuera del patron recurrente). Ver
+     * HorarioService.generarSesionesDeHoy().
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_horario")
+    private Horario horario;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_entrenador", nullable = false)

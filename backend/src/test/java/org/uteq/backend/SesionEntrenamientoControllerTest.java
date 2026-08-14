@@ -22,6 +22,7 @@ import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
+import org.uteq.backend.deportivo.horario.service.HorarioService;
 import org.uteq.backend.deportivo.sesion.controller.SesionEntrenamientoController;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
@@ -54,6 +55,7 @@ class SesionEntrenamientoControllerTest {
     @Mock private EntrenadorRepository entrenadorRepository;
     @Mock private EvaluacionDiariaRepository evaluacionRepository;
     @Mock private CategoriaRepository categoriaRepository;
+    @Mock private HorarioService horarioService;
 
     @InjectMocks private SesionEntrenamientoController controller;
 
@@ -237,6 +239,17 @@ class SesionEntrenamientoControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idCategoria\":999,\"fecha\":\"2026-08-10\",\"horaInicio\":\"16:00:00\",\"horaFin\":\"17:00:00\"}"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("hoy genera antes de leer, para que una sesion de horario fijo aparezca sin que nadie la cree a mano")
+    void hoy_genera_las_sesiones_del_horario_fijo_antes_de_listar() throws Exception {
+        autenticarComo("admin@sged.test", "ADMINISTRADOR");
+        when(sesionRepository.findByFechaOrderByHoraInicioAsc(LocalDate.now())).thenReturn(List.of());
+
+        mockMvc.perform(get("/api/sesiones/hoy")).andExpect(status().isOk());
+
+        verify(horarioService).generarSesionesDeHoy();
     }
 
     // --- GET /api/sesiones/mias ---

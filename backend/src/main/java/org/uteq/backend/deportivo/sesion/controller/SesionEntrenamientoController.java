@@ -9,12 +9,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
+import org.uteq.backend.deportivo.horario.service.HorarioService;
 import org.uteq.backend.deportivo.sesion.dto.SesionCrearRequest;
 import org.uteq.backend.deportivo.sesion.dto.SesionHoyResponse;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
@@ -43,6 +45,7 @@ public class SesionEntrenamientoController {
     private final EntrenadorRepository entrenadorRepository;
     private final EvaluacionDiariaRepository evaluacionRepository;
     private final CategoriaRepository categoriaRepository;
+    private final HorarioService horarioService;
 
     /**
      * Sesiones de hoy. Un ADMINISTRADOR o RECEPCIONISTA ve todas (el
@@ -50,12 +53,18 @@ public class SesionEntrenamientoController {
      * no esta atado a un entrenador concreto); un ENTRENADOR solo las suyas,
      * resuelto desde su propio usuario autenticado y no desde un parametro
      * que el cliente pudiera manipular para ver la agenda de otro.
+     *
+     * <p>Antes de leer, se generan las sesiones del dia que salen de un
+     * horario fijo (ver HorarioService.generarSesionesDeHoy()) -por eso ya
+     * no es de solo lectura-: asi ni el entrenador ni recepcion dependen de
+     * que alguien haya creado la sesion a mano para que aparezca hoy.
      */
     @GetMapping("/hoy")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseEntity<List<SesionHoyResponse>> hoy() {
-        LocalDate hoy = LocalDate.now();
+        horarioService.generarSesionesDeHoy();
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
         boolean veTodasLasSesiones = SecurityContextHolder.getContext().getAuthentication()
                 .getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR")
@@ -84,11 +93,12 @@ public class SesionEntrenamientoController {
      */
     @GetMapping("/mias")
     @PreAuthorize("hasRole('ENTRENADOR')")
-    @Transactional(readOnly = true)
+    @Transactional
     public ResponseEntity<List<SesionHoyResponse>> mias(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
+        horarioService.generarSesionesDeHoy();
         Entrenador entrenador = entrenadorAutenticado();
         if (entrenador == null) {
             return ResponseEntity.ok(List.of());

@@ -507,21 +507,31 @@ registrarse dos veces como entrenador.*
 
 ---
 
-**RF-17 — Horarios recurrentes de entrenamiento** 🟡 Modelado
+**RF-17 — Horarios recurrentes de entrenamiento** ✅ Implementado (2026-08-13)
 *El sistema deberá permitir definir horarios semanales recurrentes por
 categoría y entrenador, y deberá impedir que la hora de fin sea anterior o
 igual a la hora de inicio.*
-Esquema: `deportivo.horarios_entrenamiento`, con `CHECK (hora_fin > hora_inicio)`
-y `CHECK (dia_semana BETWEEN 1 AND 7)`.
+`POST/GET /api/horarios`, `DELETE /api/horarios/{id}` (baja lógica), todos
+`hasRole('ENTRENADOR')` y acotados al propio entrenador autenticado (404 si
+el horario no es suyo). Esquema: `deportivo.horarios_entrenamiento`, con
+`CHECK (hora_fin > hora_inicio)` y `CHECK (dia_semana BETWEEN 1 AND 7)`.
+De aquí se generan solas las sesiones del día que corresponde (ver RF-18):
+antes, cada sesión —fuera una recurrente o una extra— se creaba a mano.
 
 ---
 
-**RF-18 — Sesiones de entrenamiento** 🟡 Modelado
+**RF-18 — Sesiones de entrenamiento** ✅ Implementado (2026-08-13)
 *El sistema deberá registrar cada sesión de entrenamiento con su fecha,
 categoría, entrenador responsable y estado, admitiendo únicamente los
 estados PROGRAMADA, EN_CURSO, FINALIZADA y CANCELADA.*
+`POST /api/sesiones` (jornada extra, fuera del horario fijo), `GET
+/api/sesiones/hoy` y `/mias`. Estos dos últimos generan primero, de forma
+idempotente, la sesión de hoy de cada horario fijo activo que caiga en el
+día (`HorarioService.generarSesionesDeHoy()`) antes de listar — así ni el
+entrenador ni recepción dependen de que alguien cree la sesión a mano.
 Esquema: `deportivo.sesiones_entrenamiento`, con restricción `CHECK` sobre
-`estado`.
+`estado` y FK opcional `id_horario` hacia el horario que la originó (null
+si es una jornada extra).
 
 ---
 

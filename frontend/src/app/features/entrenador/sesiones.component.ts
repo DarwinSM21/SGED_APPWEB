@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SesionesService } from './sesiones.service';
-import { CategoriaOpcion, Sesion } from './sesiones.models';
+import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models';
 import { inicialesDe } from './plantilla.models';
 
 /**
@@ -26,6 +26,79 @@ import { inicialesDe } from './plantilla.models';
           {{ mostrarFormulario() ? 'Cancelar' : '+ Nueva sesión' }}
         </button>
       </div>
+
+      <section class="card horario-semanal">
+        <div class="cabecera-seccion">
+          <h2 class="subtitulo">Mi horario semanal</h2>
+          <button class="btn btn--secondary btn--sm" type="button" (click)="alternarFormularioHorario()">
+            {{ mostrarFormularioHorario() ? 'Cancelar' : '+ Agregar horario' }}
+          </button>
+        </div>
+        <p class="ayuda">Las sesiones de estos días se generan solas. Usa "+ Nueva sesión" solo para una jornada extra.</p>
+
+        @if (mostrarFormularioHorario()) {
+          <form class="formulario-horario" (ngSubmit)="onCrearHorario()">
+            <div class="fila-2">
+              <label class="field" for="categoriaHorario">
+                <span class="field__label">Categoría</span>
+                <span class="field__control">
+                  <select id="categoriaHorario" [ngModel]="idCategoriaHorario" (ngModelChange)="idCategoriaHorario = $event" name="categoriaHorario" required>
+                    <option [ngValue]="null" disabled>Selecciona...</option>
+                    @for (c of categorias(); track c.idCategoria) {
+                      <option [ngValue]="c.idCategoria">{{ c.nombre }}</option>
+                    }
+                  </select>
+                </span>
+              </label>
+              <label class="field" for="diaSemana">
+                <span class="field__label">Día</span>
+                <span class="field__control">
+                  <select id="diaSemana" [ngModel]="diaSemana" (ngModelChange)="diaSemana = $event" name="diaSemana" required>
+                    <option [ngValue]="null" disabled>Selecciona...</option>
+                    @for (d of diasSemana; track d.valor) {
+                      <option [ngValue]="d.valor">{{ d.nombre }}</option>
+                    }
+                  </select>
+                </span>
+              </label>
+            </div>
+
+            <div class="fila-2">
+              <label class="field" for="horaInicioHorario">
+                <span class="field__label">Hora de inicio</span>
+                <span class="field__control"><input id="horaInicioHorario" type="time" [(ngModel)]="horaInicioHorario" name="horaInicioHorario" required /></span>
+              </label>
+              <label class="field" for="horaFinHorario">
+                <span class="field__label">Hora de fin</span>
+                <span class="field__control"><input id="horaFinHorario" type="time" [(ngModel)]="horaFinHorario" name="horaFinHorario" required /></span>
+              </label>
+            </div>
+
+            <label class="field" for="campoHorario">
+              <span class="field__label">Campo / cancha (opcional)</span>
+              <span class="field__control"><input id="campoHorario" type="text" [(ngModel)]="campoHorario" name="campoHorario" /></span>
+            </label>
+
+            @if (errorHorario()) { <div class="alert alert--danger" role="alert">{{ errorHorario() }}</div> }
+
+            <button class="btn btn--primary btn--block" type="submit" [disabled]="guardandoHorario()">
+              {{ guardandoHorario() ? 'Guardando…' : 'Guardar horario' }}
+            </button>
+          </form>
+        }
+
+        @if (horarios().length > 0) {
+          <div class="lista-horarios">
+            @for (h of horarios(); track h.idHorario) {
+              <div class="fila-horario">
+                <span class="badge badge--info">{{ nombreDia(h.diaSemana) }}</span>
+                <span class="horario-info">{{ h.categoria }} · {{ h.horaInicio }}–{{ h.horaFin }}{{ h.campo ? ' · ' + h.campo : '' }}</span>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="onDesactivarHorario(h.idHorario)">Quitar</button>
+              </div>
+            }
+          </div>
+        }
+      </section>
 
       @if (mostrarFormulario()) {
         <form class="card formulario" (ngSubmit)="onCrear()">
@@ -119,6 +192,20 @@ import { inicialesDe } from './plantilla.models';
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 560px) { .fila-2 { grid-template-columns: 1fr; } }
 
+    .horario-semanal { padding: 1.25rem; margin-bottom: 1.5rem; }
+    .cabecera-seccion { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .subtitulo { font-size: .95rem; }
+    .ayuda { font-size: .8rem; color: var(--color-text-muted); margin: .35rem 0 0; }
+    .btn--sm { padding: .35rem .7rem; font-size: .78rem; }
+    .formulario-horario {
+      display: flex; flex-direction: column; gap: .9rem;
+      margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--color-border-light);
+    }
+    .lista-horarios { display: flex; flex-direction: column; gap: .1rem; margin-top: 1rem; }
+    .fila-horario { display: flex; align-items: center; gap: .6rem; padding: .5rem .1rem; border-bottom: 1px solid var(--color-border-light); }
+    .fila-horario:last-child { border-bottom: none; }
+    .horario-info { flex: 1; font-size: .85rem; }
+
     .lista { padding: 1.25rem; }
     .aviso { color: var(--color-text-muted); font-size: .9rem; padding: .5rem 0; }
     .vacio {
@@ -159,8 +246,21 @@ export class SesionesComponent implements OnInit {
   horaFin = '';
   campo = '';
 
+  readonly horarios = signal<Horario[]>([]);
+  readonly mostrarFormularioHorario = signal(false);
+  readonly guardandoHorario = signal(false);
+  readonly errorHorario = signal('');
+  readonly diasSemana = DIAS_SEMANA;
+
+  idCategoriaHorario: number | null = null;
+  diaSemana: number | null = null;
+  horaInicioHorario = '';
+  horaFinHorario = '';
+  campoHorario = '';
+
   ngOnInit(): void {
     this.cargarSesiones();
+    this.cargarHorarios();
     this.sesionesService.listarCategoriasActivas().subscribe({
       next: (categorias) => this.categorias.set(categorias),
       error: () => {},
@@ -221,5 +321,65 @@ export class SesionesComponent implements OnInit {
 
   iniciales(nombre: string): string {
     return inicialesDe(nombre);
+  }
+
+  private cargarHorarios(): void {
+    this.sesionesService.misHorarios().subscribe({
+      next: (horarios) => this.horarios.set(horarios),
+      error: () => {},
+    });
+  }
+
+  alternarFormularioHorario(): void {
+    this.mostrarFormularioHorario.set(!this.mostrarFormularioHorario());
+    this.errorHorario.set('');
+  }
+
+  onCrearHorario(): void {
+    if (!this.idCategoriaHorario || !this.diaSemana || !this.horaInicioHorario || !this.horaFinHorario) {
+      this.errorHorario.set('Completa categoría, día y horas.');
+      return;
+    }
+    if (this.horaFinHorario <= this.horaInicioHorario) {
+      this.errorHorario.set('La hora de fin debe ser posterior a la de inicio.');
+      return;
+    }
+
+    this.guardandoHorario.set(true);
+    this.errorHorario.set('');
+    this.sesionesService.crearHorario({
+      idCategoria: this.idCategoriaHorario,
+      diaSemana: this.diaSemana,
+      horaInicio: this.horaInicioHorario,
+      horaFin: this.horaFinHorario,
+      campo: this.campoHorario || null,
+      descripcion: null,
+    }).subscribe({
+      next: () => {
+        this.guardandoHorario.set(false);
+        this.mostrarFormularioHorario.set(false);
+        this.idCategoriaHorario = null;
+        this.diaSemana = null;
+        this.horaInicioHorario = '';
+        this.horaFinHorario = '';
+        this.campoHorario = '';
+        this.cargarHorarios();
+      },
+      error: (err) => {
+        this.guardandoHorario.set(false);
+        this.errorHorario.set(err?.error?.detail ?? 'No se pudo guardar el horario.');
+      },
+    });
+  }
+
+  onDesactivarHorario(idHorario: number): void {
+    this.sesionesService.desactivarHorario(idHorario).subscribe({
+      next: () => this.cargarHorarios(),
+      error: () => {},
+    });
+  }
+
+  nombreDia(dia: number): string {
+    return this.diasSemana.find((d) => d.valor === dia)?.nombre ?? String(dia);
   }
 }

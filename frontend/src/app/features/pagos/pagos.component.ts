@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PagosService } from './pagos.service';
@@ -21,119 +21,237 @@ const NOMBRES_MES = [
   imports: [CommonModule, FormsModule],
   template: `
     <div class="pantalla">
-      <h1 class="titulo-pantalla">Pagos</h1>
-
-      <div class="card formulario">
-        <label class="field" for="idEstudiante">
-          <span class="field__label">Estudiante</span>
-          <span class="field__control">
-            @if (cargandoEstudiantes()) {
-              <span class="aviso">Cargando…</span>
-            } @else {
-              <select id="idEstudiante" [ngModel]="idEstudiante()" (ngModelChange)="seleccionarEstudiante($event)" name="idEstudiante">
-                <option [ngValue]="null" disabled>Selecciona…</option>
-                @for (e of estudiantes(); track e.idEstudiante) {
-                  <option [ngValue]="e.idEstudiante">{{ e.nombreCompleto }} · {{ e.categoria }}</option>
-                }
-              </select>
-            }
-          </span>
-        </label>
-
-        @if (idEstudiante() !== null) {
-          <div class="tabs">
-            <button type="button" class="tab" [class.tab--activo]="tipo() === 'MEMBRESIA'" (click)="tipo.set('MEMBRESIA')">Membresía mensual</button>
-            <button type="button" class="tab" [class.tab--activo]="tipo() === 'DIARIO'" (click)="tipo.set('DIARIO')">Diario / eventual</button>
-          </div>
-
-          @if (tipo() === 'MEMBRESIA') {
-            <div class="fila-2">
-              <label class="field" for="anio">
-                <span class="field__label">Año</span>
-                <span class="field__control"><input id="anio" type="number" [(ngModel)]="anio" name="anio" /></span>
-              </label>
-              <label class="field" for="montoMembresia">
-                <span class="field__label">Monto por mes</span>
-                <span class="field__control"><input id="montoMembresia" type="number" step="0.01" min="0.01" [(ngModel)]="montoMembresia" name="montoMembresia" /></span>
-              </label>
-            </div>
-            <span class="field__label">Meses a cubrir</span>
-            <div class="meses">
-              @for (m of meses; track m) {
-                <label class="opcion-mes">
-                  <input type="checkbox" [checked]="mesesSeleccionados().has(m)" (change)="alternarMes(m)" />
-                  {{ nombreMes(m) }}
-                </label>
-              }
-            </div>
-            <button class="btn btn--primary" type="button" [disabled]="guardando() || mesesSeleccionados().size === 0" (click)="registrarMembresia()">
-              @if (guardando()) { <span class="spinner"></span> Guardando… } @else { Registrar membresía }
-            </button>
-          } @else {
-            <label class="field" for="montoDiario">
-              <span class="field__label">Monto</span>
-              <span class="field__control"><input id="montoDiario" type="number" step="0.01" min="0.01" [(ngModel)]="montoDiario" name="montoDiario" /></span>
-            </label>
-            <button class="btn btn--primary" type="button" [disabled]="guardando()" (click)="registrarDiario()">
-              @if (guardando()) { <span class="spinner"></span> Guardando… } @else { Registrar pago diario }
-            </button>
-          }
-
-          @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
-          @if (exito()) { <div class="alert alert--success" role="status">{{ exito() }}</div> }
-        }
+      <div class="encabezado">
+        <h1 class="titulo-pantalla">Gestión de Pagos</h1>
+        <p class="subtitulo-pantalla">Administra las membresías y pagos mensuales de los estudiantes de forma rápida y segura.</p>
       </div>
 
-      @if (idEstudiante() !== null) {
-        <div class="card historial">
-          <h2 class="subtitulo">Historial de pagos</h2>
-          @if (cargandoHistorial()) {
-            <p class="aviso">Cargando…</p>
-          } @else if (historial().length === 0) {
-            <p class="aviso">Sin pagos registrados todavía.</p>
-          } @else {
-            @for (p of historial(); track p.idPago) {
-              <div class="fila-pago">
-                <span class="badge" [class.badge--info]="p.tipo === 'MEMBRESIA'" [class.badge--success]="p.tipo === 'DIARIO'">
-                  {{ p.tipo === 'MEMBRESIA' ? (nombreMes(p.mes!) + ' ' + p.anio) : 'Diario' }}
-                </span>
-                <span class="monto-pago">{{ p.monto | number: '1.2-2' }}</span>
-                <span class="fecha-pago">{{ p.fechaPago }}</span>
+      <div class="layout">
+        <div class="card formulario">
+          <h2 class="titulo-card">Registro de Membresía</h2>
+
+          @if (idEstudiante() === null) {
+            <label class="field" for="idEstudiante">
+              <span class="field__label">Estudiante</span>
+              <span class="field__control">
+                @if (cargandoEstudiantes()) {
+                  <span class="aviso">Cargando…</span>
+                } @else {
+                  <select id="idEstudiante" [ngModel]="idEstudiante()" (ngModelChange)="seleccionarEstudiante($event)" name="idEstudiante">
+                    <option [ngValue]="null" disabled>Selecciona…</option>
+                    @for (e of estudiantes(); track e.idEstudiante) {
+                      <option [ngValue]="e.idEstudiante">{{ e.nombreCompleto }} · {{ e.categoria }}</option>
+                    }
+                  </select>
+                }
+              </span>
+            </label>
+          } @else if (estudianteSeleccionado(); as est) {
+            <div class="chip-estudiante">
+              <span class="avatar">{{ iniciales(est.nombreCompleto) }}</span>
+              <span class="chip-estudiante__info">
+                <span class="chip-estudiante__etiqueta">Estudiante seleccionado</span>
+                <span class="chip-estudiante__nombre">{{ est.nombreCompleto }}</span>
+              </span>
+              <span class="badge badge--info">Categoría: {{ est.categoria }}</span>
+              <button type="button" class="btn btn--ghost btn--cambiar" (click)="cambiarEstudiante()">Cambiar</button>
+            </div>
+
+            <span class="field__label">Tipo de cobro</span>
+            <div class="segmentado">
+              <button type="button" class="segmento" [class.segmento--activo]="tipo() === 'MEMBRESIA'" (click)="tipo.set('MEMBRESIA')">Membresía mensual</button>
+              <button type="button" class="segmento" [class.segmento--activo]="tipo() === 'DIARIO'" (click)="tipo.set('DIARIO')">Diario / eventual</button>
+            </div>
+
+            @if (tipo() === 'MEMBRESIA') {
+              <div class="fila-2">
+                <label class="field" for="anio">
+                  <span class="field__label">Año</span>
+                  <span class="field__control">
+                    <select id="anio" [(ngModel)]="anio" name="anio">
+                      @for (a of aniosDisponibles; track a) {
+                        <option [ngValue]="a">{{ a }}</option>
+                      }
+                    </select>
+                  </span>
+                </label>
+                <label class="field" for="montoMembresia">
+                  <span class="field__label">Monto por mes</span>
+                  <span class="field__control">
+                    <span class="field__prefijo">$</span>
+                    <input id="montoMembresia" type="number" step="0.01" min="0.01" [(ngModel)]="montoMembresia" name="montoMembresia" />
+                  </span>
+                </label>
               </div>
+
+              <div class="meses-encabezado">
+                <span class="field__label">Meses a cubrir</span>
+                <button type="button" class="enlace" (click)="alternarTodosLosMeses()">
+                  {{ todosLosMesesSeleccionados() ? 'Quitar todos' : 'Seleccionar todos' }}
+                </button>
+              </div>
+              <div class="meses">
+                @for (m of meses; track m) {
+                  <button type="button" class="pill-mes" [class.pill-mes--activo]="mesesSeleccionados().has(m)" (click)="alternarMes(m)">
+                    @if (mesesSeleccionados().has(m)) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                    }
+                    {{ nombreMes(m) }}
+                  </button>
+                }
+              </div>
+
+              <div class="resumen-total">
+                <div class="resumen-total__info">
+                  <span class="resumen-total__etiqueta">Total estimado a registrar</span>
+                  <strong class="resumen-total__monto">{{ totalEstimado() | number: '1.2-2' }}</strong>
+                  <span class="resumen-total__caption">
+                    {{ mesesSeleccionados().size }} {{ mesesSeleccionados().size === 1 ? 'mes seleccionado' : 'meses seleccionados' }}
+                  </span>
+                </div>
+                <button class="btn btn--primary" type="button" [disabled]="guardando() || mesesSeleccionados().size === 0" (click)="registrarMembresia()">
+                  @if (guardando()) {
+                    <span class="spinner"></span> Guardando…
+                  } @else {
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg>
+                    Registrar membresía
+                  }
+                </button>
+              </div>
+            } @else {
+              <label class="field" for="montoDiario">
+                <span class="field__label">Monto</span>
+                <span class="field__control">
+                  <span class="field__prefijo">$</span>
+                  <input id="montoDiario" type="number" step="0.01" min="0.01" [(ngModel)]="montoDiario" name="montoDiario" />
+                </span>
+              </label>
+              <button class="btn btn--primary btn--block" type="button" [disabled]="guardando()" (click)="registrarDiario()">
+                @if (guardando()) { <span class="spinner"></span> Guardando… } @else { Registrar pago diario }
+              </button>
             }
+
+            @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
+            @if (exito()) { <div class="alert alert--success" role="status">{{ exito() }}</div> }
           }
         </div>
-      }
+
+        @if (idEstudiante() !== null) {
+          <div class="columna-historial">
+            <div class="card historial">
+              <h2 class="titulo-card">Historial de pagos</h2>
+              @if (cargandoHistorial()) {
+                <p class="aviso">Cargando…</p>
+              } @else if (historial().length === 0) {
+                <div class="vacio">
+                  <span class="vacio__icono">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3z"/>
+                      <line x1="9" y1="8" x2="15" y2="8"/>
+                      <line x1="9" y1="12" x2="15" y2="12"/>
+                    </svg>
+                  </span>
+                  <p class="vacio__titulo">Sin pagos registrados todavía</p>
+                  <p class="vacio__texto">Los registros de pagos recientes para este estudiante aparecerán aquí.</p>
+                </div>
+              } @else {
+                @for (p of historial(); track p.idPago) {
+                  <div class="fila-pago">
+                    <span class="badge" [class.badge--info]="p.tipo === 'MEMBRESIA'" [class.badge--success]="p.tipo === 'DIARIO'">
+                      {{ p.tipo === 'MEMBRESIA' ? (nombreMes(p.mes!) + ' ' + p.anio) : 'Diario' }}
+                    </span>
+                    <span class="monto-pago">{{ p.monto | number: '1.2-2' }}</span>
+                    <span class="fecha-pago">{{ p.fechaPago }}</span>
+                  </div>
+                }
+              }
+            </div>
+
+            <div class="alert alert--info consejo">
+              Asegúrese de verificar los montos antes de registrar una membresía para evitar discrepancias contables.
+            </div>
+          </div>
+        }
+      </div>
     </div>
   `,
   styles: [`
-    .pantalla { max-width: 700px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
-    .titulo-pantalla { font-size: 1.2rem; }
-    .subtitulo { font-size: .95rem; margin-bottom: .75rem; }
+    .pantalla { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    .encabezado { display: flex; flex-direction: column; gap: .3rem; }
+    .titulo-pantalla { font-size: 1.5rem; }
+    .subtitulo-pantalla { color: var(--color-text-muted); font-size: .92rem; max-width: 640px; }
+    .titulo-card { font-size: 1.05rem; margin-bottom: 1.1rem; }
+
+    .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.25rem; align-items: start; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
 
     .formulario { padding: 1.5rem; display: flex; flex-direction: column; gap: .9rem; }
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
     @media (max-width: 480px) { .fila-2 { grid-template-columns: 1fr; } }
 
     .field__control select { flex: 1; border: none; outline: none; padding: .75rem 0; font-size: .95rem; background: transparent; color: var(--color-text); width: 100%; }
+    .field__prefijo { color: var(--color-text-faint); font-weight: 600; }
     .aviso { color: var(--color-text-muted); font-size: .85rem; }
 
-    .tabs { display: flex; gap: .4rem; border-bottom: 1px solid var(--color-border-light); padding-bottom: .1rem; }
-    .tab {
-      border: none; background: none; padding: .55rem .9rem; font-size: .87rem; font-weight: 600;
-      color: var(--color-text-muted); cursor: pointer; border-bottom: 2px solid transparent;
+    .chip-estudiante {
+      display: flex; align-items: center; gap: .75rem;
+      background: var(--color-primary-50); border: 1px solid var(--color-primary-100);
+      border-radius: var(--radius-sm); padding: .75rem 1rem;
     }
-    .tab--activo { color: var(--color-primary-700); border-bottom-color: var(--color-primary-500); }
+    .chip-estudiante__info { display: flex; flex-direction: column; gap: .1rem; flex: 1; min-width: 0; }
+    .chip-estudiante__etiqueta { font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--color-primary-600); }
+    .chip-estudiante__nombre { font-weight: 700; color: var(--color-text); }
+    .btn--cambiar { padding: .4rem .75rem; font-size: .8rem; flex-shrink: 0; }
 
-    .meses { display: grid; grid-template-columns: repeat(3, 1fr); gap: .4rem .75rem; }
-    @media (max-width: 480px) { .meses { grid-template-columns: repeat(2, 1fr); } }
-    .opcion-mes { display: flex; align-items: center; gap: .5rem; font-size: .85rem; cursor: pointer; }
+    .segmentado { display: flex; gap: .3rem; background: var(--color-bg); border-radius: var(--radius-sm); padding: .3rem; }
+    .segmento {
+      flex: 1; border: none; background: transparent; border-radius: calc(var(--radius-sm) - 4px);
+      padding: .6rem .9rem; font-size: .87rem; font-weight: 600; color: var(--color-text-muted); cursor: pointer;
+      transition: background var(--transition), color var(--transition), box-shadow var(--transition);
+    }
+    .segmento--activo { background: var(--gradient-primary); color: #fff; box-shadow: var(--shadow-sm); }
 
+    .meses-encabezado { display: flex; align-items: baseline; justify-content: space-between; }
+    .enlace { border: none; background: none; color: var(--color-primary-600); font-size: .8rem; font-weight: 700; cursor: pointer; padding: 0; }
+    .enlace:hover { text-decoration: underline; }
+
+    .meses { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .pill-mes {
+      display: inline-flex; align-items: center; gap: .35rem;
+      border: 1.5px solid var(--color-border); background: var(--color-surface); color: var(--color-text-muted);
+      border-radius: var(--radius-full); padding: .45rem .9rem; font-size: .83rem; font-weight: 600; cursor: pointer;
+      transition: background var(--transition), border-color var(--transition), color var(--transition);
+    }
+    .pill-mes svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .pill-mes--activo { border-color: var(--color-primary-500); background: var(--color-primary-50); color: var(--color-primary-700); }
+
+    .resumen-total {
+      display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+      background: var(--color-bg); border-radius: var(--radius-sm); padding: .9rem 1.1rem;
+    }
+    .resumen-total__info { display: flex; flex-direction: column; gap: .15rem; }
+    .resumen-total__etiqueta { font-size: .78rem; color: var(--color-text-muted); }
+    .resumen-total__monto { font-size: 1.3rem; color: var(--color-text); }
+    .resumen-total__caption { font-size: .75rem; color: var(--color-text-faint); }
+    .resumen-total .btn { flex-shrink: 0; }
+
+    .columna-historial { display: flex; flex-direction: column; gap: 1rem; }
     .historial { padding: 1.25rem 1.5rem; }
     .fila-pago { display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem; }
     .fila-pago:last-child { border-bottom: none; }
     .monto-pago { font-weight: 600; flex: 1; }
     .fecha-pago { color: var(--color-text-faint); font-size: .8rem; }
+
+    .vacio { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .3rem; padding: 1.5rem .5rem; }
+    .vacio__icono {
+      width: 52px; height: 52px; border-radius: 50%; background: var(--color-bg); color: var(--color-text-faint);
+      display: flex; align-items: center; justify-content: center; margin-bottom: .5rem;
+    }
+    .vacio__icono svg { width: 24px; height: 24px; }
+    .vacio__titulo { font-weight: 700; font-size: .92rem; }
+    .vacio__texto { color: var(--color-text-muted); font-size: .82rem; max-width: 220px; }
+
+    .consejo { margin: 0; }
   `]
 })
 export class PagosComponent implements OnInit {
@@ -143,10 +261,19 @@ export class PagosComponent implements OnInit {
   readonly estudiantes = signal<EstudianteOpcionPago[]>([]);
   readonly cargandoEstudiantes = signal(true);
   readonly idEstudiante = signal<number | null>(null);
+  readonly estudianteSeleccionado = computed(() =>
+    this.estudiantes().find((e) => e.idEstudiante === this.idEstudiante()) ?? null,
+  );
 
   readonly tipo = signal<'MEMBRESIA' | 'DIARIO'>('MEMBRESIA');
   readonly meses = Array.from({ length: 12 }, (_, i) => i + 1);
   readonly mesesSeleccionados = signal<Set<number>>(new Set());
+  readonly todosLosMesesSeleccionados = computed(() => this.mesesSeleccionados().size === 12);
+
+  readonly aniosDisponibles = (() => {
+    const actual = new Date().getFullYear();
+    return [actual - 1, actual, actual + 1];
+  })();
   anio = new Date().getFullYear();
   montoMembresia: number | null = null;
   montoDiario: number | null = null;
@@ -172,6 +299,16 @@ export class PagosComponent implements OnInit {
     this.cargarHistorial(id);
   }
 
+  cambiarEstudiante(): void {
+    this.idEstudiante.set(null);
+    this.mesesSeleccionados.set(new Set());
+    this.montoMembresia = null;
+    this.montoDiario = null;
+    this.error.set('');
+    this.exito.set('');
+    this.historial.set([]);
+  }
+
   private cargarHistorial(idEstudiante: number): void {
     this.cargandoHistorial.set(true);
     this.servicio.historialDe(idEstudiante).subscribe({
@@ -186,8 +323,25 @@ export class PagosComponent implements OnInit {
     this.mesesSeleccionados.set(actuales);
   }
 
+  alternarTodosLosMeses(): void {
+    this.mesesSeleccionados.set(this.todosLosMesesSeleccionados() ? new Set() : new Set(this.meses));
+  }
+
+  totalEstimado(): number {
+    return (this.montoMembresia ?? 0) * this.mesesSeleccionados().size;
+  }
+
   nombreMes(mes: number): string {
     return NOMBRES_MES[mes - 1] ?? String(mes);
+  }
+
+  iniciales(nombreCompleto: string): string {
+    return nombreCompleto
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((parte) => parte[0]?.toUpperCase() ?? '')
+      .join('');
   }
 
   registrarMembresia(): void {
