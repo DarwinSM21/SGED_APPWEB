@@ -126,6 +126,19 @@ complementario a este, no un duplicado.
 
 ## [Unreleased]
 
+### Documentación
+- Renumeración de ADRs para alinear con la Guía de la Entrega Final (el
+  Bloque A.2.2 exige `ADR-006` para "Estrategia de acceso a datos:
+  separación CRUD/SP"; el A.4.2 exige `ADR-007` para la estrategia de
+  despliegue): `ADR-004-acceso_datos` → `ADR-006-acceso_datos`,
+  `ADR-006-despliegue` → `ADR-007-despliegue`. El `ADR-007` de JWT en cookie
+  y blacklist en Redis —que ya había migrado una vez desde `ADR-003` por
+  colisión, ver la entrada de `v0.9.0-rc` más abajo— pasa a
+  `ADR-008-jwt-cookie-redis` para liberar el número que exige la guía.
+  Referencias cruzadas actualizadas en `ADR-002-autentificacion.md`,
+  `docs/informe/main.tex`, `AuthController.java`, `SesionResponse.java` y
+  `AuthServiceTest.java`.
+
 ### Seguridad
 - JWT migrado de header `Authorization` a cookies `HttpOnly` + `Secure` +
   `SameSite=Strict`; `/api/auth/registro` protegido.

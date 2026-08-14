@@ -185,6 +185,38 @@ Antes de exponer los resultados conviene ser explícito sobre dos cosas:
     media agregada esconde.
 \end{enumerate}
 
+\subsection{Preguntas de investigación}
+\label{sec:rqs}
+
+Cuatro preguntas guían el resto de este documento. Cada una es cerrada —
+admite una respuesta verificable contra la evidencia empírica del
+Capítulo~\ref{sec:evaluacion}, no una opinión— y cada una se retoma
+explícitamente en la Discusión (sección~\ref{sec:discusion}).
+
+\begin{description}[leftmargin=2.2em, style=nextline]
+  \item[RQ1.] ¿El sistema cumple los umbrales de rendimiento definidos
+    (p95~$\leq$~200\,ms con caché caliente, p95~$\leq$~500\,ms con caché
+    fría) bajo una carga concurrente de 50 usuarios virtuales, tanto en
+    operaciones CRUD servidas por el ORM como en operaciones que invocan
+    procedimientos almacenados?
+  \item[RQ2.] ¿La estrategia híbrida de acceso a datos —ORM parametrizado
+    para el CRUD elemental, procedimientos almacenados con parámetros
+    nombrados para consultas multi-tabla, agregados, reportes,
+    actualizaciones masivas, validaciones cruzadas y generación de
+    códigos— elimina el riesgo de inyección SQL de forma verificable
+    mediante los seis controles OWASP y un análisis estático
+    independiente?
+  \item[RQ3.] ¿La usabilidad percibida (SUS) es homogénea entre los
+    distintos perfiles de usuario del sistema (entrenador, estudiante,
+    recepcionista, representante), o existen diferencias significativas
+    entre roles que una media agregada esconde?
+  \item[RQ4.] ¿La cobertura de pruebas automatizadas y la trazabilidad de
+    requisitos se sostienen en los umbrales exigidos
+    ($\geq$~70\,\% líneas y ramas; 100\,\% de requisitos \emph{Must}
+    verificados) conforme crece el dominio funcional del sistema, o se
+    degradan a medida que se agregan módulos nuevos?
+\end{description}
+
 \subsection{Pila tecnológica}
 
 \begin{center}
@@ -370,7 +402,7 @@ implementación que no existe.
 También se corrigió una inconsistencia en \texttt{ADR-002} (autenticación):
 describía JWT almacenado en \texttt{localStorage} con un interceptor
 agregando \texttt{Authorization: Bearer}, cuando el código real —y el
-ADR-007 de este mismo informe— usa cookies \texttt{HttpOnly}. Es el mismo
+ADR-008 de este mismo informe— usa cookies \texttt{HttpOnly}. Es el mismo
 patrón que ya había observado el docente en la Entrega 1A (OBS-03: un ADR
 describía PHP/Laravel mientras el repositorio construía Spring Boot). Se
 corrige por la misma razón: un documento de arquitectura que no coincide con
@@ -768,6 +800,7 @@ informe pueda rastrearse hasta la ejecución concreta que la produjo.
 
 % ============================================================
 \section{Evidencia empírica}
+\label{sec:evaluacion}
 
 \subsection{Rendimiento (Bloque C.1)}
 
@@ -1433,6 +1466,118 @@ reescribir el historial ya compartido. El mismo archivo declara
 explícitamente el uso de herramientas de asistencia por inteligencia
 artificial, siguiendo la guía de transparencia del SWEBOK
 v4.0~\cite{swebok2024}.
+
+% ============================================================
+\section{Discusión}
+\label{sec:discusion}
+
+\textit{Nota de versión: esta sección responde a las preguntas de
+investigación (sección~\ref{sec:rqs}) con la evidencia empírica disponible
+al momento de escribirla. Los bloques marcados \textbf{[ACTUALIZAR]}
+dependen de una corrida fresca de \texttt{make bench} / \texttt{make test}
+sobre el estado actual de \texttt{main} — la evidencia archivada en
+\ruta{docs/mediciones/} antecede al módulo de inventario y a la mitad del
+dominio deportivo, así que reportar esos números tal cual sin remedirlos
+sería exactamente el error que la sección~\ref{sec:defectos-runtime} ya
+documentó una vez (un indicador verde que no refleja el sistema real).}
+
+\paragraph{RQ1 — Rendimiento.} La corrida de referencia disponible midió
+p95~=~14{,}18\,ms contra el \emph{endpoint} de listado protegido, muy por
+debajo del umbral de 200\,ms con caché caliente. \textbf{[ACTUALIZAR]} esa
+cifra corresponde a 3 corridas, no a las 5 independientes que exige la
+Entrega Final, y no queda registrado si distingue explícitamente el
+escenario de caché fría (umbral 500\,ms) del escenario de caché caliente.
+Falta también el test de Wilcoxon con tamaño de efecto (Cliff's delta)
+entre ambos escenarios que pide el Bloque~C. Con 5 corridas nuevas por
+escenario, RQ1 debería poder responderse con el mismo margen holgado que
+ya se observó, pero eso es una expectativa, no todavía un resultado.
+
+\paragraph{RQ2 — Seguridad.} Los seis controles OWASP (A01, A02, A03, A05,
+A07, A09) están verificados con evidencia reproducible en
+\ruta{docs/mediciones/sec/} (sección~\ref{sec:a01-falso-correcto}), y una
+revisión directa del código fuente y de \ruta{db/procs/} no encontró
+ningún uso de \texttt{createNativeQuery} con concatenación, \texttt{@Query}
+construida con \texttt{+}, ni \texttt{EXECUTE}/\texttt{sp\_executesql}
+dentro de los procedimientos almacenados — la estrategia híbrida no
+introdujo la superficie de ataque que introduciría SQL dinámico mal
+construido. \textbf{[ACTUALIZAR]} falta el escaneo automático con OWASP
+ZAP en modo \emph{baseline} y el análisis estático (find-sec-bugs, regla
+\texttt{SQL\_NONCONSTANT\_STRING\_PASSED\_TO\_EXECUTE}) que la Entrega
+Final exige como evidencia adicional, reproducible por un tercero sin
+depender de esta revisión manual.
+
+\paragraph{RQ3 — Usabilidad.} La respuesta es clara y es, a la vez, el
+hallazgo menos cómodo de todo el documento (sección~\ref{sec:sus}): la
+usabilidad \textbf{no} es homogénea entre roles. El sistema obtiene grado
+A en entrenadores y estudiantes y grado F en recepcionistas y
+representantes, con una media agregada (68{,}25) que esconde ese patrón
+bimodal en vez de exponerlo. La implicación práctica es directa: el
+esfuerzo de mejora de interfaz debería priorizar el flujo administrativo y
+el futuro módulo de representantes, no el promedio general del sistema.
+\textbf{[ACTUALIZAR]} con $N=10$ participantes la desagregación por perfil
+es indicativa, no concluyente; subir a $N \geq 15$ (mínimo que exige la
+Entrega Final) permitiría un intervalo de confianza más ajustado por
+subgrupo.
+
+\paragraph{RQ4 — Cobertura y trazabilidad bajo crecimiento.} Esta pregunta
+nace directamente de un patrón que ya se repitió una vez en la Segunda
+Entrega (sección~\ref{sec:reestructuracion}): la cobertura cayó a 39{,}8\,\%
+cuando se agregaron cinco recursos nuevos sin pruebas propias, y se
+corrigió a 72{,}5\,\%. La pregunta para la Entrega Final es si ese patrón
+se repite con el módulo de inventario y el resto del dominio deportivo,
+agregados después de esa medición. \textbf{[ACTUALIZAR]} el reporte
+archivado en \ruta{docs/mediciones/jacoco/} es anterior a esos módulos —
+no los incluye— y \texttt{pom.xml} hoy exige un mínimo de 60\,\% medido
+solo sobre \texttt{LINE}, con \texttt{deportivo/**} y varios paquetes de
+\texttt{seguridad}/\texttt{academico} excluidos explícitamente del
+chequeo. Antes de poder responder RQ4 con evidencia hace falta una corrida
+de \texttt{make test} sobre el \texttt{main} actual, sin exclusiones, con
+\texttt{BRANCH} incluido en la regla. La respuesta provisional, mientras
+tanto, es una advertencia: el patrón de la Segunda Entrega es exactamente
+el tipo de regresión silenciosa que este proyecto ya demostró que puede
+ocurrir dos veces si no se vuelve a medir explícitamente.
+
+% ============================================================
+\section{Trabajo futuro}
+\label{sec:trabajo-futuro}
+
+Cinco líneas de trabajo quedan fuera del alcance de esta entrega, cada una
+con una razón concreta documentada en otra parte del proyecto — no son una
+lista genérica de ideas, son los pendientes que \ruta{docs/etica/ETHICS.md}
+y \ruta{VERSIONING.md} ya declaran abiertos.
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Envío proactivo de notificaciones al representante
+    (RF-22).} La lectura de informes por un representante con vínculo
+    activo ya funciona; el envío proactivo (push/email/SMS) queda fuera a
+    propósito hasta no tener un mecanismo de consentimiento explícito y
+    fechado, distinto del consentimiento general de matrícula (hallazgo
+    H-04, resuelto parcialmente el 2026-08-03).
+  \item \textbf{Mecanismo de supresión de datos.} El sistema aplica baja
+    lógica, no borrado físico, por integridad referencial del historial
+    deportivo. Si un representante ejerciera el derecho de supresión, hoy
+    no hay un procedimiento que lo satisfaga. Se propone un procedimiento
+    almacenado de anonimización — sustituir datos identificativos por
+    valores neutros conservando claves foráneas y estadísticas agregadas,
+    invocable solo por \texttt{ADMINISTRADOR} y registrado en auditoría
+    (hallazgo H-03).
+  \item \textbf{Base legal documentada para peso y altura.} Estos dos
+    campos son datos de salud de un menor sin finalidad de uso
+    verificada, en el esquema pero sin ningún \emph{endpoint} de escritura
+    confirmado (hallazgo H-06). La línea de trabajo es doble: documentar
+    una finalidad concreta con consentimiento separado, o directamente no
+    exponerlos por API si ninguna funcionalidad prevista los necesita.
+  \item \textbf{Validación y protección de la cédula.} Hoy es un
+    \texttt{VARCHAR(10)} sin validación de dígito verificador, sin
+    restricción de unicidad y sin cifrado en reposo (hallazgo H-01) — más
+    permisivo de lo deseable para un identificador nacional de un menor en
+    un despliegue con datos reales.
+  \item \textbf{Cerrar la brecha de usabilidad por rol.} La sección
+    anterior (RQ3) encontró grado F en recepcionistas y representantes.
+    Rediseñar específicamente esos dos flujos —no el sistema en general— y
+    volver a medir SUS por subgrupo con $N \geq 15$ es la línea de trabajo
+    con el respaldo empírico más directo de todo este documento.
+\end{enumerate}
 
 % ============================================================
 \section{Conclusiones}

@@ -169,7 +169,7 @@ public class AuthController {
         // El token ya viajo en la cookie HttpOnly (setAuthCookies, arriba).
         // No se repite aqui: un campo de token en el cuerpo seria legible por
         // cualquier fetch/axios del frontend, anulando la proteccion HttpOnly
-        // que ADR-002 y ADR-007 declaran como el mecanismo de defensa.
+        // que ADR-002 y ADR-008 declaran como el mecanismo de defensa.
         return ResponseEntity.ok(SesionResponse.builder()
                 .username(userDetails.getUsername())
                 .nombre(nombre)

@@ -111,7 +111,7 @@ class AuthServiceTest {
                 .andExpect(jsonPath("$.username").value("admin@test.com"))
                 .andExpect(jsonPath("$.nombre").value("Admin SGED"))
                 .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
-                // El JWT viaja solo en la cookie HttpOnly (ADR-002/ADR-007).
+                // El JWT viaja solo en la cookie HttpOnly (ADR-002/ADR-008).
                 // Si algun dia vuelve a aparecer aqui, esta prueba debe
                 // fallar: un token en el cuerpo es legible por cualquier
                 // fetch/axios del frontend y anula esa proteccion.

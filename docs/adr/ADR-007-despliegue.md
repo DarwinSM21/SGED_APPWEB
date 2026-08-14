@@ -1,4 +1,4 @@
-# ADR-006: Estrategia de Despliegue y Orquestación de Servicios
+# ADR-007: Estrategia de Despliegue y Orquestación de Servicios
 
 ## Estado
 Aprobado
@@ -9,8 +9,8 @@ El equipo de desarrollo necesita asegurar que el entorno de desarrollo local, el
 ## Decisión
 Adoptar la **Contenedorización** integral de toda la arquitectura de la aplicación mediante **Docker**, y gestionar los entornos a través de **Docker Compose** para la orquestación local y de ambientes pre-producción. Las directrices establecidas son:
 
-1.  **Backend:** Se creará un `Dockerfile` multi-etapa (Multi-stage build) basado en una imagen de JDK 24 para compilar el código fuente con Maven y generar un archivo JAR optimizado y ligero sobre una imagen de ejecución (JRE) alpina mínima.
-2.  **Frontend:** Se creará un `Dockerfile` que compilará el código de Angular CLI utilizando Node.js 24 y, en su etapa final, servirá los archivos estáticos optimizados utilizando un servidor web **Nginx**, configurado correctamente para manejar el enrutamiento SPA (*Single Page Application*).
+1.  **Backend:** Se creará un `Dockerfile` multi-etapa (Multi-stage build) basado en `eclipse-temurin:21-jdk` para compilar el código fuente con Maven y generar un archivo JAR optimizado y ligero sobre `eclipse-temurin:21-jre` como imagen de ejecución.
+2.  **Frontend:** Se creará un `Dockerfile` que compilará el código de Angular CLI utilizando `node:20-alpine` y, en su etapa final, servirá los archivos estáticos optimizados utilizando `nginx:1.25-alpine`, configurado correctamente para manejar el enrutamiento SPA (*Single Page Application*).
 3.  **Orquestación (`docker-compose.yml`):** Se diseñará un archivo de orquestación unificado que levante y conecte de forma transparente en una misma red virtual aislada cuatro servicios esenciales con sus respectivos controles de salud (*healthchecks*): el contenedor del backend, el del frontend, la instancia local de Redis para desarrollo, y las variables de entorno inyectadas de forma segura a través de archivos `.env`.
 
 ## Consecuencias

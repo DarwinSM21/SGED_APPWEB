@@ -1,8 +1,17 @@
-# SGED - Tercera Entrega (Bloque B.1)
-# Objetivos exigidos: up, down, test, bench, audit, clean
+# SGED - Entrega Final (Bloque D.1)
+# Objetivos exigidos: up, down, test, bench, audit, clean, all
 SHELL := /bin/bash
+.DEFAULT_GOAL := up
 
-.PHONY: up down test bench audit clean schema logs diagrams
+.PHONY: up down test bench reports audit clean schema logs diagrams docs all
+
+## Reproduccion end-to-end en un solo comando desde clonacion limpia (Bloque D.1).
+## clean va primero a proposito: garantiza volumen de Postgres nuevo en cada
+## corrida, para que db/seed.sql se vuelva a aplicar via docker-entrypoint-initdb.d
+## (initdb solo corre esos scripts la primera vez que el volumen existe).
+all: clean up test bench reports audit docs
+	@echo ""
+	@echo "make all: contenedores + pruebas + benchmarks + reportes + auditoria + PDF, todo en verde."
 
 ## Levanta el sistema completo desde clonación limpia (un solo comando)
 up:
@@ -32,19 +41,39 @@ test:
 	cd backend && ./mvnw -B clean test
 	@echo "Reporte JaCoCo: backend/target/site/jacoco/index.html"
 
-## Benchmark k6: 3 corridas independientes, 50 VUs, 30s (Bloque C.1)
+## Benchmark k6: 5 corridas independientes, 50 VUs, 30s (Bloque A.1, Entrega Final)
 bench:
 	mkdir -p docs/mediciones/perf
-	for i in 1 2 3; do \
+	for i in 1 2 3 4 5; do \
 	  k6 run k6/listado-estudiantes.js \
 	    --summary-export docs/mediciones/perf/k6-run$$i.json ; \
 	done
 	python3 scripts/perf-analysis.py
 
+## Regenera reportes derivados que no dependen de contenedores (SUS, Bloque C.3)
+reports:
+	python3 scripts/sus-analysis.py
+
 ## Auditoría OWASP (Bloque C.2) + auditoría de SQL dinámico
 audit:
 	bash scripts/audit-owasp.sh
 	bash scripts/audit-sql-dynamic.sh
+
+## Compila el documento academico (LaTeX en contenedor: no depende de tener
+## TeX Live instalado en el host, igual que `diagrams` usa contenedores para
+## structurizr/plantuml). Copia el resultado a docs/informe-final.pdf, la
+## ruta que exige la Guia de la Entrega Final (Bloque B / Entregable 3).
+## TODO cuando se reestructure el informe a los 18 apartados del Bloque B:
+## renombrar docs/informe/main.tex -> docs/informe-final.tex y actualizar
+## este objetivo para compilar directo ahi, en vez de copiar al final.
+docs:
+	docker run --rm -v "$(CURDIR)/docs/informe:/work" -w /work texlive/texlive \
+	  sh -c "pdflatex -interaction=nonstopmode main.tex && \
+	         bibtex main && \
+	         pdflatex -interaction=nonstopmode main.tex && \
+	         pdflatex -interaction=nonstopmode main.tex"
+	cp docs/informe/main.pdf docs/informe-final.pdf
+	@echo "PDF: docs/informe/main.pdf (copiado a docs/informe-final.pdf)"
 
 ## Limpia contenedores, volúmenes y artefactos de build
 clean:

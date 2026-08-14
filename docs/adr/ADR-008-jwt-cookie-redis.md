@@ -1,4 +1,4 @@
-# ADR-007: JWT en cookie HttpOnly y blacklist de revocacion en Redis
+# ADR-008: JWT en cookie HttpOnly y blacklist de revocacion en Redis
 
 ## Estado
 Aceptado

@@ -5,7 +5,7 @@ import lombok.*;
 
 /**
  * Datos de presentacion de la sesion. Deliberadamente NO incluye el JWT: el
- * token viaja unicamente en la cookie HttpOnly (ADR-002, ADR-007). Un campo
+ * token viaja unicamente en la cookie HttpOnly (ADR-002, ADR-008). Un campo
  * de token aqui volveria legible por JavaScript exactamente lo que HttpOnly
  * existe para impedir, sin importar que la cookie tambien se emita.
  *

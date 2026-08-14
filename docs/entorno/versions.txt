@@ -1,0 +1,65 @@
+# Entorno declarado con precisión (Bloque D.2, Guía de la Entrega Final)
+#
+# Fuente de cada línea: pom.xml, package.json, Dockerfile o docker-compose.yml
+# del repositorio (no inventado). Las marcadas [TODO] no se pueden fijar desde
+# el código fuente porque dependen de la máquina donde se construye o se
+# despliega — hay que capturarlas ahí, idealmente agregando un paso al
+# pipeline de CI (`docker --version`, `docker compose version`, etc. >> este
+# archivo) para que quede "generado por el pipeline" como pide la guía, no
+# escrito a mano una sola vez.
+
+## Backend
+Java (build)            = 21 (eclipse-temurin:21-jdk, backend/Dockerfile)
+Java (runtime)           = 21 (eclipse-temurin:21-jre, backend/Dockerfile)
+Spring Boot               = 3.2.5 (backend/pom.xml)
+Flyway core                = gestionado por el parent de Spring Boot 3.2.5
+Flyway database-postgresql  = 10.12.0 (backend/pom.xml)
+jjwt (api/impl/jackson)      = 0.12.5 (backend/pom.xml)
+springdoc-openapi-starter-webmvc-ui = 2.3.0 (backend/pom.xml)
+Lombok                        = 1.18.38 (backend/pom.xml)
+JaCoCo Maven Plugin            = 0.8.12 (backend/pom.xml)
+Mockito (test)                  = 5.15.2 (backend/pom.xml)
+Maven Wrapper                    = ver backend/.mvn/wrapper/maven-wrapper.properties
+
+## Frontend
+Node.js (build)          = 20 (node:20-alpine, frontend/Dockerfile)
+npm (packageManager)      = 11.6.2 (frontend/package.json)
+Angular (core/cli/build)   = ^21.2.x (frontend/package.json — README dice
+                             "Angular 17+"; 17+ se cumple, la versión real
+                             instalada es 21.x, conviene alinear el README)
+TypeScript                  = ~5.9.2 (frontend/package.json)
+vitest (test)                 = ^4.0.8 (frontend/package.json)
+nginx (sirve el build)         = 1.25-alpine (frontend/Dockerfile)
+
+## Base de datos y cache
+PostgreSQL = 16 (declarado en README/ADR-003; docker-compose.yml fija la
+             imagen por digest sha256, no por tag — ver ese digest para la
+             versión exacta reproducible: scripts/pin-digests.sh)
+Redis      = 7 (declarado en README/ADR-005; también fijado por digest
+             sha256 en docker-compose.yml)
+
+## Herramientas de medición
+k6         = [TODO] no declarada en ningún archivo del repo — fijar con
+             `k6 version` en la máquina/CI que corre `make bench` y anotarla
+             aquí y en el README.
+Lighthouse = ver lighthouserc.js para la configuración; versión del binario
+             [TODO] no declarada — capturar con `lighthouse --version`.
+
+## Infraestructura (host de build/CI/despliegue)
+Docker         = [TODO] capturar con `docker --version` en la máquina que
+                 corre `make all` / el runner de CI, no es la misma en todas
+                 las máquinas de desarrollo del equipo.
+Docker Compose = [TODO] capturar con `docker compose version`.
+SO del runner de CI = ubuntu-latest (.github/workflows/ci.yml,
+                       actions/checkout + setup-java) — GitHub Actions
+                       resuelve "latest" a una versión concreta en cada
+                       corrida; fijar la que aparezca en el log de la
+                       corrida de referencia usada para la Entrega Final.
+SO de producción     = [TODO] depende de dónde se despliegue (Bloque A.4,
+                       todavía sin definir al momento de escribir este
+                       archivo).
+
+## Semillas y determinismo
+scripts/perf-analysis.py = seed=42 (declarado en el propio script)
+scripts/sus-analysis.py  = sin semilla aleatoria (procesa respuestas ya
+                            recolectadas, no genera aleatoriedad)

@@ -22,7 +22,7 @@ Implementar un esquema de autenticación **Stateless** basado en **JWT (JSON Web
     *   **Control granular:** Mayor flexibilidad para personalizar claims en el token y aplicar anotaciones como `@PreAuthorize` a nivel de método en los controladores.
     *   **Sin superficie de ataque XSS sobre el token:** al no ser accesible desde JavaScript, un script inyectado no puede leer ni exfiltrar el JWT.
 *   **Negativas / Desafíos:**
-    *   **Invalidación de tokens:** al ser *stateless*, revocar un token antes de su expiración (logout) exige un mecanismo adicional — resuelto con una lista de revocación en Redis indexada por `jti` (ADR-007).
+    *   **Invalidación de tokens:** al ser *stateless*, revocar un token antes de su expiración (logout) exige un mecanismo adicional — resuelto con una lista de revocación en Redis indexada por `jti` (ADR-008).
     *   **CSRF:** una cookie enviada automáticamente por el navegador es susceptible a *Cross-Site Request Forgery* si no se mitiga; se mitiga con `SameSite=Strict`, que impide que la cookie viaje en peticiones iniciadas desde otro origen.
 
 ---

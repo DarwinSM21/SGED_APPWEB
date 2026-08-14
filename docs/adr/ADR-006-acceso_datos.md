@@ -1,4 +1,4 @@
-# ADR-004: Estrategia de Acceso a Datos (ORM vs Procedimientos Almacenados)
+# ADR-006: Estrategia de Acceso a Datos (ORM vs Procedimientos Almacenados)
 
 ## Estado
 Aprobado (revisado para la Entrega Final: la regla 2 original —"prohibida la
