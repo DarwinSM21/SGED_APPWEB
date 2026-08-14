@@ -342,6 +342,130 @@ base de datos, no el objeto Java, es quien tiene la información completa
 para actuar de forma atómica y eficiente.
 
 % ============================================================
+\section{Trabajos relacionados}
+\label{sec:trabajos-relacionados}
+
+\subsection{Estrategia de búsqueda}
+
+Se sigue la orientación metodológica de Kitchenham y
+Charters~\cite{kitchenham2007}, con la reducción de escala que la propia
+Guía de la Entrega Final prevé para un PFC. \textbf{Limitación declarada:}
+la búsqueda no tuvo acceso de suscripción directo a IEEE Xplore, ACM
+Digital Library, Scopus, ScienceDirect ni Springer Link; se realizó con un
+motor de búsqueda web general, dirigida a resultados alojados o indexados
+en esas plataformas, y cada registro incluido se verificó de forma
+independiente contra una fuente primaria (el registro de metadatos de
+Crossref, la página de la editorial, o la página institucional de un
+autor) antes de citarlo. Es una desviación metodológica explícita, no
+oculta.
+
+Se ejecutaron nueve búsquedas organizadas en seis ejes temáticos, con
+ventana temporal 2016--2026:
+
+\begin{enumerate}[leftmargin=*, itemsep=2pt]
+  \item Sistemas de gestión escolar o deportiva basados en \emph{web}:
+    (\emph{school} OR \emph{sport*} OR \emph{club}) AND (\emph{management}
+    OR \emph{information}) AND (\emph{system} OR \emph{platform}).
+  \item Autenticación JWT y su seguridad: (JWT OR ``JSON Web Token'') AND
+    (\emph{security} OR \emph{vulnerabilit*} OR \emph{cookie} OR
+    \emph{storage}).
+  \item Acceso a datos híbrido ORM/procedimientos almacenados: (ORM OR
+    ``object-relational mapping'') AND (``stored procedure*'') AND
+    (\emph{performance} OR \emph{maintenance} OR \emph{security}).
+  \item Evaluación empírica de seguridad con OWASP: (OWASP) AND
+    (\emph{empirical} OR \emph{evaluation} OR ``case study'').
+  \item Usabilidad (SUS) en sistemas administrativos o educativos: (SUS OR
+    ``system usability scale'') AND (\emph{school} OR \emph{educational}
+    OR \emph{administrative}).
+  \item Ingeniería de requisitos en cursos capstone: (\emph{capstone} OR
+    ``final year project'') AND (``requirements engineering'' OR
+    ``software engineering education'').
+\end{enumerate}
+
+\textbf{Criterios de inclusión:} trabajo revisado por pares o depositado
+en un repositorio académico reconocido, con autoría y medio de
+publicación verificables contra una fuente primaria; aborda al menos uno
+de los ejes técnicos o de dominio del proyecto. \textbf{Criterios de
+exclusión:} contenido de blog, foro o documentación de producto sin
+revisión por pares; trabajos cuya autoría o venue no pudo confirmarse
+contra una fuente primaria pese a parecer académicos a primera vista —
+criterio que en la práctica descartó un candidato inicial sobre
+modelado de datos de clubes deportivos, alojado en un sitio de
+repositorio que no permitió confirmar si era un trabajo revisado por
+pares o un informe de coursework redistribuido.
+
+\begin{center}
+\begin{tikzpicture}[
+  box/.style={draw, rectangle, rounded corners, align=center, minimum width=7.2cm, minimum height=1.05cm, font=\small, fill=black!3},
+  exc/.style={draw, rectangle, align=left, text width=4.4cm, font=\scriptsize, fill=black!3},
+  arr/.style={-Stealth, thick}
+]
+\node[box] (id) {Registros identificados en las 9 búsquedas\\ $n \approx 85$};
+\node[box, below=1.15cm of id] (dedup) {Tras eliminar duplicados y contenido no académico\\ $n \approx 28$};
+\node[box, below=1.15cm of dedup] (elig) {Elegibles para verificación bibliográfica completa\\ $n = 12$};
+\node[box, below=1.15cm of elig] (inc) {Incluidos en la Tabla~\ref{tab:trabajos-relacionados}\\ $n = 8$};
+
+\node[exc, right=1.6cm of id] (exc1) {Excluidos: blogs, documentación de producto, foros ($n \approx 57$)};
+\node[exc, right=1.6cm of dedup] (exc2) {Excluidos: fuera del dominio o del eje técnico del proyecto ($n = 16$)};
+\node[exc, right=1.6cm of elig] (exc3) {Excluidos: autoría o venue no verificable contra fuente primaria ($n = 4$)};
+
+\draw[arr] (id) -- (dedup);
+\draw[arr] (dedup) -- (elig);
+\draw[arr] (elig) -- (inc);
+\draw[arr] (id.east) -- (exc1.west);
+\draw[arr] (dedup.east) -- (exc2.west);
+\draw[arr] (elig.east) -- (exc3.west);
+\end{tikzpicture}
+\end{center}
+
+Los conteos son una reconstrucción honesta del registro de búsqueda del
+equipo, no el resultado de una herramienta de gestión bibliográfica
+formal (Rayyan, Covidence) — coherente con la reducción de escala que
+esta sección declaró al principio.
+
+\subsection{Síntesis comparativa}
+
+\begin{longtable}{p{2.0cm} p{0.7cm} p{1.8cm} p{1.9cm} p{1.9cm} p{2.4cm} p{2.2cm} p{2.6cm}}
+\caption{Trabajos relacionados y su diferencia frente a SGED.\label{tab:trabajos-relacionados}}\\
+\toprule
+\textbf{Referencia} & \textbf{Año} & \textbf{Dominio} & \textbf{Pila} & \textbf{Patrones} & \textbf{Evaluación empírica} & \textbf{Limitaciones} & \textbf{Diferencia frente a SGED} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Referencia} & \textbf{Año} & \textbf{Dominio} & \textbf{Pila} & \textbf{Patrones} & \textbf{Evaluación empírica} & \textbf{Limitaciones} & \textbf{Diferencia frente a SGED} \\
+\midrule
+\endhead
+\scriptsize
+Blobel y Lames~\cite{blobel2020cis} & 2020 & Sistemas de información de clubes deportivos & No especificada & Arquitectura conceptual en capas (BI) & Caso ilustrativo (Liverpool FC), sin métricas & Conceptual, sin implementación evaluada & SGED implementa y mide lo que aquí queda a nivel de concepto \\
+Yang et al.~\cite{yang2026jwt} & 2026 & Seguridad de implementaciones JWT & 43 implementaciones, multi-lenguaje & Estudio de vulnerabilidades & 31 vulnerabilidades nuevas, 20 con CVE & No evalúa el patrón cookie \texttt{HttpOnly} específicamente & SGED aplica su hallazgo central (JWT nunca accesible a JS) desde el diseño \\
+Liu~\cite{liu2024attendance} & 2024 & Asistencia estudiantil & Spring Boot + Vue + MySQL & CRUD modular por módulo & Ninguna reportada & Sin evaluación de rendimiento, seguridad ni usabilidad & SGED mide las tres con evidencia archivada; Liu no reporta ninguna \\
+Ranaweera et al.~\cite{ranaweera2022rugby} & 2022 & Flujos de información de un club profesional (rugby) & No especificada & Transformación digital (BPM + Lean) & SUS con jugadores/staff, sobre la media de industria & Un club, sin seguridad ni rendimiento evaluados & SGED agrega OWASP y rendimiento bajo carga a la misma técnica SUS \\
+Suria~\cite{suria2024sus} & 2024 & Plataforma de aprendizaje en línea & No especificada & --- & SUS con 120 participantes, prueba de Shapiro--Wilk & Un solo perfil de usuario (estudiante) & SGED desagrega SUS por rol y encuentra una brecha que un perfil único no detecta \\
+Wen y Katt~\cite{wenkatt2023owasp} & 2023 & Evaluación de seguridad web (marco general) & No aplica (modelo) & Modelo cuantitativo sobre OWASP ASVS & Validación del modelo sobre casos de referencia & No es un sistema en producción & SGED aplica 6 controles OWASP sobre un sistema real con evidencia reproducible por control \\
+Tenhunen et al.~\cite{tenhunen2023capstone} & 2023 & Cursos capstone de ingeniería de software & No aplica (revisión) & Taxonomía de características de curso & Síntesis de 127 estudios, 2007--2022 & Meta-nivel, no evalúa un sistema individual & Sitúa a SGED en el patrón dominante (equipo de 3, cliente real, un semestre) que la revisión encuentra \\
+Chen et al.~\cite{chen2016orm} & 2016 & Mantenimiento de código ORM en sistemas Java & Java, ORM (Hibernate y otros) & Minería de repositorios sobre commits de ORM & Estudio empírico sobre proyectos Java reales & No contempla el uso complementario de procedimientos almacenados & SGED usa este hallazgo para justificar mover las operaciones complejas fuera del ORM (ADR-006) \\
+\bottomrule
+\end{longtable}
+
+\subsection{Brecha identificada}
+
+Ninguno de los ocho trabajos reunidos evalúa, sobre el mismo sistema en
+producción, las cuatro dimensiones que este documento reporta juntas:
+rendimiento bajo carga, seguridad verificada por múltiples controles
+OWASP, usabilidad desagregada por rol de usuario, y mantenibilidad medida
+como cobertura de pruebas. Los trabajos de dominio deportivo
+(Blobel y Lames, 2020; Ranaweera et al., 2022) no publican evidencia de
+seguridad ni de rendimiento; los trabajos de seguridad (Yang et al., 2026;
+Wen y Katt, 2023) no se aplican sobre un sistema de gestión deportiva o
+escolar real; el trabajo de usabilidad (Suria, 2024) no desagrega por rol
+de usuario, que es precisamente donde SGED encuentra su hallazgo más
+relevante (sección~\ref{sec:sus}): una brecha de usabilidad entre
+entrenadores/estudiantes y personal administrativo que una media agregada
+esconde. La brecha que ocupa este trabajo no es una tecnología nueva: es
+la evaluación empírica conjunta, sobre un mismo sistema real, de las
+cuatro dimensiones que la literatura revisada trata por separado.
+
+% ============================================================
 \section{Resolución de las observaciones previas (Bloque 0)}
 \label{sec:observaciones}
 
