@@ -1,6 +1,7 @@
 # Reporte de usabilidad — SUS (Bloque C.3)
 
 - Fecha del analisis: 2026-07-31T01:24:08.099042+00:00
+- Revision (amenazas a la validez): 2026-08-14
 - Commit: 5176ad4
 - Instrumento: System Usability Scale (Brooke, 1996), 10 items, escala 1-5
 - Participantes: **10** (minimo exigido: 10)
@@ -84,6 +85,63 @@ originales.
 
 Grado agregado: **C (Aceptable)** en la escala adjetival de Bangor, Kortum
 y Miller (2009) — pero la agregación esconde el patrón bimodal real.
+
+## Amenazas a la validez
+
+### Tamanho de muestra
+
+n = 10 es el minimo exigido por el instrumento SUS (Brooke, 1996) y el
+minimo recomendado por Bangor et al. (2009) para producir estimaciones
+estables de la media. Sin embargo, una muestra de 10 no permite
+generalizar con confianza a la poblacion total de usuarios del sistema.
+Se recomienda ampliar a n >= 20 en futuras iteraciones.
+
+### Intervalo de confianza amplio
+
+El IC 95 % (54,53 -- 81,97) es considerablemente amplio: abarca un
+rango de 27 puntos. Esto significa que la verdadera media poblacional
+podria estar en cualquier lugar dentro de ese rango, incluyendo valores
+significativamente por debajo del umbral de 68. La estimacion puntual
+de 68,25 es la mejor estimacion disponible, pero no debe interpretarse
+como un resultado definitivo.
+
+### Sesgo de seleccion
+
+Los participantes fueron contactados directamente por los miembros del
+equipo. No se aplico ningun mecanismo de muestreo aleatorio. Esto
+introduce un sesgo de seleccion: los participantes que aceptaron
+responder podrian tener una opinion mas favorable (o mas desfavorable)
+que el promedio de la poblacion objetivo. El protocolo de consentimiento
+informado (docs/etica/consentimiento/plantilla.md) mitiga parcialmente
+este riesgo al garantizar participacion voluntaria.
+
+### Distribucion bimodal
+
+La media agregada de 68,25 oculta una diferencia sustancial entre
+perfiles: entrenadores y estudiantes (promedio 87-90, grado A) versus
+recepcionistas y padres de familia (promedio 44-52, grado F). Esta
+distribucion bimodal indica que el sistema no es igualmente usable
+para todos los perfiles de usuario. La media agregada no captura esta
+realidad y debe interpretarse con cautela.
+
+### Amenazas externas
+
+- **Efecto halo:** participantes que conocen al equipo podrian haber
+  inflado sus respuestas por cortesia.
+- **Sesgo de recencia:** la experiencia reciente de uso podria haber
+  influenciado las respuestas mas que la experiencia acumulada.
+- **Ausencia de medicion comparativa:** no se aplica un pre-test/post-
+  test, por lo que no se puede determinar si la usabilidad mejora o
+  empeora con el uso repetido.
+
+### Conclusion sobre la validez
+
+Con n = 10 y un IC amplio, el resultado SUS de 68,25 se reporta como
+una **estimacion puntual con margen de incertidumbre**, no como un
+resultado definitivo. El cumplimiento del umbral de 68 es real pero
+marginal (+0,25). La recomendacion principal es ampliar la muestra y
+reducir el IC antes de hacer afirmaciones concluyentes sobre la
+usabilidad del sistema.
 
 ## Referencias
 
