@@ -1,5 +1,7 @@
 package org.uteq.backend.deportivo.asistencia.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
@@ -16,6 +18,9 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
     Optional<Asistencia> findBySesionIdSesionAndEstudianteIdEstudiante(Long idSesion, Long idEstudiante);
 
     List<Asistencia> findBySesionIdSesion(Long idSesion);
+
+    /** Historial propio del estudiante, mas reciente primero. */
+    Page<Asistencia> findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(Long idEstudiante, Pageable pageable);
 
     /** Estudiantes habilitados para ser calificados en una sesion. */
     @Query("""

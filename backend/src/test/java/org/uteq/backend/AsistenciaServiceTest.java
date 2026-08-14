@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
@@ -14,14 +15,20 @@ import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
+import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 /**
@@ -187,5 +194,43 @@ class AsistenciaServiceTest {
 
         assertThatThrownBy(() -> asistenciaService.marcarPorQr("andres@sged.test", 1L))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    // --- misAsistencias ---
+
+    @Test
+    @DisplayName("misAsistencias lanza RecursoNoEncontradoException si la cuenta no tiene estudiante asociado")
+    void misAsistencias_sin_estudiante_asociado_lanza_excepcion() {
+        when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> asistenciaService.misAsistencias("huerfano@sged.test"))
+                .isInstanceOf(RecursoNoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("misAsistencias devuelve el historial propio ordenado y el porcentaje de los ultimos 30 dias")
+    void misAsistencias_devuelve_historial_y_porcentaje() {
+        Estudiante e = estudiante();
+        SesionEntrenamiento sesion = SesionEntrenamiento.builder()
+                .idSesion(1L).fecha(LocalDate.of(2026, 8, 10))
+                .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
+                .build();
+        Asistencia asistencia = Asistencia.builder()
+                .idAsistencia(50L).sesion(sesion).estudiante(e)
+                .horaEntrada(LocalTime.of(16, 5)).estado(Asistencia.ESTADO_PRESENTE)
+                .build();
+
+        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(asistenciaRepository.findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(anyLong(), any()))
+                .thenReturn(new PageImpl<>(List.of(asistencia)));
+        when(asistenciaRepository.calcularPorcentajeAsistencia(anyLong(), any(), any()))
+                .thenReturn(new BigDecimal("80.00"));
+
+        var respuesta = asistenciaService.misAsistencias("andres@sged.test");
+
+        assertThat(respuesta.asistencias()).hasSize(1);
+        assertThat(respuesta.asistencias().get(0).categoria()).isEqualTo("SUB-12");
+        assertThat(respuesta.asistencias().get(0).estado()).isEqualTo(Asistencia.ESTADO_PRESENTE);
+        assertThat(respuesta.porcentajeUltimos30Dias()).isEqualByComparingTo("80.00");
     }
 }

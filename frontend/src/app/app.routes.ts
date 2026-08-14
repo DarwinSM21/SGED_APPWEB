@@ -54,6 +54,11 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ESTUDIANTE'])],
         loadComponent: () => import('./features/estudiante/marcar-asistencia.component').then(m => m.MarcarAsistenciaComponent),
       },
+      {
+        path: 'estudiante/mi-historial',
+        canActivate: [roleGuard(['ESTUDIANTE'])],
+        loadComponent: () => import('./features/estudiante/mi-historial.component').then(m => m.MiHistorialComponent),
+      },
     ]
   },
   { path: '**', redirectTo: '' }

@@ -9,6 +9,7 @@ import org.uteq.backend.academico.representante.dto.InformeDtos.*;
 import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
@@ -89,7 +90,7 @@ public class InformeService {
                 .map(this::aLesionResumen)
                 .toList();
 
-        LocalDate hoy = LocalDate.now();
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
         BigDecimal porcentajeAsistencia = asistenciaRepository
                 .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);
 

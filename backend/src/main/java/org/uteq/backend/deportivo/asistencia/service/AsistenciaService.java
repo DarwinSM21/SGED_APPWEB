@@ -2,18 +2,25 @@ package org.uteq.backend.deportivo.asistencia.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.AsistenciaResponse;
+import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MiHistorialResponse;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 /**
  * Registra la asistencia del ESTUDIANTE autenticado. El token QR ya se
@@ -73,5 +80,36 @@ public class AsistenciaService {
         }
         LocalTime limite = horaInicio.plusMinutes(toleranciaTardeMinutos);
         return ahora.isAfter(limite) ? Asistencia.ESTADO_TARDE : Asistencia.ESTADO_PRESENTE;
+    }
+
+    /**
+     * Historial propio del ESTUDIANTE autenticado. Antes solo podia marcar
+     * asistencia, no consultar lo que ya habia marcado.
+     */
+    @Transactional(readOnly = true)
+    public MiHistorialResponse misAsistencias(String username) {
+        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+
+        List<AsistenciaResponse> asistencias = asistenciaRepository
+                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())
+                .getContent().stream()
+                .map(this::aResponse)
+                .toList();
+
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        BigDecimal porcentaje = asistenciaRepository
+                .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);
+
+        return new MiHistorialResponse(asistencias, porcentaje);
+    }
+
+    private AsistenciaResponse aResponse(Asistencia a) {
+        return new AsistenciaResponse(
+                a.getIdAsistencia(),
+                a.getSesion().getFecha(),
+                a.getSesion().getCategoria().getNombre(),
+                a.getHoraEntrada(),
+                a.getEstado());
     }
 }
