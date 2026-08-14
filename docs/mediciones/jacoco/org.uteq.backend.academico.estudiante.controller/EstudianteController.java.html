@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
+import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
 
 /**
@@ -25,61 +26,91 @@ public class EstudianteController {
     private final EstudianteService estudianteService;
 
     @GetMapping
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;EstudiantePageResponse&lt;EstudianteResponse&gt;&gt; listar(
             @RequestParam(defaultValue = &quot;0&quot;) int page,
             @RequestParam(defaultValue = &quot;10&quot;) int size,
             @RequestParam(defaultValue = &quot;idEstudiante,asc&quot;) String[] sort) {
         
-<span class="fc" id="L34">        String campo = sort[0];</span>
-<span class="pc bpc" id="L35" title="2 of 4 branches missed.">        Sort.Direction dir = sort.length &gt; 1 &amp;&amp; &quot;desc&quot;.equalsIgnoreCase(sort[1])</span>
-<span class="pc" id="L36">                ? Sort.Direction.DESC : Sort.Direction.ASC;</span>
-<span class="fc" id="L37">        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));</span>
+<span class="fc" id="L35">        String campo = sort[0];</span>
+<span class="pc bpc" id="L36" title="2 of 4 branches missed.">        Sort.Direction dir = sort.length &gt; 1 &amp;&amp; &quot;desc&quot;.equalsIgnoreCase(sort[1])</span>
+<span class="pc" id="L37">                ? Sort.Direction.DESC : Sort.Direction.ASC;</span>
+<span class="fc" id="L38">        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));</span>
         
-<span class="fc" id="L39">        return ResponseEntity.ok(estudianteService.listar(pageRequest));</span>
+<span class="fc" id="L40">        return ResponseEntity.ok(estudianteService.listar(pageRequest));</span>
     }
 
     @GetMapping(&quot;/{id}&quot;)
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;EstudianteResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="fc" id="L45">        return ResponseEntity.ok(estudianteService.buscarPorId(id));</span>
+<span class="fc" id="L46">        return ResponseEntity.ok(estudianteService.buscarPorId(id));</span>
     }
 
     @PostMapping
-    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;EstudianteResponse&gt; crear(
             @Valid @RequestBody EstudianteRequest request) {
-<span class="fc" id="L52">        return ResponseEntity.status(HttpStatus.CREATED)</span>
-<span class="fc" id="L53">                .body(estudianteService.crear(request));</span>
+<span class="fc" id="L53">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L54">                .body(estudianteService.crear(request));</span>
     }
 
     @PutMapping(&quot;/{id}&quot;)
-    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;EstudianteResponse&gt; editar(
             @PathVariable Long id,
             @Valid @RequestBody EstudianteRequest request) {
-<span class="fc" id="L61">        return ResponseEntity.ok(estudianteService.editar(id, request));</span>
+<span class="fc" id="L62">        return ResponseEntity.ok(estudianteService.editar(id, request));</span>
     }
 
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L67">        estudianteService.eliminar(id);</span>
-<span class="fc" id="L68">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L68">        estudianteService.eliminar(id);</span>
+<span class="fc" id="L69">        return ResponseEntity.noContent().build();</span>
     }
 
     // Ajustado a Long idCategoria para coincidir con la relación BD/Service
     @GetMapping(&quot;/conteo/categoria/{idCategoria}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;Long&gt; contarActivos(@PathVariable Long idCategoria) {
-<span class="fc" id="L75">        return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(idCategoria));</span>
+<span class="fc" id="L76">        return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(idCategoria));</span>
     }
 
     @PostMapping(&quot;/operaciones/desactivar-categoria&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; desactivarPorCategoria(@RequestBody Long idCategoria) {
-<span class="fc" id="L81">        estudianteService.desactivarPorCategoria(idCategoria);</span>
-<span class="fc" id="L82">        return ResponseEntity.ok().build();</span>
+<span class="fc" id="L82">        estudianteService.desactivarPorCategoria(idCategoria);</span>
+<span class="fc" id="L83">        return ResponseEntity.ok().build();</span>
+    }
+
+    /** Propone el siguiente codigo_estudiante del anio (no lo reserva: el alta sigue validando unicidad). */
+    @GetMapping(&quot;/operaciones/siguiente-codigo&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;String&gt; siguienteCodigo(@RequestParam int anio) {
+<span class="nc" id="L90">        return ResponseEntity.ok(estudianteService.generarSiguienteCodigo(anio));</span>
+    }
+
+    /** Contacto rapido del representante del estudiante, para un entrenador ante una emergencia/lesion. */
+    @GetMapping(&quot;/{id}/contacto-emergencia&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;String&gt; contactoEmergencia(@PathVariable Long id) {
+<span class="nc" id="L97">        return ResponseEntity.ok(estudianteService.contactoDeEmergencia(id));</span>
+    }
+
+    /**
+     * Habilita el acceso propio de un estudiante que ya existe (rol
+     * ESTUDIANTE), para que pueda marcar su propia asistencia por QR.
+     * Distinto de {@code crear}: no crea una Persona nueva, usa la que el
+     * estudiante ya tiene. RECEPCIONISTA la necesita desde la pantalla
+     * unificada de Personas (solo puede habilitar acceso de estudiantes,
+     * no crear cuentas de otros roles).
+     */
+    @PostMapping(&quot;/{id}/acceso&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;EstudianteResponse&gt; habilitarAcceso(
+            @PathVariable Long id, @Valid @RequestBody HabilitarAccesoRequest request) {
+<span class="nc" id="L112">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="nc" id="L113">                .body(estudianteService.habilitarAcceso(id, request));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

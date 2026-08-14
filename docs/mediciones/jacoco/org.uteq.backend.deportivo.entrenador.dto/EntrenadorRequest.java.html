@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 <span class="fc" id="L6">public record EntrenadorRequest(</span>
         @NotNull(message = &quot;El ID de persona es obligatorio&quot;) Long idPersona,
         @NotNull(message = &quot;El ID de usuario es obligatorio&quot;) Long idUsuario,
-        String especialidad,
+        Long idEspecialidad,
         @Min(value = 0, message = &quot;Años de experiencia no pueden ser negativos&quot;) Short experienciaAnios,
         String certificacion
 ) {}

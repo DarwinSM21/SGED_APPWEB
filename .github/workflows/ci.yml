@@ -54,5 +54,15 @@ jobs:
       - name: Auditoría de SQL dinámico
         run: bash scripts/audit-sql-dynamic.sh
 
+      - name: Análisis estático de inyección SQL (SpotBugs + find-sec-bugs, Bloque A.2.3)
+        working-directory: backend
+        run: bash mvnw -B com.github.spotbugs:spotbugs-maven-plugin:4.8.6.4:check
+
+      - name: Publicar reporte SpotBugs
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs
+          path: backend/target/spotbugsXml.xml
+
       - name: Validación de trazabilidad
         run: bash scripts/validate-traceability.sh   # estricto cuando exista la matriz

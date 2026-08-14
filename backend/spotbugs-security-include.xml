@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Bloque A.2.3 (Guia de la Entrega Final): filtro de inclusion para
+  find-sec-bugs que restringe el analisis a los detectores de
+  concatenacion / inyeccion SQL, incluida la regla explicita que exige
+  la guia (SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE) y sus variantes
+  por tecnologia de acceso a datos (JDBC, JPA/JPQL, Hibernate/HQL,
+  Spring JDBC). No se usa el ruleset completo de find-sec-bugs a
+  proposito: el requisito de la guia es esta regla especifica, y un
+  filtro amplio generaria ruido no relacionado con el Bloque A.2
+  (estrategia hibrida CRUD-ORM / procedimientos almacenados).
+-->
+<FindBugsFilter>
+    <Match>
+        <Bug pattern="SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_JDBC"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_JPA"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_HIBERNATE"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_SPRING_JDBC"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_ANDROID"/>
+    </Match>
+    <Match>
+        <Bug pattern="SQL_INJECTION_TURBINE"/>
+    </Match>
+</FindBugsFilter>

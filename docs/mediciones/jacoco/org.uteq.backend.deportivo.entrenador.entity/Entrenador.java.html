@@ -2,6 +2,7 @@
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -29,8 +30,9 @@ public class Entrenador {
     @JoinColumn(name = &quot;id_usuario&quot;, nullable = false, unique = true)
     private Usuario usuario;
 
-    @Column(name = &quot;especialidad&quot;, length = 150)
-    private String especialidad;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;id_especialidad&quot;)
+    private Especialidad especialidad;
 
     @Column(name = &quot;experiencia_anios&quot;)
     private Short experienciaAnios;
@@ -49,14 +51,14 @@ public class Entrenador {
 
     @PrePersist
     protected void onCreate() {
-<span class="nc" id="L52">        this.createdAt = OffsetDateTime.now();</span>
-<span class="nc" id="L53">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (this.activo == null) this.activo = true;</span>
-<span class="nc" id="L55">    }</span>
+<span class="nc" id="L54">        this.createdAt = OffsetDateTime.now();</span>
+<span class="nc" id="L55">        this.updatedAt = OffsetDateTime.now();</span>
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (this.activo == null) this.activo = true;</span>
+<span class="nc" id="L57">    }</span>
 
     @PreUpdate
     protected void onUpdate() {
-<span class="nc" id="L59">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="nc" id="L60">    }</span>
+<span class="nc" id="L61">        this.updatedAt = OffsetDateTime.now();</span>
+<span class="nc" id="L62">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

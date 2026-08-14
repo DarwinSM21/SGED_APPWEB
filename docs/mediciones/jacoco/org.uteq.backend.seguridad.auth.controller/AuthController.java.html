@@ -64,52 +64,68 @@ public class AuthController {
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
 
+    /**
+     * rol es obligatorio (@NotBlank en RegisterRequest): no existe un rol
+     * generico al que caer por defecto. Quien llama ya es ADMINISTRADOR, asi
+     * que puede pedir cualquier rol existente en seguridad.roles (p.ej.
+     * ENTRENADOR, RECEPCIONISTA, REPRESENTANTE) - un nombre que no exista
+     * responde 400 via RolRepository.findByNombre.
+     *
+     * @Transactional: antes guardaba Persona y Usuario en dos pasos sueltos,
+     * sin transaccion propia. Con un tercer guardado (la fila de dominio de
+     * Entrenador/Representante) encadenado desde el frontend justo despues,
+     * una falla a mitad de camino dejaria una Persona sin Usuario o un
+     * Usuario sin rol asignado. Ya estaba senalado como pendiente; se
+     * corrige de una vez al tocar este metodo por otra razon.
+     */
     @PostMapping(&quot;/registro&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    @Transactional
     public ResponseEntity&lt;SesionResponse&gt; registro(@Valid @RequestBody RegisterRequest request) {
-<span class="fc bfc" id="L70" title="All 2 branches covered.">        if (usuarioRepository.existsByUsername(request.username())</span>
-<span class="pc bpc" id="L71" title="1 of 2 branches missed.">                || personaRepository.existsByCedulaAndActivoTrue(request.cedula())</span>
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                || personaRepository.existsByCorreo(request.correo())) {</span>
-<span class="fc" id="L73">            return ResponseEntity.status(HttpStatus.CONFLICT).build();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (usuarioRepository.existsByUsername(request.username())</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">                || personaRepository.existsByCedulaAndActivoTrue(request.cedula())</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">                || personaRepository.existsByCorreo(request.correo())) {</span>
+<span class="fc" id="L88">            return ResponseEntity.status(HttpStatus.CONFLICT).build();</span>
         }
 
-<span class="fc" id="L76">        Persona persona = Persona.builder()</span>
-<span class="fc" id="L77">                .nombre(request.nombre())</span>
-<span class="fc" id="L78">                .apellido(request.apellido())</span>
-<span class="fc" id="L79">                .cedula(request.cedula())</span>
-<span class="fc" id="L80">                .correo(request.correo())</span>
-<span class="fc" id="L81">                .fechaNacimiento(request.fechaNacimiento())</span>
-<span class="fc" id="L82">                .activo(true)</span>
-<span class="fc" id="L83">                .build();</span>
-<span class="fc" id="L84">        persona = personaRepository.save(persona);</span>
+<span class="fc" id="L91">        Rol rol = rolRepository.findByNombre(request.rol())</span>
+<span class="fc" id="L92">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + request.rol()));</span>
 
-<span class="fc" id="L86">        Rol rolUser = rolRepository.findByNombre(&quot;USER&quot;)</span>
-<span class="pc" id="L87">                .orElseGet(() -&gt; rolRepository.save(</span>
-<span class="nc" id="L88">                        Rol.builder().nombre(&quot;USER&quot;).descripcion(&quot;Usuario estandar&quot;).build()));</span>
+<span class="fc" id="L94">        Persona persona = Persona.builder()</span>
+<span class="fc" id="L95">                .nombre(request.nombre())</span>
+<span class="fc" id="L96">                .apellido(request.apellido())</span>
+<span class="fc" id="L97">                .cedula(request.cedula())</span>
+<span class="fc" id="L98">                .correo(request.correo())</span>
+<span class="fc" id="L99">                .fechaNacimiento(request.fechaNacimiento())</span>
+<span class="fc" id="L100">                .activo(true)</span>
+<span class="fc" id="L101">                .build();</span>
+<span class="fc" id="L102">        persona = personaRepository.save(persona);</span>
 
         // id_estado_general es NOT NULL: sin esto el alta tambien falla en base
         // de datos aunque la persona ya se haya podido insertar.
-<span class="fc" id="L92">        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)</span>
-<span class="pc" id="L93">                .orElseThrow(() -&gt; new IllegalStateException(</span>
+<span class="fc" id="L106">        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)</span>
+<span class="pc" id="L107">                .orElseThrow(() -&gt; new IllegalStateException(</span>
                         &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
 
-<span class="fc" id="L96">        Usuario usuario = Usuario.builder()</span>
-<span class="fc" id="L97">                .persona(persona)</span>
-<span class="fc" id="L98">                .estadoGeneral(estadoActivo)</span>
-<span class="fc" id="L99">                .username(request.username())</span>
-<span class="fc" id="L100">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L101">                .activo(true)</span>
-<span class="fc" id="L102">                .roles(Set.of(rolUser))</span>
-<span class="fc" id="L103">                .build();</span>
-<span class="fc" id="L104">        usuario = usuarioRepository.save(usuario);</span>
+<span class="fc" id="L110">        Usuario usuario = Usuario.builder()</span>
+<span class="fc" id="L111">                .persona(persona)</span>
+<span class="fc" id="L112">                .estadoGeneral(estadoActivo)</span>
+<span class="fc" id="L113">                .username(request.username())</span>
+<span class="fc" id="L114">                .password_Hash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L115">                .activo(true)</span>
+<span class="fc" id="L116">                .roles(Set.of(rol))</span>
+<span class="fc" id="L117">                .build();</span>
+<span class="fc" id="L118">        usuario = usuarioRepository.save(usuario);</span>
 
-<span class="fc" id="L106">        String nombreCompleto = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
-<span class="fc" id="L107">        return ResponseEntity.status(HttpStatus.CREATED)</span>
-<span class="fc" id="L108">                .body(SesionResponse.builder()</span>
-<span class="fc" id="L109">                        .username(usuario.getUsername())</span>
-<span class="fc" id="L110">                        .nombre(nombreCompleto)</span>
-<span class="fc" id="L111">                        .rol(&quot;USER&quot;)</span>
-<span class="fc" id="L112">                        .build());</span>
+<span class="fc" id="L120">        String nombreCompleto = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
+<span class="fc" id="L121">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L122">                .body(SesionResponse.builder()</span>
+<span class="fc" id="L123">                        .username(usuario.getUsername())</span>
+<span class="fc" id="L124">                        .nombre(nombreCompleto)</span>
+<span class="fc" id="L125">                        .rol(rol.getNombre())</span>
+<span class="fc" id="L126">                        .idPersona(persona.getIdPersona())</span>
+<span class="fc" id="L127">                        .idUsuario(usuario.getIdUsuario())</span>
+<span class="fc" id="L128">                        .build());</span>
     }
 
     @PostMapping(&quot;/login&quot;)
@@ -119,45 +135,46 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
-<span class="fc" id="L122">        String ip = httpRequest.getRemoteAddr();</span>
+<span class="fc" id="L138">        String ip = httpRequest.getRemoteAddr();</span>
 
-<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (loginAttemptService.estaBloqueada(ip)) {</span>
-<span class="nc" id="L125">            throw new TooManyRequestsException(</span>
+<span class="pc bpc" id="L140" title="1 of 2 branches missed.">        if (loginAttemptService.estaBloqueada(ip)) {</span>
+<span class="nc" id="L141">            throw new TooManyRequestsException(</span>
                     &quot;Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.&quot;);
         }
 
         Authentication auth;
         try {
-<span class="fc" id="L131">            auth = authenticationManager.authenticate(</span>
-<span class="fc" id="L132">                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));</span>
-<span class="fc" id="L133">        } catch (BadCredentialsException e) {</span>
-<span class="fc" id="L134">            loginAttemptService.registrarFallo(ip);</span>
-<span class="fc" id="L135">            AUTH_AUDIT_LOG.warn(&quot;AUTH_LOGIN_FAIL ip={} sub={}&quot;, ip, request.username());</span>
-<span class="fc" id="L136">            throw e;</span>
-<span class="fc" id="L137">        }</span>
+<span class="fc" id="L147">            auth = authenticationManager.authenticate(</span>
+<span class="fc" id="L148">                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));</span>
+<span class="fc" id="L149">        } catch (BadCredentialsException e) {</span>
+<span class="fc" id="L150">            loginAttemptService.registrarFallo(ip);</span>
+<span class="fc" id="L151">            AUTH_AUDIT_LOG.warn(&quot;AUTH_LOGIN_FAIL ip={} sub={}&quot;, ip, request.username());</span>
+<span class="fc" id="L152">            throw e;</span>
+<span class="fc" id="L153">        }</span>
 
-<span class="fc" id="L139">        loginAttemptService.registrarExito(ip);</span>
+<span class="fc" id="L155">        loginAttemptService.registrarExito(ip);</span>
 
-<span class="fc" id="L141">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
-<span class="fc" id="L142">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
-<span class="fc" id="L143">        AUTH_AUDIT_LOG.info(&quot;AUTH_LOGIN_OK ip={} sub={}&quot;, ip, userDetails.getUsername());</span>
+<span class="fc" id="L157">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
+<span class="fc" id="L158">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
+<span class="fc" id="L159">        AUTH_AUDIT_LOG.info(&quot;AUTH_LOGIN_OK ip={} sub={}&quot;, ip, userDetails.getUsername());</span>
 
-<span class="fc" id="L145">        String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);</span>
-<span class="fc" id="L146">        String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);</span>
-<span class="fc" id="L147">        setAuthCookies(httpResponse, accessToken, refreshToken);</span>
+<span class="fc" id="L161">        String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);</span>
+<span class="fc" id="L162">        String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);</span>
+<span class="fc" id="L163">        setAuthCookies(httpResponse, accessToken, refreshToken);</span>
 
-<span class="fc" id="L149">        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())</span>
-<span class="fc" id="L150">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
-<span class="fc" id="L151">                .orElse(userDetails.getUsername());</span>
+<span class="fc" id="L165">        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())</span>
+<span class="fc" id="L166">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
+<span class="fc" id="L167">                .orElse(userDetails.getUsername());</span>
 
-        // Asigna el token a la respuesta
-<span class="fc" id="L154">        return ResponseEntity.ok(SesionResponse.builder()</span>
-<span class="fc" id="L155">                .username(userDetails.getUsername())</span>
-<span class="fc" id="L156">                .nombre(nombre)</span>
-<span class="fc" id="L157">                .rol(rol)</span>
-<span class="fc" id="L158">                .accessToken(accessToken)   // 👈 AQUÍ USAS LA VARIABLE</span>
-<span class="fc" id="L159">                .refreshToken(refreshToken) // 👈 AQUÍ USAS LA VARIABLE</span>
-<span class="fc" id="L160">                .build());</span>
+        // El token ya viajo en la cookie HttpOnly (setAuthCookies, arriba).
+        // No se repite aqui: un campo de token en el cuerpo seria legible por
+        // cualquier fetch/axios del frontend, anulando la proteccion HttpOnly
+        // que ADR-002 y ADR-008 declaran como el mecanismo de defensa.
+<span class="fc" id="L173">        return ResponseEntity.ok(SesionResponse.builder()</span>
+<span class="fc" id="L174">                .username(userDetails.getUsername())</span>
+<span class="fc" id="L175">                .nombre(nombre)</span>
+<span class="fc" id="L176">                .rol(rol)</span>
+<span class="fc" id="L177">                .build());</span>
     }
 
     @PostMapping(&quot;/logout&quot;)
@@ -165,20 +182,20 @@ public class AuthController {
             @CookieValue(name = ACCESS_COOKIE, required = false) String accessToken,
             HttpServletResponse httpResponse) {
 
-<span class="nc bnc" id="L168" title="All 2 branches missed.">        if (accessToken != null) {</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (accessToken != null) {</span>
             try {
-<span class="nc" id="L170">                String jti = jwtService.extractJti(accessToken);</span>
-<span class="nc bnc" id="L171" title="All 2 branches missed.">                if (jti != null) {</span>
-<span class="nc" id="L172">                    blacklistService.revocar(jti, jwtService.getExpirationMs());</span>
+<span class="nc" id="L187">                String jti = jwtService.extractJti(accessToken);</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                if (jti != null) {</span>
+<span class="nc" id="L189">                    blacklistService.revocar(jti, jwtService.getExpirationMs());</span>
                 }
-<span class="nc" id="L174">            } catch (Exception e) {</span>
+<span class="nc" id="L191">            } catch (Exception e) {</span>
                 // Token ya invalido, ignorar
-<span class="nc" id="L176">            }</span>
+<span class="nc" id="L193">            }</span>
         }
 
-<span class="nc" id="L179">        clearAuthCookies(httpResponse);</span>
-<span class="nc" id="L180">        SecurityContextHolder.clearContext();</span>
-<span class="nc" id="L181">        return ResponseEntity.noContent().build();</span>
+<span class="nc" id="L196">        clearAuthCookies(httpResponse);</span>
+<span class="nc" id="L197">        SecurityContextHolder.clearContext();</span>
+<span class="nc" id="L198">        return ResponseEntity.noContent().build();</span>
     }
 
     @PostMapping(&quot;/refresh&quot;)
@@ -186,68 +203,69 @@ public class AuthController {
             @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
 
-<span class="nc bnc" id="L189" title="All 4 branches missed.">        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {</span>
-<span class="nc" id="L190">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+<span class="nc bnc" id="L206" title="All 4 branches missed.">        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {</span>
+<span class="nc" id="L207">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
         }
 
-<span class="nc" id="L193">        String username = jwtService.extractUsername(refreshToken);</span>
-<span class="nc" id="L194">        String rol = jwtService.extractRol(refreshToken);</span>
-<span class="nc" id="L195">        String newAccessToken = jwtService.generateToken(username, rol);</span>
-<span class="nc" id="L196">        setAccessCookie(httpResponse, newAccessToken);</span>
+<span class="nc" id="L210">        String username = jwtService.extractUsername(refreshToken);</span>
+<span class="nc" id="L211">        String rol = jwtService.extractRol(refreshToken);</span>
+<span class="nc" id="L212">        String newAccessToken = jwtService.generateToken(username, rol);</span>
+<span class="nc" id="L213">        setAccessCookie(httpResponse, newAccessToken);</span>
 
-<span class="nc" id="L198">        return ResponseEntity.noContent().build();</span>
+<span class="nc" id="L215">        return ResponseEntity.noContent().build();</span>
     }
 
     @GetMapping(&quot;/me&quot;)
+    @Transactional(readOnly = true)
     public ResponseEntity&lt;SesionResponse&gt; me() {
-<span class="nc" id="L203">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="nc bnc" id="L204" title="All 6 branches missed.">        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails)) {</span>
-<span class="nc" id="L205">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
+<span class="nc" id="L221">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L222" title="All 6 branches missed.">        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails)) {</span>
+<span class="nc" id="L223">            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();</span>
         }
 
-<span class="nc" id="L208">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
-<span class="nc" id="L209">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
+<span class="nc" id="L226">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
+<span class="nc" id="L227">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
 
-<span class="nc" id="L211">        String nombre = usuarioRepository.findByUsername(userDetails.getUsername())</span>
-<span class="nc" id="L212">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
-<span class="nc" id="L213">                .orElse(userDetails.getUsername());</span>
+<span class="nc" id="L229">        String nombre = usuarioRepository.findByUsername(userDetails.getUsername())</span>
+<span class="nc" id="L230">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
+<span class="nc" id="L231">                .orElse(userDetails.getUsername());</span>
 
-<span class="nc" id="L215">        return ResponseEntity.ok(SesionResponse.builder()</span>
-<span class="nc" id="L216">                .username(userDetails.getUsername())</span>
-<span class="nc" id="L217">                .nombre(nombre)</span>
-<span class="nc" id="L218">                .rol(rol)</span>
-<span class="nc" id="L219">                .build());</span>
+<span class="nc" id="L233">        return ResponseEntity.ok(SesionResponse.builder()</span>
+<span class="nc" id="L234">                .username(userDetails.getUsername())</span>
+<span class="nc" id="L235">                .nombre(nombre)</span>
+<span class="nc" id="L236">                .rol(rol)</span>
+<span class="nc" id="L237">                .build());</span>
     }
 
     @GetMapping(&quot;/ping&quot;)
     public ResponseEntity&lt;String&gt; ping() {
-<span class="fc" id="L224">        return ResponseEntity.ok(&quot;pong&quot;);</span>
+<span class="fc" id="L242">        return ResponseEntity.ok(&quot;pong&quot;);</span>
     }
 
     private void setAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-<span class="fc" id="L228">        setAccessCookie(response, accessToken);</span>
-<span class="fc" id="L229">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
-<span class="fc" id="L230">                buildCookie(REFRESH_COOKIE, refreshToken, jwtService.getRefreshExpirationMs()).toString());</span>
-<span class="fc" id="L231">    }</span>
+<span class="fc" id="L246">        setAccessCookie(response, accessToken);</span>
+<span class="fc" id="L247">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
+<span class="fc" id="L248">                buildCookie(REFRESH_COOKIE, refreshToken, jwtService.getRefreshExpirationMs()).toString());</span>
+<span class="fc" id="L249">    }</span>
 
     private void setAccessCookie(HttpServletResponse response, String accessToken) {
-<span class="fc" id="L234">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
-<span class="fc" id="L235">                buildCookie(ACCESS_COOKIE, accessToken, jwtService.getExpirationMs()).toString());</span>
-<span class="fc" id="L236">    }</span>
+<span class="fc" id="L252">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
+<span class="fc" id="L253">                buildCookie(ACCESS_COOKIE, accessToken, jwtService.getExpirationMs()).toString());</span>
+<span class="fc" id="L254">    }</span>
 
     private void clearAuthCookies(HttpServletResponse response) {
-<span class="nc" id="L239">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_COOKIE, &quot;&quot;, 0).toString());</span>
-<span class="nc" id="L240">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_COOKIE, &quot;&quot;, 0).toString());</span>
-<span class="nc" id="L241">    }</span>
+<span class="nc" id="L257">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_COOKIE, &quot;&quot;, 0).toString());</span>
+<span class="nc" id="L258">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_COOKIE, &quot;&quot;, 0).toString());</span>
+<span class="nc" id="L259">    }</span>
 
     private ResponseCookie buildCookie(String name, String value, long maxAgeMs) {
-<span class="fc" id="L244">        return ResponseCookie.from(name, value)</span>
-<span class="fc" id="L245">                .httpOnly(true)</span>
-<span class="fc" id="L246">                .secure(cookieSecure)</span>
-<span class="fc" id="L247">                .sameSite(&quot;Strict&quot;)</span>
-<span class="fc" id="L248">                .path(&quot;/api&quot;)</span>
-<span class="fc" id="L249">                .maxAge(maxAgeMs / 1000)</span>
-<span class="fc" id="L250">                .build();</span>
+<span class="fc" id="L262">        return ResponseCookie.from(name, value)</span>
+<span class="fc" id="L263">                .httpOnly(true)</span>
+<span class="fc" id="L264">                .secure(cookieSecure)</span>
+<span class="fc" id="L265">                .sameSite(&quot;Strict&quot;)</span>
+<span class="fc" id="L266">                .path(&quot;/api&quot;)</span>
+<span class="fc" id="L267">                .maxAge(maxAgeMs / 1000)</span>
+<span class="fc" id="L268">                .build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

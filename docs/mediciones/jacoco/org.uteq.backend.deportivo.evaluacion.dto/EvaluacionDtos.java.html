@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EvaluacionDtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.dto</a> &gt; <span class="el_source">EvaluacionDtos.java</span></div><h1>EvaluacionDtos.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.dto;
+
+import jakarta.validation.constraints.DecimalMax;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * DTO del modulo de evaluacion diaria.
+ *
+ * &lt;p&gt;Van juntos a proposito: son las piezas de una sola pantalla y leerlos
+ * como conjunto explica el flujo mejor que ocho archivos sueltos.
+ */
+public final class EvaluacionDtos {
+
+    private EvaluacionDtos() {}
+
+    /**
+     * Un jugador tal como lo ve el entrenador al abrir la sesion.
+     *
+     * @param puntajes       lo ya guardado hoy, o la precarga del entrenamiento
+     *                       anterior si todavia no se califico
+     * @param precargado     true si los puntajes vienen del dia previo y aun no
+     *                       se han confirmado hoy; la interfaz puede marcarlos
+     *                       para que el entrenador sepa que son heredados
+     * @param lesionado      arrastra lesion activa
+     * @param puedeEvaluarse false si no marco asistencia: la ficha va bloqueada
+     */
+<span class="nc" id="L33">    public record JugadorEvaluableResponse(</span>
+            Long idEstudiante,
+            String nombreCompleto,
+            String categoria,
+            Long idPosicion,
+            String posicion,
+            /** PRESENTE, TARDE, AUSENTE o JUSTIFICADO (deportivo.asistencias.estado). */
+            String estadoAsistencia,
+            Map&lt;String, BigDecimal&gt; puntajes,
+            boolean precargado,
+            boolean lesionado,
+            boolean puedeEvaluarse,
+            String motivoBloqueo
+    ) {}
+
+    /** Pantalla completa de evaluacion de una sesion. */
+<span class="nc" id="L49">    public record EvaluacionSesionResponse(</span>
+            Long idEvaluacion,
+            Long idSesion,
+            LocalDate fecha,
+            String categoria,
+            String estado,
+            List&lt;CriterioResponse&gt; criterios,
+            List&lt;JugadorEvaluableResponse&gt; jugadores,
+            String observacionGeneral
+    ) {}
+
+<span class="nc" id="L60">    public record CriterioResponse(</span>
+            Long idCriterio,
+            String nombre,
+            String descripcion,
+            Short puntajeMaximo
+    ) {}
+
+    /**
+     * Guardado incremental de un jugador. El entrenador mueve un slider y la
+     * interfaz manda esto sin esperar a que termine: el documento del modulo
+     * pide autoguardado para no perder trabajo.
+     */
+<span class="fc" id="L72">    public record GuardarJugadorRequest(</span>
+            @NotNull Long idEstudiante,
+            Long idPosicionJugada,
+            @NotNull List&lt;PuntajeCriterioRequest&gt; puntajes
+    ) {}
+
+<span class="fc" id="L78">    public record PuntajeCriterioRequest(</span>
+            @NotNull Long idCriterio,
+            @NotNull
+            @DecimalMin(value = &quot;0.0&quot;, message = &quot;El puntaje no puede ser negativo&quot;)
+            @DecimalMax(value = &quot;10.0&quot;, message = &quot;El puntaje no puede superar 10&quot;)
+            BigDecimal puntaje
+    ) {}
+
+    /** Comentario generado para un jugador. */
+<span class="nc" id="L87">    public record FeedbackResponse(</span>
+            Long idEstudiante,
+            String texto,
+            boolean generadoPorIa,
+            String motivoNoDisponible
+    ) {}
+
+    /**
+     * Alineacion sugerida. Deliberadamente sin comentario de IA: ese texto se
+     * pide aparte, con el endpoint de feedback, solo cuando el entrenador lo
+     * toca. Calcular la alineacion es gratis y determinista; llamar al
+     * modelo de lenguaje no lo es, y no hay razon para pagarlo en cada
+     * apertura de pantalla si nadie va a leer el comentario.
+     */
+<span class="fc" id="L101">    public record PlantillaResponse(</span>
+            Long idSesion,
+            String categoria,
+            List&lt;JugadorPlantillaResponse&gt; titulares,
+            List&lt;JugadorPlantillaResponse&gt; suplentes,
+            List&lt;Long&gt; excluidosPorLesion
+    ) {}
+
+    /** Comentario de IA sobre una alineacion ya calculada, pedido a demanda. */
+<span class="fc" id="L110">    public record FeedbackPlantillaResponse(</span>
+            String comentario,
+            boolean generadoPorIa,
+            String motivoNoDisponible
+    ) {}
+
+<span class="fc" id="L116">    public record JugadorPlantillaResponse(</span>
+            Long idEstudiante,
+            String nombreCompleto,
+            String posicion,
+            BigDecimal promedioAcumulado
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

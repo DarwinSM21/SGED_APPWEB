@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EspecialidadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.especialidad.service</a> &gt; <span class="el_source">EspecialidadService.java</span></div><h1>EspecialidadService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.especialidad.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.especialidad.dto.EspecialidadRequest;
+import org.uteq.backend.deportivo.especialidad.dto.EspecialidadResponse;
+import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
+import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class EspecialidadService {
+
+    private final EspecialidadRepository especialidadRepository;
+
+    @Transactional(readOnly = true)
+    public Page&lt;EspecialidadResponse&gt; listarPaginado(Pageable pageable) {
+<span class="fc" id="L24">        return especialidadRepository.findByActivoTrue(pageable).map(this::toResponse);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;EspecialidadResponse&gt; listarTodasActivas() {
+<span class="fc" id="L29">        return especialidadRepository.findByActivoTrue().stream()</span>
+<span class="fc" id="L30">                .map(this::toResponse)</span>
+<span class="fc" id="L31">                .toList();</span>
+    }
+
+    @Transactional(readOnly = true)
+    public EspecialidadResponse buscarPorId(Long id) {
+<span class="fc" id="L36">        Especialidad especialidad = especialidadRepository.findById(id)</span>
+<span class="pc" id="L37">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
+<span class="nc" id="L38">        return toResponse(especialidad);</span>
+    }
+
+    @Transactional
+    public EspecialidadResponse crear(EspecialidadRequest request) {
+<span class="fc bfc" id="L43" title="All 2 branches covered.">        if (especialidadRepository.existsByNombreIgnoreCase(request.nombre())) {</span>
+<span class="fc" id="L44">            throw new IllegalArgumentException(&quot;Ya existe una especialidad con ese nombre&quot;);</span>
+        }
+
+<span class="fc" id="L47">        Especialidad especialidad = Especialidad.builder()</span>
+<span class="fc" id="L48">                .nombre(request.nombre())</span>
+<span class="fc" id="L49">                .activo(true)</span>
+<span class="fc" id="L50">                .build();</span>
+
+<span class="fc" id="L52">        return toResponse(especialidadRepository.save(especialidad));</span>
+    }
+
+    @Transactional
+    public EspecialidadResponse editar(Long id, EspecialidadRequest request) {
+<span class="fc" id="L57">        Especialidad especialidad = especialidadRepository.findById(id)</span>
+<span class="pc" id="L58">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
+
+<span class="pc bpc" id="L60" title="1 of 2 branches missed.">        if (!especialidad.getNombre().equalsIgnoreCase(request.nombre())</span>
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">                &amp;&amp; especialidadRepository.existsByNombreIgnoreCase(request.nombre())) {</span>
+<span class="nc" id="L62">            throw new IllegalArgumentException(&quot;Ya existe una especialidad con ese nombre&quot;);</span>
+        }
+
+<span class="fc" id="L65">        especialidad.setNombre(request.nombre());</span>
+
+<span class="fc" id="L67">        return toResponse(especialidadRepository.save(especialidad));</span>
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+<span class="fc" id="L72">        Especialidad especialidad = especialidadRepository.findById(id)</span>
+<span class="pc" id="L73">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L74">        especialidad.setActivo(false);</span>
+<span class="fc" id="L75">        especialidadRepository.save(especialidad);</span>
+<span class="fc" id="L76">    }</span>
+
+    private EspecialidadResponse toResponse(Especialidad especialidad) {
+<span class="fc" id="L79">        return new EspecialidadResponse(</span>
+<span class="fc" id="L80">                especialidad.getIdEspecialidad(),</span>
+<span class="fc" id="L81">                especialidad.getNombre(),</span>
+<span class="fc" id="L82">                especialidad.getActivo(),</span>
+<span class="fc" id="L83">                especialidad.getCreatedAt()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

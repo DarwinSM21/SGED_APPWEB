@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PerfilJugadorAnonimo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.ia</a> &gt; <span class="el_source">PerfilJugadorAnonimo.java</span></div><h1>PerfilJugadorAnonimo.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.ia;
+
+import java.util.Map;
+
+/**
+ * Datos de un jugador que SI pueden salir del sistema hacia un modelo de
+ * lenguaje externo.
+ *
+ * &lt;p&gt;Este record existe para que la restriccion de privacidad no dependa de
+ * que alguien se acuerde de aplicarla: el generador de feedback no recibe
+ * entidades del dominio, recibe esto. No hay forma de pasarle un nombre, una
+ * cedula, un correo o una fecha de nacimiento porque esos campos no existen
+ * aqui. Si en el futuro alguien necesita enviarlos, tendra que modificar este
+ * archivo, y ese cambio es visible en revision de codigo.
+ *
+ * &lt;p&gt;El motivo es concreto. El nivel gratuito de la API de Gemini permite que
+ * el proveedor use los datos enviados para mejorar sus propios productos, y
+ * los titulares de estos datos son menores de edad cuyo representante legal
+ * todavia no tiene un mecanismo de consentimiento modelado en el sistema
+ * (hallazgo H-04 de docs/etica/ETHICS.md). Enviar rendimiento deportivo
+ * seudonimizado es defendible; enviar identidades no lo es.
+ *
+ * @param referencia    identificador opaco dentro de la peticion (&quot;Jugador 1&quot;),
+ *                      sin relacion con la clave primaria ni con el codigo de
+ *                      estudiante
+ * @param categoria     nombre de la categoria del dia (por ejemplo &quot;SUB-12&quot;)
+ * @param posicion      posicion en la que jugo, o null
+ * @param puntajes      puntaje por criterio (&quot;Tecnica&quot; -&gt; 7.5)
+ * @param puntajesPrevios promedio historico por criterio, para que el modelo
+ *                      pueda hablar de evolucion y no solo del dia
+ * @param asistenciasUltimoMes cuantas sesiones asistio en el ultimo mes
+ * @param lesionado     si arrastra una lesion activa
+ */
+public record PerfilJugadorAnonimo(
+        String referencia,
+        String categoria,
+        String posicion,
+        Map&lt;String, Double&gt; puntajes,
+        Map&lt;String, Double&gt; puntajesPrevios,
+        Integer asistenciasUltimoMes,
+        boolean lesionado
+) {
+<span class="fc" id="L43">    public PerfilJugadorAnonimo {</span>
+<span class="pc bpc" id="L44" title="1 of 4 branches missed.">        if (referencia == null || referencia.isBlank()) {</span>
+<span class="fc" id="L45">            throw new IllegalArgumentException(&quot;La referencia anonima es obligatoria&quot;);</span>
+        }
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">        puntajes = puntajes == null ? Map.of() : Map.copyOf(puntajes);</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">        puntajesPrevios = puntajesPrevios == null ? Map.of() : Map.copyOf(puntajesPrevios);</span>
+<span class="fc" id="L49">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

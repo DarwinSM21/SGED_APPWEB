@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.controller</a> &gt; <span class="el_source">PagoController.java</span></div><h1>PagoController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.academico.pago.dto.PagoDtos.*;
+import org.uteq.backend.academico.pago.entity.Pago;
+import org.uteq.backend.academico.pago.service.PagoService;
+
+import java.util.List;
+
+/**
+ * Pagos. Los registra recepcion (o un administrador); el principal
+ * autenticado se resuelve aqui, nunca se confia en un id de cliente,
+ * mismo criterio ya usado para el resto de altas de este modulo.
+ *
+ * &lt;p&gt;Los metodos llevan @Transactional propio porque aResponse() navega
+ * Pago -&amp;gt; Estudiante -&amp;gt; Persona y Pago -&amp;gt; Usuario -&amp;gt; Persona (relaciones
+ * LAZY) con open-in-view deshabilitado.
+ */
+@RestController
+@RequestMapping(&quot;/api/pagos&quot;)
+@RequiredArgsConstructor
+public class PagoController {
+
+    private final PagoService pagoService;
+
+    @PostMapping(&quot;/membresia&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional
+    public ResponseEntity&lt;List&lt;PagoResponse&gt;&gt; registrarMembresia(@Valid @RequestBody RegistrarMembresiaRequest request) {
+<span class="nc" id="L37">        var pagos = pagoService.registrarMembresia(</span>
+<span class="nc" id="L38">                request.idEstudiante(), request.anio(), request.meses(),</span>
+<span class="nc" id="L39">                request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="nc" id="L40">        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());</span>
+    }
+
+    @PostMapping(&quot;/diario&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional
+    public ResponseEntity&lt;PagoResponse&gt; registrarDiario(@Valid @RequestBody RegistrarDiarioRequest request) {
+<span class="nc" id="L47">        var pago = pagoService.registrarDiario(</span>
+<span class="nc" id="L48">                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="nc" id="L49">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));</span>
+    }
+
+    @GetMapping(&quot;/estudiante/{idEstudiante}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;List&lt;PagoResponse&gt;&gt; historial(@PathVariable Long idEstudiante) {
+<span class="nc" id="L56">        return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());</span>
+    }
+
+    @GetMapping(&quot;/ingresos-mes&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;IngresosMesResponse&gt; ingresosDelMes() {
+<span class="nc" id="L63">        return ResponseEntity.ok(pagoService.ingresosDelMes());</span>
+    }
+
+    private String usernameAutenticado() {
+<span class="nc" id="L67">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+    }
+
+    private PagoResponse aResponse(Pago p) {
+<span class="nc" id="L71">        var persona = p.getEstudiante().getPersona();</span>
+<span class="nc" id="L72">        var registrador = p.getRegistradoPor().getPersona();</span>
+<span class="nc" id="L73">        return new PagoResponse(</span>
+<span class="nc" id="L74">                p.getIdPago(),</span>
+<span class="nc" id="L75">                p.getEstudiante().getIdEstudiante(),</span>
+<span class="nc" id="L76">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="nc" id="L77">                p.getTipo(),</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">                p.getAnio() != null ? p.getAnio().intValue() : null,</span>
+<span class="nc bnc" id="L79" title="All 2 branches missed.">                p.getMes() != null ? p.getMes().intValue() : null,</span>
+<span class="nc" id="L80">                p.getMonto(),</span>
+<span class="nc" id="L81">                p.getFechaPago(),</span>
+<span class="nc" id="L82">                registrador.getNombre() + &quot; &quot; + registrador.getApellido());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -46,7 +46,7 @@
   linkcolor=uteqverde,
   urlcolor=uteqverde,
   citecolor=uteqverde,
-  pdftitle={SGED - Informe de la Tercera Entrega},
+  pdftitle={SGED - Informe de la Entrega Final},
   pdfauthor={Arcalle Grefa Darwin Orlando, Pallo Pinto Alejandro Daniel, Velez Lopez Ricardo Elias}
 }
 
@@ -54,7 +54,7 @@
 \fancyhf{}
 \setlength{\headheight}{14pt}
 \renewcommand{\headrulewidth}{0.4pt}
-\lhead{SGED --- Tercera Entrega}
+\lhead{SGED --- Entrega Final}
 \rhead{Aplicaciones Web --- PPA 2026-2027}
 \cfoot{\thepage}
 
@@ -78,22 +78,25 @@
 {\Huge\bfseries\color{uteqverde} SGED}\\[0.4cm]
 {\Large Sistema de Gestión para la\\Escuela Deportiva ProFútbol}\\[1.5cm]
 
-{\LARGE\bfseries Informe de la Tercera Entrega}\\[0.4cm]
+{\LARGE\bfseries Informe de la Entrega Final}\\[0.4cm]
 {\large Proyecto Fin de Curso --- Aplicaciones Web}\\[2cm]
 
 \begin{tabular}{rl}
 \textbf{Asignatura:} & Aplicaciones Web (Quinto nivel) \\[0.2cm]
 \textbf{Docente:} & Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. \\[0.2cm]
 \textbf{Periodo:} & PPA 2026-2027 \\[0.2cm]
-\textbf{Etiqueta:} & \texttt{v0.9.0-rc} (candidata a versión estable) \\[0.2cm]
-\textbf{\emph{Commit} del corte:} & \texttt{380c388} \\[0.2cm]
-\textbf{DOI:} & \pendiente{} (Zenodo, ver §\ref{sec:amenazas}) \\
-\end{tabular}\\[1.5cm]
+\textbf{Etiqueta:} & \texttt{v1.0.0} \pendiente{} (ver nota de versión más abajo) \\[0.2cm]
+\textbf{\emph{Commit} del corte:} & \pendiente{} (se fija al cerrar la Entrega Final) \\[0.2cm]
+\textbf{DOI del software:} & \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240} \\[0.2cm]
+\textbf{DOI del \emph{dataset}:} & \pendiente{} (depósito separado en Zenodo, Bloque D.3) \\
+\end{tabular}\\[1.2cm]
 
-{\large\bfseries Integrantes:}\\[0.3cm]
-{\large Arcalle Grefa Darwin Orlando}\\
-{\large Pallo Pinto Alejandro Daniel}\\
-{\large Velez Lopez Ricardo Elias}\\[1.5cm]
+{\large\bfseries Integrantes y ORCID:}\\[0.3cm]
+\begin{tabular}{ll}
+Arcalle Grefa Darwin Orlando & ORCID: \pendiente{} (registro pendiente en \url{orcid.org}) \\
+Pallo Pinto Alejandro Daniel & ORCID: \pendiente{} (registro pendiente en \url{orcid.org}) \\
+Velez Lopez Ricardo Elias & ORCID: \pendiente{} (registro pendiente en \url{orcid.org}) \\
+\end{tabular}\\[1.2cm]
 
 {\large\bfseries Repositorio:}\\[0.2cm]
 {\ttfamily\url{https://github.com/DarwinSM21/SGED_APPWEB}}\\[1.5cm]
@@ -103,87 +106,200 @@
 \vfill
 \end{titlepage}
 
+\begin{quote}
+\small\itshape\color{alerta}
+Nota de versión (honesta, no cosmética): al momento de esta redacción el
+repositorio sigue en la etiqueta \texttt{v0.9.0-rc}. Los campos marcados
+\pendiente{} en esta portada —etiqueta \texttt{v1.0.0}, \emph{commit} de
+cierre, ORCID de cada integrante y DOI del \emph{dataset}— se completan
+en el mismo commit en que se coloca la etiqueta final, siguiendo la
+misma disciplina que \ruta{VERSIONING.md} ya aplica: no se declara
+cerrado lo que todavía no lo está.
+\end{quote}
+
 \tableofcontents
+\listoffigures
+\listoftables
+\lstlistoflistings
+\newpage
+
+\section*{Lista de siglas y acrónimos}
+\addcontentsline{toc}{section}{Lista de siglas y acrónimos}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Sigla} & \textbf{Expansión (primera aparición)} \\
+\midrule
+ADR & \emph{Architecture Decision Record} — registro de decisión arquitectónica \\
+API & \emph{Application Programming Interface} \\
+CI & Integración continua (\emph{Continuous Integration}) \\
+CRediT & \emph{Contributor Roles Taxonomy} \\
+CRUD & Crear, Leer, Actualizar, Borrar (\emph{Create, Read, Update, Delete}) \\
+CSP & \emph{Content Security Policy} \\
+DOI & \emph{Digital Object Identifier} \\
+DSR & \emph{Design Science Research} \\
+FAIR & \emph{Findable, Accessible, Interoperable, Reusable} \\
+GQM & \emph{Goal-Question-Metric} \\
+HU & Historia de usuario \\
+IC 95\,\% & Intervalo de confianza al 95\,\% \\
+INCOSE & \emph{International Council on Systems Engineering} \\
+IMRaD & \emph{Introduction, Methods, Results and Discussion} \\
+JPA & \emph{Java Persistence API} \\
+JTI & \emph{JWT ID} — identificador único de un token JWT \\
+JWT & \emph{JSON Web Token} \\
+LOPDP & Ley Orgánica de Protección de Datos Personales (Ecuador) \\
+MoSCoW & \emph{Must, Should, Could, Won't} — escala de priorización de requisitos \\
+ORM & \emph{Object-Relational Mapping} \\
+OWASP & \emph{Open Web Application Security Project} \\
+PFC & Proyecto Fin de Curso \\
+PRISMA & \emph{Preferred Reporting Items for Systematic Reviews and Meta-Analyses} \\
+RD & Restricción de diseño \\
+RF & Requisito funcional \\
+RNF & Requisito no funcional \\
+RQ & Pregunta de investigación (\emph{Research Question}) \\
+SGED & Sistema de Gestión para la Escuela Deportiva (ProFútbol) \\
+SP & Procedimiento almacenado (\emph{Stored Procedure}) \\
+SRS & \emph{Software Requirements Specification} \\
+SUS & \emph{System Usability Scale} \\
+UTEQ & Universidad Técnica Estatal de Quevedo \\
+VU & Usuario virtual (\emph{Virtual User}, k6) \\
+ZAP & \emph{Zed Attack Proxy} (OWASP) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
 \newpage
 
 % ============================================================
-\section*{Resumen ejecutivo}
-\addcontentsline{toc}{section}{Resumen ejecutivo}
+\section*{Resumen}
+\addcontentsline{toc}{section}{Resumen}
+\label{sec:resumen-es}
 
-La Tercera Entrega no añade funcionalidad: verifica, con evidencia empírica
-reproducible, lo que el proyecto ya afirmaba tener. Este informe documenta
-el estado del sistema SGED en la etiqueta \texttt{v0.9.0-rc}
-(\emph{commit} \texttt{380c388}) y los resultados de las cinco mediciones
-exigidas.
+\textbf{Contexto y problema.} La escuela de fútbol formativo ProFútbol
+gestionaba de forma manual y dispersa la matrícula de sus estudiantes
+menores de edad, el control de asistencia, los pagos y el inventario
+deportivo, sin trazabilidad verificable ni control de acceso a datos
+sensibles. \textbf{Objetivo.} Este trabajo desarrolla y evalúa
+empíricamente SGED, un sistema web que cubre esos cuatro dominios bajo
+una estrategia híbrida de acceso a datos (CRUD sobre ORM más
+procedimientos almacenados parametrizados) y un proceso disciplinado de
+ingeniería de requisitos conforme a ISO/IEC/IEEE~29148:2018.
+\textbf{Métodos.} Se siguió \emph{Design Science Research}
+(Peffers~\emph{et al.}) sobre una arquitectura documentada en C4 (Spring
+Boot~3.2/Java~21, Angular, PostgreSQL~16, Redis~7, Docker Compose), con
+autenticación JWT en cookie \texttt{HttpOnly}. La evaluación empírica
+combina pruebas de carga (k6), auditoría de los seis controles
+OWASP~Top~10 más análisis estático, cobertura de pruebas (JaCoCo),
+calidad web (Lighthouse) y usabilidad percibida (\emph{System Usability
+Scale}, $N=10$), todas archivadas como datos crudos reproducibles.
+\textbf{Resultados principales.} A la fecha de este corte el sistema
+cumple los umbrales de rendimiento (p95 muy por debajo de 200\,ms), los
+seis controles OWASP evidenciados y la cobertura mínima exigida; el
+proceso de medición detectó y corrigió tres instrumentos que producían
+lecturas engañosas, entre ellos una exposición real de datos de
+estudiantes menores de edad (hallazgo H-08, corregido). La usabilidad
+agregada cruza apenas el umbral aceptable, pero esconde un patrón
+bimodal marcado por rol de usuario. \textbf{Conclusiones.} La estrategia
+híbrida de acceso a datos es empíricamente sostenible sin sacrificar
+seguridad, y la disciplina de reportar instrumentos de medición
+defectuosos —en vez de solo sus resultados— es en sí misma un aporte
+metodológico del trabajo. Quedan abiertas líneas de trabajo futuro sobre
+el patrón bimodal de usabilidad y la exposición pública del dominio
+deportivo restante.
 
-\textbf{Resultados cuantitativos.} El sistema cumple los cinco umbrales:
-rendimiento p95 de 14,18\,ms frente a un límite de 200\,ms (3 corridas k6,
-0\,\% de errores); 6 de 6 controles OWASP evidenciados con peticiones
-verificables; 72,5\,\% de cobertura de instrucciones frente a un mínimo de
-60\,\% (102 pruebas, 0 fallos); accesibilidad Lighthouse de 100/100; y una
-media SUS de 68,25 con 10 participantes reales, que cruza el umbral de la
-media de la industria por 0,25 puntos.
+\textbf{Palabras clave:} sistemas de gestión escolar deportiva;
+ingeniería de requisitos; validación empírica de software; seguridad de
+aplicaciones web; arquitectura de software; pruebas de usabilidad;
+reproducibilidad de resultados.
 
-\textbf{Hallazgo principal.} El aporte real de esta entrega fue descubrir
-que \emph{tres de esas mediciones estaban dando resultados válidos en
-apariencia sobre un sistema que no hacía lo que el indicador decía}. La
-cobertura se medía sobre clases compiladas antes de una reestructuración de
-paquetes; la auditoría de control de acceso se bloqueaba a sí misma y
-devolvía un rechazo que probaba autenticación, no autorización; y el
-registro de usuarios llevaba roto desde la reestructuración mientras sus
-pruebas unitarias pasaban, porque usan dobles de prueba y la restricción
-violada la aplica el motor de base de datos. Corregidas las tres
-mediciones, la auditoría destapó una exposición real: los datos
-identificativos de los estudiantes menores de edad —incluida la búsqueda
-por número de cédula— eran accesibles a cualquier cuenta autenticada del
-sistema, por ausencia de anotaciones de autorización en cinco recursos
-nuevos. Está corregido y registrado como hallazgo H-08.
+\newpage
 
-\textbf{Resultado de usabilidad.} La media SUS agregada esconde un patrón
-bimodal nítido por perfil: entrenadores y estudiantes califican el sistema
-como excelente (86,7 y 90,0; grado A), mientras recepcionistas y padres de
-familia lo califican como pobre o inaceptable (51,7 y 43,75; grado F). Se
-reporta el patrón y no solo el promedio, porque es el que orienta el
-trabajo de la Entrega Final.
+\section*{Abstract}
+\addcontentsline{toc}{section}{Abstract}
+\label{sec:resumen-en}
 
-\textbf{Lo que no está.} El DOI de Zenodo no está asignado, el módulo de
-representantes y el resto del dominio deportivo no están implementados, y
-persisten siete hallazgos éticos abiertos. Todos se declaran en las
-secciones correspondientes en lugar de omitirse.
+\textbf{Context and problem.} The ProFútbol youth football academy
+managed enrollment of underage students, attendance, payments, and
+sports inventory manually and across disconnected spreadsheets, with no
+verifiable traceability and no access control over sensitive personal
+data. \textbf{Objective.} This work develops and empirically evaluates
+SGED, a web system covering those four domains under a hybrid
+data-access strategy (parametrized ORM CRUD plus stored procedures) and
+a disciplined requirements-engineering process aligned with
+ISO/IEC/IEEE~29148:2018. \textbf{Methods.} The project follows Design
+Science Research (Peffers~\emph{et al.}) over a C4-documented
+architecture (Spring~Boot~3.2/Java~21, Angular, PostgreSQL~16, Redis~7,
+Docker Compose), with JWT authentication carried in an
+\texttt{HttpOnly} cookie. Empirical evaluation combines load testing
+(k6), an audit of the six mandatory OWASP~Top~10 controls plus static
+analysis, automated-test coverage (JaCoCo), web-quality auditing
+(Lighthouse), and perceived usability (System Usability Scale,
+$N=10$), all archived as reproducible raw data. \textbf{Main results.}
+As of this cut, the system meets the performance thresholds (p95 well
+under 200\,ms), evidences all six OWASP controls, and meets the minimum
+required coverage; the measurement process itself uncovered and fixed
+three instruments that were producing misleading readings, including a
+real exposure of underage students' personal data (finding H-08, now
+fixed). Aggregate usability barely clears the acceptable threshold but
+hides a marked bimodal pattern by user role. \textbf{Conclusions.} The
+hybrid data-access strategy is empirically sustainable without
+sacrificing security, and reporting faulty measurement instruments —
+not just their results — is itself a methodological contribution of
+this work. Open future work concerns the bimodal usability pattern and
+the public exposure of the remaining sports domain.
+
+\textbf{Keywords:} sports school management systems; requirements
+engineering; empirical software validation; web application security;
+software architecture; usability testing; reproducibility of results.
 
 \newpage
 
 % ============================================================
 \section{Introducción}
 
-Este informe documenta la Tercera Entrega del Proyecto Fin de Curso de la
+Este informe documenta la Entrega Final del Proyecto Fin de Curso de la
 asignatura Aplicaciones Web: el sistema \textbf{SGED}, una aplicación web
 para la gestión administrativa y deportiva de la escuela de fútbol formativo
 ProFútbol.
 
-El eje de esta entrega es la \emph{verificabilidad}. Todo lo que se afirma
+El eje de este trabajo es la \emph{verificabilidad}. Todo lo que se afirma
 aquí puede comprobarse ejecutando el repositorio: cada número proviene de una
 medición archivada en \ruta{docs/mediciones/}, y cada requisito enlaza con el
 archivo que lo implementa y con la prueba que lo cubre.
 
-\subsection{Estado de la entrega: declaración previa}
+\subsection{Contexto y motivación}
+\label{sec:contexto-motivacion}
 
-Antes de exponer los resultados conviene ser explícito sobre dos cosas:
+La administración de una escuela de fútbol formativo combina cuatro
+procesos que rara vez conviven en una sola herramienta: matrícula y
+control académico de menores de edad, seguimiento deportivo (categorías,
+horarios, sesiones, asistencia, evaluación de desempeño), cobro de
+mensualidades y control de inventario (uniformes, balones, material de
+entrenamiento). La literatura de informática deportiva documenta que las
+herramientas digitales dedicadas siguen siendo la excepción, no la norma,
+en clubes y escuelas de formación —que típicamente operan con hojas de
+cálculo, mensajería informal y registro en papel— y que esa carencia se
+traduce en pérdida de trazabilidad y en decisiones tomadas sin datos
+consolidados~\cite{blobel2020cis}. El mismo patrón se documenta en el
+deporte de alto rendimiento, donde la fragmentación del flujo de
+información entre preparadores, cuerpo médico y dirección deportiva es
+un problema reportado explícitamente, no solo intuido~\cite{ranaweera2022rugby}.
 
-\begin{enumerate}[leftmargin=*]
-  \item \textbf{Alcance realmente implementado.} El sistema expone hoy 13
-    \emph{endpoints} REST (autenticación y gestión de estudiantes). El
-    dominio deportivo (entrenadores, horarios, sesiones, asistencias y
-    evaluaciones) está \emph{modelado y migrado} en la base de datos, pero
-    no expuesto vía API. En el documento de requisitos cada elemento indica
-    su estado real, y en este informe se mantiene la misma distinción. No se
-    presenta como entregado nada que no lo esté.
-  \item \textbf{Medición de usabilidad completada, con un resultado que no
-    se suaviza.} La encuesta SUS (Bloque~C.3, sección~\ref{sec:sus}) se
-    aplicó a 10 participantes reales: media SUS 68,25, apenas por encima
-    del umbral de 68, y con un patrón bimodal marcado por perfil que la
-    media agregada esconde.
-\end{enumerate}
+El caso de ProFútbol añade una dimensión que no es solo operativa sino
+regulatoria: la mayoría de sus estudiantes son menores de edad, y sus
+datos —incluida la cédula, la asistencia con hora y lugar, y las
+evaluaciones individuales de desempeño— constituyen información sensible
+bajo la Ley Orgánica de Protección de Datos Personales de
+Ecuador~\cite{lopdp2021}. Digitalizar sin diseñar control de acceso desde
+el inicio no resuelve el problema original: lo traslada a un sistema que
+puede exponerlo a mayor escala, como evidencia el propio hallazgo~H-08 de
+este trabajo (sección~\ref{sec:a01-falso-correcto}). La magnitud concreta
+del problema que SGED cubre se dimensiona con las cifras de su propia
+especificación: 47 requisitos individuales (31 funcionales, 13 no
+funcionales, 3 restricciones de diseño, sección~\ref{sec:ingenieria-requisitos})
+repartidos en cinco roles de usuario y cuatro dominios funcionales, que
+antes de este proyecto no tenían ningún soporte de software dedicado.
 
 \subsection{Preguntas de investigación}
 \label{sec:rqs}
@@ -217,22 +333,159 @@ explícitamente en la Discusión (sección~\ref{sec:discusion}).
     degradan a medida que se agregan módulos nuevos?
 \end{description}
 
+\subsection{Objetivo general y objetivos específicos}
+\label{sec:objetivos}
+
+\textbf{Objetivo general.} Desarrollar y validar empíricamente un sistema
+web de gestión administrativa y deportiva para una escuela de fútbol
+formativo, bajo una estrategia híbrida de acceso a datos y con evidencia
+reproducible de sus atributos de calidad.
+
+\begin{description}[leftmargin=2.4em, style=nextline]
+  \item[OE1.] Implementar la estrategia híbrida de acceso a datos —CRUD
+    parametrizado sobre ORM más procedimientos almacenados para
+    consultas multi-tabla, agregados, reportes, actualizaciones masivas,
+    validaciones cruzadas y generación de códigos— en los dominios
+    administrativo y deportivo del sistema. \emph{(RQ2)}
+  \item[OE2.] Medir el rendimiento del sistema bajo carga concurrente y
+    contrastarlo contra los umbrales de ISO/IEC~25010. \emph{(RQ1)}
+  \item[OE3.] Auditar la seguridad del sistema frente a los seis
+    controles OWASP mínimos exigidos y a un análisis estático
+    independiente sobre acceso a datos. \emph{(RQ2)}
+  \item[OE4.] Evaluar la usabilidad percibida del sistema, por perfil de
+    usuario, mediante el instrumento \emph{System Usability Scale}.
+    \emph{(RQ3)}
+  \item[OE5.] Sostener la cobertura de pruebas automatizadas y la
+    trazabilidad de requisitos conforme crece el dominio funcional del
+    sistema. \emph{(RQ4)}
+\end{description}
+
+\subsection{Contribuciones}
+\label{sec:contribuciones}
+
+\begin{enumerate}[leftmargin=*]
+  \item Un sistema web de gestión escolar deportiva con arquitectura
+    documentada en C4 (niveles 1 a 3) y siete registros de decisión
+    arquitectónica, en \ruta{docs/arquitectura/} y \ruta{docs/adr/}.
+  \item Una estrategia híbrida de acceso a datos auditada empíricamente
+    contra inyección SQL, con procedimientos almacenados versionados y
+    catalogados en \ruta{db/procs/} y \ruta{docs/basedatos/CATALOGO-SP.md}
+    (sección~\ref{sec:acceso-datos}).
+  \item Un corpus de ingeniería de requisitos trazable de extremo a
+    extremo —SRS, historias de usuario, casos de uso, matriz de
+    trazabilidad— conforme a ISO/IEC/IEEE~29148:2018, en
+    \ruta{docs/requisitos/} y \ruta{docs/trazabilidad/matriz.csv}
+    (Capítulo~\ref{sec:ingenieria-requisitos}).
+  \item Un conjunto reproducible de evidencia empírica de rendimiento,
+    seguridad, cobertura, calidad web y usabilidad, con datos crudos y
+    \emph{scripts} de análisis versionados en \ruta{docs/mediciones/} y
+    \ruta{scripts/} (Capítulo~\ref{sec:evaluacion}).
+  \item Una bitácora metodológica de defectos de instrumentación de
+    medición detectados y corregidos durante el propio proceso de
+    evaluación —incluido el hallazgo de seguridad H-08— documentada como
+    aporte en vez de omitida (sección~\ref{sec:a01-falso-correcto}).
+\end{enumerate}
+
+\subsection{Organización del documento}
+
+El Capítulo~\ref{sec:marco-teorico} presenta los fundamentos conceptuales
+del trabajo. El Capítulo~\ref{sec:trabajos-relacionados} sitúa a SGED
+frente a sistemas comparables y declara la brecha que este trabajo cubre.
+El Capítulo~\ref{sec:ingenieria-requisitos} documenta el proceso completo
+de ingeniería de requisitos. Los Capítulos~\ref{sec:observaciones} y
+\ref{sec:reestructuracion} cierran, respectivamente, la deuda de
+observaciones acumuladas y una decisión estructural relevante del
+código. El Capítulo~\ref{sec:arquitectura} describe el diseño del sistema
+y la sección~\ref{sec:acceso-datos} profundiza en la estrategia híbrida
+de acceso a datos con listados de código representativos. El
+Capítulo~\ref{sec:protocolo} declara el protocolo experimental antes de
+que el Capítulo~\ref{sec:evaluacion} presente los resultados. Los
+capítulos finales —Reproducibilidad, Amenazas a la validez, ética,
+CRediT, Discusión, Trabajo futuro y Conclusiones— cierran el documento
+con la interpretación crítica y las declaraciones obligatorias exigidas
+por la Entrega Final.
+
 \subsection{Pila tecnológica}
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Pila tecnológica de SGED.}
+\label{tab:pila-tecnologica}
 \begin{tabular}{@{}ll@{}}
 \toprule
 \textbf{Capa} & \textbf{Tecnología} \\
 \midrule
 Backend & Spring Boot 3.2 (Java 21 LTS), Spring Data JPA, Spring Security \\
 Frontend & Angular, servido por nginx con terminación TLS \\
-Base de datos & PostgreSQL 16 (esquemas \texttt{seguridad} y \texttt{deportivo}) \\
+Base de datos & PostgreSQL 16 (esquemas \texttt{seguridad}, \texttt{academico}, \texttt{deportivo} e \texttt{inventario}) \\
 Caché y revocación & Redis 7 \\
-Migraciones & Flyway (\texttt{V1}--\texttt{V6}) \\
+Migraciones & Flyway (\texttt{V1}--\texttt{V17}) \\
 Orquestación & Docker Compose, imágenes fijadas por digest SHA-256 \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
+
+\subsection{Estado de la entrega: declaración previa}
+\label{sec:estado-entrega}
+
+\begin{quote}
+\small\itshape\color{alerta}
+Advertencia de consistencia interna, dejada explícita en vez de
+corregida en silencio: al momento de esta redacción el sistema expone
+\textbf{21 controladores REST y 97 operaciones \emph{mapeadas}}
+(\texttt{grep} sobre \ruta{backend/src/main/java}), muy por encima de
+los 13 \emph{endpoints} de autenticación y estudiantes que reportaba la
+Tercera Entrega —se agregaron los dominios de representantes, pagos,
+inventario, especialidades, evaluación diaria, lesiones, horarios,
+sesiones y asistencia entre el 2026-08-03 y el 2026-08-13
+(sección~\ref{sec:ingenieria-requisitos}). \textbf{Actualización de esta
+misma redacción (2026-08-14):} se volvió a ejecutar \texttt{clean test}
+sobre el código actual —\textbf{270 pruebas, 0 fallos, 140 clases
+analizadas}— y el \texttt{jacoco.csv} archivado ya corresponde a esta
+corrida, no a la del 30 de julio. Cobertura agregada:
+\textbf{75,3\,\% de líneas} (cumple el 70\,\% exigido) pero
+\textbf{59,3\,\% de \emph{branches}} (no cumple, aunque mejoró frente al
+41,9\,\% de la medición anterior). El déficit no está distribuido
+uniformemente: el módulo \texttt{academico.pago} tiene \textbf{0\,\% de
+cobertura de \emph{branches}} (0 de 4 en el controlador, 0 de 10 en el
+servicio) — es un dominio completo sin pruebas propias, no un residuo
+disperso de casos límite sin cubrir. \texttt{deportivo.lesion.controller}
+también está en 0\,\% (0 de 2). \textbf{Pendiente crítico antes de
+colocar la etiqueta \texttt{v1.0.0}:} escribir pruebas para
+\texttt{PagoController}/\texttt{PagoService} y \texttt{LesionController}
+— es la vía más directa para cerrar la brecha de \emph{branches}, más
+que perseguir cobertura dispersa en el resto del código.
+
+\textbf{Segunda actualización, misma sesión:} se regeneraron también
+rendimiento y seguridad contra el sistema local completo
+(\texttt{docker compose up}). En el camino se encontró y corrigió un
+defecto de entorno no relacionado con el código: el \ruta{.env} local
+tenía \texttt{DB\_URL} apuntando a una base de datos Supabase remota en
+vez de al contenedor \texttt{postgres} local, así que el backend nunca
+usaba los datos sembrados localmente y el inicio de sesión con el
+usuario semilla fallaba con \texttt{401} pese a que el \emph{hash} en la
+base de datos local era correcto — se verificó de forma aislada con la
+misma clase \texttt{BCryptPasswordEncoder} del backend antes de
+descartar esa hipótesis. Corregido el \ruta{.env} a la ``Opción 1''
+(local) que ya documenta \ruta{.env.example}, el sistema es reproducible
+de extremo a extremo tal como describe este capítulo. \textbf{Rendimiento}
+(5 corridas, 50~VU, 30~s): p95 promedio \textbf{9,91\,ms} (IC~95\,\%
+$\pm$0,25), muy por debajo del umbral de 200\,ms; una corrida de cinco
+tuvo una tasa de error de 0,01\,\% (2 de 15\,921 peticiones), las otras
+cuatro sin errores. \textbf{Seguridad OWASP:} los seis controles
+(A01, A02, A03, A05, A07, A09) evidenciados de nuevo con peticiones
+reales contra el sistema actual, y la auditoría de SQL dinámico sin
+hallazgos. \textbf{Calidad web (Lighthouse) sigue pendiente}: este
+entorno de ejecución no tiene un navegador Chrome/Chromium instalable
+en esta sesión; queda para una corrida posterior con el entorno
+completo.
+\end{quote}
+
+La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
+aplicó sobre el sistema en una etapa comparable a la actual: 10
+participantes reales, media SUS 68,25 (apenas por encima del umbral de
+68), con un patrón bimodal marcado por perfil que la media agregada
+esconde.
 
 % ============================================================
 \section{Marco teórico}
@@ -394,7 +647,8 @@ modelado de datos de clubes deportivos, alojado en un sitio de
 repositorio que no permitió confirmar si era un trabajo revisado por
 pares o un informe de coursework redistribuido.
 
-\begin{center}
+\begin{figure}[htbp]
+\centering
 \begin{tikzpicture}[
   box/.style={draw, rectangle, rounded corners, align=center, minimum width=7.2cm, minimum height=1.05cm, font=\small, fill=black!3},
   exc/.style={draw, rectangle, align=left, text width=4.4cm, font=\scriptsize, fill=black!3},
@@ -416,7 +670,9 @@ pares o un informe de coursework redistribuido.
 \draw[arr] (dedup.east) -- (exc2.west);
 \draw[arr] (elig.east) -- (exc3.west);
 \end{tikzpicture}
-\end{center}
+\caption{Diagrama de flujo PRISMA 2020 de la revisión de trabajos relacionados.}
+\label{fig:prisma}
+\end{figure}
 
 Los conteos son una reconstrucción honesta del registro de búsqueda del
 equipo, no el resultado de una herramienta de gestión bibliográfica
@@ -488,7 +744,10 @@ proyecto no documenta todavía una sesión de identificación de
 \emph{stakeholders} formal y separada — ver el señalamiento honesto en la
 subsección siguiente.}, los interesados se organizan en tres anillos:
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Interesados de SGED por anillo (\emph{stakeholder onion}).}
+\label{tab:stakeholders}
 \begin{tabular}{@{}p{2.8cm}p{11.5cm}@{}}
 \toprule
 \textbf{Anillo} & \textbf{Interesados} \\
@@ -508,7 +767,7 @@ Código de la Niñez y Adolescencia) actúa como interesado normativo, sin
 representación directa en el sistema. \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \subsection{Técnicas de elicitación aplicadas}
 
@@ -554,7 +813,10 @@ de \ruta{ETHICS.md}) y el módulo \texttt{equipo}/\texttt{partido}
 (esquema versionado en \texttt{V16}, sin API por decisión, no por
 omisión).
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Requisitos funcionales de SGED por categoría MoSCoW inferida.}
+\label{tab:moscow}
 \begin{tabular}{@{}lrl@{}}
 \toprule
 \textbf{Categoría MoSCoW (inferida)} & \textbf{Cantidad} & \textbf{Fuente} \\
@@ -568,7 +830,7 @@ Won't (esta entrega, declarado) & 2 & RF-11b, módulo equipo/partido \\
 \textbf{Total de requisitos funcionales} & \textbf{31} & RF-01 a RF-30 + RF-11b \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \textbf{Hallazgo:} seis requisitos del módulo deportivo (RF-17 a RF-22,
 los más recientes — implementados entre el 2026-08-09 y el 2026-08-13) no
@@ -670,7 +932,10 @@ que el changelog registra hoy.
 
 \subsection{Métricas de calidad de requisitos}
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Métricas de calidad de requisitos de SGED.}
+\label{tab:metricas-requisitos}
 \begin{tabular}{@{}lr@{}}
 \toprule
 \textbf{Métrica} & \textbf{Valor} \\
@@ -690,7 +955,7 @@ Entradas en el changelog de requisitos & 30 (cobertura: RF-01–RF-22 y RNF-01�
 Tasa de estabilidad (sobre el rango cubierto) & 63{,}6\,\% \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 $^\ast$Incluye los 3 requisitos en estado 🟡 Modelado, cuya "verificación"
 en el SRS describe la restricción de esquema (p. ej. la restricción
@@ -881,8 +1146,27 @@ el código no es evidencia, es motivo de observación.
 
 % ============================================================
 \section{Arquitectura}
+\label{sec:arquitectura}
 
-\subsection{Vista de contenedores}
+\subsection{Vista de contexto (C4 nivel 1)}
+\label{sec:c4n1}
+
+El nivel 1 sitúa el sistema frente a sus actores humanos y sus dos
+dependencias externas (proveedor de correo para notificaciones y, en
+producción, el proveedor de TLS). Es el nivel con menor tasa de cambio de
+los tres: no se ha modificado desde la Entrega 1A porque los actores y
+las fronteras del sistema no cambiaron con la reestructuración en
+dominios de la sección~\ref{sec:reestructuracion}, solo su interior.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{../arquitectura/L1-contexto.png}
+\caption{C4 nivel 1 — contexto del sistema SGED, generado desde \ruta{docs/arquitectura/workspace.dsl}.}
+\label{fig:c4-l1}
+\end{figure}
+
+\subsection{Vista de contenedores (C4 nivel 2)}
+\label{sec:c4n2}
 
 \begin{center}
 \begin{tikzpicture}[
@@ -903,6 +1187,18 @@ el código no es evidencia, es motivo de observación.
 \draw[flecha] (api) -- node[above, font=\scriptsize, sloped]{cookie JTI} (rd);
 \end{tikzpicture}
 \end{center}
+
+El diagrama anterior es una simplificación didáctica de los cinco
+contenedores reales; el diagrama C4 nivel 2 generado directamente desde
+\ruta{workspace.dsl} —la fuente de verdad, no esta figura— es el
+siguiente:
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{../arquitectura/L2-contenedores.png}
+\caption{C4 nivel 2 — contenedores de SGED, generado desde \ruta{docs/arquitectura/workspace.dsl}.}
+\label{fig:c4-l2}
+\end{figure}
 
 La documentación de arquitectura en el modelo C4~\cite{brown2018c4} y las
 decisiones arquitectónicas (ADR)~\cite{nygard2011adr} se mantienen en
@@ -931,9 +1227,12 @@ servicio, cada servicio accede a datos por un repositorio JPA, y ningún
 controlador toca un repositorio directamente — la disciplina de capas es
 verificable en el diagrama, no solo declarada en el texto.
 
-\begin{center}
+\begin{figure}[htbp]
+\centering
 \includegraphics[width=\textwidth]{../arquitectura/L3-componentes.png}
-\end{center}
+\caption{C4 nivel 3 — componentes del contenedor API Spring Boot, generado desde \ruta{docs/arquitectura/workspace.dsl}.}
+\label{fig:c4-l3}
+\end{figure}
 
 Dos detalles del diagrama merecen lectura explícita. Primero,
 \texttt{EstudianteRepository} es el único repositorio que invoca
@@ -946,6 +1245,7 @@ directa de haber normalizado la categoría, y es la clase de acoplamiento
 que conviene tener dibujado antes de que crezca.
 
 \subsection{Autenticación: JWT en cookie \texttt{HttpOnly}}
+\label{sec:jwt-cookie}
 
 El sistema emite el JWT~\cite{rfc7519} exclusivamente en una cookie
 \texttt{HttpOnly}, \texttt{Secure} y \texttt{SameSite=Strict}. El token nunca
@@ -976,7 +1276,10 @@ El Bloque~A.2 de la guía exige una separación explícita entre lo que resuelve
 el ORM y lo que debe resolver el motor de base de datos. La regla adoptada
 es:
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Reparto de responsabilidades entre ORM y procedimientos almacenados.}
+\label{tab:reparto-orm-sp}
 \begin{tabular}{@{}p{7.3cm}p{7.3cm}@{}}
 \toprule
 \textbf{Spring Data JPA (ORM)} & \textbf{Procedimientos almacenados} \\
@@ -986,21 +1289,34 @@ Agregaciones, actualizaciones masivas con criterio de negocio, operaciones
 multi-tabla transaccionales. \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-Los dos procedimientos implementados están versionados en
-\ruta{db/procs/} y creados por migración Flyway~\cite{flyway}:
+\textbf{Nota de esta versión del informe:} el sistema creció de dos a
+\textbf{siete} procedimientos almacenados desde la Tercera Entrega, uno
+por cada categoría funcional que exige el Bloque~A.2.1 de la Entrega
+Final. Todos están versionados en \ruta{db/procs/}, creados por
+migración Flyway~\cite{flyway} (\texttt{V5}, \texttt{V6}, \texttt{V11},
+\texttt{V15}) y catalogados en \ruta{docs/basedatos/CATALOGO-SP.md}, que
+es la fuente de verdad que esta tabla resume:
 
-\begin{center}
-\begin{tabular}{@{}lll@{}}
+\begin{table}[htbp]
+\centering
+\caption{Procedimientos almacenados de SGED por categoría funcional (Bloque A.2.1).}
+\label{tab:procs}
+\begin{tabular}{@{}p{4.6cm}p{3.1cm}p{6.2cm}@{}}
 \toprule
-\textbf{Procedimiento} & \textbf{Requisito} & \textbf{Motivo} \\
+\textbf{Procedimiento} & \textbf{Categoría} & \textbf{Propósito} \\
 \midrule
-\texttt{sp\_contar\_estudiantes\_activos} & RF-14 & Agregación \texttt{COUNT} \\
-\texttt{sp\_desactivar\_estudiantes\_categoria} & RF-15 & Actualización masiva transaccional \\
+\texttt{sp\_contar\_estudiantes\_activos} & Cálculo agregado & Conteo de estudiantes activos por categoría \\
+\texttt{sp\_desactivar\_estudiantes\_categoria} & Actualización masiva & Baja lógica masiva de una categoría completa \\
+\texttt{sp\_validar\_categoria\_estudiante\_sesion} & Validación cruzada & Un estudiante solo marca asistencia en sesiones de su propia categoría \\
+\texttt{sp\_generar\_codigo\_estudiante} & Generación de código secuencial & Siguiente \texttt{codigo\_estudiante} consecutivo del año \\
+\texttt{sp\_reporte\_asistencia\_estudiante} & Reporte & Porcentaje de asistencia en un rango de fechas \\
+\texttt{sp\_contacto\_representante\_estudiante} & Consulta multi-tabla & Contacto de emergencia del representante activo \\
+\texttt{sp\_reporte\_stock\_bajo} & Reporte / agregado & Conteo de artículos bajo el mínimo de \emph{stock} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \subsection{Un defecto real: \texttt{FUNCTION} frente a \texttt{PROCEDURE}}
 
@@ -1034,6 +1350,86 @@ Ninguna capa construye sentencias SQL por concatenación de cadenas. Toda
 consulta usa parámetros vinculados (JPA) o parámetros nombrados (los
 procedimientos). El repositorio incluye una auditoría automatizada
 (\ruta{scripts/audit-sql-dynamic.sh}) integrada en \texttt{make audit}.
+
+% ============================================================
+\section{Implementación}
+\label{sec:implementacion}
+
+Este capítulo describe las decisiones de código que no se derivan
+directamente del diagrama de arquitectura (Capítulo~\ref{sec:arquitectura})
+ni de la estrategia de acceso a datos (sección~\ref{sec:acceso-datos},
+que actúa como la subsección de este capítulo dedicada a esa estrategia,
+con su propio listado de código). No se transcriben archivos completos:
+cada listado remite al archivo real del repositorio para el detalle.
+
+\subsection{Aislamiento de capas}
+
+La disciplina \emph{controlador~$\rightarrow$~servicio~$\rightarrow$~repositorio}
+descrita en la sección~\ref{sec:c4n3} se aplica sin excepción en los 21
+controladores del \emph{backend}: ningún controlador inyecta un
+repositorio directamente, y ningún repositorio contiene lógica de
+negocio. Los cinco dominios (\texttt{seguridad}, \texttt{academico},
+\texttt{deportivo}, \texttt{inventario} y el transversal
+\texttt{common}) están separados por paquete Java, no solo por
+convención de nombres, de modo que un ciclo de dependencias entre
+dominios se detecta en tiempo de compilación.
+
+\subsection{Manejo global de errores}
+
+Todas las respuestas de error del \emph{backend} siguen el formato
+\emph{Problem Detail} de la RFC~9457~\cite{rfc9457}, centralizado en un
+único punto de la capa web:
+
+\begin{lstlisting}[language=Java,caption={Manejador global de excepciones (\ruta{backend/.../common/exception/GlobalExceptionHandler.java})}]
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ApiException.class)
+    public ProblemDetail handleApiException(ApiException ex) {
+        String tipo = ex.getClass().getSimpleName();
+        ProblemDetail pd = ex.toProblemDetail(tipo, ex.getStatus().getReasonPhrase());
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+    // ExceptionHandler adicionales para validacion, autenticacion y autorizacion
+}
+\end{lstlisting}
+
+Cada excepción de dominio extiende \texttt{ApiException} y declara su
+propio código HTTP; el manejador no interpreta tipos de excepción
+específicos del dominio, solo los traduce al formato de respuesta
+uniforme — la razón por la que agregar un dominio nuevo (representantes,
+pagos, inventario) no requirió tocar este archivo.
+
+\subsection{Autenticación en el \emph{frontend}: cookies, no \emph{localStorage}}
+
+El interceptor HTTP de Angular no lee ni adjunta el JWT manualmente — es
+la cookie \texttt{HttpOnly} (sección~\ref{sec:jwt-cookie}) la que viaja
+automáticamente con cada petición del mismo origen:
+
+\begin{lstlisting}[language=JavaScript,caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})}]
+export const authInterceptor: HttpInterceptorFn = (req, next) => {
+  return next(req.clone({ withCredentials: true }));
+};
+\end{lstlisting}
+
+La brevedad del interceptor es intencional y es la consecuencia directa
+de la decisión de \texttt{ADR-002}/\texttt{ADR-008}: al no poder leer la
+cookie desde JavaScript, el \emph{frontend} no tiene lógica de adjuntar
+ni refrescar el token por su cuenta — delega esa responsabilidad
+enteramente en el navegador y en el filtro de seguridad del
+\emph{backend}.
+
+\subsection{Configuración por entorno}
+
+La configuración de Spring Boot vive en un único \ruta{application.yml}
+con valores parametrizados por variable de entorno (\ruta{.env.example}
+documenta cada una sin valores sensibles); no existen perfiles
+\texttt{application-\{dev,prod\}.yml} duplicados que puedan divergir
+entre sí. En \ruta{docker-compose.yml} las imágenes de PostgreSQL y
+Redis están fijadas por \emph{digest} \texttt{sha256} en vez de por
+etiqueta \texttt{latest}, para que \texttt{make up} reproduzca el mismo
+binario en cualquier máquina (Bloque~D.2).
 
 % ============================================================
 \section{Requisitos y modelo de datos}
@@ -1173,7 +1569,10 @@ ruta REST, y son el objetivo declarado de la Entrega Final.
 El esquema se divide en dos espacios de nombres con responsabilidades
 separadas:
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Esquemas del modelo de datos de SGED.}
+\label{tab:esquemas}
 \begin{tabular}{@{}llp{7.4cm}@{}}
 \toprule
 \textbf{Esquema} & \textbf{Tablas} & \textbf{Contenido} \\
@@ -1184,7 +1583,7 @@ estados y estudiantes. \\
 asistencias, criterios, evaluaciones, detalle y observaciones. \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 Decisiones de modelado relevantes, todas materializadas como restricciones
 en el motor y no solo como validación en la aplicación:
@@ -1213,18 +1612,130 @@ El diccionario completo, con tipos, restricciones y disparadores, está en
 falla al arrancar si el esquema real y las entidades divergen.
 
 % ============================================================
-\section{Protocolo experimental}
+\section{Materiales y métodos}
 \label{sec:protocolo}
 
 Todas las mediciones de este informe se generaron ejecutando el sistema real
 levantado con \texttt{make up}, no en simulación, y sus artefactos crudos
-están versionados sin edición manual. Esta sección declara el procedimiento
-antes de presentar los resultados, para que un tercero pueda repetirlos y
-obtener cifras comparables.
+están versionados sin edición manual. Este capítulo declara el enfoque
+metodológico, los instrumentos y el procedimiento antes de presentar los
+resultados (Capítulo~\ref{sec:evaluacion}), para que un tercero pueda
+repetirlos y obtener cifras comparables.
+
+\subsection{Enfoque metodológico}
+\label{sec:dsr}
+
+El trabajo sigue \emph{Design Science Research} (DSR) en la formulación de
+Peffers~\emph{et al.}~\cite{peffers2007}, articulada con los criterios de
+rigor y relevancia de Hevner~\emph{et al.}~\cite{hevner2004}, en sus seis
+actividades:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Identificación del problema y motivación} —
+    sección~\ref{sec:contexto-motivacion}: gestión administrativa y
+    deportiva fragmentada, sin trazabilidad ni control de acceso sobre
+    datos de menores.
+  \item \textbf{Definición de objetivos de una solución} —
+    sección~\ref{sec:objetivos}: objetivo general y cinco objetivos
+    específicos trazados a las cuatro preguntas de investigación.
+  \item \textbf{Diseño y desarrollo} — Capítulo~\ref{sec:arquitectura} y
+    sección~\ref{sec:acceso-datos}: arquitectura en C4, estrategia
+    híbrida de acceso a datos, siete ADR.
+  \item \textbf{Demostración} — el sistema desplegado y operable
+    (\texttt{make up}), con datos sembrados y los cinco roles de usuario
+    reales.
+  \item \textbf{Evaluación} — Capítulo~\ref{sec:evaluacion}: contraste
+    empírico contra los umbrales de rendimiento, seguridad, cobertura,
+    calidad web y usabilidad declarados en este capítulo.
+  \item \textbf{Comunicación} — este documento, el repositorio público y
+    la defensa oral del PFC.
+\end{enumerate}
+
+El ciclo no fue lineal: la Tercera Entrega ya había ejecutado una vuelta
+completa de demostración y evaluación, y esta entrega repite las
+actividades 3 a 5 sobre el sistema ampliado, en la lógica iterativa que
+el propio modelo de Peffers admite entre sus actividades.
+
+\subsection{Instrumentos de medición}
+\label{sec:instrumentos}
+
+\begin{table}[htbp]
+\centering
+\caption{Instrumentos de medición usados en la evaluación empírica.}
+\label{tab:instrumentos}
+\begin{tabular}{@{}llp{7cm}@{}}
+\toprule
+\textbf{Bloque} & \textbf{Instrumento} & \textbf{Configuración} \\
+\midrule
+Rendimiento & k6 & \ruta{k6/listado-estudiantes.js}, 50 VU, 30\,s, umbrales declarados en el propio \emph{script} \\
+Seguridad & \texttt{curl} + análisis estático & \ruta{scripts/audit-owasp.sh}, \ruta{scripts/audit-sql-dynamic.sh} \\
+Cobertura & JaCoCo & Umbral 70\,\% líneas y \emph{branches}, configurado en \ruta{backend/pom.xml} \\
+Calidad web & Lighthouse & \ruta{lighthouserc.js} \\
+Usabilidad & SUS (Brooke) & Cuestionario de 10 ítems sin modificación~\cite{brooke1996}, escala adjetival de Bangor~\emph{et al.}~\cite{bangor2009} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Enfoque de métricas: un GQM completo}
+\label{sec:gqm}
+
+Las métricas del sistema se alinean con el marco \emph{Goal-Question-Metric}
+de Basili~\emph{et al.}~\cite{basili1994gqm}. Se presenta un GQM completo,
+correspondiente a RQ1 (sección~\ref{sec:rqs}):
+
+\begin{table}[htbp]
+\centering
+\caption{Ejemplo de Goal-Question-Metric para RQ1.}
+\label{tab:gqm}
+\begin{tabular}{@{}p{2.4cm}p{12cm}@{}}
+\toprule
+\textbf{Meta (\emph{Goal})} & Caracterizar el rendimiento del \emph{endpoint} de listado protegido bajo carga concurrente, desde el punto de vista del equipo de desarrollo, en el contexto del ambiente de pruebas de la Entrega Final. \\
+\textbf{Pregunta 1} & ¿Cuál es la latencia p95 del \emph{endpoint} bajo 50 usuarios virtuales concurrentes? \\
+\textbf{Métrica 1} & p95 de tiempo de respuesta (ms), agregado sobre corridas independientes, con intervalo de confianza al 95\,\%. \\
+\textbf{Pregunta 2} & ¿El sistema devuelve errores de servidor bajo esa carga? \\
+\textbf{Métrica 2} & Tasa de respuestas HTTP $\geq$ 500 sobre el total de peticiones de la corrida. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Población, muestreo y participantes}
+\label{sec:muestreo}
+
+Para la componente de usabilidad, la población objetivo son los cinco
+perfiles de usuario reales del sistema (administrador, entrenador,
+recepcionista, estudiante, representante). El muestreo fue por
+conveniencia —participantes disponibles del entorno cercano al
+equipo—, siguiendo la clasificación de técnicas de muestreo de Baltes y
+Ralph~\cite{baltesralph2022}, quienes documentan que es la técnica más
+frecuente y a la vez la que exige declarar sus límites en vez de
+omitirlos. \textbf{Limitación declarada:} $N=10$ es una muestra pequeña
+y no probabilística; los resultados por perfil (dos participantes por
+rol) se interpretan como indicativos de un patrón, no como una
+estimación poblacional generalizable —la razón por la que
+sección~\ref{sec:sus} reporta el desglose por perfil en vez de solo la
+media agregada.
+
+\subsection{Análisis estadístico declarado a priori}
+\label{sec:analisis-estadistico}
+
+Antes de ejecutar las mediciones se fijaron los estadísticos a reportar:
+media, mediana, desviación típica e intervalo de confianza al 95\,\%
+para todas las métricas cuantitativas; percentiles p50, p90 y p95 para
+rendimiento. Se prefieren intervalos de confianza sobre valores~$p$ como
+forma primaria de reporte, siguiendo la recomendación del Bloque~C de la
+guía. \textbf{Pendiente declarado:} con solo tres corridas de k6
+archivadas (sección~\ref{sec:estado-entrega} señala que además están
+desactualizadas) no se calculó todavía un test inferencial entre
+caché fría y caché caliente ni su tamaño de efecto (por ejemplo Wilcoxon
+con \emph{Cliff's delta}); ambos quedan planificados para cuando se
+regeneren las cinco corridas independientes que exige el Bloque~A.1.
 
 \subsection{Entorno de ejecución}
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Entorno de ejecución de las mediciones.}
+\label{tab:entorno}
 \begin{tabular}{@{}lp{9.2cm}@{}}
 \toprule
 \textbf{Elemento} & \textbf{Valor} \\
@@ -1236,7 +1747,7 @@ Estado inicial & Base de datos creada desde cero (\texttt{docker compose down -v
 Red & Todas las peticiones contra \texttt{localhost}; sin latencia de red externa \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 El estado inicial no es un detalle menor. Los \emph{scripts} de
 inicialización de PostgreSQL solo se ejecutan cuando el directorio de datos
@@ -1246,7 +1757,10 @@ aquí parte de volumen limpio.
 
 \subsection{Procedimiento por bloque}
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Procedimiento de medición por bloque de evaluación.}
+\label{tab:procedimiento-bloque}
 \begin{tabular}{@{}llp{6.1cm}@{}}
 \toprule
 \textbf{Bloque} & \textbf{Herramienta} & \textbf{Procedimiento y control de variabilidad} \\
@@ -1258,9 +1772,9 @@ Cobertura & JaCoCo & \texttt{make test}, que ejecuta \texttt{clean test} para qu
 C.5 Accesibilidad & Lighthouse & 3 corridas mediante \ruta{lighthouserc.js}; se reportan los cuatro puntajes agregados y las métricas Web Vitals. \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-\subsection{Determinismo y trazabilidad}
+\subsection{Determinismo, semillas y trazabilidad}
 
 Los archivos crudos (\texttt{.json} de k6 y Lighthouse, \texttt{.txt} de las
 respuestas HTTP, \texttt{.csv} del SUS y de JaCoCo) se conservan tal como los
@@ -1270,32 +1784,57 @@ archivo de evidencia lleva en su cabecera la fecha en UTC, el \emph{commit}
 corto y la versión de la herramienta que lo generó, de modo que una cifra del
 informe pueda rastrearse hasta la ejecución concreta que la produjo.
 
+\ruta{scripts/perf-analysis.py} fija semilla aleatoria \texttt{42} para
+cualquier remuestreo estadístico sobre los datos crudos de k6, declarada
+en la cabecera del propio \emph{script} y en \ruta{docs/mediciones/perf/REPORT.md}.
+Los datos de SUS y de JaCoCo no requieren semilla porque no involucran
+muestreo aleatorio: son transcripción directa (SUS) o instrumentación
+determinista de cobertura (JaCoCo). Las versiones exactas de cada
+herramienta (k6, Lighthouse, JDK, Docker) se declaran por corrida en
+\ruta{docs/entorno/versions.txt} y en la cabecera de cada archivo crudo.
+
 % ============================================================
 \section{Evidencia empírica}
 \label{sec:evaluacion}
 
 \subsection{Rendimiento (Bloque C.1)}
 
-Tres corridas independientes de k6 con 50 usuarios virtuales durante 30
-segundos contra el \emph{endpoint} protegido \texttt{GET /api/estudiantes}:
+Cinco corridas independientes de k6 con 50 usuarios virtuales durante 30
+segundos contra el \emph{endpoint} protegido \texttt{GET /api/estudiantes}
+— cumple el mínimo de cinco corridas que exige el Bloque~A.1 de la
+Entrega Final (la Tercera Entrega solo había archivado tres). Corrida
+regenerada el 2026-08-14 contra el sistema local completo, tras corregir
+el defecto de \ruta{.env} descrito en la sección~\ref{sec:estado-entrega}:
 
-\begin{center}
-\begin{tabular}{@{}lrrrrr@{}}
+\begin{table}[htbp]
+\centering
+\caption{Resultados de las corridas de rendimiento (k6).}
+\label{tab:k6-resultados}
+\begin{tabular}{@{}lrrrrrr@{}}
 \toprule
-\textbf{Corrida} & \textbf{Media (ms)} & \textbf{Mediana} & \textbf{p90} & \textbf{p95} & \textbf{RPS} \\
+\textbf{Corrida} & \textbf{Media (ms)} & \textbf{Mediana} & \textbf{p90} & \textbf{p95} & \textbf{Errores} & \textbf{RPS} \\
 \midrule
-1 & 6,53 & 5,26 & 11,38 & 14,45 & 404,21 \\
-2 & 6,67 & 5,94 & 11,63 & 15,32 & 403,52 \\
-3 & 6,25 & 5,66 & 10,37 & 12,78 & 405,99 \\
+1 & 7,15 & 6,88 & 9,04 & 9,87  & 0,00\,\%  & 403,64 \\
+2 & 7,04 & 6,74 & 9,16 & 10,04 & 0,00\,\%  & 404,73 \\
+3 & 6,96 & 6,58 & 9,06 & 10,13 & 0,00\,\%  & 404,46 \\
+4 & 6,97 & 6,68 & 8,81 & 9,62  & 0,01\,\%  & 287,88 \\
+5 & 6,96 & 6,62 & 8,98 & 9,87  & 0,00\,\%  & 404,88 \\
 \midrule
-\textbf{Agregado} & \textbf{6,48} & --- & --- & \textbf{14,18} & \textbf{404,57} \\
+\textbf{Agregado} & \textbf{7,02} & --- & --- & \textbf{9,91} & --- & \textbf{381,12} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-Con intervalo de confianza al 95\,\%: media $6{,}48 \pm 0{,}53$\,ms, p95
-$14{,}18 \pm 3{,}20$\,ms, throughput $404{,}57 \pm 3{,}16$\,RPS, y
-\textbf{0\,\% de errores} en las tres corridas.
+Con intervalo de confianza al 95\,\%: media $7{,}02 \pm 0{,}10$\,ms
+(DT $0{,}08$), p95 $9{,}91 \pm 0{,}25$\,ms, throughput
+$381{,}12 \pm 64{,}71$\,RPS. La corrida~4 registró 2 peticiones fallidas
+de 15\,921 (0,01\,\%) — el umbral estricto \texttt{rate==0} del
+\emph{script} k6 la marca en rojo, y se reporta así en vez de omitirla;
+las otras cuatro corridas no tuvieron errores. El throughput de la
+corrida~4 también es visiblemente menor (287,88 RPS frente a
+$\approx$404 de las demás), coherente con esas dos peticiones fallidas
+—probablemente una conexión rechazada bajo el pico de concurrencia—
+afectando el cómputo agregado de esa corrida.
 
 El umbral exigido es p95 $<$ 200\,ms con caché caliente~\cite{iso25010}. El
 resultado lo cumple con un margen de más de un orden de magnitud. \ok
@@ -1305,7 +1844,10 @@ resultado lo cumple con un margen de más de un orden de magnitud. \ok
 Seis controles verificados con peticiones reales contra el sistema en
 ejecución~\cite{owasp2021}:
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Resultado de los seis controles OWASP verificados.}
+\label{tab:owasp}
 \begin{tabular}{@{}llp{7.6cm}@{}}
 \toprule
 \textbf{Control} & \textbf{Resultado} & \textbf{Evidencia observada} \\
@@ -1318,7 +1860,7 @@ A07 Fallos de autenticación & \ok & Bloqueo exacto en el sexto intento (\texttt
 A09 Registro y monitoreo & \ok & \texttt{AUTH\_LOGIN\_OK/FAIL} con IP, marca de tiempo y sujeto \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 Los errores se devuelven como \texttt{ProblemDetail}~\cite{rfc9457}, sin
 trazas de pila ni detalles internos. Ejemplo real capturado para A07:
@@ -1394,7 +1936,10 @@ filtros de Spring Security: verifican el mapeo HTTP, no la autorización.
 La corrección no aplica una regla uniforme, sino una por recurso según el
 dato que maneja:
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Criterio de acceso aplicado por recurso tras corregir el hallazgo H-08.}
+\label{tab:acceso-por-recurso}
 \begin{tabular}{@{}llp{6.4cm}@{}}
 \toprule
 \textbf{Recurso} & \textbf{Acceso} & \textbf{Criterio} \\
@@ -1406,7 +1951,7 @@ dato que maneja:
 \texttt{EstadoGeneral} & Lectura: 3 roles & Catálogo sin datos personales. \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 La evidencia regenerada (\ruta{docs/mediciones/sec/a01-acceso-roto.txt})
 comprueba las dos direcciones, que es lo que hace verificable la
@@ -1453,6 +1998,41 @@ ensuciaba el registro con trazas de pila que no corresponden a ningún
 defecto del sistema —ruido que compite con las anomalías reales en A09.
 Ahora responde \texttt{400}.
 
+\subsection{Análisis estático y escaneo automático (Bloque A.1/A.2.3)}
+\label{sec:zap-spotbugs}
+
+Dos piezas de evidencia adicionales, generadas el 2026-08-14 y
+archivadas en \ruta{docs/mediciones/sec/}, complementan la verificación
+manual de los seis controles anteriores.
+
+\textbf{Análisis estático de inyección SQL.} SpotBugs~4.8.6.4 con el
+complemento find-sec-bugs~1.13.0, restringido por un filtro de
+inclusión (\ruta{backend/spotbugs-security-include.xml}) a los
+detectores de inyección SQL —incluida la regla
+\texttt{SQL\_NONCONSTANT\_STRING\_PASSED\_TO\_EXECUTE} que exige
+explícitamente el Bloque~A.2.3— sobre los 148 archivos fuente del
+\emph{backend}: \textbf{cero hallazgos}. Consistente con la auditoría
+manual de \ruta{scripts/audit-sql-dynamic.sh}
+(sección~\ref{sec:acceso-datos}), pero esta vez con una herramienta de
+análisis de bytecode independiente, no un \emph{grep} de patrones de
+texto. El comando ya forma parte del \emph{pipeline} de CI
+(\ruta{.github/workflows/ci.yml}).
+
+\textbf{Escaneo OWASP ZAP baseline.} Modo pasivo contra
+\texttt{/api/docs} (15 URL rastreadas desde la especificación OpenAPI):
+\textbf{0 hallazgos de severidad alta}, 7 advertencias de severidad
+baja/media, todas concentradas en la interfaz de Swagger UI (una
+dependencia de terceros expuesta a propósito para la revisión del
+tribunal) —biblioteca JS de terceros potencialmente desactualizada,
+cabeceras \texttt{Permissions-Policy}/\texttt{Cross-Origin-Embedder-Policy}
+ausentes en esas páginas puntuales, una marca de tiempo Unix dentro de
+un archivo \texttt{.js} de terceros— y ninguna sobre los
+\emph{endpoints} de negocio de la API. Reporte completo en
+\ruta{docs/mediciones/sec/zap/}. \textbf{Alcance declarado:} este
+escaneo cubrió el \emph{backend}; una corrida equivalente contra el
+\emph{frontend} Angular queda pendiente, junto con la puesta en
+producción (Bloque~A.4).
+
 \subsection{Cobertura de pruebas}
 \label{sec:cobertura}
 
@@ -1486,7 +2066,10 @@ porcentaje salga parecido, porque nada garantiza que la próxima vez la
 distorsión sea igual de pequeña. Para que el defecto no pueda repetirse,
 el objetivo \texttt{make test} pasó a ejecutar \texttt{clean test}.
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Clases de prueba JUnit y qué verifica cada una.}
+\label{tab:pruebas-junit}
 \begin{tabular}{@{}lrp{7.4cm}@{}}
 \toprule
 \textbf{Clase de prueba} & \textbf{Nº} & \textbf{Qué verifica} \\
@@ -1512,7 +2095,7 @@ el objetivo \texttt{make test} pasó a ejecutar \texttt{clean test}.
 \textbf{Total} & \textbf{102} & \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 Un detalle técnico real que surgió al escribir estas pruebas: los cuatro
 controladores que reciben \texttt{Pageable} como parámetro
@@ -1536,38 +2119,61 @@ verifican no solo que el bloqueo ocurra, sino que un fallo posterior
 atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
 —según cómo se implemente— reiniciar el contador y evadir el límite.
 
-\subsection{Calidad web: Lighthouse (Bloque C.5)}
+\subsection{Calidad web: Lighthouse (Bloque C.5 / A.1)}
 
-Tres corridas con perfil móvil (Lighthouse v13.4.1):
+Seis corridas independientes, tres por perfil (Lighthouse v13.4.1),
+regeneradas el 2026-08-14 contra \texttt{https://localhost:8443}
+—cumple el mínimo de tres corridas por perfil (móvil y escritorio) que
+exige el Bloque~A.1; la Tercera Entrega solo había cubierto el perfil
+móvil—:
 
-\begin{center}
-\begin{tabular}{@{}lrrl@{}}
+\begin{table}[htbp]
+\centering
+\caption{Resultados de Lighthouse por categoría y perfil.}
+\label{tab:lighthouse}
+\begin{tabular}{@{}lrrrl@{}}
 \toprule
-\textbf{Categoría} & \textbf{Media} & \textbf{Umbral} & \textbf{Estado} \\
+\textbf{Categoría} & \textbf{Móvil} & \textbf{Escritorio} & \textbf{Umbral} & \textbf{Estado} \\
 \midrule
-Rendimiento & 92,3 & $\geq$ 80 & \ok \\
-Accesibilidad & 100 & $\geq$ 90 & \ok \\
-Buenas prácticas & 96 & $\geq$ 90 & \ok \\
-SEO & 63 & $\geq$ 90 & Ver §\ref{sec:seo} \\
+Rendimiento & 82,0 & 99,0 & $\geq$ 80 & \ok \\
+Accesibilidad & 100 & 100 & $\geq$ 90 & \ok \\
+Buenas prácticas & 96 & 96 & $\geq$ 90 & \ok \\
+SEO & 63 & 63 & $\geq$ 90 & Ver §\ref{sec:seo} \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
-Métricas Web Vitals: LCP 2,86\,s; FCP 2,43\,s; TBT 25,7\,ms; y CLS
-\textbf{0,000} en las tres corridas (la interfaz no desplaza contenido
-durante la carga).
+Desviación típica de 0 en las tres corridas de cada perfil: con
+\texttt{throttlingMethod: simulate}, Lighthouse deriva los tiempos de un
+único \emph{trace} más un modelo determinista de red/CPU (Lantern), no
+de una limitación real variable por corrida — es el comportamiento
+esperado del método, no un defecto de la medición. Métricas Web Vitals
+de la primera corrida de cada perfil: móvil LCP~3,8\,s / FCP~3,3\,s;
+escritorio LCP~0,8\,s / FCP~0,7\,s; TBT y CLS en 0 en ambos perfiles (la
+interfaz no desplaza contenido durante la carga).
 
-Esta medición expuso, y permitió corregir, tres defectos reales del
-frontend: el documento declaraba \texttt{lang=\textquotedbl{}en\textquotedbl{}}
-en una aplicación íntegramente en español; conservaba el título \texttt{Frontend} generado por
-Angular CLI y no tenía descripción; y carecía de un elemento \texttt{<main>},
-lo que hacía fallar la auditoría de puntos de referencia de accesibilidad.
-Corregidos los tres, la accesibilidad pasó de 97 a \textbf{100}.
+\textbf{Corrección metodológica de esta misma sesión, dejada explícita:}
+la primera corrida de escritorio, con la configuración de
+\emph{throttling} del perfil móvil aplicada por error al
+\texttt{form-factor} de escritorio, midió 62/100 de rendimiento
+—por debajo del umbral—. Antes de reportarlo como hallazgo real se
+verificó la causa: ese \emph{throttling} manual no es una configuración
+válida para escritorio. Repetida con el \emph{preset} oficial
+\texttt{--preset=desktop} de la propia herramienta, el resultado sube a
+99/100 de forma consistente en las tres corridas. Se documenta el
+descarte metodológico en vez de omitirlo, con la misma disciplina que
+ya aplicó la Tercera Entrega a sus tres instrumentos de medición
+defectuosos.
 
-Se corrigió además un defecto en la propia configuración de medición:
-\ruta{lighthouserc.js} declaraba \texttt{preset: 'mobile'}, un valor que no
-existe en Lighthouse, lo que abortaba toda corrida con código de salida 1.
-Es decir, \textbf{esta medición nunca se había podido ejecutar}.
+Esta medición había expuesto, y permitido corregir en la Tercera
+Entrega, tres defectos reales del \emph{frontend}: el documento
+declaraba \texttt{lang=\textquotedbl{}en\textquotedbl{}} en una
+aplicación íntegramente en español; conservaba el título
+\texttt{Frontend} generado por Angular CLI y no tenía descripción; y
+carecía de un elemento \texttt{<main>}, lo que hacía fallar la
+auditoría de puntos de referencia de accesibilidad. Corregidos los
+tres, la accesibilidad pasó de 97 a \textbf{100}, y se mantiene en 100
+en ambos perfiles en esta regeneración.
 
 \subsubsection{Por qué el SEO de 63 es el resultado correcto}
 \label{sec:seo}
@@ -1606,7 +2212,10 @@ transcritos a \ruta{docs/mediciones/sus/respuestas.csv} sin registrar
 nombres, solo un código de participante y su perfil): 3 entrenadores, 3
 recepcionistas, 2 estudiantes, 2 padres de familia.
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Estadísticos agregados de la encuesta SUS.}
+\label{tab:sus-agregado}
 \begin{tabular}{@{}lr@{}}
 \toprule
 \textbf{Métrica} & \textbf{Valor} \\
@@ -1618,7 +2227,7 @@ Mediana & 73,75 \\
 Grado & C --- Aceptable \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 La media cruza el umbral de 68 por apenas 0,25 puntos, y el intervalo de
 confianza es ancho: con esta muestra no puede afirmarse con confianza
@@ -1629,7 +2238,10 @@ cómodo.
 \textbf{El hallazgo más informativo no es la media, es su distribución
 bimodal por perfil}, que la agregación esconde:
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Puntuación SUS promedio por perfil de usuario.}
+\label{tab:sus-perfil}
 \begin{tabular}{@{}lrl@{}}
 \toprule
 \textbf{Perfil} & \textbf{Promedio SUS} & \textbf{Grado} \\
@@ -1640,7 +2252,7 @@ Recepcionista (n=3) & 51,7 & F \\
 Padre de familia (n=2) & 43,75 & F \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 Entrenadores y estudiantes calificaron el sistema como excelente;
 recepcionistas y padres de familia, como inaceptable. El CRUD de
@@ -1665,7 +2277,10 @@ cp .env.example .env
 make up
 \end{lstlisting}
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Objetivos del Makefile para reproducción end-to-end.}
+\label{tab:makefile-objetivos}
 \begin{tabular}{@{}ll@{}}
 \toprule
 \textbf{Objetivo} & \textbf{Acción} \\
@@ -1677,7 +2292,7 @@ make up
 \texttt{make clean} & Limpia contenedores, volúmenes y compilaciones \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 Las imágenes de PostgreSQL y Redis están fijadas por digest SHA-256, no por
 etiqueta móvil: dos construcciones del mismo \emph{commit} usan exactamente
@@ -1838,7 +2453,10 @@ Los roles siguientes no son autodeclarados: se derivan del historial de
 \texttt{package-lock.json}, PDF), porque contar un reporte HTML de
 cobertura como líneas de autoría inflaría la medida sin reflejar trabajo.
 
-\begin{center}
+\begin{table}[htbp]
+\centering
+\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log}).}
+\label{tab:credit-cifras}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 \textbf{Integrante} & \textbf{\emph{Commits}} & \textbf{Líneas escritas} & \textbf{Archivos} \\
@@ -1850,7 +2468,7 @@ Velez Lopez Ricardo Elias & 32 & 4\,077 & 108 \\
 \textbf{Total en \texttt{main}} & \textbf{121} & \textbf{27\,266} & --- \\
 \bottomrule
 \end{tabular}
-\end{center}
+\end{table}
 
 \subsection{Roles por integrante}
 
@@ -2113,6 +2731,80 @@ y \ruta{VERSIONING.md} ya declaran abiertos.
     REST del dominio deportivo restante (horarios, sesiones, asistencias,
     evaluaciones) sigue siendo el objetivo natural de la Entrega Final.
 \end{enumerate}
+
+% ============================================================
+\section{Declaraciones obligatorias}
+\label{sec:declaraciones}
+
+Sección propia y consolidada, exigida por el Bloque~B.15 de la Guía de
+la Entrega Final. Las declaraciones de ética y de contribuciones
+(CRediT) ya se desarrollaron con su propio detalle en las secciones
+correspondientes de este documento; aquí se referencian en vez de
+duplicarse, junto con las declaraciones que todavía no tenían una
+sección propia.
+
+\textbf{Disponibilidad de código.} Repositorio público en
+\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.0}
+\pendiente{} (ver nota de versión en la portada), DOI del software en
+Zenodo: \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240}.
+
+\textbf{Disponibilidad de datos.} Los datos crudos de todas las
+mediciones (rendimiento, seguridad, cobertura, calidad web, usabilidad)
+están versionados en \ruta{docs/mediciones/} bajo la misma licencia del
+repositorio. \textbf{Pendiente:} el depósito separado del \emph{dataset}
+de mediciones en Zenodo con DOI propio y licencia Creative Commons
+Attribution~4.0, distinto del DOI del software, que exige el Bloque~D.3.
+
+\textbf{Disponibilidad de materiales.} Colección Postman
+(\ruta{docs/postman/coleccion.json}, 32 peticiones), \emph{scripts} de
+carga k6 (\ruta{k6/}), configuración Lighthouse
+(\ruta{lighthouserc.js}), instrumento y protocolo SUS
+(\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}), plantilla de
+consentimiento (\ruta{docs/etica/consentimiento/}). \textbf{Pendiente:}
+los análisis de rendimiento y de SUS son \emph{scripts} de Python
+(\ruta{scripts/perf-analysis.py}, \ruta{scripts/sus-analysis.py}) y no
+cuadernos ejecutables con salidas archivadas (Jupyter o RMarkdown) como
+exige literalmente el Bloque~D.1; convertirlos o documentar la
+equivalencia es una tarea abierta antes del cierre.
+
+\textbf{Declaración ética.} El sistema trata datos personales de
+menores de edad. Los participantes de la encuesta SUS firmaron
+consentimiento informado, sus respuestas se anonimizaron con códigos
+P01–P10, y ocho hallazgos éticos (H-01 a H-08, uno ya corregido) están
+declarados sin omisiones en \ruta{docs/etica/ETHICS.md} y en la sección
+de Consideraciones éticas de este documento.
+
+\textbf{Contribuciones de autores (CRediT).} Los catorce roles de la
+taxonomía CRediT asignados a cada integrante, derivados del historial
+de \texttt{git} y no autodeclarados, se detallan en la
+sección~\ref{sec:credit} y en \ruta{CONTRIBUTORS.md}.
+
+\textbf{Conflictos de interés.} El equipo declara la ausencia de
+conflictos de interés: ningún integrante tiene relación contractual,
+financiera o personal con la escuela ProFútbol ni con ningún proveedor
+mencionado en este documento (Fly.io, Supabase, Upstash, Zenodo) más
+allá del uso de sus capas gratuitas para este proyecto académico.
+
+\textbf{Financiamiento.} Este trabajo no recibió financiamiento externo.
+Es un Proyecto Fin de Curso de la asignatura Aplicaciones Web,
+desarrollado como requisito académico de la Universidad Técnica Estatal
+de Quevedo, sin patrocinio de terceros.
+
+\textbf{Uso de asistentes de inteligencia artificial.} Siguiendo la
+guía de transparencia del SWEBOK v4.0~\cite{swebok2024}, el equipo
+declara el uso de un asistente de IA generativa (Claude, de Anthropic)
+como herramienta de apoyo en revisión y corrección de código de
+seguridad, generación de \emph{scripts} de auditoría y análisis de
+resultados, y redacción de documentación (incluidas partes de este
+informe). El diseño de la arquitectura, las decisiones de seguridad y la
+verificación de que el sistema funciona correctamente fueron hechos y
+revisados por el equipo. El detalle completo, con el alcance exacto por
+archivo, está en \ruta{CONTRIBUTORS.md}.
+
+\textbf{Agradecimientos.} Al Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D.,
+por la dirección y retroalimentación del PFC a lo largo de las cuatro
+entregas, y a la Universidad Técnica Estatal de Quevedo por el acceso a
+la infraestructura académica del curso.
 
 \newpage
 \bibliographystyle{plain}

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SesionEntrenamientoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.sesion.controller</a> &gt; <span class="el_source">SesionEntrenamientoController.java</span></div><h1>SesionEntrenamientoController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.sesion.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.categoria.entity.Categoria;
+import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
+import org.uteq.backend.deportivo.horario.service.HorarioService;
+import org.uteq.backend.deportivo.sesion.dto.SesionCrearRequest;
+import org.uteq.backend.deportivo.sesion.dto.SesionHoyResponse;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * Punto de entrada del entrenador (y, desde RECEPCIONISTA, de la pantalla de
+ * QR) a sus sesiones: cuales hay hoy, el historial completo, y el alta de
+ * una nueva.
+ *
+ * &lt;p&gt;Sin /hoy, la pantalla de evaluacion diaria (que exige un id de sesion en
+ * la ruta) no tiene forma de descubrirse a si misma: el entrenador tendria
+ * que conocer el numero de antemano. Lo mismo le pasaria a recepcion para
+ * elegir para cual sesion mostrar el QR.
+ */
+@RestController
+@RequestMapping(&quot;/api/sesiones&quot;)
+@RequiredArgsConstructor
+public class SesionEntrenamientoController {
+
+    private final SesionEntrenamientoRepository sesionRepository;
+    private final EntrenadorRepository entrenadorRepository;
+    private final EvaluacionDiariaRepository evaluacionRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final HorarioService horarioService;
+
+    /**
+     * Sesiones de hoy. Un ADMINISTRADOR o RECEPCIONISTA ve todas (el
+     * recepcionista necesita elegir cualquiera de ellas para mostrar su QR,
+     * no esta atado a un entrenador concreto); un ENTRENADOR solo las suyas,
+     * resuelto desde su propio usuario autenticado y no desde un parametro
+     * que el cliente pudiera manipular para ver la agenda de otro.
+     *
+     * &lt;p&gt;Antes de leer, se generan las sesiones del dia que salen de un
+     * horario fijo (ver HorarioService.generarSesionesDeHoy()) -por eso ya
+     * no es de solo lectura-: asi ni el entrenador ni recepcion dependen de
+     * que alguien haya creado la sesion a mano para que aparezca hoy.
+     */
+    @GetMapping(&quot;/hoy&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional
+    public ResponseEntity&lt;List&lt;SesionHoyResponse&gt;&gt; hoy() {
+<span class="fc" id="L66">        horarioService.generarSesionesDeHoy();</span>
+<span class="fc" id="L67">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L68">        boolean veTodasLasSesiones = SecurityContextHolder.getContext().getAuthentication()</span>
+<span class="fc" id="L69">                .getAuthorities().stream()</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                .anyMatch(a -&gt; a.getAuthority().equals(&quot;ROLE_ADMINISTRADOR&quot;)</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                        || a.getAuthority().equals(&quot;ROLE_RECEPCIONISTA&quot;));</span>
+
+        List&lt;SesionEntrenamiento&gt; sesiones;
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (veTodasLasSesiones) {</span>
+<span class="fc" id="L75">            sesiones = sesionRepository.findByFechaOrderByHoraInicioAsc(hoy);</span>
+        } else {
+<span class="fc" id="L77">            var entrenador = entrenadorAutenticado();</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">            sesiones = entrenador == null</span>
+<span class="fc" id="L79">                    ? List.of()</span>
+<span class="fc" id="L80">                    : sesionRepository.findByFechaOrderByHoraInicioAsc(hoy).stream()</span>
+<span class="fc" id="L81">                        .filter(s -&gt; s.getEntrenador().getIdEntrenador().equals(entrenador.getIdEntrenador()))</span>
+<span class="fc" id="L82">                        .toList();</span>
+        }
+
+<span class="fc" id="L85">        return ResponseEntity.ok(sesiones.stream().map(this::aResponse).toList());</span>
+    }
+
+    /**
+     * Historial completo del entrenador autenticado (pasadas y futuras), no
+     * solo las de hoy: sin esto, cualquier dia sin sesion programada dejaba
+     * al entrenador sin forma de llegar a una evaluacion o plantilla pasada
+     * desde la interfaz.
+     */
+    @GetMapping(&quot;/mias&quot;)
+    @PreAuthorize(&quot;hasRole('ENTRENADOR')&quot;)
+    @Transactional
+    public ResponseEntity&lt;List&lt;SesionHoyResponse&gt;&gt; mias(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;20&quot;) int size) {
+
+<span class="fc" id="L101">        horarioService.generarSesionesDeHoy();</span>
+<span class="fc" id="L102">        Entrenador entrenador = entrenadorAutenticado();</span>
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (entrenador == null) {</span>
+<span class="nc" id="L104">            return ResponseEntity.ok(List.of());</span>
+        }
+
+<span class="fc" id="L107">        Page&lt;SesionEntrenamiento&gt; pagina = sesionRepository.findByEntrenadorIdEntrenadorOrderByFechaDesc(</span>
+<span class="fc" id="L108">                entrenador.getIdEntrenador(), PageRequest.of(page, size));</span>
+<span class="fc" id="L109">        return ResponseEntity.ok(pagina.map(this::aResponse).getContent());</span>
+    }
+
+    /**
+     * Alta de una sesion propia. El idEntrenador nunca viene del cliente: se
+     * resuelve del usuario autenticado, igual que en /hoy y /mias, para que
+     * un entrenador no pueda crear una sesion &quot;a nombre&quot; de otro con solo
+     * cambiar un id en el body.
+     */
+    @PostMapping
+    @PreAuthorize(&quot;hasRole('ENTRENADOR')&quot;)
+    @Transactional
+    public ResponseEntity&lt;SesionHoyResponse&gt; crear(@Valid @RequestBody SesionCrearRequest request) {
+<span class="fc" id="L122">        Entrenador entrenador = entrenadorAutenticado();</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        if (entrenador == null) {</span>
+<span class="nc" id="L124">            throw new RecursoNoEncontradoException(&quot;No hay un entrenador asociado a esta cuenta&quot;);</span>
+        }
+
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        if (!request.horaFin().isAfter(request.horaInicio())) {</span>
+<span class="fc" id="L128">            throw new IllegalArgumentException(&quot;La hora de fin debe ser posterior a la hora de inicio&quot;);</span>
+        }
+
+<span class="fc" id="L131">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="fc" id="L132">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L133">                        &quot;Categoria no encontrada con id: &quot; + request.idCategoria()));</span>
+
+<span class="fc" id="L135">        SesionEntrenamiento sesion = SesionEntrenamiento.builder()</span>
+<span class="fc" id="L136">                .entrenador(entrenador)</span>
+<span class="fc" id="L137">                .categoria(categoria)</span>
+<span class="fc" id="L138">                .fecha(request.fecha())</span>
+<span class="fc" id="L139">                .horaInicio(request.horaInicio())</span>
+<span class="fc" id="L140">                .horaFin(request.horaFin())</span>
+<span class="fc" id="L141">                .campo(request.campo())</span>
+<span class="fc" id="L142">                .estado(&quot;PROGRAMADA&quot;)</span>
+<span class="fc" id="L143">                .build();</span>
+
+<span class="fc" id="L145">        sesion = sesionRepository.save(sesion);</span>
+<span class="fc" id="L146">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(sesion));</span>
+    }
+
+    private Entrenador entrenadorAutenticado() {
+<span class="fc" id="L150">        String username = SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L151">        return entrenadorRepository.findByUsuario_Username(username).orElse(null);</span>
+    }
+
+    private SesionHoyResponse aResponse(SesionEntrenamiento s) {
+<span class="fc" id="L155">        var persona = s.getEntrenador().getPersona();</span>
+<span class="fc" id="L156">        return new SesionHoyResponse(</span>
+<span class="fc" id="L157">                s.getIdSesion(),</span>
+<span class="fc" id="L158">                s.getCategoria().getNombre(),</span>
+<span class="fc" id="L159">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L160">                s.getFecha(),</span>
+<span class="fc" id="L161">                s.getHoraInicio(),</span>
+<span class="fc" id="L162">                s.getHoraFin(),</span>
+<span class="fc" id="L163">                s.getCampo(),</span>
+<span class="fc" id="L164">                s.getEstado(),</span>
+<span class="fc" id="L165">                evaluacionRepository.existsBySesionIdSesion(s.getIdSesion()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

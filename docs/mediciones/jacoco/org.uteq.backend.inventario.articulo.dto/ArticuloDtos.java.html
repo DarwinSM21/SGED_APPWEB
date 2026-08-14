@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArticuloDtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.articulo.dto</a> &gt; <span class="el_source">ArticuloDtos.java</span></div><h1>ArticuloDtos.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.articulo.dto;
+
+import jakarta.validation.constraints.*;
+import org.uteq.backend.inventario.articulo.entity.Articulo.TipoArticulo;
+
+import java.time.Instant;
+import java.util.List;
+
+public final class ArticuloDtos {
+
+    private ArticuloDtos() {}
+
+<span class="fc" id="L13">    public record ArticuloRequest(</span>
+            @NotBlank(message = &quot;El nombre del artículo es obligatorio&quot;)
+            @Size(max = 150, message = &quot;El nombre no puede superar los 150 caracteres&quot;)
+            String nombre,
+
+            @NotNull(message = &quot;El tipo de artículo es obligatorio&quot;)
+            TipoArticulo tipo,
+
+            @Size(max = 20, message = &quot;La talla no puede superar los 20 caracteres&quot;)
+            String talla,
+
+            @Size(max = 255, message = &quot;La descripción no puede superar los 255 caracteres&quot;)
+            String descripcion,
+
+            @NotNull(message = &quot;El stock mínimo es obligatorio&quot;)
+            @Min(value = 0, message = &quot;El stock mínimo no puede ser negativo&quot;)
+            Integer stockMinimo,
+
+            @Size(max = 20, message = &quot;La unidad de medida no puede superar los 20 caracteres&quot;)
+            String unidadMedida
+    ) {}
+
+<span class="fc" id="L35">    public record ArticuloResponse(</span>
+            Long idArticulo,
+            String nombre,
+            TipoArticulo tipo,
+            String talla,
+            String descripcion,
+            Integer stockActual,
+            Integer stockMinimo,
+            String unidadMedida,
+            Boolean activo,
+            Instant createdAt
+    ) {}
+
+<span class="fc" id="L48">    public record StockBajoResponse(</span>
+            long total,
+            List&lt;ArticuloResponse&gt; articulos
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

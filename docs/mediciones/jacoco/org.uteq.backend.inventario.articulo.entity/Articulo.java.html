@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Articulo.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.articulo.entity</a> &gt; <span class="el_source">Articulo.java</span></div><h1>Articulo.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.articulo.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.Instant;
+
+@Entity
+@Table(name = &quot;articulos&quot;, schema = &quot;inventario&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Articulo {
+
+<span class="fc" id="L19">    public enum TipoArticulo { UNIFORME, BALON, IMPLEMENTO, OTRO }</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_articulo&quot;)
+    private Long idArticulo;
+
+    @Column(nullable = false, length = 150)
+    private String nombre;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TipoArticulo tipo;
+
+    @Column(length = 20)
+    private String talla;
+
+    @Column(length = 255)
+    private String descripcion;
+
+    @Column(name = &quot;stock_actual&quot;, nullable = false)
+    @Builder.Default
+    private Integer stockActual = 0;
+
+    @Column(name = &quot;stock_minimo&quot;, nullable = false)
+    @Builder.Default
+    private Integer stockMinimo = 0;
+
+    @Column(name = &quot;unidad_medida&quot;, nullable = false, length = 20)
+    @Builder.Default
+    private String unidadMedida = &quot;unidad&quot;;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean activo = true;
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = &quot;updated_at&quot;)
+    private Instant updatedAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

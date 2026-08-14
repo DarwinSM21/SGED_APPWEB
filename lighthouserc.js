@@ -1,6 +1,15 @@
-// Umbrales mínimos exigidos por el Bloque C.5.
-// Ejecutar con: npx lhci autorun  (contra contenedor recién levantado,
-// perfil móvil, throttling Slow 4G).
+// Umbrales mínimos exigidos por el Bloque C.5 / A.1.
+// Perfil móvil: npx lhci autorun (contra contenedor recién levantado,
+// throttling Slow 4G).
+// Perfil escritorio (Bloque A.1, exige ambos perfiles): lhci no admite
+// dos configuraciones de collect en el mismo archivo, así que se corre
+// aparte con la CLI de Lighthouse y el preset oficial de escritorio,
+// que fija su propio throttling apropiado (no reusar la config de
+// arriba con form-factor=desktop: ver la nota metodológica en
+// docs/mediciones/lighthouse/REPORT.md sobre por qué eso da un
+// resultado invalido):
+//   npx lighthouse https://localhost:8443 --preset=desktop \
+//     --output=json,html --output-path=docs/mediciones/lighthouse/desktop-runN
 module.exports = {
   ci: {
     collect: {

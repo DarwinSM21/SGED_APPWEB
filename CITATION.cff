@@ -6,18 +6,28 @@ version: 0.9.0-rc
 date-released: 2026-07-30
 repository-code: "https://github.com/DarwinSM21/SGED_APPWEB"
 license: MIT
+# DOI del software (Zenodo). El DOI del dataset de mediciones es un
+# deposito SEPARADO (Bloque D.3) y todavia no existe; cuando se cree,
+# se referencia aqui bajo `identifiers`, no en este campo `doi`.
 doi: 10.5281/zenodo.21713240
 authors:
+  # ORCID pendiente de registro (gratuito, en orcid.org) para los tres
+  # integrantes -- Bloque B.1. Se agrega el campo `orcid:` a cada autor
+  # en cuanto exista el identificador; no se rellena con un valor
+  # provisional para no declarar como cerrado lo que no lo esta.
   - family-names: Arcalle Grefa
     given-names: Darwin Orlando
     affiliation: "Universidad Técnica Estatal de Quevedo"
+    # orcid: "https://orcid.org/PENDIENTE"
   - family-names: Pallo Pinto
     given-names: Alejandro Daniel
     email: dpallop@uteq.edu.ec
     affiliation: "Universidad Técnica Estatal de Quevedo"
+    # orcid: "https://orcid.org/PENDIENTE"
   - family-names: Velez Lopez
     given-names: Ricardo Elias
     affiliation: "Universidad Técnica Estatal de Quevedo"
+    # orcid: "https://orcid.org/PENDIENTE"
 keywords:
   - spring-boot
   - angular
@@ -25,3 +35,5 @@ keywords:
   - jwt
   - owasp
   - proyecto-fin-de-curso
+  - ingenieria-de-requisitos
+  - sistema-gestion-escolar-deportiva

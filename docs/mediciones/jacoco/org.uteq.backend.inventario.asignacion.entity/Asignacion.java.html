@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Asignacion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.asignacion.entity</a> &gt; <span class="el_source">Asignacion.java</span></div><h1>Asignacion.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.asignacion.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.inventario.articulo.entity.Articulo;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+
+import java.time.Instant;
+import java.time.LocalDate;
+
+/**
+ * Entrega/devolucion de un articulo a un estudiante o entrenador.
+ * Exactamente uno de estudiante/entrenador va lleno, segun
+ * tipoDestinatario (reflejado en el CHECK de la migracion V15).
+ */
+@Entity
+@Table(name = &quot;asignaciones&quot;, schema = &quot;inventario&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Asignacion {
+
+<span class="fc" id="L29">    public enum TipoDestinatario { ESTUDIANTE, ENTRENADOR }</span>
+<span class="fc" id="L30">    public enum EstadoAsignacion { ASIGNADO, DEVUELTO, PERDIDO }</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_asignacion&quot;)
+    private Long idAsignacion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_articulo&quot;, nullable = false)
+    private Articulo articulo;
+
+    @Column(nullable = false)
+    private Integer cantidad;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = &quot;tipo_destinatario&quot;, nullable = false, length = 15)
+    private TipoDestinatario tipoDestinatario;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;id_estudiante&quot;)
+    private Estudiante estudiante;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;id_entrenador&quot;)
+    private Entrenador entrenador;
+
+    @Column(name = &quot;fecha_asignacion&quot;, nullable = false)
+    @Builder.Default
+    private LocalDate fechaAsignacion = LocalDate.now();
+
+    @Column(name = &quot;fecha_devolucion_esperada&quot;)
+    private LocalDate fechaDevolucionEsperada;
+
+    @Column(name = &quot;fecha_devolucion_real&quot;)
+    private LocalDate fechaDevolucionReal;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 15)
+    @Builder.Default
+    private EstadoAsignacion estado = EstadoAsignacion.ASIGNADO;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;registrado_por_id_usuario&quot;, nullable = false)
+    private Usuario registradoPor;
+
+    @Column(length = 255)
+    private String observaciones;
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = &quot;updated_at&quot;)
+    private Instant updatedAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -15,9 +15,12 @@ import org.uteq.backend.seguridad.persona.service.PersonaService;
 
 /**
  * CRUD de Persona. Concentra los datos identificativos (cedula, correo)
- * de estudiantes menores de edad, por lo que todos los endpoints quedan
- * restringidos a ADMINISTRADOR: no hay ninguna operacion de este recurso
- * que un rol ENTRENADOR o USER necesite ejercer directamente.
+ * de estudiantes menores de edad, por lo que la mayoria de endpoints queda
+ * restringida a ADMINISTRADOR. La excepcion es {@code crear}: la
+ * recepcionista tambien la necesita para poder registrar un estudiante
+ * nuevo (Estudiante siempre cuelga de una Persona ya existente, asi que
+ * ese es el primer paso del alta). Leer/editar/eliminar el catalogo
+ * completo de personas sigue siendo solo de ADMINISTRADOR.
  */
 @RestController
 @RequestMapping(&quot;/api/personas&quot;)
@@ -30,26 +33,26 @@ public class PersonaController {
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Page&lt;PersonaResponse&gt;&gt; listar(
             @PageableDefault(size = 10, sort = &quot;apellido&quot;) Pageable pageable) {
-<span class="fc" id="L33">        return ResponseEntity.ok(personaService.listar(pageable));</span>
+<span class="fc" id="L36">        return ResponseEntity.ok(personaService.listar(pageable));</span>
     }
 
     @GetMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L39">        return ResponseEntity.ok(personaService.buscarPorId(id));</span>
+<span class="nc" id="L42">        return ResponseEntity.ok(personaService.buscarPorId(id));</span>
     }
 
     @GetMapping(&quot;/cedula/{cedula}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; buscarPorCedula(@PathVariable String cedula) {
-<span class="fc" id="L45">        return ResponseEntity.ok(personaService.buscarPorCedula(cedula));</span>
+<span class="fc" id="L48">        return ResponseEntity.ok(personaService.buscarPorCedula(cedula));</span>
     }
 
     @PostMapping
-    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; crear(@Valid @RequestBody PersonaRequest request) {
-<span class="fc" id="L51">        PersonaResponse personaCreada = personaService.crear(request);</span>
-<span class="fc" id="L52">        return ResponseEntity.status(HttpStatus.CREATED).body(personaCreada);</span>
+<span class="fc" id="L54">        PersonaResponse personaCreada = personaService.crear(request);</span>
+<span class="fc" id="L55">        return ResponseEntity.status(HttpStatus.CREATED).body(personaCreada);</span>
     }
 
     @PutMapping(&quot;/{id}&quot;)
@@ -57,14 +60,14 @@ public class PersonaController {
     public ResponseEntity&lt;PersonaResponse&gt; editar(
             @PathVariable Long id,
             @Valid @RequestBody PersonaRequest request) {
-<span class="nc" id="L60">        return ResponseEntity.ok(personaService.editar(id, request));</span>
+<span class="nc" id="L63">        return ResponseEntity.ok(personaService.editar(id, request));</span>
     }
 
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L66">        personaService.eliminar(id);</span>
-<span class="fc" id="L67">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L69">        personaService.eliminar(id);</span>
+<span class="fc" id="L70">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

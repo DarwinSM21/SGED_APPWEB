@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.service</a> &gt; <span class="el_source">NotificacionService.java</span></div><h1>NotificacionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.service;
+
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.representante.dto.NotificacionDtos.NotificacionResponse;
+import org.uteq.backend.academico.representante.entity.Notificacion;
+import org.uteq.backend.academico.representante.entity.Notificacion.Tipo;
+import org.uteq.backend.academico.representante.entity.Representante;
+import org.uteq.backend.academico.representante.repository.NotificacionRepository;
+import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
+import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+
+import java.util.List;
+
+/**
+ * RF-22: notifica a los representantes de un estudiante cuando marca
+ * asistencia o se le registra una lesion. Notificacion EN-APP unicamente
+ * (fila en {@code academico.notificaciones}, sin correo/SMS): este
+ * proyecto no tiene infraestructura de envio externo, y agregarla
+ * necesitaria credenciales que nadie tiene todavia.
+ *
+ * &lt;p&gt;Si el estudiante no tiene ningun representante vinculado, no pasa
+ * nada -no es un error, simplemente no hay a quien avisar-. Este efecto
+ * nunca debe poder tumbar el flujo principal (marcar asistencia / registrar
+ * lesion): si algun dia se le agrega logica que pueda fallar, debe fallar
+ * en silencio para esa parte, no propagar la excepcion hacia arriba.
+ */
+@Service
+@RequiredArgsConstructor
+public class NotificacionService {
+
+<span class="fc" id="L37">    private static final Logger log = LoggerFactory.getLogger(NotificacionService.class);</span>
+
+    private final NotificacionRepository notificacionRepository;
+    private final RepresentanteEstudianteRepository vinculoRepository;
+    private final RepresentanteRepository representanteRepository;
+
+    @Transactional
+    public void notificarAsistencia(Estudiante estudiante, String estadoAsistencia) {
+<span class="fc" id="L45">        sinTumbarElFlujoPrincipal(&quot;asistencia&quot;, () -&gt; {</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            String estado = &quot;TARDE&quot;.equals(estadoAsistencia) ? &quot;con tardanza&quot; : &quot;a tiempo&quot;;</span>
+<span class="fc" id="L47">            crearParaCadaRepresentante(estudiante, Tipo.ASISTENCIA,</span>
+<span class="fc" id="L48">                    nombreCompleto(estudiante) + &quot; marcó asistencia hoy (&quot; + estado + &quot;).&quot;);</span>
+<span class="fc" id="L49">        });</span>
+<span class="fc" id="L50">    }</span>
+
+    @Transactional
+    public void notificarLesion(Estudiante estudiante, String descripcionLesion) {
+<span class="fc" id="L54">        sinTumbarElFlujoPrincipal(&quot;lesion&quot;, () -&gt;</span>
+<span class="pc" id="L55">                crearParaCadaRepresentante(estudiante, Tipo.LESION,</span>
+<span class="fc" id="L56">                        &quot;Se registró una lesión para &quot; + nombreCompleto(estudiante) + &quot;: &quot; + descripcionLesion));</span>
+<span class="fc" id="L57">    }</span>
+
+    /**
+     * Ejecuta el efecto de notificacion sin dejar que su fallo se propague.
+     *
+     * &lt;p&gt;La captura tiene que estar &lt;b&gt;aqui dentro&lt;/b&gt; y no en quien llama.
+     * Estos metodos son {@code @Transactional} y se invocan desde
+     * {@code AsistenciaService}/{@code LesionService}, que ya estan dentro de
+     * una transaccion: con propagacion REQUIRED se unen a la misma. Si la
+     * excepcion saliera del metodo, el proxy de Spring marcaria la
+     * transaccion como {@code rollback-only} y el {@code try/catch} del
+     * llamador no serviria de nada -al confirmar saltaria
+     * {@code UnexpectedRollbackException} y se perderia la asistencia que el
+     * estudiante ya habia marcado-.
+     *
+     * &lt;p&gt;Limite conocido: esto cubre los fallos de nivel de aplicacion, que
+     * son los realistas aqui (un estudiante sin persona asociada, un vinculo
+     * inconsistente). Un fallo de nivel de base -por ejemplo, violacion de
+     * clave foranea al insertar- aborta la transaccion en el propio
+     * PostgreSQL y ya no hay captura en Java que la rescate. Aislarlo por
+     * completo exigiria mover esto a REQUIRES_NEW o a un
+     * {@code @TransactionalEventListener(AFTER_COMMIT)}; se deja anotado
+     * como trabajo futuro y no se hace ahora para no reestructurar un flujo
+     * ya probado.
+     */
+    private void sinTumbarElFlujoPrincipal(String contexto, Runnable efecto) {
+        try {
+<span class="fc" id="L84">            efecto.run();</span>
+<span class="fc" id="L85">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L86">            log.warn(&quot;No se pudo notificar a los representantes ({}): {}. &quot;</span>
+                            + &quot;El registro principal se conserva.&quot;,
+<span class="fc" id="L88">                    contexto, e.getClass().getSimpleName());</span>
+<span class="fc" id="L89">        }</span>
+<span class="fc" id="L90">    }</span>
+
+    @Transactional(readOnly = true)
+    public List&lt;NotificacionResponse&gt; misNotificaciones(String username) {
+<span class="nc" id="L94">        Representante representante = representanteDe(username);</span>
+<span class="nc" id="L95">        return notificacionRepository</span>
+<span class="nc" id="L96">                .findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(representante.getIdRepresentante())</span>
+<span class="nc" id="L97">                .stream().map(this::aResponse).toList();</span>
+    }
+
+    @Transactional(readOnly = true)
+    public long conteoNoLeidas(String username) {
+<span class="nc" id="L102">        Representante representante = representanteDe(username);</span>
+<span class="nc" id="L103">        return notificacionRepository.countByRepresentante_IdRepresentanteAndLeidaFalse(representante.getIdRepresentante());</span>
+    }
+
+    /** 404 uniforme si la notificacion no existe o no es suya: mismo criterio IDOR del resto del modulo. */
+    @Transactional
+    public void marcarLeida(String username, Long idNotificacion) {
+<span class="nc" id="L109">        Representante representante = representanteDe(username);</span>
+<span class="nc" id="L110">        Notificacion notificacion = notificacionRepository</span>
+<span class="nc" id="L111">                .findByIdNotificacionAndRepresentante_IdRepresentante(idNotificacion, representante.getIdRepresentante())</span>
+<span class="nc" id="L112">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Notificación no encontrada con id: &quot; + idNotificacion));</span>
+<span class="nc" id="L113">        notificacion.setLeida(true);</span>
+<span class="nc" id="L114">        notificacionRepository.save(notificacion);</span>
+<span class="nc" id="L115">    }</span>
+
+    private void crearParaCadaRepresentante(Estudiante estudiante, Tipo tipo, String mensaje) {
+<span class="fc" id="L118">        List&lt;Representante&gt; representantes = vinculoRepository</span>
+<span class="fc" id="L119">                .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())</span>
+<span class="pc" id="L120">                .stream().map(v -&gt; v.getRepresentante()).toList();</span>
+
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">        for (Representante representante : representantes) {</span>
+<span class="nc" id="L123">            notificacionRepository.save(Notificacion.builder()</span>
+<span class="nc" id="L124">                    .representante(representante)</span>
+<span class="nc" id="L125">                    .estudiante(estudiante)</span>
+<span class="nc" id="L126">                    .tipo(tipo)</span>
+<span class="nc" id="L127">                    .mensaje(mensaje)</span>
+<span class="nc" id="L128">                    .leida(false)</span>
+<span class="nc" id="L129">                    .build());</span>
+<span class="nc" id="L130">        }</span>
+<span class="fc" id="L131">    }</span>
+
+    private Representante representanteDe(String username) {
+<span class="nc" id="L134">        return representanteRepository.findByUsuario_Username(username)</span>
+<span class="nc" id="L135">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un representante asociado a esta cuenta&quot;));</span>
+    }
+
+    private String nombreCompleto(Estudiante e) {
+<span class="fc" id="L139">        var p = e.getPersona();</span>
+<span class="fc" id="L140">        return p.getNombre() + &quot; &quot; + p.getApellido();</span>
+    }
+
+    private NotificacionResponse aResponse(Notificacion n) {
+<span class="nc" id="L144">        var persona = n.getEstudiante().getPersona();</span>
+<span class="nc" id="L145">        return new NotificacionResponse(</span>
+<span class="nc" id="L146">                n.getIdNotificacion(),</span>
+<span class="nc" id="L147">                n.getEstudiante().getIdEstudiante(),</span>
+<span class="nc" id="L148">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="nc" id="L149">                n.getTipo(),</span>
+<span class="nc" id="L150">                n.getMensaje(),</span>
+<span class="nc" id="L151">                n.getLeida(),</span>
+<span class="nc" id="L152">                n.getCreatedAt());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

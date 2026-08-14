@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LesionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.lesion.service</a> &gt; <span class="el_source">LesionService.java</span></div><h1>LesionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.lesion.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.lesion.entity.Lesion;
+import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * Registro de lesiones. Las carga el entrenador desde el mismo modulo de
+ * evaluacion diaria, no la recepcionista.
+ *
+ * &lt;p&gt;Una lesion activa tiene tres efectos en el sistema: excluye al jugador de
+ * las sugerencias de plantilla, distingue su ausencia de una falta sin motivo,
+ * y dispara la notificacion al representante.
+ */
+@Service
+@RequiredArgsConstructor
+public class LesionService {
+
+    private final LesionRepository lesionRepository;
+    private final EstudianteRepository estudianteRepository;
+    private final EntrenadorRepository entrenadorRepository;
+    private final NotificacionService notificacionService;
+
+    @Transactional
+    public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
+                            LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
+
+<span class="fc" id="L39">        var estudiante = estudianteRepository.findById(idEstudiante)</span>
+<span class="fc" id="L40">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;No existe el estudiante &quot; + idEstudiante));
+<span class="fc" id="L42">        var entrenador = entrenadorRepository.findById(idEntrenador)</span>
+<span class="pc" id="L43">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;No existe el entrenador &quot; + idEntrenador));
+
+        // La base tiene un indice unico parcial que impide dos lesiones
+        // activas del mismo estudiante. Se comprueba antes para devolver un
+        // mensaje util en vez de un error de restriccion.
+<span class="fc" id="L49">        lesionRepository.buscarActivaPorEstudiante(idEstudiante).ifPresent(l -&gt; {</span>
+<span class="fc" id="L50">            throw new IllegalArgumentException(</span>
+                    &quot;El estudiante ya tiene una lesion activa registrada el &quot;
+<span class="fc" id="L52">                            + l.getFechaLesion() + &quot;. Da de alta esa antes de registrar otra.&quot;);</span>
+        });
+
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now();</span>
+<span class="pc bpc" id="L56" title="1 of 4 branches missed.">        if (fechaEstimadaRetorno != null &amp;&amp; fechaEstimadaRetorno.isBefore(fecha)) {</span>
+<span class="fc" id="L57">            throw new IllegalArgumentException(</span>
+                    &quot;La fecha estimada de retorno no puede ser anterior a la de la lesion&quot;);
+        }
+
+<span class="fc" id="L61">        Lesion lesion = lesionRepository.save(Lesion.builder()</span>
+<span class="fc" id="L62">                .estudiante(estudiante)</span>
+<span class="fc" id="L63">                .entrenador(entrenador)</span>
+<span class="fc" id="L64">                .descripcion(descripcion)</span>
+<span class="fc" id="L65">                .fechaLesion(fecha)</span>
+<span class="fc" id="L66">                .fechaEstimadaRetorno(fechaEstimadaRetorno)</span>
+<span class="fc" id="L67">                .build());</span>
+<span class="fc" id="L68">        notificacionService.notificarLesion(estudiante, descripcion);</span>
+<span class="fc" id="L69">        return lesion;</span>
+    }
+
+    /** Cierra una lesion: el jugador vuelve a entrar en las plantillas. */
+    @Transactional
+    public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {
+<span class="fc" id="L75">        var lesion = lesionRepository.findById(idLesion)</span>
+<span class="pc" id="L76">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;No existe la lesion &quot; + idLesion));
+
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        if (lesion.getFechaAlta() != null) {</span>
+<span class="fc" id="L80">            throw new IllegalArgumentException(&quot;Esa lesion ya tiene fecha de alta&quot;);</span>
+        }
+
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now();</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (fecha.isBefore(lesion.getFechaLesion())) {</span>
+<span class="fc" id="L85">            throw new IllegalArgumentException(</span>
+                    &quot;El alta no puede ser anterior a la fecha de la lesion&quot;);
+        }
+
+<span class="fc" id="L89">        lesion.setFechaAlta(fecha);</span>
+<span class="fc" id="L90">        return lesionRepository.save(lesion);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Lesion&gt; listarActivas(Pageable pageable) {
+<span class="nc" id="L95">        return lesionRepository.listarActivas(pageable);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;Lesion&gt; historialDe(Long idEstudiante, Pageable pageable) {
+<span class="nc" id="L100">        return lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, pageable);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;Long&gt; idsLesionados() {
+<span class="nc" id="L105">        return lesionRepository.idsEstudiantesLesionados();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

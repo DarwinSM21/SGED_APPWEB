@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovimientoStockService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.movimiento.service</a> &gt; <span class="el_source">MovimientoStockService.java</span></div><h1>MovimientoStockService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.movimiento.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.inventario.articulo.entity.Articulo;
+import org.uteq.backend.inventario.articulo.repository.ArticuloRepository;
+import org.uteq.backend.inventario.movimiento.dto.MovimientoDtos.*;
+import org.uteq.backend.inventario.movimiento.entity.MovimientoStock;
+import org.uteq.backend.inventario.movimiento.entity.MovimientoStock.TipoMovimiento;
+import org.uteq.backend.inventario.movimiento.repository.MovimientoStockRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+/**
+ * Entradas/salidas/ajustes de stock. ENTRADA y AJUSTE suman a
+ * stock_actual, SALIDA resta; una SALIDA que dejaria el stock negativo
+ * se rechaza antes de tocar la base de datos.
+ */
+@Service
+@RequiredArgsConstructor
+public class MovimientoStockService {
+
+    private final MovimientoStockRepository movimientoStockRepository;
+    private final ArticuloRepository articuloRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    @Transactional(readOnly = true)
+    public Page&lt;MovimientoResponse&gt; listarPaginado(Pageable pageable) {
+<span class="nc" id="L33">        return movimientoStockRepository.findAllByOrderByFechaMovimientoDesc(pageable).map(this::toResponse);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public Page&lt;MovimientoResponse&gt; listarPorArticulo(Long idArticulo, Pageable pageable) {
+<span class="nc" id="L38">        return movimientoStockRepository.findByArticulo_IdArticuloOrderByFechaMovimientoDesc(idArticulo, pageable)</span>
+<span class="nc" id="L39">                .map(this::toResponse);</span>
+    }
+
+    @Transactional
+    public MovimientoResponse registrar(MovimientoRequest request, String usernameRegistrador) {
+<span class="fc" id="L44">        Articulo articulo = buscarArticulo(request.idArticulo());</span>
+<span class="fc" id="L45">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
+
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        int delta = request.tipoMovimiento() == TipoMovimiento.SALIDA</span>
+<span class="fc" id="L48">                ? -request.cantidad()</span>
+<span class="fc" id="L49">                : request.cantidad();</span>
+<span class="fc" id="L50">        int nuevoStock = articulo.getStockActual() + delta;</span>
+
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        if (nuevoStock &lt; 0) {</span>
+<span class="fc" id="L53">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L54">                    &quot;Stock insuficiente: hay &quot; + articulo.getStockActual() + &quot; unidades de \&quot;&quot;</span>
+<span class="fc" id="L55">                            + articulo.getNombre() + &quot;\&quot; y se intentan retirar &quot; + request.cantidad());</span>
+        }
+
+<span class="fc" id="L58">        articulo.setStockActual(nuevoStock);</span>
+<span class="fc" id="L59">        articuloRepository.save(articulo);</span>
+
+<span class="fc" id="L61">        MovimientoStock movimiento = MovimientoStock.builder()</span>
+<span class="fc" id="L62">                .articulo(articulo)</span>
+<span class="fc" id="L63">                .tipoMovimiento(request.tipoMovimiento())</span>
+<span class="fc" id="L64">                .cantidad(request.cantidad())</span>
+<span class="fc" id="L65">                .motivo(request.motivo())</span>
+<span class="fc" id="L66">                .registradoPor(registrador)</span>
+<span class="fc" id="L67">                .build();</span>
+
+<span class="fc" id="L69">        return toResponse(movimientoStockRepository.save(movimiento));</span>
+    }
+
+    private Articulo buscarArticulo(Long id) {
+<span class="fc" id="L73">        return articuloRepository.findById(id)</span>
+<span class="pc" id="L74">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Artículo no encontrado con ID: &quot; + id));</span>
+    }
+
+    private Usuario buscarUsuario(String username) {
+<span class="fc" id="L78">        return usuarioRepository.findByUsername(username)</span>
+<span class="pc" id="L79">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Usuario autenticado no encontrado: &quot; + username));</span>
+    }
+
+    private MovimientoResponse toResponse(MovimientoStock m) {
+<span class="fc" id="L83">        var registrador = m.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L84">        return new MovimientoResponse(</span>
+<span class="fc" id="L85">                m.getIdMovimiento(),</span>
+<span class="fc" id="L86">                m.getArticulo().getIdArticulo(),</span>
+<span class="fc" id="L87">                m.getArticulo().getNombre(),</span>
+<span class="fc" id="L88">                m.getTipoMovimiento(),</span>
+<span class="fc" id="L89">                m.getCantidad(),</span>
+<span class="fc" id="L90">                m.getMotivo(),</span>
+<span class="fc" id="L91">                registrador.getNombre() + &quot; &quot; + registrador.getApellido(),</span>
+<span class="fc" id="L92">                m.getFechaMovimiento()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

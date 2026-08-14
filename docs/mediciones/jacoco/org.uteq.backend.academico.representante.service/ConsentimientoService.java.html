@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConsentimientoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.service</a> &gt; <span class="el_source">ConsentimientoService.java</span></div><h1>ConsentimientoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.dto.ConsentimientoDtos.*;
+import org.uteq.backend.academico.representante.entity.Consentimiento;
+import org.uteq.backend.academico.representante.entity.Representante;
+import org.uteq.backend.academico.representante.repository.ConsentimientoRepository;
+import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+import java.time.OffsetDateTime;
+import java.util.List;
+
+/**
+ * Otorga/revoca el consentimiento del representante para el tratamiento
+ * de datos de un representado (hallazgo H-04 de ETHICS.md). Lo registra
+ * un administrador -en esta iteracion el representante no tiene una
+ * pantalla propia para autorizarlo el mismo, mismo criterio &quot;el admin lo
+ * crea&quot; ya usado para las cuentas- dejando constancia de quien lo hizo.
+ */
+@Service
+@RequiredArgsConstructor
+public class ConsentimientoService {
+
+    private final ConsentimientoRepository consentimientoRepository;
+    private final RepresentanteRepository representanteRepository;
+    private final EstudianteRepository estudianteRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    @Transactional
+    public ConsentimientoResponse otorgar(OtorgarConsentimientoRequest request, String usernameAdmin) {
+<span class="fc" id="L38">        Representante representante = representanteRepository.findById(request.idRepresentante())</span>
+<span class="fc" id="L39">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L40">                        &quot;Representante no encontrado con id: &quot; + request.idRepresentante()));</span>
+<span class="fc" id="L41">        Estudiante estudiante = estudianteRepository.findById(request.idEstudiante())</span>
+<span class="pc" id="L42">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L43">                        &quot;Estudiante no encontrado con id: &quot; + request.idEstudiante()));</span>
+
+<span class="fc" id="L45">        consentimientoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(</span>
+<span class="fc" id="L46">                        request.idRepresentante(), request.idEstudiante(), request.alcance())</span>
+<span class="fc" id="L47">                .ifPresent(c -&gt; {</span>
+<span class="fc" id="L48">                    throw new IllegalArgumentException(&quot;Ya existe un consentimiento vigente con ese alcance&quot;);</span>
+                });
+
+<span class="fc" id="L51">        Usuario admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);</span>
+
+<span class="fc" id="L53">        Consentimiento consentimiento = Consentimiento.builder()</span>
+<span class="fc" id="L54">                .representante(representante)</span>
+<span class="fc" id="L55">                .estudiante(estudiante)</span>
+<span class="fc" id="L56">                .alcance(request.alcance())</span>
+<span class="fc" id="L57">                .otorgadoEn(OffsetDateTime.now())</span>
+<span class="fc" id="L58">                .registradoPor(admin)</span>
+<span class="fc" id="L59">                .build();</span>
+
+<span class="fc" id="L61">        consentimiento = consentimientoRepository.save(consentimiento);</span>
+<span class="fc" id="L62">        return toResponse(consentimiento);</span>
+    }
+
+    @Transactional
+    public ConsentimientoResponse revocar(Long idConsentimiento, String usernameAdmin) {
+<span class="fc" id="L67">        Consentimiento consentimiento = consentimientoRepository.findById(idConsentimiento)</span>
+<span class="pc" id="L68">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;Consentimiento no encontrado con id: &quot; + idConsentimiento));
+
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        if (!consentimiento.estaVigente()) {</span>
+<span class="fc" id="L72">            throw new IllegalArgumentException(&quot;Ese consentimiento ya estaba revocado&quot;);</span>
+        }
+
+<span class="fc" id="L75">        Usuario admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);</span>
+<span class="fc" id="L76">        consentimiento.setRevocadoEn(OffsetDateTime.now());</span>
+<span class="fc" id="L77">        consentimiento.setRevocadoPor(admin);</span>
+<span class="fc" id="L78">        consentimiento = consentimientoRepository.save(consentimiento);</span>
+<span class="fc" id="L79">        return toResponse(consentimiento);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;ConsentimientoResponse&gt; listarPorEstudiante(Long idEstudiante) {
+<span class="fc" id="L84">        return consentimientoRepository.findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(idEstudiante).stream()</span>
+<span class="fc" id="L85">                .map(this::toResponse)</span>
+<span class="fc" id="L86">                .toList();</span>
+    }
+
+    private ConsentimientoResponse toResponse(Consentimiento c) {
+<span class="fc" id="L90">        return new ConsentimientoResponse(</span>
+<span class="fc" id="L91">                c.getIdConsentimiento(),</span>
+<span class="fc" id="L92">                c.getRepresentante().getIdRepresentante(),</span>
+<span class="fc" id="L93">                c.getEstudiante().getIdEstudiante(),</span>
+<span class="fc" id="L94">                c.getAlcance(),</span>
+<span class="fc" id="L95">                c.getOtorgadoEn(),</span>
+<span class="fc bfc" id="L96" title="All 2 branches covered.">                c.getRegistradoPor() != null ? c.getRegistradoPor().getUsername() : null,</span>
+<span class="fc" id="L97">                c.getRevocadoEn(),</span>
+<span class="fc" id="L98">                c.estaVigente());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

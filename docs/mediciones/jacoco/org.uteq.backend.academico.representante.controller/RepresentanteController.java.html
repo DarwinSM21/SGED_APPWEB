@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepresentanteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.controller</a> &gt; <span class="el_source">RepresentanteController.java</span></div><h1>RepresentanteController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.academico.representante.dto.RepresentantePageResponse;
+import org.uteq.backend.academico.representante.dto.RepresentanteRequest;
+import org.uteq.backend.academico.representante.dto.RepresentanteResponse;
+import org.uteq.backend.academico.representante.dto.VinculoRequest;
+import org.uteq.backend.academico.representante.service.RepresentanteService;
+
+/**
+ * CRUD de Representante. A diferencia de {@code EntrenadorController}, no
+ * se comparte lectura con ENTRENADOR: un coach no tiene motivo operativo
+ * para ver datos de contacto de tutores. El alta la hace un
+ * administrador o un recepcionista (pantalla unificada de Personas)
+ * sobre un idPersona/idUsuario ya creados via {@code POST /api/usuarios}
+ * (mismo patron de dos pasos que Entrenador), opcionalmente vinculando de
+ * una vez a sus representados. RECEPCIONISTA solo puede leer/crear/
+ * vincular -- editar datos de un representante existente o eliminarlo
+ * sigue siendo exclusivo de ADMINISTRADOR.
+ */
+@RestController
+@RequestMapping(&quot;/api/representantes&quot;)
+@RequiredArgsConstructor
+public class RepresentanteController {
+
+    private final RepresentanteService representanteService;
+
+    @GetMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;RepresentantePageResponse&lt;RepresentanteResponse&gt;&gt; listar(
+            @PageableDefault(size = 10) Pageable pageable) {
+<span class="fc" id="L39">        return ResponseEntity.ok(representanteService.listar(pageable));</span>
+    }
+
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;RepresentanteResponse&gt; buscarPorId(@PathVariable Long id) {
+<span class="nc" id="L45">        return ResponseEntity.ok(representanteService.buscarPorId(id));</span>
+    }
+
+    @PostMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;RepresentanteResponse&gt; crear(@Valid @RequestBody RepresentanteRequest request) {
+<span class="fc" id="L51">        return ResponseEntity.status(HttpStatus.CREATED).body(representanteService.crear(request));</span>
+    }
+
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;RepresentanteResponse&gt; editar(
+            @PathVariable Long id, @Valid @RequestBody RepresentanteRequest request) {
+<span class="nc" id="L58">        return ResponseEntity.ok(representanteService.editar(id, request));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
+<span class="fc" id="L64">        representanteService.eliminar(id);</span>
+<span class="fc" id="L65">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * El cuerpo es opcional: sin el, el vinculo queda sin relacion y sin
+     * contacto principal (mismo resultado que antes de exponer esos campos).
+     */
+    @PostMapping(&quot;/{id}/estudiantes/{idEstudiante}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;RepresentanteResponse&gt; vincularEstudiante(
+            @PathVariable Long id, @PathVariable Long idEstudiante,
+            @Valid @RequestBody(required = false) VinculoRequest request) {
+<span class="fc" id="L77">        return ResponseEntity.ok(representanteService.vincularEstudiante(id, idEstudiante, request));</span>
+    }
+
+    @DeleteMapping(&quot;/{id}/estudiantes/{idEstudiante}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;Void&gt; desvincularEstudiante(
+            @PathVariable Long id, @PathVariable Long idEstudiante) {
+<span class="fc" id="L84">        representanteService.desvincularEstudiante(id, idEstudiante);</span>
+<span class="fc" id="L85">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

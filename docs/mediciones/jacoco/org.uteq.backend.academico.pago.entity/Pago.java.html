@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Pago.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.entity</a> &gt; <span class="el_source">Pago.java</span></div><h1>Pago.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+
+/**
+ * Pago de un estudiante. MEMBRESIA cubre un mes calendario exacto
+ * (anio+mes obligatorios, sin poder repetirse: ver el indice unico
+ * parcial de db/schema.sql); DIARIO es puntual y no lleva periodo.
+ */
+@Entity
+@Table(name = &quot;pagos&quot;, schema = &quot;academico&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Pago {
+
+<span class="fc" id="L28">    public enum TipoPago { MEMBRESIA, DIARIO }</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_pago&quot;)
+    private Long idPago;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_estudiante&quot;, nullable = false)
+    private Estudiante estudiante;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private TipoPago tipo;
+
+    private Short anio;
+
+    private Short mes;
+
+    @Column(nullable = false, precision = 8, scale = 2)
+    private BigDecimal monto;
+
+    @Column(name = &quot;fecha_pago&quot;, nullable = false)
+    private LocalDate fechaPago;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;registrado_por_id_usuario&quot;, nullable = false)
+    private Usuario registradoPor;
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = &quot;updated_at&quot;)
+    private Instant updatedAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoDtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.dto</a> &gt; <span class="el_source">PagoDtos.java</span></div><h1>PagoDtos.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.dto;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+public final class PagoDtos {
+
+    private PagoDtos() {}
+
+<span class="nc" id="L18">    public record RegistrarMembresiaRequest(</span>
+            @NotNull Long idEstudiante,
+            @NotNull @Min(2020) @Max(2100) Integer anio,
+            @NotEmpty List&lt;@Min(1) @Max(12) Integer&gt; meses,
+            @NotNull @DecimalMin(value = &quot;0.01&quot;) BigDecimal monto,
+            LocalDate fechaPago
+    ) {}
+
+<span class="nc" id="L26">    public record RegistrarDiarioRequest(</span>
+            @NotNull Long idEstudiante,
+            @NotNull @DecimalMin(value = &quot;0.01&quot;) BigDecimal monto,
+            LocalDate fechaPago
+    ) {}
+
+<span class="nc" id="L32">    public record PagoResponse(</span>
+            Long idPago,
+            Long idEstudiante,
+            String estudiante,
+            TipoPago tipo,
+            Integer anio,
+            Integer mes,
+            BigDecimal monto,
+            LocalDate fechaPago,
+            String registradoPor
+    ) {}
+
+<span class="fc" id="L44">    public record IngresosMesResponse(</span>
+            Integer anio,
+            Integer mes,
+            BigDecimal total,
+            Long cantidadPagos
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

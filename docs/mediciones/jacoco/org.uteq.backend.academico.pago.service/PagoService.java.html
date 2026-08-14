@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.service</a> &gt; <span class="el_source">PagoService.java</span></div><h1>PagoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.pago.entity.Pago;
+import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
+import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
+import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.List;
+
+/**
+ * Registro de pagos. MEMBRESIA valida, antes de guardar nada, que ningun
+ * mes solicitado este ya cubierto (todo o nada: si uno falla no se cobra
+ * a medias). DIARIO no tiene esa validacion porque no cubre periodo.
+ */
+@Service
+@RequiredArgsConstructor
+public class PagoService {
+
+    private final PagoRepository pagoRepository;
+    private final EstudianteRepository estudianteRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    @Transactional
+    public List&lt;Pago&gt; registrarMembresia(Long idEstudiante, int anio, List&lt;Integer&gt; meses,
+                                          BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
+<span class="nc" id="L38">        Estudiante estudiante = buscarEstudiante(idEstudiante);</span>
+<span class="nc" id="L39">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
+
+<span class="nc" id="L41">        List&lt;Integer&gt; mesesUnicos = meses.stream().distinct().sorted().toList();</span>
+<span class="nc bnc" id="L42" title="All 2 branches missed.">        for (Integer mes : mesesUnicos) {</span>
+<span class="nc bnc" id="L43" title="All 2 branches missed.">            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(</span>
+<span class="nc" id="L44">                    idEstudiante, TipoPago.MEMBRESIA, (short) anio, mes.shortValue())) {</span>
+<span class="nc" id="L45">                throw new IllegalArgumentException(</span>
+                        &quot;El mes &quot; + mes + &quot;/&quot; + anio + &quot; ya está cubierto para este estudiante&quot;);
+            }
+<span class="nc" id="L48">        }</span>
+
+<span class="nc bnc" id="L50" title="All 2 branches missed.">        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR);</span>
+<span class="nc" id="L51">        List&lt;Pago&gt; pagos = mesesUnicos.stream()</span>
+<span class="nc" id="L52">                .map(mes -&gt; Pago.builder()</span>
+<span class="nc" id="L53">                        .estudiante(estudiante)</span>
+<span class="nc" id="L54">                        .tipo(TipoPago.MEMBRESIA)</span>
+<span class="nc" id="L55">                        .anio((short) anio)</span>
+<span class="nc" id="L56">                        .mes(mes.shortValue())</span>
+<span class="nc" id="L57">                        .monto(monto)</span>
+<span class="nc" id="L58">                        .fechaPago(fecha)</span>
+<span class="nc" id="L59">                        .registradoPor(registrador)</span>
+<span class="nc" id="L60">                        .build())</span>
+<span class="nc" id="L61">                .toList();</span>
+<span class="nc" id="L62">        return pagoRepository.saveAll(pagos);</span>
+    }
+
+    @Transactional
+    public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
+<span class="nc" id="L67">        Estudiante estudiante = buscarEstudiante(idEstudiante);</span>
+<span class="nc" id="L68">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
+
+<span class="nc" id="L70">        return pagoRepository.save(Pago.builder()</span>
+<span class="nc" id="L71">                .estudiante(estudiante)</span>
+<span class="nc" id="L72">                .tipo(TipoPago.DIARIO)</span>
+<span class="nc" id="L73">                .monto(monto)</span>
+<span class="nc bnc" id="L74" title="All 2 branches missed.">                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR))</span>
+<span class="nc" id="L75">                .registradoPor(registrador)</span>
+<span class="nc" id="L76">                .build());</span>
+    }
+
+    @Transactional(readOnly = true)
+    public List&lt;Pago&gt; historialDe(Long idEstudiante) {
+<span class="nc bnc" id="L81" title="All 2 branches missed.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
+<span class="nc" id="L82">            throw new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
+        }
+<span class="nc" id="L84">        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);</span>
+    }
+
+    /** Cuanto entro en caja este mes calendario (Ecuador), sin importar que mes cubre cada pago. */
+    @Transactional(readOnly = true)
+    public IngresosMesResponse ingresosDelMes() {
+<span class="fc" id="L90">        YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L91">        LocalDate inicio = mesActual.atDay(1);</span>
+<span class="fc" id="L92">        LocalDate fin = mesActual.atEndOfMonth();</span>
+
+<span class="fc" id="L94">        BigDecimal total = pagoRepository.sumarMontoEntreFechas(inicio, fin);</span>
+<span class="fc" id="L95">        long cantidad = pagoRepository.countByFechaPagoBetween(inicio, fin);</span>
+<span class="fc" id="L96">        return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);</span>
+    }
+
+    private Estudiante buscarEstudiante(Long id) {
+<span class="nc" id="L100">        return estudianteRepository.findById(id)</span>
+<span class="nc" id="L101">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
+    }
+
+    private Usuario buscarUsuario(String username) {
+<span class="nc" id="L105">        return usuarioRepository.findByUsername(username)</span>
+<span class="nc" id="L106">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Usuario autenticado no encontrado: &quot; + username));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

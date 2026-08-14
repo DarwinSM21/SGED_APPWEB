@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PlantillaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.service</a> &gt; <span class="el_source">PlantillaService.java</span></div><h1>PlantillaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.ia.GeneradorFeedbackIA;
+import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.*;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
+import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+
+/**
+ * Sugerencia de alineacion.
+ *
+ * &lt;p&gt;&lt;b&gt;La IA no elige a los jugadores.&lt;/b&gt; La seleccion y el orden salen de
+ * una regla explicita y auditable: se excluye a los lesionados, se ordena por
+ * promedio acumulado y se cortan los primeros N. Cualquiera puede reproducir
+ * el resultado a mano con los mismos datos, y el entrenador puede ajustar la
+ * sugerencia.
+ *
+ * &lt;p&gt;El modelo de lenguaje solo redacta un comentario sobre una alineacion ya
+ * decidida, y solo cuando se le pide explicitamente ({@link #feedback}): dejar
+ * que un modelo generativo decida quien juega haria la decision inauditable,
+ * irreproducible y dificilmente explicable a un padre de familia que pregunte
+ * por que su hijo quedo fuera; y llamarlo automaticamente en cada apertura de
+ * pantalla gastaria cuota de un servicio externo sin que nadie lo pidiera.
+ */
+@Service
+@RequiredArgsConstructor
+public class PlantillaService {
+
+    private final SesionEntrenamientoRepository sesionRepository;
+    private final AsistenciaRepository asistenciaRepository;
+    private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+    private final LesionRepository lesionRepository;
+    private final GeneradorFeedbackIA generadorFeedback;
+
+    @Value(&quot;${plantilla.titulares:11}&quot;)
+    private int cantidadTitulares;
+
+    @Transactional(readOnly = true)
+    public PlantillaResponse sugerir(Long idSesion) {
+<span class="fc" id="L52">        var r = calcular(idSesion);</span>
+<span class="fc" id="L53">        return new PlantillaResponse(idSesion, r.categoria(), r.titulares(), r.suplentes(), r.excluidos());</span>
+    }
+
+    /** Recalcula la misma alineacion y, sobre ella, pide el comentario a la IA. */
+    @Transactional(readOnly = true)
+    public FeedbackPlantillaResponse feedback(Long idSesion) {
+<span class="fc" id="L59">        var r = calcular(idSesion);</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (r.titulares().isEmpty()) {</span>
+<span class="fc" id="L61">            return new FeedbackPlantillaResponse(null, false, &quot;No hay alineacion que comentar&quot;);</span>
+        }
+<span class="fc" id="L63">        var resultado = comentarDe(r.titulares(), r.categoria());</span>
+<span class="fc" id="L64">        return new FeedbackPlantillaResponse(resultado.texto(), resultado.disponible(), resultado.motivo());</span>
+    }
+
+    private ResultadoCalculo calcular(Long idSesion) {
+<span class="fc" id="L68">        var sesion = sesionRepository.findById(idSesion)</span>
+<span class="fc" id="L69">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe la sesion &quot; + idSesion));</span>
+
+<span class="fc" id="L71">        String categoria = sesion.getCategoria().getNombre();</span>
+
+        // Solo entran quienes asistieron a la sesion.
+<span class="fc" id="L74">        var asistencias = asistenciaRepository.listarHabilitadosParaEvaluar(idSesion);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        if (asistencias.isEmpty()) {</span>
+<span class="fc" id="L76">            return new ResultadoCalculo(categoria, List.of(), List.of(), List.of());</span>
+        }
+
+<span class="fc" id="L79">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
+
+<span class="fc" id="L81">        List&lt;Estudiante&gt; disponibles = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L82">        List&lt;Long&gt; excluidos = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">        for (var a : asistencias) {</span>
+<span class="fc" id="L84">            Long id = a.getEstudiante().getIdEstudiante();</span>
+<span class="fc bfc" id="L85" title="All 2 branches covered.">            if (lesionados.contains(id)) {</span>
+<span class="fc" id="L86">                excluidos.add(id);</span>
+            } else {
+<span class="fc" id="L88">                disponibles.add(a.getEstudiante());</span>
+            }
+<span class="fc" id="L90">        }</span>
+
+<span class="fc" id="L92">        Map&lt;Long, BigDecimal&gt; promedios = promediosDe(disponibles);</span>
+
+        // Orden deterministico: promedio descendente y, ante empate, por id.
+        // El desempate por id evita que dos llamadas con los mismos datos
+        // devuelvan alineaciones distintas.
+<span class="fc" id="L97">        disponibles.sort(Comparator</span>
+<span class="fc" id="L98">                .comparing((Estudiante e) -&gt; promedios.getOrDefault(</span>
+<span class="fc" id="L99">                        e.getIdEstudiante(), BigDecimal.ZERO)).reversed()</span>
+<span class="fc" id="L100">                .thenComparing(Estudiante::getIdEstudiante));</span>
+
+<span class="fc" id="L102">        List&lt;JugadorPlantillaResponse&gt; titulares = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L103">        List&lt;JugadorPlantillaResponse&gt; suplentes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (int i = 0; i &lt; disponibles.size(); i++) {</span>
+<span class="fc" id="L105">            var jugador = aResponse(disponibles.get(i), promedios);</span>
+<span class="fc bfc" id="L106" title="All 2 branches covered.">            if (i &lt; cantidadTitulares) {</span>
+<span class="fc" id="L107">                titulares.add(jugador);</span>
+            } else {
+<span class="fc" id="L109">                suplentes.add(jugador);</span>
+            }
+        }
+
+<span class="fc" id="L113">        return new ResultadoCalculo(categoria, titulares, suplentes, excluidos);</span>
+    }
+
+    private Map&lt;Long, BigDecimal&gt; promediosDe(List&lt;Estudiante&gt; estudiantes) {
+<span class="pc bpc" id="L117" title="1 of 2 branches missed.">        if (estudiantes.isEmpty()) {</span>
+<span class="nc" id="L118">            return Map.of();</span>
+        }
+<span class="fc" id="L120">        List&lt;Long&gt; ids = estudiantes.stream().map(Estudiante::getIdEstudiante).toList();</span>
+<span class="fc" id="L121">        Map&lt;Long, BigDecimal&gt; promedios = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        for (Object[] fila : evaluacionEstudianteRepository.promedioGeneralPorEstudiante(ids)) {</span>
+<span class="fc" id="L123">            Long id = (Long) fila[0];</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            Double promedio = fila[1] == null ? 0.0 : ((Number) fila[1]).doubleValue();</span>
+<span class="fc" id="L125">            promedios.put(id, BigDecimal.valueOf(promedio).setScale(1, RoundingMode.HALF_UP));</span>
+<span class="fc" id="L126">        }</span>
+<span class="fc" id="L127">        return promedios;</span>
+    }
+
+    private JugadorPlantillaResponse aResponse(Estudiante e, Map&lt;Long, BigDecimal&gt; promedios) {
+<span class="fc" id="L131">        var p = e.getPersona();</span>
+        // Posicion nominal del estudiante (academico.estudiantes.id_posicion),
+        // no la jugada en un dia concreto: es la mejor aproximacion disponible
+        // sin pedirle al entrenador que la tag ee cada vez que evalua.
+<span class="fc bfc" id="L135" title="All 2 branches covered.">        String posicion = e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null;</span>
+<span class="fc" id="L136">        return new JugadorPlantillaResponse(</span>
+<span class="fc" id="L137">                e.getIdEstudiante(),</span>
+<span class="fc" id="L138">                p.getNombre() + &quot; &quot; + p.getApellido(),</span>
+                posicion,
+<span class="fc" id="L140">                promedios.getOrDefault(e.getIdEstudiante(), BigDecimal.ZERO));</span>
+    }
+
+    /**
+     * Pide el comentario al modelo. Solo se le envian datos seudonimizados:
+     * &quot;Jugador 1&quot;, su categoria y su promedio. Ningun nombre sale del sistema.
+     */
+    private GeneradorFeedbackIA.ResultadoFeedback comentarDe(
+            List&lt;JugadorPlantillaResponse&gt; titulares, String categoria) {
+
+<span class="fc" id="L150">        List&lt;PerfilJugadorAnonimo&gt; perfiles = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        for (int i = 0; i &lt; titulares.size(); i++) {</span>
+<span class="fc" id="L152">            var t = titulares.get(i);</span>
+<span class="fc" id="L153">            perfiles.add(new PerfilJugadorAnonimo(</span>
+                    &quot;Jugador &quot; + (i + 1),
+                    categoria,
+<span class="fc" id="L156">                    t.posicion(),</span>
+<span class="fc" id="L157">                    Map.of(&quot;Promedio acumulado&quot;, t.promedioAcumulado().doubleValue()),</span>
+<span class="fc" id="L158">                    Map.of(),</span>
+                    null,
+                    false));
+        }
+<span class="fc" id="L162">        return generadorFeedback.generarComentarioPlantilla(perfiles);</span>
+    }
+
+<span class="fc" id="L165">    private record ResultadoCalculo(</span>
+            String categoria,
+            List&lt;JugadorPlantillaResponse&gt; titulares,
+            List&lt;JugadorPlantillaResponse&gt; suplentes,
+            List&lt;Long&gt; excluidos
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

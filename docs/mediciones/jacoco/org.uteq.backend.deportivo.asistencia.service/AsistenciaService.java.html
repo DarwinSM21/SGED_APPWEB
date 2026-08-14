@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AsistenciaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.service</a> &gt; <span class="el_source">AsistenciaService.java</span></div><h1>AsistenciaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.AsistenciaResponse;
+import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MiHistorialResponse;
+import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+
+/**
+ * Registra la asistencia del ESTUDIANTE autenticado. El token QR ya se
+ * canjeo en el controller (AsistenciaQrController.marcar) antes de llamar
+ * aqui; este servicio solo resuelve quien es el estudiante, decide
+ * PRESENTE vs TARDE, y persiste.
+ */
+@Service
+@RequiredArgsConstructor
+public class AsistenciaService {
+
+    private final AsistenciaRepository asistenciaRepository;
+    private final EstudianteRepository estudianteRepository;
+    private final SesionEntrenamientoRepository sesionRepository;
+    private final NotificacionService notificacionService;
+
+    @Value(&quot;${asistencia.tolerancia-tarde-minutos:10}&quot;)
+    private int toleranciaTardeMinutos;
+
+    @Transactional
+    public Asistencia marcarPorQr(String username, Long idSesion) {
+<span class="fc" id="L45">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L46">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
+
+<span class="fc" id="L48">        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())</span>
+<span class="fc" id="L49">                .ifPresent(a -&gt; {</span>
+<span class="fc" id="L50">                    throw new IllegalArgumentException(&quot;Ya marcaste tu asistencia en esta sesión&quot;);</span>
+                });
+
+<span class="fc" id="L53">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
+<span class="pc" id="L54">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Sesión no encontrada con id: &quot; + idSesion));</span>
+
+<span class="fc" id="L56">        Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(</span>
+<span class="fc" id="L57">                estudiante.getIdEstudiante(), idSesion);</span>
+<span class="fc bfc" id="L58" title="All 4 branches covered.">        if (categoriaCoincide == null || !categoriaCoincide) {</span>
+<span class="fc" id="L59">            throw new IllegalArgumentException(&quot;Esta sesión no corresponde a tu categoría&quot;);</span>
+        }
+
+<span class="fc" id="L62">        LocalTime ahora = LocalTime.now();</span>
+<span class="fc" id="L63">        Asistencia asistencia = Asistencia.builder()</span>
+<span class="fc" id="L64">                .sesion(sesion)</span>
+<span class="fc" id="L65">                .estudiante(estudiante)</span>
+<span class="fc" id="L66">                .horaEntrada(ahora)</span>
+<span class="fc" id="L67">                .metodo(Asistencia.METODO_QR)</span>
+<span class="fc" id="L68">                .estado(calcularEstado(sesion.getHoraInicio(), ahora))</span>
+<span class="fc" id="L69">                .build();</span>
+
+<span class="fc" id="L71">        asistencia = asistenciaRepository.save(asistencia);</span>
+<span class="fc" id="L72">        notificacionService.notificarAsistencia(estudiante, asistencia.getEstado());</span>
+<span class="fc" id="L73">        return asistencia;</span>
+    }
+
+    /** Sin hora_inicio programada no hay contra que medir la tardanza: PRESENTE. */
+    private String calcularEstado(LocalTime horaInicio, LocalTime ahora) {
+<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (horaInicio == null) {</span>
+<span class="fc" id="L79">            return Asistencia.ESTADO_PRESENTE;</span>
+        }
+<span class="fc" id="L81">        LocalTime limite = horaInicio.plusMinutes(toleranciaTardeMinutos);</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        return ahora.isAfter(limite) ? Asistencia.ESTADO_TARDE : Asistencia.ESTADO_PRESENTE;</span>
+    }
+
+    /**
+     * Historial propio del ESTUDIANTE autenticado. Antes solo podia marcar
+     * asistencia, no consultar lo que ya habia marcado.
+     */
+    @Transactional(readOnly = true)
+    public MiHistorialResponse misAsistencias(String username) {
+<span class="fc" id="L91">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L92">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
+
+<span class="fc" id="L94">        List&lt;AsistenciaResponse&gt; asistencias = asistenciaRepository</span>
+<span class="fc" id="L95">                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())</span>
+<span class="fc" id="L96">                .getContent().stream()</span>
+<span class="fc" id="L97">                .map(this::aResponse)</span>
+<span class="fc" id="L98">                .toList();</span>
+
+<span class="fc" id="L100">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L101">        BigDecimal porcentaje = asistenciaRepository</span>
+<span class="fc" id="L102">                .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);</span>
+
+<span class="fc" id="L104">        return new MiHistorialResponse(asistencias, porcentaje);</span>
+    }
+
+    private AsistenciaResponse aResponse(Asistencia a) {
+<span class="fc" id="L108">        return new AsistenciaResponse(</span>
+<span class="fc" id="L109">                a.getIdAsistencia(),</span>
+<span class="fc" id="L110">                a.getSesion().getFecha(),</span>
+<span class="fc" id="L111">                a.getSesion().getCategoria().getNombre(),</span>
+<span class="fc" id="L112">                a.getHoraEntrada(),</span>
+<span class="fc" id="L113">                a.getEstado());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

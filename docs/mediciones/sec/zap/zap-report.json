@@ -1,0 +1,579 @@
+{
+	"@programName": "ZAP",
+	"@version": "2.17.0",
+	"@generated": "Fri, 14 Aug 2026 19:15:54",
+	"created": "2026-08-14T19:15:54.240469958Z",
+	"insights":[
+		{
+			"level": "Low",
+			"reason": "Warning",
+			"site": "",
+			"key": "insight.log.warn",
+			"description": "ZAP warnings logged - see the zap.log file for details",
+			"statistic": "2"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.code.2xx",
+			"description": "Percentage of responses with status code 2xx",
+			"statistic": "60"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.code.3xx",
+			"description": "Percentage of responses with status code 3xx",
+			"statistic": "6"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.code.4xx",
+			"description": "Percentage of responses with status code 4xx",
+			"statistic": "33"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.ctype.application/problem+json",
+			"description": "Percentage of endpoints with content type application/problem+json",
+			"statistic": "30"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.ctype.image/png",
+			"description": "Percentage of endpoints with content type image/png",
+			"statistic": "15"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.ctype.text/css",
+			"description": "Percentage of endpoints with content type text/css",
+			"statistic": "15"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.ctype.text/html",
+			"description": "Percentage of endpoints with content type text/html",
+			"statistic": "15"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.ctype.text/javascript",
+			"description": "Percentage of endpoints with content type text/javascript",
+			"statistic": "23"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.method.GET",
+			"description": "Percentage of endpoints with method GET",
+			"statistic": "100"
+		},
+		{
+			"level": "Info",
+			"reason": "Informational",
+			"site": "http://host.docker.internal:8080",
+			"key": "insight.endpoint.total",
+			"description": "Count of total endpoints",
+			"statistic": "13"
+		}
+	],
+	"site":[ 
+		{
+			"@name": "http://host.docker.internal:8080",
+			"@host": "host.docker.internal",
+			"@port": "8080",
+			"@ssl": "false",
+			"alerts": [ 
+				{
+					"pluginid": "10003",
+					"alertRef": "10003",
+					"alert": "Vulnerable JS Library",
+					"name": "Vulnerable JS Library",
+					"riskcode": "3",
+					"confidence": "2",
+					"riskdesc": "High (Medium)",
+					"desc": "<p>The identified library appears to be vulnerable.</p>",
+					"instances":[ 
+						{
+							"id": "10",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-bundle.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-bundle.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "DOMPurify.version=\"3.0.6\"",
+							"otherinfo": "The identified library DOMPurify, version 3.0.6 is vulnerable.\nCVE-2025-26791\nCVE-2026-66010\nCVE-2024-47875\nCVE-2026-41239\nCVE-2026-65899\nCVE-2026-41238\nCVE-2026-65898\nCVE-2026-65912\nCVE-2026-65901\nCVE-2026-65900\nCVE-2026-65914\nCVE-2026-65903\nCVE-2026-65913\nCVE-2026-65902\nCVE-2024-45801\nCVE-2026-41240\nCVE-2026-49978\nCVE-2026-49458\nCVE-2026-49459\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-gvmj-g25r-r7wr\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-c2j3-45gr-mqc4\nhttps://github.com/cure53/DOMPurify/commit/d18ffcb554e0001748865da03ac75dd7829f0f02\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-cj63-jhhr-wcxv\nhttps://github.com/cure53/DOMPurify/commit/6ea80cd8b47640c20f2f230c7920b1f4ce4fdf7a\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-39q2-94rc-95cp\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-r47g-fvhr-h676\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-h7mw-gpvr-xq4m\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-cjmm-f4jc-qw8r\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-cmwh-pvxp-8882\nhttps://github.com/cure53/DOMPurify/pull/1537\nhttps://nvd.nist.gov/vuln/detail/CVE-2024-45801\nhttps://github.com/advisories/GHSA-vhxf-7vqr-mrjg\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-mmhx-hmjr-r674\nhttps://github.com/advisories/GHSA-mmhx-hmjr-r674\nhttps://github.com/cure53/DOMPurify/commit/26e1d69ca7f769f5c558619d644d90dd8bf26ebc\nhttps://nvd.nist.gov/vuln/detail/CVE-2025-26791\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-gx9m-whjm-85jf\nhttps://github.com/cure53/DOMPurify/blob/0ef5e537a514f904b6aa1d7ad9e749e365d7185f/test/test-suite.js#L2098\nhttps://ensy.zip/posts/dompurify-323-bypass\nhttps://nsysean.github.io/posts/dompurify-323-bypass\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-rp9w-3fw7-7cwq\nhttps://github.com/cure53/DOMPurify/commit/1e520262bf4c66b5efda49e2316d6d1246ca7b21\nhttps://github.com/advisories/GHSA-gx9m-whjm-85jf\nhttps://github.com/cure53/DOMPurify/releases/tag/3.2.4\nhttps://github.com/cure53/DOMPurify/releases/tag/3.3.2\nhttps://github.com/cure53/DOMPurify/releases/tag/3.4.0\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-vxr8-fq34-vvx9\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-v9jr-rg53-9pgp\nhttps://github.com/cure53/DOMPurify/commit/0ef5e537a514f904b6aa1d7ad9e749e365d7185f\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-x4vx-rjvf-j5p4\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-hpcv-96wg-7vj8\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-h8r8-wccr-v5f2\nhttps://github.com/cure53/DOMPurify\nhttps://github.com/cure53/DOMPurify/releases/tag/3.4.12\nhttps://nvd.nist.gov/vuln/detail/CVE-2024-47875\nhttps://github.com/cure53/DOMPurify/commit/a9ca1e537422319a557a9a2aa61f003b23b4a197\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-crv5-9vww-q3g8\nhttps://github.com/cure53/DOMPurify/security/advisories/GHSA-76mc-f452-cxcm\n"
+						}
+					],
+					"count": "1",
+					"systemic": false,
+					"solution": "<p>Upgrade to the latest version of the affected library.</p>",
+					"otherinfo": "<p>The identified library DOMPurify, version 3.0.6 is vulnerable.</p><p>CVE-2025-26791</p><p>CVE-2026-66010</p><p>CVE-2024-47875</p><p>CVE-2026-41239</p><p>CVE-2026-65899</p><p>CVE-2026-41238</p><p>CVE-2026-65898</p><p>CVE-2026-65912</p><p>CVE-2026-65901</p><p>CVE-2026-65900</p><p>CVE-2026-65914</p><p>CVE-2026-65903</p><p>CVE-2026-65913</p><p>CVE-2026-65902</p><p>CVE-2024-45801</p><p>CVE-2026-41240</p><p>CVE-2026-49978</p><p>CVE-2026-49458</p><p>CVE-2026-49459</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-gvmj-g25r-r7wr</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-c2j3-45gr-mqc4</p><p>https://github.com/cure53/DOMPurify/commit/d18ffcb554e0001748865da03ac75dd7829f0f02</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-cj63-jhhr-wcxv</p><p>https://github.com/cure53/DOMPurify/commit/6ea80cd8b47640c20f2f230c7920b1f4ce4fdf7a</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-39q2-94rc-95cp</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-r47g-fvhr-h676</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-h7mw-gpvr-xq4m</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-cjmm-f4jc-qw8r</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-cmwh-pvxp-8882</p><p>https://github.com/cure53/DOMPurify/pull/1537</p><p>https://nvd.nist.gov/vuln/detail/CVE-2024-45801</p><p>https://github.com/advisories/GHSA-vhxf-7vqr-mrjg</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-mmhx-hmjr-r674</p><p>https://github.com/advisories/GHSA-mmhx-hmjr-r674</p><p>https://github.com/cure53/DOMPurify/commit/26e1d69ca7f769f5c558619d644d90dd8bf26ebc</p><p>https://nvd.nist.gov/vuln/detail/CVE-2025-26791</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-gx9m-whjm-85jf</p><p>https://github.com/cure53/DOMPurify/blob/0ef5e537a514f904b6aa1d7ad9e749e365d7185f/test/test-suite.js#L2098</p><p>https://ensy.zip/posts/dompurify-323-bypass</p><p>https://nsysean.github.io/posts/dompurify-323-bypass</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-rp9w-3fw7-7cwq</p><p>https://github.com/cure53/DOMPurify/commit/1e520262bf4c66b5efda49e2316d6d1246ca7b21</p><p>https://github.com/advisories/GHSA-gx9m-whjm-85jf</p><p>https://github.com/cure53/DOMPurify/releases/tag/3.2.4</p><p>https://github.com/cure53/DOMPurify/releases/tag/3.3.2</p><p>https://github.com/cure53/DOMPurify/releases/tag/3.4.0</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-vxr8-fq34-vvx9</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-v9jr-rg53-9pgp</p><p>https://github.com/cure53/DOMPurify/commit/0ef5e537a514f904b6aa1d7ad9e749e365d7185f</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-x4vx-rjvf-j5p4</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-hpcv-96wg-7vj8</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-h8r8-wccr-v5f2</p><p>https://github.com/cure53/DOMPurify</p><p>https://github.com/cure53/DOMPurify/releases/tag/3.4.12</p><p>https://nvd.nist.gov/vuln/detail/CVE-2024-47875</p><p>https://github.com/cure53/DOMPurify/commit/a9ca1e537422319a557a9a2aa61f003b23b4a197</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-crv5-9vww-q3g8</p><p>https://github.com/cure53/DOMPurify/security/advisories/GHSA-76mc-f452-cxcm</p><p></p>",
+					"reference": "<p>https://owasp.org/Top10/2021/A06_2021-Vulnerable_and_Outdated_Components/</p>",
+					"cweid": "1395",
+					"wascid": "-1",
+					"sourceid": "31"
+				},
+				{
+					"pluginid": "10055",
+					"alertRef": "10055-13",
+					"alert": "CSP: Failure to Define Directive with No Fallback",
+					"name": "CSP: Failure to Define Directive with No Fallback",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>The Content Security Policy fails to define one of the directives that has no fallback. Missing/excluding them is the same as allowing anything.</p>",
+					"instances":[ 
+						{
+							"id": "5",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; frame-ancestors 'none'",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "4",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.html",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.html",
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; frame-ancestors 'none'",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>",
+					"otherinfo": "<p>The directive(s): form-action is/are among the directives that do not fallback to default-src.</p>",
+					"reference": "<p>https://www.w3.org/TR/CSP/</p><p>https://caniuse.com/#search=content+security+policy</p><p>https://content-security-policy.com/</p><p>https://github.com/HtmlUnit/htmlunit-csp</p><p>https://web.dev/articles/csp#resource-options</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "90004",
+					"alertRef": "90004-2",
+					"alert": "Cross-Origin-Embedder-Policy Header Missing or Invalid",
+					"name": "Cross-Origin-Embedder-Policy Header Missing or Invalid",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>Cross-Origin-Embedder-Policy header is a response header that prevents a document from loading any cross-origin resources that don't explicitly grant the document permission (using CORP or CORS).</p>",
+					"instances":[ 
+						{
+							"id": "24",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "Cross-Origin-Embedder-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "23",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.html",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.html",
+							"method": "GET",
+							"param": "Cross-Origin-Embedder-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>Ensure that the application/web server sets the Cross-Origin-Embedder-Policy header appropriately, and that it sets the Cross-Origin-Embedder-Policy header to 'require-corp' for documents.</p><p>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Embedder-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-embedder-policy).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy</p>",
+					"cweid": "693",
+					"wascid": "14",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "90004",
+					"alertRef": "90004-3",
+					"alert": "Cross-Origin-Opener-Policy Header Missing or Invalid",
+					"name": "Cross-Origin-Opener-Policy Header Missing or Invalid",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>Cross-Origin-Opener-Policy header is a response header that allows a site to control if others included documents share the same browsing context. Sharing the same browsing context with untrusted documents might lead to data leak.</p>",
+					"instances":[ 
+						{
+							"id": "26",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "Cross-Origin-Opener-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "25",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.html",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.html",
+							"method": "GET",
+							"param": "Cross-Origin-Opener-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>Ensure that the application/web server sets the Cross-Origin-Opener-Policy header appropriately, and that it sets the Cross-Origin-Opener-Policy header to 'same-origin' for documents.</p><p>'same-origin-allow-popups' is considered as less secured and should be avoided.</p><p>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Opener-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-opener-policy).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Opener-Policy</p>",
+					"cweid": "693",
+					"wascid": "14",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "90004",
+					"alertRef": "90004-1",
+					"alert": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+					"name": "Cross-Origin-Resource-Policy Header Missing or Invalid",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>Cross-Origin-Resource-Policy header is an opt-in header designed to counter side-channels attacks like Spectre. Resource should be specifically set as shareable amongst different origins.</p>",
+					"instances":[ 
+						{
+							"id": "22",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "16",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/favicon-16x16.png",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/favicon-16x16.png",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "7",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/favicon-32x32.png",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/favicon-32x32.png",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "13",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.css",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.css",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "21",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.html",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.html",
+							"method": "GET",
+							"param": "Cross-Origin-Resource-Policy",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>Ensure that the application/web server sets the Cross-Origin-Resource-Policy header appropriately, and that it sets the Cross-Origin-Resource-Policy header to 'same-origin' for all web pages.</p><p>'same-site' is considered as less secured and should be avoided.</p><p>If resources must be shared, set the header to 'cross-origin'.</p><p>If possible, ensure that the end user uses a standards-compliant and modern web browser that supports the Cross-Origin-Resource-Policy header (https://caniuse.com/mdn-http_headers_cross-origin-resource-policy).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Cross-Origin-Embedder-Policy</p>",
+					"cweid": "693",
+					"wascid": "14",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "10063",
+					"alertRef": "10063-1",
+					"alert": "Permissions Policy Header Not Set",
+					"name": "Permissions Policy Header Not Set",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>Permissions Policy Header is an added layer of security that helps to restrict from unauthorized access or usage of browser/client features by web resources. This policy ensures the user privacy by limiting or specifying the features of the browsers can be used by the web resources. Permissions Policy provides a set of standard HTTP headers that allow website owners to limit which features of browsers can be used by the page such as camera, microphone, location, full screen etc.</p>",
+					"instances":[ 
+						{
+							"id": "20",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "19",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.html",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.html",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "30",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-initializer.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-initializer.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "86",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-bundle.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-bundle.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "84",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-standalone-preset.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-standalone-preset.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to set the Permissions-Policy header.</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Permissions-Policy</p><p>https://developer.chrome.com/blog/feature-policy/</p><p>https://scotthelme.co.uk/a-new-security-header-feature-policy/</p><p>https://w3c.github.io/webappsec-feature-policy/</p><p>https://www.smashingmagazine.com/2018/12/feature-policy/</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "10096",
+					"alertRef": "10096",
+					"alert": "Timestamp Disclosure - Unix",
+					"name": "Timestamp Disclosure - Unix",
+					"riskcode": "1",
+					"confidence": "1",
+					"riskdesc": "Low (Low)",
+					"desc": "<p>A timestamp was disclosed by the application/web server. - Unix</p>",
+					"instances":[ 
+						{
+							"id": "32",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-standalone-preset.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-standalone-preset.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1518500249",
+							"otherinfo": "1518500249, which evaluates to: 2018-02-13 05:37:29."
+						},
+						{
+							"id": "35",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-standalone-preset.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-standalone-preset.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1732584193",
+							"otherinfo": "1732584193, which evaluates to: 2024-11-26 01:23:13."
+						},
+						{
+							"id": "40",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-standalone-preset.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-standalone-preset.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1750603025",
+							"otherinfo": "1750603025, which evaluates to: 2025-06-22 14:37:05."
+						},
+						{
+							"id": "33",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-standalone-preset.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-standalone-preset.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1859775393",
+							"otherinfo": "1859775393, which evaluates to: 2028-12-07 04:16:33."
+						},
+						{
+							"id": "34",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/swagger-ui-standalone-preset.js",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/swagger-ui-standalone-preset.js",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "1894007588",
+							"otherinfo": "1894007588, which evaluates to: 2030-01-07 09:13:08."
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>Manually confirm that the timestamp data is not sensitive, and that the data cannot be aggregated to disclose exploitable patterns.</p>",
+					"otherinfo": "<p>1518500249, which evaluates to: 2018-02-13 05:37:29.</p>",
+					"reference": "<p>https://cwe.mitre.org/data/definitions/200.html</p>",
+					"cweid": "497",
+					"wascid": "13",
+					"sourceid": "30"
+				},
+				{
+					"pluginid": "10109",
+					"alertRef": "10109",
+					"alert": "Modern Web Application",
+					"name": "Modern Web Application",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The application appears to be a modern web application. If you need to explore it automatically then the Client Spider may well be more effective than the standard one.</p>",
+					"instances":[ 
+						{
+							"id": "8",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "<script src=\"./swagger-ui-bundle.js\" charset=\"UTF-8\"> </script>",
+							"otherinfo": "No links have been found while there are scripts, which is an indication that this is a modern web application."
+						},
+						{
+							"id": "9",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/index.html",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/index.html",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "<script src=\"./swagger-ui-bundle.js\" charset=\"UTF-8\"> </script>",
+							"otherinfo": "No links have been found while there are scripts, which is an indication that this is a modern web application."
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>This is an informational alert and so no changes are required.</p>",
+					"otherinfo": "<p>No links have been found while there are scripts, which is an indication that this is a modern web application.</p>",
+					"reference": "",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "10049",
+					"alertRef": "10049-1",
+					"alert": "Non-Storable Content",
+					"name": "Non-Storable Content",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The response contents are not storable by caching components such as proxy servers. If the response does not contain sensitive, personal or user-specific information, it may benefit from being stored and cached, to improve performance.</p>",
+					"instances":[ 
+						{
+							"id": "1",
+							"uri": "http://host.docker.internal:8080/",
+							"nodeName": "http:\/\/host.docker.internal:8080\/",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "no-store",
+							"otherinfo": ""
+						},
+						{
+							"id": "2",
+							"uri": "http://host.docker.internal:8080/api",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "no-store",
+							"otherinfo": ""
+						},
+						{
+							"id": "3",
+							"uri": "http://host.docker.internal:8080/api/docs",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/docs",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "no-store",
+							"otherinfo": ""
+						},
+						{
+							"id": "0",
+							"uri": "http://host.docker.internal:8080/api/swagger-ui/favicon-32x32.png",
+							"nodeName": "http:\/\/host.docker.internal:8080\/api\/swagger-ui\/favicon-32x32.png",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "no-store",
+							"otherinfo": ""
+						},
+						{
+							"id": "6",
+							"uri": "http://host.docker.internal:8080/sitemap.xml",
+							"nodeName": "http:\/\/host.docker.internal:8080\/sitemap.xml",
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "no-store",
+							"otherinfo": ""
+						}
+					],
+					"count": "5",
+					"systemic": true,
+					"solution": "<p>The content may be marked as storable by ensuring that the following conditions are satisfied:</p><p>The request method must be understood by the cache and defined as being cacheable (\"GET\", \"HEAD\", and \"POST\" are currently defined as cacheable)</p><p>The response status code must be understood by the cache (one of the 1XX, 2XX, 3XX, 4XX, or 5XX response classes are generally understood)</p><p>The \"no-store\" cache directive must not appear in the request or response header fields</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"private\" response directive must not appear in the response</p><p>For caching by \"shared\" caches such as \"proxy\" caches, the \"Authorization\" header field must not appear in the request, unless the response explicitly allows it (using one of the \"must-revalidate\", \"public\", or \"s-maxage\" Cache-Control response directives)</p><p>In addition to the conditions above, at least one of the following conditions must also be satisfied by the response:</p><p>It must contain an \"Expires\" header field</p><p>It must contain a \"max-age\" response directive</p><p>For \"shared\" caches such as \"proxy\" caches, it must contain a \"s-maxage\" response directive</p><p>It must contain a \"Cache Control Extension\" that allows it to be cached</p><p>It must have a status code that is defined as cacheable by default (200, 203, 204, 206, 300, 301, 404, 405, 410, 414, 501).</p>",
+					"otherinfo": "",
+					"reference": "<p>https://datatracker.ietf.org/doc/html/rfc7234</p><p>https://datatracker.ietf.org/doc/html/rfc7231</p><p>https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html</p>",
+					"cweid": "524",
+					"wascid": "13",
+					"sourceid": "4"
+				}
+			]
+		}
+	],
+	"sequences":[
+	]
+
+}

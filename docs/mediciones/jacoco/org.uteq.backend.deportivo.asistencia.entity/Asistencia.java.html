@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Asistencia.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.entity</a> &gt; <span class="el_source">Asistencia.java</span></div><h1>Asistencia.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+
+import java.time.Instant;
+import java.time.LocalTime;
+
+/**
+ * Asistencia de un estudiante a una sesion. Es la precondicion de la
+ * evaluacion diaria: sin PRESENTE o TARDE en la sesion, el entrenador no
+ * puede calificar a ese jugador.
+ *
+ * &lt;p&gt;{@code metodo} deja auditado COMO se marco: QR escaneado por el propio
+ * estudiante, RFID, o registro MANUAL de la recepcionista cuando el celular
+ * no esta disponible.
+ */
+@Entity
+@Table(name = &quot;asistencias&quot;, schema = &quot;deportivo&quot;)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Asistencia {
+
+    public static final String METODO_QR = &quot;QR&quot;;
+    public static final String METODO_MANUAL = &quot;MANUAL&quot;;
+    public static final String ESTADO_PRESENTE = &quot;PRESENTE&quot;;
+    public static final String ESTADO_TARDE = &quot;TARDE&quot;;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_asistencia&quot;)
+    private Long idAsistencia;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_sesion&quot;, nullable = false)
+    private SesionEntrenamiento sesion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_estudiante&quot;, nullable = false)
+    private Estudiante estudiante;
+
+    @Column(name = &quot;hora_entrada&quot;)
+    private LocalTime horaEntrada;
+
+    @Column(nullable = false, length = 10)
+    @Builder.Default
+    private String metodo = METODO_MANUAL;
+
+    @Column(nullable = false, length = 15)
+    private String estado;
+
+    @Column(length = 255)
+    private String observacion;
+
+    @CreationTimestamp
+    @Column(name = &quot;creado_en&quot;, updatable = false)
+    private Instant creadoEn;
+
+    @UpdateTimestamp
+    @Column(name = &quot;actualizado_en&quot;)
+    private Instant actualizadoEn;
+
+    /** Solo quien estuvo en el entrenamiento puede ser calificado. */
+    @Transient
+    public boolean habilitaEvaluacion() {
+<span class="fc bfc" id="L69" title="All 4 branches covered.">        return ESTADO_PRESENTE.equals(estado) || ESTADO_TARDE.equals(estado);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

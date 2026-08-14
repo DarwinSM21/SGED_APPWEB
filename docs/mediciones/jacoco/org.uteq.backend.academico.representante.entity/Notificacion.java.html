@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Notificacion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.entity</a> &gt; <span class="el_source">Notificacion.java</span></div><h1>Notificacion.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+
+import java.time.Instant;
+
+/**
+ * Notificacion en-app al representante (RF-22): se crea una fila por cada
+ * representante con vinculo activo al estudiante cuando este marca
+ * asistencia o se le registra una lesion. No hay envio de correo/SMS: no
+ * existe infraestructura externa para eso en este proyecto.
+ */
+@Entity
+@Table(name = &quot;notificaciones&quot;, schema = &quot;academico&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Notificacion {
+
+<span class="fc" id="L25">    public enum Tipo { ASISTENCIA, LESION }</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_notificacion&quot;)
+    private Long idNotificacion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_representante&quot;, nullable = false)
+    private Representante representante;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_estudiante&quot;, nullable = false)
+    private Estudiante estudiante;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Tipo tipo;
+
+    @Column(nullable = false, columnDefinition = &quot;text&quot;)
+    private String mensaje;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean leida = false;
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private Instant createdAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

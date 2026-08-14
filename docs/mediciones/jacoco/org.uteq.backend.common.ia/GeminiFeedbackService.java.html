@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeminiFeedbackService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.ia</a> &gt; <span class="el_source">GeminiFeedbackService.java</span></div><h1>GeminiFeedbackService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.ia;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClient;
+
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+/**
+ * Implementacion de {@link GeneradorFeedbackIA} contra la API de Gemini.
+ *
+ * &lt;p&gt;Decision de proveedor y de costo tomada por el equipo: nivel gratuito de
+ * Gemini, suficiente para el volumen del proyecto (~30 estudiantes/dia frente
+ * a limites de 250-1000 solicitudes diarias).
+ *
+ * &lt;p&gt;La clave se pasa en la cabecera {@code x-goog-api-key} y no como
+ * parametro de consulta. Google documenta ambas formas, pero un parametro de
+ * consulta viaja en la URL y termina en logs de acceso, historiales de proxy y
+ * cabeceras {@code Referer}. Para un proyecto con auditoria OWASP encima, la
+ * cabecera es la unica opcion defendible.
+ */
+@Service
+public class GeminiFeedbackService implements GeneradorFeedbackIA {
+
+<span class="fc" id="L32">    private static final Logger log = LoggerFactory.getLogger(GeminiFeedbackService.class);</span>
+    private static final String BASE_URL = &quot;https://generativelanguage.googleapis.com/v1beta&quot;;
+
+    /**
+     * Instruccion de sistema. Acota el registro y, sobre todo, prohibe al
+     * modelo inventar datos: el entrenador tiene que poder confiar en que el
+     * texto describe lo que realmente se midio.
+     */
+    private static final String INSTRUCCION_SISTEMA = &quot;&quot;&quot;
+            Eres un asistente que redacta retroalimentacion deportiva para una escuela
+            de futbol formativo con jugadores en edad escolar.
+
+            Reglas que debes cumplir siempre:
+            - Escribe en espanol neutro, en segunda persona del plural o impersonal.
+            - Maximo 3 frases. Sin listas, sin titulos, sin emojis.
+            - Basate unicamente en los datos numericos que recibes. No inventes
+              hechos, incidentes ni cualidades que no esten en los datos.
+            - Tono constructivo y apropiado para un menor de edad: senala un punto
+              fuerte y un aspecto a mejorar, nunca descalifiques a la persona.
+            - No hagas diagnosticos medicos ni recomendaciones de salud.
+            - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
+            &quot;&quot;&quot;;
+
+    private final RestClient restClient;
+    private final String apiKey;
+    private final String modelo;
+    private final boolean habilitado;
+
+    public GeminiFeedbackService(
+            @Value(&quot;${ia.gemini.api-key:}&quot;) String apiKey,
+            @Value(&quot;${ia.gemini.modelo:gemini-2.0-flash}&quot;) String modelo,
+            @Value(&quot;${ia.gemini.habilitado:false}&quot;) boolean habilitado,
+<span class="fc" id="L64">            @Value(&quot;${ia.gemini.timeout-segundos:8}&quot;) int timeoutSegundos) {</span>
+
+<span class="fc" id="L66">        this.apiKey = apiKey;</span>
+<span class="fc" id="L67">        this.modelo = modelo;</span>
+<span class="pc bpc" id="L68" title="1 of 6 branches missed.">        this.habilitado = habilitado &amp;&amp; apiKey != null &amp;&amp; !apiKey.isBlank();</span>
+
+<span class="fc" id="L70">        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();</span>
+        // Timeouts cortos a proposito: el entrenador califica desde el celular
+        // en la cancha, con mala conexion. Es preferible quedarse sin
+        // comentario a dejar la interfaz colgada.
+<span class="fc" id="L74">        factory.setConnectTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());</span>
+<span class="fc" id="L75">        factory.setReadTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());</span>
+
+<span class="fc" id="L77">        this.restClient = RestClient.builder()</span>
+<span class="fc" id="L78">                .baseUrl(BASE_URL)</span>
+<span class="fc" id="L79">                .requestFactory(factory)</span>
+<span class="fc" id="L80">                .build();</span>
+
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (!this.habilitado) {</span>
+<span class="fc" id="L83">            log.info(&quot;Feedback con IA deshabilitado: no hay clave de Gemini configurada &quot;</span>
+                    + &quot;o ia.gemini.habilitado=false. El sistema funciona sin comentarios generados.&quot;);
+        }
+<span class="fc" id="L86">    }</span>
+
+    @Override
+    public boolean estaDisponible() {
+<span class="fc" id="L90">        return habilitado;</span>
+    }
+
+    @Override
+    public ResultadoFeedback generarComentarioJugador(PerfilJugadorAnonimo perfil) {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        if (!habilitado) {</span>
+<span class="fc" id="L96">            return ResultadoFeedback.noDisponible(&quot;Generacion de texto deshabilitada&quot;);</span>
+        }
+<span class="fc" id="L98">        return invocar(construirPromptJugador(perfil));</span>
+    }
+
+    @Override
+    public ResultadoFeedback generarComentarioPlantilla(List&lt;PerfilJugadorAnonimo&gt; alineacion) {
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (!habilitado) {</span>
+<span class="nc" id="L104">            return ResultadoFeedback.noDisponible(&quot;Generacion de texto deshabilitada&quot;);</span>
+        }
+<span class="pc bpc" id="L106" title="2 of 4 branches missed.">        if (alineacion == null || alineacion.isEmpty()) {</span>
+<span class="fc" id="L107">            return ResultadoFeedback.noDisponible(&quot;La alineacion esta vacia&quot;);</span>
+        }
+<span class="nc" id="L109">        return invocar(construirPromptPlantilla(alineacion));</span>
+    }
+
+    // ------------------------------------------------------------------
+    // Construccion de prompts
+    //
+    // Solo se serializan campos de PerfilJugadorAnonimo. Ese record no tiene
+    // nombre, cedula, correo ni fecha de nacimiento, de modo que aqui no hay
+    // forma de filtrar identidad aunque se quisiera.
+    // ------------------------------------------------------------------
+
+    private String construirPromptJugador(PerfilJugadorAnonimo p) {
+<span class="fc" id="L121">        var sb = new StringBuilder();</span>
+<span class="fc" id="L122">        sb.append(&quot;Redacta la retroalimentacion del entrenamiento de hoy para este jugador.\n\n&quot;);</span>
+<span class="fc" id="L123">        sb.append(&quot;Categoria: &quot;).append(p.categoria()).append('\n');</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">        if (p.posicion() != null) {</span>
+<span class="fc" id="L125">            sb.append(&quot;Posicion en la que jugo: &quot;).append(p.posicion()).append('\n');</span>
+        }
+<span class="fc" id="L127">        sb.append(&quot;Puntajes de hoy (sobre 10): &quot;).append(formatear(p.puntajes())).append('\n');</span>
+<span class="pc bpc" id="L128" title="1 of 2 branches missed.">        if (!p.puntajesPrevios().isEmpty()) {</span>
+<span class="fc" id="L129">            sb.append(&quot;Promedio historico: &quot;).append(formatear(p.puntajesPrevios())).append('\n');</span>
+        }
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">        if (p.asistenciasUltimoMes() != null) {</span>
+<span class="fc" id="L132">            sb.append(&quot;Sesiones asistidas en el ultimo mes: &quot;).append(p.asistenciasUltimoMes()).append('\n');</span>
+        }
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        if (p.lesionado()) {</span>
+<span class="nc" id="L135">            sb.append(&quot;Arrastra una lesion activa: no sugieras aumentar la carga fisica.\n&quot;);</span>
+        }
+<span class="fc" id="L137">        return sb.toString();</span>
+    }
+
+    private String construirPromptPlantilla(List&lt;PerfilJugadorAnonimo&gt; alineacion) {
+<span class="nc" id="L141">        var sb = new StringBuilder();</span>
+<span class="nc" id="L142">        sb.append(&quot;Comenta brevemente esta alineacion, ya seleccionada por el sistema &quot;)</span>
+<span class="nc" id="L143">          .append(&quot;segun puntaje acumulado. No propongas cambios de jugadores ni de posiciones: &quot;)</span>
+<span class="nc" id="L144">          .append(&quot;eso ya lo decidio el algoritmo. Basandote solo en los puntajes dados, &quot;)</span>
+<span class="nc" id="L145">          .append(&quot;señala una fortaleza del once planteado y un aspecto a vigilar &quot;)</span>
+<span class="nc" id="L146">          .append(&quot;(por ejemplo un puntaje mas bajo en alguna posicion o criterio).\n\n&quot;);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">        for (var p : alineacion) {</span>
+<span class="nc" id="L148">            sb.append(&quot;- &quot;).append(p.referencia())</span>
+<span class="nc bnc" id="L149" title="All 2 branches missed.">              .append(&quot; (&quot;).append(p.posicion() == null ? &quot;sin posicion&quot; : p.posicion()).append(&quot;): &quot;)</span>
+<span class="nc" id="L150">              .append(formatear(p.puntajes())).append('\n');</span>
+<span class="nc" id="L151">        }</span>
+<span class="nc" id="L152">        return sb.toString();</span>
+    }
+
+    private String formatear(Map&lt;String, Double&gt; puntajes) {
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        if (puntajes.isEmpty()) {</span>
+<span class="nc" id="L157">            return &quot;sin datos&quot;;</span>
+        }
+<span class="fc" id="L159">        return puntajes.entrySet().stream()</span>
+<span class="fc" id="L160">                .sorted(Map.Entry.comparingByKey())</span>
+<span class="fc" id="L161">                .map(e -&gt; e.getKey() + &quot; &quot; + e.getValue())</span>
+<span class="fc" id="L162">                .collect(Collectors.joining(&quot;, &quot;));</span>
+    }
+
+    // ------------------------------------------------------------------
+    // Invocacion
+    // ------------------------------------------------------------------
+
+    private ResultadoFeedback invocar(String prompt) {
+        try {
+<span class="fc" id="L171">            var cuerpo = Map.of(</span>
+<span class="fc" id="L172">                    &quot;systemInstruction&quot;, Map.of(</span>
+<span class="fc" id="L173">                            &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, INSTRUCCION_SISTEMA))),</span>
+<span class="fc" id="L174">                    &quot;contents&quot;, List.of(Map.of(</span>
+<span class="fc" id="L175">                            &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, prompt)))),</span>
+<span class="fc" id="L176">                    &quot;generationConfig&quot;, Map.of(</span>
+<span class="fc" id="L177">                            &quot;temperature&quot;, 0.4,</span>
+                            // Los modelos &quot;-latest&quot; actuales razonan antes de responder y ese
+                            // pensamiento interno tambien consume maxOutputTokens (~600-700
+                            // tokens tipicos vistos en pruebas reales); con un limite bajo la
+                            // respuesta visible quedaba cortada a mitad de frase.
+<span class="fc" id="L182">                            &quot;maxOutputTokens&quot;, 2048));</span>
+
+<span class="fc" id="L184">            JsonNode respuesta = restClient.post()</span>
+<span class="fc" id="L185">                    .uri(&quot;/models/{modelo}:generateContent&quot;, modelo)</span>
+<span class="fc" id="L186">                    .header(&quot;x-goog-api-key&quot;, apiKey)</span>
+<span class="fc" id="L187">                    .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L188">                    .body(cuerpo)</span>
+<span class="nc" id="L189">                    .retrieve()</span>
+<span class="nc" id="L190">                    .body(JsonNode.class);</span>
+
+<span class="nc" id="L192">            String texto = extraerTexto(respuesta);</span>
+<span class="nc bnc" id="L193" title="All 4 branches missed.">            if (texto == null || texto.isBlank()) {</span>
+                // Ocurre cuando el filtro de seguridad del proveedor bloquea la
+                // respuesta: hay 200 OK pero sin contenido utilizable.
+<span class="nc" id="L196">                log.warn(&quot;Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)&quot;);</span>
+<span class="nc" id="L197">                return ResultadoFeedback.noDisponible(&quot;El modelo no devolvio texto&quot;);</span>
+            }
+<span class="nc" id="L199">            return ResultadoFeedback.ok(texto.trim());</span>
+
+<span class="fc" id="L201">        } catch (Exception e) {</span>
+            // Se registra el tipo de fallo, nunca el prompt: aunque va
+            // seudonimizado, no hay razon para duplicarlo en los logs.
+<span class="fc" id="L204">            log.warn(&quot;No se pudo generar feedback con IA: {}&quot;, e.getClass().getSimpleName());</span>
+<span class="fc" id="L205">            return ResultadoFeedback.noDisponible(&quot;El servicio de generacion no respondio&quot;);</span>
+        }
+    }
+
+    private String extraerTexto(JsonNode respuesta) {
+<span class="nc bnc" id="L210" title="All 2 branches missed.">        if (respuesta == null) {</span>
+<span class="nc" id="L211">            return null;</span>
+        }
+<span class="nc" id="L213">        JsonNode parts = respuesta.path(&quot;candidates&quot;).path(0).path(&quot;content&quot;).path(&quot;parts&quot;);</span>
+<span class="nc bnc" id="L214" title="All 4 branches missed.">        if (!parts.isArray() || parts.isEmpty()) {</span>
+<span class="nc" id="L215">            return null;</span>
+        }
+<span class="nc" id="L217">        return parts.get(0).path(&quot;text&quot;).asText(null);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

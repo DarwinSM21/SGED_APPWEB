@@ -9,7 +9,20 @@ import jakarta.validation.constraints.Size;
         @NotNull(message = &quot;El ID de estado general es obligatorio&quot;) Long idEstadoGeneral,
         @NotBlank(message = &quot;El nombre de usuario es obligatorio&quot;)
         @Size(min = 4, max = 50, message = &quot;El username debe tener entre 4 y 50 caracteres&quot;) String username,
-        @NotBlank(message = &quot;La contraseña es obligatoria&quot;)
-        @Size(min = 6, message = &quot;La contraseña debe tener al menos 6 caracteres&quot;) String password
+        /**
+         * Opcional al editar: en blanco significa &quot;no cambiar la contraseña
+         * actual&quot;. Obligatoria al crear (validado a mano en
+         * UsuarioService.crear, ya que @NotBlank no puede depender de si es
+         * alta o edicion en el mismo DTO). @Size es null-safe: no dispara si
+         * el valor es null.
+         */
+        @Size(min = 6, message = &quot;La contraseña debe tener al menos 6 caracteres&quot;) String password,
+        /**
+         * Opcional. Si viene, se valida contra seguridad.roles y se asigna al
+         * crear (mismo criterio que AuthController.registro, pero sin forzar
+         * una Persona nueva). Si es null, el usuario queda sin rol -- caso de
+         * edicion, que no toca los roles existentes.
+         */
+        String rol
 ) {}
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

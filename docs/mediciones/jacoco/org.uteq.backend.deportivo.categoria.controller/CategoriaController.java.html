@@ -28,19 +28,19 @@ public class CategoriaController {
     private final CategoriaService categoriaService;
 
     @GetMapping
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;Page&lt;CategoriaResponse&gt;&gt; listarPaginado(Pageable pageable) {
 <span class="fc" id="L33">        return ResponseEntity.ok(categoriaService.listarPaginado(pageable));</span>
     }
 
     @GetMapping(&quot;/activas&quot;)
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;List&lt;CategoriaResponse&gt;&gt; listarActivas() {
 <span class="fc" id="L39">        return ResponseEntity.ok(categoriaService.listarTodasActivas());</span>
     }
 
     @GetMapping(&quot;/{id}&quot;)
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'USER')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; buscarPorId(@PathVariable Long id) {
 <span class="nc" id="L45">        return ResponseEntity.ok(categoriaService.buscarPorId(id));</span>
     }

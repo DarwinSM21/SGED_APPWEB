@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovimientoStock.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.movimiento.entity</a> &gt; <span class="el_source">MovimientoStock.java</span></div><h1>MovimientoStock.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.movimiento.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.uteq.backend.inventario.articulo.entity.Articulo;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+
+import java.time.Instant;
+
+/**
+ * Ledger de entradas/salidas/ajustes de stock. Independiente de a quien
+ * se le entrega algo (eso lo cubre inventario.asignaciones): este es el
+ * historial de &quot;cuanto entro/salio del deposito&quot;.
+ */
+@Entity
+@Table(name = &quot;movimientos_stock&quot;, schema = &quot;inventario&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class MovimientoStock {
+
+<span class="fc" id="L25">    public enum TipoMovimiento { ENTRADA, SALIDA, AJUSTE }</span>
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_movimiento&quot;)
+    private Long idMovimiento;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_articulo&quot;, nullable = false)
+    private Articulo articulo;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = &quot;tipo_movimiento&quot;, nullable = false, length = 10)
+    private TipoMovimiento tipoMovimiento;
+
+    @Column(nullable = false)
+    private Integer cantidad;
+
+    @Column(length = 255)
+    private String motivo;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;registrado_por_id_usuario&quot;, nullable = false)
+    private Usuario registradoPor;
+
+    @Column(name = &quot;fecha_movimiento&quot;, nullable = false)
+    @Builder.Default
+    private Instant fechaMovimiento = Instant.now();
+
+    @CreationTimestamp
+    @Column(name = &quot;created_at&quot;, updatable = false)
+    private Instant createdAt;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RepresentanteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.service</a> &gt; <span class="el_source">RepresentanteService.java</span></div><h1>RepresentanteService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.representante.dto.RepresentantePageResponse;
+import org.uteq.backend.academico.representante.dto.RepresentanteRequest;
+import org.uteq.backend.academico.representante.dto.RepresentanteResponse;
+import org.uteq.backend.academico.representante.dto.RepresentanteResponse.EstudianteVinculadoResponse;
+import org.uteq.backend.academico.representante.dto.VinculoRequest;
+import org.uteq.backend.academico.representante.entity.Representante;
+import org.uteq.backend.academico.representante.entity.RepresentanteEstudiante;
+import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
+import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+import java.util.List;
+
+/**
+ * CRUD administrativo de Representante. El alta y la vinculacion con
+ * estudiantes son operaciones de ADMINISTRADOR (mismo criterio que
+ * Entrenador): un representante no se autoregistra, lo da de alta un
+ * administrador ya vinculandolo a sus representados.
+ */
+@Service
+@RequiredArgsConstructor
+public class RepresentanteService {
+
+    private final RepresentanteRepository representanteRepository;
+    private final RepresentanteEstudianteRepository vinculoRepository;
+    private final PersonaRepository personaRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final EstudianteRepository estudianteRepository;
+
+    @Transactional(readOnly = true)
+    public RepresentantePageResponse&lt;RepresentanteResponse&gt; listar(Pageable pageable) {
+<span class="fc" id="L45">        Page&lt;Representante&gt; page = representanteRepository.findByActivoTrue(pageable);</span>
+<span class="fc" id="L46">        var content = page.getContent().stream().map(this::toResponse).toList();</span>
+<span class="fc" id="L47">        return new RepresentantePageResponse&lt;&gt;(</span>
+<span class="fc" id="L48">                content, page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());</span>
+    }
+
+    @Transactional(readOnly = true)
+    public RepresentanteResponse buscarPorId(Long id) {
+<span class="fc" id="L53">        Representante r = representanteRepository.findById(id)</span>
+<span class="pc" id="L54">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Representante no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L55">        return toResponse(r);</span>
+    }
+
+    @Transactional
+    public RepresentanteResponse crear(RepresentanteRequest request) {
+<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (representanteRepository.existsByPersona_IdPersona(request.idPersona())) {</span>
+<span class="fc" id="L61">            throw new IllegalArgumentException(&quot;La persona ya está registrada como representante&quot;);</span>
+        }
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (representanteRepository.existsByUsuario_IdUsuario(request.idUsuario())) {</span>
+<span class="fc" id="L64">            throw new IllegalArgumentException(&quot;El usuario ya está asignado a otro representante&quot;);</span>
+        }
+
+<span class="fc" id="L67">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="pc" id="L68">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
+<span class="fc" id="L69">        Usuario usuario = usuarioRepository.findById(request.idUsuario())</span>
+<span class="pc" id="L70">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + request.idUsuario()));</span>
+
+<span class="fc" id="L72">        boolean tieneRolRepresentante = usuario.getRoles().stream()</span>
+<span class="fc" id="L73">                .anyMatch(r -&gt; &quot;REPRESENTANTE&quot;.equals(r.getNombre()));</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        if (!tieneRolRepresentante) {</span>
+<span class="fc" id="L75">            throw new IllegalArgumentException(</span>
+                    &quot;El usuario debe tener el rol REPRESENTANTE para registrarse como representante&quot;);
+        }
+
+<span class="fc" id="L79">        Representante representante = Representante.builder()</span>
+<span class="fc" id="L80">                .persona(persona)</span>
+<span class="fc" id="L81">                .usuario(usuario)</span>
+<span class="fc" id="L82">                .parentesco(request.parentesco())</span>
+<span class="fc" id="L83">                .telefonoContacto(request.telefonoContacto())</span>
+<span class="fc" id="L84">                .activo(true)</span>
+<span class="fc" id="L85">                .build();</span>
+<span class="fc" id="L86">        representante = representanteRepository.save(representante);</span>
+
+<span class="fc" id="L88">        List&lt;Long&gt; idsIniciales = request.idsEstudiantesIniciales();</span>
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">        if (idsIniciales != null) {</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">            for (Long idEstudiante : idsIniciales) {</span>
+<span class="fc" id="L91">                vincular(representante, idEstudiante);</span>
+<span class="fc" id="L92">            }</span>
+        }
+
+<span class="fc" id="L95">        return toResponse(representante);</span>
+    }
+
+    @Transactional
+    public RepresentanteResponse editar(Long id, RepresentanteRequest request) {
+<span class="nc" id="L100">        Representante representante = representanteRepository.findById(id)</span>
+<span class="nc" id="L101">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Representante no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L102">        representante.setParentesco(request.parentesco());</span>
+<span class="nc" id="L103">        representante.setTelefonoContacto(request.telefonoContacto());</span>
+<span class="nc" id="L104">        representante = representanteRepository.save(representante);</span>
+<span class="nc" id="L105">        return toResponse(representante);</span>
+    }
+
+    @Transactional
+    public void eliminar(Long id) {
+<span class="fc" id="L110">        Representante representante = representanteRepository.findById(id)</span>
+<span class="pc" id="L111">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Representante no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L112">        representante.setActivo(false);</span>
+<span class="fc" id="L113">        representanteRepository.save(representante);</span>
+<span class="fc" id="L114">    }</span>
+
+    @Transactional
+    public RepresentanteResponse vincularEstudiante(Long idRepresentante, Long idEstudiante, VinculoRequest request) {
+<span class="fc" id="L118">        Representante representante = representanteRepository.findById(idRepresentante)</span>
+<span class="pc" id="L119">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Representante no encontrado con id: &quot; + idRepresentante));</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        String relacion = request == null ? null : request.relacion();</span>
+<span class="pc bpc" id="L121" title="2 of 4 branches missed.">        boolean contactoPrincipal = request != null &amp;&amp; Boolean.TRUE.equals(request.contactoPrincipal());</span>
+<span class="fc" id="L122">        vincular(representante, idEstudiante, relacion, contactoPrincipal);</span>
+<span class="fc" id="L123">        return toResponse(representante);</span>
+    }
+
+    /** Baja logica del vinculo puntual: no toca la cuenta ni los demas representados. */
+    @Transactional
+    public void desvincularEstudiante(Long idRepresentante, Long idEstudiante) {
+<span class="fc" id="L129">        RepresentanteEstudiante vinculo = vinculoRepository</span>
+<span class="fc" id="L130">                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(idRepresentante, idEstudiante)</span>
+<span class="fc" id="L131">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Ese estudiante no está vinculado a este representante&quot;));</span>
+<span class="fc" id="L132">        vinculo.setActivo(false);</span>
+<span class="fc" id="L133">        vinculoRepository.save(vinculo);</span>
+<span class="fc" id="L134">    }</span>
+
+    private void vincular(Representante representante, Long idEstudiante) {
+<span class="fc" id="L137">        vincular(representante, idEstudiante, null, false);</span>
+<span class="fc" id="L138">    }</span>
+
+    private void vincular(Representante representante, Long idEstudiante,
+                          String relacion, boolean contactoPrincipal) {
+<span class="fc" id="L142">        Estudiante estudiante = estudianteRepository.findById(idEstudiante)</span>
+<span class="fc" id="L143">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>
+
+        // Un estudiante tiene un solo contacto principal: designar uno nuevo
+        // desplaza al anterior en vez de dejar dos marcados.
+<span class="fc bfc" id="L147" title="All 2 branches covered.">        if (contactoPrincipal) {</span>
+<span class="fc" id="L148">            vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(idEstudiante).stream()</span>
+<span class="pc bpc" id="L149" title="1 of 2 branches missed.">                    .filter(v -&gt; !v.getRepresentante().getIdRepresentante().equals(representante.getIdRepresentante()))</span>
+<span class="fc" id="L150">                    .filter(v -&gt; Boolean.TRUE.equals(v.getContactoPrincipal()))</span>
+<span class="fc" id="L151">                    .forEach(v -&gt; {</span>
+<span class="fc" id="L152">                        v.setContactoPrincipal(false);</span>
+<span class="fc" id="L153">                        vinculoRepository.save(v);</span>
+<span class="fc" id="L154">                    });</span>
+        }
+
+<span class="fc" id="L157">        vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(</span>
+<span class="fc" id="L158">                        representante.getIdRepresentante(), idEstudiante)</span>
+<span class="fc" id="L159">                .ifPresentOrElse(</span>
+                        existente -&gt; {
+<span class="nc" id="L161">                            existente.setActivo(true);</span>
+<span class="nc" id="L162">                            existente.setRelacion(relacion);</span>
+<span class="nc" id="L163">                            existente.setContactoPrincipal(contactoPrincipal);</span>
+<span class="nc" id="L164">                            vinculoRepository.save(existente);</span>
+<span class="nc" id="L165">                        },</span>
+<span class="fc" id="L166">                        () -&gt; vinculoRepository.save(RepresentanteEstudiante.builder()</span>
+<span class="fc" id="L167">                                .representante(representante)</span>
+<span class="fc" id="L168">                                .estudiante(estudiante)</span>
+<span class="fc" id="L169">                                .activo(true)</span>
+<span class="fc" id="L170">                                .relacion(relacion)</span>
+<span class="fc" id="L171">                                .contactoPrincipal(contactoPrincipal)</span>
+<span class="fc" id="L172">                                .build())</span>
+                );
+<span class="fc" id="L174">    }</span>
+
+    private RepresentanteResponse toResponse(Representante r) {
+<span class="fc" id="L177">        List&lt;EstudianteVinculadoResponse&gt; representados =</span>
+<span class="fc" id="L178">                vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(r.getIdRepresentante()).stream()</span>
+<span class="pc" id="L179">                        .map(v -&gt; new EstudianteVinculadoResponse(</span>
+<span class="nc" id="L180">                                v.getEstudiante().getIdEstudiante(),</span>
+<span class="nc" id="L181">                                v.getEstudiante().getPersona().getNombre() + &quot; &quot; + v.getEstudiante().getPersona().getApellido(),</span>
+<span class="nc" id="L182">                                v.getEstudiante().getCategoria().getNombre(),</span>
+<span class="nc" id="L183">                                v.getRelacion(),</span>
+<span class="nc" id="L184">                                v.getContactoPrincipal()))</span>
+<span class="fc" id="L185">                        .toList();</span>
+
+<span class="fc" id="L187">        return new RepresentanteResponse(</span>
+<span class="fc" id="L188">                r.getIdRepresentante(),</span>
+<span class="fc" id="L189">                r.getPersona().getIdPersona(),</span>
+<span class="fc" id="L190">                r.getPersona().getNombre(),</span>
+<span class="fc" id="L191">                r.getPersona().getApellido(),</span>
+<span class="fc" id="L192">                r.getPersona().getCedula(),</span>
+<span class="fc" id="L193">                r.getPersona().getCorreo(),</span>
+<span class="fc" id="L194">                r.getUsuario().getIdUsuario(),</span>
+<span class="fc" id="L195">                r.getUsuario().getUsername(),</span>
+<span class="fc" id="L196">                r.getParentesco(),</span>
+<span class="fc" id="L197">                r.getTelefonoContacto(),</span>
+<span class="fc" id="L198">                r.getActivo(),</span>
+<span class="fc" id="L199">                r.getCreatedAt(),</span>
+                representados
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LesionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.lesion.controller</a> &gt; <span class="el_source">LesionController.java</span></div><h1>LesionController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.lesion.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.deportivo.lesion.dto.LesionDtos.*;
+import org.uteq.backend.deportivo.lesion.entity.Lesion;
+import org.uteq.backend.deportivo.lesion.service.LesionService;
+
+/**
+ * Lesiones. Las registra el entrenador; la recepcionista no interviene.
+ *
+ * &lt;p&gt;La descripcion es un dato de salud de un menor, asi que la lectura queda
+ * restringida a entrenador y administrador. Un rol USER no tiene por que ver
+ * el historial medico de nadie.
+ *
+ * &lt;p&gt;Los cuatro metodos llevan {@code @Transactional} propio: aResponse()
+ * navega Lesion -&amp;gt; Estudiante -&amp;gt; Persona (ambas relaciones LAZY), y
+ * open-in-view esta deshabilitado en este proyecto (application.yml), asi
+ * que sin una transaccion activa en el momento de mapear, esa navegacion
+ * lanza LazyInitializationException. El propio LesionService ya es
+ * transaccional, pero esa transaccion se cierra al volver aqui.
+ */
+@RestController
+@RequestMapping(&quot;/api/lesiones&quot;)
+@RequiredArgsConstructor
+public class LesionController {
+
+    private final LesionService lesionService;
+
+    @GetMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;Page&lt;LesionResponse&gt;&gt; listarActivas(
+            @PageableDefault(size = 20) Pageable pageable) {
+<span class="nc" id="L43">        return ResponseEntity.ok(lesionService.listarActivas(pageable).map(this::aResponse));</span>
+    }
+
+    @GetMapping(&quot;/estudiante/{idEstudiante}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;Page&lt;LesionResponse&gt;&gt; historial(
+            @PathVariable Long idEstudiante,
+            @PageableDefault(size = 20) Pageable pageable) {
+<span class="nc" id="L52">        return ResponseEntity.ok(lesionService.historialDe(idEstudiante, pageable).map(this::aResponse));</span>
+    }
+
+    @PostMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @Transactional
+    public ResponseEntity&lt;LesionResponse&gt; registrar(@Valid @RequestBody RegistrarLesionRequest request) {
+<span class="nc" id="L59">        var lesion = lesionService.registrar(</span>
+<span class="nc" id="L60">                request.idEstudiante(), request.idEntrenador(), request.descripcion(),</span>
+<span class="nc" id="L61">                request.fechaLesion(), request.fechaEstimadaRetorno());</span>
+<span class="nc" id="L62">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(lesion));</span>
+    }
+
+    @PostMapping(&quot;/{idLesion}/alta&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @Transactional
+    public ResponseEntity&lt;LesionResponse&gt; darDeAlta(@PathVariable Long idLesion,
+                                                    @RequestBody(required = false) DarDeAltaRequest request) {
+<span class="nc bnc" id="L70" title="All 2 branches missed.">        var fecha = request == null ? null : request.fechaAlta();</span>
+<span class="nc" id="L71">        return ResponseEntity.ok(aResponse(lesionService.darDeAlta(idLesion, fecha)));</span>
+    }
+
+    private LesionResponse aResponse(Lesion l) {
+<span class="nc" id="L75">        var persona = l.getEstudiante().getPersona();</span>
+<span class="nc" id="L76">        return new LesionResponse(</span>
+<span class="nc" id="L77">                l.getIdLesion(),</span>
+<span class="nc" id="L78">                l.getEstudiante().getIdEstudiante(),</span>
+<span class="nc" id="L79">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="nc" id="L80">                l.getDescripcion(),</span>
+<span class="nc" id="L81">                l.getFechaLesion(),</span>
+<span class="nc" id="L82">                l.getFechaEstimadaRetorno(),</span>
+<span class="nc" id="L83">                l.getFechaAlta(),</span>
+<span class="nc" id="L84">                l.estaActiva());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

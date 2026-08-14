@@ -227,6 +227,34 @@
 					</argLine>
 				</configuration>
 			</plugin>
+			<!-- Bloque A.2.3 / A.1 (Entrega Final): analisis estatico de seguridad
+			     sobre concatenacion de SQL. find-sec-bugs (plugin de SpotBugs)
+			     con el filtro de inclusion en spotbugs-security-include.xml,
+			     que restringe el chequeo a los detectores de inyeccion SQL
+			     (incluye SQL_NONCONSTANT_STRING_PASSED_TO_EXECUTE y sus
+			     variantes JDBC/JPA/Hibernate/Spring), no al ruleset completo:
+			     el requisito de la guia es esa regla especifica, no una
+			     auditoria general de calidad de codigo. haltOnError=false por
+			     la misma razon que el check de JaCoCo de arriba: se quiere ver
+			     el reporte antes de que rompa el build. -->
+			<plugin>
+				<groupId>com.github.spotbugs</groupId>
+				<artifactId>spotbugs-maven-plugin</artifactId>
+				<version>4.8.6.4</version>
+				<configuration>
+					<effort>Max</effort>
+					<threshold>Low</threshold>
+					<failOnError>false</failOnError>
+					<includeFilterFile>${project.basedir}/spotbugs-security-include.xml</includeFilterFile>
+					<plugins>
+						<plugin>
+							<groupId>com.h3xstream.findsecbugs</groupId>
+							<artifactId>findsecbugs-plugin</artifactId>
+							<version>1.13.0</version>
+						</plugin>
+					</plugins>
+				</configuration>
+			</plugin>
 		</plugins>
 	</build>
 

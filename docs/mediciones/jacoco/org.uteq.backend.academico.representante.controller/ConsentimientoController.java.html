@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConsentimientoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.controller</a> &gt; <span class="el_source">ConsentimientoController.java</span></div><h1>ConsentimientoController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.academico.representante.dto.ConsentimientoDtos.*;
+import org.uteq.backend.academico.representante.service.ConsentimientoService;
+
+import java.util.List;
+
+/**
+ * Administra el consentimiento del representante (hallazgo H-04 de
+ * ETHICS.md). Solo ADMINISTRADOR: en esta iteracion el representante no
+ * otorga su propio consentimiento desde la app, lo registra un
+ * administrador.
+ */
+@RestController
+@RequestMapping(&quot;/api/consentimientos&quot;)
+@RequiredArgsConstructor
+@PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+public class ConsentimientoController {
+
+    private final ConsentimientoService consentimientoService;
+
+    @PostMapping
+    public ResponseEntity&lt;ConsentimientoResponse&gt; otorgar(@Valid @RequestBody OtorgarConsentimientoRequest request) {
+<span class="fc" id="L31">        String usernameAdmin = SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L32">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L33">                .body(consentimientoService.otorgar(request, usernameAdmin));</span>
+    }
+
+    @PostMapping(&quot;/{id}/revocar&quot;)
+    public ResponseEntity&lt;ConsentimientoResponse&gt; revocar(@PathVariable Long id) {
+<span class="fc" id="L38">        String usernameAdmin = SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L39">        return ResponseEntity.ok(consentimientoService.revocar(id, usernameAdmin));</span>
+    }
+
+    @GetMapping(&quot;/estudiante/{idEstudiante}&quot;)
+    public ResponseEntity&lt;List&lt;ConsentimientoResponse&gt;&gt; listarPorEstudiante(@PathVariable Long idEstudiante) {
+<span class="fc" id="L44">        return ResponseEntity.ok(consentimientoService.listarPorEstudiante(idEstudiante));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

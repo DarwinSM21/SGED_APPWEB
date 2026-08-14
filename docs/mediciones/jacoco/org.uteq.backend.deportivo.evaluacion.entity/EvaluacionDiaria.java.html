@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EvaluacionDiaria.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.entity</a> &gt; <span class="el_source">EvaluacionDiaria.java</span></div><h1>EvaluacionDiaria.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Cabecera de la evaluacion de una sesion: una por sesion de entrenamiento.
+ *
+ * &lt;p&gt;Nace en BORRADOR y se guarda sola mientras el entrenador trabaja, para
+ * que no pierda lo cargado si se le corta la conexion en la cancha. Pasa a
+ * FINALIZADA cuando la cierra explicitamente.
+ */
+@Entity
+@Table(name = &quot;evaluaciones_diarias&quot;, schema = &quot;deportivo&quot;)
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class EvaluacionDiaria {
+
+    public static final String BORRADOR = &quot;BORRADOR&quot;;
+    public static final String FINALIZADA = &quot;FINALIZADA&quot;;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_evaluacion&quot;)
+    private Long idEvaluacion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_sesion&quot;, nullable = false, unique = true)
+    private SesionEntrenamiento sesion;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = &quot;id_entrenador&quot;, nullable = false)
+    private Entrenador entrenador;
+
+    @Column(nullable = false)
+    private LocalDate fecha;
+
+    @Column(name = &quot;observacion_general&quot;, columnDefinition = &quot;text&quot;)
+    private String observacionGeneral;
+
+    @Column(nullable = false, length = 15)
+    @Builder.Default
+    private String estado = BORRADOR;
+
+    @OneToMany(mappedBy = &quot;evaluacion&quot;, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List&lt;EvaluacionEstudiante&gt; jugadores = new ArrayList&lt;&gt;();
+
+    @CreationTimestamp
+    @Column(name = &quot;creado_en&quot;, updatable = false)
+    private Instant creadoEn;
+
+    @UpdateTimestamp
+    @Column(name = &quot;actualizado_en&quot;)
+    private Instant actualizadoEn;
+
+    @Transient
+    public boolean estaFinalizada() {
+<span class="fc" id="L67">        return FINALIZADA.equals(estado);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

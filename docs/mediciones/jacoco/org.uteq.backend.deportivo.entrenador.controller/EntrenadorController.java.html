@@ -16,7 +16,9 @@ import org.uteq.backend.deportivo.entrenador.service.EntrenadorService;
 /**
  * CRUD de Entrenador. El alta y la baja crean o retiran el vinculo con una
  * cuenta de usuario, por lo que son operaciones administrativas; la consulta
- * la comparten ADMINISTRADOR y ENTRENADOR.
+ * la comparten ADMINISTRADOR, ENTRENADOR y RECEPCIONISTA (esta ultima
+ * necesita listar entrenadores para asignarles articulos de inventario,
+ * ver org.uteq.backend.inventario.asignacion).
  */
 @RestController
 @RequestMapping(&quot;/api/entrenadores&quot;)
@@ -26,22 +28,22 @@ public class EntrenadorController {
     private final EntrenadorService entrenadorService;
 
     @GetMapping
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;EntrenadorPageResponse&lt;EntrenadorResponse&gt;&gt; listar(
             @PageableDefault(size = 10) Pageable pageable) {
-<span class="fc" id="L32">        return ResponseEntity.ok(entrenadorService.listar(pageable));</span>
+<span class="fc" id="L34">        return ResponseEntity.ok(entrenadorService.listar(pageable));</span>
     }
 
     @GetMapping(&quot;/{id}&quot;)
-    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;EntrenadorResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L38">        return ResponseEntity.ok(entrenadorService.buscarPorId(id));</span>
+<span class="nc" id="L40">        return ResponseEntity.ok(entrenadorService.buscarPorId(id));</span>
     }
 
     @PostMapping
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;EntrenadorResponse&gt; crear(@Valid @RequestBody EntrenadorRequest request) {
-<span class="fc" id="L44">        return ResponseEntity.status(HttpStatus.CREATED).body(entrenadorService.crear(request));</span>
+<span class="fc" id="L46">        return ResponseEntity.status(HttpStatus.CREATED).body(entrenadorService.crear(request));</span>
     }
 
     @PutMapping(&quot;/{id}&quot;)
@@ -49,14 +51,14 @@ public class EntrenadorController {
     public ResponseEntity&lt;EntrenadorResponse&gt; editar(
             @PathVariable Long id,
             @Valid @RequestBody EntrenadorRequest request) {
-<span class="nc" id="L52">        return ResponseEntity.ok(entrenadorService.editar(id, request));</span>
+<span class="nc" id="L54">        return ResponseEntity.ok(entrenadorService.editar(id, request));</span>
     }
 
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L58">        entrenadorService.eliminar(id);</span>
-<span class="fc" id="L59">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L60">        entrenadorService.eliminar(id);</span>
+<span class="fc" id="L61">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
