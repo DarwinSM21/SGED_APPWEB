@@ -479,6 +479,34 @@ hallazgos. \textbf{Calidad web (Lighthouse) sigue pendiente}: este
 entorno de ejecución no tiene un navegador Chrome/Chromium instalable
 en esta sesión; queda para una corrida posterior con el entorno
 completo.
+
+\textbf{Actualización adicional (2026-08-14, sesión posterior):} el
+\textbf{pendiente crítico} señalado arriba —pruebas para
+\texttt{PagoController}/\texttt{PagoService} y \texttt{LesionController}—
+ya está resuelto: ambos módulos tienen suites propias
+(\texttt{PagoControllerTest}, \texttt{PagoServiceTest},
+\texttt{LesionControllerTest}, \texttt{LesionServiceTest}). Se agregaron
+además pruebas dirigidas a las ramas sin cubrir de mayor impacto en todo
+el \emph{bundle}: \texttt{JwtAuthenticationFilter} (que no tenía ninguna
+prueba propia), \texttt{AuthController} en sus rutas de \emph{logout},
+\emph{refresh} y \texttt{/me} (tampoco las tenían), y el filtro de
+búsqueda de \texttt{AuditoriaService} (invisible para JaCoCo mientras el
+repositorio estuviera mockeado, aunque \texttt{buscar()} sí tuviera
+prueba). Cobertura verificada con \texttt{mvn verify} en limpio:
+\textbf{369 pruebas, 0 fallos}; agregada, \textbf{86,2\,\% de líneas} y
+\textbf{71,2\,\% de \emph{branches}} — ambas superan por primera vez el
+70\,\% exigido sobre el \emph{bundle} completo. La regla de JaCoCo pasó
+de \texttt{haltOnFailure=false} (advertía en el log sin romper el
+\emph{build}) a \texttt{haltOnFailure=true}: el umbral ya se hace
+cumplir, no solo se declara. El reporte archivado en
+\ruta{docs/mediciones/jacoco/} corresponde a esta corrida. De paso se
+corrigió un defecto de \emph{test} preexistente y no relacionado con la
+cobertura: una prueba de \texttt{AsistenciaServiceTest} construía su hora
+de referencia con \texttt{LocalTime.now().plusHours(1)} sin protegerse
+del cruce de medianoche (\texttt{LocalTime} no tiene fecha), y fallaba de
+forma intermitente según la hora del día en que corriera la suite —sus
+dos pruebas hermanas ya protegían el caso simétrico de restar, a esta le
+faltaba el de sumar.
 \end{quote}
 
 La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
