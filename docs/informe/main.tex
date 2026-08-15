@@ -935,6 +935,12 @@ propia entrada del SRS (por ejemplo, RF-06 contra
 \texttt{LoginAttemptServiceTest.bloqueada\_al\_alcanzar\_el\_limite}) — una
 forma continua de validación por criterios de aceptación medidos, en el
 sentido que describe Pohl~\cite{pohl2010}, no solo una revisión puntual.
+Es el mismo problema de fondo que aborda la recuperación automática de
+enlaces de trazabilidad requisito-código en la literatura reciente
+—vincular cada requisito con la evidencia de código que lo satisface—,
+solo que aquí se resuelve declarando el nombre de la prueba en el
+propio SRS en vez de inferirlo después con métodos de recuperación
+automática~\cite{wang2024traceability}.
 No se realizaron todavía \emph{walkthroughs} formales ni prototipado
 evolutivo documentado como técnica de validación separada.
 
@@ -2052,7 +2058,10 @@ manual de \ruta{scripts/audit-sql-dynamic.sh}
 (sección~\ref{sec:acceso-datos}), pero esta vez con una herramienta de
 análisis de bytecode independiente, no un \emph{grep} de patrones de
 texto. El comando ya forma parte del \emph{pipeline} de CI
-(\ruta{.github/workflows/ci.yml}).
+(\ruta{.github/workflows/ci.yml}), en la línea de lo que Rostami
+Mazrae~\emph{et al.} documentan sobre cómo los equipos de desarrollo
+adoptan, combinan y migran entre herramientas de CI/CD en la
+práctica~\cite{rostamimazrae2023cicd}.
 
 \textbf{Escaneo OWASP ZAP baseline.} Modo pasivo contra
 \texttt{/api/docs} (15 URL rastreadas desde la especificación OpenAPI):
@@ -2309,7 +2318,11 @@ Final, no solo un número que aprobó por poco.
 \section{Reproducibilidad}
 
 El sistema se levanta completo desde una clonación limpia con un solo
-comando:
+comando, siguiendo la misma motivación que documentan Cito y Gall para
+usar contenedores como mecanismo de reproducibilidad en investigación
+de ingeniería de software: encapsular las suposiciones y dependencias
+que de otro modo quedan como conocimiento tácito del
+equipo~\cite{citogall2016docker}:
 
 \begin{lstlisting}[language=bash,caption={Arranque reproducible}]
 git clone https://github.com/DarwinSM21/SGED_APPWEB.git
