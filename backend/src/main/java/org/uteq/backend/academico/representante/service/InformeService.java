@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.dto.InformeDtos.*;
 import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
@@ -43,6 +44,7 @@ public class InformeService {
 
     private final RepresentanteRepository representanteRepository;
     private final RepresentanteEstudianteRepository vinculoRepository;
+    private final EstudianteRepository estudianteRepository;
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     private final AsistenciaRepository asistenciaRepository;
@@ -77,6 +79,25 @@ public class InformeService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante))
                 .getEstudiante();
 
+        return construirInforme(estudiante);
+    }
+
+    /**
+     * Informe del propio ESTUDIANTE autenticado: mismas piezas que
+     * informeDe() (promedio por criterio, historial de lesiones, % de
+     * asistencia), pero sin el chequeo de vinculo -aqui la unica
+     * autorizacion que hace falta es "es su propia cuenta"-.
+     */
+    @Transactional(readOnly = true)
+    public InformeEstudianteResponse miInforme(String username) {
+        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+        return construirInforme(estudiante);
+    }
+
+    private InformeEstudianteResponse construirInforme(Estudiante estudiante) {
+        Long idEstudiante = estudiante.getIdEstudiante();
+
         List<PromedioCriterioResponse> promedios = evaluacionEstudianteRepository
                 .promedioHistoricoPorCriterio(idEstudiante).stream()
                 .map(fila -> new PromedioCriterioResponse(
@@ -95,7 +116,7 @@ public class InformeService {
                 .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);
 
         return new InformeEstudianteResponse(
-                estudiante.getIdEstudiante(),
+                idEstudiante,
                 estudiante.getPersona().getNombre() + " " + estudiante.getPersona().getApellido(),
                 estudiante.getCategoria().getNombre(),
                 promedios,

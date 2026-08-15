@@ -83,6 +83,44 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
             </button>
 
             @if (estaExpandido(j.idEstudiante)) {
+              <div class="panel-lesion">
+                @if (!j.lesionado) {
+                  @if (formularioLesionAbierto() === j.idEstudiante) {
+                    <div class="form-lesion">
+                      <label class="campo-lesion">
+                        <span>Descripción</span>
+                        <textarea rows="2" placeholder="¿Qué le pasó?"
+                                  [ngModel]="descripcionLesion()" (ngModelChange)="descripcionLesion.set($event)"></textarea>
+                      </label>
+                      <label class="campo-lesion">
+                        <span>Fecha estimada de retorno (opcional)</span>
+                        <input type="date" [ngModel]="fechaRetornoLesion()" (ngModelChange)="fechaRetornoLesion.set($event)" />
+                      </label>
+                      @if (errorLesion()) { <p class="alert alert--danger">{{ errorLesion() }}</p> }
+                      <div class="acciones-lesion">
+                        <button type="button" class="btn btn--danger btn--sm" (click)="guardarLesion(j)" [disabled]="guardandoLesion()">
+                          @if (guardandoLesion()) { <span class="spinner"></span> Guardando… } @else { Guardar }
+                        </button>
+                        <button type="button" class="btn btn--ghost btn--sm" (click)="cancelarFormularioLesion()">Cancelar</button>
+                      </div>
+                    </div>
+                  } @else {
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="abrirFormularioLesion(j.idEstudiante)">
+                      Marcar lesión
+                    </button>
+                  }
+                } @else {
+                  <div class="lesion-activa">
+                    @if (errorLesion() && dandoDeAlta() === j.idEstudiante) {
+                      <p class="alert alert--danger">{{ errorLesion() }}</p>
+                    }
+                    <button type="button" class="btn btn--secondary btn--sm" (click)="darDeAlta(j)" [disabled]="dandoDeAlta() === j.idEstudiante">
+                      @if (dandoDeAlta() === j.idEstudiante) { <span class="spinner"></span> Dando de alta… } @else { Dar de alta }
+                    </button>
+                  </div>
+                }
+              </div>
+
               @if (!j.puedeEvaluarse) {
                 <p class="motivo">{{ j.motivoBloqueo }}</p>
               } @else {
@@ -174,6 +212,18 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
     .motivo { margin: 0 .95rem .9rem; color: var(--color-text-muted); font-size: .875rem; }
     .criterios { padding: .2rem .95rem .95rem; border-top: 1px solid var(--color-border-light); }
 
+    .panel-lesion { padding: .7rem .95rem; border-top: 1px solid var(--color-border-light); }
+    .btn--sm { padding: .4rem .8rem; font-size: .8rem; }
+    .form-lesion { display: flex; flex-direction: column; gap: .7rem; }
+    .campo-lesion { display: flex; flex-direction: column; gap: .35rem; font-size: .8rem; font-weight: 600; color: var(--color-text); }
+    .campo-lesion textarea, .campo-lesion input {
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      padding: .6rem .7rem; font-size: .85rem; font-family: inherit;
+      background: var(--color-surface); color: var(--color-text); resize: vertical;
+    }
+    .acciones-lesion { display: flex; gap: .5rem; }
+    .lesion-activa { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
+
     .criterio { display: block; margin-top: .9rem; }
     .criterio-nombre { display: flex; justify-content: space-between; font-size: .875rem; margin-bottom: .3rem; }
     .criterio-nombre b { color: var(--color-primary-600); }
@@ -213,6 +263,15 @@ export class EvaluacionDiariaComponent implements OnInit {
   readonly error = signal<string | null>(null);
   readonly finalizando = signal(false);
   readonly expandidos = signal<Set<number>>(new Set());
+
+  /** Formulario inline de "Marcar lesión": qué jugador lo tiene abierto, o null si ninguno. */
+  readonly formularioLesionAbierto = signal<number | null>(null);
+  readonly descripcionLesion = signal('');
+  readonly fechaRetornoLesion = signal('');
+  readonly guardandoLesion = signal(false);
+  /** idEstudiante de quien se está dando de alta ahora mismo, o null. */
+  readonly dandoDeAlta = signal<number | null>(null);
+  readonly errorLesion = signal('');
 
   private idSesion!: number;
 
@@ -312,6 +371,61 @@ export class EvaluacionDiariaComponent implements OnInit {
         this.sesion.set({ ...s, estado: 'FINALIZADA' });
       },
       error: () => { this.finalizando.set(false); },
+    });
+  }
+
+  abrirFormularioLesion(idEstudiante: number): void {
+    this.errorLesion.set('');
+    this.descripcionLesion.set('');
+    this.fechaRetornoLesion.set('');
+    this.formularioLesionAbierto.set(idEstudiante);
+  }
+
+  cancelarFormularioLesion(): void {
+    this.formularioLesionAbierto.set(null);
+    this.errorLesion.set('');
+  }
+
+  guardarLesion(jugador: JugadorEvaluable): void {
+    const descripcion = this.descripcionLesion().trim();
+    if (!descripcion) {
+      this.errorLesion.set('Describí qué le pasó antes de guardar.');
+      return;
+    }
+    this.errorLesion.set('');
+    this.guardandoLesion.set(true);
+
+    this.servicio.registrarLesion(
+      jugador.idEstudiante, descripcion, this.fechaRetornoLesion() || undefined,
+    ).subscribe({
+      next: (lesion) => {
+        jugador.lesionado = true;
+        jugador.idLesion = lesion.idLesion;
+        this.guardandoLesion.set(false);
+        this.formularioLesionAbierto.set(null);
+      },
+      error: (err) => {
+        this.guardandoLesion.set(false);
+        this.errorLesion.set(err?.error?.detail ?? 'No se pudo registrar la lesión.');
+      },
+    });
+  }
+
+  darDeAlta(jugador: JugadorEvaluable): void {
+    if (!jugador.idLesion || this.dandoDeAlta() === jugador.idEstudiante) return;
+    this.errorLesion.set('');
+    this.dandoDeAlta.set(jugador.idEstudiante);
+
+    this.servicio.darDeAltaLesion(jugador.idLesion).subscribe({
+      next: () => {
+        jugador.lesionado = false;
+        jugador.idLesion = null;
+        this.dandoDeAlta.set(null);
+      },
+      error: (err) => {
+        this.dandoDeAlta.set(null);
+        this.errorLesion.set(err?.error?.detail ?? 'No se pudo dar de alta la lesión.');
+      },
     });
   }
 

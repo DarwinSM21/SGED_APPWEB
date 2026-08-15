@@ -1,5 +1,6 @@
 package org.uteq.backend;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,10 +12,15 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
+import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.controller.LesionController;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.service.LesionService;
@@ -22,6 +28,7 @@ import org.uteq.backend.seguridad.persona.entity.Persona;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -36,6 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class LesionControllerTest {
 
     @Mock private LesionService lesionService;
+    @Mock private EntrenadorRepository entrenadorRepository;
 
     @InjectMocks private LesionController controller;
 
@@ -47,6 +55,17 @@ class LesionControllerTest {
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .build();
+    }
+
+    @AfterEach
+    void limpiarContextoDeSeguridad() {
+        SecurityContextHolder.clearContext();
+    }
+
+    private void autenticarComo(String username, String rol) {
+        var auth = new UsernamePasswordAuthenticationToken(
+                username, null, List.of(new SimpleGrantedAuthority("ROLE_" + rol)));
+        SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
     /**
@@ -103,8 +122,9 @@ class LesionControllerTest {
     // --- POST /api/lesiones ---
 
     @Test
-    @DisplayName("registrar devuelve 201 con la lesion activa recien creada")
+    @DisplayName("registrar devuelve 201 con la lesion activa recien creada (ADMINISTRADOR, con idEntrenador en el body)")
     void registrar_devuelve_201() throws Exception {
+        autenticarComo("admin@sged.test", "ADMINISTRADOR");
         when(lesionService.registrar(eq(1L), eq(2L), eq("Esguince de tobillo"), any(), any()))
                 .thenReturn(lesion(10L, true));
 
@@ -119,6 +139,7 @@ class LesionControllerTest {
     @Test
     @DisplayName("registrar propaga como 400 una segunda lesion activa del mismo estudiante")
     void registrar_segunda_lesion_activa_da_400() throws Exception {
+        autenticarComo("admin@sged.test", "ADMINISTRADOR");
         when(lesionService.registrar(any(), any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException(
                         "El estudiante ya tiene una lesion activa registrada el 2026-08-01. Da de alta esa antes de registrar otra."));
@@ -136,6 +157,44 @@ class LesionControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idEstudiante\":1,\"idEntrenador\":2,\"descripcion\":\"\"}"))
                 .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    @DisplayName("registrar ignora el idEntrenador del body si quien llama es ENTRENADOR: usa el propio")
+    void registrar_entrenador_ignora_idEntrenador_del_body() throws Exception {
+        autenticarComo("carlos@sged.test", "ENTRENADOR");
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test"))
+                .thenReturn(Optional.of(Entrenador.builder().idEntrenador(5L).build()));
+        when(lesionService.registrar(eq(1L), eq(5L), eq("Esguince de tobillo"), any(), any()))
+                .thenReturn(lesion(10L, true));
+
+        mockMvc.perform(post("/api/lesiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idEstudiante\":1,\"idEntrenador\":999,\"descripcion\":\"Esguince de tobillo\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("registrar da 404 si la cuenta ENTRENADOR no tiene fila de entrenador asociada")
+    void registrar_entrenador_sin_fila_asociada_da_404() throws Exception {
+        autenticarComo("huerfano@sged.test", "ENTRENADOR");
+        when(entrenadorRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/lesiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idEstudiante\":1,\"descripcion\":\"Esguince de tobillo\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("registrar da 400 si ADMINISTRADOR no manda idEntrenador")
+    void registrar_administrador_sin_idEntrenador_da_400() throws Exception {
+        autenticarComo("admin@sged.test", "ADMINISTRADOR");
+
+        mockMvc.perform(post("/api/lesiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"idEstudiante\":1,\"descripcion\":\"Esguince de tobillo\"}"))
+                .andExpect(status().isBadRequest());
     }
 
     // --- POST /api/lesiones/{id}/alta ---

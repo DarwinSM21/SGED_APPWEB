@@ -10,9 +10,16 @@ public final class LesionDtos {
 
     private LesionDtos() {}
 
+    /**
+     * idEntrenador es opcional desde el body: una cuenta ENTRENADOR lo
+     * resuelve del token (ver LesionController.idEntrenadorEfectivo), asi
+     * que ya no lo necesita mandar. Una cuenta ADMINISTRADOR si debe
+     * mandarlo -no tiene un id de entrenador propio- y el controller
+     * responde 400 si vino en null en ese caso.
+     */
     public record RegistrarLesionRequest(
             @NotNull Long idEstudiante,
-            @NotNull Long idEntrenador,
+            Long idEntrenador,
             @NotBlank @Size(max = 1000) String descripcion,
             LocalDate fechaLesion,
             LocalDate fechaEstimadaRetorno

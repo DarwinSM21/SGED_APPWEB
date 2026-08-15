@@ -27,6 +27,8 @@ export interface JugadorEvaluable {
    */
   precargado: boolean;
   lesionado: boolean;
+  /** id de la lesion activa, para poder dar de alta; null si no esta lesionado. */
+  idLesion: number | null;
   /** false si no marco asistencia: la ficha va bloqueada. */
   puedeEvaluarse: boolean;
   motivoBloqueo: string | null;

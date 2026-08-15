@@ -612,6 +612,41 @@ esa dependencia.
 
 ---
 
+**RF-31 — Registro y alta de lesiones** ✅ Implementado (2026-08-14)
+*El sistema deberá permitir al entrenador registrar una lesión de un
+estudiante (descripción y fecha estimada de retorno opcional), impidiendo
+una segunda lesión activa simultánea del mismo estudiante, y deberá
+permitir darla de alta cuando el estudiante se recupera.*
+Esquema: `deportivo.lesiones` (`LesionController`, `LesionService`); el
+backend ya existía de una revisión anterior, pero sin frontend que lo
+consumiera. Se agregaron los botones "Marcar lesión" / "Dar de alta" a la
+pantalla de Evaluación diaria del entrenador, y se endureció
+`LesionController.registrar`: el `idEntrenador` de una cuenta ENTRENADOR
+ya no sale del cuerpo de la petición (que un entrenador podía manipular
+para registrar una lesión "a nombre de" otro), sino que se resuelve del
+token autenticado, mismo criterio que `SesionEntrenamientoController`.
+
+---
+
+**RF-32 — Autoconsulta del estudiante sobre su equipo y desempeño** ✅ Implementado (2026-08-14)
+*El sistema deberá permitir a un estudiante autenticado consultar su
+propia categoría, su posición nominal, el entrenador de su próxima
+sesión programada, sus compañeros de equipo (solo nombre y posición, sin
+datos de contacto ni promedios — son menores de edad) y sus propias
+estadísticas de evaluación (promedio histórico por criterio, porcentaje
+de asistencia de los últimos 30 días e historial de lesiones propio).*
+`MiEquipoController` (`GET /api/estudiante/mi-equipo`,
+`GET /api/estudiante/mi-informe`), solo rol ESTUDIANTE. Las estadísticas
+reutilizan tal cual la lógica que `InformeService` ya usaba para el
+informe que el representante ve de un representado (`construirInforme`,
+extraído como método común); el equipo es un endpoint nuevo
+(`MiEquipoService`) que cruza `academico.estudiantes`,
+`deportivo.categorias`, `deportivo.posiciones` y la sesión futura más
+próxima de `deportivo.sesiones_entrenamiento` para resolver el
+entrenador asignado.
+
+---
+
 ### 3.4 Módulo de inventario (nuevo en esta revisión)
 
 > **Cierra el schema `inventario`** que `ADR-003` había reservado como

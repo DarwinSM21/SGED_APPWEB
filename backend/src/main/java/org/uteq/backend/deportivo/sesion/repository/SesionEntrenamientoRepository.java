@@ -24,4 +24,13 @@ public interface SesionEntrenamientoRepository extends JpaRepository<SesionEntre
 
     /** Idempotencia de HorarioService.generarSesionesDeHoy(): no duplicar la sesion de un horario ya generada hoy. */
     boolean existsByHorario_IdHorarioAndFecha(Long idHorario, LocalDate fecha);
+
+    /**
+     * Sesion futura mas proxima de una categoria, para saber "quien es mi
+     * entrenador" desde el punto de vista del estudiante. Se usa con
+     * PageRequest.of(0, 1): la primera fila es la respuesta, lista vacia
+     * significa que no hay ninguna sesion programada todavia.
+     */
+    List<SesionEntrenamiento> findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+            Long idCategoria, LocalDate fecha, Pageable pageable);
 }

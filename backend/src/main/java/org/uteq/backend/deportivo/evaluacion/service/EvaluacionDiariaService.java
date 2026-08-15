@@ -66,7 +66,10 @@ public class EvaluacionDiariaService {
                         .build()));
 
         List<CriterioEvaluacion> criterios = criterioRepository.findByActivoTrueOrderByIdCriterioAsc();
-        Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
+        Map<Long, Long> lesionActivaPorEstudiante = new HashMap<>();
+        for (Object[] fila : lesionRepository.idsYLesionActivaPorEstudiante()) {
+            lesionActivaPorEstudiante.put((Long) fila[0], (Long) fila[1]);
+        }
 
         // Evaluacion previa de la misma categoria: fuente de la precarga.
         Long idEvaluacionPrevia = buscarEvaluacionPrevia(sesion);
@@ -74,7 +77,7 @@ public class EvaluacionDiariaService {
         List<JugadorEvaluableResponse> jugadores = new ArrayList<>();
         for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {
             jugadores.add(construirJugador(
-                    asistencia, evaluacion, idEvaluacionPrevia, lesionados));
+                    asistencia, evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
         }
         jugadores.sort(Comparator.comparing(JugadorEvaluableResponse::nombreCompleto));
 
@@ -93,7 +96,7 @@ public class EvaluacionDiariaService {
     private JugadorEvaluableResponse construirJugador(Asistencia asistencia,
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
-                                                      Set<Long> lesionados) {
+                                                      Map<Long, Long> lesionActivaPorEstudiante) {
         var estudiante = asistencia.getEstudiante();
         Long idEstudiante = estudiante.getIdEstudiante();
         var persona = estudiante.getPersona();
@@ -130,13 +133,15 @@ public class EvaluacionDiariaService {
             precargado = !puntajes.isEmpty();
         }
 
+        Long idLesionActiva = lesionActivaPorEstudiante.get(idEstudiante);
         return new JugadorEvaluableResponse(
                 idEstudiante, nombre,
                 estudiante.getCategoria().getNombre(),
                 idPosicion, posicion,
                 asistencia.getEstado(),
                 puntajes, precargado,
-                lesionados.contains(idEstudiante),
+                idLesionActiva != null,
+                idLesionActiva,
                 puedeEvaluarse, motivo);
     }
 

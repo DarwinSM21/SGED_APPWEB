@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
@@ -33,6 +34,9 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     /** Resuelve el estudiante a partir del usuario autenticado (JWT -> username). */
     Optional<Estudiante> findByUsuario_Username(String username);
+
+    /** Companeros de equipo: los demas estudiantes activos de la misma categoria. */
+    List<Estudiante> findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(Long idCategoria, Long idEstudiante);
 
     boolean existsByUsuario_IdUsuario(Long idUsuario);
 

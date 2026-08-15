@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import {
-  EvaluacionSesion, GuardarJugadorRequest, EstadoGuardado,
+  EvaluacionSesion, GuardarJugadorRequest, EstadoGuardado, Lesion,
 } from './evaluacion.models';
 
 /**
@@ -55,6 +55,19 @@ export class EvaluacionService {
   finalizar(idSesion: number, observacionGeneral: string): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/sesion/${idSesion}/finalizar`, observacionGeneral);
+  }
+
+  /**
+   * idEntrenador no va en el body: el backend lo resuelve del token para
+   * una cuenta ENTRENADOR (ver LesionController.idEntrenadorEfectivo), asi
+   * que nadie puede registrar una lesion "a nombre de" otro entrenador.
+   */
+  registrarLesion(idEstudiante: number, descripcion: string, fechaEstimadaRetorno?: string): Observable<Lesion> {
+    return this.http.post<Lesion>('/api/lesiones', { idEstudiante, descripcion, fechaEstimadaRetorno });
+  }
+
+  darDeAltaLesion(idLesion: number): Observable<Lesion> {
+    return this.http.post<Lesion>(`/api/lesiones/${idLesion}/alta`, {});
   }
 
   /**

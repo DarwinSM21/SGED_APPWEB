@@ -28,6 +28,8 @@ public final class EvaluacionDtos {
      *                       se han confirmado hoy; la interfaz puede marcarlos
      *                       para que el entrenador sepa que son heredados
      * @param lesionado      arrastra lesion activa
+     * @param idLesion       id de esa lesion activa, para poder dar de alta
+     *                       sin una consulta aparte; null si no esta lesionado
      * @param puedeEvaluarse false si no marco asistencia: la ficha va bloqueada
      */
     public record JugadorEvaluableResponse(
@@ -41,6 +43,7 @@ public final class EvaluacionDtos {
             Map<String, BigDecimal> puntajes,
             boolean precargado,
             boolean lesionado,
+            Long idLesion,
             boolean puedeEvaluarse,
             String motivoBloqueo
     ) {}

@@ -49,6 +49,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
   ESTUDIANTE: [
     { etiqueta: 'Marcar asistencia', ruta: '/estudiante/marcar-asistencia', icono: 'qr' },
     { etiqueta: 'Mi historial', ruta: '/estudiante/mi-historial', icono: 'calendario' },
+    { etiqueta: 'Mi equipo', ruta: '/estudiante/mi-equipo', icono: 'familia' },
   ],
 };
 

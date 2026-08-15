@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.dto.InformeDtos.EstudianteResumenResponse;
 import org.uteq.backend.academico.representante.dto.InformeDtos.InformeEstudianteResponse;
 import org.uteq.backend.academico.representante.entity.Representante;
@@ -49,6 +50,7 @@ class InformeServiceTest {
 
     @Mock private RepresentanteRepository representanteRepository;
     @Mock private RepresentanteEstudianteRepository vinculoRepository;
+    @Mock private EstudianteRepository estudianteRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
@@ -153,6 +155,39 @@ class InformeServiceTest {
         assertThat(informe.promediosPorCriterio().get(0).promedio()).isEqualTo(7.5);
         assertThat(informe.historialLesiones()).hasSize(1);
         assertThat(informe.historialLesiones().get(0).activa()).isTrue();
+        assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
+    }
+
+    @Test
+    @DisplayName("miInforme responde 404 si la cuenta no tiene fila de estudiante asociada")
+    void miInforme_sin_estudiante_asociado_lanza_excepcion() {
+        when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> informeService.miInforme("huerfano@sged.test"))
+                .isInstanceOf(RecursoNoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("miInforme arma el mismo DTO que informeDe, resuelto por la cuenta autenticada")
+    void miInforme_devuelve_el_informe_del_propio_estudiante() {
+        Estudiante yo = estudiante(10L, "Juan");
+        Lesion lesion = Lesion.builder()
+                .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
+                .fechaAlta(null).build();
+
+        when(estudianteRepository.findByUsuario_Username("juan.hijo@sged.test")).thenReturn(Optional.of(yo));
+        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+                .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
+        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
+                .thenReturn((Page<Lesion>) new PageImpl<>(List.of(lesion)));
+        when(asistenciaRepository.calcularPorcentajeAsistencia(eq(10L), any(LocalDate.class), any(LocalDate.class)))
+                .thenReturn(new BigDecimal("85.71"));
+
+        InformeEstudianteResponse informe = informeService.miInforme("juan.hijo@sged.test");
+
+        assertThat(informe.nombreCompleto()).isEqualTo("Juan Hijo");
+        assertThat(informe.promediosPorCriterio()).hasSize(1);
+        assertThat(informe.historialLesiones()).hasSize(1);
         assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
     }
 }

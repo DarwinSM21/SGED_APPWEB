@@ -17,9 +17,12 @@ import org.uteq.backend.deportivo.evaluacion.repository.*;
 import org.uteq.backend.deportivo.evaluacion.service.EvaluacionDiariaService;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+import org.uteq.backend.seguridad.persona.entity.Persona;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -58,6 +61,7 @@ class EvaluacionDiariaServiceTest {
     private Estudiante estudiante() {
         return Estudiante.builder()
                 .idEstudiante(ID_ESTUDIANTE)
+                .persona(Persona.builder().nombre("Juan").apellido("Perez").build())
                 .categoria(Categoria.builder().idCategoria(3L).nombre("SUB-12").build())
                 .build();
     }
@@ -198,5 +202,32 @@ class EvaluacionDiariaServiceTest {
 
         assertThrows(RecursoNoEncontradoException.class, () -> servicio.abrir(ID_SESION));
         verify(evaluacionRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("abrir trae el idLesion del jugador con lesion activa, y null para el que no la tiene")
+    void abrirTraeIdLesionDelJugadorLesionado() {
+        var categoria = Categoria.builder().idCategoria(3L).nombre("SUB-12").build();
+        var sesion = SesionEntrenamiento.builder()
+                .idSesion(ID_SESION).categoria(categoria).fecha(LocalDate.of(2026, 8, 14)).build();
+
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion));
+        when(evaluacionRepository.findBySesionIdSesion(ID_SESION)).thenReturn(Optional.of(evaluacionBorrador()));
+        when(criterioRepository.findByActivoTrueOrderByIdCriterioAsc()).thenReturn(List.of());
+        when(lesionRepository.idsYLesionActivaPorEstudiante())
+                .thenReturn(List.<Object[]>of(new Object[]{ID_ESTUDIANTE, 77L}));
+        when(sesionRepository.findByCategoriaIdCategoriaAndFechaLessThanOrderByFechaDesc(eq(3L), any(), any()))
+                .thenReturn(List.of());
+        when(asistenciaRepository.findBySesionIdSesion(ID_SESION))
+                .thenReturn(List.of(asistenciaCon(Asistencia.ESTADO_PRESENTE)));
+        when(evaluacionEstudianteRepository.findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(anyLong(), anyLong()))
+                .thenReturn(Optional.empty());
+
+        var respuesta = servicio.abrir(ID_SESION);
+
+        assertEquals(1, respuesta.jugadores().size());
+        var jugador = respuesta.jugadores().get(0);
+        assertTrue(jugador.lesionado());
+        assertEquals(77L, jugador.idLesion());
     }
 }

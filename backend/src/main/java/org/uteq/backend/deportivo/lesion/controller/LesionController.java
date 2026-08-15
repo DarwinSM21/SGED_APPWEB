@@ -8,8 +8,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.dto.LesionDtos.*;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.service.LesionService;
@@ -34,6 +37,7 @@ import org.uteq.backend.deportivo.lesion.service.LesionService;
 public class LesionController {
 
     private final LesionService lesionService;
+    private final EntrenadorRepository entrenadorRepository;
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
@@ -57,7 +61,7 @@ public class LesionController {
     @Transactional
     public ResponseEntity<LesionResponse> registrar(@Valid @RequestBody RegistrarLesionRequest request) {
         var lesion = lesionService.registrar(
-                request.idEstudiante(), request.idEntrenador(), request.descripcion(),
+                request.idEstudiante(), idEntrenadorEfectivo(request.idEntrenador()), request.descripcion(),
                 request.fechaLesion(), request.fechaEstimadaRetorno());
         return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(lesion));
     }
@@ -69,6 +73,29 @@ public class LesionController {
                                                     @RequestBody(required = false) DarDeAltaRequest request) {
         var fecha = request == null ? null : request.fechaAlta();
         return ResponseEntity.ok(aResponse(lesionService.darDeAlta(idLesion, fecha)));
+    }
+
+    /**
+     * El idEntrenador de una lesion no puede salir del body sin mas: una
+     * cuenta ENTRENADOR podria mandar el id de un colega. Si quien llama
+     * tiene ese rol, se ignora lo que venga en el body y se resuelve del
+     * token (mismo criterio que SesionEntrenamientoController). Solo
+     * ADMINISTRADOR -que no tiene un id de entrenador propio- puede
+     * especificar cualquiera, y para eso si es obligatorio.
+     */
+    private Long idEntrenadorEfectivo(Long idEntrenadorDelBody) {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean esEntrenador = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ENTRENADOR"));
+        if (!esEntrenador) {
+            if (idEntrenadorDelBody == null) {
+                throw new IllegalArgumentException("idEntrenador es obligatorio para esta cuenta");
+            }
+            return idEntrenadorDelBody;
+        }
+        return entrenadorRepository.findByUsuario_Username(auth.getName())
+                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un entrenador asociado a esta cuenta"))
+                .getIdEntrenador();
     }
 
     private LesionResponse aResponse(Lesion l) {

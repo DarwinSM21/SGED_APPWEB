@@ -24,6 +24,15 @@ public interface LesionRepository extends JpaRepository<Lesion, Long> {
     @Query("SELECT l.estudiante.idEstudiante FROM Lesion l WHERE l.fechaAlta IS NULL")
     List<Long> idsEstudiantesLesionados();
 
+    /**
+     * Igual que idsEstudiantesLesionados pero trae tambien el id de la
+     * lesion: la pantalla de evaluacion diaria necesita ese id para poder
+     * dar de alta sin una consulta aparte por jugador. Cada fila es
+     * [idEstudiante, idLesion].
+     */
+    @Query("SELECT l.estudiante.idEstudiante, l.idLesion FROM Lesion l WHERE l.fechaAlta IS NULL")
+    List<Object[]> idsYLesionActivaPorEstudiante();
+
     Page<Lesion> findByEstudianteIdEstudianteOrderByFechaLesionDesc(Long idEstudiante, Pageable pageable);
 
     @Query("SELECT l FROM Lesion l WHERE l.fechaAlta IS NULL ORDER BY l.fechaLesion DESC")
