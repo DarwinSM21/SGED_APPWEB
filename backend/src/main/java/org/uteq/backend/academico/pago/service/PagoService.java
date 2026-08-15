@@ -11,6 +11,7 @@ import org.uteq.backend.academico.pago.repository.PagoRepository;
 import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
 import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -32,6 +33,8 @@ public class PagoService {
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
 
+    @Auditado(accion = "CREAR", entidad = "Pago",
+            descripcionSpel = "'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'")
     @Transactional
     public List<Pago> registrarMembresia(Long idEstudiante, int anio, List<Integer> meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
@@ -62,6 +65,7 @@ public class PagoService {
         return pagoRepository.saveAll(pagos);
     }
 
+    @Auditado(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago")
     @Transactional
     public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
         Estudiante estudiante = buscarEstudiante(idEstudiante);

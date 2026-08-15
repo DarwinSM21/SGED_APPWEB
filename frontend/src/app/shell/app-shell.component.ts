@@ -4,7 +4,8 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { inicialesDe } from '../features/entrenador/plantilla.models';
 
-type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago' | 'inventario';
+type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago' | 'inventario'
+  | 'auditoria' | 'reporte' | 'configuracion';
 
 interface NavItem {
   etiqueta: string;
@@ -28,11 +29,14 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     { etiqueta: 'Recepción', ruta: '/recepcion', icono: 'qr' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
+    { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },
+    { etiqueta: 'Auditorías', ruta: '/admin/auditorias', icono: 'auditoria' },
   ],
   ENTRENADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Mis sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
+    { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },
   ],
   USER: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
@@ -42,6 +46,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     { etiqueta: 'Personas', ruta: '/personas', icono: 'familia' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
+    { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },
   ],
   REPRESENTANTE: [
     { etiqueta: 'Mis representados', ruta: '/representante', icono: 'familia' },
@@ -108,11 +113,27 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
                   @case ('inventario') {
                     <path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>
                   }
+                  @case ('auditoria') {
+                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 13l2 2 4-4"></path>
+                  }
+                  @case ('reporte') {
+                    <line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line>
+                  }
+                  @case ('configuracion') {
+                    <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                  }
                 }
               </svg>
               <span class="sidebar__etiqueta">{{ item.etiqueta }}</span>
             </a>
           }
+
+          <a class="sidebar__item" routerLink="/configuracion" routerLinkActive="activo" title="Configuración">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span class="sidebar__etiqueta">Configuración</span>
+          </a>
         </nav>
 
         <button class="sidebar__colapsar" type="button" (click)="alternarColapso()"

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -37,6 +38,7 @@ public class PersonaService {
         return toResponse(persona);
     }
 
+    @Auditado(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona")
     @Transactional
     public PersonaResponse crear(PersonaRequest request) {
         // Validar unicidad de Cédula y Correo
@@ -57,6 +59,7 @@ public class PersonaService {
         return toResponse(persona);
     }
 
+    @Auditado(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona")
     @Transactional
     public PersonaResponse editar(Long id, PersonaRequest request) {
         Persona persona = personaRepository.findById(id)
@@ -77,6 +80,7 @@ public class PersonaService {
         return toResponse(persona);
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0")
     @Transactional
     public void eliminar(Long id) {
         Persona persona = personaRepository.findById(id)

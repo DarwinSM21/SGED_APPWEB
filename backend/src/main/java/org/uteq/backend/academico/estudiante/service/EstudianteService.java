@@ -22,6 +22,7 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.rol.entity.Rol;
@@ -72,6 +73,7 @@ public class EstudianteService {
         return toResponse(e);
     }
 
+    @Auditado(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
@@ -136,6 +138,7 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse editar(Long id, EstudianteRequest request) {
@@ -185,6 +188,7 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
@@ -201,6 +205,8 @@ public class EstudianteService {
         return resultado != null ? resultado : 0L;
     }
 
+    @Auditado(accion = "EDITAR", entidad = "Estudiante",
+            descripcionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public void desactivarPorCategoria(Long idCategoria) {
@@ -229,6 +235,8 @@ public class EstudianteService {
      * Representante, que si crea una Persona nueva porque el tutor no
      * estaba antes en el sistema.
      */
+    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+            descripcionSpel = "'habilitó acceso al Estudiante #' + #result.idEstudiante")
     @Transactional
     public EstudianteResponse habilitarAcceso(Long idEstudiante, HabilitarAccesoRequest request) {
         Estudiante estudiante = estudianteRepository.findById(idEstudiante)

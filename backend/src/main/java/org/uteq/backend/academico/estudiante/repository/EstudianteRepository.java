@@ -3,6 +3,7 @@ package org.uteq.backend.academico.estudiante.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
@@ -49,4 +50,13 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
     /** Propone el siguiente codigo_estudiante consecutivo del anio dado (formato EST-<anio>-0000). */
     @Procedure(procedureName = "academico.sp_generar_codigo_estudiante")
         String generarSiguienteCodigo(@Param("p_anio") Integer anio);
+
+    /** Reporte de fichas: filtros opcionales de categoria y estado activo. */
+    @Query("""
+           SELECT e FROM Estudiante e
+           WHERE (:idCategoria IS NULL OR e.categoria.idCategoria = :idCategoria)
+             AND (:activo IS NULL OR e.activo = :activo)
+           ORDER BY e.persona.apellido, e.persona.nombre
+           """)
+    List<Estudiante> buscarParaReporte(@Param("idCategoria") Long idCategoria, @Param("activo") Boolean activo);
 }

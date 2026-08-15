@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.*;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
 import org.uteq.backend.inventario.articulo.repository.ArticuloRepository;
@@ -33,6 +34,7 @@ public class ArticuloService {
         return toResponse(buscarEntidad(id));
     }
 
+    @Auditado(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo")
     @Transactional
     public ArticuloResponse crear(ArticuloRequest request) {
         Articulo articulo = Articulo.builder()
@@ -50,6 +52,7 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
+    @Auditado(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo")
     @Transactional
     public ArticuloResponse editar(Long id, ArticuloRequest request) {
         Articulo articulo = buscarEntidad(id);
@@ -66,6 +69,7 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0")
     @Transactional
     public void eliminar(Long id) {
         Articulo articulo = buscarEntidad(id);

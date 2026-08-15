@@ -12,6 +12,7 @@ import org.uteq.backend.inventario.movimiento.dto.MovimientoDtos.*;
 import org.uteq.backend.inventario.movimiento.entity.MovimientoStock;
 import org.uteq.backend.inventario.movimiento.entity.MovimientoStock.TipoMovimiento;
 import org.uteq.backend.inventario.movimiento.repository.MovimientoStockRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -39,6 +40,7 @@ public class MovimientoStockService {
                 .map(this::toResponse);
     }
 
+    @Auditado(accion = "CREAR", entidad = "MovimientoStock", idSpel = "#result.idMovimiento")
     @Transactional
     public MovimientoResponse registrar(MovimientoRequest request, String usernameRegistrador) {
         Articulo articulo = buscarArticulo(request.idArticulo());

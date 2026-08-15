@@ -37,4 +37,18 @@ public interface LesionRepository extends JpaRepository<Lesion, Long> {
 
     @Query("SELECT l FROM Lesion l WHERE l.fechaAlta IS NULL ORDER BY l.fechaLesion DESC")
     Page<Lesion> listarActivas(Pageable pageable);
+
+    /** Reporte de lesiones: filtros opcionales de estudiante, categoria y rango de fechas. */
+    @Query("""
+           SELECT l FROM Lesion l
+           WHERE (:idEstudiante IS NULL OR l.estudiante.idEstudiante = :idEstudiante)
+             AND (:idCategoria IS NULL OR l.estudiante.categoria.idCategoria = :idCategoria)
+             AND (:desde IS NULL OR l.fechaLesion >= :desde)
+             AND (:hasta IS NULL OR l.fechaLesion <= :hasta)
+           ORDER BY l.fechaLesion DESC
+           """)
+    List<Lesion> buscarParaReporte(@Param("idEstudiante") Long idEstudiante,
+                                    @Param("idCategoria") Long idCategoria,
+                                    @Param("desde") java.time.LocalDate desde,
+                                    @Param("hasta") java.time.LocalDate hasta);
 }

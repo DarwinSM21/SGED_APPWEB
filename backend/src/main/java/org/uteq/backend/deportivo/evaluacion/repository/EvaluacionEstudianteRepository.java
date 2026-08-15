@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionEstudiante;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,4 +54,18 @@ public interface EvaluacionEstudianteRepository extends JpaRepository<Evaluacion
            GROUP BY ee.estudiante.idEstudiante
            """)
     List<Object[]> promedioGeneralPorEstudiante(@Param("ids") List<Long> ids);
+
+    /** Reporte de evaluaciones: filtros opcionales de estudiante, categoria y rango de fechas. */
+    @Query("""
+           SELECT ee FROM EvaluacionEstudiante ee
+           WHERE (:idEstudiante IS NULL OR ee.estudiante.idEstudiante = :idEstudiante)
+             AND (:idCategoria IS NULL OR ee.categoriaDia.idCategoria = :idCategoria)
+             AND (:desde IS NULL OR ee.evaluacion.fecha >= :desde)
+             AND (:hasta IS NULL OR ee.evaluacion.fecha <= :hasta)
+           ORDER BY ee.evaluacion.fecha DESC
+           """)
+    List<EvaluacionEstudiante> buscarParaReporte(@Param("idEstudiante") Long idEstudiante,
+                                                  @Param("idCategoria") Long idCategoria,
+                                                  @Param("desde") LocalDate desde,
+                                                  @Param("hasta") LocalDate hasta);
 }

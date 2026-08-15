@@ -18,6 +18,7 @@ import org.uteq.backend.inventario.asignacion.entity.Asignacion;
 import org.uteq.backend.inventario.asignacion.entity.Asignacion.EstadoAsignacion;
 import org.uteq.backend.inventario.asignacion.entity.Asignacion.TipoDestinatario;
 import org.uteq.backend.inventario.asignacion.repository.AsignacionRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -55,6 +56,7 @@ public class AsignacionService {
                 .map(this::toResponse);
     }
 
+    @Auditado(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion")
     @Transactional
     public AsignacionResponse crear(AsignacionRequest request, String usernameRegistrador) {
         validarDestinatario(request.tipoDestinatario(), request.idEstudiante(), request.idEntrenador());
@@ -90,6 +92,7 @@ public class AsignacionService {
         return toResponse(asignacionRepository.save(builder.build()));
     }
 
+    @Auditado(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion")
     @Transactional
     public AsignacionResponse devolver(Long id, DevolucionRequest request) {
         if (request.estado() == EstadoAsignacion.ASIGNADO) {

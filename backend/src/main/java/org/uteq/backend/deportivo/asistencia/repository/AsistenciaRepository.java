@@ -48,4 +48,18 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
             @Param("p_estudiante") Long idEstudiante,
             @Param("p_desde") LocalDate desde,
             @Param("p_hasta") LocalDate hasta);
+
+    /** Reporte de asistencias: filtros opcionales de estudiante, categoria y rango de fechas. */
+    @Query("""
+           SELECT a FROM Asistencia a
+           WHERE (:idEstudiante IS NULL OR a.estudiante.idEstudiante = :idEstudiante)
+             AND (:idCategoria IS NULL OR a.estudiante.categoria.idCategoria = :idCategoria)
+             AND (:desde IS NULL OR a.sesion.fecha >= :desde)
+             AND (:hasta IS NULL OR a.sesion.fecha <= :hasta)
+           ORDER BY a.sesion.fecha DESC
+           """)
+    List<Asistencia> buscarParaReporte(@Param("idEstudiante") Long idEstudiante,
+                                        @Param("idCategoria") Long idCategoria,
+                                        @Param("desde") LocalDate desde,
+                                        @Param("hasta") LocalDate hasta);
 }

@@ -14,6 +14,7 @@ import org.uteq.backend.academico.representante.repository.RepresentanteReposito
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -71,6 +72,7 @@ public class UsuarioService {
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
     })
+    @Auditado(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario")
     @Transactional
     public UsuarioResponse crear(UsuarioRequest request) {
         if (request.password() == null || request.password().isBlank()) {
@@ -112,6 +114,7 @@ public class UsuarioService {
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
     })
+    @Auditado(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario")
     @Transactional
     public UsuarioResponse editar(Long id, UsuarioRequest request) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -157,6 +160,7 @@ public class UsuarioService {
         return toResponse(usuario);
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
     @Transactional
     public void eliminar(Long id) {

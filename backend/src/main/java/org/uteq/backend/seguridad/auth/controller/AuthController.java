@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.common.exception.TooManyRequestsException;
+import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
 import org.uteq.backend.seguridad.auth.dto.*;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -63,6 +64,7 @@ public class AuthController {
     private final RolRepository rolRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final org.springframework.security.crypto.password.PasswordEncoder passwordEncoder;
+    private final AuditoriaService auditoriaService;
 
     /**
      * rol es obligatorio (@NotBlank en RegisterRequest): no existe un rol
@@ -149,6 +151,8 @@ public class AuthController {
         } catch (BadCredentialsException e) {
             loginAttemptService.registrarFallo(ip);
             AUTH_AUDIT_LOG.warn("AUTH_LOGIN_FAIL ip={} sub={}", ip, request.username());
+            auditoriaService.registrarConIdentidad(request.username(), null,
+                    "LOGIN_FALLIDO", "Usuario", null, "intento de inicio de sesión fallido");
             throw e;
         }
 
@@ -157,6 +161,8 @@ public class AuthController {
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "");
         AUTH_AUDIT_LOG.info("AUTH_LOGIN_OK ip={} sub={}", ip, userDetails.getUsername());
+        auditoriaService.registrarConIdentidad(userDetails.getUsername(), rol,
+                "LOGIN", "Usuario", null, "inició sesión");
 
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
@@ -192,6 +198,8 @@ public class AuthController {
                 // Token ya invalido, ignorar
             }
         }
+
+        auditoriaService.registrar("LOGOUT", "Usuario", null, "cerró sesión");
 
         clearAuthCookies(httpResponse);
         SecurityContextHolder.clearContext();

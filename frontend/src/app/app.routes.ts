@@ -64,6 +64,20 @@ export const routes: Routes = [
         canActivate: [roleGuard(['ESTUDIANTE'])],
         loadComponent: () => import('./features/estudiante/mi-equipo.component').then(m => m.MiEquipoComponent),
       },
+      {
+        path: 'admin/auditorias',
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+        loadComponent: () => import('./features/auditorias/auditorias.component').then(m => m.AuditoriasComponent),
+      },
+      {
+        path: 'reportes',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR'])],
+        loadComponent: () => import('./features/reportes/reportes.component').then(m => m.ReportesComponent),
+      },
+      {
+        path: 'configuracion',
+        loadComponent: () => import('./features/configuracion/configuracion.component').then(m => m.ConfiguracionComponent),
+      },
     ]
   },
   { path: '**', redirectTo: '' }

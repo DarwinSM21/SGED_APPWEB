@@ -12,6 +12,7 @@ import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,6 +34,7 @@ public class LesionService {
     private final EntrenadorRepository entrenadorRepository;
     private final NotificacionService notificacionService;
 
+    @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion")
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
                             LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
@@ -71,6 +73,8 @@ public class LesionService {
     }
 
     /** Cierra una lesion: el jugador vuelve a entrar en las plantillas. */
+    @Auditado(accion = "EDITAR", entidad = "Lesion", idSpel = "#result.idLesion",
+            descripcionSpel = "'dio de alta la Lesion #' + #result.idLesion")
     @Transactional
     public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {
         var lesion = lesionRepository.findById(idLesion)

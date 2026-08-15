@@ -2,6 +2,7 @@ package org.uteq.backend.academico.pago.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 
@@ -25,4 +26,16 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     BigDecimal sumarMontoEntreFechas(LocalDate inicio, LocalDate fin);
 
     long countByFechaPagoBetween(LocalDate inicio, LocalDate fin);
+
+    /** Reporte de pagos: filtros opcionales de estudiante y rango de fechas. */
+    @Query("""
+           SELECT p FROM Pago p
+           WHERE (:idEstudiante IS NULL OR p.estudiante.idEstudiante = :idEstudiante)
+             AND (:desde IS NULL OR p.fechaPago >= :desde)
+             AND (:hasta IS NULL OR p.fechaPago <= :hasta)
+           ORDER BY p.fechaPago DESC
+           """)
+    List<Pago> buscarParaReporte(@Param("idEstudiante") Long idEstudiante,
+                                  @Param("desde") LocalDate desde,
+                                  @Param("hasta") LocalDate hasta);
 }

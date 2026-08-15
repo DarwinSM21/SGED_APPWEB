@@ -11,6 +11,7 @@ import org.uteq.backend.deportivo.evaluacion.entity.*;
 import org.uteq.backend.deportivo.evaluacion.repository.*;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
@@ -246,6 +247,8 @@ public class EvaluacionDiariaService {
     }
 
     /** Cierra la evaluacion. A partir de aqui no admite cambios. */
+    @Auditado(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
+            descripcionSpel = "'finalizó la evaluación de la sesión #' + #p0")
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)

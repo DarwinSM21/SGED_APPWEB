@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
+import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
 import org.uteq.backend.seguridad.auth.controller.AuthController;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
@@ -65,6 +66,7 @@ class AuthServiceTest {
     @Mock private EstadoGeneralRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private LoginAttemptService loginAttemptService;
+    @Mock private AuditoriaService auditoriaService;
 
     @InjectMocks private AuthController authController;
 
