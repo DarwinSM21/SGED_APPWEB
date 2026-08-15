@@ -35,19 +35,33 @@ git log --pretty="AUTOR:%an" --numstat main
 > pesa más que dos mil líneas de documentación. La tabla existe porque la
 > evaluación exige autoría verificable, no para jerarquizar al equipo.
 
-## Nota de trazabilidad: commits de "DannaN24"
+## Nota de trazabilidad: corrección de autoría en el historial (2026-08-15)
 
-Los commits `feat: exponer registro, logout y refresh...` y
-`fix: completar archivos vacios V1 sql, docker-compose...` (2026-06-29)
-aparecen en `git log` bajo `DannaN24 <dninasuntar@uteq.edu.ec>`, pero son
-trabajo real de **Pallo Pinto Alejandro Daniel**: esa cuenta era la que
-había quedado configurada en el PC de la universidad que usó ese día. Esto
-ya había quedado insinuado en el propio historial (commit `a456255`, del
-mismo 2026-06-29: *"docs: commits anteriores realizados por Alejandro Pallo
-- cuenta DannaN24 era la configurada en PC universitaria"*), pero sin una
-nota escrita hasta ahora. No se reescribió el `git log` (evitar reescribir
-historia ya compartida con el equipo); esta nota es la aclaración oficial de
-autoría para efectos de evaluación.
+Hasta el 2026-08-14, dos commits del 2026-06-29 (`feat: exponer registro,
+logout y refresh...` y `fix: completar archivos vacios V1 sql,
+docker-compose...`) aparecían en `git log` bajo `DannaN24
+<dninasuntar@uteq.edu.ec>`, siendo en realidad trabajo de **Pallo Pinto
+Alejandro Daniel**: esa cuenta había quedado configurada por accidente en
+el PC de la universidad que usó ese día. Esto ya estaba insinuado en el
+propio historial del momento (commit `docs: commits anteriores realizados
+por Alejandro Pallo - cuenta DannaN24 era la configurada en PC
+universitaria`), pero sin corregirse.
+
+Adicionalmente, 2 commits de Alejandro tenían un error de tipeo en el
+dominio del correo (`uteq.edue.ec` en vez de `uteq.edu.ec`) y 5 commits de
+Ricardo usaban un correo (`ricardo@email.com`) no vinculado a su cuenta de
+GitHub — ambos casos hacían que esos commits aparecieran como
+"colaboradores fantasma" (cuentas anónimas, sin nombre) en la vista de
+Contribuidores de GitHub en vez de atribuirse a sus autores reales.
+
+El 2026-08-15, con acuerdo explícito de los tres integrantes, se corrigió
+la autoría (`git commit --amend`/`filter-branch` sobre esos 9 commits
+puntuales, sin tocar el contenido de ningún archivo) y se forzó el push.
+Los tags `v0.1.0-entrega-1b`, `v0.7.1` y `v0.9.0-rc` se recrearon apuntando
+a los commits equivalentes ya corregidos, preservando mensaje, fecha y
+autor original de cada tag. El resto del historial —158 de los 167
+commits de `main`, ya correctamente atribuidos desde el inicio— no se
+tocó.
 
 ## Nota sobre correos no institucionales
 
