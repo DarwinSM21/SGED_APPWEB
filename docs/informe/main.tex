@@ -507,7 +507,11 @@ corrigió un defecto de \emph{test} preexistente y no relacionado con la
 cobertura: una prueba de \texttt{AsistenciaServiceTest} construía su hora
 de referencia con \texttt{LocalTime.now().plusHours(1)} sin protegerse
 del cruce de medianoche (\texttt{LocalTime} no tiene fecha), y fallaba de
-forma intermitente según la hora del día en que corriera la suite —sus
+forma intermitente según la hora del día en que corriera la suite —un
+caso puntual de la categoría de defectos que Tiwari~\emph{et al.}
+estudian sistemáticamente sobre 151 casos reales de proyectos Python de
+código abierto, clasificando sus categorías conceptuales, operaciones
+involucradas y causas raíz~\cite{tiwari2025datetime}. Sus
 dos pruebas hermanas ya protegían el caso simétrico de restar, a esta le
 faltaba el de sumar.
 \end{quote}
