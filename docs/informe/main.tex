@@ -1850,7 +1850,15 @@ segundos contra el \emph{endpoint} protegido \texttt{GET /api/estudiantes}
 — cumple el mínimo de cinco corridas que exige el Bloque~A.1 de la
 Entrega Final (la Tercera Entrega solo había archivado tres). Corrida
 regenerada el 2026-08-14 contra el sistema local completo, tras corregir
-el defecto de \ruta{.env} descrito en la sección~\ref{sec:estado-entrega}:
+el defecto de \ruta{.env} descrito en la sección~\ref{sec:estado-entrega}.
+
+La decisión de repetir la medición y reportar un intervalo de confianza,
+en vez de publicar el resultado de una sola corrida, sigue el argumento
+metodológico de Georges~\emph{et al.}: una única ejecución de un sistema
+sobre JVM no caracteriza su rendimiento, porque la variación entre
+corridas puede ser del mismo orden que la diferencia que se pretende
+reportar, y sin estadística de intervalos no hay forma de distinguir una
+de otra~\cite{georges2007benchmarking}. Los resultados:
 
 \begin{table}[htbp]
 \centering
@@ -2470,7 +2478,15 @@ cédula, fecha de nacimiento, asistencia con hora y lugar, y evaluaciones
 individuales de desempeño. Esa combinación es sensible porque los titulares
 son menores que no pueden consentir por sí mismos, porque la asistencia es
 información de localización temporal, y porque las evaluaciones constituyen
-perfilado de personas~\cite{lopdp2021,acm2018}.
+perfilado de personas~\cite{lopdp2021,acm2018}. El riesgo no es solo
+regulatorio: Carvalho y Gonçalves advierten sobre la presión creciente por
+identificar talento a edades cada vez más tempranas en el deporte
+formativo, y sobre el desajuste entre los indicadores que se miden y el
+desarrollo real del deportista
+joven~\cite{carvalho2023talento}. Un sistema que registra
+puntajes periódicos de un menor no es un instrumento neutral: puede
+consolidar una etiqueta temprana que condicione decisiones posteriores
+sobre esa misma persona.
 
 El principio de minimización se aplicó al diseño original —se descartaron
 contextura y datos de alimentación—, pero conviene ser preciso sobre su
@@ -2500,6 +2516,50 @@ autenticada del sistema, incluida la búsqueda por número de cédula
 (sección~\ref{sec:a01-falso-correcto}). Un documento de ética que solo
 enumera riesgos hipotéticos y omite la exposición concreta que sí ocurrió
 sería un documento de imagen, no de rendición de cuentas.
+
+\subsection{Generación de retroalimentación con un modelo de lenguaje externo}
+\label{sec:ia-feedback}
+
+El sistema incorpora un servicio opcional
+(\ruta{backend/.../common/ia/GeminiFeedbackService.java}) que redacta
+comentarios de retroalimentación deportiva invocando un modelo de lenguaje
+de un tercero. Enviar información sobre menores de edad a un proveedor
+externo es, por sí mismo, una superficie de divulgación nueva, así que las
+decisiones de diseño se documentan aquí y no solo en el código:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Seudonimización estructural, no por convención.} Lo único
+    que se serializa hacia el proveedor es el \emph{record}
+    \texttt{PerfilJugadorAnonimo}, que no tiene campos de nombre, cédula,
+    correo ni fecha de nacimiento. No es que el código «evite» enviarlos:
+    no existen en el tipo que viaja, de modo que no hay forma de filtrarlos
+    aunque una modificación futura lo intentara por descuido.
+  \item \textbf{La clave viaja en cabecera, no como parámetro de consulta.}
+    Ambas formas están documentadas por el proveedor, pero un parámetro de
+    consulta queda registrado en \emph{logs} de acceso, historiales de
+    \emph{proxy} y cabeceras \texttt{Referer}.
+  \item \textbf{Desactivado por defecto y degradación silenciosa.} Sin
+    clave configurada el servicio reporta no disponible y el resto de la
+    evaluación funciona igual; un fallo del proveedor nunca puede hacer
+    perder al entrenador lo que ya calificó a mano.
+  \item \textbf{Instrucción de sistema que prohíbe inventar.} El
+    \emph{prompt} de sistema acota el registro, prohíbe explícitamente
+    afirmar hechos que no estén en los datos numéricos recibidos, exige
+    tono apropiado para un menor y veta diagnósticos médicos o
+    recomendaciones de aumentar carga física a un jugador lesionado.
+  \item \textbf{Los registros no incluyen el \emph{prompt}.} Ante un fallo
+    se registra el tipo de excepción, nunca el contenido enviado.
+\end{itemize}
+
+Estas mitigaciones acotan el riesgo de divulgación, no la calidad del texto
+generado, que es un problema distinto y abierto: Dai~\emph{et al.} muestran
+que la retroalimentación producida por modelos de lenguaje puede ser fluida
+y coherente y aun así variar en su pertinencia según el
+criterio evaluado~\cite{dai2024feedback}. Por eso el comentario generado se
+presenta como apoyo a la redacción del entrenador y no como sustituto de su
+juicio, y su evaluación empírica queda declarada como trabajo pendiente:
+\textbf{esta entrega no aporta evidencia sobre la calidad de los textos
+generados}, solo sobre las garantías de privacidad de su integración.
 
 Todos los datos del repositorio son ficticios. No se utilizaron datos reales
 de menores en ninguna etapa del desarrollo ni de las mediciones.
