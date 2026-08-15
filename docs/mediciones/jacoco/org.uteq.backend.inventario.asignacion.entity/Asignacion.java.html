@@ -6,6 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -26,8 +27,8 @@ import java.time.LocalDate;
 @Builder
 public class Asignacion {
 
-<span class="fc" id="L29">    public enum TipoDestinatario { ESTUDIANTE, ENTRENADOR }</span>
-<span class="fc" id="L30">    public enum EstadoAsignacion { ASIGNADO, DEVUELTO, PERDIDO }</span>
+<span class="fc" id="L30">    public enum TipoDestinatario { ESTUDIANTE, ENTRENADOR }</span>
+<span class="fc" id="L31">    public enum EstadoAsignacion { ASIGNADO, DEVUELTO, PERDIDO }</span>
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -55,7 +56,7 @@ public class Asignacion {
 
     @Column(name = &quot;fecha_asignacion&quot;, nullable = false)
     @Builder.Default
-    private LocalDate fechaAsignacion = LocalDate.now();
+    private LocalDate fechaAsignacion = LocalDate.now(Zonas.ECUADOR);
 
     @Column(name = &quot;fecha_devolucion_esperada&quot;)
     private LocalDate fechaDevolucionEsperada;

@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.*;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
 import org.uteq.backend.inventario.articulo.repository.ArticuloRepository;
@@ -20,85 +21,88 @@ public class ArticuloService {
 
     @Transactional(readOnly = true)
     public Page&lt;ArticuloResponse&gt; listarPaginado(Pageable pageable) {
-<span class="fc" id="L23">        return articuloRepository.findByActivoTrue(pageable).map(this::toResponse);</span>
+<span class="fc" id="L24">        return articuloRepository.findByActivoTrue(pageable).map(this::toResponse);</span>
     }
 
     @Transactional(readOnly = true)
     public List&lt;ArticuloResponse&gt; listarActivos() {
-<span class="nc" id="L28">        return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();</span>
+<span class="nc" id="L29">        return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();</span>
     }
 
     @Transactional(readOnly = true)
     public ArticuloResponse buscarPorId(Long id) {
-<span class="nc" id="L33">        return toResponse(buscarEntidad(id));</span>
+<span class="nc" id="L34">        return toResponse(buscarEntidad(id));</span>
     }
 
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;)
     @Transactional
     public ArticuloResponse crear(ArticuloRequest request) {
-<span class="fc" id="L38">        Articulo articulo = Articulo.builder()</span>
-<span class="fc" id="L39">                .nombre(request.nombre())</span>
-<span class="fc" id="L40">                .tipo(request.tipo())</span>
-<span class="fc" id="L41">                .talla(request.talla())</span>
-<span class="fc" id="L42">                .descripcion(request.descripcion())</span>
-<span class="fc" id="L43">                .stockActual(0)</span>
-<span class="fc" id="L44">                .stockMinimo(request.stockMinimo())</span>
-<span class="pc bpc" id="L45" title="3 of 4 branches missed.">                .unidadMedida(request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()</span>
-<span class="pc" id="L46">                        ? request.unidadMedida() : &quot;unidad&quot;)</span>
-<span class="fc" id="L47">                .activo(true)</span>
-<span class="fc" id="L48">                .build();</span>
+<span class="fc" id="L40">        Articulo articulo = Articulo.builder()</span>
+<span class="fc" id="L41">                .nombre(request.nombre())</span>
+<span class="fc" id="L42">                .tipo(request.tipo())</span>
+<span class="fc" id="L43">                .talla(request.talla())</span>
+<span class="fc" id="L44">                .descripcion(request.descripcion())</span>
+<span class="fc" id="L45">                .stockActual(0)</span>
+<span class="fc" id="L46">                .stockMinimo(request.stockMinimo())</span>
+<span class="pc bpc" id="L47" title="3 of 4 branches missed.">                .unidadMedida(request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()</span>
+<span class="pc" id="L48">                        ? request.unidadMedida() : &quot;unidad&quot;)</span>
+<span class="fc" id="L49">                .activo(true)</span>
+<span class="fc" id="L50">                .build();</span>
 
-<span class="fc" id="L50">        return toResponse(articuloRepository.save(articulo));</span>
+<span class="fc" id="L52">        return toResponse(articuloRepository.save(articulo));</span>
     }
 
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;)
     @Transactional
     public ArticuloResponse editar(Long id, ArticuloRequest request) {
-<span class="fc" id="L55">        Articulo articulo = buscarEntidad(id);</span>
+<span class="fc" id="L58">        Articulo articulo = buscarEntidad(id);</span>
 
-<span class="fc" id="L57">        articulo.setNombre(request.nombre());</span>
-<span class="fc" id="L58">        articulo.setTipo(request.tipo());</span>
-<span class="fc" id="L59">        articulo.setTalla(request.talla());</span>
-<span class="fc" id="L60">        articulo.setDescripcion(request.descripcion());</span>
-<span class="fc" id="L61">        articulo.setStockMinimo(request.stockMinimo());</span>
-<span class="pc bpc" id="L62" title="2 of 4 branches missed.">        if (request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()) {</span>
-<span class="fc" id="L63">            articulo.setUnidadMedida(request.unidadMedida());</span>
+<span class="fc" id="L60">        articulo.setNombre(request.nombre());</span>
+<span class="fc" id="L61">        articulo.setTipo(request.tipo());</span>
+<span class="fc" id="L62">        articulo.setTalla(request.talla());</span>
+<span class="fc" id="L63">        articulo.setDescripcion(request.descripcion());</span>
+<span class="fc" id="L64">        articulo.setStockMinimo(request.stockMinimo());</span>
+<span class="pc bpc" id="L65" title="2 of 4 branches missed.">        if (request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()) {</span>
+<span class="fc" id="L66">            articulo.setUnidadMedida(request.unidadMedida());</span>
         }
 
-<span class="fc" id="L66">        return toResponse(articuloRepository.save(articulo));</span>
+<span class="fc" id="L69">        return toResponse(articuloRepository.save(articulo));</span>
     }
 
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L71">        Articulo articulo = buscarEntidad(id);</span>
-<span class="fc" id="L72">        articulo.setActivo(false);</span>
-<span class="fc" id="L73">        articuloRepository.save(articulo);</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L75">        Articulo articulo = buscarEntidad(id);</span>
+<span class="fc" id="L76">        articulo.setActivo(false);</span>
+<span class="fc" id="L77">        articuloRepository.save(articulo);</span>
+<span class="fc" id="L78">    }</span>
 
     @Transactional(readOnly = true)
     public StockBajoResponse stockBajo() {
-<span class="fc" id="L78">        List&lt;ArticuloResponse&gt; articulos = articuloRepository.findConStockBajo().stream()</span>
-<span class="fc" id="L79">                .map(this::toResponse)</span>
-<span class="fc" id="L80">                .toList();</span>
-<span class="fc" id="L81">        Long total = articuloRepository.contarStockBajo();</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        return new StockBajoResponse(total != null ? total : 0L, articulos);</span>
+<span class="fc" id="L82">        List&lt;ArticuloResponse&gt; articulos = articuloRepository.findConStockBajo().stream()</span>
+<span class="fc" id="L83">                .map(this::toResponse)</span>
+<span class="fc" id="L84">                .toList();</span>
+<span class="fc" id="L85">        Long total = articuloRepository.contarStockBajo();</span>
+<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        return new StockBajoResponse(total != null ? total : 0L, articulos);</span>
     }
 
     private Articulo buscarEntidad(Long id) {
-<span class="fc" id="L86">        return articuloRepository.findById(id)</span>
-<span class="fc" id="L87">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Artículo no encontrado con ID: &quot; + id));</span>
+<span class="fc" id="L90">        return articuloRepository.findById(id)</span>
+<span class="fc" id="L91">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Artículo no encontrado con ID: &quot; + id));</span>
     }
 
     private ArticuloResponse toResponse(Articulo a) {
-<span class="fc" id="L91">        return new ArticuloResponse(</span>
-<span class="fc" id="L92">                a.getIdArticulo(),</span>
-<span class="fc" id="L93">                a.getNombre(),</span>
-<span class="fc" id="L94">                a.getTipo(),</span>
-<span class="fc" id="L95">                a.getTalla(),</span>
-<span class="fc" id="L96">                a.getDescripcion(),</span>
-<span class="fc" id="L97">                a.getStockActual(),</span>
-<span class="fc" id="L98">                a.getStockMinimo(),</span>
-<span class="fc" id="L99">                a.getUnidadMedida(),</span>
-<span class="fc" id="L100">                a.getActivo(),</span>
-<span class="fc" id="L101">                a.getCreatedAt()</span>
+<span class="fc" id="L95">        return new ArticuloResponse(</span>
+<span class="fc" id="L96">                a.getIdArticulo(),</span>
+<span class="fc" id="L97">                a.getNombre(),</span>
+<span class="fc" id="L98">                a.getTipo(),</span>
+<span class="fc" id="L99">                a.getTalla(),</span>
+<span class="fc" id="L100">                a.getDescripcion(),</span>
+<span class="fc" id="L101">                a.getStockActual(),</span>
+<span class="fc" id="L102">                a.getStockMinimo(),</span>
+<span class="fc" id="L103">                a.getUnidadMedida(),</span>
+<span class="fc" id="L104">                a.getActivo(),</span>
+<span class="fc" id="L105">                a.getCreatedAt()</span>
         );
     }
 }

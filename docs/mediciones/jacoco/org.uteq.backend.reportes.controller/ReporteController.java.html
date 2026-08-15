@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReporteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.reportes.controller</a> &gt; <span class="el_source">ReporteController.java</span></div><h1>ReporteController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.reportes.controller;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.uteq.backend.reportes.service.ReporteService;
+
+import java.time.LocalDate;
+
+@RestController
+@RequestMapping(&quot;/api/reportes&quot;)
+@RequiredArgsConstructor
+public class ReporteController {
+
+    private final ReporteService reporteService;
+
+    @GetMapping(&quot;/estudiantes-fichas&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;byte[]&gt; estudiantesFichas(
+            @RequestParam(required = false) Long categoria,
+            @RequestParam(required = false) Boolean activo) {
+<span class="fc" id="L29">        return pdf(&quot;fichas-estudiantes.pdf&quot;, reporteService.estudiantesFichas(categoria, activo));</span>
+    }
+
+    @GetMapping(&quot;/pagos&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;byte[]&gt; pagos(
+            @RequestParam(required = false) Long estudianteId,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta) {
+<span class="fc" id="L38">        return pdf(&quot;pagos.pdf&quot;, reporteService.pagos(estudianteId, fechaDesde, fechaHasta));</span>
+    }
+
+    @GetMapping(&quot;/asistencias&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; asistencias(
+            @RequestParam(required = false) Long estudianteId,
+            @RequestParam(required = false) Long categoria,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta) {
+<span class="nc" id="L48">        return pdf(&quot;asistencias.pdf&quot;, reporteService.asistencias(estudianteId, categoria, fechaDesde, fechaHasta));</span>
+    }
+
+    @GetMapping(&quot;/evaluaciones&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; evaluaciones(
+            @RequestParam(required = false) Long estudianteId,
+            @RequestParam(required = false) Long categoria,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta) {
+<span class="nc" id="L58">        return pdf(&quot;evaluaciones.pdf&quot;, reporteService.evaluaciones(estudianteId, categoria, fechaDesde, fechaHasta));</span>
+    }
+
+    @GetMapping(&quot;/lesiones&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;byte[]&gt; lesiones(
+            @RequestParam(required = false) Long estudianteId,
+            @RequestParam(required = false) Long categoria,
+            @RequestParam(required = false) LocalDate fechaDesde,
+            @RequestParam(required = false) LocalDate fechaHasta) {
+<span class="nc" id="L68">        return pdf(&quot;lesiones.pdf&quot;, reporteService.lesiones(estudianteId, categoria, fechaDesde, fechaHasta));</span>
+    }
+
+    private ResponseEntity&lt;byte[]&gt; pdf(String nombreArchivo, byte[] contenido) {
+<span class="fc" id="L72">        return ResponseEntity.ok()</span>
+<span class="fc" id="L73">                .contentType(MediaType.APPLICATION_PDF)</span>
+<span class="fc" id="L74">                .header(HttpHeaders.CONTENT_DISPOSITION,</span>
+<span class="fc" id="L75">                        ContentDisposition.attachment().filename(nombreArchivo).build().toString())</span>
+<span class="fc" id="L76">                .body(contenido);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

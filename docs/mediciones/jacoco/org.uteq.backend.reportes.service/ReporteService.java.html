@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReporteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.reportes.service</a> &gt; <span class="el_source">ReporteService.java</span></div><h1>ReporteService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.reportes.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.pago.entity.Pago;
+import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.evaluacion.entity.DetalleEvaluacion;
+import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionEstudiante;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
+import org.uteq.backend.deportivo.lesion.entity.Lesion;
+import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/**
+ * Arma las filas de cada reporte reutilizando los repositorios de negocio
+ * ya existentes (sin duplicar logica de consulta); ReportePdfService solo
+ * se encarga del formato del PDF.
+ */
+@Service
+@RequiredArgsConstructor
+public class ReporteService {
+
+<span class="fc" id="L33">    private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy&quot;);</span>
+
+    private final ReportePdfService pdfService;
+    private final EstudianteRepository estudianteRepository;
+    private final PagoRepository pagoRepository;
+    private final AsistenciaRepository asistenciaRepository;
+    private final LesionRepository lesionRepository;
+    private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+
+    @Transactional(readOnly = true)
+    public byte[] estudiantesFichas(Long idCategoria, Boolean activo) {
+<span class="fc" id="L44">        var encontrados = sinVacio(estudianteRepository.buscarParaReporte(idCategoria, activo));</span>
+<span class="fc" id="L45">        var filas = encontrados.stream()</span>
+<span class="fc" id="L46">                .map(e -&gt; List.of(</span>
+<span class="fc" id="L47">                        e.getCodigoEstudiante(),</span>
+<span class="fc" id="L48">                        e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
+<span class="fc" id="L49">                        e.getCategoria().getNombre(),</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">                        Boolean.TRUE.equals(e.getActivo()) ? &quot;Activo&quot; : &quot;Inactivo&quot;,</span>
+<span class="fc" id="L51">                        e.getFechaIngreso().format(FECHA)))</span>
+<span class="fc" id="L52">                .toList();</span>
+<span class="fc" id="L53">        return pdfService.generar(&quot;Reporte de Fichas de Estudiantes&quot;,</span>
+<span class="fc" id="L54">                List.of(&quot;Código&quot;, &quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Estado&quot;, &quot;Fecha ingreso&quot;), filas);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] pagos(Long idEstudiante, LocalDate desde, LocalDate hasta) {
+<span class="fc" id="L59">        var filas = sinVacio(pagoRepository.buscarParaReporte(idEstudiante, desde, hasta)).stream()</span>
+<span class="fc" id="L60">                .map(this::filaPago)</span>
+<span class="fc" id="L61">                .toList();</span>
+<span class="fc" id="L62">        return pdfService.generar(&quot;Reporte de Pagos&quot;,</span>
+<span class="fc" id="L63">                List.of(&quot;Estudiante&quot;, &quot;Tipo&quot;, &quot;Período&quot;, &quot;Monto&quot;, &quot;Fecha de pago&quot;, &quot;Registrado por&quot;), filas);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] asistencias(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
+<span class="nc" id="L68">        var filas = sinVacio(asistenciaRepository.buscarParaReporte(idEstudiante, idCategoria, desde, hasta)).stream()</span>
+<span class="nc" id="L69">                .map(this::filaAsistencia)</span>
+<span class="nc" id="L70">                .toList();</span>
+<span class="nc" id="L71">        return pdfService.generar(&quot;Reporte de Asistencias&quot;,</span>
+<span class="nc" id="L72">                List.of(&quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Fecha sesión&quot;, &quot;Estado&quot;, &quot;Método&quot;), filas);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] evaluaciones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
+<span class="nc" id="L77">        var filas = sinVacio(evaluacionEstudianteRepository.buscarParaReporte(idEstudiante, idCategoria, desde, hasta)).stream()</span>
+<span class="nc" id="L78">                .map(this::filaEvaluacion)</span>
+<span class="nc" id="L79">                .toList();</span>
+<span class="nc" id="L80">        return pdfService.generar(&quot;Reporte de Evaluaciones&quot;,</span>
+<span class="nc" id="L81">                List.of(&quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Fecha&quot;, &quot;Posición&quot;, &quot;Promedio&quot;), filas);</span>
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] lesiones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
+<span class="fc" id="L86">        var filas = sinVacio(lesionRepository.buscarParaReporte(idEstudiante, idCategoria, desde, hasta)).stream()</span>
+<span class="fc" id="L87">                .map(this::filaLesion)</span>
+<span class="fc" id="L88">                .toList();</span>
+<span class="fc" id="L89">        return pdfService.generar(&quot;Reporte de Lesiones&quot;,</span>
+<span class="fc" id="L90">                List.of(&quot;Estudiante&quot;, &quot;Descripción&quot;, &quot;Fecha lesión&quot;, &quot;Retorno estimado&quot;, &quot;Estado&quot;), filas);</span>
+    }
+
+    private &lt;T&gt; List&lt;T&gt; sinVacio(List&lt;T&gt; resultados) {
+<span class="fc bfc" id="L94" title="All 2 branches covered.">        if (resultados.isEmpty()) {</span>
+<span class="fc" id="L95">            throw new RecursoNoEncontradoException(&quot;No hay datos para los filtros seleccionados&quot;);</span>
+        }
+<span class="fc" id="L97">        return resultados;</span>
+    }
+
+    private List&lt;String&gt; filaPago(Pago p) {
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">        String periodo = p.getTipo() == Pago.TipoPago.MEMBRESIA ? p.getMes() + &quot;/&quot; + p.getAnio() : &quot;-&quot;;</span>
+<span class="fc" id="L102">        var registrador = p.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L103">        return List.of(</span>
+<span class="fc" id="L104">                p.getEstudiante().getPersona().getNombre() + &quot; &quot; + p.getEstudiante().getPersona().getApellido(),</span>
+<span class="fc" id="L105">                p.getTipo().name(),</span>
+                periodo,
+<span class="fc" id="L107">                p.getMonto().toPlainString(),</span>
+<span class="fc" id="L108">                p.getFechaPago().format(FECHA),</span>
+<span class="fc" id="L109">                registrador.getNombre() + &quot; &quot; + registrador.getApellido());</span>
+    }
+
+    private List&lt;String&gt; filaAsistencia(Asistencia a) {
+<span class="nc" id="L113">        return List.of(</span>
+<span class="nc" id="L114">                a.getEstudiante().getPersona().getNombre() + &quot; &quot; + a.getEstudiante().getPersona().getApellido(),</span>
+<span class="nc" id="L115">                a.getEstudiante().getCategoria().getNombre(),</span>
+<span class="nc" id="L116">                a.getSesion().getFecha().format(FECHA),</span>
+<span class="nc" id="L117">                a.getEstado(),</span>
+<span class="nc" id="L118">                a.getMetodo());</span>
+    }
+
+    private List&lt;String&gt; filaEvaluacion(EvaluacionEstudiante ee) {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        String posicion = ee.getPosicionJugada() != null ? ee.getPosicionJugada().getNombre() : &quot;-&quot;;</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">        String promedio = ee.getDetalles().isEmpty() ? &quot;-&quot; : promedio(ee.getDetalles());</span>
+<span class="nc" id="L124">        return List.of(</span>
+<span class="nc" id="L125">                ee.getEstudiante().getPersona().getNombre() + &quot; &quot; + ee.getEstudiante().getPersona().getApellido(),</span>
+<span class="nc" id="L126">                ee.getCategoriaDia().getNombre(),</span>
+<span class="nc" id="L127">                ee.getEvaluacion().getFecha().format(FECHA),</span>
+                posicion,
+                promedio);
+    }
+
+    private List&lt;String&gt; filaLesion(Lesion l) {
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        String retorno = l.getFechaEstimadaRetorno() != null ? l.getFechaEstimadaRetorno().format(FECHA) : &quot;-&quot;;</span>
+<span class="pc bpc" id="L134" title="1 of 2 branches missed.">        String estado = l.estaActiva() ? &quot;Activa&quot; : &quot;De alta el &quot; + l.getFechaAlta().format(FECHA);</span>
+<span class="fc" id="L135">        return List.of(</span>
+<span class="fc" id="L136">                l.getEstudiante().getPersona().getNombre() + &quot; &quot; + l.getEstudiante().getPersona().getApellido(),</span>
+<span class="fc" id="L137">                l.getDescripcion(),</span>
+<span class="fc" id="L138">                l.getFechaLesion().format(FECHA),</span>
+                retorno,
+                estado);
+    }
+
+    private String promedio(List&lt;DetalleEvaluacion&gt; detalles) {
+<span class="nc" id="L144">        BigDecimal suma = detalles.stream().map(DetalleEvaluacion::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+<span class="nc" id="L145">        return suma.divide(BigDecimal.valueOf(detalles.size()), 2, RoundingMode.HALF_UP).toPlainString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

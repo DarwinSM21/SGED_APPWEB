@@ -1,6 +1,8 @@
 package org.uteq.backend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,6 +15,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,7 +44,10 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -76,6 +82,11 @@ class AuthServiceTest {
                 .standaloneSetup(authController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+    }
+
+    @AfterEach
+    void limpiarContextoDeSeguridad() {
+        SecurityContextHolder.clearContext();
     }
 
     private UserDetails mockUser(String username, String rol) {
@@ -281,5 +292,201 @@ class AuthServiceTest {
         mockMvc.perform(get("/api/auth/ping"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("pong"));
+    }
+
+    @Test
+    void loginBloqueadaPorIntentosFallidosDa429() throws Exception {
+        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(true);
+
+        LoginRequest loginRequest = new LoginRequest("admin@test.com", "cualquiera");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isTooManyRequests());
+
+        verify(authenticationManager, never()).authenticate(any());
+    }
+
+    /** Cuenta autenticada cuya Persona no se pudo resolver: el nombre cae al username, no rompe el login. */
+    @Test
+    void loginSinFichaDePersonaUsaUsernameComoNombre() throws Exception {
+        UserDetails userDetails = mockUser("sinficha@test.com", "ROLE_ENTRENADOR");
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+
+        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(auth);
+        when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
+        when(jwtService.generateRefreshToken(anyString(), anyString())).thenReturn("mock-refresh-token");
+        when(usuarioRepository.findByUsernameAndActivoTrue("sinficha@test.com")).thenReturn(Optional.empty());
+
+        LoginRequest loginRequest = new LoginRequest("sinficha@test.com", "Admin2026!");
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("sinficha@test.com"));
+    }
+
+    @Test
+    void registroCedulaDuplicadaDa409() throws Exception {
+        when(usuarioRepository.existsByUsername("cedula.dup@test.com")).thenReturn(false);
+        when(personaRepository.existsByCedulaAndActivoTrue("0912345678")).thenReturn(true);
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345678", "cedula.dup.correo@test.com",
+                LocalDate.of(2000, 1, 1), "cedula.dup@test.com", "test123", "ENTRENADOR");
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isConflict());
+
+        verify(personaRepository, never()).save(any());
+    }
+
+    @Test
+    void registroCorreoDuplicadoDa409() throws Exception {
+        when(usuarioRepository.existsByUsername("correo.dup@test.com")).thenReturn(false);
+        when(personaRepository.existsByCedulaAndActivoTrue("0912345681")).thenReturn(false);
+        when(personaRepository.existsByCorreo("correo.dup.persona@test.com")).thenReturn(true);
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345681", "correo.dup.persona@test.com",
+                LocalDate.of(2000, 1, 1), "correo.dup@test.com", "test123", "ENTRENADOR");
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isConflict());
+
+        verify(personaRepository, never()).save(any());
+    }
+
+    /** id_estado_general=1 falta en el catalogo (seed no aplicado): 500, no una excepcion sin manejar. */
+    @Test
+    void registroSinCatalogoEstadoGeneralDa500() throws Exception {
+        when(usuarioRepository.existsByUsername("sinestado@test.com")).thenReturn(false);
+        when(personaRepository.existsByCedulaAndActivoTrue("0912345682")).thenReturn(false);
+        when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
+            Persona p = i.getArgument(0);
+            p.setIdPersona(9L);
+            return p;
+        });
+        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
+                Optional.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345682", "sinestado.persona@test.com",
+                LocalDate.of(2000, 1, 1), "sinestado@test.com", "test123", "ENTRENADOR");
+
+        mockMvc.perform(post("/api/auth/registro")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isInternalServerError());
+    }
+
+    @Test
+    void logoutConCookieRevocaElToken() throws Exception {
+        when(jwtService.extractJti("token-valido")).thenReturn("jti-123");
+        when(jwtService.getExpirationMs()).thenReturn(900_000L);
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .cookie(new Cookie("sged_access", "token-valido")))
+                .andExpect(status().isNoContent());
+
+        verify(blacklistService).revocar("jti-123", 900_000L);
+        verify(auditoriaService).registrar(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
+    }
+
+    @Test
+    void logoutSinCookieNoIntentaRevocar() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isNoContent());
+
+        verify(jwtService, never()).extractJti(any());
+        verify(blacklistService, never()).revocar(any(), anyLong());
+    }
+
+    /** Cookie presente pero con un JWT corrupto: extractJti lanza, logout igual responde 204. */
+    @Test
+    void logoutConTokenInvalidoIgnoraLaExcepcionYContinua() throws Exception {
+        when(jwtService.extractJti("token-corrupto")).thenThrow(new RuntimeException("token malformado"));
+
+        mockMvc.perform(post("/api/auth/logout")
+                        .cookie(new Cookie("sged_access", "token-corrupto")))
+                .andExpect(status().isNoContent());
+
+        verify(blacklistService, never()).revocar(any(), anyLong());
+    }
+
+    @Test
+    void refreshSinCookieDa401() throws Exception {
+        mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshConTokenInvalidoDa401() throws Exception {
+        when(jwtService.isTokenValid("refresh-invalido")).thenReturn(false);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new Cookie("sged_refresh", "refresh-invalido")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshConTokenValidoEmiteNuevoAccessToken() throws Exception {
+        when(jwtService.isTokenValid("refresh-valido")).thenReturn(true);
+        when(jwtService.extractUsername("refresh-valido")).thenReturn("admin@test.com");
+        when(jwtService.extractRol("refresh-valido")).thenReturn("ADMINISTRADOR");
+        when(jwtService.generateToken("admin@test.com", "ADMINISTRADOR")).thenReturn("nuevo-access");
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new Cookie("sged_refresh", "refresh-valido")))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void meSinAutenticarDa401() throws Exception {
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void meAutenticadoDevuelveLaSesion() throws Exception {
+        UserDetails userDetails = mockUser("admin@test.com", "ROLE_ADMINISTRADOR");
+        var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
+        Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
+                .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
+        when(usuarioRepository.findByUsername("admin@test.com")).thenReturn(Optional.of(usuario));
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("admin@test.com"))
+                .andExpect(jsonPath("$.nombre").value("Admin SGED"))
+                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
+    }
+
+    /** Sesion autenticada pero cuya Persona ya no existe: el nombre cae al username, /me no rompe. */
+    @Test
+    void meAutenticadoSinFichaUsaUsernameComoNombre() throws Exception {
+        UserDetails userDetails = mockUser("huerfano@test.com", "ROLE_ENTRENADOR");
+        var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        when(usuarioRepository.findByUsername("huerfano@test.com")).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.nombre").value("huerfano@test.com"));
     }
 }

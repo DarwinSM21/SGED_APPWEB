@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuditoriaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auditoria.service</a> &gt; <span class="el_source">AuditoriaService.java</span></div><h1>AuditoriaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auditoria.service;
+
+import jakarta.persistence.criteria.Predicate;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.uteq.backend.seguridad.auditoria.dto.AuditoriaResponse;
+import org.uteq.backend.seguridad.auditoria.entity.Auditoria;
+import org.uteq.backend.seguridad.auditoria.repository.AuditoriaRepository;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Registra filas en seguridad.auditoria. A diferencia del resto de
+ * servicios del proyecto (que reciben el username ya resuelto desde el
+ * controller, ver comentario en InformeService), este lee
+ * SecurityContextHolder directamente: es el unico punto que se invoca
+ * desde un aspecto AOP envolviendo metodos arbitrarios, que no puede
+ * agregarles un parametro de username.
+ *
+ * &lt;p&gt;Nunca debe romper la operacion de negocio que audita: cualquier
+ * fallo al resolver el contexto o guardar la fila se loguea y se ignora.
+ * Por eso mismo los metodos de escritura usan REQUIRES_NEW -- login()
+ * corre en una transaccion @Transactional(readOnly = true), y sin una
+ * transaccion propia el INSERT de auditoria fallaria con &quot;cannot execute
+ * INSERT in a read-only transaction&quot; y de paso dejaria abortada la
+ * transaccion de login entero.
+ */
+@Service
+@RequiredArgsConstructor
+public class AuditoriaService {
+
+<span class="fc" id="L46">    private static final Logger log = LoggerFactory.getLogger(AuditoriaService.class);</span>
+
+    private final AuditoriaRepository auditoriaRepository;
+    private final UsuarioRepository usuarioRepository;
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void registrar(String accion, String entidad, Long entidadId, String descripcion) {
+<span class="fc" id="L53">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L54" title="1 of 4 branches missed.">        String username = (auth != null &amp;&amp; auth.isAuthenticated()) ? auth.getName() : &quot;desconocido&quot;;</span>
+<span class="pc bpc" id="L55" title="1 of 4 branches missed.">        String rol = (auth != null &amp;&amp; !auth.getAuthorities().isEmpty())</span>
+<span class="fc" id="L56">                ? auth.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;)</span>
+<span class="fc" id="L57">                : null;</span>
+<span class="fc" id="L58">        registrarConIdentidad(username, rol, accion, entidad, entidadId, descripcion);</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Variante para llamadores que ya conocen la identidad (ej.
+     * AuthController en login/logout, donde SecurityContextHolder todavia
+     * no tiene autenticacion resuelta porque la sesion es stateless por
+     * JWT y ese token recien se esta emitiendo).
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void registrarConIdentidad(String username, String rol, String accion, String entidad,
+                                       Long entidadId, String descripcion) {
+        try {
+<span class="fc" id="L71">            Auditoria.AuditoriaBuilder builder = Auditoria.builder()</span>
+<span class="fc" id="L72">                    .fecha(OffsetDateTime.now())</span>
+<span class="fc" id="L73">                    .usuarioNombre(username)</span>
+<span class="fc" id="L74">                    .rol(rol)</span>
+<span class="fc" id="L75">                    .accion(accion)</span>
+<span class="fc" id="L76">                    .entidad(entidad)</span>
+<span class="fc" id="L77">                    .entidadId(entidadId)</span>
+<span class="fc" id="L78">                    .descripcion(descripcion)</span>
+<span class="fc" id="L79">                    .ip(resolverIp());</span>
+
+<span class="fc" id="L81">            usuarioRepository.findByUsername(username).ifPresent(builder::usuario);</span>
+
+<span class="fc" id="L83">            auditoriaRepository.save(builder.build());</span>
+<span class="fc" id="L84">        } catch (Exception e) {</span>
+<span class="fc" id="L85">            log.error(&quot;No se pudo registrar la auditoria: accion={} entidad={} entidadId={}&quot;,</span>
+                    accion, entidad, entidadId, e);
+<span class="fc" id="L87">        }</span>
+<span class="fc" id="L88">    }</span>
+
+    /**
+     * Filtros con Specification (no JPQL &quot;@Query&quot; con &quot;IS NULL OR&quot;): con
+     * parametros null combinados en un OR, PostgreSQL no siempre puede
+     * inferir el tipo del parametro preparado y el driver JDBC responde
+     * &quot;could not determine data type of parameter&quot; -- con Specification
+     * cada predicado se agrega solo si el filtro esta presente, sin ese
+     * problema.
+     */
+    @Transactional(readOnly = true)
+    public Page&lt;AuditoriaResponse&gt; buscar(String usuario, String accion, String entidad,
+                                           OffsetDateTime fechaDesde, OffsetDateTime fechaHasta,
+                                           Pageable pageable) {
+<span class="fc" id="L102">        Specification&lt;Auditoria&gt; filtro = construirFiltro(usuario, accion, entidad, fechaDesde, fechaHasta);</span>
+<span class="fc" id="L103">        return auditoriaRepository.findAll(filtro, pageable)</span>
+<span class="fc" id="L104">                .map(a -&gt; new AuditoriaResponse(</span>
+<span class="fc" id="L105">                        a.getIdAuditoria(),</span>
+<span class="fc" id="L106">                        a.getFecha(),</span>
+<span class="fc" id="L107">                        a.getUsuarioNombre(),</span>
+<span class="fc" id="L108">                        a.getRol(),</span>
+<span class="fc" id="L109">                        a.getAccion(),</span>
+<span class="fc" id="L110">                        a.getEntidad(),</span>
+<span class="fc" id="L111">                        a.getEntidadId(),</span>
+<span class="fc" id="L112">                        a.getDescripcion()));</span>
+    }
+
+    private Specification&lt;Auditoria&gt; construirFiltro(String usuario, String accion, String entidad,
+                                                       OffsetDateTime fechaDesde, OffsetDateTime fechaHasta) {
+<span class="fc" id="L117">        return (root, query, cb) -&gt; {</span>
+<span class="fc" id="L118">            List&lt;Predicate&gt; predicados = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L119" title="All 4 branches covered.">            if (usuario != null &amp;&amp; !usuario.isBlank()) {</span>
+<span class="fc" id="L120">                predicados.add(cb.like(cb.lower(root.get(&quot;usuarioNombre&quot;)), &quot;%&quot; + usuario.toLowerCase() + &quot;%&quot;));</span>
+            }
+<span class="fc bfc" id="L122" title="All 4 branches covered.">            if (accion != null &amp;&amp; !accion.isBlank()) {</span>
+<span class="fc" id="L123">                predicados.add(cb.equal(root.get(&quot;accion&quot;), accion));</span>
+            }
+<span class="pc bpc" id="L125" title="1 of 4 branches missed.">            if (entidad != null &amp;&amp; !entidad.isBlank()) {</span>
+<span class="fc" id="L126">                predicados.add(cb.equal(root.get(&quot;entidad&quot;), entidad));</span>
+            }
+<span class="fc bfc" id="L128" title="All 2 branches covered.">            if (fechaDesde != null) {</span>
+<span class="fc" id="L129">                predicados.add(cb.greaterThanOrEqualTo(root.get(&quot;fecha&quot;), fechaDesde));</span>
+            }
+<span class="fc bfc" id="L131" title="All 2 branches covered.">            if (fechaHasta != null) {</span>
+<span class="fc" id="L132">                predicados.add(cb.lessThanOrEqualTo(root.get(&quot;fecha&quot;), fechaHasta));</span>
+            }
+<span class="fc" id="L134">            return cb.and(predicados.toArray(new Predicate[0]));</span>
+        };
+    }
+
+    private String resolverIp() {
+<span class="fc" id="L139">        var attrs = RequestContextHolder.getRequestAttributes();</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (attrs instanceof ServletRequestAttributes servletAttrs) {</span>
+<span class="fc" id="L141">            return servletAttrs.getRequest().getRemoteAddr();</span>
+        }
+<span class="fc" id="L143">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

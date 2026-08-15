@@ -59,7 +59,7 @@ public class AsistenciaService {
 <span class="fc" id="L59">            throw new IllegalArgumentException(&quot;Esta sesión no corresponde a tu categoría&quot;);</span>
         }
 
-<span class="fc" id="L62">        LocalTime ahora = LocalTime.now();</span>
+<span class="fc" id="L62">        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);</span>
 <span class="fc" id="L63">        Asistencia asistencia = Asistencia.builder()</span>
 <span class="fc" id="L64">                .sesion(sesion)</span>
 <span class="fc" id="L65">                .estudiante(estudiante)</span>

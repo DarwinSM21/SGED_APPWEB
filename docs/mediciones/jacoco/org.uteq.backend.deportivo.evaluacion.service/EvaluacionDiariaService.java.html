@@ -11,6 +11,7 @@ import org.uteq.backend.deportivo.evaluacion.entity.*;
 import org.uteq.backend.deportivo.evaluacion.repository.*;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
@@ -54,102 +55,107 @@ public class EvaluacionDiariaService {
      */
     @Transactional
     public EvaluacionSesionResponse abrir(Long idSesion) {
-<span class="fc" id="L57">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
-<span class="pc" id="L58">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe la sesion &quot; + idSesion));</span>
+<span class="fc" id="L58">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
+<span class="fc" id="L59">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe la sesion &quot; + idSesion));</span>
 
-<span class="nc" id="L60">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
-<span class="nc" id="L61">                .orElseGet(() -&gt; evaluacionRepository.save(EvaluacionDiaria.builder()</span>
-<span class="nc" id="L62">                        .sesion(sesion)</span>
-<span class="nc" id="L63">                        .entrenador(sesion.getEntrenador())</span>
-<span class="nc" id="L64">                        .fecha(sesion.getFecha())</span>
-<span class="nc" id="L65">                        .estado(EvaluacionDiaria.BORRADOR)</span>
-<span class="nc" id="L66">                        .build()));</span>
+<span class="fc" id="L61">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
+<span class="pc" id="L62">                .orElseGet(() -&gt; evaluacionRepository.save(EvaluacionDiaria.builder()</span>
+<span class="nc" id="L63">                        .sesion(sesion)</span>
+<span class="nc" id="L64">                        .entrenador(sesion.getEntrenador())</span>
+<span class="nc" id="L65">                        .fecha(sesion.getFecha())</span>
+<span class="nc" id="L66">                        .estado(EvaluacionDiaria.BORRADOR)</span>
+<span class="nc" id="L67">                        .build()));</span>
 
-<span class="nc" id="L68">        List&lt;CriterioEvaluacion&gt; criterios = criterioRepository.findByActivoTrueOrderByIdCriterioAsc();</span>
-<span class="nc" id="L69">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
+<span class="fc" id="L69">        List&lt;CriterioEvaluacion&gt; criterios = criterioRepository.findByActivoTrueOrderByIdCriterioAsc();</span>
+<span class="fc" id="L70">        Map&lt;Long, Long&gt; lesionActivaPorEstudiante = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (Object[] fila : lesionRepository.idsYLesionActivaPorEstudiante()) {</span>
+<span class="fc" id="L72">            lesionActivaPorEstudiante.put((Long) fila[0], (Long) fila[1]);</span>
+<span class="fc" id="L73">        }</span>
 
         // Evaluacion previa de la misma categoria: fuente de la precarga.
-<span class="nc" id="L72">        Long idEvaluacionPrevia = buscarEvaluacionPrevia(sesion);</span>
+<span class="fc" id="L76">        Long idEvaluacionPrevia = buscarEvaluacionPrevia(sesion);</span>
 
-<span class="nc" id="L74">        List&lt;JugadorEvaluableResponse&gt; jugadores = new ArrayList&lt;&gt;();</span>
-<span class="nc bnc" id="L75" title="All 2 branches missed.">        for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
-<span class="nc" id="L76">            jugadores.add(construirJugador(</span>
-                    asistencia, evaluacion, idEvaluacionPrevia, lesionados));
-<span class="nc" id="L78">        }</span>
-<span class="nc" id="L79">        jugadores.sort(Comparator.comparing(JugadorEvaluableResponse::nombreCompleto));</span>
+<span class="fc" id="L78">        List&lt;JugadorEvaluableResponse&gt; jugadores = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">        for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
+<span class="fc" id="L80">            jugadores.add(construirJugador(</span>
+                    asistencia, evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
+<span class="fc" id="L82">        }</span>
+<span class="fc" id="L83">        jugadores.sort(Comparator.comparing(JugadorEvaluableResponse::nombreCompleto));</span>
 
-<span class="nc" id="L81">        return new EvaluacionSesionResponse(</span>
-<span class="nc" id="L82">                evaluacion.getIdEvaluacion(),</span>
+<span class="fc" id="L85">        return new EvaluacionSesionResponse(</span>
+<span class="fc" id="L86">                evaluacion.getIdEvaluacion(),</span>
                 idSesion,
-<span class="nc" id="L84">                evaluacion.getFecha(),</span>
-<span class="nc" id="L85">                sesion.getCategoria().getNombre(),</span>
-<span class="nc" id="L86">                evaluacion.getEstado(),</span>
-<span class="nc" id="L87">                criterios.stream().map(c -&gt; new CriterioResponse(</span>
-<span class="nc" id="L88">                        c.getIdCriterio(), c.getNombre(), c.getDescripcion(), c.getPuntajeMaximo())).toList(),</span>
+<span class="fc" id="L88">                evaluacion.getFecha(),</span>
+<span class="fc" id="L89">                sesion.getCategoria().getNombre(),</span>
+<span class="fc" id="L90">                evaluacion.getEstado(),</span>
+<span class="pc" id="L91">                criterios.stream().map(c -&gt; new CriterioResponse(</span>
+<span class="pc" id="L92">                        c.getIdCriterio(), c.getNombre(), c.getDescripcion(), c.getPuntajeMaximo())).toList(),</span>
                 jugadores,
-<span class="nc" id="L90">                evaluacion.getObservacionGeneral());</span>
+<span class="fc" id="L94">                evaluacion.getObservacionGeneral());</span>
     }
 
     private JugadorEvaluableResponse construirJugador(Asistencia asistencia,
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
-                                                      Set&lt;Long&gt; lesionados) {
-<span class="nc" id="L97">        var estudiante = asistencia.getEstudiante();</span>
-<span class="nc" id="L98">        Long idEstudiante = estudiante.getIdEstudiante();</span>
-<span class="nc" id="L99">        var persona = estudiante.getPersona();</span>
-<span class="nc" id="L100">        String nombre = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
+                                                      Map&lt;Long, Long&gt; lesionActivaPorEstudiante) {
+<span class="fc" id="L101">        var estudiante = asistencia.getEstudiante();</span>
+<span class="fc" id="L102">        Long idEstudiante = estudiante.getIdEstudiante();</span>
+<span class="fc" id="L103">        var persona = estudiante.getPersona();</span>
+<span class="fc" id="L104">        String nombre = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
 
-<span class="nc" id="L102">        boolean puedeEvaluarse = asistencia.habilitaEvaluacion();</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">        String motivo = puedeEvaluarse ? null</span>
-<span class="nc" id="L104">                : &quot;No se puede calificar: la asistencia figura como &quot; + asistencia.getEstado();</span>
+<span class="fc" id="L106">        boolean puedeEvaluarse = asistencia.habilitaEvaluacion();</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">        String motivo = puedeEvaluarse ? null</span>
+<span class="pc" id="L108">                : &quot;No se puede calificar: la asistencia figura como &quot; + asistencia.getEstado();</span>
 
         // Lo ya guardado hoy tiene prioridad sobre cualquier precarga.
-<span class="nc" id="L107">        var yaEvaluado = evaluacionEstudianteRepository</span>
-<span class="nc" id="L108">                .findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(</span>
-<span class="nc" id="L109">                        evaluacion.getIdEvaluacion(), idEstudiante);</span>
+<span class="fc" id="L111">        var yaEvaluado = evaluacionEstudianteRepository</span>
+<span class="fc" id="L112">                .findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(</span>
+<span class="fc" id="L113">                        evaluacion.getIdEvaluacion(), idEstudiante);</span>
 
-<span class="nc" id="L111">        Map&lt;String, BigDecimal&gt; puntajes = new LinkedHashMap&lt;&gt;();</span>
-<span class="nc" id="L112">        boolean precargado = false;</span>
-<span class="nc" id="L113">        Long idPosicion = null;</span>
-<span class="nc" id="L114">        String posicion = null;</span>
+<span class="fc" id="L115">        Map&lt;String, BigDecimal&gt; puntajes = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L116">        boolean precargado = false;</span>
+<span class="fc" id="L117">        Long idPosicion = null;</span>
+<span class="fc" id="L118">        String posicion = null;</span>
 
-<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (yaEvaluado.isPresent()) {</span>
-<span class="nc" id="L117">            var ee = yaEvaluado.get();</span>
-<span class="nc bnc" id="L118" title="All 2 branches missed.">            for (DetalleEvaluacion d : ee.getDetalles()) {</span>
-<span class="nc" id="L119">                puntajes.put(d.getCriterio().getNombre(), d.getPuntaje());</span>
-<span class="nc" id="L120">            }</span>
-<span class="nc bnc" id="L121" title="All 2 branches missed.">            if (ee.getPosicionJugada() != null) {</span>
-<span class="nc" id="L122">                idPosicion = ee.getPosicionJugada().getIdPosicion();</span>
-<span class="nc" id="L123">                posicion = ee.getPosicionJugada().getNombre();</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        if (yaEvaluado.isPresent()) {</span>
+<span class="nc" id="L121">            var ee = yaEvaluado.get();</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            for (DetalleEvaluacion d : ee.getDetalles()) {</span>
+<span class="nc" id="L123">                puntajes.put(d.getCriterio().getNombre(), d.getPuntaje());</span>
+<span class="nc" id="L124">            }</span>
+<span class="nc bnc" id="L125" title="All 2 branches missed.">            if (ee.getPosicionJugada() != null) {</span>
+<span class="nc" id="L126">                idPosicion = ee.getPosicionJugada().getIdPosicion();</span>
+<span class="nc" id="L127">                posicion = ee.getPosicionJugada().getNombre();</span>
             }
-<span class="nc bnc" id="L125" title="All 4 branches missed.">        } else if (idEvaluacionPrevia != null &amp;&amp; puedeEvaluarse) {</span>
-<span class="nc bnc" id="L126" title="All 2 branches missed.">            for (Object[] fila : evaluacionEstudianteRepository</span>
-<span class="nc" id="L127">                    .puntajesDeEvaluacion(idEstudiante, idEvaluacionPrevia)) {</span>
-<span class="nc" id="L128">                puntajes.put((String) fila[0], (BigDecimal) fila[1]);</span>
-<span class="nc" id="L129">            }</span>
-<span class="nc bnc" id="L130" title="All 2 branches missed.">            precargado = !puntajes.isEmpty();</span>
+<span class="pc bpc" id="L129" title="3 of 4 branches missed.">        } else if (idEvaluacionPrevia != null &amp;&amp; puedeEvaluarse) {</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            for (Object[] fila : evaluacionEstudianteRepository</span>
+<span class="nc" id="L131">                    .puntajesDeEvaluacion(idEstudiante, idEvaluacionPrevia)) {</span>
+<span class="nc" id="L132">                puntajes.put((String) fila[0], (BigDecimal) fila[1]);</span>
+<span class="nc" id="L133">            }</span>
+<span class="nc bnc" id="L134" title="All 2 branches missed.">            precargado = !puntajes.isEmpty();</span>
         }
 
-<span class="nc" id="L133">        return new JugadorEvaluableResponse(</span>
+<span class="fc" id="L137">        Long idLesionActiva = lesionActivaPorEstudiante.get(idEstudiante);</span>
+<span class="fc" id="L138">        return new JugadorEvaluableResponse(</span>
                 idEstudiante, nombre,
-<span class="nc" id="L135">                estudiante.getCategoria().getNombre(),</span>
+<span class="fc" id="L140">                estudiante.getCategoria().getNombre(),</span>
                 idPosicion, posicion,
-<span class="nc" id="L137">                asistencia.getEstado(),</span>
+<span class="pc bpc" id="L142" title="1 of 2 branches missed.">                asistencia.getEstado(),</span>
                 puntajes, precargado,
-<span class="nc" id="L139">                lesionados.contains(idEstudiante),</span>
+                idLesionActiva != null,
+                idLesionActiva,
                 puedeEvaluarse, motivo);
     }
 
     private Long buscarEvaluacionPrevia(SesionEntrenamiento sesion) {
-<span class="nc" id="L144">        var previas = sesionRepository.findByCategoriaIdCategoriaAndFechaLessThanOrderByFechaDesc(</span>
-<span class="nc" id="L145">                sesion.getCategoria().getIdCategoria(), sesion.getFecha(),</span>
-<span class="nc" id="L146">                org.springframework.data.domain.PageRequest.of(0, 1));</span>
-<span class="nc bnc" id="L147" title="All 2 branches missed.">        if (previas.isEmpty()) {</span>
-<span class="nc" id="L148">            return null;</span>
+<span class="fc" id="L150">        var previas = sesionRepository.findByCategoriaIdCategoriaAndFechaLessThanOrderByFechaDesc(</span>
+<span class="fc" id="L151">                sesion.getCategoria().getIdCategoria(), sesion.getFecha(),</span>
+<span class="fc" id="L152">                org.springframework.data.domain.PageRequest.of(0, 1));</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">        if (previas.isEmpty()) {</span>
+<span class="fc" id="L154">            return null;</span>
         }
-<span class="nc" id="L150">        return evaluacionRepository.findBySesionIdSesion(previas.get(0).getIdSesion())</span>
-<span class="nc" id="L151">                .map(EvaluacionDiaria::getIdEvaluacion)</span>
-<span class="nc" id="L152">                .orElse(null);</span>
+<span class="nc" id="L156">        return evaluacionRepository.findBySesionIdSesion(previas.get(0).getIdSesion())</span>
+<span class="nc" id="L157">                .map(EvaluacionDiaria::getIdEvaluacion)</span>
+<span class="nc" id="L158">                .orElse(null);</span>
     }
 
     /**
@@ -159,101 +165,103 @@ public class EvaluacionDiariaService {
      */
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
-<span class="fc" id="L162">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
-<span class="pc" id="L163">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L168">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
+<span class="pc" id="L169">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;La sesion &quot; + idSesion + &quot; no tiene evaluacion abierta&quot;));
 
-<span class="fc bfc" id="L166" title="All 2 branches covered.">        if (evaluacion.estaFinalizada()) {</span>
-<span class="fc" id="L167">            throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        if (evaluacion.estaFinalizada()) {</span>
+<span class="fc" id="L173">            throw new IllegalArgumentException(</span>
                     &quot;La evaluacion ya fue finalizada y no admite cambios&quot;);
         }
 
         // Regla 1: sin asistencia habilitante no se guarda nada.
-<span class="fc" id="L172">        Asistencia asistencia = asistenciaRepository</span>
-<span class="fc" id="L173">                .findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, request.idEstudiante())</span>
-<span class="fc" id="L174">                .orElseThrow(() -&gt; new IllegalArgumentException(</span>
+<span class="fc" id="L178">        Asistencia asistencia = asistenciaRepository</span>
+<span class="fc" id="L179">                .findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, request.idEstudiante())</span>
+<span class="fc" id="L180">                .orElseThrow(() -&gt; new IllegalArgumentException(</span>
                         &quot;El estudiante no tiene asistencia registrada en esta sesion&quot;));
 
-<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (!asistencia.habilitaEvaluacion()) {</span>
-<span class="fc" id="L178">            throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        if (!asistencia.habilitaEvaluacion()) {</span>
+<span class="fc" id="L184">            throw new IllegalArgumentException(</span>
                     &quot;No se puede calificar a un estudiante cuya asistencia es &quot;
-<span class="fc" id="L180">                            + asistencia.getEstado());</span>
+<span class="fc" id="L186">                            + asistencia.getEstado());</span>
         }
 
-<span class="fc" id="L183">        var estudiante = asistencia.getEstudiante();</span>
+<span class="fc" id="L189">        var estudiante = asistencia.getEstudiante();</span>
 
-<span class="fc" id="L185">        EvaluacionEstudiante ee = evaluacionEstudianteRepository</span>
-<span class="fc" id="L186">                .findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(</span>
-<span class="fc" id="L187">                        evaluacion.getIdEvaluacion(), request.idEstudiante())</span>
-<span class="fc" id="L188">                .orElseGet(() -&gt; EvaluacionEstudiante.builder()</span>
-<span class="fc" id="L189">                        .evaluacion(evaluacion)</span>
-<span class="fc" id="L190">                        .estudiante(estudiante)</span>
+<span class="fc" id="L191">        EvaluacionEstudiante ee = evaluacionEstudianteRepository</span>
+<span class="fc" id="L192">                .findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(</span>
+<span class="fc" id="L193">                        evaluacion.getIdEvaluacion(), request.idEstudiante())</span>
+<span class="fc" id="L194">                .orElseGet(() -&gt; EvaluacionEstudiante.builder()</span>
+<span class="fc" id="L195">                        .evaluacion(evaluacion)</span>
+<span class="fc" id="L196">                        .estudiante(estudiante)</span>
                         // Regla 3: la categoria del dia se congela al crear la
                         // fila, tomandola del estudiante en este momento.
-<span class="fc" id="L193">                        .categoriaDia(estudiante.getCategoria())</span>
-<span class="fc" id="L194">                        .build());</span>
+<span class="fc" id="L199">                        .categoriaDia(estudiante.getCategoria())</span>
+<span class="fc" id="L200">                        .build());</span>
 
-<span class="pc bpc" id="L196" title="1 of 2 branches missed.">        if (request.idPosicionJugada() != null) {</span>
-<span class="nc" id="L197">            ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())</span>
-<span class="nc" id="L198">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
-<span class="nc" id="L199">                            &quot;No existe la posicion &quot; + request.idPosicionJugada())));</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">        if (request.idPosicionJugada() != null) {</span>
+<span class="nc" id="L203">            ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())</span>
+<span class="nc" id="L204">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L205">                            &quot;No existe la posicion &quot; + request.idPosicionJugada())));</span>
         }
 
-<span class="fc" id="L202">        lesionRepository.buscarActivaPorEstudiante(request.idEstudiante())</span>
-<span class="fc" id="L203">                .ifPresent(ee::setLesion);</span>
+<span class="fc" id="L208">        lesionRepository.buscarActivaPorEstudiante(request.idEstudiante())</span>
+<span class="fc" id="L209">                .ifPresent(ee::setLesion);</span>
 
-<span class="fc" id="L205">        aplicarPuntajes(ee, request);</span>
-<span class="fc" id="L206">        evaluacionEstudianteRepository.save(ee);</span>
-<span class="fc" id="L207">    }</span>
+<span class="fc" id="L211">        aplicarPuntajes(ee, request);</span>
+<span class="fc" id="L212">        evaluacionEstudianteRepository.save(ee);</span>
+<span class="fc" id="L213">    }</span>
 
     private void aplicarPuntajes(EvaluacionEstudiante ee, GuardarJugadorRequest request) {
-<span class="fc" id="L210">        Map&lt;Long, CriterioEvaluacion&gt; criterios = new HashMap&lt;&gt;();</span>
-<span class="fc" id="L211">        criterioRepository.findByActivoTrueOrderByIdCriterioAsc()</span>
-<span class="fc" id="L212">                .forEach(c -&gt; criterios.put(c.getIdCriterio(), c));</span>
+<span class="fc" id="L216">        Map&lt;Long, CriterioEvaluacion&gt; criterios = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L217">        criterioRepository.findByActivoTrueOrderByIdCriterioAsc()</span>
+<span class="fc" id="L218">                .forEach(c -&gt; criterios.put(c.getIdCriterio(), c));</span>
 
-<span class="fc" id="L214">        Map&lt;Long, DetalleEvaluacion&gt; existentes = new HashMap&lt;&gt;();</span>
-<span class="pc" id="L215">        ee.getDetalles().forEach(d -&gt; existentes.put(d.getCriterio().getIdCriterio(), d));</span>
+<span class="fc" id="L220">        Map&lt;Long, DetalleEvaluacion&gt; existentes = new HashMap&lt;&gt;();</span>
+<span class="pc" id="L221">        ee.getDetalles().forEach(d -&gt; existentes.put(d.getCriterio().getIdCriterio(), d));</span>
 
-<span class="fc bfc" id="L217" title="All 2 branches covered.">        for (PuntajeCriterioRequest p : request.puntajes()) {</span>
-<span class="fc" id="L218">            CriterioEvaluacion criterio = criterios.get(p.idCriterio());</span>
-<span class="pc bpc" id="L219" title="1 of 2 branches missed.">            if (criterio == null) {</span>
-<span class="nc" id="L220">                throw new IllegalArgumentException(</span>
-<span class="nc" id="L221">                        &quot;El criterio &quot; + p.idCriterio() + &quot; no existe o esta desactivado&quot;);</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        for (PuntajeCriterioRequest p : request.puntajes()) {</span>
+<span class="fc" id="L224">            CriterioEvaluacion criterio = criterios.get(p.idCriterio());</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">            if (criterio == null) {</span>
+<span class="nc" id="L226">                throw new IllegalArgumentException(</span>
+<span class="nc" id="L227">                        &quot;El criterio &quot; + p.idCriterio() + &quot; no existe o esta desactivado&quot;);</span>
             }
-<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (p.puntaje().compareTo(BigDecimal.valueOf(criterio.getPuntajeMaximo())) &gt; 0) {</span>
-<span class="fc" id="L224">                throw new IllegalArgumentException(</span>
-<span class="fc" id="L225">                        &quot;El puntaje de &quot; + criterio.getNombre() + &quot; supera su maximo de &quot;</span>
-<span class="fc" id="L226">                                + criterio.getPuntajeMaximo());</span>
+<span class="fc bfc" id="L229" title="All 2 branches covered.">            if (p.puntaje().compareTo(BigDecimal.valueOf(criterio.getPuntajeMaximo())) &gt; 0) {</span>
+<span class="fc" id="L230">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L231">                        &quot;El puntaje de &quot; + criterio.getNombre() + &quot; supera su maximo de &quot;</span>
+<span class="fc" id="L232">                                + criterio.getPuntajeMaximo());</span>
             }
 
-<span class="fc" id="L229">            DetalleEvaluacion detalle = existentes.get(p.idCriterio());</span>
-<span class="pc bpc" id="L230" title="1 of 2 branches missed.">            if (detalle == null) {</span>
-<span class="fc" id="L231">                detalle = DetalleEvaluacion.builder()</span>
-<span class="fc" id="L232">                        .evaluacionEstudiante(ee)</span>
-<span class="fc" id="L233">                        .criterio(criterio)</span>
-<span class="fc" id="L234">                        .puntaje(p.puntaje())</span>
-<span class="fc" id="L235">                        .build();</span>
-<span class="fc" id="L236">                ee.getDetalles().add(detalle);</span>
+<span class="fc" id="L235">            DetalleEvaluacion detalle = existentes.get(p.idCriterio());</span>
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">            if (detalle == null) {</span>
+<span class="fc" id="L237">                detalle = DetalleEvaluacion.builder()</span>
+<span class="fc" id="L238">                        .evaluacionEstudiante(ee)</span>
+<span class="fc" id="L239">                        .criterio(criterio)</span>
+<span class="fc" id="L240">                        .puntaje(p.puntaje())</span>
+<span class="fc" id="L241">                        .build();</span>
+<span class="fc" id="L242">                ee.getDetalles().add(detalle);</span>
             } else {
-<span class="nc" id="L238">                detalle.setPuntaje(p.puntaje());</span>
+<span class="nc" id="L244">                detalle.setPuntaje(p.puntaje());</span>
             }
-<span class="fc" id="L240">        }</span>
-<span class="fc" id="L241">    }</span>
+<span class="fc" id="L246">        }</span>
+<span class="fc" id="L247">    }</span>
 
     /** Cierra la evaluacion. A partir de aqui no admite cambios. */
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;EvaluacionDiaria&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'finalizó la evaluación de la sesión #' + #p0&quot;)
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
-<span class="fc" id="L246">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
-<span class="pc" id="L247">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L254">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
+<span class="pc" id="L255">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;La sesion &quot; + idSesion + &quot; no tiene evaluacion abierta&quot;));
 
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">        if (evaluacion.estaFinalizada()) {</span>
-<span class="fc" id="L251">            throw new IllegalArgumentException(&quot;La evaluacion ya estaba finalizada&quot;);</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        if (evaluacion.estaFinalizada()) {</span>
+<span class="fc" id="L259">            throw new IllegalArgumentException(&quot;La evaluacion ya estaba finalizada&quot;);</span>
         }
 
-<span class="nc" id="L254">        evaluacion.setObservacionGeneral(observacionGeneral);</span>
-<span class="nc" id="L255">        evaluacion.setEstado(EvaluacionDiaria.FINALIZADA);</span>
-<span class="nc" id="L256">        evaluacionRepository.save(evaluacion);</span>
-<span class="nc" id="L257">    }</span>
+<span class="nc" id="L262">        evaluacion.setObservacionGeneral(observacionGeneral);</span>
+<span class="nc" id="L263">        evaluacion.setEstado(EvaluacionDiaria.FINALIZADA);</span>
+<span class="nc" id="L264">        evaluacionRepository.save(evaluacion);</span>
+<span class="nc" id="L265">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

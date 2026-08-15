@@ -84,7 +84,7 @@ public class SecurityConfig {
         // Sigue siendo compatible con allowCredentials=true porque Spring
         // igual refleja el origen puntual que hizo match, nunca &quot;*&quot; literal.
 <span class="fc" id="L86">        config.setAllowedOriginPatterns(corsAllowedOriginPatterns);</span>
-<span class="fc" id="L87">        config.setAllowedMethods(List.of(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;DELETE&quot;, &quot;OPTIONS&quot;));</span>
+<span class="fc" id="L87">        config.setAllowedMethods(List.of(&quot;GET&quot;, &quot;POST&quot;, &quot;PUT&quot;, &quot;PATCH&quot;, &quot;DELETE&quot;, &quot;OPTIONS&quot;));</span>
 <span class="fc" id="L88">        config.setAllowedHeaders(List.of(&quot;Authorization&quot;, &quot;Content-Type&quot;, &quot;Accept&quot;));</span>
 <span class="fc" id="L89">        config.setAllowCredentials(true);</span>
 <span class="fc" id="L90">        config.setMaxAge(3600L);</span>

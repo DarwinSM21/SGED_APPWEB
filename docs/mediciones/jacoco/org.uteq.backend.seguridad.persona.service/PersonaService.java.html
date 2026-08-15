@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -19,108 +20,111 @@ public class PersonaService {
 
     @Transactional(readOnly = true)
     public Page&lt;PersonaResponse&gt; listar(Pageable pageable) {
-<span class="fc" id="L22">        return personaRepository.findByActivoTrue(pageable)</span>
-<span class="fc" id="L23">                .map(this::toResponse);</span>
+<span class="fc" id="L23">        return personaRepository.findByActivoTrue(pageable)</span>
+<span class="fc" id="L24">                .map(this::toResponse);</span>
     }
 
     @Transactional(readOnly = true)
     public PersonaResponse buscarPorId(Long id) {
-<span class="fc" id="L28">        Persona p = personaRepository.findByIdPersonaAndActivoTrue(id)</span>
-<span class="pc" id="L29">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada o inactivada con id: &quot; + id));</span>
-<span class="nc" id="L30">        return toResponse(p);</span>
+<span class="fc" id="L29">        Persona p = personaRepository.findByIdPersonaAndActivoTrue(id)</span>
+<span class="pc" id="L30">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada o inactivada con id: &quot; + id));</span>
+<span class="nc" id="L31">        return toResponse(p);</span>
     }
 
     @Transactional(readOnly = true)
     public PersonaResponse buscarPorCedula(String cedula) {
-<span class="fc" id="L35">        Persona persona = personaRepository.findByCedulaAndActivoTrue(cedula)</span>
-<span class="pc" id="L36">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con cédula: &quot; + cedula));</span>
-<span class="fc" id="L37">        return toResponse(persona);</span>
+<span class="fc" id="L36">        Persona persona = personaRepository.findByCedulaAndActivoTrue(cedula)</span>
+<span class="pc" id="L37">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con cédula: &quot; + cedula));</span>
+<span class="fc" id="L38">        return toResponse(persona);</span>
     }
 
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Persona&quot;, idSpel = &quot;#result.idPersona&quot;)
     @Transactional
     public PersonaResponse crear(PersonaRequest request) {
         // Validar unicidad de Cédula y Correo
-<span class="fc" id="L43">        validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), null);</span>
+<span class="fc" id="L45">        validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), null);</span>
 
-<span class="fc" id="L45">        Persona persona = Persona.builder()</span>
-<span class="fc" id="L46">                .nombre(request.nombre())</span>
-<span class="fc" id="L47">                .apellido(request.apellido())</span>
-<span class="fc" id="L48">                .cedula(request.cedula())</span>
-<span class="fc" id="L49">                .correo(request.correo())</span>
-<span class="fc" id="L50">                .telefono(request.telefono())</span>
-<span class="fc" id="L51">                .foto(request.foto())</span>
-<span class="fc" id="L52">                .fechaNacimiento(request.fechaNacimiento())</span>
-<span class="fc" id="L53">                .activo(true)</span>
-<span class="fc" id="L54">                .build();</span>
+<span class="fc" id="L47">        Persona persona = Persona.builder()</span>
+<span class="fc" id="L48">                .nombre(request.nombre())</span>
+<span class="fc" id="L49">                .apellido(request.apellido())</span>
+<span class="fc" id="L50">                .cedula(request.cedula())</span>
+<span class="fc" id="L51">                .correo(request.correo())</span>
+<span class="fc" id="L52">                .telefono(request.telefono())</span>
+<span class="fc" id="L53">                .foto(request.foto())</span>
+<span class="fc" id="L54">                .fechaNacimiento(request.fechaNacimiento())</span>
+<span class="fc" id="L55">                .activo(true)</span>
+<span class="fc" id="L56">                .build();</span>
 
-<span class="fc" id="L56">        persona = personaRepository.save(persona);</span>
-<span class="fc" id="L57">        return toResponse(persona);</span>
+<span class="fc" id="L58">        persona = personaRepository.save(persona);</span>
+<span class="fc" id="L59">        return toResponse(persona);</span>
     }
 
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Persona&quot;, idSpel = &quot;#result.idPersona&quot;)
     @Transactional
     public PersonaResponse editar(Long id, PersonaRequest request) {
-<span class="fc" id="L62">        Persona persona = personaRepository.findById(id)</span>
-<span class="pc" id="L63">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L65">        Persona persona = personaRepository.findById(id)</span>
+<span class="pc" id="L66">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + id));</span>
 
         // Validar unicidad excluyendo la persona actual que se edita
-<span class="fc" id="L66">        validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), id);</span>
+<span class="fc" id="L69">        validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), id);</span>
 
-<span class="fc" id="L68">        persona.setNombre(request.nombre());</span>
-<span class="fc" id="L69">        persona.setApellido(request.apellido());</span>
-<span class="fc" id="L70">        persona.setCedula(request.cedula());</span>
-<span class="fc" id="L71">        persona.setCorreo(request.correo());</span>
-<span class="fc" id="L72">        persona.setTelefono(request.telefono());</span>
-<span class="fc" id="L73">        persona.setFoto(request.foto());</span>
-<span class="fc" id="L74">        persona.setFechaNacimiento(request.fechaNacimiento());</span>
+<span class="fc" id="L71">        persona.setNombre(request.nombre());</span>
+<span class="fc" id="L72">        persona.setApellido(request.apellido());</span>
+<span class="fc" id="L73">        persona.setCedula(request.cedula());</span>
+<span class="fc" id="L74">        persona.setCorreo(request.correo());</span>
+<span class="fc" id="L75">        persona.setTelefono(request.telefono());</span>
+<span class="fc" id="L76">        persona.setFoto(request.foto());</span>
+<span class="fc" id="L77">        persona.setFechaNacimiento(request.fechaNacimiento());</span>
 
-<span class="fc" id="L76">        persona = personaRepository.save(persona);</span>
-<span class="fc" id="L77">        return toResponse(persona);</span>
+<span class="fc" id="L79">        persona = personaRepository.save(persona);</span>
+<span class="fc" id="L80">        return toResponse(persona);</span>
     }
 
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Persona&quot;, idSpel = &quot;#p0&quot;)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L82">        Persona persona = personaRepository.findById(id)</span>
-<span class="pc" id="L83">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L86">        Persona persona = personaRepository.findById(id)</span>
+<span class="pc" id="L87">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + id));</span>
         
         // Baja lógica
-<span class="fc" id="L86">        persona.setActivo(false);</span>
-<span class="fc" id="L87">        personaRepository.save(persona);</span>
-<span class="fc" id="L88">    }</span>
+<span class="fc" id="L90">        persona.setActivo(false);</span>
+<span class="fc" id="L91">        personaRepository.save(persona);</span>
+<span class="fc" id="L92">    }</span>
 
     // --- Métodos Privados de Apoyo ---
 
     private void validarUnicidadCedulaYCorreo(String cedula, String correo, Long idActual) {
-<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (idActual == null) {</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (idActual == null) {</span>
             // Al CREAR
-<span class="fc bfc" id="L95" title="All 2 branches covered.">            if (personaRepository.existsByCedulaAndActivoTrue(cedula)) {</span>
-<span class="fc" id="L96">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con la cédula: &quot; + cedula);</span>
+<span class="fc bfc" id="L99" title="All 2 branches covered.">            if (personaRepository.existsByCedulaAndActivoTrue(cedula)) {</span>
+<span class="fc" id="L100">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con la cédula: &quot; + cedula);</span>
             }
-<span class="fc bfc" id="L98" title="All 2 branches covered.">            if (personaRepository.existsByCorreo(correo)) {</span>
-<span class="fc" id="L99">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con el correo: &quot; + correo);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            if (personaRepository.existsByCorreo(correo)) {</span>
+<span class="fc" id="L103">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con el correo: &quot; + correo);</span>
             }
         } else {
             // Al EDITAR (Usa las consultas JPQL con != :idPersona)
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            if (personaRepository.existeOtraPersonaConCedula(cedula, idActual)) {</span>
-<span class="nc" id="L104">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con la cédula: &quot; + cedula);</span>
+<span class="pc bpc" id="L107" title="1 of 2 branches missed.">            if (personaRepository.existeOtraPersonaConCedula(cedula, idActual)) {</span>
+<span class="nc" id="L108">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con la cédula: &quot; + cedula);</span>
             }
-<span class="pc bpc" id="L106" title="1 of 2 branches missed.">            if (personaRepository.existeOtraPersonaConCorreo(correo, idActual)) {</span>
-<span class="nc" id="L107">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con el correo: &quot; + correo);</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            if (personaRepository.existeOtraPersonaConCorreo(correo, idActual)) {</span>
+<span class="nc" id="L111">                throw new IllegalArgumentException(&quot;Ya existe una persona registrada con el correo: &quot; + correo);</span>
             }
         }
-<span class="fc" id="L110">    }</span>
+<span class="fc" id="L114">    }</span>
 
     private PersonaResponse toResponse(Persona p) {
-<span class="fc" id="L113">        return new PersonaResponse(</span>
-<span class="fc" id="L114">                p.getIdPersona(),</span>
-<span class="fc" id="L115">                p.getNombre(),</span>
-<span class="fc" id="L116">                p.getApellido(),</span>
-<span class="fc" id="L117">                p.getCedula(),</span>
-<span class="fc" id="L118">                p.getCorreo(),</span>
-<span class="fc" id="L119">                p.getTelefono(),</span>
-<span class="fc" id="L120">                p.getFoto(),</span>
-<span class="fc" id="L121">                p.getFechaNacimiento(),</span>
-<span class="fc" id="L122">                p.getActivo(),</span>
-<span class="pc bpc" id="L123" title="1 of 2 branches missed.">                p.getCreatedAt() != null ? p.getCreatedAt().toInstant() : null</span>
+<span class="fc" id="L117">        return new PersonaResponse(</span>
+<span class="fc" id="L118">                p.getIdPersona(),</span>
+<span class="fc" id="L119">                p.getNombre(),</span>
+<span class="fc" id="L120">                p.getApellido(),</span>
+<span class="fc" id="L121">                p.getCedula(),</span>
+<span class="fc" id="L122">                p.getCorreo(),</span>
+<span class="fc" id="L123">                p.getTelefono(),</span>
+<span class="fc" id="L124">                p.getFoto(),</span>
+<span class="fc" id="L125">                p.getFechaNacimiento(),</span>
+<span class="fc" id="L126">                p.getActivo(),</span>
+<span class="pc bpc" id="L127" title="1 of 2 branches missed.">                p.getCreatedAt() != null ? p.getCreatedAt().toInstant() : null</span>
         );
     }
 }

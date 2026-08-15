@@ -186,7 +186,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
 <span class="fc" id="L186">                    .header(&quot;x-goog-api-key&quot;, apiKey)</span>
 <span class="fc" id="L187">                    .contentType(MediaType.APPLICATION_JSON)</span>
 <span class="fc" id="L188">                    .body(cuerpo)</span>
-<span class="nc" id="L189">                    .retrieve()</span>
+<span class="fc" id="L189">                    .retrieve()</span>
 <span class="nc" id="L190">                    .body(JsonNode.class);</span>
 
 <span class="nc" id="L192">            String texto = extraerTexto(respuesta);</span>

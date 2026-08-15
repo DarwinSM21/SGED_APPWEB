@@ -58,6 +58,19 @@ class AsistenciaServiceTest {
         return SesionEntrenamiento.builder().idSesion(1L).horaInicio(horaInicio).build();
     }
 
+    /**
+     * Hora "dentro de una hora" que nunca cruza medianoche: LocalTime no tiene
+     * fecha, asi que sumar cerca de las 23:xx envolveria hacia las 00:xx e
+     * invertiria la comparacion de calcularEstado. Mismo cuidado que ya
+     * aplican marcarPorQr_marca_tarde_fuera_de_tolerancia y
+     * tolerancia_es_configurable, para el caso simetrico de sumar en vez de
+     * restar.
+     */
+    private LocalTime enUnaHora() {
+        LocalTime ahora = LocalTime.now();
+        return ahora.isAfter(LocalTime.of(23, 0)) ? LocalTime.of(23, 59) : ahora.plusHours(1);
+    }
+
     @Test
     @DisplayName("marcarPorQr lanza RecursoNoEncontradoException si la cuenta no tiene estudiante asociado")
     void marcarPorQr_sin_estudiante_asociado_lanza_excepcion() {
@@ -83,7 +96,7 @@ class AsistenciaServiceTest {
     @DisplayName("marcarPorQr marca PRESENTE dentro de la tolerancia")
     void marcarPorQr_marca_presente_dentro_de_tolerancia() {
         Estudiante e = estudiante();
-        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().plusHours(1));
+        SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
@@ -169,7 +182,7 @@ class AsistenciaServiceTest {
     @DisplayName("marcarPorQr rechaza una sesion que no es de la categoria del estudiante")
     void marcarPorQr_rechaza_categoria_no_coincidente() {
         Estudiante e = estudiante();
-        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().plusHours(1));
+        SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
@@ -185,7 +198,7 @@ class AsistenciaServiceTest {
     @DisplayName("marcarPorQr rechaza si el procedimiento no puede determinar la categoria (null)")
     void marcarPorQr_rechaza_categoria_indeterminada() {
         Estudiante e = estudiante();
-        SesionEntrenamiento sesion = sesionConHoraInicio(LocalTime.now().plusHours(1));
+        SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());

@@ -86,13 +86,13 @@ import java.util.List;
 
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
-<span class="nc" id="L89">        log.error(&quot;Error no controlado&quot;, ex);</span>
-<span class="nc" id="L90">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L89">        log.error(&quot;Error no controlado&quot;, ex);</span>
+<span class="fc" id="L90">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.INTERNAL_SERVER_ERROR, &quot;Error interno del servidor&quot;);
-<span class="nc" id="L92">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Interno&quot;));</span>
-<span class="nc" id="L93">        pd.setTitle(&quot;Internal Server Error&quot;);</span>
-<span class="nc" id="L94">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="nc" id="L95">        return pd;</span>
+<span class="fc" id="L92">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Interno&quot;));</span>
+<span class="fc" id="L93">        pd.setTitle(&quot;Internal Server Error&quot;);</span>
+<span class="fc" id="L94">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L95">        return pd;</span>
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

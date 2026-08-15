@@ -34,52 +34,52 @@ public class PagoController {
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional
     public ResponseEntity&lt;List&lt;PagoResponse&gt;&gt; registrarMembresia(@Valid @RequestBody RegistrarMembresiaRequest request) {
-<span class="nc" id="L37">        var pagos = pagoService.registrarMembresia(</span>
-<span class="nc" id="L38">                request.idEstudiante(), request.anio(), request.meses(),</span>
-<span class="nc" id="L39">                request.monto(), request.fechaPago(), usernameAutenticado());</span>
-<span class="nc" id="L40">        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());</span>
+<span class="fc" id="L37">        var pagos = pagoService.registrarMembresia(</span>
+<span class="fc" id="L38">                request.idEstudiante(), request.anio(), request.meses(),</span>
+<span class="fc" id="L39">                request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="fc" id="L40">        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());</span>
     }
 
     @PostMapping(&quot;/diario&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional
     public ResponseEntity&lt;PagoResponse&gt; registrarDiario(@Valid @RequestBody RegistrarDiarioRequest request) {
-<span class="nc" id="L47">        var pago = pagoService.registrarDiario(</span>
-<span class="nc" id="L48">                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());</span>
-<span class="nc" id="L49">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));</span>
+<span class="fc" id="L47">        var pago = pagoService.registrarDiario(</span>
+<span class="fc" id="L48">                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="fc" id="L49">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));</span>
     }
 
     @GetMapping(&quot;/estudiante/{idEstudiante}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;List&lt;PagoResponse&gt;&gt; historial(@PathVariable Long idEstudiante) {
-<span class="nc" id="L56">        return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());</span>
+<span class="fc" id="L56">        return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());</span>
     }
 
     @GetMapping(&quot;/ingresos-mes&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;IngresosMesResponse&gt; ingresosDelMes() {
-<span class="nc" id="L63">        return ResponseEntity.ok(pagoService.ingresosDelMes());</span>
+<span class="fc" id="L63">        return ResponseEntity.ok(pagoService.ingresosDelMes());</span>
     }
 
     private String usernameAutenticado() {
-<span class="nc" id="L67">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L67">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 
     private PagoResponse aResponse(Pago p) {
-<span class="nc" id="L71">        var persona = p.getEstudiante().getPersona();</span>
-<span class="nc" id="L72">        var registrador = p.getRegistradoPor().getPersona();</span>
-<span class="nc" id="L73">        return new PagoResponse(</span>
-<span class="nc" id="L74">                p.getIdPago(),</span>
-<span class="nc" id="L75">                p.getEstudiante().getIdEstudiante(),</span>
-<span class="nc" id="L76">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
-<span class="nc" id="L77">                p.getTipo(),</span>
-<span class="nc bnc" id="L78" title="All 2 branches missed.">                p.getAnio() != null ? p.getAnio().intValue() : null,</span>
-<span class="nc bnc" id="L79" title="All 2 branches missed.">                p.getMes() != null ? p.getMes().intValue() : null,</span>
-<span class="nc" id="L80">                p.getMonto(),</span>
-<span class="nc" id="L81">                p.getFechaPago(),</span>
-<span class="nc" id="L82">                registrador.getNombre() + &quot; &quot; + registrador.getApellido());</span>
+<span class="fc" id="L71">        var persona = p.getEstudiante().getPersona();</span>
+<span class="fc" id="L72">        var registrador = p.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L73">        return new PagoResponse(</span>
+<span class="fc" id="L74">                p.getIdPago(),</span>
+<span class="fc" id="L75">                p.getEstudiante().getIdEstudiante(),</span>
+<span class="fc" id="L76">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L77">                p.getTipo(),</span>
+<span class="fc bfc" id="L78" title="All 2 branches covered.">                p.getAnio() != null ? p.getAnio().intValue() : null,</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">                p.getMes() != null ? p.getMes().intValue() : null,</span>
+<span class="fc" id="L80">                p.getMonto(),</span>
+<span class="fc" id="L81">                p.getFechaPago(),</span>
+<span class="fc" id="L82">                registrador.getNombre() + &quot; &quot; + registrador.getApellido());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
