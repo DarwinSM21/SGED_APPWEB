@@ -1658,7 +1658,12 @@ repetirlos y obtener cifras comparables.
 
 El trabajo sigue \emph{Design Science Research} (DSR) en la formulación de
 Peffers~\emph{et al.}~\cite{peffers2007}, articulada con los criterios de
-rigor y relevancia de Hevner~\emph{et al.}~\cite{hevner2004}, en sus seis
+rigor y relevancia de Hevner~\emph{et al.}~\cite{hevner2004} —un marco que
+la revisión de Engström~\emph{et al.} confirma como infrecuente en la
+investigación de ingeniería de software pese a encajar naturalmente con
+ella, precisamente porque buena parte de esa investigación ya diseña
+soluciones a problemas prácticos sin nombrar explícitamente el
+paradigma~\cite{engstrom2020dsr}—, en sus seis
 actividades:
 
 \begin{enumerate}[leftmargin=*]
@@ -2231,7 +2236,12 @@ ellas en 1,0. \ok
 
 El instrumento (\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}) es el
 cuestionario SUS de diez ítems~\cite{brooke1996} con la escala adjetival de
-interpretación~\cite{bangor2009}. El script \ruta{scripts/sus-analysis.py}
+interpretación~\cite{bangor2009}, administrado en español: la validación
+psicométrica de Castilla~\emph{et al.} sobre 1321 participantes hispanohablantes
+confirma que las formas completa y corta del SUS en español conservan
+propiedades psicométricas válidas, con el cuidado adicional de vigilar el
+efecto de los ítems redactados en negativo~\cite{castilla2023sus}. El script
+\ruta{scripts/sus-analysis.py}
 calcula media, desviación típica, intervalo de confianza al 95\,\%, mediana
 y grado por participante; se niega deliberadamente a ejecutarse con menos
 de diez participantes, y su aritmética quedó verificada contra los cuatro
@@ -2347,7 +2357,12 @@ empírica~\cite{iso25010}.
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
     pruebas.} Un 72,5\,\% indica qué proporción del código se ejecuta
-    durante la suite, no que las aserciones sean pertinentes. El caso del
+    durante la suite, no que las aserciones sean pertinentes —el mismo
+    desacople que documentan Imran~\emph{et al.} sobre pruebas de
+    rendimiento en sistemas Java de código abierto: alcanzan una
+    cobertura sistemáticamente menor que las pruebas funcionales pese a
+    ser igual de válidas, porque miden algo distinto de lo que la
+    cobertura agregada expresa~\cite{imran2025coverage}. El caso del
     registro de usuarios lo demuestra dentro de este mismo proyecto: el
     \emph{endpoint} estaba cubierto por dos pruebas que pasaban y aun así
     fallaba en toda petición real (sección~\ref{sec:defectos-runtime}).
