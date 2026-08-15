@@ -1,5 +1,6 @@
 \documentclass[11pt,a4paper]{article}
 
+\usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-noindentfirst]{babel}
@@ -901,8 +902,8 @@ RF-22) terminen de exponerse vía API.
 fuente que se actualiza con cada cambio de código; \ruta{historias-usuario.md}
 y \ruta{casos-uso.md} no se han actualizado al mismo ritmo. Concretamente:
 RF-17 (horarios), RF-18 (sesiones) y RF-22 (notificaciones) ya figuran
-\textbf{✅ Implementado} en el SRS, pero \ruta{historias-usuario.md}
-todavía marca HU-11 y HU-14 como 🟡/⬜, y \ruta{casos-uso.md} sigue
+\textcolor{okverde}{\textbf{Implementado}} en el SRS, pero \ruta{historias-usuario.md}
+todavía marca HU-11 y HU-14 como \emph{Modelado}/\emph{Planificado}, y \ruta{casos-uso.md} sigue
 listando CU-11, CU-12 y CU-15 en la tabla de "casos de uso pendientes".
 Tampoco existe todavía ninguna historia o caso de uso para los ocho
 requisitos del módulo de catálogos/cuentas (RF-23 a RF-26) ni para los
@@ -952,7 +953,7 @@ Sobre el alcance que sí cubre (RF-01–RF-22), 8 requisitos registran al
 menos una modificación posterior a su adición (RF-01, RF-02, RF-03,
 RF-06, RF-08, RF-11, RF-14, RF-15) de 22 requisitos totales en ese rango:
 \[
-\text{tasa de estabilidad} = 1 - \frac{8}{22} \approx 0{,}636 \;\; (63{,}6\,\%)
+\text{tasa de estabilidad} = 1 - \frac{8}{22} \approx 0,636 \quad \text{(63,6\,\%)}
 \]
 Cifra que debe leerse con la salvedad anterior: mide solo el 71\,\%
 (22 de 31) de los requisitos funcionales actuales, porque es lo único
@@ -972,9 +973,9 @@ Requisitos funcionales totales (RF) & 31 \\
 Requisitos no funcionales (RNF) & 13 \\
 Restricciones de diseño (RD) & 3 \\
 \textbf{Total de requisitos individuales} & \textbf{47} \\
-RF en estado ✅ Implementado & 28 (90{,}3\,\%) \\
-RF en estado 🟡 Modelado (solo esquema) & 3 (9{,}7\,\%) \\
-RF en estado ⬜ Planificado & 0 \\
+RF en estado Implementado & 28 (90{,}3\,\%) \\
+RF en estado Modelado (solo esquema) & 3 (9{,}7\,\%) \\
+RF en estado Planificado & 0 \\
 RF con verificación de prueba nombrada explícitamente & 31 de 31 (100\,\%)$^\ast$ \\
 RF con prioridad formal declarada & 25 de 31 (80{,}6\,\%) \\
 Historias de usuario & 14 (\textsc{hu}-01 a \textsc{hu}-14) \\
@@ -985,7 +986,7 @@ Tasa de estabilidad (sobre el rango cubierto) & 63{,}6\,\% \\
 \end{tabular}
 \end{table}
 
-$^\ast$Incluye los 3 requisitos en estado 🟡 Modelado, cuya "verificación"
+$^\ast$Incluye los 3 requisitos en estado Modelado, cuya "verificación"
 en el SRS describe la restricción de esquema (p. ej. la restricción
 \texttt{CHECK} de \textsc{rf}-19), no todavía una prueba de API porque el
 \emph{endpoint} no existe.
@@ -1435,7 +1436,7 @@ El interceptor HTTP de Angular no lee ni adjunta el JWT manualmente — es
 la cookie \texttt{HttpOnly} (sección~\ref{sec:jwt-cookie}) la que viaja
 automáticamente con cada petición del mismo origen:
 
-\begin{lstlisting}[language=JavaScript,caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})}]
+\begin{lstlisting}[caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})}]
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req.clone({ withCredentials: true }));
 };
