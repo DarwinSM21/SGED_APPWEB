@@ -83,3 +83,6 @@ la verificación de que el sistema funciona correctamente fueron hechos y
 revisados por el equipo, no de forma autónoma por la IA. Los commits de este
 repositorio no incluyen atribución de coautoría a IA — la autoría de cada
 commit corresponde únicamente a la persona que lo realizó.
+
+Declaración ampliada por fase del proyecto:
+[`docs/etica/ai-disclosure.md`](docs/etica/ai-disclosure.md).

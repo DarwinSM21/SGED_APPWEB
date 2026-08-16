@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ReportePdfService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.reportes.service</a> &gt; <span class="el_source">ReportePdfService.java</span></div><h1>ReportePdfService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.reportes.service;
+
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Font;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
+import org.uteq.backend.common.Zonas;
+
+import java.awt.Color;
+import java.io.ByteArrayOutputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
+/**
+ * Utilidad compartida para armar los PDFs de Reportes y de &quot;mis datos&quot; en
+ * Configuracion: mismo encabezado/tabla/pie para todos, cada llamador solo
+ * arma sus filas reutilizando los repositorios/servicios que ya existen.
+ */
+@Service
+<span class="fc" id="L28">public class ReportePdfService {</span>
+
+<span class="fc" id="L30">    private static final Font FUENTE_TITULO = new Font(Font.HELVETICA, 16, Font.BOLD);</span>
+<span class="fc" id="L31">    private static final Font FUENTE_ENCABEZADO = new Font(Font.HELVETICA, 9, Font.BOLD, Color.WHITE);</span>
+<span class="fc" id="L32">    private static final Font FUENTE_CELDA = new Font(Font.HELVETICA, 9);</span>
+<span class="fc" id="L33">    private static final Font FUENTE_PIE = new Font(Font.HELVETICA, 8, Font.ITALIC);</span>
+<span class="fc" id="L34">    private static final Color COLOR_ENCABEZADO = new Color(79, 70, 229);</span>
+
+    public byte[] generar(String titulo, List&lt;String&gt; encabezados, List&lt;List&lt;String&gt;&gt; filas) {
+<span class="fc" id="L37">        Document documento = new Document(PageSize.A4, 36, 36, 54, 54);</span>
+        try {
+<span class="fc" id="L39">            ByteArrayOutputStream salida = new ByteArrayOutputStream();</span>
+<span class="fc" id="L40">            PdfWriter.getInstance(documento, salida);</span>
+<span class="fc" id="L41">            documento.open();</span>
+
+<span class="fc" id="L43">            documento.add(new Paragraph(&quot;SGED - &quot; + titulo, FUENTE_TITULO));</span>
+<span class="fc" id="L44">            documento.add(new Paragraph(&quot; &quot;));</span>
+
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (filas.isEmpty()) {</span>
+<span class="fc" id="L47">                documento.add(new Paragraph(&quot;No hay datos para los filtros seleccionados.&quot;, FUENTE_CELDA));</span>
+            } else {
+<span class="fc" id="L49">                documento.add(construirTabla(encabezados, filas));</span>
+            }
+
+<span class="fc" id="L52">            documento.add(new Paragraph(&quot; &quot;));</span>
+<span class="fc" id="L53">            documento.add(new Paragraph(</span>
+<span class="fc" id="L54">                    &quot;Generado por &quot; + usuarioActual() + &quot; el &quot; + fechaActual(), FUENTE_PIE));</span>
+
+<span class="fc" id="L56">            documento.close();</span>
+<span class="fc" id="L57">            return salida.toByteArray();</span>
+<span class="nc" id="L58">        } catch (DocumentException e) {</span>
+<span class="nc" id="L59">            throw new IllegalStateException(&quot;No se pudo generar el PDF: &quot; + titulo, e);</span>
+        }
+    }
+
+    private PdfPTable construirTabla(List&lt;String&gt; encabezados, List&lt;List&lt;String&gt;&gt; filas) {
+<span class="fc" id="L64">        PdfPTable tabla = new PdfPTable(encabezados.size());</span>
+<span class="fc" id="L65">        tabla.setWidthPercentage(100);</span>
+
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (String encabezado : encabezados) {</span>
+<span class="fc" id="L68">            PdfPCell celda = new PdfPCell(new Phrase(encabezado, FUENTE_ENCABEZADO));</span>
+<span class="fc" id="L69">            celda.setBackgroundColor(COLOR_ENCABEZADO);</span>
+<span class="fc" id="L70">            celda.setPadding(5);</span>
+<span class="fc" id="L71">            tabla.addCell(celda);</span>
+<span class="fc" id="L72">        }</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        for (List&lt;String&gt; fila : filas) {</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">            for (String valor : fila) {</span>
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                PdfPCell celda = new PdfPCell(new Phrase(valor != null ? valor : &quot;-&quot;, FUENTE_CELDA));</span>
+<span class="fc" id="L76">                celda.setPadding(4);</span>
+<span class="fc" id="L77">                tabla.addCell(celda);</span>
+<span class="fc" id="L78">            }</span>
+<span class="fc" id="L79">        }</span>
+<span class="fc" id="L80">        return tabla;</span>
+    }
+
+    private String usuarioActual() {
+<span class="fc" id="L84">        var auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L85" title="1 of 4 branches missed.">        return auth != null &amp;&amp; auth.isAuthenticated() ? auth.getName() : &quot;desconocido&quot;;</span>
+    }
+
+    private String fechaActual() {
+<span class="fc" id="L89">        return LocalDateTime.now(Zonas.ECUADOR).format(DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm&quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

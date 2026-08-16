@@ -1,5 +1,6 @@
 package org.uteq.backend;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -10,6 +11,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,7 +41,10 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,7 +52,9 @@ import static org.mockito.Mockito.when;
 /**
  * Prueba unitaria de AuthService, sin contexto HTTP (D-03 / R-03 del
  * informe de evaluacion de calidad: antes esta logica vivia en
- * AuthController y solo podia probarse levantando MockMvc).
+ * AuthController y solo podia probarse levantando MockMvc). Los
+ * escenarios que solo tienen sentido a nivel HTTP (cookies, codigos de
+ * estado sin autenticacion) viven en AuthControllerTest.
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -65,6 +72,11 @@ class AuthServiceTest {
 
     @InjectMocks private AuthService authService;
 
+    @AfterEach
+    void limpiarContextoDeSeguridad() {
+        SecurityContextHolder.clearContext();
+    }
+
     private UserDetails mockUser(String username, String rol) {
         return User.builder()
                 .username(username)
@@ -72,6 +84,8 @@ class AuthServiceTest {
                 .authorities(List.of(new SimpleGrantedAuthority(rol)))
                 .build();
     }
+
+    // --- login ---
 
     @Test
     void loginConCredencialesCorrectasDevuelveTokensYSesion() {
@@ -101,6 +115,26 @@ class AuthServiceTest {
         assertThat(resultado.sesion().getRol()).isEqualTo("ADMINISTRADOR");
     }
 
+    /** Cuenta autenticada cuya Persona no se pudo resolver: el nombre cae al username, no rompe el login. */
+    @Test
+    void loginSinFichaDePersonaUsaUsernameComoNombre() {
+        UserDetails userDetails = mockUser("sinficha@test.com", "ROLE_ENTRENADOR");
+        Authentication auth = new UsernamePasswordAuthenticationToken(
+                userDetails, null, userDetails.getAuthorities());
+
+        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(auth);
+        when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
+        when(jwtService.generateRefreshToken(anyString(), anyString())).thenReturn("mock-refresh-token");
+        when(usuarioRepository.findByUsernameAndActivoTrue("sinficha@test.com")).thenReturn(Optional.empty());
+
+        AuthService.LoginResult resultado = authService.login(
+                new LoginRequest("sinficha@test.com", "Admin2026!"), "127.0.0.1");
+
+        assertThat(resultado.sesion().getNombre()).isEqualTo("sinficha@test.com");
+    }
+
     @Test
     void loginConContrasenaIncorrectaLanzaBadCredentialsYRegistraFallo() {
         when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
@@ -127,6 +161,8 @@ class AuthServiceTest {
         verify(authenticationManager, never()).authenticate(any());
     }
 
+    // --- registrar ---
+
     @Test
     void registrarConUsernameDuplicadoDevuelveVacio() {
         when(usuarioRepository.existsByUsername("test@test.com")).thenReturn(true);
@@ -134,6 +170,33 @@ class AuthServiceTest {
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "test@test.com",
                 LocalDate.of(2000, 1, 1), "test@test.com", "test123", "ENTRENADOR");
+
+        assertThat(authService.registrar(registerRequest)).isEmpty();
+        verify(personaRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarConCedulaDuplicadaDevuelveVacio() {
+        when(usuarioRepository.existsByUsername("cedula.dup@test.com")).thenReturn(false);
+        when(personaRepository.existsByCedulaAndActivoTrue("0912345678")).thenReturn(true);
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345678", "cedula.dup.correo@test.com",
+                LocalDate.of(2000, 1, 1), "cedula.dup@test.com", "test123", "ENTRENADOR");
+
+        assertThat(authService.registrar(registerRequest)).isEmpty();
+        verify(personaRepository, never()).save(any());
+    }
+
+    @Test
+    void registrarConCorreoDuplicadoDevuelveVacio() {
+        when(usuarioRepository.existsByUsername("correo.dup@test.com")).thenReturn(false);
+        when(personaRepository.existsByCedulaAndActivoTrue("0912345681")).thenReturn(false);
+        when(personaRepository.existsByCorreo("correo.dup.persona@test.com")).thenReturn(true);
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345681", "correo.dup.persona@test.com",
+                LocalDate.of(2000, 1, 1), "correo.dup@test.com", "test123", "ENTRENADOR");
 
         assertThat(authService.registrar(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
@@ -186,6 +249,63 @@ class AuthServiceTest {
         verify(personaRepository, never()).save(any());
     }
 
+    /** id_estado_general=1 falta en el catalogo (seed no aplicado): la excepcion sale sin capturar, no un guardado a medias. */
+    @Test
+    void registrarSinCatalogoEstadoGeneralLanzaIllegalStateException() {
+        when(usuarioRepository.existsByUsername("sinestado@test.com")).thenReturn(false);
+        when(personaRepository.existsByCedulaAndActivoTrue("0912345682")).thenReturn(false);
+        when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
+        when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
+            Persona p = i.getArgument(0);
+            p.setIdPersona(9L);
+            return p;
+        });
+        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
+                Optional.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.empty());
+
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345682", "sinestado.persona@test.com",
+                LocalDate.of(2000, 1, 1), "sinestado@test.com", "test123", "ENTRENADOR");
+
+        assertThatThrownBy(() -> authService.registrar(registerRequest))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    // --- logout ---
+
+    @Test
+    void logoutConTokenValidoRevocaYAudita() {
+        when(jwtService.extractJti("token-valido")).thenReturn("jti-123");
+        when(jwtService.getExpirationMs()).thenReturn(900_000L);
+
+        authService.logout("token-valido");
+
+        verify(blacklistService).revocar("jti-123", 900_000L);
+        verify(auditoriaService).registrar(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
+    }
+
+    @Test
+    void logoutSinTokenNoIntentaRevocar() {
+        authService.logout(null);
+
+        verify(jwtService, never()).extractJti(any());
+        verify(blacklistService, never()).revocar(any(), anyLong());
+    }
+
+    /** Token presente pero corrupto: extractJti lanza, logout igual audita y no propaga la excepcion. */
+    @Test
+    void logoutConTokenCorruptoIgnoraLaExcepcion() {
+        when(jwtService.extractJti("token-corrupto")).thenThrow(new RuntimeException("token malformado"));
+
+        authService.logout("token-corrupto");
+
+        verify(blacklistService, never()).revocar(any(), anyLong());
+        verify(auditoriaService).registrar(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
+    }
+
+    // --- refrescar ---
+
     @Test
     void refrescarConTokenInvalidoDevuelveVacio() {
         when(jwtService.isTokenValid("bad-token")).thenReturn(false);
@@ -201,5 +321,46 @@ class AuthServiceTest {
         when(jwtService.generateToken("admin@test.com", "ADMINISTRADOR")).thenReturn("nuevo-access-token");
 
         assertThat(authService.refrescar("good-token")).contains("nuevo-access-token");
+    }
+
+    // --- obtenerSesionActual ---
+
+    @Test
+    void obtenerSesionActualDevuelveLaSesion() {
+        UserDetails userDetails = mockUser("admin@test.com", "ROLE_ADMINISTRADOR");
+        var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
+        Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
+                .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
+        when(usuarioRepository.findByUsername("admin@test.com")).thenReturn(Optional.of(usuario));
+
+        Optional<SesionResponse> resultado = authService.obtenerSesionActual();
+
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getUsername()).isEqualTo("admin@test.com");
+        assertThat(resultado.get().getNombre()).isEqualTo("Admin SGED");
+        assertThat(resultado.get().getRol()).isEqualTo("ADMINISTRADOR");
+    }
+
+    /** Sesion autenticada pero cuya Persona ya no existe: el nombre cae al username, no rompe. */
+    @Test
+    void obtenerSesionActualSinFichaUsaUsernameComoNombre() {
+        UserDetails userDetails = mockUser("huerfano@test.com", "ROLE_ENTRENADOR");
+        var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(auth);
+
+        when(usuarioRepository.findByUsername("huerfano@test.com")).thenReturn(Optional.empty());
+
+        Optional<SesionResponse> resultado = authService.obtenerSesionActual();
+
+        assertThat(resultado).isPresent();
+        assertThat(resultado.get().getNombre()).isEqualTo("huerfano@test.com");
+    }
+
+    @Test
+    void obtenerSesionActualSinAutenticarDevuelveVacio() {
+        assertThat(authService.obtenerSesionActual()).isEmpty();
     }
 }

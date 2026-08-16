@@ -180,25 +180,19 @@
 					<execution>
 						<!-- Entrega Final (Bloque A.1): el umbral real que pide la guia
 						     es >=70% en LINE y BRANCH, sin excepciones de paquete: por
-						     eso ya no se excluye deportivo/** ni los cuatro paquetes de
+						     eso no se excluye deportivo/** ni los cuatro paquetes de
 						     seguridad/academico que antes quedaban fuera del chequeo.
-						     haltOnFailure=false a proposito: no sabemos todavia si el
-						     codigo actual llega a 70/70 sobre TODO el bundle (el ultimo
-						     reporte archivado en docs/mediciones/jacoco/ es anterior al
-						     modulo de inventario). Con haltOnFailure=false, `mvn verify`
-						     sigue en verde pero el log de Maven imprime la violacion
-						     exacta: que paquete y por cuanto queda corto, sin romper
-						     el build mientras se escriben las pruebas que faltan. Antes
-						     de cerrar la Entrega Final: confirmar que el bundle completo
-						     ya llega a 0.70/0.70 y entonces quitar haltOnFailure (o
-						     ponerlo en true) para que el umbral quede exigido de verdad,
-						     no solo declarado. -->
+						     haltOnFailure=true: el bundle completo ya llega a 71%
+						     branches / 86% lines (confirmado con `mvn verify` en limpio,
+						     2026-08-14), asi que el umbral queda exigido de verdad y no
+						     solo declarado: un retroceso por debajo de 70% ahora rompe
+						     el build en vez de solo advertir en el log. -->
 						<id>check</id>
 						<goals>
 							<goal>check</goal>
 						</goals>
 						<configuration>
-							<haltOnFailure>false</haltOnFailure>
+							<haltOnFailure>true</haltOnFailure>
 							<rules>
 								<rule>
 									<element>BUNDLE</element>

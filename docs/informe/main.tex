@@ -1,5 +1,6 @@
 \documentclass[11pt,a4paper]{article}
 
+\usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage[spanish,es-noindentfirst]{babel}
@@ -475,10 +476,44 @@ tuvo una tasa de error de 0,01\,\% (2 de 15\,921 peticiones), las otras
 cuatro sin errores. \textbf{Seguridad OWASP:} los seis controles
 (A01, A02, A03, A05, A07, A09) evidenciados de nuevo con peticiones
 reales contra el sistema actual, y la auditoría de SQL dinámico sin
-hallazgos. \textbf{Calidad web (Lighthouse) sigue pendiente}: este
-entorno de ejecución no tiene un navegador Chrome/Chromium instalable
-en esta sesión; queda para una corrida posterior con el entorno
-completo.
+hallazgos. \textbf{Calidad web (Lighthouse):} este entorno de ejecución
+no tenía un navegador Chrome/Chromium instalable en esta sesión puntual;
+quedó para una corrida posterior con el entorno completo, ya reportada
+más abajo: seis corridas independientes (tres por perfil) el 2026-08-14
+(sección~\ref{sec:seo}), con los tres criterios exigidos por encima del
+umbral y una explicación deliberada del único que no lo está (SEO).
+
+\textbf{Actualización adicional (2026-08-14, sesión posterior):} el
+\textbf{pendiente crítico} señalado arriba —pruebas para
+\texttt{PagoController}/\texttt{PagoService} y \texttt{LesionController}—
+ya está resuelto: ambos módulos tienen suites propias
+(\texttt{PagoControllerTest}, \texttt{PagoServiceTest},
+\texttt{LesionControllerTest}, \texttt{LesionServiceTest}). Se agregaron
+además pruebas dirigidas a las ramas sin cubrir de mayor impacto en todo
+el \emph{bundle}: \texttt{JwtAuthenticationFilter} (que no tenía ninguna
+prueba propia), \texttt{AuthController} en sus rutas de \emph{logout},
+\emph{refresh} y \texttt{/me} (tampoco las tenían), y el filtro de
+búsqueda de \texttt{AuditoriaService} (invisible para JaCoCo mientras el
+repositorio estuviera mockeado, aunque \texttt{buscar()} sí tuviera
+prueba). Cobertura verificada con \texttt{mvn verify} en limpio:
+\textbf{369 pruebas, 0 fallos}; agregada, \textbf{86,2\,\% de líneas} y
+\textbf{71,2\,\% de \emph{branches}} — ambas superan por primera vez el
+70\,\% exigido sobre el \emph{bundle} completo. La regla de JaCoCo pasó
+de \texttt{haltOnFailure=false} (advertía en el log sin romper el
+\emph{build}) a \texttt{haltOnFailure=true}: el umbral ya se hace
+cumplir, no solo se declara. El reporte archivado en
+\ruta{docs/mediciones/jacoco/} corresponde a esta corrida. De paso se
+corrigió un defecto de \emph{test} preexistente y no relacionado con la
+cobertura: una prueba de \texttt{AsistenciaServiceTest} construía su hora
+de referencia con \texttt{LocalTime.now().plusHours(1)} sin protegerse
+del cruce de medianoche (\texttt{LocalTime} no tiene fecha), y fallaba de
+forma intermitente según la hora del día en que corriera la suite —un
+caso puntual de la categoría de defectos que Tiwari~\emph{et al.}
+estudian sistemáticamente sobre 151 casos reales de proyectos Python de
+código abierto, clasificando sus categorías conceptuales, operaciones
+involucradas y causas raíz~\cite{tiwari2025datetime}. Sus
+dos pruebas hermanas ya protegían el caso simétrico de restar, a esta le
+faltaba el de sumar.
 \end{quote}
 
 La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
@@ -873,8 +908,8 @@ RF-22) terminen de exponerse vía API.
 fuente que se actualiza con cada cambio de código; \ruta{historias-usuario.md}
 y \ruta{casos-uso.md} no se han actualizado al mismo ritmo. Concretamente:
 RF-17 (horarios), RF-18 (sesiones) y RF-22 (notificaciones) ya figuran
-\textbf{✅ Implementado} en el SRS, pero \ruta{historias-usuario.md}
-todavía marca HU-11 y HU-14 como 🟡/⬜, y \ruta{casos-uso.md} sigue
+\textcolor{okverde}{\textbf{Implementado}} en el SRS, pero \ruta{historias-usuario.md}
+todavía marca HU-11 y HU-14 como \emph{Modelado}/\emph{Planificado}, y \ruta{casos-uso.md} sigue
 listando CU-11, CU-12 y CU-15 en la tabla de "casos de uso pendientes".
 Tampoco existe todavía ninguna historia o caso de uso para los ocho
 requisitos del módulo de catálogos/cuentas (RF-23 a RF-26) ni para los
@@ -904,6 +939,12 @@ propia entrada del SRS (por ejemplo, RF-06 contra
 \texttt{LoginAttemptServiceTest.bloqueada\_al\_alcanzar\_el\_limite}) — una
 forma continua de validación por criterios de aceptación medidos, en el
 sentido que describe Pohl~\cite{pohl2010}, no solo una revisión puntual.
+Es el mismo problema de fondo que aborda la recuperación automática de
+enlaces de trazabilidad requisito-código en la literatura reciente
+—vincular cada requisito con la evidencia de código que lo satisface—,
+solo que aquí se resuelve declarando el nombre de la prueba en el
+propio SRS en vez de inferirlo después con métodos de recuperación
+automática~\cite{wang2024traceability}.
 No se realizaron todavía \emph{walkthroughs} formales ni prototipado
 evolutivo documentado como técnica de validación separada.
 
@@ -924,7 +965,7 @@ Sobre el alcance que sí cubre (RF-01–RF-22), 8 requisitos registran al
 menos una modificación posterior a su adición (RF-01, RF-02, RF-03,
 RF-06, RF-08, RF-11, RF-14, RF-15) de 22 requisitos totales en ese rango:
 \[
-\text{tasa de estabilidad} = 1 - \frac{8}{22} \approx 0{,}636 \;\; (63{,}6\,\%)
+\text{tasa de estabilidad} = 1 - \frac{8}{22} \approx 0,636 \quad \text{(63,6\,\%)}
 \]
 Cifra que debe leerse con la salvedad anterior: mide solo el 71\,\%
 (22 de 31) de los requisitos funcionales actuales, porque es lo único
@@ -944,9 +985,9 @@ Requisitos funcionales totales (RF) & 31 \\
 Requisitos no funcionales (RNF) & 13 \\
 Restricciones de diseño (RD) & 3 \\
 \textbf{Total de requisitos individuales} & \textbf{47} \\
-RF en estado ✅ Implementado & 28 (90{,}3\,\%) \\
-RF en estado 🟡 Modelado (solo esquema) & 3 (9{,}7\,\%) \\
-RF en estado ⬜ Planificado & 0 \\
+RF en estado Implementado & 28 (90{,}3\,\%) \\
+RF en estado Modelado (solo esquema) & 3 (9{,}7\,\%) \\
+RF en estado Planificado & 0 \\
 RF con verificación de prueba nombrada explícitamente & 31 de 31 (100\,\%)$^\ast$ \\
 RF con prioridad formal declarada & 25 de 31 (80{,}6\,\%) \\
 Historias de usuario & 14 (\textsc{hu}-01 a \textsc{hu}-14) \\
@@ -957,7 +998,7 @@ Tasa de estabilidad (sobre el rango cubierto) & 63{,}6\,\% \\
 \end{tabular}
 \end{table}
 
-$^\ast$Incluye los 3 requisitos en estado 🟡 Modelado, cuya "verificación"
+$^\ast$Incluye los 3 requisitos en estado Modelado, cuya "verificación"
 en el SRS describe la restricción de esquema (p. ej. la restricción
 \texttt{CHECK} de \textsc{rf}-19), no todavía una prueba de API porque el
 \emph{endpoint} no existe.
@@ -1407,7 +1448,7 @@ El interceptor HTTP de Angular no lee ni adjunta el JWT manualmente — es
 la cookie \texttt{HttpOnly} (sección~\ref{sec:jwt-cookie}) la que viaja
 automáticamente con cada petición del mismo origen:
 
-\begin{lstlisting}[language=JavaScript,caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})}]
+\begin{lstlisting}[caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})}]
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req.clone({ withCredentials: true }));
 };
@@ -1627,7 +1668,12 @@ repetirlos y obtener cifras comparables.
 
 El trabajo sigue \emph{Design Science Research} (DSR) en la formulación de
 Peffers~\emph{et al.}~\cite{peffers2007}, articulada con los criterios de
-rigor y relevancia de Hevner~\emph{et al.}~\cite{hevner2004}, en sus seis
+rigor y relevancia de Hevner~\emph{et al.}~\cite{hevner2004} —un marco que
+la revisión de Engström~\emph{et al.} confirma como infrecuente en la
+investigación de ingeniería de software pese a encajar naturalmente con
+ella, precisamente porque buena parte de esa investigación ya diseña
+soluciones a problemas prácticos sin nombrar explícitamente el
+paradigma~\cite{engstrom2020dsr}—, en sus seis
 actividades:
 
 \begin{enumerate}[leftmargin=*]
@@ -1804,7 +1850,15 @@ segundos contra el \emph{endpoint} protegido \texttt{GET /api/estudiantes}
 — cumple el mínimo de cinco corridas que exige el Bloque~A.1 de la
 Entrega Final (la Tercera Entrega solo había archivado tres). Corrida
 regenerada el 2026-08-14 contra el sistema local completo, tras corregir
-el defecto de \ruta{.env} descrito en la sección~\ref{sec:estado-entrega}:
+el defecto de \ruta{.env} descrito en la sección~\ref{sec:estado-entrega}.
+
+La decisión de repetir la medición y reportar un intervalo de confianza,
+en vez de publicar el resultado de una sola corrida, sigue el argumento
+metodológico de Georges~\emph{et al.}: una única ejecución de un sistema
+sobre JVM no caracteriza su rendimiento, porque la variación entre
+corridas puede ser del mismo orden que la diferencia que se pretende
+reportar, y sin estadística de intervalos no hay forma de distinguir una
+de otra~\cite{georges2007benchmarking}. Los resultados:
 
 \begin{table}[htbp]
 \centering
@@ -2016,7 +2070,10 @@ manual de \ruta{scripts/audit-sql-dynamic.sh}
 (sección~\ref{sec:acceso-datos}), pero esta vez con una herramienta de
 análisis de bytecode independiente, no un \emph{grep} de patrones de
 texto. El comando ya forma parte del \emph{pipeline} de CI
-(\ruta{.github/workflows/ci.yml}).
+(\ruta{.github/workflows/ci.yml}), en la línea de lo que Rostami
+Mazrae~\emph{et al.} documentan sobre cómo los equipos de desarrollo
+adoptan, combinan y migran entre herramientas de CI/CD en la
+práctica~\cite{rostamimazrae2023cicd}.
 
 \textbf{Escaneo OWASP ZAP baseline.} Modo pasivo contra
 \texttt{/api/docs} (15 URL rastreadas desde la especificación OpenAPI):
@@ -2200,7 +2257,12 @@ ellas en 1,0. \ok
 
 El instrumento (\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}) es el
 cuestionario SUS de diez ítems~\cite{brooke1996} con la escala adjetival de
-interpretación~\cite{bangor2009}. El script \ruta{scripts/sus-analysis.py}
+interpretación~\cite{bangor2009}, administrado en español: la validación
+psicométrica de Castilla~\emph{et al.} sobre 1321 participantes hispanohablantes
+confirma que las formas completa y corta del SUS en español conservan
+propiedades psicométricas válidas, con el cuidado adicional de vigilar el
+efecto de los ítems redactados en negativo~\cite{castilla2023sus}. El script
+\ruta{scripts/sus-analysis.py}
 calcula media, desviación típica, intervalo de confianza al 95\,\%, mediana
 y grado por participante; se niega deliberadamente a ejecutarse con menos
 de diez participantes, y su aritmética quedó verificada contra los cuatro
@@ -2268,7 +2330,11 @@ Final, no solo un número que aprobó por poco.
 \section{Reproducibilidad}
 
 El sistema se levanta completo desde una clonación limpia con un solo
-comando:
+comando, siguiendo la misma motivación que documentan Cito y Gall para
+usar contenedores como mecanismo de reproducibilidad en investigación
+de ingeniería de software: encapsular las suposiciones y dependencias
+que de otro modo quedan como conocimiento tácito del
+equipo~\cite{citogall2016docker}:
 
 \begin{lstlisting}[language=bash,caption={Arranque reproducible}]
 git clone https://github.com/DarwinSM21/SGED_APPWEB.git
@@ -2316,7 +2382,12 @@ empírica~\cite{iso25010}.
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
     pruebas.} Un 72,5\,\% indica qué proporción del código se ejecuta
-    durante la suite, no que las aserciones sean pertinentes. El caso del
+    durante la suite, no que las aserciones sean pertinentes —el mismo
+    desacople que documentan Imran~\emph{et al.} sobre pruebas de
+    rendimiento en sistemas Java de código abierto: alcanzan una
+    cobertura sistemáticamente menor que las pruebas funcionales pese a
+    ser igual de válidas, porque miden algo distinto de lo que la
+    cobertura agregada expresa~\cite{imran2025coverage}. El caso del
     registro de usuarios lo demuestra dentro de este mismo proyecto: el
     \emph{endpoint} estaba cubierto por dos pruebas que pasaban y aun así
     fallaba en toda petición real (sección~\ref{sec:defectos-runtime}).
@@ -2407,7 +2478,15 @@ cédula, fecha de nacimiento, asistencia con hora y lugar, y evaluaciones
 individuales de desempeño. Esa combinación es sensible porque los titulares
 son menores que no pueden consentir por sí mismos, porque la asistencia es
 información de localización temporal, y porque las evaluaciones constituyen
-perfilado de personas~\cite{lopdp2021,acm2018}.
+perfilado de personas~\cite{lopdp2021,acm2018}. El riesgo no es solo
+regulatorio: Carvalho y Gonçalves advierten sobre la presión creciente por
+identificar talento a edades cada vez más tempranas en el deporte
+formativo, y sobre el desajuste entre los indicadores que se miden y el
+desarrollo real del deportista
+joven~\cite{carvalho2023talento}. Un sistema que registra
+puntajes periódicos de un menor no es un instrumento neutral: puede
+consolidar una etiqueta temprana que condicione decisiones posteriores
+sobre esa misma persona.
 
 El principio de minimización se aplicó al diseño original —se descartaron
 contextura y datos de alimentación—, pero conviene ser preciso sobre su
@@ -2437,6 +2516,50 @@ autenticada del sistema, incluida la búsqueda por número de cédula
 (sección~\ref{sec:a01-falso-correcto}). Un documento de ética que solo
 enumera riesgos hipotéticos y omite la exposición concreta que sí ocurrió
 sería un documento de imagen, no de rendición de cuentas.
+
+\subsection{Generación de retroalimentación con un modelo de lenguaje externo}
+\label{sec:ia-feedback}
+
+El sistema incorpora un servicio opcional
+(\ruta{backend/.../common/ia/GeminiFeedbackService.java}) que redacta
+comentarios de retroalimentación deportiva invocando un modelo de lenguaje
+de un tercero. Enviar información sobre menores de edad a un proveedor
+externo es, por sí mismo, una superficie de divulgación nueva, así que las
+decisiones de diseño se documentan aquí y no solo en el código:
+
+\begin{itemize}[leftmargin=*]
+  \item \textbf{Seudonimización estructural, no por convención.} Lo único
+    que se serializa hacia el proveedor es el \emph{record}
+    \texttt{PerfilJugadorAnonimo}, que no tiene campos de nombre, cédula,
+    correo ni fecha de nacimiento. No es que el código «evite» enviarlos:
+    no existen en el tipo que viaja, de modo que no hay forma de filtrarlos
+    aunque una modificación futura lo intentara por descuido.
+  \item \textbf{La clave viaja en cabecera, no como parámetro de consulta.}
+    Ambas formas están documentadas por el proveedor, pero un parámetro de
+    consulta queda registrado en \emph{logs} de acceso, historiales de
+    \emph{proxy} y cabeceras \texttt{Referer}.
+  \item \textbf{Desactivado por defecto y degradación silenciosa.} Sin
+    clave configurada el servicio reporta no disponible y el resto de la
+    evaluación funciona igual; un fallo del proveedor nunca puede hacer
+    perder al entrenador lo que ya calificó a mano.
+  \item \textbf{Instrucción de sistema que prohíbe inventar.} El
+    \emph{prompt} de sistema acota el registro, prohíbe explícitamente
+    afirmar hechos que no estén en los datos numéricos recibidos, exige
+    tono apropiado para un menor y veta diagnósticos médicos o
+    recomendaciones de aumentar carga física a un jugador lesionado.
+  \item \textbf{Los registros no incluyen el \emph{prompt}.} Ante un fallo
+    se registra el tipo de excepción, nunca el contenido enviado.
+\end{itemize}
+
+Estas mitigaciones acotan el riesgo de divulgación, no la calidad del texto
+generado, que es un problema distinto y abierto: Dai~\emph{et al.} muestran
+que la retroalimentación producida por modelos de lenguaje puede ser fluida
+y coherente y aun así variar en su pertinencia según el
+criterio evaluado~\cite{dai2024feedback}. Por eso el comentario generado se
+presenta como apoyo a la redacción del entrenador y no como sustituto de su
+juicio, y su evaluación empírica queda declarada como trabajo pendiente:
+\textbf{esta entrega no aporta evidencia sobre la calidad de los textos
+generados}, solo sobre las garantías de privacidad de su integración.
 
 Todos los datos del repositorio son ficticios. No se utilizaron datos reales
 de menores en ninguna etapa del desarrollo ni de las mediciones.

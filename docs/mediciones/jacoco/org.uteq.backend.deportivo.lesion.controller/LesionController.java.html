@@ -8,8 +8,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.dto.LesionDtos.*;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.service.LesionService;
@@ -34,13 +37,14 @@ import org.uteq.backend.deportivo.lesion.service.LesionService;
 public class LesionController {
 
     private final LesionService lesionService;
+    private final EntrenadorRepository entrenadorRepository;
 
     @GetMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;Page&lt;LesionResponse&gt;&gt; listarActivas(
             @PageableDefault(size = 20) Pageable pageable) {
-<span class="nc" id="L43">        return ResponseEntity.ok(lesionService.listarActivas(pageable).map(this::aResponse));</span>
+<span class="fc" id="L47">        return ResponseEntity.ok(lesionService.listarActivas(pageable).map(this::aResponse));</span>
     }
 
     @GetMapping(&quot;/estudiante/{idEstudiante}&quot;)
@@ -49,17 +53,17 @@ public class LesionController {
     public ResponseEntity&lt;Page&lt;LesionResponse&gt;&gt; historial(
             @PathVariable Long idEstudiante,
             @PageableDefault(size = 20) Pageable pageable) {
-<span class="nc" id="L52">        return ResponseEntity.ok(lesionService.historialDe(idEstudiante, pageable).map(this::aResponse));</span>
+<span class="fc" id="L56">        return ResponseEntity.ok(lesionService.historialDe(idEstudiante, pageable).map(this::aResponse));</span>
     }
 
     @PostMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     @Transactional
     public ResponseEntity&lt;LesionResponse&gt; registrar(@Valid @RequestBody RegistrarLesionRequest request) {
-<span class="nc" id="L59">        var lesion = lesionService.registrar(</span>
-<span class="nc" id="L60">                request.idEstudiante(), request.idEntrenador(), request.descripcion(),</span>
-<span class="nc" id="L61">                request.fechaLesion(), request.fechaEstimadaRetorno());</span>
-<span class="nc" id="L62">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(lesion));</span>
+<span class="fc" id="L63">        var lesion = lesionService.registrar(</span>
+<span class="fc" id="L64">                request.idEstudiante(), idEntrenadorEfectivo(request.idEntrenador()), request.descripcion(),</span>
+<span class="fc" id="L65">                request.fechaLesion(), request.fechaEstimadaRetorno());</span>
+<span class="fc" id="L66">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(lesion));</span>
     }
 
     @PostMapping(&quot;/{idLesion}/alta&quot;)
@@ -67,21 +71,44 @@ public class LesionController {
     @Transactional
     public ResponseEntity&lt;LesionResponse&gt; darDeAlta(@PathVariable Long idLesion,
                                                     @RequestBody(required = false) DarDeAltaRequest request) {
-<span class="nc bnc" id="L70" title="All 2 branches missed.">        var fecha = request == null ? null : request.fechaAlta();</span>
-<span class="nc" id="L71">        return ResponseEntity.ok(aResponse(lesionService.darDeAlta(idLesion, fecha)));</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        var fecha = request == null ? null : request.fechaAlta();</span>
+<span class="fc" id="L75">        return ResponseEntity.ok(aResponse(lesionService.darDeAlta(idLesion, fecha)));</span>
+    }
+
+    /**
+     * El idEntrenador de una lesion no puede salir del body sin mas: una
+     * cuenta ENTRENADOR podria mandar el id de un colega. Si quien llama
+     * tiene ese rol, se ignora lo que venga en el body y se resuelve del
+     * token (mismo criterio que SesionEntrenamientoController). Solo
+     * ADMINISTRADOR -que no tiene un id de entrenador propio- puede
+     * especificar cualquiera, y para eso si es obligatorio.
+     */
+    private Long idEntrenadorEfectivo(Long idEntrenadorDelBody) {
+<span class="fc" id="L87">        var auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="fc" id="L88">        boolean esEntrenador = auth.getAuthorities().stream()</span>
+<span class="fc" id="L89">                .anyMatch(a -&gt; a.getAuthority().equals(&quot;ROLE_ENTRENADOR&quot;));</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (!esEntrenador) {</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">            if (idEntrenadorDelBody == null) {</span>
+<span class="fc" id="L92">                throw new IllegalArgumentException(&quot;idEntrenador es obligatorio para esta cuenta&quot;);</span>
+            }
+<span class="fc" id="L94">            return idEntrenadorDelBody;</span>
+        }
+<span class="fc" id="L96">        return entrenadorRepository.findByUsuario_Username(auth.getName())</span>
+<span class="fc" id="L97">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un entrenador asociado a esta cuenta&quot;))</span>
+<span class="fc" id="L98">                .getIdEntrenador();</span>
     }
 
     private LesionResponse aResponse(Lesion l) {
-<span class="nc" id="L75">        var persona = l.getEstudiante().getPersona();</span>
-<span class="nc" id="L76">        return new LesionResponse(</span>
-<span class="nc" id="L77">                l.getIdLesion(),</span>
-<span class="nc" id="L78">                l.getEstudiante().getIdEstudiante(),</span>
-<span class="nc" id="L79">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
-<span class="nc" id="L80">                l.getDescripcion(),</span>
-<span class="nc" id="L81">                l.getFechaLesion(),</span>
-<span class="nc" id="L82">                l.getFechaEstimadaRetorno(),</span>
-<span class="nc" id="L83">                l.getFechaAlta(),</span>
-<span class="nc" id="L84">                l.estaActiva());</span>
+<span class="fc" id="L102">        var persona = l.getEstudiante().getPersona();</span>
+<span class="fc" id="L103">        return new LesionResponse(</span>
+<span class="fc" id="L104">                l.getIdLesion(),</span>
+<span class="fc" id="L105">                l.getEstudiante().getIdEstudiante(),</span>
+<span class="fc" id="L106">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L107">                l.getDescripcion(),</span>
+<span class="fc" id="L108">                l.getFechaLesion(),</span>
+<span class="fc" id="L109">                l.getFechaEstimadaRetorno(),</span>
+<span class="fc" id="L110">                l.getFechaAlta(),</span>
+<span class="fc" id="L111">                l.estaActiva());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

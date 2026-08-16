@@ -1,6 +1,7 @@
 package org.uteq.backend;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,6 +24,7 @@ import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -144,5 +146,79 @@ class AuthControllerTest {
         mockMvc.perform(get("/api/auth/ping"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("pong"));
+    }
+
+    // --- logout ---
+
+    @Test
+    void logoutConCookieDelegaElValorYLimpiaLasCookies() throws Exception {
+        mockMvc.perform(post("/api/auth/logout")
+                        .cookie(new Cookie("sged_access", "token-valido")))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().maxAge("sged_access", 0))
+                .andExpect(cookie().maxAge("sged_refresh", 0));
+
+        verify(authService).logout("token-valido");
+    }
+
+    @Test
+    void logoutSinCookieDelegaNull() throws Exception {
+        mockMvc.perform(post("/api/auth/logout"))
+                .andExpect(status().isNoContent());
+
+        verify(authService).logout(isNull());
+    }
+
+    // --- refresh ---
+
+    @Test
+    void refreshSinCookieDa401() throws Exception {
+        when(authService.refrescar(isNull())).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/auth/refresh"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshConTokenInvalidoDa401() throws Exception {
+        when(authService.refrescar("refresh-invalido")).thenReturn(Optional.empty());
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new Cookie("sged_refresh", "refresh-invalido")))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void refreshConTokenValidoPoneLaCookieYDevuelve204() throws Exception {
+        when(authService.refrescar("refresh-valido")).thenReturn(Optional.of("nuevo-access"));
+        when(jwtService.getExpirationMs()).thenReturn(900_000L);
+
+        mockMvc.perform(post("/api/auth/refresh")
+                        .cookie(new Cookie("sged_refresh", "refresh-valido")))
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().value("sged_access", "nuevo-access"));
+    }
+
+    // --- me ---
+
+    @Test
+    void meSinAutenticarDa401() throws Exception {
+        when(authService.obtenerSesionActual()).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void meAutenticadoDevuelveLaSesion() throws Exception {
+        SesionResponse sesion = SesionResponse.builder()
+                .username("admin@test.com").nombre("Admin SGED").rol("ADMINISTRADOR").build();
+        when(authService.obtenerSesionActual()).thenReturn(Optional.of(sesion));
+
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.username").value("admin@test.com"))
+                .andExpect(jsonPath("$.nombre").value("Admin SGED"))
+                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
     }
 }

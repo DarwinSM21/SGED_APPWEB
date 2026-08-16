@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MiEquipoDtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.estudiante.dto</a> &gt; <span class="el_source">MiEquipoDtos.java</span></div><h1>MiEquipoDtos.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.estudiante.dto;
+
+import java.util.List;
+
+/**
+ * Lo que un ESTUDIANTE ve sobre su propio equipo: su categoria, su
+ * posicion nominal, quien es su entrenador (el de la sesion programada
+ * mas proxima de su categoria) y sus companeros.
+ *
+ * &lt;p&gt;Companeros lleva deliberadamente solo nombre y posicion -son menores
+ * de edad, sin datos de contacto ni promedios entre compañeros-.
+ */
+public final class MiEquipoDtos {
+
+    private MiEquipoDtos() {}
+
+<span class="fc" id="L17">    public record CategoriaDetalleResponse(</span>
+            String nombre,
+            Integer edadMin,
+            Integer edadMax,
+            String descripcion
+    ) {}
+
+<span class="fc" id="L24">    public record PosicionResponse(String nombre, String abreviatura) {}</span>
+
+<span class="fc" id="L26">    public record EntrenadorAsignadoResponse(String nombre, String especialidad) {}</span>
+
+<span class="fc" id="L28">    public record CompaneroResponse(Long idEstudiante, String nombre, String posicion) {}</span>
+
+<span class="fc" id="L30">    public record MiEquipoResponse(</span>
+            CategoriaDetalleResponse categoria,
+            /** null si el estudiante no tiene posicion nominal asignada todavia. */
+            PosicionResponse posicion,
+            /** null si su categoria no tiene ninguna sesion programada a futuro. */
+            EntrenadorAsignadoResponse entrenador,
+            List&lt;CompaneroResponse&gt; companeros
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

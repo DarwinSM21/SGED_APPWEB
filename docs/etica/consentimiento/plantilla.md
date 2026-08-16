@@ -125,5 +125,11 @@ Fecha: ____ / ____ / ______
 
 ---
 
-*Este documento se archiva en `docs/etica/consentimientos/` del repositorio
-SGED_APPWEB. Una copia firmada se entrega al participante.*
+*Este documento firmado contiene el nombre y la firma real del
+participante — un dato personal identificable, a diferencia de las
+respuestas anónimas del CSV. Por eso **no se archiva en el repositorio
+público** de SGED_APPWEB: cada copia firmada se guarda fuera del control
+de versiones (carpeta local o institucional de acceso restringido del
+equipo evaluador) y solo el número de participante anónimo que enlaza
+con `docs/mediciones/sus/respuestas.csv` puede exponerse públicamente.
+Una copia firmada se entrega al participante.*

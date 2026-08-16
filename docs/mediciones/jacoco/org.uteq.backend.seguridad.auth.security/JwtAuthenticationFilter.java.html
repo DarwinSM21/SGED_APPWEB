@@ -44,42 +44,42 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         // Extrae el token (Primero prueba por Header Bearer, luego por Cookie)
-<span class="nc" id="L47">        String token = extractAccessToken(request);</span>
+<span class="fc" id="L47">        String token = extractAccessToken(request);</span>
 
-<span class="nc bnc" id="L49" title="All 2 branches missed.">        if (token == null) {</span>
-<span class="nc" id="L50">            filterChain.doFilter(request, response);</span>
-<span class="nc" id="L51">            return;</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (token == null) {</span>
+<span class="fc" id="L50">            filterChain.doFilter(request, response);</span>
+<span class="fc" id="L51">            return;</span>
         }
 
         try {
-<span class="nc" id="L55">            String username = jwtService.extractUsername(token);</span>
+<span class="fc" id="L55">            String username = jwtService.extractUsername(token);</span>
 
-<span class="nc bnc" id="L57" title="All 4 branches missed.">            if (username != null &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {</span>
-<span class="nc" id="L58">                String jti = jwtService.extractJti(token);</span>
+<span class="fc bfc" id="L57" title="All 4 branches covered.">            if (username != null &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {</span>
+<span class="fc" id="L58">                String jti = jwtService.extractJti(token);</span>
 
-<span class="nc bnc" id="L60" title="All 4 branches missed.">                if (jti != null &amp;&amp; blacklistService.estaRevocado(jti)) {</span>
-<span class="nc" id="L61">                    filterChain.doFilter(request, response);</span>
-<span class="nc" id="L62">                    return;</span>
+<span class="pc bpc" id="L60" title="1 of 4 branches missed.">                if (jti != null &amp;&amp; blacklistService.estaRevocado(jti)) {</span>
+<span class="fc" id="L61">                    filterChain.doFilter(request, response);</span>
+<span class="fc" id="L62">                    return;</span>
                 }
 
-<span class="nc" id="L65">                UserDetails userDetails = userDetailsService.loadUserByUsername(username);</span>
+<span class="fc" id="L65">                UserDetails userDetails = userDetailsService.loadUserByUsername(username);</span>
 
-<span class="nc bnc" id="L67" title="All 2 branches missed.">                if (jwtService.isTokenValid(token)) {</span>
-<span class="nc" id="L68">                    UsernamePasswordAuthenticationToken authToken =</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                if (jwtService.isTokenValid(token)) {</span>
+<span class="fc" id="L68">                    UsernamePasswordAuthenticationToken authToken =</span>
                             new UsernamePasswordAuthenticationToken(
-<span class="nc" id="L70">                                    userDetails, null, userDetails.getAuthorities());</span>
-<span class="nc" id="L71">                    authToken.setDetails(</span>
-<span class="nc" id="L72">                            new WebAuthenticationDetailsSource().buildDetails(request));</span>
-<span class="nc" id="L73">                    SecurityContextHolder.getContext().setAuthentication(authToken);</span>
+<span class="fc" id="L70">                                    userDetails, null, userDetails.getAuthorities());</span>
+<span class="fc" id="L71">                    authToken.setDetails(</span>
+<span class="fc" id="L72">                            new WebAuthenticationDetailsSource().buildDetails(request));</span>
+<span class="fc" id="L73">                    SecurityContextHolder.getContext().setAuthentication(authToken);</span>
                 }
             }
-<span class="nc" id="L76">        } catch (Exception e) {</span>
+<span class="fc" id="L76">        } catch (Exception e) {</span>
             // Token inválido o expirado: deja que Spring Security maneje el 401
-<span class="nc" id="L78">            logger.debug(&quot;Error procesando autenticación JWT: &quot; + e.getMessage());</span>
-<span class="nc" id="L79">        }</span>
+<span class="fc" id="L78">            logger.debug(&quot;Error procesando autenticación JWT: &quot; + e.getMessage());</span>
+<span class="fc" id="L79">        }</span>
 
-<span class="nc" id="L81">        filterChain.doFilter(request, response);</span>
-<span class="nc" id="L82">    }</span>
+<span class="fc" id="L81">        filterChain.doFilter(request, response);</span>
+<span class="fc" id="L82">    }</span>
 
     /**
      * Busca el token JWT de dos formas:
@@ -88,25 +88,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      */
     private String extractAccessToken(HttpServletRequest request) {
         // 1. Intentar obtener desde el Header Authorization (Bearer)
-<span class="nc" id="L91">        String authHeader = request.getHeader(AUTHORIZATION_HEADER);</span>
-<span class="nc bnc" id="L92" title="All 4 branches missed.">        if (authHeader != null &amp;&amp; authHeader.startsWith(BEARER_PREFIX)) {</span>
-<span class="nc" id="L93">            String bearerToken = authHeader.substring(BEARER_PREFIX.length()).trim();</span>
-<span class="nc bnc" id="L94" title="All 2 branches missed.">            if (!bearerToken.isEmpty()) {</span>
-<span class="nc" id="L95">                return bearerToken;</span>
+<span class="fc" id="L91">        String authHeader = request.getHeader(AUTHORIZATION_HEADER);</span>
+<span class="fc bfc" id="L92" title="All 4 branches covered.">        if (authHeader != null &amp;&amp; authHeader.startsWith(BEARER_PREFIX)) {</span>
+<span class="fc" id="L93">            String bearerToken = authHeader.substring(BEARER_PREFIX.length()).trim();</span>
+<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (!bearerToken.isEmpty()) {</span>
+<span class="fc" id="L95">                return bearerToken;</span>
             }
         }
 
         // 2. Si no hay Header, intentar obtener desde las Cookies
-<span class="nc" id="L100">        Cookie[] cookies = request.getCookies();</span>
-<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (cookies != null) {</span>
-<span class="nc bnc" id="L102" title="All 2 branches missed.">            for (Cookie cookie : cookies) {</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">                if (ACCESS_COOKIE.equals(cookie.getName())) {</span>
-<span class="nc" id="L104">                    return cookie.getValue();</span>
+<span class="fc" id="L100">        Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (cookies != null) {</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">            for (Cookie cookie : cookies) {</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">                if (ACCESS_COOKIE.equals(cookie.getName())) {</span>
+<span class="fc" id="L104">                    return cookie.getValue();</span>
                 }
             }
         }
 
-<span class="nc" id="L109">        return null;</span>
+<span class="fc" id="L109">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

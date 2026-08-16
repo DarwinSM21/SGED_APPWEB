@@ -28,9 +28,11 @@ public final class EvaluacionDtos {
      *                       se han confirmado hoy; la interfaz puede marcarlos
      *                       para que el entrenador sepa que son heredados
      * @param lesionado      arrastra lesion activa
+     * @param idLesion       id de esa lesion activa, para poder dar de alta
+     *                       sin una consulta aparte; null si no esta lesionado
      * @param puedeEvaluarse false si no marco asistencia: la ficha va bloqueada
      */
-<span class="nc" id="L33">    public record JugadorEvaluableResponse(</span>
+<span class="fc" id="L35">    public record JugadorEvaluableResponse(</span>
             Long idEstudiante,
             String nombreCompleto,
             String categoria,
@@ -41,12 +43,13 @@ public final class EvaluacionDtos {
             Map&lt;String, BigDecimal&gt; puntajes,
             boolean precargado,
             boolean lesionado,
+            Long idLesion,
             boolean puedeEvaluarse,
             String motivoBloqueo
     ) {}
 
     /** Pantalla completa de evaluacion de una sesion. */
-<span class="nc" id="L49">    public record EvaluacionSesionResponse(</span>
+<span class="fc" id="L52">    public record EvaluacionSesionResponse(</span>
             Long idEvaluacion,
             Long idSesion,
             LocalDate fecha,
@@ -57,7 +60,7 @@ public final class EvaluacionDtos {
             String observacionGeneral
     ) {}
 
-<span class="nc" id="L60">    public record CriterioResponse(</span>
+<span class="nc" id="L63">    public record CriterioResponse(</span>
             Long idCriterio,
             String nombre,
             String descripcion,
@@ -69,13 +72,13 @@ public final class EvaluacionDtos {
      * interfaz manda esto sin esperar a que termine: el documento del modulo
      * pide autoguardado para no perder trabajo.
      */
-<span class="fc" id="L72">    public record GuardarJugadorRequest(</span>
+<span class="fc" id="L75">    public record GuardarJugadorRequest(</span>
             @NotNull Long idEstudiante,
             Long idPosicionJugada,
             @NotNull List&lt;PuntajeCriterioRequest&gt; puntajes
     ) {}
 
-<span class="fc" id="L78">    public record PuntajeCriterioRequest(</span>
+<span class="fc" id="L81">    public record PuntajeCriterioRequest(</span>
             @NotNull Long idCriterio,
             @NotNull
             @DecimalMin(value = &quot;0.0&quot;, message = &quot;El puntaje no puede ser negativo&quot;)
@@ -84,7 +87,7 @@ public final class EvaluacionDtos {
     ) {}
 
     /** Comentario generado para un jugador. */
-<span class="nc" id="L87">    public record FeedbackResponse(</span>
+<span class="nc" id="L90">    public record FeedbackResponse(</span>
             Long idEstudiante,
             String texto,
             boolean generadoPorIa,
@@ -98,7 +101,7 @@ public final class EvaluacionDtos {
      * modelo de lenguaje no lo es, y no hay razon para pagarlo en cada
      * apertura de pantalla si nadie va a leer el comentario.
      */
-<span class="fc" id="L101">    public record PlantillaResponse(</span>
+<span class="fc" id="L104">    public record PlantillaResponse(</span>
             Long idSesion,
             String categoria,
             List&lt;JugadorPlantillaResponse&gt; titulares,
@@ -107,13 +110,13 @@ public final class EvaluacionDtos {
     ) {}
 
     /** Comentario de IA sobre una alineacion ya calculada, pedido a demanda. */
-<span class="fc" id="L110">    public record FeedbackPlantillaResponse(</span>
+<span class="fc" id="L113">    public record FeedbackPlantillaResponse(</span>
             String comentario,
             boolean generadoPorIa,
             String motivoNoDisponible
     ) {}
 
-<span class="fc" id="L116">    public record JugadorPlantillaResponse(</span>
+<span class="fc" id="L119">    public record JugadorPlantillaResponse(</span>
             Long idEstudiante,
             String nombreCompleto,
             String posicion,

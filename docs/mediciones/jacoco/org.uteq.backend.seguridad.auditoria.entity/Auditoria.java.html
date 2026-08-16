@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Auditoria.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auditoria.entity</a> &gt; <span class="el_source">Auditoria.java</span></div><h1>Auditoria.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auditoria.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+
+import java.time.OffsetDateTime;
+
+@Entity
+@Table(name = &quot;auditoria&quot;, schema = &quot;seguridad&quot;)
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Auditoria {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = &quot;id_auditoria&quot;)
+    private Long idAuditoria;
+
+    @Column(name = &quot;fecha&quot;, nullable = false)
+    private OffsetDateTime fecha;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = &quot;id_usuario&quot;)
+    private Usuario usuario;
+
+    @Column(name = &quot;usuario_nombre&quot;, nullable = false, length = 150)
+    private String usuarioNombre;
+
+    @Column(name = &quot;rol&quot;, length = 50)
+    private String rol;
+
+    @Column(name = &quot;accion&quot;, nullable = false, length = 30)
+    private String accion;
+
+    @Column(name = &quot;entidad&quot;, length = 100)
+    private String entidad;
+
+    @Column(name = &quot;entidad_id&quot;)
+    private Long entidadId;
+
+    @Column(name = &quot;descripcion&quot;, nullable = false, columnDefinition = &quot;text&quot;)
+    private String descripcion;
+
+    @Column(name = &quot;ip&quot;, length = 45)
+    private String ip;
+
+    @PrePersist
+    protected void onCreate() {
+<span class="nc bnc" id="L53" title="All 2 branches missed.">        if (this.fecha == null) {</span>
+<span class="nc" id="L54">            this.fecha = OffsetDateTime.now();</span>
+        }
+<span class="nc" id="L56">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

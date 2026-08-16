@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MiEquipoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.estudiante.service</a> &gt; <span class="el_source">MiEquipoService.java</span></div><h1>MiEquipoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.estudiante.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.*;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+
+import java.time.LocalDate;
+import java.util.List;
+
+/**
+ * &quot;Mi equipo&quot; del ESTUDIANTE autenticado: categoria, posicion nominal,
+ * entrenador de su proxima sesion programada, y companeros de la misma
+ * categoria.
+ */
+@Service
+@RequiredArgsConstructor
+public class MiEquipoService {
+
+    private final EstudianteRepository estudianteRepository;
+    private final SesionEntrenamientoRepository sesionRepository;
+
+    @Transactional(readOnly = true)
+    public MiEquipoResponse miEquipo(String username) {
+<span class="fc" id="L32">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L33">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
+
+<span class="fc" id="L35">        var categoria = estudiante.getCategoria();</span>
+<span class="fc" id="L36">        var categoriaResponse = new CategoriaDetalleResponse(</span>
+<span class="fc" id="L37">                categoria.getNombre(),</span>
+<span class="pc bpc" id="L38" title="1 of 2 branches missed.">                categoria.getEdadMin() == null ? null : categoria.getEdadMin().intValue(),</span>
+<span class="pc bpc" id="L39" title="1 of 2 branches missed.">                categoria.getEdadMax() == null ? null : categoria.getEdadMax().intValue(),</span>
+<span class="fc" id="L40">                categoria.getDescripcion());</span>
+
+<span class="fc" id="L42">        var posicion = estudiante.getPosicion();</span>
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        PosicionResponse posicionResponse = posicion == null ? null</span>
+<span class="pc" id="L44">                : new PosicionResponse(posicion.getNombre(), posicion.getAbreviatura());</span>
+
+<span class="fc" id="L46">        EntrenadorAsignadoResponse entrenadorResponse = proximoEntrenadorDe(categoria.getIdCategoria());</span>
+
+<span class="fc" id="L48">        List&lt;CompaneroResponse&gt; companeros = estudianteRepository</span>
+<span class="fc" id="L49">                .findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(</span>
+<span class="fc" id="L50">                        categoria.getIdCategoria(), estudiante.getIdEstudiante())</span>
+<span class="fc" id="L51">                .stream()</span>
+<span class="fc" id="L52">                .map(this::aCompanero)</span>
+<span class="fc" id="L53">                .toList();</span>
+
+<span class="fc" id="L55">        return new MiEquipoResponse(categoriaResponse, posicionResponse, entrenadorResponse, companeros);</span>
+    }
+
+    private EntrenadorAsignadoResponse proximoEntrenadorDe(Long idCategoria) {
+<span class="fc" id="L59">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L60">        List&lt;SesionEntrenamiento&gt; proximas = sesionRepository</span>
+<span class="fc" id="L61">                .findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(</span>
+<span class="fc" id="L62">                        idCategoria, hoy, PageRequest.of(0, 1));</span>
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (proximas.isEmpty()) {</span>
+<span class="fc" id="L64">            return null;</span>
+        }
+<span class="fc" id="L66">        var entrenador = proximas.get(0).getEntrenador();</span>
+<span class="fc" id="L67">        var persona = entrenador.getPersona();</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        String especialidad = entrenador.getEspecialidad() == null ? null : entrenador.getEspecialidad().getNombre();</span>
+<span class="fc" id="L69">        return new EntrenadorAsignadoResponse(persona.getNombre() + &quot; &quot; + persona.getApellido(), especialidad);</span>
+    }
+
+    private CompaneroResponse aCompanero(Estudiante e) {
+<span class="fc" id="L73">        var persona = e.getPersona();</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">        String posicion = e.getPosicion() == null ? null : e.getPosicion().getNombre();</span>
+<span class="fc" id="L75">        return new CompaneroResponse(e.getIdEstudiante(), persona.getNombre() + &quot; &quot; + persona.getApellido(), posicion);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
