@@ -11,6 +11,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -32,12 +33,19 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 /**
- * El umbral PRESENTE/TARDE se prueba con horaInicio a +-1h de LocalTime.now()
- * en vez de valores fijos: el servicio llama LocalTime.now() el mismo, y este
- * proyecto no usa un Clock inyectable en ningun lado (introducir uno solo
- * para esto seria una desviacion de convencion para un beneficio menor). Un
- * margen de una hora hace el resultado determinista frente a los pocos
- * milisegundos que tarda en ejecutarse la prueba.
+ * El umbral PRESENTE/TARDE se prueba con horaInicio a +-1h de
+ * LocalTime.now(Zonas.ECUADOR) en vez de valores fijos: el servicio llama
+ * LocalTime.now(Zonas.ECUADOR) el mismo, y este proyecto no usa un Clock
+ * inyectable en ningun lado (introducir uno solo para esto seria una
+ * desviacion de convencion para un beneficio menor). Un margen de una hora
+ * hace el resultado determinista frente a los pocos milisegundos que tarda
+ * en ejecutarse la prueba.
+ *
+ * <p>Usar Zonas.ECUADOR aqui y no LocalTime.now() a secas no es cosmetico:
+ * el CI (ubuntu-latest) corre en UTC, 5 horas adelantado a America/Guayaquil.
+ * Con LocalTime.now() sin zona, esta prueba pasaba siempre en un entorno
+ * configurado en hora de Ecuador y fallaba siempre en CI -- el desfase de
+ * 5 horas hacia que la ventana de tolerancia calzara mal en cada corrida.
  */
 @ExtendWith(MockitoExtension.class)
 class AsistenciaServiceTest {
@@ -67,7 +75,7 @@ class AsistenciaServiceTest {
      * restar.
      */
     private LocalTime enUnaHora() {
-        LocalTime ahora = LocalTime.now();
+        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
         return ahora.isAfter(LocalTime.of(23, 0)) ? LocalTime.of(23, 59) : ahora.plusHours(1);
     }
 
@@ -120,7 +128,7 @@ class AsistenciaServiceTest {
         // restar 1h cruzaria medianoche hacia "ayer" e invertiria la
         // comparacion de calcularEstado (daria PRESENTE en vez de TARDE). Se
         // ancla a medianoche en ese caso puntual en vez de envolver.
-        LocalTime ahora = LocalTime.now();
+        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
         LocalTime horaInicio = ahora.isBefore(LocalTime.of(1, 0)) ? LocalTime.MIDNIGHT : ahora.minusHours(1);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicio);
 
@@ -161,7 +169,7 @@ class AsistenciaServiceTest {
         Estudiante e = estudiante();
         // 5 minutos despues del inicio, con solo 1 minuto de tolerancia -> TARDE.
         // Mismo cuidado de medianoche que en marcarPorQr_marca_tarde_fuera_de_tolerancia.
-        LocalTime ahoraTolerancia = LocalTime.now();
+        LocalTime ahoraTolerancia = LocalTime.now(Zonas.ECUADOR);
         LocalTime horaInicioTolerancia = ahoraTolerancia.isBefore(LocalTime.of(0, 5))
                 ? LocalTime.MIDNIGHT : ahoraTolerancia.minusMinutes(5);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicioTolerancia);

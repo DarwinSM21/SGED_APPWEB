@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
@@ -118,12 +119,21 @@ class HorarioServiceTest {
         verify(horarioRepository, never()).save(any());
     }
 
+    /**
+     * hoy se calcula con Zonas.ECUADOR, igual que HorarioService.generarSesionesDeHoy():
+     * usar LocalDate.now() a secas queda desfasado del servicio en la ventana
+     * UTC 00:00-04:59 (19:00-23:59 en Ecuador, donde "hoy" en UTC ya es
+     * "mañana" en Ecuador), y ese desfase es justo lo que rompia esta prueba
+     * en CI (ubuntu-latest corre en UTC) sin fallar nunca en una maquina ya
+     * configurada en hora de Ecuador.
+     */
     @Test
     @DisplayName("generarSesionesDeHoy solo crea la sesion de los horarios que todavia no la tienen hoy")
     void generarSesionesDeHoy_crea_solo_las_que_faltan() {
         var yo = entrenador(1L);
         var categoria = Categoria.builder().idCategoria(5L).nombre("SUB-12").build();
-        short diaDeHoy = (short) LocalDate.now().getDayOfWeek().getValue();
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        short diaDeHoy = (short) hoy.getDayOfWeek().getValue();
         var horarioSinSesionHoy = Horario.builder().idHorario(1L).entrenador(yo).categoria(categoria)
                 .diaSemana(diaDeHoy).horaInicio(LocalTime.of(16, 0)).horaFin(LocalTime.of(18, 0)).build();
         var horarioYaGenerado = Horario.builder().idHorario(2L).entrenador(yo).categoria(categoria)
@@ -131,8 +141,8 @@ class HorarioServiceTest {
 
         when(horarioRepository.findByActivoTrueAndDiaSemana(diaDeHoy))
                 .thenReturn(List.of(horarioSinSesionHoy, horarioYaGenerado));
-        when(sesionRepository.existsByHorario_IdHorarioAndFecha(1L, LocalDate.now())).thenReturn(false);
-        when(sesionRepository.existsByHorario_IdHorarioAndFecha(2L, LocalDate.now())).thenReturn(true);
+        when(sesionRepository.existsByHorario_IdHorarioAndFecha(1L, hoy)).thenReturn(false);
+        when(sesionRepository.existsByHorario_IdHorarioAndFecha(2L, hoy)).thenReturn(true);
 
         service.generarSesionesDeHoy();
 
