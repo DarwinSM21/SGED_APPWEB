@@ -266,6 +266,38 @@
 					</plugins>
 				</configuration>
 			</plugin>
+			<!-- COD-01 / R-04 (informe de evaluacion de calidad): verificacion
+			     automatica de estilo, ausente hasta ahora en el backend. Google
+			     Java Style Guide via google_checks.xml (empaquetado en el propio
+			     plugin, no requiere dependencia adicional). failOnViolation=false
+			     por la misma razon que el check de JaCoCo y el de SpotBugs de
+			     arriba: el informe ya identifico 17 archivos con lineas de mas de
+			     120 columnas, 1 archivo con tabulaciones y 1 linea de codigo
+			     comentado (D-10), que Google Style tambien marcaria. El objetivo
+			     de esta primera integracion es que `mvn validate` imprima esas
+			     violaciones sin romper el build; una vez corregidas (R-10),
+			     poner failOnViolation en true para que el umbral quede exigido. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.1</version>
+				<configuration>
+					<configLocation>google_checks.xml</configLocation>
+					<violationSeverity>warning</violationSeverity>
+					<failOnViolation>false</failOnViolation>
+					<failsOnError>false</failsOnError>
+					<consoleOutput>true</consoleOutput>
+				</configuration>
+				<executions>
+					<execution>
+						<id>checkstyle-validate</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 		</plugins>
 	</build>
 

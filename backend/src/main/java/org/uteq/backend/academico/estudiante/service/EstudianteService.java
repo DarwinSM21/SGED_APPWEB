@@ -5,7 +5,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
@@ -25,13 +24,9 @@ import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.time.LocalDate;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
@@ -44,10 +39,13 @@ public class EstudianteService {
     private final PersonaRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
-    private final PasswordEncoder passwordEncoder;
     private final RepresentanteEstudianteRepository representanteEstudianteRepository;
+    // MET-01 / R-06 (informe de evaluacion de calidad): antes EstudianteService
+    // inyectaba UsuarioRepository, RolRepository y PasswordEncoder directo
+    // (fan-out interno de 18, el mas alto del sistema) para la porcion de
+    // alta que cruza a seguridad -crear la cuenta y validar coherencia de
+    // rol-. Esa porcion vive ahora en EstudianteAccesoService.
+    private final EstudianteAccesoService estudianteAccesoService;
 
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
@@ -77,7 +75,7 @@ public class EstudianteService {
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
-        validarCuentaCoherente(request.idPersona());
+        estudianteAccesoService.validarCoherenciaConFichaEstudiante(request.idPersona());
 
         // 1. Buscar si la persona YA tiene un registro como estudiante (activo o inactivo)
         Optional<Estudiante> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
@@ -151,29 +149,9 @@ public class EstudianteService {
             throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
         }
 
-        // Reasignar Persona si cambió (Y validar que la nueva persona tampoco tenga ya una ficha de estudiante)
-        if (!estudiante.getPersona().getIdPersona().equals(request.idPersona())) {
-            if (estudianteRepository.existsByPersona_IdPersona(request.idPersona())) {
-                throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
-            }
-            Persona nuevaPersona = personaRepository.findById(request.idPersona())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + request.idPersona()));
-            estudiante.setPersona(nuevaPersona);
-        }
-
-        // Reasignar Categoría si cambió
-        if (!estudiante.getCategoria().getIdCategoria().equals(request.idCategoria())) {
-            Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
-            estudiante.setCategoria(categoria);
-        }
-
-        // Reasignar Estado General si cambió
-        if (!estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(request.idEstadoGeneral())) {
-            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
-            estudiante.setEstadoGeneral(estadoGeneral);
-        }
+        reasignarPersonaSiCambio(estudiante, request.idPersona());
+        reasignarCategoriaSiCambio(estudiante, request.idCategoria());
+        reasignarEstadoGeneralSiCambio(estudiante, request.idEstadoGeneral());
 
         // Actualizar datos propios del estudiante
         estudiante.setCodigoEstudiante(request.codigoEstudiante());
@@ -186,6 +164,41 @@ public class EstudianteService {
         estudiante = estudianteRepository.save(estudiante);
 
         return toResponse(estudiante);
+    }
+
+    // R-09 (informe de evaluacion de calidad): las tres reasignaciones de
+    // editar() seguian el mismo patron -si el id pedido difiere del actual,
+    // buscar la nueva fila y reasignarla- y sumaban su propia complejidad al
+    // metodo. Extraidas para que editar() quede lineal: valida, reasigna lo
+    // que cambio, guarda.
+    private void reasignarPersonaSiCambio(Estudiante estudiante, Long idPersonaNueva) {
+        if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {
+            return;
+        }
+        if (estudianteRepository.existsByPersona_IdPersona(idPersonaNueva)) {
+            throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
+        }
+        Persona nuevaPersona = personaRepository.findById(idPersonaNueva)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + idPersonaNueva));
+        estudiante.setPersona(nuevaPersona);
+    }
+
+    private void reasignarCategoriaSiCambio(Estudiante estudiante, Long idCategoriaNueva) {
+        if (estudiante.getCategoria().getIdCategoria().equals(idCategoriaNueva)) {
+            return;
+        }
+        Categoria categoria = categoriaRepository.findById(idCategoriaNueva)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + idCategoriaNueva));
+        estudiante.setCategoria(categoria);
+    }
+
+    private void reasignarEstadoGeneralSiCambio(Estudiante estudiante, Long idEstadoGeneralNuevo) {
+        if (estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(idEstadoGeneralNuevo)) {
+            return;
+        }
+        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + idEstadoGeneralNuevo));
+        estudiante.setEstadoGeneral(estadoGeneral);
     }
 
     @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
@@ -245,47 +258,12 @@ public class EstudianteService {
         if (estudiante.getUsuario() != null) {
             throw new IllegalArgumentException("Este estudiante ya tiene una cuenta de acceso");
         }
-        if (usuarioRepository.existsByUsername(request.username())) {
-            throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
-        }
 
-        Rol rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
-                .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));
-        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
-                .orElseThrow(() -> new IllegalStateException(
-                        "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
-
-        Usuario usuario = Usuario.builder()
-                .persona(estudiante.getPersona())
-                .estadoGeneral(estadoActivo)
-                .username(request.username())
-                .password_Hash(passwordEncoder.encode(request.password()))
-                .activo(true)
-                .roles(Set.of(rolEstudiante))
-                .build();
-        usuario = usuarioRepository.save(usuario);
+        Usuario usuario = estudianteAccesoService.crearCuentaDeEstudiante(estudiante.getPersona(), request);
 
         estudiante.setUsuario(usuario);
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
-    }
-
-    /**
-     * Guarda simetrica a UsuarioService.validarRolCoherente: si la persona
-     * ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin cuenta
-     * no hay nada que validar -- lo normal es que un estudiante no tenga
-     * acceso al sistema, y si despues se le habilita, habilitarAcceso() ya
-     * fija el rol ESTUDIANTE.
-     */
-    private void validarCuentaCoherente(Long idPersona) {
-        usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -> {
-            boolean esEstudiante = usuario.getRoles() != null && usuario.getRoles().stream()
-                    .anyMatch(r -> "ESTUDIANTE".equals(r.getNombre()));
-            if (!esEstudiante) {
-                throw new IllegalArgumentException(
-                        "La persona tiene una cuenta con otro rol: no se le puede crear una ficha de estudiante");
-            }
-        });
     }
 
     // Mapeador privado Entity -> DTO

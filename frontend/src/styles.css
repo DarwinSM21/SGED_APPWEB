@@ -238,6 +238,26 @@ a { color: var(--color-primary-600); }
 .spinner--dark { border-color: var(--color-border); border-top-color: var(--color-primary-500); }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ---------- Secciones de formulario (paneles maestro-detalle) ----------
+   Compartidas entre los componentes en que se dividio personas-admin (R-05,
+   informe de evaluacion de calidad): antes vivian en el styles: [] de un
+   solo componente de 840 lineas; movidas aca porque la encapsulacion de
+   vista de Angular no deja que el CSS de un componente padre alcance el
+   template de sus hijos. */
+.aviso { color: var(--color-text-muted); font-size: .85rem; }
+.resumen-seccion { font-size: .85rem; color: var(--color-text-muted); margin-bottom: .5rem; }
+.subtitulo-seccion { font-size: .88rem; margin-bottom: .5rem; }
+.bloque { display: flex; flex-direction: column; gap: .75rem; }
+.bloque--separado { border-top: 1px solid var(--color-border-light); padding-top: 1rem; }
+.fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+@media (max-width: 480px) { .fila-2 { grid-template-columns: 1fr; } }
+.acciones { display: flex; justify-content: flex-end; gap: .5rem; }
+.btn--sm { padding: .5rem .9rem; font-size: .85rem; }
+.buscador { width: 100%; padding: .6rem .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: .88rem; background: transparent; color: var(--color-text); }
+.badges-persona { display: flex; gap: .3rem; flex-wrap: wrap; margin-top: .15rem; }
+.col-principal { font-weight: 600; }
+.col-secundaria { color: var(--color-text-muted); }
+
 /* ============================================================
    Estructura compartida Login / Registro: panel de marca en
    degradado a la izquierda, tarjeta blanca a la derecha. Ambas

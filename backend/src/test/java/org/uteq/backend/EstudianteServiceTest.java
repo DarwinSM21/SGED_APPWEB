@@ -4,20 +4,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
 import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
@@ -27,17 +26,13 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -50,10 +45,8 @@ class EstudianteServiceTest {
     @Mock private PersonaRepository personaRepository;
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private EstadoGeneralRepository estadoGeneralRepository;
-    @Mock private UsuarioRepository usuarioRepository;
-    @Mock private RolRepository rolRepository;
-    @Mock private PasswordEncoder passwordEncoder;
     @Mock private RepresentanteEstudianteRepository representanteEstudianteRepository;
+    @Mock private EstudianteAccesoService estudianteAccesoService;
 
     @InjectMocks private EstudianteService service;
 
@@ -181,12 +174,8 @@ class EstudianteServiceTest {
     @DisplayName("crear - Lanza IllegalArgumentException si la persona ya tiene cuenta con otro rol")
     void crear_persona_con_cuenta_de_otro_rol_lanza_excepcion() {
         EstudianteRequest request = crearRequestValido();
-        Usuario cuentaEntrenador = Usuario.builder()
-                .idUsuario(9L)
-                .username("otro.rol")
-                .roles(Set.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()))
-                .build();
-        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
+        doThrow(new IllegalArgumentException("La persona tiene una cuenta con otro rol"))
+                .when(estudianteAccesoService).validarCoherenciaConFichaEstudiante(1L);
 
         assertThrows(IllegalArgumentException.class, () -> service.crear(request));
 
@@ -196,13 +185,10 @@ class EstudianteServiceTest {
     @Test
     @DisplayName("crear - Acepta a la persona cuya cuenta ya tiene rol ESTUDIANTE")
     void crear_persona_con_cuenta_de_estudiante_pasa() {
+        // No se stubea estudianteAccesoService.validarCoherenciaConFichaEstudiante:
+        // un mock de un metodo void no hace nada por defecto, que es
+        // exactamente el resultado de "la cuenta ya es de rol ESTUDIANTE".
         EstudianteRequest request = crearRequestValido();
-        Usuario cuentaEstudiante = Usuario.builder()
-                .idUsuario(9L)
-                .username("ana.e")
-                .roles(Set.of(Rol.builder().idRol(5L).nombre("ESTUDIANTE").build()))
-                .build();
-        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
         when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
@@ -332,28 +318,18 @@ class EstudianteServiceTest {
     @DisplayName("habilitarAcceso - Crea el usuario sobre la Persona YA existente, no una nueva")
     void habilitarAcceso_crea_usuario_sobre_persona_existente() {
         HabilitarAccesoRequest request = new HabilitarAccesoRequest("andres@sged.test", "password123");
-        Rol rolEstudiante = Rol.builder().idRol(6L).nombre("ESTUDIANTE").build();
+        Usuario usuarioCreado = Usuario.builder().idUsuario(9L).persona(personaDummy).build();
 
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
-        when(usuarioRepository.existsByUsername("andres@sged.test")).thenReturn(false);
-        when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
-        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
-        when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
-        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
-            Usuario u = i.getArgument(0);
-            u.setIdUsuario(9L);
-            return u;
-        });
+        when(estudianteAccesoService.crearCuentaDeEstudiante(personaDummy, request)).thenReturn(usuarioCreado);
         when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
 
         EstudianteResponse resp = service.habilitarAcceso(1L, request);
 
         assertNotNull(resp);
-        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
-        verify(usuarioRepository).save(captor.capture());
-        assertSame(personaDummy, captor.getValue().getPersona());
+        verify(estudianteAccesoService).crearCuentaDeEstudiante(personaDummy, request);
         verify(personaRepository, never()).save(any());
-        assertSame(estudianteDummy.getUsuario(), captor.getValue());
+        assertSame(usuarioCreado, estudianteDummy.getUsuario());
     }
 
     @Test
@@ -364,16 +340,21 @@ class EstudianteServiceTest {
 
         assertThrows(IllegalArgumentException.class,
                 () -> service.habilitarAcceso(1L, new HabilitarAccesoRequest("x@sged.test", "password123")));
+
+        verify(estudianteAccesoService, never()).crearCuentaDeEstudiante(any(), any());
     }
 
     @Test
-    @DisplayName("habilitarAcceso - Rechaza si el username ya esta en uso")
+    @DisplayName("habilitarAcceso - Propaga el rechazo de EstudianteAccesoService si el username ya esta en uso")
     void habilitarAcceso_rechaza_username_duplicado() {
+        HabilitarAccesoRequest request = new HabilitarAccesoRequest("dup@sged.test", "password123");
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
-        when(usuarioRepository.existsByUsername("dup@sged.test")).thenReturn(true);
+        doThrow(new IllegalArgumentException("Ya existe una cuenta con ese usuario"))
+                .when(estudianteAccesoService).crearCuentaDeEstudiante(personaDummy, request);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> service.habilitarAcceso(1L, new HabilitarAccesoRequest("dup@sged.test", "password123")));
+        assertThrows(IllegalArgumentException.class, () -> service.habilitarAcceso(1L, request));
+
+        verify(estudianteRepository, never()).save(any());
     }
 
     @Test

@@ -134,22 +134,8 @@ public class UsuarioService {
         usuario.setEstadoGeneral(estado);
         usuario.setUsername(request.username());
 
-        // password en blanco significa "no cambiarla" -- ver comentario en UsuarioRequest
-        if (request.password() != null && !request.password().isBlank()) {
-            usuario.setPassword_Hash(passwordEncoder.encode(request.password()));
-        }
-
-        if (request.rol() != null) {
-            String rolActual = usuario.getRoles() == null ? null
-                    : usuario.getRoles().stream().findFirst().map(Rol::getNombre).orElse(null);
-            if (!request.rol().equals(rolActual)) {
-                validarRolCoherente(persona.getIdPersona(), request.rol());
-                // HashSet mutable: Hibernate necesita poder mutar la coleccion
-                // ya administrada de este Usuario persistido -- Set.of() es
-                // inmutable y hace fallar el flush con UnsupportedOperationException.
-                usuario.setRoles(new java.util.HashSet<>(Set.of(buscarRol(request.rol()))));
-            }
-        }
+        actualizarPasswordSiCorresponde(usuario, request.password());
+        actualizarRolSiCambio(usuario, persona, request.rol());
 
         usuario = usuarioRepository.save(usuario);
 
@@ -168,6 +154,34 @@ public class UsuarioService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
+    }
+
+    // R-09 (informe de evaluacion de calidad): antes esta comprobacion vivia
+    // inline en editar() -- "password en blanco significa no cambiarla", ver
+    // comentario en UsuarioRequest -- y sumaba a su complejidad ciclomatica.
+    private void actualizarPasswordSiCorresponde(Usuario usuario, String nuevaPassword) {
+        if (nuevaPassword != null && !nuevaPassword.isBlank()) {
+            usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
+        }
+    }
+
+    // R-09: idem, extraido de editar() para bajar su CC de 9. Solo revalida y
+    // reasigna el rol si de verdad cambio -- si el rol pedido es null (el
+    // formulario de edicion no toca roles) o es el mismo que ya tiene, no
+    // hace nada.
+    private void actualizarRolSiCambio(Usuario usuario, Persona persona, String rolPedido) {
+        if (rolPedido == null) {
+            return;
+        }
+        String rolActual = usuario.getRoles() == null ? null
+                : usuario.getRoles().stream().findFirst().map(Rol::getNombre).orElse(null);
+        if (!rolPedido.equals(rolActual)) {
+            validarRolCoherente(persona.getIdPersona(), rolPedido);
+            // HashSet mutable: Hibernate necesita poder mutar la coleccion
+            // ya administrada de este Usuario persistido -- Set.of() es
+            // inmutable y hace fallar el flush con UnsupportedOperationException.
+            usuario.setRoles(new java.util.HashSet<>(Set.of(buscarRol(rolPedido))));
+        }
     }
 
     private Rol buscarRol(String nombre) {
