@@ -14,10 +14,16 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', async () => {
+  it('should render a router-outlet', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, frontend');
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
+  });
+
+  it('should apply the saved theme to the document root on startup', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    expect(document.documentElement.hasAttribute('data-theme')).toBe(true);
   });
 });
