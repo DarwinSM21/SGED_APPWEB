@@ -18,7 +18,11 @@ import { PersonasStateService } from './personas-state.service';
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Ficha de estudiante</h3>
       @if (persona()?.estudiante; as e) {
-        <p class="resumen-seccion">{{ e.codigoEstudiante }} · {{ e.nombreCategoria }} · {{ e.activo ? 'activo' : 'inactivo' }}</p>
+        <p class="resumen-seccion">
+          {{ e.codigoEstudiante }} · {{ e.nombreCategoria }}
+          @if (e.abreviaturaPosicion) { · {{ e.abreviaturaPosicion }} }
+          · {{ e.activo ? 'activo' : 'inactivo' }}
+        </p>
 
         <h4 class="subtitulo-menor">Representantes</h4>
         @if (state.representantesDelEstudiante().length === 0) {
@@ -65,6 +69,11 @@ import { PersonasStateService } from './personas-state.service';
         } @else if (state.representantes().length === 0) {
           <p class="aviso">No hay representantes registrados todavía.</p>
         }
+      } @else if (rolIncoherente(); as rol) {
+        <p class="aviso">
+          Esta persona ya tiene una cuenta con rol <strong>{{ rol }}</strong>. Una cuenta solo puede tener un rol
+          coherente con su ficha, así que acá no se le puede crear una ficha de estudiante.
+        </p>
       } @else {
         <div class="fila-2">
           <label class="field" for="e-categoria"><span class="field__label">Categoría</span>
@@ -80,6 +89,13 @@ import { PersonasStateService } from './personas-state.service';
         <div class="fila-2">
           <label class="field" for="e-ingreso"><span class="field__label">Fecha de ingreso</span>
             <span class="field__control"><input id="e-ingreso" type="date" [(ngModel)]="formEstudiante.fechaIngreso" name="e-ingreso" /></span></label>
+          <label class="field" for="e-posicion"><span class="field__label">Posición (opcional)</span>
+            <span class="field__control">
+              <select id="e-posicion" [(ngModel)]="formEstudiante.idPosicion" name="e-posicion">
+                <option [ngValue]="null">Sin posición todavía</option>
+                @for (p of state.posiciones(); track p.idPosicion) { <option [ngValue]="p.idPosicion">{{ p.nombre }} ({{ p.abreviatura }})</option> }
+              </select>
+            </span></label>
         </div>
         @if (errorEstudiante()) { <div class="alert alert--danger" role="alert">{{ errorEstudiante() }}</div> }
         <div class="acciones">
@@ -108,8 +124,20 @@ export class FichaEstudianteComponent {
 
   readonly persona = computed(() => this.state.seleccionada());
 
-  formEstudiante: { idCategoria: number | null; codigoEstudiante: string; fechaIngreso: string } =
-    { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10) };
+  /**
+   * El backend ya rechaza crear la ficha si la cuenta tiene otro rol
+   * (EstudianteAccesoService.validarCoherenciaConFichaEstudiante); esto
+   * solo evita mostrarle el formulario a alguien que de todas formas va a
+   * chocar con ese error al enviarlo.
+   */
+  readonly rolIncoherente = computed(() => {
+    const usuario = this.persona()?.usuario;
+    if (!usuario || usuario.roles.includes('ESTUDIANTE')) return null;
+    return usuario.roles[0] ?? null;
+  });
+
+  formEstudiante: { idCategoria: number | null; codigoEstudiante: string; fechaIngreso: string; idPosicion: number | null } =
+    { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10), idPosicion: null };
   readonly guardandoEstudiante = signal(false);
   readonly errorEstudiante = signal('');
 
@@ -121,7 +149,7 @@ export class FichaEstudianteComponent {
   constructor() {
     effect(() => {
       this.state.seleccionada();
-      this.formEstudiante = { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10) };
+      this.formEstudiante = { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10), idPosicion: null };
       this.formVinculo = { idRepresentante: null, relacion: '', contactoPrincipal: false };
       this.errorEstudiante.set('');
       this.errorVinculo.set('');
@@ -136,7 +164,7 @@ export class FichaEstudianteComponent {
     this.servicio.crearEstudiante({
       idPersona, idCategoria: this.formEstudiante.idCategoria, idEstadoGeneral: ESTADO_GENERAL_ACTIVO,
       codigoEstudiante: this.formEstudiante.codigoEstudiante, fechaIngreso: this.formEstudiante.fechaIngreso,
-      peso: null, altura: null,
+      peso: null, altura: null, idPosicion: this.formEstudiante.idPosicion,
     }).subscribe({
       next: () => { this.guardandoEstudiante.set(false); this.state.cargarPersonas(true); },
       error: (err) => { this.guardandoEstudiante.set(false); this.errorEstudiante.set(err?.error?.detail ?? 'Error del servidor'); },

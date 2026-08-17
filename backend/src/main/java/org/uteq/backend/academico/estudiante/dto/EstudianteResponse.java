@@ -17,6 +17,9 @@ public record EstudianteResponse(
         LocalDate fechaIngreso,
         BigDecimal peso,
         BigDecimal altura,
+        Long idPosicion,
+        String nombrePosicion,
+        String abreviaturaPosicion,
         Boolean activo,
         Instant createdAt
 ) {}

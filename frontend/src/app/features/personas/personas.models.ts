@@ -63,6 +63,7 @@ export interface EstudianteRequest {
   fechaIngreso: string;
   peso: number | null;
   altura: number | null;
+  idPosicion: number | null;
 }
 
 export interface EstudianteResponse {
@@ -78,8 +79,17 @@ export interface EstudianteResponse {
   fechaIngreso: string;
   peso: number | null;
   altura: number | null;
+  idPosicion: number | null;
+  nombrePosicion: string | null;
+  abreviaturaPosicion: string | null;
   activo: boolean;
   createdAt: string;
+}
+
+export interface PosicionOpcion {
+  idPosicion: number;
+  nombre: string;
+  abreviatura: string;
 }
 
 export interface HabilitarAccesoRequest {

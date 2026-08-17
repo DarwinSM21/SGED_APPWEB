@@ -254,6 +254,7 @@ export class PersonasRecepcionComponent implements OnInit {
       this.servicio.editarEstudiante(idEdicion, {
         idPersona: estudianteActual.idPersona, idCategoria: this.idCategoria, idEstadoGeneral: estudianteActual.idEstadoGeneral,
         codigoEstudiante: this.codigoEstudiante, fechaIngreso: this.fechaIngreso, peso: this.peso, altura: this.altura,
+        idPosicion: estudianteActual.idPosicion,
       }).subscribe({
         next: () => { this.editando.set(null); this.finalizarConExito('Estudiante actualizado'); },
         error: (err) => this.manejarError(err),
@@ -269,6 +270,7 @@ export class PersonasRecepcionComponent implements OnInit {
         this.servicio.crearEstudiante({
           idPersona: persona.idPersona, idCategoria: this.idCategoria!, idEstadoGeneral: ESTADO_GENERAL_ACTIVO,
           codigoEstudiante: this.codigoEstudiante, fechaIngreso: this.fechaIngreso, peso: this.peso, altura: this.altura,
+          idPosicion: null,
         }).subscribe({
           next: () => this.finalizarConExito('Estudiante registrado'),
           error: (err) => { this.guardando.set(false); this.error.set('La persona se creó, pero no se pudo registrar como estudiante: ' + this.mensajeDeError(err)); },

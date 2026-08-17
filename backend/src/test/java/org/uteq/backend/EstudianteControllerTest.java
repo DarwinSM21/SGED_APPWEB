@@ -71,6 +71,9 @@ class EstudianteControllerTest {
                 LocalDate.now(),
                 new BigDecimal("60.50"),
                 new BigDecimal("1.70"),
+                null,
+                null,
+                null,
                 true,
                 Instant.now()
         );
@@ -84,7 +87,8 @@ class EstudianteControllerTest {
                 "EST-001",                // codigoEstudiante
                 LocalDate.now(),          // fechaIngreso
                 new BigDecimal("60.50"),  // peso
-                new BigDecimal("1.70")    // altura
+                new BigDecimal("1.70"),   // altura
+                null                      // idPosicion
         );
     }
 
@@ -146,7 +150,7 @@ class EstudianteControllerTest {
     void crear_con_datos_invalidos_da_422() throws Exception {
         // Objeto request inválido (campos @NotNull nulos)
         EstudianteRequest requestInvalido = new EstudianteRequest(
-                null, null, null, "", LocalDate.now().plusDays(1), new BigDecimal("0.00"), new BigDecimal("0.00")
+                null, null, null, "", LocalDate.now().plusDays(1), new BigDecimal("0.00"), new BigDecimal("0.00"), null
         );
 
         mockMvc.perform(post("/api/estudiantes")

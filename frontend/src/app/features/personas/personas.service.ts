@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   CategoriaOpcion, EntrenadorRequest, EntrenadorResponse, EspecialidadOpcion, EstudianteRequest, EstudianteResponse,
-  HabilitarAccesoRequest, PersonaRequest, PersonaResponse, RepresentanteRequest,
+  HabilitarAccesoRequest, PersonaRequest, PersonaResponse, PosicionOpcion, RepresentanteRequest,
   RepresentanteResponse, UsuarioRequest, UsuarioResponse, VinculoRequest,
 } from './personas.models';
 
@@ -65,6 +65,10 @@ export class PersonasService {
 
   categoriasActivas() {
     return this.http.get<CategoriaOpcion[]>('/api/categorias/activas');
+  }
+
+  posicionesActivas() {
+    return this.http.get<PosicionOpcion[]>('/api/posiciones/activas');
   }
 
   siguienteCodigoEstudiante(anio: number) {

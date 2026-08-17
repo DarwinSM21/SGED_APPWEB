@@ -19,6 +19,8 @@ import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+import org.uteq.backend.deportivo.posicion.entity.Posicion;
+import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
@@ -39,6 +41,7 @@ public class EstudianteService {
     private final PersonaRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
+    private final PosicionRepository posicionRepository;
     private final RepresentanteEstudianteRepository representanteEstudianteRepository;
     // MET-01 / R-06 (informe de evaluacion de calidad): antes EstudianteService
     // inyectaba UsuarioRepository, RolRepository y PasswordEncoder directo
@@ -101,6 +104,7 @@ public class EstudianteService {
             est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR));
             est.setPeso(request.peso());
             est.setAltura(request.altura());
+            est.setPosicion(resolverPosicion(request.idPosicion()));
             est.setActivo(true); // 👈 Re-activación del registro
 
             est = estudianteRepository.save(est);
@@ -129,6 +133,7 @@ public class EstudianteService {
                 .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR))
                 .peso(request.peso())
                 .altura(request.altura())
+                .posicion(resolverPosicion(request.idPosicion()))
                 .activo(true)
                 .build();
 
@@ -152,6 +157,7 @@ public class EstudianteService {
         reasignarPersonaSiCambio(estudiante, request.idPersona());
         reasignarCategoriaSiCambio(estudiante, request.idCategoria());
         reasignarEstadoGeneralSiCambio(estudiante, request.idEstadoGeneral());
+        reasignarPosicionSiCambio(estudiante, request.idPosicion());
 
         // Actualizar datos propios del estudiante
         estudiante.setCodigoEstudiante(request.codigoEstudiante());
@@ -199,6 +205,27 @@ public class EstudianteService {
         EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + idEstadoGeneralNuevo));
         estudiante.setEstadoGeneral(estadoGeneral);
+    }
+
+    /**
+     * A diferencia de categoria/estadoGeneral, la posicion es opcional y
+     * puede pasar de asignada a sin asignar (idPosicionNueva null): no basta
+     * con "si cambio, buscar la nueva", tambien hay que poder desasignarla.
+     */
+    private void reasignarPosicionSiCambio(Estudiante estudiante, Long idPosicionNueva) {
+        Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
+        if (java.util.Objects.equals(actual, idPosicionNueva)) {
+            return;
+        }
+        estudiante.setPosicion(resolverPosicion(idPosicionNueva));
+    }
+
+    private Posicion resolverPosicion(Long idPosicion) {
+        if (idPosicion == null) {
+            return null;
+        }
+        return posicionRepository.findById(idPosicion)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Posición no encontrada: " + idPosicion));
     }
 
     @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
@@ -281,6 +308,9 @@ public class EstudianteService {
                 e.getFechaIngreso(),
                 e.getPeso(),
                 e.getAltura(),
+                e.getPosicion() != null ? e.getPosicion().getIdPosicion() : null,
+                e.getPosicion() != null ? e.getPosicion().getNombre() : null,
+                e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,
                 e.getActivo(),
                 e.getCreatedAt() // 👈 Pasa directo e.getCreatedAt()
         );
