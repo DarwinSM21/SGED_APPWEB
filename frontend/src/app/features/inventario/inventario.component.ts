@@ -67,7 +67,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
                 <span class="field__control"><input id="af-talla" [(ngModel)]="formArticulo.talla" name="af-talla" /></span>
               </label>
               <label class="field" for="af-stockMinimo">
-                <span class="field__label">Stock mínimo</span>
+                <span class="field__label">Stock mínimo (umbral de alerta, no la cantidad inicial)</span>
                 <span class="field__control"><input id="af-stockMinimo" type="number" min="0" [(ngModel)]="formArticulo.stockMinimo" name="af-stockMinimo" /></span>
               </label>
             </div>

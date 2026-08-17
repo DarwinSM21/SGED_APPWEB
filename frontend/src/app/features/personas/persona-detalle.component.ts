@@ -132,6 +132,14 @@ export class PersonaDetalleComponent {
 
   private manejarError(err: any): void {
     this.guardandoPersona.set(false);
-    this.errorPersona.set(err?.error?.detail ?? 'Error del servidor');
+    // El backend manda el detalle por campo en err.error.errores (ej.
+    // "cedula: must match \"\d{10}\""), no solo el "detail" generico
+    // ("Errores de validacion"). Se muestran ambos si estan disponibles.
+    const detalles: string[] | undefined = err?.error?.errores;
+    if (detalles?.length) {
+      this.errorPersona.set(detalles.join(' · '));
+    } else {
+      this.errorPersona.set(err?.error?.detail ?? 'Error del servidor');
+    }
   }
 }
