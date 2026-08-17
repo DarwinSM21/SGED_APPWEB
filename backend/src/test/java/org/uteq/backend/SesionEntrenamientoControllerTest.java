@@ -116,14 +116,14 @@ class SesionEntrenamientoControllerTest {
     @DisplayName("mias delega el username autenticado y la paginacion")
     void mias_delega_username_y_paginacion() throws Exception {
         autenticarComo("carlos@sged.test", "ENTRENADOR");
-        when(sesionService.misSesiones(eq("carlos@sged.test"), anyInt(), anyInt()))
+        when(sesionService.misSesiones(eq("carlos@sged.test"), eq(false), anyInt(), anyInt()))
                 .thenReturn(List.of(respuesta("Carlos")));
 
         mockMvc.perform(get("/api/sesiones/mias"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)));
 
-        verify(sesionService).misSesiones("carlos@sged.test", 0, 20);
+        verify(sesionService).misSesiones("carlos@sged.test", false, 0, 20);
     }
 
     @Test

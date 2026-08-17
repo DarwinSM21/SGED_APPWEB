@@ -27,6 +27,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Personas', ruta: '/personas', icono: 'usuario-mas' },
     { etiqueta: 'Recepción', ruta: '/recepcion', icono: 'qr' },
+    { etiqueta: 'Sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
     { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },

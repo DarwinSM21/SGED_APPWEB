@@ -11,7 +11,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
       {
         path: 'entrenador/sesiones',
-        canActivate: [roleGuard(['ENTRENADOR'])],
+        canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
         loadComponent: () => import('./features/entrenador/sesiones.component').then(m => m.SesionesComponent),
       },
       {

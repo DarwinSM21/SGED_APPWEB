@@ -52,7 +52,11 @@ export function apellidoDe(nombreCompleto: string): string {
   return partes[partes.length - 1] ?? nombreCompleto;
 }
 
-/** El backend manda LocalTime como "HH:mm:ss"; a nadie le interesan los segundos en pantalla. */
+/** El backend manda LocalTime como "HH:mm:ss"; se muestra en 12 horas con AM/PM, sin segundos. */
 export function horaCorta(hora: string | null): string | null {
-  return hora ? hora.slice(0, 5) : hora;
+  if (!hora) return hora;
+  const [h, m] = hora.slice(0, 5).split(':').map(Number);
+  const periodo = h < 12 ? 'AM' : 'PM';
+  const h12 = h % 12 === 0 ? 12 : h % 12;
+  return `${h12}:${String(m).padStart(2, '0')} ${periodo}`;
 }
