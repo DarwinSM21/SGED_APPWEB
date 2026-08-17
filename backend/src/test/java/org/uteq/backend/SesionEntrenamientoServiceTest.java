@@ -156,9 +156,24 @@ class SesionEntrenamientoServiceTest {
                 .thenReturn(new PageImpl<>(List.of(pasada)));
         when(evaluacionRepository.existsBySesionIdSesion(any())).thenReturn(false);
 
-        List<SesionHoyResponse> resultado = sesionService.misSesiones("carlos@sged.test", 0, 20);
+        List<SesionHoyResponse> resultado = sesionService.misSesiones("carlos@sged.test", false, 0, 20);
 
         assertThat(resultado).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("mias con veTodasLasSesiones=true devuelve el historial de todos, no requiere un Entrenador propio")
+    void miasVeTodasNoRequiereEntrenadorPropio() {
+        var yo = entrenador(1L, "Carlos");
+        var sesion = sesionDe(yo);
+
+        when(sesionRepository.findAll(any(PageRequest.class))).thenReturn(new PageImpl<>(List.of(sesion)));
+        when(evaluacionRepository.existsBySesionIdSesion(any())).thenReturn(false);
+
+        List<SesionHoyResponse> resultado = sesionService.misSesiones("admin@sged.test", true, 0, 20);
+
+        assertThat(resultado).hasSize(1);
+        verify(entrenadorRepository, never()).findByUsuario_Username("admin@sged.test");
     }
 
     @Test

@@ -3,6 +3,7 @@ package org.uteq.backend.deportivo.sesion.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.Zonas;
@@ -67,13 +68,23 @@ public class SesionEntrenamientoService {
     }
 
     /**
-     * Historial completo del entrenador (pasadas y futuras), no solo las de
-     * hoy: sin esto, cualquier dia sin sesion programada dejaba al
-     * entrenador sin forma de llegar a una evaluacion o plantilla pasada.
+     * Historial completo (pasadas y futuras), no solo las de hoy: sin esto,
+     * cualquier dia sin sesion programada dejaba al entrenador sin forma de
+     * llegar a una evaluacion o plantilla pasada. Mismo criterio
+     * veTodasLasSesiones que sesionesDeHoy(): un ADMINISTRADOR audita el
+     * historial completo de todos los entrenadores, no solo el propio (que
+     * ademas no tiene, al no ser un Entrenador).
      */
     @Transactional
-    public List<SesionHoyResponse> misSesiones(String username, int page, int size) {
+    public List<SesionHoyResponse> misSesiones(String username, boolean veTodasLasSesiones, int page, int size) {
         horarioService.generarSesionesDeHoy();
+
+        if (veTodasLasSesiones) {
+            Page<SesionEntrenamiento> todas = sesionRepository.findAll(
+                    PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha")));
+            return todas.map(this::aResponse).getContent();
+        }
+
         Entrenador entrenador = entrenadorPorUsername(username);
         if (entrenador == null) {
             return List.of();

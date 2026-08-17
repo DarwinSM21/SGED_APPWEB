@@ -2,7 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { PersonasService } from './personas.service';
 import {
   CategoriaOpcion, EntrenadorResponse, EspecialidadOpcion, EstudianteResponse, PersonaConEstado, PersonaResponse,
-  RepresentanteResponse, UsuarioResponse,
+  PosicionOpcion, RepresentanteResponse, UsuarioResponse,
 } from './personas.models';
 
 /**
@@ -30,6 +30,7 @@ export class PersonasStateService {
   readonly representantes = signal<RepresentanteResponse[]>([]);
   readonly categorias = signal<CategoriaOpcion[]>([]);
   readonly especialidades = signal<EspecialidadOpcion[]>([]);
+  readonly posiciones = signal<PosicionOpcion[]>([]);
   readonly cargando = signal(true);
 
   readonly personas = computed<PersonaConEstado[]>(() => {
@@ -76,6 +77,7 @@ export class PersonasStateService {
     this.cargarPersonas();
     this.servicio.categoriasActivas().subscribe({ next: (c) => this.categorias.set(c) });
     this.servicio.especialidadesActivas().subscribe({ next: (e) => this.especialidades.set(e) });
+    this.servicio.posicionesActivas().subscribe({ next: (p) => this.posiciones.set(p) });
   }
 
   cargarPersonas(mantenerSeleccion = false): void {

@@ -55,17 +55,27 @@ public class SesionEntrenamientoController {
     }
 
     @GetMapping("/mias")
-    @PreAuthorize("hasRole('ENTRENADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<List<SesionHoyResponse>> mias(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
-        return ResponseEntity.ok(sesionService.misSesiones(username, page, size));
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean veTodasLasSesiones = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+
+        return ResponseEntity.ok(sesionService.misSesiones(auth.getName(), veTodasLasSesiones, page, size));
     }
 
+    /**
+     * ADMINISTRADOR pasa el chequeo de rol, pero SesionEntrenamientoService
+     * sigue exigiendo un Entrenador propio para crear: un admin no "es" un
+     * entrenador, asi que recibe RecursoNoEncontradoException (404, mensaje
+     * especifico) en vez del generico 403 de antes -que ademas era enganoso,
+     * porque un administrador si tiene permiso sobre el resto del sistema-.
+     */
     @PostMapping
-    @PreAuthorize("hasRole('ENTRENADOR')")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<SesionHoyResponse> crear(@Valid @RequestBody SesionCrearRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         SesionHoyResponse creada = sesionService.crear(username, request);

@@ -38,5 +38,8 @@ public record EstudianteRequest(
 
         @DecimalMin(value = "0.01", message = "La altura debe ser mayor a 0")
         @Digits(integer = 3, fraction = 2, message = "La altura debe tener máximo 3 enteros y 2 decimales")
-        BigDecimal altura
+        BigDecimal altura,
+
+        /** Posicion nominal (ver Posicion.java). Opcional: no todo estudiante la tiene definida todavia. */
+        Long idPosicion
 ) {}

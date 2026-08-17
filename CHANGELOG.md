@@ -126,50 +126,24 @@ complementario a este, no un duplicado.
 
 ## [Unreleased]
 
-### Documentación
-- Renumeración de ADRs para alinear con la Guía de la Entrega Final (el
-  Bloque A.2.2 exige `ADR-006` para "Estrategia de acceso a datos:
-  separación CRUD/SP"; el A.4.2 exige `ADR-007` para la estrategia de
-  despliegue): `ADR-004-acceso_datos` → `ADR-006-acceso_datos`,
-  `ADR-006-despliegue` → `ADR-007-despliegue`. El `ADR-007` de JWT en cookie
-  y blacklist en Redis —que ya había migrado una vez desde `ADR-003` por
-  colisión, ver la entrada de `v0.9.0-rc` más abajo— pasa a
-  `ADR-008-jwt-cookie-redis` para liberar el número que exige la guía.
-  Referencias cruzadas actualizadas en `ADR-002-autentificacion.md`,
-  `docs/informe/main.tex`, `AuthController.java`, `SesionResponse.java` y
-  `AuthServiceTest.java`.
+## [v1.0.0] - 2026-08-17
 
-### Seguridad
-- JWT migrado de header `Authorization` a cookies `HttpOnly` + `Secure` +
-  `SameSite=Strict`; `/api/auth/registro` protegido.
-- Terminación TLS en `:8443` vía nginx con certificado autofirmado (OWASP A02).
-- Content-Security-Policy explícito en `SecurityConfig`.
-- Log de auditoría estructurado A09 (login OK/FAIL con IP y `sub`).
-- `@Valid` responde `422` en vez de `400` (alineado a la auditoría OWASP A03).
-- Auditoría OWASP de 6 controles corregida y regenerada contra el stack real
-  (A01, A02, A03, A05, A07, A09) — `docs/mediciones/sec/`.
+### Fixed
+- Eliminado `RefreshTokenRequest.java` (dead code): el DTO existía pero ningún
+  archivo lo importaba. El endpoint `/api/auth/refresh` lee el token de
+  `@CookieValue`, no del body. Su existencia creaba confusión sobre si los
+  tokens viajan en el cuerpo de la respuesta.
 
-### Datos
-- Conversión de consultas JPQL a procedimientos almacenados reales invocados
-  vía `@Procedure` (antes quedaban huérfanos o usaban `FUNCTION` en vez de
-  `PROCEDURE`) — `V5`/`V6` en `db/migration/`.
-- `database/` renombrado a `db/` en la raíz para cumplir la estructura exigida.
-- Postgres y Redis pinados por digest sha256 real en `docker-compose.yml`
-  (Bloque B.1).
-
-### Rendimiento y pruebas
-- Corrección de JaCoCo (el `argLine` de Surefire pisaba el javaagent) —
-  cobertura real ahora medible.
-- Pruebas unitarias e de integración agregadas: `EstudianteController`,
-  `LoginAttemptService`, `RedisBlacklistService`.
-- Evidencia empírica real generada contra el stack en vivo: 3 corridas de
-  k6 con análisis de intervalo de confianza 95%, `docs/mediciones/perf/REPORT.md`.
-
-### Correcciones
-- Cache de `Estudiante` rompía desde el segundo request (Jackson no leía el
-  `@class` raíz al usar `GenericJackson2JsonRedisSerializer`).
-- `GenericJackson2JsonRedisSerializer` no soportaba `java.time.Instant`.
-- Bugs de autorización y sesión encontrados corriendo el sistema en vivo.
+### Documentation
+- Sección "Amenazas a la validez" agregada al reporte SUS
+  (`docs/mediciones/sus/REPORT.md`): documenta tamaño de muestra mínimo
+  (n=10), IC 95% amplio (54.53–81.97), sesgo de selección, distribución
+  bimodal por perfil, y amenazas externas (efecto halo, recencia, ausencia
+  de pre/post-test).
+- Verificación explícita de que ningún endpoint de auth devuelve tokens en
+  el body: `/api/auth/login` → `SesionResponse` (username, nombre, rol);
+  `/api/auth/refresh` → `204 No Content`; `/api/auth/logout` →
+  `204 No Content`. Tokens viajan exclusivamente en cookies HttpOnly.
 
 ## [v0.1.0-entrega-1b] - 2026-06-24
 

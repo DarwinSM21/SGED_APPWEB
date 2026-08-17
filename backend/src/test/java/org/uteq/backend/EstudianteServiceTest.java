@@ -98,7 +98,8 @@ class EstudianteServiceTest {
                 "EST-001",
                 LocalDate.now(),
                 new BigDecimal("45.50"),
-                new BigDecimal("1.50")
+                new BigDecimal("1.50"),
+                null
         );
     }
 

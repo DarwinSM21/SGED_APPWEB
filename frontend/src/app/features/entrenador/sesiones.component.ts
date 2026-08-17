@@ -6,6 +6,14 @@ import { SesionesService } from './sesiones.service';
 import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models';
 import { horaCorta, inicialesDe } from './plantilla.models';
 
+/** Fecha local de hoy en formato "yyyy-MM-dd", la que espera un <input type="date">. */
+function fechaHoyIso(): string {
+  const hoy = new Date();
+  const mes = String(hoy.getMonth() + 1).padStart(2, '0');
+  const dia = String(hoy.getDate()).padStart(2, '0');
+  return `${hoy.getFullYear()}-${mes}-${dia}`;
+}
+
 /**
  * Historial completo de sesiones del entrenador autenticado (pasadas y
  * futuras), con alta de una nueva. Antes de esto no existia ningun punto de
@@ -243,7 +251,8 @@ export class SesionesComponent implements OnInit {
 
   /** Propiedades planas, no signals: [(ngModel)] las actualiza via su propio manejador de evento. */
   idCategoria: number | null = null;
-  fecha = '';
+  /** Por defecto hoy (fecha local del navegador): la jornada extra casi siempre es la de hoy mismo; se puede cambiar a mano. */
+  fecha = fechaHoyIso();
   horaInicio = '';
   horaFin = '';
   campo = '';
@@ -297,7 +306,7 @@ export class SesionesComponent implements OnInit {
         this.guardando.set(false);
         this.mostrarFormulario.set(false);
         this.idCategoria = null;
-        this.fecha = '';
+        this.fecha = fechaHoyIso();
         this.horaInicio = '';
         this.horaFin = '';
         this.campo = '';

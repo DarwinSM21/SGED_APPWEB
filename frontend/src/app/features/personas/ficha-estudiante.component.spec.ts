@@ -46,14 +46,14 @@ describe('FichaEstudianteComponent', () => {
   it('con categoria valida crea la ficha con el idPersona de la persona seleccionada', () => {
     servicioMock.crearEstudiante.mockReturnValue(of({}));
     vi.spyOn(state, 'cargarPersonas').mockImplementation(() => {});
-    component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10' };
+    component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10', idPosicion: null };
 
     component.crearEstudiante();
 
     expect(servicioMock.crearEstudiante).toHaveBeenCalledWith({
       idPersona: 1, idCategoria: 3, idEstadoGeneral: 1,
       codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10',
-      peso: null, altura: null,
+      peso: null, altura: null, idPosicion: null,
     });
     expect(component.guardandoEstudiante()).toBe(false);
     expect(state.cargarPersonas).toHaveBeenCalledWith(true);
@@ -61,7 +61,7 @@ describe('FichaEstudianteComponent', () => {
 
   it('un codigo duplicado muestra el error del backend sin romper el formulario', () => {
     servicioMock.crearEstudiante.mockReturnValue(throwError(() => ({ error: { detail: 'El código ya existe.' } })));
-    component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10' };
+    component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10', idPosicion: null };
 
     component.crearEstudiante();
 

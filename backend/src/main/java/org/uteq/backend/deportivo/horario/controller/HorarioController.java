@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/horarios")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ENTRENADOR')")
+@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
 public class HorarioController {
 
     private final HorarioService horarioService;
