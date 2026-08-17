@@ -3,6 +3,7 @@ package org.uteq.backend.deportivo.asistencia.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
-public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
+public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, JpaSpecificationExecutor<Asistencia> {
 
     Optional<Asistencia> findBySesionIdSesionAndEstudianteIdEstudiante(Long idSesion, Long idEstudiante);
 
@@ -48,18 +49,4 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long> {
             @Param("p_estudiante") Long idEstudiante,
             @Param("p_desde") LocalDate desde,
             @Param("p_hasta") LocalDate hasta);
-
-    /** Reporte de asistencias: filtros opcionales de estudiante, categoria y rango de fechas. */
-    @Query("""
-           SELECT a FROM Asistencia a
-           WHERE (:idEstudiante IS NULL OR a.estudiante.idEstudiante = :idEstudiante)
-             AND (:idCategoria IS NULL OR a.estudiante.categoria.idCategoria = :idCategoria)
-             AND (:desde IS NULL OR a.sesion.fecha >= :desde)
-             AND (:hasta IS NULL OR a.sesion.fecha <= :hasta)
-           ORDER BY a.sesion.fecha DESC
-           """)
-    List<Asistencia> buscarParaReporte(@Param("idEstudiante") Long idEstudiante,
-                                        @Param("idCategoria") Long idCategoria,
-                                        @Param("desde") LocalDate desde,
-                                        @Param("hasta") LocalDate hasta);
 }

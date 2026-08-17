@@ -3,6 +3,7 @@ package org.uteq.backend.deportivo.lesion.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -10,7 +11,7 @@ import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import java.util.List;
 import java.util.Optional;
 
-public interface LesionRepository extends JpaRepository<Lesion, Long> {
+public interface LesionRepository extends JpaRepository<Lesion, Long>, JpaSpecificationExecutor<Lesion> {
 
     /** Lesion activa (sin alta) de un estudiante. La BD garantiza que hay a lo sumo una. */
     @Query("""
@@ -37,18 +38,4 @@ public interface LesionRepository extends JpaRepository<Lesion, Long> {
 
     @Query("SELECT l FROM Lesion l WHERE l.fechaAlta IS NULL ORDER BY l.fechaLesion DESC")
     Page<Lesion> listarActivas(Pageable pageable);
-
-    /** Reporte de lesiones: filtros opcionales de estudiante, categoria y rango de fechas. */
-    @Query("""
-           SELECT l FROM Lesion l
-           WHERE (:idEstudiante IS NULL OR l.estudiante.idEstudiante = :idEstudiante)
-             AND (:idCategoria IS NULL OR l.estudiante.categoria.idCategoria = :idCategoria)
-             AND (:desde IS NULL OR l.fechaLesion >= :desde)
-             AND (:hasta IS NULL OR l.fechaLesion <= :hasta)
-           ORDER BY l.fechaLesion DESC
-           """)
-    List<Lesion> buscarParaReporte(@Param("idEstudiante") Long idEstudiante,
-                                    @Param("idCategoria") Long idCategoria,
-                                    @Param("desde") java.time.LocalDate desde,
-                                    @Param("hasta") java.time.LocalDate hasta);
 }
