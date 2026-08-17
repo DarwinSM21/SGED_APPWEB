@@ -1,6 +1,8 @@
 package org.uteq.backend.reportes.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
@@ -56,7 +58,10 @@ public class ReporteService {
 
     @Transactional(readOnly = true)
     public byte[] pagos(Long idEstudiante, LocalDate desde, LocalDate hasta) {
-        var filas = sinVacio(pagoRepository.buscarParaReporte(idEstudiante, desde, hasta)).stream()
+        Specification<Pago> spec = Specification.<Pago>where(igualA("estudiante.idEstudiante", idEstudiante))
+                .and(this.<Pago>desdeDe("fechaPago", desde))
+                .and(this.<Pago>hastaDe("fechaPago", hasta));
+        var filas = sinVacio(pagoRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "fechaPago"))).stream()
                 .map(this::filaPago)
                 .toList();
         return pdfService.generar("Reporte de Pagos",
@@ -65,7 +70,11 @@ public class ReporteService {
 
     @Transactional(readOnly = true)
     public byte[] asistencias(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        var filas = sinVacio(asistenciaRepository.buscarParaReporte(idEstudiante, idCategoria, desde, hasta)).stream()
+        Specification<Asistencia> spec = Specification.<Asistencia>where(igualA("estudiante.idEstudiante", idEstudiante))
+                .and(this.<Asistencia>igualA("estudiante.categoria.idCategoria", idCategoria))
+                .and(this.<Asistencia>desdeDe("sesion.fecha", desde))
+                .and(this.<Asistencia>hastaDe("sesion.fecha", hasta));
+        var filas = sinVacio(asistenciaRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).stream()
                 .map(this::filaAsistencia)
                 .toList();
         return pdfService.generar("Reporte de Asistencias",
@@ -74,7 +83,11 @@ public class ReporteService {
 
     @Transactional(readOnly = true)
     public byte[] evaluaciones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        var filas = sinVacio(evaluacionEstudianteRepository.buscarParaReporte(idEstudiante, idCategoria, desde, hasta)).stream()
+        Specification<EvaluacionEstudiante> spec = Specification.<EvaluacionEstudiante>where(igualA("estudiante.idEstudiante", idEstudiante))
+                .and(this.<EvaluacionEstudiante>igualA("categoriaDia.idCategoria", idCategoria))
+                .and(this.<EvaluacionEstudiante>desdeDe("evaluacion.fecha", desde))
+                .and(this.<EvaluacionEstudiante>hastaDe("evaluacion.fecha", hasta));
+        var filas = sinVacio(evaluacionEstudianteRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).stream()
                 .map(this::filaEvaluacion)
                 .toList();
         return pdfService.generar("Reporte de Evaluaciones",
@@ -83,11 +96,47 @@ public class ReporteService {
 
     @Transactional(readOnly = true)
     public byte[] lesiones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        var filas = sinVacio(lesionRepository.buscarParaReporte(idEstudiante, idCategoria, desde, hasta)).stream()
+        Specification<Lesion> spec = Specification.<Lesion>where(igualA("estudiante.idEstudiante", idEstudiante))
+                .and(this.<Lesion>igualA("estudiante.categoria.idCategoria", idCategoria))
+                .and(this.<Lesion>desdeDe("fechaLesion", desde))
+                .and(this.<Lesion>hastaDe("fechaLesion", hasta));
+        var filas = sinVacio(lesionRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "fechaLesion"))).stream()
                 .map(this::filaLesion)
                 .toList();
         return pdfService.generar("Reporte de Lesiones",
                 List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), filas);
+    }
+
+    /**
+     * Predicados de filtro opcional para los reportes, construidos con Criteria API en vez
+     * de "(:x IS NULL OR campo = :x)" en JPQL: ese patron dispara "could not determine data
+     * type of parameter" en Postgres cuando el parametro solo aparece en un IS NULL sin otro
+     * contexto tipado (Hibernate 6 + pgjdbc). Con Specification, un filtro ausente simplemente
+     * no agrega predicado -- nunca se envia un parametro ambiguo.
+     */
+    private <T> Specification<T> igualA(String ruta, Object valor) {
+        if (valor == null) return Specification.<T>where(null);
+        return (root, query, cb) -> cb.equal(this.<T, Object>ruta(root, ruta), valor);
+    }
+
+    private <T> Specification<T> desdeDe(String ruta, LocalDate desde) {
+        if (desde == null) return Specification.<T>where(null);
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(this.<T, LocalDate>ruta(root, ruta), desde);
+    }
+
+    private <T> Specification<T> hastaDe(String ruta, LocalDate hasta) {
+        if (hasta == null) return Specification.<T>where(null);
+        return (root, query, cb) -> cb.lessThanOrEqualTo(this.<T, LocalDate>ruta(root, ruta), hasta);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T, Y> jakarta.persistence.criteria.Path<Y> ruta(
+            jakarta.persistence.criteria.Root<T> root, String puntos) {
+        jakarta.persistence.criteria.Path<Object> path = null;
+        for (String segmento : puntos.split("\\.")) {
+            path = path == null ? root.get(segmento) : path.get(segmento);
+        }
+        return (jakarta.persistence.criteria.Path<Y>) (jakarta.persistence.criteria.Path<?>) path;
     }
 
     private <T> List<T> sinVacio(List<T> resultados) {

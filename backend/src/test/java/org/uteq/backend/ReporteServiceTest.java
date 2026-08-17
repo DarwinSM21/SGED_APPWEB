@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago;
@@ -86,7 +88,7 @@ class ReporteServiceTest {
     @Test
     @DisplayName("pagos sin resultados lanza 404")
     void pagosSinResultadosDa404() {
-        when(pagoRepository.buscarParaReporte(any(), any(), any())).thenReturn(List.of());
+        when(pagoRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of());
 
         assertThrows(RecursoNoEncontradoException.class, () -> servicio.pagos(1L, null, null));
     }
@@ -102,7 +104,7 @@ class ReporteServiceTest {
                 .fechaPago(LocalDate.of(2026, 8, 1))
                 .registradoPor(registrador)
                 .build();
-        when(pagoRepository.buscarParaReporte(any(), any(), any())).thenReturn(List.of(pago));
+        when(pagoRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of(pago));
 
         byte[] pdf = servicio.pagos(null, null, null);
 
@@ -112,7 +114,7 @@ class ReporteServiceTest {
     @Test
     @DisplayName("lesiones sin resultados lanza 404")
     void lesionesSinResultadosDa404() {
-        when(lesionRepository.buscarParaReporte(any(), any(), any(), any())).thenReturn(List.of());
+        when(lesionRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of());
 
         assertThrows(RecursoNoEncontradoException.class,
                 () -> servicio.lesiones(null, null, null, null));
@@ -126,7 +128,7 @@ class ReporteServiceTest {
                 .descripcion("Esguince de tobillo")
                 .fechaLesion(LocalDate.of(2026, 8, 1))
                 .build();
-        when(lesionRepository.buscarParaReporte(any(), any(), any(), any())).thenReturn(List.of(lesion));
+        when(lesionRepository.findAll(any(Specification.class), any(Sort.class))).thenReturn(List.of(lesion));
 
         byte[] pdf = servicio.lesiones(null, null, null, null);
 
