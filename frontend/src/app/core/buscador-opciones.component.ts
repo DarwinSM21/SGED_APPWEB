@@ -54,13 +54,13 @@ const MAXIMO_VISIBLE = 50;
             [attr.aria-controls]="idLista"
             [attr.aria-activedescendant]="abierto() && activa() >= 0 ? idOpcion(activa()) : null"
             [placeholder]="marcador()"
-            [value]="texto()"
+            [value]="abierto() ? texto() : (textoSeleccionado() ?? '')"
             [disabled]="cargando()"
             (input)="alEscribir($event)"
             (focus)="abrir()"
             (keydown)="alTeclear($event)" />
-          @if (texto()) {
-            <button type="button" class="field__toggle" aria-label="Limpiar búsqueda"
+          @if (texto() || textoSeleccionado()) {
+            <button type="button" class="field__toggle" aria-label="Limpiar selección"
                     (click)="limpiar()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                    stroke-linecap="round" stroke-linejoin="round">
@@ -137,8 +137,16 @@ export class BuscadorOpcionesComponent {
   readonly etiqueta = input('Buscar');
   readonly marcador = input('Escribe para buscar…');
   readonly cargando = input(false);
+  /**
+   * Lo ya elegido, para mostrarlo cuando el campo esta cerrado. Se recibe
+   * como texto y no como OpcionBuscable porque el padre suele guardar solo
+   * el id y resolver el nombre por su cuenta.
+   */
+  readonly textoSeleccionado = input<string | null>(null);
 
   readonly seleccionada = output<OpcionBuscable>();
+  /** El boton de limpiar: el padre decide que significa volver a "nada". */
+  readonly limpiada = output<void>();
 
   private readonly campo = viewChild<ElementRef<HTMLInputElement>>('campo');
 
@@ -166,6 +174,7 @@ export class BuscadorOpcionesComponent {
   readonly ocultas = computed(() => Math.max(0, this.coincidentes().length - MAXIMO_VISIBLE));
 
   abrir(): void {
+    this.texto.set('');
     this.abierto.set(true);
     this.activa.set(0);
   }
@@ -211,6 +220,7 @@ export class BuscadorOpcionesComponent {
 
   limpiar(): void {
     this.texto.set('');
+    this.limpiada.emit();
     this.abierto.set(true);
     this.campo()?.nativeElement.focus();
   }

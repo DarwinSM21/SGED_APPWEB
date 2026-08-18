@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { mensajeDeError } from '../../core/mensaje-error';
+import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
 
 /**
  * Seccion "Ficha de estudiante" del panel de detalle: alta de la ficha y
@@ -14,7 +15,7 @@ import { mensajeDeError } from '../../core/mensaje-error';
 @Component({
   selector: 'app-ficha-estudiante',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent],
   template: `
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Ficha de estudiante</h3>
@@ -44,15 +45,13 @@ import { mensajeDeError } from '../../core/mensaje-error';
 
         @if (state.representantesDisponibles().length > 0) {
           <div class="fila-2">
-            <label class="field" for="v-representante"><span class="field__label">Agregar representante</span>
-              <span class="field__control">
-                <select id="v-representante" [(ngModel)]="formVinculo.idRepresentante" name="v-representante">
-                  <option [ngValue]="null" disabled>Selecciona…</option>
-                  @for (r of state.representantesDisponibles(); track r.idRepresentante) {
-                    <option [ngValue]="r.idRepresentante">{{ r.nombre }} {{ r.apellido }}</option>
-                  }
-                </select>
-              </span></label>
+            <app-buscador-opciones
+              etiqueta="Agregar representante"
+              marcador="Busca por nombre o apellido…"
+              [opciones]="opcionesRepresentantes()"
+              [textoSeleccionado]="nombreRepresentante(formVinculo.idRepresentante)"
+              (seleccionada)="formVinculo.idRepresentante = $event.id"
+              (limpiada)="formVinculo.idRepresentante = null" />
             <label class="field" for="v-relacion"><span class="field__label">Relación</span>
               <span class="field__control"><input id="v-relacion" [(ngModel)]="formVinculo.relacion" name="v-relacion" placeholder="Madre, padre, tutor…" /></span></label>
           </div>
@@ -120,6 +119,26 @@ import { mensajeDeError } from '../../core/mensaje-error';
   `],
 })
 export class FichaEstudianteComponent {
+
+  /**
+   * La lista de representantes crece con las familias de la escuela, asi que
+   * es la que antes deja de servir como desplegable. Categoria y posicion se
+   * quedan como select a proposito: son listas cortas y cerradas -tres
+   * categorias, diez posiciones de futbol- donde un buscador solo agrega
+   * pasos.
+   */
+  readonly opcionesRepresentantes = computed<OpcionBuscable[]>(() =>
+    this.state.representantesDisponibles().map((r) => ({
+      id: r.idRepresentante,
+      titulo: r.nombre + ' ' + r.apellido,
+    })));
+
+  nombreRepresentante(id: number | null): string | null {
+    if (id === null) return null;
+    const r = this.state.representantesDisponibles().find((x) => x.idRepresentante === id);
+    return r ? r.nombre + ' ' + r.apellido : null;
+  }
+
   readonly state = inject(PersonasStateService);
   private readonly servicio = inject(PersonasService);
 

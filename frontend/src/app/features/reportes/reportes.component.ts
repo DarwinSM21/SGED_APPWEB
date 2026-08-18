@@ -6,6 +6,7 @@ import { descargarBlob } from '../../core/descargar-archivo';
 import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 import { ReportesService } from './reportes.service';
 import { CategoriaOpcionReporte, EstudianteOpcionReporte, FiltrosReporte } from './reportes.models';
+import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
 
 type TipoReporte = 'estudiantes-fichas' | 'pagos' | 'asistencias' | 'evaluaciones' | 'lesiones';
 
@@ -36,7 +37,7 @@ const TARJETAS: TarjetaReporte[] = [
 @Component({
   selector: 'app-reportes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent],
   template: `
     <div class="pantalla">
       <div class="encabezado">
@@ -50,17 +51,13 @@ const TARJETAS: TarjetaReporte[] = [
             <h2 class="tarjeta__titulo">{{ t.titulo }}</h2>
             <p class="tarjeta__descripcion">{{ t.descripcion }}</p>
 
-            <label class="field" [attr.for]="t.tipo + '-estudiante'">
-              <span class="field__label">Estudiante (opcional)</span>
-              <span class="field__control">
-                <select [id]="t.tipo + '-estudiante'" [(ngModel)]="filtros[t.tipo].estudianteId" [name]="t.tipo + '-estudiante'">
-                  <option [ngValue]="null">Todos</option>
-                  @for (e of estudiantes(); track e.idEstudiante) {
-                    <option [ngValue]="e.idEstudiante">{{ e.nombreCompleto }}</option>
-                  }
-                </select>
-              </span>
-            </label>
+            <app-buscador-opciones
+              etiqueta="Estudiante (opcional)"
+              marcador="Todos — escribe un nombre para filtrar…"
+              [opciones]="opcionesEstudiantes()"
+              [textoSeleccionado]="nombreDe(filtros[t.tipo].estudianteId)"
+              (seleccionada)="filtros[t.tipo].estudianteId = $event.id"
+              (limpiada)="filtros[t.tipo].estudianteId = null" />
 
             @if (t.conCategoria) {
               <label class="field" [attr.for]="t.tipo + '-categoria'">
@@ -143,6 +140,15 @@ export class ReportesComponent implements OnInit {
   });
 
   readonly estudiantes = signal<EstudianteOpcionReporte[]>([]);
+
+  readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
+    this.estudiantes().map((e) => ({ id: e.idEstudiante, titulo: e.nombreCompleto })));
+
+  /** null = sin filtro, que en este reporte significa "todos". */
+  nombreDe(id: number | null | undefined): string | null {
+    if (id === null || id === undefined) return null;
+    return this.estudiantes().find((e) => e.idEstudiante === id)?.nombreCompleto ?? null;
+  }
   readonly categorias = signal<CategoriaOpcionReporte[]>([]);
   readonly generando = signal<Record<string, boolean>>({});
   readonly error = signal<Record<string, string>>({});

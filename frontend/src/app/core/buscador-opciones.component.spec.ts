@@ -102,4 +102,35 @@ describe('BuscadorOpcionesComponent', () => {
     expect(emitida).toBeNull();
     expect(componente.filtradas()).toHaveLength(0);
   });
+
+  it('muestra lo elegido cuando esta cerrado y la consulta mientras se busca', () => {
+    fixture.componentRef.setInput('textoSeleccionado', 'Carlos Mora');
+    fixture.detectChanges();
+    const input = (): HTMLInputElement =>
+      fixture.nativeElement.querySelector('input');
+
+    expect(input().value).toBe('Carlos Mora');
+
+    // Al abrir se limpia la consulta para poder escribir de cero, pero lo
+    // elegido no se pierde: sigue ahi si se cierra sin elegir otra cosa.
+    componente.abrir();
+    fixture.detectChanges();
+    expect(input().value).toBe('');
+
+    componente.alTeclear(new KeyboardEvent('keydown', { key: 'Escape' }));
+    fixture.detectChanges();
+    expect(input().value).toBe('Carlos Mora');
+  });
+
+  it('limpiar avisa al padre para que vuelva a "nada"', () => {
+    fixture.componentRef.setInput('textoSeleccionado', 'Carlos Mora');
+    fixture.detectChanges();
+    let limpiado = false;
+    componente.limpiada.subscribe(() => (limpiado = true));
+
+    componente.limpiar();
+
+    expect(limpiado).toBe(true);
+    expect(componente.texto()).toBe('');
+  });
 });
