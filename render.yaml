@@ -1,0 +1,131 @@
+# Blueprint de Render para SGED.
+#
+# Render lee este fichero desde la raíz del repositorio y crea los tres
+# servicios de una sola vez, así que el despliegue queda versionado y
+# reproducible en vez de depender de lo que alguien haya hecho a mano en el
+# panel.
+#
+# La base de datos NO está aquí a propósito: el Postgres gratuito de Render
+# caduca a los 30 días de creado, lo que dejaría el sistema caído justo
+# cuando ya nadie lo está mirando. Va en Supabase, cuyo plan gratuito no
+# expira. Ver docs/despliegue/render.md.
+#
+# Por qué el frontend es un sitio estático y no un contenedor: Render da 750
+# horas de instancia gratis por mes para TODO el workspace. Un contenedor de
+# nginx consumiría de esa bolsa sin necesidad, porque lo único que hace es
+# servir ficheros y reenviar /api. Como sitio estático no consume horas, y
+# las reglas de reescritura cubren las dos funciones. Así la bolsa entera
+# queda para el backend, que es quien de verdad la necesita.
+
+services:
+
+  # ----------------------------------------------------------------
+  # Backend Spring Boot
+  # ----------------------------------------------------------------
+  - type: web
+    name: sged-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /actuator/health
+    envVars:
+      # Las migraciones de Flyway no reconstruyen la base desde cero -ninguna
+      # crea deportivo.categorias aunque V7, V16 y V17 la referencian-, así
+      # que el esquema se aplica a mano una vez desde db/schema.sql.
+      # Encenderlo aquí haría fallar el arranque.
+      - key: FLYWAY_ENABLED
+        value: "false"
+
+      # Render sirve HTTPS real, así que las cookies van marcadas Secure.
+      # Sin esto viajan sin ese atributo y se incumple el Bloque A.1.
+      - key: COOKIE_SECURE
+        value: "true"
+
+      - key: SERVER_PORT
+        value: "8080"
+
+      # Redis: Render inyecta los datos de la instancia de abajo. No lleva
+      # TLS porque la conexión va por la red privada del workspace, no por
+      # internet.
+      - key: REDIS_HOST
+        fromService:
+          type: keyvalue
+          name: sged-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: keyvalue
+          name: sged-redis
+          property: port
+      - key: REDIS_SSL
+        value: "false"
+
+      # Se genera solo y no se ve en el repositorio.
+      - key: JWT_SECRET
+        generateValue: true
+
+      # sync: false => Render los pide en el panel al crear el Blueprint y
+      # nunca quedan escritos aquí. Son los datos de Supabase.
+      #
+      # DB_URL debe llevar prepareThreshold=0&preparedStatementCacheQueries=0
+      # o Hibernate 6 falla contra el pooler con "could not determine data
+      # type of parameter".
+      - key: DB_URL
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+      # Opcionales: solo si se va a mostrar la retroalimentación por IA.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: IA_HABILITADO
+        value: "false"
+
+  # ----------------------------------------------------------------
+  # Redis (caché de Spring y tokens de QR)
+  # ----------------------------------------------------------------
+  - type: keyvalue
+    name: sged-redis
+    plan: free
+    region: oregon
+    # Sin acceso desde internet: solo lo alcanza el backend por la red
+    # privada del workspace.
+    ipAllowList: []
+
+  # ----------------------------------------------------------------
+  # Frontend Angular (sitio estático)
+  # ----------------------------------------------------------------
+  - type: web
+    name: sged-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist/frontend/browser
+    routes:
+      # El orden importa: Render aplica la PRIMERA regla que coincida. Si el
+      # comodín de la SPA fuera primero, se tragaría también /api.
+      #
+      # Es reescritura y no redirección: el navegador sigue viendo el dominio
+      # del frontend, así que la API queda en el mismo origen y las cookies
+      # SameSite=Strict siguen funcionando.
+      - type: rewrite
+        source: /api/*
+        destination: https://sged-backend.onrender.com/api/*
+
+      # Enrutado del lado del cliente: cualquier ruta desconocida devuelve
+      # index.html. Render no aplica reglas si existe un fichero en esa ruta,
+      # así que los bundles se sirven directo.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
