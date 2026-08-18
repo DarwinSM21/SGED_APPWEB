@@ -40,4 +40,18 @@ public interface PagoRepository extends JpaRepository<Pago, Long>, JpaSpecificat
            """)
     List<Long> idsConMembresiaCubierta(
             @Param("tipo") TipoPago tipo, @Param("anio") Short anio, @Param("mes") Short mes);
+
+    /**
+     * Recaudacion agrupada por mes calendario de cobro. Devuelve solo los
+     * meses que tuvieron algun pago: los vacios los completa el servicio,
+     * porque un mes sin ingresos tiene que dibujarse como barra en cero y no
+     * desaparecer del grafico.
+     */
+    @Query("""
+           SELECT year(p.fechaPago), month(p.fechaPago), SUM(p.monto), COUNT(p)
+           FROM Pago p
+           WHERE p.fechaPago BETWEEN :desde AND :hasta
+           GROUP BY year(p.fechaPago), month(p.fechaPago)
+           """)
+    List<Object[]> totalesPorMesDeCobro(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }

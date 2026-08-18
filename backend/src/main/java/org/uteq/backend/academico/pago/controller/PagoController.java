@@ -63,6 +63,14 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.ingresosDelMes());
     }
 
+    @GetMapping("/ingresos-historico")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<HistoricoIngresosResponse> historicoIngresos(
+            @RequestParam(defaultValue = "6") int meses) {
+        return ResponseEntity.ok(pagoService.historicoIngresos(meses));
+    }
+
     private String usernameAutenticado() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }

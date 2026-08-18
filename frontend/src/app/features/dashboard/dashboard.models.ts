@@ -21,6 +21,22 @@ export interface PanelAlertas {
   estudiantes: EstudianteEnRiesgo[];
 }
 
+export interface IngresoMes {
+  anio: number;
+  mes: number;
+  total: number;
+  cantidadPagos: number;
+}
+
+export interface HistoricoIngresos {
+  /** Serie completa y sin huecos: un mes sin cobros viaja en cero. */
+  meses: IngresoMes[];
+  total: number;
+  promedioMensual: number;
+  /** null si en todo el rango no hubo ningún cobro. */
+  mejorMes: IngresoMes | null;
+}
+
 export interface SesionHoy {
   idSesion: number;
   categoria: string;

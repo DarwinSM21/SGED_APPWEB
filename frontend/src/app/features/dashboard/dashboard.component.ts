@@ -4,8 +4,9 @@ import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { homeRouteForRole } from '../../auth/home-route';
-import { PanelAlertas, SesionHoy } from './dashboard.models';
+import { HistoricoIngresos, PanelAlertas, SesionHoy } from './dashboard.models';
 import { horaCorta, inicialesDe } from '../entrenador/plantilla.models';
+import { GraficosIngresosComponent } from './graficos.component';
 
 /** Forma minima de una pagina de Spring Data que interesa aqui. */
 interface PaginaLigera {
@@ -52,7 +53,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, GraficosIngresosComponent],
   template: `
     <div class="contenido">
       @if (esOperativo()) {
@@ -130,6 +131,13 @@ const NOMBRES_MES = [
               Ver todas mis sesiones
             </a>
           </section>
+        }
+
+        @if (esAdministrador() && historico() && alertas(); as a) {
+          <app-graficos-ingresos
+            [datos]="historico()!"
+            [estudiantesActivos]="a.estudiantesActivos"
+            [pendientes]="a.conMensualidadPendiente" />
         }
 
         @if (esAdministrador() && alertas(); as a) {
@@ -354,6 +362,7 @@ export class DashboardComponent implements OnInit {
   readonly estudiantesActivos = signal<number | null>(null);
   /** Null mientras carga o si la peticion fallo: la seccion no se dibuja. */
   readonly alertas = signal<PanelAlertas | null>(null);
+  readonly historico = signal<HistoricoIngresos | null>(null);
 
   /** ADMINISTRADOR y ENTRENADOR tienen acceso operativo; USER solo consulta. */
   readonly esOperativo = computed(() => {
@@ -390,6 +399,7 @@ export class DashboardComponent implements OnInit {
           if (this.esAdministrador()) {
             this.cargarConteoDeEstudiantes();
             this.cargarAlertas();
+            this.cargarHistoricoIngresos();
           }
         }
       },
@@ -431,6 +441,14 @@ export class DashboardComponent implements OnInit {
   private cargarAlertas(): void {
     this.http.get<PanelAlertas>('/api/alertas').subscribe({
       next: (panel) => this.alertas.set(panel),
+      error: () => {},
+    });
+  }
+
+  /** Seis meses: entra un semestre completo sin que las barras queden hilos. */
+  private cargarHistoricoIngresos(): void {
+    this.http.get<HistoricoIngresos>('/api/pagos/ingresos-historico?meses=6').subscribe({
+      next: (serie) => this.historico.set(serie),
       error: () => {},
     });
   }

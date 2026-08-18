@@ -47,4 +47,18 @@ public final class PagoDtos {
             BigDecimal total,
             Long cantidadPagos
     ) {}
+
+    /**
+     * Serie para el grafico de barras del tablero: un punto por mes, en
+     * orden cronologico y sin huecos -un mes sin cobros viaja en cero, no se
+     * omite: si faltara, el grafico dibujaria dos meses contiguos que en
+     * realidad estan separados y la lectura de la tendencia seria falsa-.
+     */
+    public record HistoricoIngresosResponse(
+            List<IngresosMesResponse> meses,
+            BigDecimal total,
+            BigDecimal promedioMensual,
+            /** Mes con mayor recaudacion del rango; null si no hubo ningun cobro. */
+            IngresosMesResponse mejorMes
+    ) {}
 }
