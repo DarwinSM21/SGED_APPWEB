@@ -77,7 +77,7 @@ class EstudianteAccesoServiceTest {
     @Test
     @DisplayName("crearCuentaDeEstudiante rechaza un username ya en uso, sin guardar nada")
     void crearCuenta_username_duplicado_lanza() {
-        when(usuarioRepository.existsByUsername("dup@sged.test")).thenReturn(true);
+        when(usuarioRepository.existsByUsernameIgnoreCase("dup@sged.test")).thenReturn(true);
 
         assertThatThrownBy(() -> service.crearCuentaDeEstudiante(
                 persona, new HabilitarAccesoRequest("dup@sged.test", "password123")))
@@ -92,7 +92,7 @@ class EstudianteAccesoServiceTest {
         HabilitarAccesoRequest request = new HabilitarAccesoRequest("andres@sged.test", "password123");
         Rol rolEstudiante = Rol.builder().idRol(6L).nombre("ESTUDIANTE").build();
 
-        when(usuarioRepository.existsByUsername("andres@sged.test")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("andres@sged.test")).thenReturn(false);
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
         when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
@@ -113,7 +113,7 @@ class EstudianteAccesoServiceTest {
     @Test
     @DisplayName("crearCuentaDeEstudiante lanza IllegalStateException si falta el rol ESTUDIANTE en el catalogo")
     void crearCuenta_sin_rol_estudiante_en_catalogo_lanza() {
-        when(usuarioRepository.existsByUsername("x@sged.test")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("x@sged.test")).thenReturn(false);
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.crearCuentaDeEstudiante(persona, new HabilitarAccesoRequest("x@sged.test", "password123")))

@@ -77,7 +77,7 @@ public class AuthService {
      */
     @Transactional
     public Optional<SesionResponse> registrar(RegisterRequest request) {
-        if (usuarioRepository.existsByUsername(request.username())
+        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
                 || personaRepository.existsByCedulaAndActivoTrue(request.cedula())
                 || personaRepository.existsByCorreo(request.correo())) {
             return Optional.empty();

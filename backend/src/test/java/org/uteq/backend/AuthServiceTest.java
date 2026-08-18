@@ -165,7 +165,7 @@ class AuthServiceTest {
 
     @Test
     void registrarConUsernameDuplicadoDevuelveVacio() {
-        when(usuarioRepository.existsByUsername("test@test.com")).thenReturn(true);
+        when(usuarioRepository.existsByUsernameIgnoreCase("test@test.com")).thenReturn(true);
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "test@test.com",
@@ -177,7 +177,7 @@ class AuthServiceTest {
 
     @Test
     void registrarConCedulaDuplicadaDevuelveVacio() {
-        when(usuarioRepository.existsByUsername("cedula.dup@test.com")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("cedula.dup@test.com")).thenReturn(false);
         when(personaRepository.existsByCedulaAndActivoTrue("0912345678")).thenReturn(true);
 
         RegisterRequest registerRequest = new RegisterRequest(
@@ -190,7 +190,7 @@ class AuthServiceTest {
 
     @Test
     void registrarConCorreoDuplicadoDevuelveVacio() {
-        when(usuarioRepository.existsByUsername("correo.dup@test.com")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("correo.dup@test.com")).thenReturn(false);
         when(personaRepository.existsByCedulaAndActivoTrue("0912345681")).thenReturn(false);
         when(personaRepository.existsByCorreo("correo.dup.persona@test.com")).thenReturn(true);
 
@@ -204,7 +204,7 @@ class AuthServiceTest {
 
     @Test
     void registrarExitosoCreaPersonaYUsuario() {
-        when(usuarioRepository.existsByUsername("new@test.com")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("new@test.com")).thenReturn(false);
         when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
             Persona p = i.getArgument(0);
             p.setIdPersona(1L);
@@ -236,7 +236,7 @@ class AuthServiceTest {
     /** Un rol que no existe en seguridad.roles no crea nada a medias. */
     @Test
     void registrarConRolInexistenteLanzaIllegalArgumentException() {
-        when(usuarioRepository.existsByUsername("otro@test.com")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("otro@test.com")).thenReturn(false);
         when(rolRepository.findByNombre("SUPERADMIN")).thenReturn(Optional.empty());
 
         RegisterRequest registerRequest = new RegisterRequest(
@@ -252,7 +252,7 @@ class AuthServiceTest {
     /** id_estado_general=1 falta en el catalogo (seed no aplicado): la excepcion sale sin capturar, no un guardado a medias. */
     @Test
     void registrarSinCatalogoEstadoGeneralLanzaIllegalStateException() {
-        when(usuarioRepository.existsByUsername("sinestado@test.com")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("sinestado@test.com")).thenReturn(false);
         when(personaRepository.existsByCedulaAndActivoTrue("0912345682")).thenReturn(false);
         when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
         when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {

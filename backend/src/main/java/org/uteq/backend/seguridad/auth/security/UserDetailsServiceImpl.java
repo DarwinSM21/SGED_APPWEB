@@ -22,9 +22,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByUsernameAndActivoTrue(username)
+        // Se busca con el username saneado igual que se guarda (Usuario.
+        // normalizarUsername): sin mayusculas y sin espacios sobrantes. Los
+        // dos casos son reales al escribir en un celular -capitaliza la
+        // primera letra- o al pegar credenciales -arrastra un espacio-, y
+        // ambos terminaban en 401 sin ninguna pista de la causa.
+        String buscado = username == null ? "" : username.trim();
+
+        Usuario usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(buscado)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                        "Usuario no encontrado: " + username));
+                        "Usuario no encontrado: " + buscado));
 
         // 💡 Agregamos "ROLE_" para que reconozca los roles con hasRole(...)
         List<SimpleGrantedAuthority> autoridades = usuario.getRoles().stream()

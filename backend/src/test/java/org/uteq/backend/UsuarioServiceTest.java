@@ -105,7 +105,7 @@ class UsuarioServiceTest {
     @DisplayName("crear rechaza username duplicado")
     void crear_username_duplicado_lanza_excepcion() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", "clave123", null);
-        when(usuarioRepository.existsByUsername("ana.torres")).thenReturn(true);
+        when(usuarioRepository.existsByUsernameIgnoreCase("ana.torres")).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.crear(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -118,7 +118,7 @@ class UsuarioServiceTest {
     @DisplayName("crear persiste el usuario con la contrasena codificada")
     void crear_persiste_usuario_valido() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "nuevo.usuario", "clave123", null);
-        when(usuarioRepository.existsByUsername("nuevo.usuario")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("nuevo.usuario")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(passwordEncoder.encode("clave123")).thenReturn("hash-codificado");
@@ -141,7 +141,7 @@ class UsuarioServiceTest {
     void crear_con_rol_asigna_el_rol() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "coach.nuevo", "clave123", "ENTRENADOR");
         Rol entrenador = Rol.builder().idRol(2L).nombre("ENTRENADOR").build();
-        when(usuarioRepository.existsByUsername("coach.nuevo")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("coach.nuevo")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(Optional.of(entrenador));
@@ -161,7 +161,7 @@ class UsuarioServiceTest {
     @DisplayName("crear con un rol inexistente lanza IllegalArgumentException")
     void crear_con_rol_inexistente_lanza_excepcion() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "nuevo", "clave123", "NO_EXISTE");
-        when(usuarioRepository.existsByUsername("nuevo")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("nuevo")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(rolRepository.findByNombre("NO_EXISTE")).thenReturn(Optional.empty());
@@ -177,7 +177,7 @@ class UsuarioServiceTest {
     @DisplayName("crear lanza RecursoNoEncontradoException si la persona no existe")
     void crear_persona_inexistente_lanza_excepcion() {
         UsuarioRequest request = new UsuarioRequest(99L, 1L, "nuevo", "clave123", null);
-        when(usuarioRepository.existsByUsername("nuevo")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("nuevo")).thenReturn(false);
         when(personaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.crear(request))
@@ -284,7 +284,7 @@ class UsuarioServiceTest {
     @DisplayName("crear rechaza un rol que no corresponde a la ficha de estudiante de la persona")
     void crear_con_rol_incoherente_con_ficha_estudiante_lanza_excepcion() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "fernanda.c", "clave123", "ENTRENADOR");
-        when(usuarioRepository.existsByUsername("fernanda.c")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("fernanda.c")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
@@ -301,7 +301,7 @@ class UsuarioServiceTest {
     void crear_con_rol_coherente_persiste() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "fernanda.c", "clave123", "ESTUDIANTE");
         Rol estudiante = Rol.builder().idRol(5L).nombre("ESTUDIANTE").build();
-        when(usuarioRepository.existsByUsername("fernanda.c")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("fernanda.c")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
@@ -320,7 +320,7 @@ class UsuarioServiceTest {
     @DisplayName("crear rechaza un rol que no corresponde a la ficha de representante de la persona")
     void crear_con_rol_incoherente_con_ficha_representante_lanza_excepcion() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.t", "clave123", "ADMINISTRADOR");
-        when(usuarioRepository.existsByUsername("ana.t")).thenReturn(false);
+        when(usuarioRepository.existsByUsernameIgnoreCase("ana.t")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);

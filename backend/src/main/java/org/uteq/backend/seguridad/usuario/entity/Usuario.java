@@ -7,6 +7,7 @@ import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.rol.entity.Rol;
 
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.Set;
 
 @Entity
@@ -63,10 +64,25 @@ public class Usuario {
         this.createdAt = OffsetDateTime.now();
         this.updatedAt = OffsetDateTime.now();
         if (this.activo == null) this.activo = true;
+        normalizarUsername();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = OffsetDateTime.now();
+        normalizarUsername();
+    }
+
+    /**
+     * El username se guarda siempre en minusculas. Va aqui y no en cada
+     * servicio de alta porque asi ninguna via de escritura -presente o
+     * futura- puede saltearselo, y la busqueda de login
+     * (findByUsernameIgnoreCase...) queda comparando contra un unico
+     * formato canonico en vez de contra lo que cada pantalla haya mandado.
+     */
+    private void normalizarUsername() {
+        if (this.username != null) {
+            this.username = this.username.trim().toLowerCase(Locale.ROOT);
+        }
     }
 }

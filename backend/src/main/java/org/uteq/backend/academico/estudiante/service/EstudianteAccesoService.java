@@ -58,7 +58,7 @@ public class EstudianteAccesoService {
      * que tiene el Usuario guardado.
      */
     public Usuario crearCuentaDeEstudiante(Persona persona, HabilitarAccesoRequest request) {
-        if (usuarioRepository.existsByUsername(request.username())) {
+        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
         }
 

@@ -78,7 +78,7 @@ public class UsuarioService {
         if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("La contraseña es obligatoria");
         }
-        if (usuarioRepository.existsByUsername(request.username())) {
+        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("El nombre de usuario ya se encuentra registrado");
         }
 
@@ -120,7 +120,8 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
 
-        if (!usuario.getUsername().equals(request.username()) && usuarioRepository.existsByUsername(request.username())) {
+        if (!usuario.getUsername().equalsIgnoreCase(request.username())
+                && usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("El nombre de usuario ya está ocupado");
         }
 
