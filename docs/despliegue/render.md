@@ -1,18 +1,28 @@
 # Despliegue en Render
 
-Despliegue público y permanente, independiente de cualquier equipo local. La
-configuración está en `render.yaml` (raíz del repositorio), así que Render
-crea los tres servicios de una sola vez en lugar de depender de ajustes
-hechos a mano en el panel.
+Despliegue público con HTTPS real, en **una sola cuenta** y sin tarjeta de
+crédito. La configuración está en `render.yaml` (raíz del repositorio), así
+que Render crea los cuatro recursos de una vez en lugar de depender de
+ajustes hechos a mano.
 
 ## Qué resuelve
 
 Elimina el hallazgo **H-05** de `docs/etica/ETHICS.md`: Render sirve HTTPS con
-certificado real, así que el sistema deja de depender del certificado
-autofirmado. A diferencia del túnel de Cloudflare (ver `cloudflare-tunnel.md`),
-la URL no depende de que tu computadora esté encendida.
+certificado real, así que el sistema deja de depender del autofirmado. A
+diferencia del túnel de Cloudflare (`cloudflare-tunnel.md`), la URL no depende
+de que tu computadora esté encendida.
 
-## Arquitectura y por qué
+## ⚠️ La base de datos caduca en 30 días
+
+El plan gratuito de Render Postgres **se elimina 30 días después de crearse**,
+y con él los datos. Está asumido a propósito para esta entrega.
+
+**Anota la fecha de creación.** Si el sistema debe seguir en pie después,
+las salidas son: pasar la base a un plan de pago (desde $6/mes) o moverla a un
+proveedor cuyo plan gratuito no expire, como Supabase — en ese caso solo
+cambian `DB_URL`, `DB_USER` y `DB_PASSWORD`, nada más.
+
+## Arquitectura
 
 ```
 navegador ──HTTPS──> sged-frontend (sitio estático, CDN)
@@ -23,92 +33,85 @@ navegador ──HTTPS──> sged-frontend (sitio estático, CDN)
                           │
                 ┌─────────┴─────────┐
                 ▼                   ▼
-           Supabase            sged-redis
-          (PostgreSQL)      (Render Key Value)
+          sged-postgres        sged-redis
 ```
 
 **El frontend es un sitio estático, no un contenedor.** Render da 750 horas de
-instancia gratuitas al mes para todo el workspace; un contenedor de nginx las
+instancia gratis al mes para todo el workspace; un nginx en contenedor las
 consumiría solo para servir ficheros y reenviar `/api`. Como sitio estático no
-consume horas y las reglas de reescritura hacen ese trabajo, dejando la bolsa
-completa para el backend.
+consume horas, y las reglas de reescritura hacen ese trabajo.
 
-**La reescritura conserva el mismo origen.** No es una redirección: el
-navegador sigue viendo el dominio del frontend, así que las cookies
-`SameSite=Strict` siguen siendo válidas. Si fuera redirección, la sesión se
-rompería.
+**La reescritura conserva el mismo origen.** No es redirección: el navegador
+sigue viendo el dominio del frontend, así que las cookies `SameSite=Strict`
+siguen siendo válidas. Con una redirección se rompería la sesión.
 
-**La base va en Supabase, no en Render.** El Postgres gratuito de Render
-**caduca a los 30 días de creado**. El plan gratuito de Supabase no expira.
+## Paso 1 — Crear el Blueprint
 
-## Antes de empezar
+En `render.com`: **New → Blueprint**, conecta el repositorio de GitHub. Render
+detecta `render.yaml` y muestra los cuatro recursos que va a crear.
 
-Necesitas dos cuentas, que debes crear tú:
+## Paso 2 — Completar las tres variables de la base
 
-- **Render** (`render.com`) — plan *Hobby*, $0/mes.
-- **Supabase** (`supabase.com`) — para PostgreSQL.
+Render pedirá los valores marcados como `sync: false`. Están en el panel de
+**sged-postgres**, pestaña *Info*:
 
-## Paso 1 — Base de datos en Supabase
+| Variable | De dónde sale |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://<Internal-Host>/sged_db` |
+| `DB_USER` | El campo *Username* |
+| `DB_PASSWORD` | El campo *Password* |
 
-Crea un proyecto y guarda la contraseña. Copia la cadena de conexión del
-**Transaction Pooler** (puerto 6543), no la conexión directa.
+Usa el host **interno** (`dpg-…-a`), no el externo: el backend corre dentro de
+Render y así la conexión no sale a internet.
 
-Aplica el esquema una sola vez. Conviene exportar la cadena como variable en
-lugar de escribirla en el comando, para que no quede en el historial:
+Render entrega su cadena en formato `postgres://…`, que Spring **no** acepta
+como `spring.datasource.url` porque le falta el prefijo `jdbc:`. Por eso
+`DB_URL` se arma a mano en lugar de tomarse tal cual.
+
+> Si más adelante activas *connection pooling* (pgbouncer) en la base, añade
+> `?prepareThreshold=0&preparedStatementCacheQueries=0` al final de `DB_URL`.
+> Sin eso, Hibernate 6 contra un pooler falla con *"could not determine data
+> type of parameter"*. Sin pooling no hace falta.
+
+`JWT_SECRET` lo genera Render solo. `GEMINI_API_KEY` solo si vas a mostrar la
+retroalimentación por IA.
+
+## Paso 3 — Cargar el esquema
+
+Las migraciones de Flyway **no** reconstruyen la base desde cero: ninguna crea
+`deportivo.categorias` aunque V7, V16 y V17 la referencian. La fuente de
+verdad es `db/schema.sql`, y se aplica una sola vez.
+
+Copia la **External Database URL** del panel y expórtala como variable, para
+que la contraseña no quede en el historial de la terminal:
 
 ```bash
-export SUPABASE_URL='postgresql://postgres.TU_REF:TU_PASSWORD@aws-0-us-east-1.pooler.supabase.com:6543/postgres'
+export RENDER_DB='postgresql://USUARIO:PASSWORD@HOST-EXTERNO.oregon-postgres.render.com/sged_db'
 ```
 
 ```bash
-psql "$SUPABASE_URL" -f db/schema.sql
+psql "$RENDER_DB" -f db/schema.sql
 ```
 
 ```bash
-psql "$SUPABASE_URL" -f db/seed.sql
+psql "$RENDER_DB" -f db/seed.sql
 ```
-
-> Las migraciones de Flyway **no** reconstruyen la base desde cero: ninguna
-> crea `deportivo.categorias` aunque V7, V16 y V17 la referencian. Por eso
-> `FLYWAY_ENABLED=false` y la fuente de verdad del esquema es
-> `db/schema.sql`.
 
 Comprueba que quedó:
 
 ```bash
-psql "$SUPABASE_URL" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('seguridad','academico','deportivo','inventario');"
+psql "$RENDER_DB" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('seguridad','academico','deportivo','inventario');"
 ```
 
-## Paso 2 — Crear el Blueprint en Render
-
-En el panel: **New → Blueprint**, conecta el repositorio de GitHub y Render
-detectará `render.yaml`.
-
-Te pedirá los valores marcados como `sync: false`, que nunca se escriben en el
-repositorio:
-
-| Variable | Valor |
-|---|---|
-| `DB_URL` | `jdbc:postgresql://aws-0-us-east-1.pooler.supabase.com:6543/postgres?prepareThreshold=0&preparedStatementCacheQueries=0` |
-| `DB_USER` | `postgres.TU_REF` |
-| `DB_PASSWORD` | La contraseña de Supabase |
-| `GEMINI_API_KEY` | Opcional, solo si vas a mostrar la IA |
-
-`prepareThreshold=0&preparedStatementCacheQueries=0` **no es opcional**: sin
-eso, Hibernate 6 contra el pooler falla con *"could not determine data type of
-parameter"*.
-
-`JWT_SECRET` lo genera Render solo.
-
-## Paso 3 — Ajustar la URL del backend
+## Paso 4 — Ajustar la URL del backend
 
 `render.yaml` asume que el backend queda en
 `https://sged-backend.onrender.com`. Si Render le asigna otro nombre —porque
 ya exista uno igual—, corrige el `destination` de la regla `/api/*` y vuelve a
-sincronizar el Blueprint. **Si no coincide, el frontend carga pero ninguna
-llamada a la API funciona.**
+sincronizar. **Si no coincide, el frontend carga pero ninguna llamada a la API
+funciona.**
 
-## Paso 4 — Verificar, en este orden
+## Paso 5 — Verificar, en este orden
 
 Primero que el backend viva:
 
@@ -117,7 +120,7 @@ curl -s https://sged-backend.onrender.com/actuator/health
 ```
 
 Debe responder `{"status":"UP",...}`. La primera petición puede tardar
-bastante: el plan gratuito tiene 0.1 CPU y Spring Boot arranca lento.
+bastante: 0.1 CPU y Spring Boot arranca lento.
 
 Después **el flujo de cookies, que es lo más frágil de este diseño**:
 
@@ -125,28 +128,28 @@ Después **el flujo de cookies, que es lo más frágil de este diseño**:
 curl -s -D - -o /dev/null -X POST https://sged-frontend.onrender.com/api/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"TU_PASSWORD"}' | grep -i "set-cookie"
 ```
 
-Tienen que aparecer `sged_access` y `sged_refresh` con `Secure; HttpOnly;
+Deben aparecer `sged_access` y `sged_refresh` con `Secure; HttpOnly;
 SameSite=Strict`.
 
 > **Si las cookies no llegan**, la reescritura del sitio estático no está
-> propagando el encabezado `Set-Cookie`. No es un problema de la aplicación.
-> La solución es servir el frontend como servicio Docker en vez de sitio
-> estático, reutilizando `frontend/Dockerfile.fly` y
-> `frontend/nginx.fly.conf.template` (que ya hacen exactamente eso y están
-> probados), a costa de consumir horas de instancia. Esta ruta es la primera
-> que hay que comprobar tras desplegar.
+> propagando el encabezado `Set-Cookie`. No es un fallo de la aplicación. La
+> salida es servir el frontend como servicio Docker en vez de sitio estático,
+> reutilizando `frontend/Dockerfile.fly` y `frontend/nginx.fly.conf.template`
+> —que ya hacen exactamente eso y están probados—, a costa de consumir horas
+> de instancia. Es lo PRIMERO que hay que comprobar tras desplegar.
 
 ## Limitaciones del plan gratuito
 
 - **Se apaga tras 15 minutos sin tráfico** y despierta con la siguiente
-  petición. Con 0.1 CPU, ese arranque en frío es lento.
+  petición. Con 0.1 CPU ese arranque en frío es lento.
 - **750 horas de instancia al mes** para todo el workspace. El sitio estático
   no consume; solo el backend.
 - **512 MB de RAM y 0.1 CPU** para el backend.
+- **La base caduca a los 30 días** (ver arriba).
 
 Para una demo evaluada: entra a la URL unos minutos antes para que el backend
-ya esté despierto. Que la URL responda lento en el momento de la revisión
-cuenta como riesgo real, no como detalle.
+ya esté despierto. Que responda lento en el momento de la revisión cuenta como
+riesgo real, no como detalle.
 
 ## Antes de compartir el enlace
 
