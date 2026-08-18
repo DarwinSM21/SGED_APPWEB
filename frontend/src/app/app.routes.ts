@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/personas/personas.component').then(m => m.PersonasComponent),
       },
       {
+        path: 'categorias',
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+        loadComponent: () => import('./features/categorias/categorias.component').then(m => m.CategoriasComponent),
+      },
+      {
         path: 'pagos',
         canActivate: [roleGuard(['ADMINISTRADOR', 'RECEPCIONISTA'])],
         loadComponent: () => import('./features/pagos/pagos.component').then(m => m.PagosComponent),

@@ -14,4 +14,7 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     List<Categoria> findByActivoTrue();
 
     boolean existsByNombreIgnoreCase(String nombre);
+
+    /** Para editar: el propio registro no cuenta como duplicado de si mismo. */
+    boolean existsByNombreIgnoreCaseAndIdCategoriaNot(String nombre, Long idCategoria);
 }

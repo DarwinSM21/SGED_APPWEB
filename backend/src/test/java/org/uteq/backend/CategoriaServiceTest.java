@@ -142,4 +142,63 @@ class CategoriaServiceTest {
         assertThat(existente.getActivo()).isFalse();
         verify(categoriaRepository).save(existente);
     }
+
+    @Test
+    @DisplayName("crear rechaza un nombre que ya existe, sin importar mayusculas")
+    void crear_rechaza_nombre_duplicado() {
+        // El repositorio ya tenia este metodo, pero el servicio no lo llamaba:
+        // el catalogo aceptaba dos "SUB-12" y el formulario de estudiante
+        // mostraba dos opciones identicas, imposibles de distinguir.
+        when(categoriaRepository.existsByNombreIgnoreCase("sub-12")).thenReturn(true);
+
+        assertThatThrownBy(() -> categoriaService.crear(
+                new CategoriaRequest("sub-12", (short) 10, (short) 12, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ya existe una categoría");
+
+        verify(categoriaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("editar deja renombrar sin chocar consigo misma")
+    void editar_no_se_considera_duplicado_de_si_misma() {
+        when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("Sub-12", 1L))
+                .thenReturn(false);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaSub12()));
+        when(categoriaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        CategoriaResponse r = categoriaService.editar(
+                1L, new CategoriaRequest("Sub-12", (short) 10, (short) 13, "ajuste"));
+
+        assertThat(r.edadMax()).isEqualTo((short) 13);
+    }
+
+    @Test
+    @DisplayName("editar rechaza tomar el nombre de otra categoria")
+    void editar_rechaza_nombre_de_otra() {
+        when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("Sub-14", 1L))
+                .thenReturn(true);
+
+        assertThatThrownBy(() -> categoriaService.editar(
+                1L, new CategoriaRequest("Sub-14", (short) 10, (short) 12, null)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Ya existe otra categoría");
+
+        verify(categoriaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("reactivar vuelve a poner activo en true")
+    void reactivar_revierte_la_baja_logica() {
+        Categoria dadaDeBaja = categoriaSub12();
+        dadaDeBaja.setActivo(false);
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(dadaDeBaja));
+        when(categoriaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        CategoriaResponse r = categoriaService.reactivar(1L);
+
+        // Sin este camino, una categoria desactivada por error solo se
+        // recuperaba tocando la base a mano.
+        assertThat(r.activo()).isTrue();
+    }
 }

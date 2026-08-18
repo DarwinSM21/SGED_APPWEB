@@ -41,6 +41,10 @@ public class CategoriaService {
 
     @Transactional
     public CategoriaResponse crear(CategoriaRequest request) {
+        if (categoriaRepository.existsByNombreIgnoreCase(request.nombre())) {
+            throw new IllegalArgumentException(
+                    "Ya existe una categoría llamada \"" + request.nombre() + "\"");
+        }
         validarEdades(request.edadMin(), request.edadMax());
 
         Categoria categoria = Categoria.builder()
@@ -56,6 +60,10 @@ public class CategoriaService {
 
     @Transactional
     public CategoriaResponse editar(Long id, CategoriaRequest request) {
+        if (categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot(request.nombre(), id)) {
+            throw new IllegalArgumentException(
+                    "Ya existe otra categoría llamada \"" + request.nombre() + "\"");
+        }
         validarEdades(request.edadMin(), request.edadMax());
 
         Categoria categoria = categoriaRepository.findById(id)
@@ -66,6 +74,20 @@ public class CategoriaService {
         categoria.setEdadMax(request.edadMax());
         categoria.setDescripcion(request.descripcion());
 
+        return toResponse(categoriaRepository.save(categoria));
+    }
+
+    /**
+     * Vuelve a poner una categoria en circulacion. Es un metodo aparte y no
+     * un efecto de editar(): reactivar es una decision explicita, y si
+     * editar el nombre reviviera de paso una categoria dada de baja, seria
+     * un cambio de estado que nadie pidio.
+     */
+    @Transactional
+    public CategoriaResponse reactivar(Long id) {
+        Categoria categoria = categoriaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
+        categoria.setActivo(true);
         return toResponse(categoriaRepository.save(categoria));
     }
 

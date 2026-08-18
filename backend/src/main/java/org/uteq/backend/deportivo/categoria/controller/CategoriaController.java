@@ -57,6 +57,17 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaService.editar(id, request));
     }
 
+    /**
+     * Deshacer una baja. Sin esto, una categoria desactivada por error solo
+     * se recuperaba tocando la base a mano: la baja es logica, pero no habia
+     * camino de vuelta por la API.
+     */
+    @PostMapping("/{id}/reactivar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<CategoriaResponse> reactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(categoriaService.reactivar(id));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {

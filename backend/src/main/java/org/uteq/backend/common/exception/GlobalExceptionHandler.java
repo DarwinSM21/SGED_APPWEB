@@ -8,6 +8,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -80,6 +82,43 @@ public class GlobalExceptionHandler {
                 "El cuerpo de la peticion falta o no tiene el formato esperado");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/CuerpoIlegible"));
         pd.setTitle("Bad Request");
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
+    /**
+     * Falta un parametro de consulta obligatorio. Mismo criterio que el
+     * cuerpo ilegible: sin este manejador cae en el generico y responde 500,
+     * o sea el sistema se acusa a si mismo de un error que cometio el
+     * cliente. Se nombra el parametro que falta porque sin eso el mensaje no
+     * le sirve a nadie para corregir la llamada.
+     */
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ProblemDetail handleParametroFaltante(MissingServletRequestParameterException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Falta el parametro obligatorio '" + ex.getParameterName() + "'");
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/ParametroFaltante"));
+        pd.setTitle("Bad Request");
+        pd.setProperty("parametro", ex.getParameterName());
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
+    /**
+     * El parametro llego pero no se puede convertir al tipo esperado, por
+     * ejemplo /api/estudiantes/abc donde el id es numerico. Se informa cual
+     * parametro es, pero NO el tipo interno de Java: al cliente le sirve
+     * saber que campo corrigir, no como esta implementado el servidor.
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "El valor de '" + ex.getName() + "' no tiene el formato esperado");
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/ParametroInvalido"));
+        pd.setTitle("Bad Request");
+        pd.setProperty("parametro", ex.getName());
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
     }

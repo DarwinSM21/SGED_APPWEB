@@ -6,7 +6,7 @@ import { inicialesDe } from '../features/entrenador/plantilla.models';
 import { relojEn12 } from '../core/formato-fecha';
 
 type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago' | 'inventario'
-  | 'auditoria' | 'reporte' | 'configuracion';
+  | 'capas' | 'auditoria' | 'reporte' | 'configuracion';
 
 interface NavItem {
   etiqueta: string;
@@ -27,6 +27,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
   ADMINISTRADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Personas', ruta: '/personas', icono: 'usuario-mas' },
+    { etiqueta: 'Categorías', ruta: '/categorias', icono: 'capas' },
     { etiqueta: 'Recepción', ruta: '/recepcion', icono: 'qr' },
     { etiqueta: 'Sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
@@ -114,6 +115,9 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
                   }
                   @case ('inventario') {
                     <path d="M21 8 12 3 3 8l9 5 9-5Z"></path><path d="M3 8v8l9 5 9-5V8"></path><path d="M12 13v8"></path>
+                  }
+                  @case ('capas') {
+                    <path d="m12 2 9 5-9 5-9-5 9-5Z"></path><path d="m3 12 9 5 9-5"></path><path d="m3 17 9 5 9-5"></path>
                   }
                   @case ('auditoria') {
                     <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M9 13l2 2 4-4"></path>
