@@ -1,8 +1,15 @@
-# Variante de Dockerfile solo para el despliegue en Fly.io. El Dockerfile
-# original (usado por docker-compose en desarrollo local) no se toca.
-# Diferencia: sin el paso que genera el certificado autofirmado (Fly
-# Proxy entrega HTTPS real en su borde, no hace falta), y copia
-# nginx.fly.conf en vez de nginx.conf.
+# Imagen del frontend para Fly.io.
+#
+# Igual que Dockerfile salvo dos cosas, y las dos son el motivo de que exista
+# este fichero aparte:
+#
+# 1. No se genera ni se instala el certificado autofirmado. Fly termina TLS
+#    con un certificado real de Let's Encrypt; conservar el autofirmado aquí
+#    reintroduciría el hallazgo H-05 de ETHICS.md, que este despliegue elimina.
+#
+# 2. Usa nginx.fly.conf.template: escucha en 8080 y resuelve al backend por
+#    el DNS privado de Fly en cada peticion, no por el nombre de servicio de
+#    docker-compose.
 
 # Etapa 1: compilar Angular
 FROM node:20-alpine AS build
@@ -12,10 +19,11 @@ RUN npm ci
 COPY . .
 RUN npm run build
 
-# Etapa 2: servir con nginx (HTTP simple; Fly Proxy hace TLS)
+# Etapa 2: servir con nginx
 FROM nginx:1.25-alpine
-
-COPY nginx.fly.conf /etc/nginx/conf.d/default.conf
+# La imagen de nginx procesa las plantillas de este directorio con envsubst
+# al arrancar y deja el resultado en /etc/nginx/conf.d/.
+COPY nginx.fly.conf.template /etc/nginx/templates/default.conf.template
 # Angular 17+ application builder deja la app en dist/<proyecto>/browser
 COPY --from=build /app/dist/frontend/browser /usr/share/nginx/html
-EXPOSE 80
+EXPOSE 8080

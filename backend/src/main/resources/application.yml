@@ -44,6 +44,12 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
+      # Vacios en desarrollo -el Redis de docker-compose no pide nada- y
+      # obligatorios en cualquier Redis gestionado, que solo acepta TLS y
+      # contrasena. Sin estos dos, el despliegue remoto falla al conectar.
+      password: ${REDIS_PASSWORD:}
+      ssl:
+        enabled: ${REDIS_SSL:false}
 
 # Generacion de texto con modelo de lenguaje (modulo Entrenador).
 # Deshabilitada por defecto: el sistema debe funcionar completo sin ella.

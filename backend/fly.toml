@@ -1,41 +1,41 @@
-# Fly.io — backend SGED (Bloque A.4). No es un despliegue automático:
-# hay que correr `fly launch --no-deploy --copy-config` (o `fly apps create`)
-# una vez, autenticado con `fly auth login`, para que Fly asocie este
-# archivo a una app real. Si "sged-profutbol-api" ya está tomado (los
-# nombres de app en Fly son globales), Fly va a pedir uno distinto.
-app = "sged-profutbol-api"
-primary_region = "gru"  # São Paulo — la región de Fly más cercana a Ecuador; confirmar disponibilidad al momento del despliegue, `fly platform regions` lista las vigentes
+# Backend SGED en Fly.io.
+#
+# No declara servicios publicos a proposito: la unica puerta de entrada es el
+# frontend, que hace proxy de /api por la red privada de Fly. Publicar tambien
+# el backend duplicaria la superficie expuesta y romperia las cookies, que son
+# SameSite=Strict y necesitan un solo origen.
+
+app = "sged-backend"
+primary_region = "mia"          # Miami, el mas cercano a Ecuador; cambiable
 
 [build]
   dockerfile = "Dockerfile"
 
-# Variables NO sensibles solamente. Todo lo que sea secreto (DB_URL,
-# DB_PASSWORD, JWT_SECRET, REDIS_HOST/PORT si Upstash los da con
-# credenciales embebidas, GEMINI_API_KEY, CONTRASENA_ADMIN) se define con
-# `fly secrets set` (ver DEPLOYMENT.md sección 4) — nunca en este archivo,
-# que sí se commitea al repo público.
 [env]
-  FLYWAY_ENABLED = "true"
+  # El esquema se aplica una vez a mano con db/schema.sql: las migraciones de
+  # Flyway no reconstruyen la base desde cero (deportivo.categorias no la crea
+  # ninguna). Encenderlo aqui haria fallar el arranque.
+  FLYWAY_ENABLED = "false"
+
+  # Fly sirve HTTPS de verdad, asi que las cookies van marcadas Secure.
   COOKIE_SECURE = "true"
 
-[http_service]
-  internal_port = 8080
-  force_https = true
-  auto_stop_machines = false
-  auto_start_machines = true
-  min_machines_running = 1
-  # min_machines_running=1 a propósito, no el default 0: con 0 la máquina
-  # se apaga por inactividad y el primer request del tribunal durante la
-  # evaluación pagaría un "cold start" — riesgo directo contra la regla
-  # transversal 8 (URL que no responde a tiempo => P5 a Insuficiente).
+  # Redis gestionado: siempre con TLS.
+  REDIS_SSL = "true"
+  REDIS_PORT = "6379"
 
-  [[http_service.checks]]
-    path = "/actuator/health"
-    method = "GET"
-    interval = "15s"
-    timeout = "5s"
-    grace_period = "30s"
+  SERVER_PORT = "8080"
 
 [[vm]]
   size = "shared-cpu-1x"
-  memory = "512mb"
+  memory = "512mb"              # Spring Boot no arranca comodo en 256 MB
+
+# Chequeo sobre la red privada; no requiere IP publica.
+[checks]
+  [checks.salud]
+    type = "http"
+    port = 8080
+    path = "/actuator/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "60s"

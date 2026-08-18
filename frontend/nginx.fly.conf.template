@@ -1,0 +1,67 @@
+# Configuración de nginx para Fly.io. Es una PLANTILLA: la imagen oficial de
+# nginx ejecuta envsubst sobre /etc/nginx/templates/*.template al arrancar y
+# reemplaza solo las variables que existen en el entorno, así que las
+# variables propias de nginx ($uri, $host, …) quedan intactas.
+#
+# Diferencias con nginx.conf (desarrollo), y el porqué de cada una:
+#
+# 1. No termina TLS: Fly sirve HTTPS con un certificado real de Let's Encrypt
+#    y habla HTTP con el contenedor. Conservar el autofirmado reintroduciría
+#    el hallazgo H-05, que es justamente lo que este despliegue elimina.
+#
+# 2. Escucha en 8080, el internal_port declarado en fly.toml.
+#
+# 3. El upstream se resuelve EN CADA PETICIÓN y no al arrancar. Con un nombre
+#    literal en proxy_pass, nginx resuelve el DNS al iniciar y aborta con
+#    "host not found in upstream" si el backend todavía no existe -verificado:
+#    el contenedor no levanta-. Como las máquinas se apagan solas sin tráfico,
+#    eso significaría que el frontend no puede reiniciar mientras el backend
+#    duerme. Pasar el destino por una variable obliga a nginx a diferir la
+#    resolución, y así arranca siempre y encuentra al backend cuando despierta.
+
+server {
+    listen 8080;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Los bundles llevan hash en el nombre: se cachean para siempre.
+    location ~* \.(?:js|css|woff2?|png|jpg|jpeg|svg|ico)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # index.html nunca se cachea, o el navegador seguiría pidiendo los bundles
+    # viejos después de cada despliegue.
+    location = /index.html {
+        add_header Cache-Control "no-cache";
+    }
+
+    location /api/ {
+        resolver ${DNS_RESOLVER} valid=5s;
+        set $destino ${BACKEND_UPSTREAM};
+
+        # Sin parte de URI en proxy_pass: se reenvía la ruta original tal
+        # cual, que ya empieza por /api/ y es lo que el backend espera.
+        proxy_pass http://$destino;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Real-IP $remote_addr;
+        # Detrás del proxy de Fly, $scheme vale "http" porque ese es el último
+        # salto; el esquema que vio el navegador llega en esta cabecera. Si el
+        # backend creyera que la conexión fue HTTP, no emitiría las cookies
+        # marcadas Secure y nadie podría iniciar sesión.
+        proxy_set_header X-Forwarded-Proto $http_x_forwarded_proto;
+        proxy_read_timeout 60s;
+    }
+
+    # El actuator queda fuera a propósito: expuesto en internet publicaría el
+    # estado interno del sistema sin que ninguna pantalla lo necesite.
+}
