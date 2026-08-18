@@ -32,6 +32,9 @@ docs/informe/*.aux
 docs/informe/*.log
 docs/informe/*.out
 docs/informe/*.toc
+docs/informe/*.lof
+docs/informe/*.lot
+docs/informe/*.lol
 docs/informe/*.bbl
 docs/informe/*.blg
 docs/informe/p1.log

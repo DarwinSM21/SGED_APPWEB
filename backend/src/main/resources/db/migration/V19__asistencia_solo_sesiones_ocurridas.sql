@@ -1,20 +1,16 @@
--- sp_reporte_asistencia_estudiante
--- Propósito: reporte -porcentaje de asistencia de un estudiante en un
---            rango de fechas. El denominador es el total de sesiones
---            programadas para SU categoría en ese rango (no solo las filas
---            de asistencia que existan), para que una inasistencia real
---            -que hoy no siempre deja fila propia- no quede invisible.
---            El rango se recorta a ayer: una sesión que todavía no ocurrió
---            no puede contar como falta.
--- Entrada:  p_estudiante BIGINT, p_desde DATE, p_hasta DATE
--- Salida:   porcentaje_asistencia NUMERIC (parametro OUT, NULL si no hubo
---           sesiones programadas en el rango)
--- Tablas:   academico.estudiantes, deportivo.sesiones_entrenamiento,
---           deportivo.asistencias
--- Sin SQL dinámico. Parámetros nombrados.
+-- V19: el porcentaje de asistencia deja de contar sesiones que no ocurrieron.
 --
--- Es un PROCEDURE (no FUNCTION): ver nota en
--- sp_contar_estudiantes_activos.sql sobre por que hace falta.
+-- Con la generacion automatica de sesiones (7 dias hacia adelante) la sesion
+-- del dia aparece en la base a primera hora, sin asistencias todavia. Como el
+-- denominador del reporte tomaba el rango completo hasta hoy, cada manana el
+-- porcentaje de TODOS los estudiantes caia -medido en la demo: de 100% a 50%
+-- con solo dos sesiones en ventana- y se recuperaba recien cuando el
+-- entrenador pasaba lista. El panel de alertas terminaba marcando a los 25
+-- estudiantes por asistencia baja, que es lo mismo que no marcar a ninguno.
+--
+-- El recorte va dentro del procedimiento y no en los servicios porque los
+-- tres llamadores (alertas, informe al representante y ficha de asistencia)
+-- pasan hasta = hoy y todos arrastraban el mismo error.
 CREATE OR REPLACE PROCEDURE deportivo.sp_reporte_asistencia_estudiante(
     IN p_estudiante BIGINT,
     IN p_desde DATE,

@@ -787,9 +787,18 @@ LANGUAGE plpgsql
 AS $$
 DECLARE
     v_categoria BIGINT;
+    v_corte DATE;
     v_total_sesiones INT;
     v_total_presentes INT;
 BEGIN
+    -- Una sesion de hoy o posterior todavia no ocurrio: nadie pudo asistir.
+    -- Si entrara al denominador, el porcentaje de todos caeria cada manana
+    -- al generarse la sesion del dia y se recuperaria recien cuando el
+    -- entrenador pasa lista, castigando al estudiante por una ausencia que
+    -- aun no existe. Se mide hasta ayer. El recorte va aqui y no en cada
+    -- servicio porque los tres llamadores pasan hasta = hoy.
+    v_corte := LEAST(p_hasta, CURRENT_DATE - 1);
+
     SELECT id_categoria INTO v_categoria
       FROM academico.estudiantes
      WHERE id_estudiante = p_estudiante;
@@ -797,14 +806,14 @@ BEGIN
     SELECT COUNT(*) INTO v_total_sesiones
       FROM deportivo.sesiones_entrenamiento se
      WHERE se.id_categoria = v_categoria
-       AND se.fecha BETWEEN p_desde AND p_hasta;
+       AND se.fecha BETWEEN p_desde AND v_corte;
 
     SELECT COUNT(*) INTO v_total_presentes
       FROM deportivo.asistencias a
       JOIN deportivo.sesiones_entrenamiento se ON se.id_sesion = a.id_sesion
      WHERE a.id_estudiante = p_estudiante
        AND a.estado IN ('PRESENTE', 'TARDE')
-       AND se.fecha BETWEEN p_desde AND p_hasta;
+       AND se.fecha BETWEEN p_desde AND v_corte;
 
     IF v_total_sesiones = 0 THEN
         porcentaje_asistencia := NULL;
