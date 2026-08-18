@@ -1,18 +1,18 @@
 # Reporte de usabilidad — SUS (Bloque C.3)
 
-- Fecha del analisis: 2026-08-18T16:52:47.223324+00:00
-- Commit: 899c442
+- Fecha del analisis: 2026-08-18T16:55:31.669561+00:00
+- Commit: 95c4f12
 - Instrumento: System Usability Scale (Brooke, 1996), 10 items, escala 1-5
-- Participantes: **14** (minimo exigido: 10)
+- Participantes: **15** (minimo exigido: 10)
 
 ## Resultado agregado
 
 | Metrica | Valor |
 |---|---|
-| Media SUS | **68.57** |
-| Desviacion tipica | 19.36 |
-| IC 95 % | 68.57 ± 10.14  (58.43 – 78.71) |
-| Mediana | 68.75 |
+| Media SUS | **69.33** |
+| Desviacion tipica | 18.89 |
+| IC 95 % | 69.33 ± 9.56  (59.78 – 78.89) |
+| Mediana | 70.00 |
 | Minimo | 37.50 |
 | Maximo | 90.00 |
 | Grado | **C — Aceptable** |
@@ -24,6 +24,7 @@ Umbral objetivo del proyecto: SUS >= 68 (media de la industria). Resultado: **CU
 | Grado | Participantes |
 |---|---|
 | A | 6 |
+| B | 1 |
 | C | 1 |
 | D | 4 |
 | F | 3 |
@@ -46,10 +47,11 @@ Umbral objetivo del proyecto: SUS >= 68 (media de la industria). Resultado: **CU
 | ENC-14 | representante | 55.0 | D |
 | ENC-15 | estudiante | 85.0 | A |
 | ENC-16 | representante | 67.5 | D |
+| ENC-17 | entrenador | 80.0 | B |
 
 ## Interpretacion
 
-Con 14 participantes externos, el sistema obtiene una media SUS de 68.57 (IC 95 % 58.43–78.71), lo que corresponde al grado **C (Aceptable)** en la escala adjetival de Bangor, Kortum y Miller (2009).
+Con 15 participantes externos, el sistema obtiene una media SUS de 69.33 (IC 95 % 59.78–78.89), lo que corresponde al grado **C (Aceptable)** en la escala adjetival de Bangor, Kortum y Miller (2009).
 
 El analisis por perfil y las amenazas a la validez estan en [INTERPRETACION.md](INTERPRETACION.md), que este script NO sobrescribe: al agregar participantes hay que actualizarlo a mano.
 

@@ -517,10 +517,10 @@ faltaba el de sumar.
 \end{quote}
 
 La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
-aplicó sobre el sistema en una etapa comparable a la actual: 10
-participantes reales, media SUS 68,25 (apenas por encima del umbral de
-68), con un patrón bimodal marcado por perfil que la media agregada
-esconde.
+aplicó sobre el sistema en una etapa comparable a la actual: 15
+participantes reales, media SUS 69,33 (por encima del umbral de 68,
+aunque el intervalo de confianza todavía lo incluye), con un patrón
+bimodal marcado por perfil que la media agregada esconde.
 
 % ============================================================
 \section{Marco teórico}
@@ -1813,7 +1813,7 @@ aquí parte de volumen limpio.
 \midrule
 C.1 Rendimiento & k6 & \texttt{make bench}: 3 corridas independientes de 50 usuarios virtuales durante 30\,s. Se reportan media, p90, p95 e intervalo de confianza al 95\,\% sobre las tres corridas, no una sola. \\
 C.2/C.4 Seguridad & \texttt{curl} & \texttt{make audit}: peticiones reales contra el sistema en ejecución, guardando la respuesta HTTP íntegra con cabeceras. Cada control se contrasta en sus dos direcciones: lo que debe rechazarse y lo que debe seguir permitido. \\
-C.3 Usabilidad & SUS en papel & Cuestionario de Brooke de 10 ítems aplicado a 10 participantes externos; transcripción a CSV y cálculo con \ruta{scripts/sus-analysis.py}, cuya aritmética se validó contra los cuatro casos de referencia de la literatura (0, 50, 75 y 100 puntos). \\
+C.3 Usabilidad & SUS en papel & Cuestionario de Brooke de 10 ítems aplicado a 15 participantes externos en dos tandas; transcripción a CSV y cálculo con \ruta{scripts/sus-analysis.py}, cuya aritmética se validó contra los cuatro casos de referencia de la literatura (0, 50, 75 y 100 puntos). \\
 Cobertura & JaCoCo & \texttt{make test}, que ejecuta \texttt{clean test} para que la instrumentación no alcance clases de compilaciones anteriores. \\
 C.5 Accesibilidad & Lighthouse & 3 corridas mediante \ruta{lighthouserc.js}; se reportan los cuatro puntajes agregados y las métricas Web Vitals. \\
 \bottomrule
@@ -2269,10 +2269,18 @@ de diez participantes, y su aritmética quedó verificada contra los cuatro
 casos de referencia de la literatura (0, 50, 75 y 100 puntos) antes de
 usarlo con datos reales.
 
-\textbf{Aplicado el 2026-07-30 a 10 participantes} (formularios en papel,
-transcritos a \ruta{docs/mediciones/sus/respuestas.csv} sin registrar
-nombres, solo un código de participante y su perfil): 3 entrenadores, 3
-recepcionistas, 2 estudiantes, 2 padres de familia.
+\textbf{Aplicado a 15 participantes} en dos tandas (2026-07-30 y
+2026-08-18; formularios en papel, transcritos a
+\ruta{docs/mediciones/sus/respuestas.csv} sin registrar nombres, solo
+un código de participante y su perfil): 4 entrenadores, 4 estudiantes,
+4 representantes y 3 recepcionistas.
+
+La segunda tanda no se recolectó para mejorar el resultado sino para
+reducir la incertidumbre de la primera, y conviene juzgarla por eso: al
+pasar de 10 a 15 participantes la media se movió 1,08 puntos (68,25 a
+69,33) mientras la amplitud del intervalo de confianza cayó un 30\,\%
+(27,4 a 19,1 puntos). La estimación ya era estable; lo que faltaba era
+precisión.
 
 \begin{table}[htbp]
 \centering
@@ -2282,20 +2290,20 @@ recepcionistas, 2 estudiantes, 2 padres de familia.
 \toprule
 \textbf{Métrica} & \textbf{Valor} \\
 \midrule
-Media SUS & 68,25 \\
-Desviación típica & 22,14 \\
-IC 95\,\% & 68,25 $\pm$ 13,72 \quad (54,53 -- 81,97) \\
-Mediana & 73,75 \\
+Media SUS & 69,33 \\
+Desviación típica & 18,89 \\
+IC 95\,\% & 69,33 $\pm$ 9,56 \quad (59,77 -- 78,89) \\
+Mediana & 70,00 \\
 Grado & C --- Aceptable \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-La media cruza el umbral de 68 por apenas 0,25 puntos, y el intervalo de
-confianza es ancho: con esta muestra no puede afirmarse con confianza
-estadística que la media poblacional real supere 68, solo que 68,25 es la
-mejor estimación puntual disponible. No se presenta como un resultado
-cómodo.
+La media cruza el umbral de 68 por 1,33 puntos y el intervalo de confianza
+todavía incluye valores por debajo de ese umbral: con esta muestra la
+afirmación defendible es que la mejor estimación puntual está por encima de
+68, no que el sistema lo supere con confianza estadística. No se presenta
+como un resultado cómodo.
 
 \textbf{El hallazgo más informativo no es la media, es su distribución
 bimodal por perfil}, que la agregación esconde:
@@ -2308,23 +2316,41 @@ bimodal por perfil}, que la agregación esconde:
 \toprule
 \textbf{Perfil} & \textbf{Promedio SUS} & \textbf{Grado} \\
 \midrule
-Entrenador (n=3) & 86,7 & A \\
-Estudiante (n=2) & 90,0 & A \\
+Entrenador (n=4) & 85,0 & A \\
+Estudiante (n=4) & 83,8 & A \\
 Recepcionista (n=3) & 51,7 & F \\
-Padre de familia (n=2) & 43,75 & F \\
+Representante (n=4) & 52,5 & F \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Entrenadores y estudiantes calificaron el sistema como excelente;
-recepcionistas y padres de familia, como inaceptable. El CRUD de
-estudiantes implementado hasta esta entrega (RF-08 a RF-15) es exactamente
-el flujo operado por un rol administrativo — no el de un entrenador
-consultando información, ni el de un padre buscando visibilidad sobre su
-representado —, lo que sugiere que la interfaz actual está más pulida para
-un caso de uso que no es el de quienes peor la calificaron. Es una pista
-concreta de dónde enfocar el trabajo de usabilidad antes de la Entrega
-Final, no solo un número que aprobó por poco.
+Los cuatro perfiles se parten en dos bloques con muy poca dispersión interna:
+1,2 puntos de diferencia dentro del grupo alto, 0,8 dentro del bajo, y 33,3
+entre ambos --- más de una vez y media la amplitud del intervalo de confianza.
+
+La línea divisoria no es ser interno o externo a la escuela: el recepcionista
+es personal interno y de uso diario, y puntúa igual de bajo que el
+representante. Lo que separa a los grupos es \emph{qué hace cada rol con el
+sistema}. Entrenador y estudiante sobre todo consultan --- ver sesiones,
+marcar asistencia, revisar el equipo ---, y esos son los flujos que más
+atención de diseño recibieron. Recepcionista y representante operan o esperan
+información: el primero da de alta, edita y cobra; el segundo busca
+visibilidad sobre su representado y hoy el sistema no le envía nada por
+iniciativa propia (RF-22 sigue sin implementarse). Dicho de otro modo, quien
+peor califica el sistema es quien más trabajo administrativo hace con él.
+
+El patrón resistió dos ampliaciones sucesivas de la muestra: los cinco
+participantes agregados --- dos estudiantes, dos representantes y un
+entrenador --- cayeron cada uno en el bloque que su rol predecía, sin
+excepción. Es una pista concreta de dónde enfocar el trabajo de usabilidad,
+no solo un número que aprobó por poco.
+
+Con 3 o 4 participantes por perfil estos promedios son indicativos y no
+soportan una prueba de hipótesis entre grupos: el patrón se sostiene por su
+magnitud y por su consistencia al ampliar la muestra, no por significancia
+estadística. El análisis completo, con las amenazas a la validez, está en
+
+uta{docs/mediciones/sus/INTERPRETACION.md}.
 
 % ============================================================
 \section{Reproducibilidad}
@@ -2428,13 +2454,12 @@ empírica~\cite{iso25010}.
 \emph{¿Hasta dónde se generalizan los resultados?}
 
 \begin{itemize}[leftmargin=*]
-  \item \textbf{La muestra del SUS es de 10 participantes}, el mínimo
-    metodológico, y por conveniencia. El intervalo de confianza
-    (54,53--81,97) es lo bastante ancho como para que no pueda afirmarse
-    con confianza estadística que la media poblacional supere el umbral de
-    68: 68,25 es la mejor estimación puntual disponible, no un aprobado
-    consolidado.
-  \item \textbf{Los subgrupos por perfil tienen 2 o 3 personas cada uno.}
+  \item \textbf{La muestra del SUS es de 15 participantes},
+    recolectada por conveniencia. Cumple el mínimo exigido, pero el
+    intervalo de confianza (59,77--78,89) todavía incluye valores por
+    debajo del umbral de 68: 69,33 es la mejor estimación puntual
+    disponible, no un aprobado consolidado.
+  \item \textbf{Los subgrupos por perfil tienen 3 o 4 personas cada uno.}
     El patrón bimodal es nítido y tiene una explicación plausible ligada a
     qué flujos están implementados, pero con esos tamaños no puede
     descartarse que parte de la diferencia sea variación individual. Se

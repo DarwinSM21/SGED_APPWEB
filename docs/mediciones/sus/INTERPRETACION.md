@@ -2,25 +2,33 @@
 
 `REPORT.md` lo **regenera** `scripts/sus-analysis.py` en cada corrida: todo lo
 que se escriba allí a mano se pierde al agregar un participante. Por eso el
-análisis vive aquí, donde ningún script lo sobrescribe. Los números de este
-documento corresponden a la corrida con **n = 14** (2026-08-18); si se agregan
+análisis vive aquí, donde ningún script lo sobrescribe. Los números
+corresponden a la corrida con **n = 15** (2026-08-18); si se agregan
 respuestas, hay que actualizarlos a mano.
 
 ## Resultado agregado
 
-Con 14 participantes externos, la media SUS es **68,57** (IC 95 %
-58,43 – 78,71), grado **C (Aceptable)** en la escala adjetival de Bangor,
-Kortum y Miller (2009).
+Con 15 participantes externos, la media SUS es **69,33** (IC 95 %
+59,77 – 78,89; DT 18,89; mediana 70,00), grado **C (Aceptable)** en la escala
+adjetival de Bangor, Kortum y Miller (2009).
 
-Cruza el umbral de 68 por 0,57 puntos. No se reporta como un aprobado cómodo:
-el intervalo de confianza todavía incluye valores por debajo de 68, así que la
-afirmación defendible es "la mejor estimación puntual está apenas sobre el
-umbral", no "el sistema supera el umbral".
+La media cruza el umbral de 68 por 1,33 puntos. No se reporta como un
+aprobado cómodo: el intervalo de confianza todavía incluye valores por debajo
+de 68, así que la afirmación defendible es "la mejor estimación puntual está
+por encima del umbral", no "el sistema supera el umbral".
 
-Sí mejoró la precisión respecto de la muestra anterior. Con n = 10 el IC
-abarcaba 27 puntos (54,53 – 81,97); con n = 14 abarca 20 (58,43 – 78,71). La
-media casi no se movió (68,25 → 68,57), lo que sugiere que la estimación es
-estable y que lo que cambió fue la certeza, no el resultado.
+La muestra creció en dos tandas y conviene mirar qué se movió:
+
+| | n = 10 | n = 14 | n = 15 |
+|---|---|---|---|
+| Media | 68,25 | 68,57 | **69,33** |
+| Amplitud del IC 95 % | 27,4 pts | 20,3 pts | **19,1 pts** |
+
+La media se movió 1,08 puntos en total mientras la muestra creció un 50 %. Lo
+que mejoró no fue el resultado sino la precisión: el intervalo se estrechó un
+30 %. Eso es lo esperable cuando la estimación inicial ya era estable, y es el
+argumento honesto para haber ampliado la muestra: no se buscaba subir la nota,
+se buscaba reducir la incertidumbre.
 
 ## Patrón por perfil — el hallazgo principal
 
@@ -29,16 +37,15 @@ participante, no por variación individual:
 
 | Perfil | n | Puntuaciones SUS | Promedio |
 |---|---|---|---|
-| Entrenador | 3 | 85,0 / 85,0 / 90,0 | **86,7** |
+| Entrenador | 4 | 80,0 / 85,0 / 85,0 / 90,0 | **85,0** |
 | Estudiante | 4 | 70,0 / 85,0 / 90,0 / 90,0 | **83,8** |
 | Representante | 4 | 37,5 / 50,0 / 55,0 / 67,5 | **52,5** |
 | Recepcionista | 3 | 37,5 / 55,0 / 62,5 | **51,7** |
 
-Tras unificar las etiquetas (ver nota metodológica), la distribución queda
-partida en dos grupos casi sin dispersión interna: dos perfiles alrededor de
-85 y dos alrededor de 52. La diferencia dentro de cada grupo es de 2,9 y 0,8
-puntos respectivamente; entre grupos, de **35 puntos** — más de una vez y
-media la amplitud del intervalo de confianza. No es ruido de muestreo.
+Los cuatro perfiles se parten en dos bloques con muy poca dispersión interna:
+**1,2 puntos** de diferencia dentro del grupo alto, **0,8** dentro del bajo, y
+**33,3 entre ambos** — más de una vez y media la amplitud del intervalo de
+confianza. No es ruido de muestreo.
 
 Lo que separa a los dos grupos no es ser interno o externo a la escuela: el
 recepcionista es personal interno y de uso diario, y puntúa igual de bajo que
@@ -51,30 +58,32 @@ visibilidad sobre su representado y hoy el sistema no le envía nada por
 iniciativa propia (RF-22 sigue sin implementarse; solo existe el registro de
 consentimiento que lo habilitará).
 
-Dicho de otro modo: quien peor califica el sistema es quien más trabajo
-administrativo hace con él.
+Dicho de otro modo: **quien peor califica el sistema es quien más trabajo
+administrativo hace con él.**
 
-Los cuatro participantes nuevos **no alteran** el patrón: los dos estudiantes
-(70,0 y 85,0) se suman al grupo alto y los dos representantes (55,0 y 67,5)
-al bajo. Que sobreviva a una ampliación del 40 % de la muestra lo refuerza.
+El patrón resistió dos ampliaciones sucesivas de la muestra. Los cinco
+participantes agregados —dos estudiantes, dos representantes y un
+entrenador— cayeron cada uno en el bloque que su rol predecía, sin excepción.
+Que sobreviva a un crecimiento del 50 % lo vuelve difícil de atribuir al azar.
 
 ## Amenazas a la validez
 
 ### Tamaño de muestra
 
-n = 14 supera el mínimo de 10 del instrumento (Brooke, 1996), pero **no alcanza
-los 15 participantes** que exige la guía de la Entrega Final. Falta uno. Se
-reporta así en lugar de presentar la muestra como suficiente.
+n = 15 cumple el mínimo exigido por la guía de la Entrega Final y supera con
+holgura el mínimo de 10 del instrumento (Brooke, 1996). No permite, sin
+embargo, generalizar con confianza a la población total de usuarios.
 
-Para los subgrupos el problema es mayor: con 2 o 3 participantes por perfil,
+Para los subgrupos la limitación es mayor: con 3 o 4 participantes por perfil,
 los promedios por rol son indicativos y no soportan una prueba de hipótesis
-entre grupos. El patrón bimodal se sostiene por su magnitud (35 puntos) y por
-su consistencia al ampliar la muestra, no por significancia estadística.
+entre grupos. El patrón bimodal se sostiene por su magnitud (33,3 puntos) y
+por su consistencia al ampliar la muestra, no por significancia estadística.
+Afirmar lo contrario con estos n sería sobreinterpretar.
 
 ### Intervalo de confianza
 
-El IC 95 % abarca 20 puntos e incluye valores por debajo del umbral de 68. La
-estimación puntual es la mejor disponible, no un resultado concluyente.
+El IC 95 % abarca 19,1 puntos e incluye valores por debajo del umbral de 68.
+La estimación puntual es la mejor disponible, no un resultado concluyente.
 
 ### Sesgo de selección
 
@@ -86,9 +95,10 @@ elimina este sesgo.
 
 ### Media agregada frente a distribución bimodal
 
-Reportar 68,57 como resultado único describe mal el sistema: ningún perfil
-puntúa cerca de 68. Es el promedio de dos poblaciones distintas, y por eso la
-tabla por perfil se reporta junto a la media y no como anexo.
+Reportar 69,33 como resultado único describe mal el sistema: **ningún perfil
+puntúa cerca de 69**. Es el promedio de dos poblaciones separadas por 33
+puntos. Por eso la tabla por perfil se reporta junto a la media agregada y no
+como anexo.
 
 ## Notas metodológicas
 
@@ -99,23 +109,19 @@ preservan por ser más informativas, en vez de forzarlas a las categorías
 originales. La única corrección aplicada es la unificación descrita abajo.
 
 **Unificación de `padre de familia` en `representante` (2026-08-18).** Las
-respuestas llegaron en dos tandas con etiquetas distintas para el mismo rol:
+respuestas llegaron en tandas con etiquetas distintas para el mismo rol:
 ENC-04 y ENC-08 como `padre de familia`, ENC-14 y ENC-16 como `representante`.
 Se unificaron bajo `representante`, que es como el sistema nombra ese rol,
 **por confirmación explícita de quien aplicó los cuestionarios**; no fue una
 decisión de análisis.
 
-El cambio afecta solo a la etiqueta: ninguna puntuación se modificó, y la
-media global, la desviación y el intervalo de confianza son idénticos antes y
-después (68,57 / 19,36 / ±10,14). Lo que cambia es la lectura por perfil: el
-grupo pasa de dos subgrupos de n=2 (43,8 y 61,2) a uno de n=4 con media 52,5,
-que queda junto a recepcionista en vez de aparentar una posición intermedia.
-La versión previa de este documento describía a los representantes como
-situados "entre los dos extremos" — con la muestra unificada eso ya no es
-cierto y se corrige aquí.
+El cambio afecta solo a la etiqueta: ninguna puntuación se modificó y los
+estadísticos agregados son idénticos antes y después. Lo que cambia es la
+lectura por perfil: el grupo pasa de dos subgrupos de n=2 (43,8 y 61,2) a uno
+de n=4 con media 52,5, que queda junto a recepcionista en vez de aparentar una
+posición intermedia que era un artefacto de la etiqueta.
 
-**Numeración.** Los identificadores van de ENC-01 a ENC-10 y luego de ENC-13 a
-ENC-16: **no existen ENC-11 ni ENC-12**. El salto se conserva tal como llegaron
-los datos en vez de renumerar, para no dar la impresión de una serie continua
-que no lo es. Si esos dos cuestionarios existen y no se han volcado, agregarlos
-cerraría además el requisito de 15.
+**Numeración.** Los identificadores van de ENC-01 a ENC-10 y de ENC-13 a
+ENC-17: **no existen ENC-11 ni ENC-12**. El salto se conserva tal como
+llegaron los datos en vez de renumerar, para no dar la impresión de una serie
+continua que no lo es.
