@@ -70,6 +70,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/estudiante/mi-equipo.component').then(m => m.MiEquipoComponent),
       },
       {
+        path: 'admin/consentimientos',
+        canActivate: [roleGuard(['ADMINISTRADOR'])],
+        loadComponent: () => import('./features/consentimientos/consentimientos.component').then(m => m.ConsentimientosComponent),
+      },
+      {
         path: 'admin/auditorias',
         canActivate: [roleGuard(['ADMINISTRADOR'])],
         loadComponent: () => import('./features/auditorias/auditorias.component').then(m => m.AuditoriasComponent),

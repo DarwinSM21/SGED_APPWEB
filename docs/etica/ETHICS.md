@@ -160,6 +160,31 @@ del envío proactivo del sistema que este hallazgo señala como el riesgo real
 (ver también H-07). La tabla de consentimientos queda reservada
 exclusivamente para gatear esa notificación cuando se construya.
 
+**Actualización (2026-08-18) — el consentimiento ya se puede registrar desde
+la aplicación.** Hasta esta fecha la resolución era incompleta en un sentido
+que no estaba dicho: la tabla y su API existían desde la V9, pero ninguna
+pantalla las usaba, así que un consentimiento solo podía registrarse
+escribiendo SQL a mano. Documentar una mitigación que en la práctica nadie
+puede ejecutar es, para efectos del hallazgo, no haberla implementado.
+
+Ahora existe **Consentimientos** (`/admin/consentimientos`, solo
+ADMINISTRADOR): se elige al estudiante, se ven sus representantes vinculados
+y para cada uno se otorga o revoca el consentimiento, con el historial de
+revocaciones visible y fechado. La pantalla ofrece únicamente los
+representantes ya vinculados a ese estudiante —la API acepta cualquier par,
+pero registrar el consentimiento de quien no es su tutor no significa nada— y
+declara explícitamente en su encabezado qué autoriza el consentimiento y qué
+no, para que la distinción de este hallazgo no dependa de que alguien haya
+leído este documento.
+
+Verificado contra la base real: otorgar, rechazo del segundo consentimiento
+vigente con el mismo alcance, revocar, y volver a otorgar conservando la fila
+revocada con su fecha.
+
+Lo que **sigue abierto** es lo mismo que antes: el envío real de
+notificaciones (RF-22 propiamente dicho). El hallazgo se mantiene parcial por
+esa razón, no por la ausencia de la interfaz.
+
 ### H-05 — Certificado TLS autofirmado
 
 El despliegue actual usa un certificado autofirmado, adecuado para
