@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { homeRouteForRole } from '../home-route';
+import { PelotaAnimadaComponent } from '../pelota-animada.component';
 
 /**
  * `loading`/`error` viven en signals, no en propiedades sueltas: este
@@ -15,12 +16,13 @@ import { homeRouteForRole } from '../home-route';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PelotaAnimadaComponent],
   template: `
     <div class="auth-shell">
       <aside class="auth-brand">
         <div class="auth-brand__glow auth-brand__glow--a"></div>
         <div class="auth-brand__glow auth-brand__glow--b"></div>
+        <app-pelota-animada />
         <div class="auth-brand__content">
           <div class="auth-brand__logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

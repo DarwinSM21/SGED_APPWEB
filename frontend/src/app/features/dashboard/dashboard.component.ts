@@ -4,13 +4,18 @@ import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { homeRouteForRole } from '../../auth/home-route';
-import { SesionHoy } from './dashboard.models';
+import { PanelAlertas, SesionHoy } from './dashboard.models';
 import { horaCorta, inicialesDe } from '../entrenador/plantilla.models';
 
 /** Forma minima de una pagina de Spring Data que interesa aqui. */
 interface PaginaLigera {
   totalElements: number;
 }
+
+const NOMBRES_MES = [
+  'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+  'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+];
 
 /**
  * Punto de entrada tras iniciar sesion para ADMINISTRADOR/ENTRENADOR/USER.
@@ -127,6 +132,58 @@ interface PaginaLigera {
           </section>
         }
 
+        @if (esAdministrador() && alertas(); as a) {
+          <section class="card panel-alertas">
+            <div class="panel-alertas__cabecera">
+              <div>
+                <h2>Requieren atención</h2>
+                <p class="panel-alertas__sub">
+                  {{ a.estudiantes.length }} de {{ a.estudiantesActivos }} estudiantes ·
+                  cuota de {{ nombreMes(a.mes) }} {{ a.anio }}
+                </p>
+              </div>
+              @if (a.estudiantes.length > 0) {
+                <div class="resumen-alertas">
+                  @if (a.conMensualidadPendiente > 0) {
+                    <span class="chip chip--dinero">{{ a.conMensualidadPendiente }} deben cuota</span>
+                  }
+                  @if (a.conAsistenciaBaja > 0) {
+                    <span class="chip chip--falta">{{ a.conAsistenciaBaja }} asistencia &lt; {{ a.umbralAsistencia }}%</span>
+                  }
+                  @if (a.conLesionActiva > 0) {
+                    <span class="chip chip--lesion">{{ a.conLesionActiva }} lesionados</span>
+                  }
+                </div>
+              }
+            </div>
+
+            @if (a.estudiantes.length === 0) {
+              <div class="todo-en-orden">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                <p>Nadie con cuota pendiente, asistencia baja ni lesiones activas.</p>
+              </div>
+            } @else {
+              @for (e of a.estudiantes; track e.idEstudiante) {
+                <div class="fila-alerta" [attr.data-severidad]="e.totalAlertas">
+                  <span class="franja"></span>
+                  <span class="avatar avatar--muted">{{ iniciales(e.nombreCompleto) }}</span>
+                  <div class="alerta-info">
+                    <span class="alerta-nombre">{{ e.nombreCompleto }}</span>
+                    <span class="alerta-categoria">{{ e.categoria ?? 'sin categoría' }}</span>
+                  </div>
+                  <div class="alerta-motivos">
+                    @if (e.mensualidadPendiente) { <span class="chip chip--dinero">Debe cuota</span> }
+                    @if (e.asistenciaBaja) {
+                      <span class="chip chip--falta">Asistencia {{ e.porcentajeAsistencia | number: '1.0-0' }}%</span>
+                    }
+                    @if (e.lesionActiva) { <span class="chip chip--lesion">Lesión activa</span> }
+                  </div>
+                </div>
+              }
+            }
+          </section>
+        }
+
         <section class="card lista">
           <div class="lista__cabecera">
             <h2>{{ esAdministrador() ? 'Sesiones de hoy' : 'Mis sesiones de hoy' }}</h2>
@@ -181,6 +238,56 @@ interface PaginaLigera {
     }
     .acceso:hover { border-color: var(--color-primary-500); background: var(--color-primary-50); }
     .acceso svg { width: 17px; height: 17px; color: var(--color-primary-600); flex-shrink: 0; }
+
+    /* ---- Panel "Requieren atención" ---- */
+    .panel-alertas { padding: 1.25rem 1.4rem; margin-bottom: 1.5rem; }
+    .panel-alertas__cabecera {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem;
+    }
+    .panel-alertas__cabecera h2 { font-size: 1rem; }
+    .panel-alertas__sub { margin: .2rem 0 0; font-size: .78rem; color: var(--color-text-muted); }
+    .resumen-alertas { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+    /* El color codifica el tipo de problema, no solo decora: el mismo tono
+       se repite en el resumen de arriba y en la fila de cada estudiante. */
+    .chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      padding: .22rem .6rem; border-radius: var(--radius-full);
+      font-size: .74rem; font-weight: 700; white-space: nowrap;
+    }
+    .chip--dinero { background: var(--color-warning-bg); color: var(--color-warning-text); }
+    .chip--falta { background: var(--color-info-bg); color: var(--color-info-text); }
+    .chip--lesion { background: var(--color-danger-bg); color: var(--color-danger-text); }
+
+    .fila-alerta {
+      display: flex; align-items: center; gap: .7rem;
+      padding: .6rem .2rem .6rem 0; border-bottom: 1px solid var(--color-border-light);
+    }
+    .fila-alerta:last-child { border-bottom: none; }
+
+    /* Franja de severidad: cuantas señales acumula el estudiante. Va antes
+       que el texto para que el ojo ordene la lista sin leerla. */
+    .franja { width: 4px; align-self: stretch; border-radius: 2px; background: var(--color-warning); flex-shrink: 0; }
+    .fila-alerta[data-severidad="2"] .franja { background: #e0872c; }
+    .fila-alerta[data-severidad="3"] .franja { background: var(--color-danger); }
+
+    .alerta-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+    .alerta-nombre { font-weight: 600; font-size: .9rem; }
+    .alerta-categoria { font-size: .76rem; color: var(--color-text-faint); }
+    .alerta-motivos { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
+
+    .todo-en-orden {
+      display: flex; flex-direction: column; align-items: center; gap: .55rem;
+      text-align: center; padding: 1.75rem 1rem; color: var(--color-success-text);
+    }
+    .todo-en-orden svg { width: 30px; height: 30px; }
+    .todo-en-orden p { font-size: .87rem; color: var(--color-text-muted); }
+
+    @media (max-width: 620px) {
+      .fila-alerta { flex-wrap: wrap; }
+      .alerta-motivos { justify-content: flex-start; width: 100%; padding-left: 2.9rem; }
+    }
 
     .kpis {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -245,6 +352,8 @@ export class DashboardComponent implements OnInit {
   readonly cargandoSesiones = signal(false);
   readonly lesionesActivas = signal<number | null>(null);
   readonly estudiantesActivos = signal<number | null>(null);
+  /** Null mientras carga o si la peticion fallo: la seccion no se dibuja. */
+  readonly alertas = signal<PanelAlertas | null>(null);
 
   /** ADMINISTRADOR y ENTRENADOR tienen acceso operativo; USER solo consulta. */
   readonly esOperativo = computed(() => {
@@ -280,6 +389,7 @@ export class DashboardComponent implements OnInit {
           this.cargarConteoDeLesiones();
           if (this.esAdministrador()) {
             this.cargarConteoDeEstudiantes();
+            this.cargarAlertas();
           }
         }
       },
@@ -314,7 +424,22 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  /**
+   * Si falla, el panel simplemente no se dibuja: es informacion de apoyo,
+   * no puede tumbar el resto del tablero.
+   */
+  private cargarAlertas(): void {
+    this.http.get<PanelAlertas>('/api/alertas').subscribe({
+      next: (panel) => this.alertas.set(panel),
+      error: () => {},
+    });
+  }
+
   iniciales(nombre: string): string {
     return inicialesDe(nombre);
+  }
+
+  nombreMes(mes: number): string {
+    return NOMBRES_MES[mes - 1] ?? String(mes);
   }
 }

@@ -27,4 +27,17 @@ public interface PagoRepository extends JpaRepository<Pago, Long>, JpaSpecificat
     BigDecimal sumarMontoEntreFechas(LocalDate inicio, LocalDate fin);
 
     long countByFechaPagoBetween(LocalDate inicio, LocalDate fin);
+
+    /**
+     * Quienes ya tienen cubierta la membresia de un mes concreto. Se pide la
+     * lista completa de una vez, en lugar de preguntar estudiante por
+     * estudiante: el panel de alertas la usa para restar sobre el total de
+     * activos, y consultar de a uno serian tantas consultas como alumnos.
+     */
+    @Query("""
+           SELECT p.estudiante.idEstudiante FROM Pago p
+           WHERE p.tipo = :tipo AND p.anio = :anio AND p.mes = :mes
+           """)
+    List<Long> idsConMembresiaCubierta(
+            @Param("tipo") TipoPago tipo, @Param("anio") Short anio, @Param("mes") Short mes);
 }

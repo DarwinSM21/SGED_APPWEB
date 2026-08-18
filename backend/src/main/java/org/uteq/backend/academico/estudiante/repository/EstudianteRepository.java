@@ -15,6 +15,9 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
 
     Page<Estudiante> findByActivoTrue(Pageable pageable);
 
+    /** Padron completo de activos, para los paneles que recorren a todos y no paginan. */
+    List<Estudiante> findByActivoTrueOrderByPersona_ApellidoAsc();
+
     long countByCategoria_IdCategoriaAndActivoTrue(Long idCategoria);
 
     Optional<Estudiante> findByIdEstudianteAndActivoTrue(Long idEstudiante);
