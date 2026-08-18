@@ -7,6 +7,12 @@
    ============================================================ */
 
 :root {
+  /* Le dice al navegador en que tema pintar lo que dibuja el sistema y no
+     nosotros: el desplegable del select, las barras de desplazamiento y los
+     selectores de fecha. Sin esto el popup salia blanco con texto casi
+     blanco, o sea ilegible. */
+  color-scheme: light;
+
   /* Paleta principal (índigo → violeta), inspirada en la propuesta de Figma */
   --color-primary-50: #eef2ff;
   --color-primary-100: #e0e7ff;
@@ -64,6 +70,8 @@
    Sombras/degradado/radios se mantienen iguales en ambos temas.
    ============================================================ */
 :root[data-theme="oscuro"] {
+  color-scheme: dark;
+
   --color-success-bg: #052e22;
   --color-success-text: #34d399;
   --color-danger-bg: #3a0d0d;
@@ -160,6 +168,14 @@ a { color: var(--color-primary-600); }
   background: transparent;
   color: var(--color-text);
   min-width: 0;
+}
+.field__control select { cursor: pointer; }
+/* El popup del select lo dibuja el navegador y no hereda el fondo del
+   control: si se deja transparente, el texto viaja con el color del tema
+   oscuro sobre el blanco del sistema. Se pinta explicito. */
+select option, select optgroup {
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 .field__toggle {
   border: none;

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PagosService } from './pagos.service';
 import { EstudianteOpcionPago, IngresosMes, PagoResponse } from './pagos.models';
 import { mensajeDeError as traducirError } from '../../core/mensaje-error';
+import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
 
 const NOMBRES_MES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -19,7 +20,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-pagos',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent],
   template: `
     <div class="pantalla">
       <div class="encabezado">
@@ -50,21 +51,12 @@ const NOMBRES_MES = [
           <h2 class="titulo-card">Registro de Membresía</h2>
 
           @if (idEstudiante() === null) {
-            <label class="field" for="idEstudiante">
-              <span class="field__label">Estudiante</span>
-              <span class="field__control">
-                @if (cargandoEstudiantes()) {
-                  <span class="aviso">Cargando…</span>
-                } @else {
-                  <select id="idEstudiante" [ngModel]="idEstudiante()" (ngModelChange)="seleccionarEstudiante($event)" name="idEstudiante">
-                    <option [ngValue]="null" disabled>Selecciona…</option>
-                    @for (e of estudiantes(); track e.idEstudiante) {
-                      <option [ngValue]="e.idEstudiante">{{ e.nombreCompleto }} · {{ e.categoria }}</option>
-                    }
-                  </select>
-                }
-              </span>
-            </label>
+            <app-buscador-opciones
+              etiqueta="Estudiante"
+              marcador="Escribe el nombre o la categoría…"
+              [opciones]="opcionesEstudiantes()"
+              [cargando]="cargandoEstudiantes()"
+              (seleccionada)="seleccionarEstudiante($event.id)" />
           } @else if (estudianteSeleccionado(); as est) {
             <div class="chip-estudiante">
               <span class="avatar">{{ iniciales(est.nombreCompleto) }}</span>
@@ -295,6 +287,14 @@ export class PagosComponent implements OnInit {
   readonly estudiantes = signal<EstudianteOpcionPago[]>([]);
   readonly cargandoEstudiantes = signal(true);
   readonly idEstudiante = signal<number | null>(null);
+  /** El buscador habla en {id, titulo, subtitulo}, no en el DTO de pagos. */
+  readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
+    this.estudiantes().map((e) => ({
+      id: e.idEstudiante,
+      titulo: e.nombreCompleto,
+      subtitulo: e.categoria,
+    })));
+
   readonly estudianteSeleccionado = computed(() =>
     this.estudiantes().find((e) => e.idEstudiante === this.idEstudiante()) ?? null,
   );
