@@ -49,7 +49,7 @@ public class SesionEntrenamientoService {
      */
     @Transactional
     public List<SesionHoyResponse> sesionesDeHoy(String username, boolean veTodasLasSesiones) {
-        horarioService.generarSesionesDeHoy();
+        horarioService.generarSesionesProgramadas();
         LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
 
         List<SesionEntrenamiento> sesiones;
@@ -77,7 +77,7 @@ public class SesionEntrenamientoService {
      */
     @Transactional
     public List<SesionHoyResponse> misSesiones(String username, boolean veTodasLasSesiones, int page, int size) {
-        horarioService.generarSesionesDeHoy();
+        horarioService.generarSesionesProgramadas();
 
         if (veTodasLasSesiones) {
             Page<SesionEntrenamiento> todas = sesionRepository.findAll(

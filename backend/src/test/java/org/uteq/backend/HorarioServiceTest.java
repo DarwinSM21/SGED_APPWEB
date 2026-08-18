@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * La propiedad que importa en generarSesionesDeHoy(): es idempotente. Se
+ * La propiedad que importa en generarSesionesProgramadas(): es idempotente. Se
  * llama en cada GET /api/sesiones/hoy y /mias (ver
  * SesionEntrenamientoController), asi que si no evita duplicar la sesion de
  * un horario ya generado hoy, cada recarga de pantalla crearia una fila
@@ -120,7 +121,7 @@ class HorarioServiceTest {
     }
 
     /**
-     * hoy se calcula con Zonas.ECUADOR, igual que HorarioService.generarSesionesDeHoy():
+     * hoy se calcula con Zonas.ECUADOR, igual que HorarioService.generarSesionesProgramadas():
      * usar LocalDate.now() a secas queda desfasado del servicio en la ventana
      * UTC 00:00-04:59 (19:00-23:59 en Ecuador, donde "hoy" en UTC ya es
      * "mañana" en Ecuador), y ese desfase es justo lo que rompia esta prueba
@@ -128,8 +129,8 @@ class HorarioServiceTest {
      * configurada en hora de Ecuador.
      */
     @Test
-    @DisplayName("generarSesionesDeHoy solo crea la sesion de los horarios que todavia no la tienen hoy")
-    void generarSesionesDeHoy_crea_solo_las_que_faltan() {
+    @DisplayName("generarSesionesProgramadas solo crea la sesion de los horarios que todavia no la tienen hoy")
+    void generarSesionesProgramadas_crea_solo_las_que_faltan() {
         var yo = entrenador(1L);
         var categoria = Categoria.builder().idCategoria(5L).nombre("SUB-12").build();
         LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
@@ -144,8 +145,65 @@ class HorarioServiceTest {
         when(sesionRepository.existsByHorario_IdHorarioAndFecha(1L, hoy)).thenReturn(false);
         when(sesionRepository.existsByHorario_IdHorarioAndFecha(2L, hoy)).thenReturn(true);
 
-        service.generarSesionesDeHoy();
+        service.generarSesionesProgramadas();
 
         verify(sesionRepository, times(1)).save(any(SesionEntrenamiento.class));
+    }
+
+    /**
+     * El caso que motivo programar una ventana en vez de solo el dia en
+     * curso: con el sistema apagado varios dias, al encenderlo tiene que
+     * quedar cubierta la semana completa de una sola vez, no unicamente hoy.
+     */
+    @Test
+    @DisplayName("con la ventana de 7 dias, un horario de lunes a viernes deja programadas 5 sesiones")
+    void generarSesionesProgramadas_cubre_toda_la_semana() {
+        ReflectionTestUtils.setField(service, "diasProgramados", 7);
+
+        var yo = entrenador(1L);
+        var categoria = Categoria.builder().idCategoria(5L).nombre("SUB-12").build();
+
+        // Un horario por cada dia habil, como el caso real de la escuela.
+        for (short dia = 1; dia <= 5; dia++) {
+            var horario = Horario.builder().idHorario((long) dia).entrenador(yo).categoria(categoria)
+                    .diaSemana(dia).horaInicio(LocalTime.of(16, 0)).horaFin(LocalTime.of(18, 0)).build();
+            when(horarioRepository.findByActivoTrueAndDiaSemana(dia)).thenReturn(List.of(horario));
+        }
+        // Sabado y domingo no entrenan.
+        when(horarioRepository.findByActivoTrueAndDiaSemana((short) 6)).thenReturn(List.of());
+        when(horarioRepository.findByActivoTrueAndDiaSemana((short) 7)).thenReturn(List.of());
+        when(sesionRepository.existsByHorario_IdHorarioAndFecha(any(), any())).thenReturn(false);
+
+        service.generarSesionesProgramadas();
+
+        // 8 dias recorridos (hoy + 7) tocan cada dia habil al menos una vez y
+        // uno de ellos dos veces, pero nunca sabado ni domingo.
+        var guardadas = org.mockito.ArgumentCaptor.forClass(SesionEntrenamiento.class);
+        verify(sesionRepository, times(6)).save(guardadas.capture());
+        assertThat(guardadas.getAllValues())
+                .allSatisfy(s -> assertThat(s.getFecha().getDayOfWeek().getValue()).isBetween(1, 5));
+    }
+
+    @Test
+    @DisplayName("nunca se programan fechas pasadas: el horario dice lo que viene, no reconstruye lo que ya paso")
+    void generarSesionesProgramadas_no_crea_fechas_pasadas() {
+        ReflectionTestUtils.setField(service, "diasProgramados", 7);
+
+        var yo = entrenador(1L);
+        var categoria = Categoria.builder().idCategoria(5L).nombre("SUB-12").build();
+        for (short dia = 1; dia <= 7; dia++) {
+            var horario = Horario.builder().idHorario((long) dia).entrenador(yo).categoria(categoria)
+                    .diaSemana(dia).horaInicio(LocalTime.of(16, 0)).horaFin(LocalTime.of(18, 0)).build();
+            when(horarioRepository.findByActivoTrueAndDiaSemana(dia)).thenReturn(List.of(horario));
+        }
+        when(sesionRepository.existsByHorario_IdHorarioAndFecha(any(), any())).thenReturn(false);
+
+        service.generarSesionesProgramadas();
+
+        var guardadas = org.mockito.ArgumentCaptor.forClass(SesionEntrenamiento.class);
+        verify(sesionRepository, times(8)).save(guardadas.capture());
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        assertThat(guardadas.getAllValues())
+                .allSatisfy(s -> assertThat(s.getFecha()).isAfterOrEqualTo(hoy));
     }
 }

@@ -22,7 +22,7 @@ public interface SesionEntrenamientoRepository extends JpaRepository<SesionEntre
     List<SesionEntrenamiento> findByCategoriaIdCategoriaAndFechaLessThanOrderByFechaDesc(
             Long idCategoria, LocalDate fecha, Pageable pageable);
 
-    /** Idempotencia de HorarioService.generarSesionesDeHoy(): no duplicar la sesion de un horario ya generada hoy. */
+    /** Idempotencia de HorarioService.generarSesionesProgramadas(): no duplicar la sesion de un horario ya generada hoy. */
     boolean existsByHorario_IdHorarioAndFecha(Long idHorario, LocalDate fecha);
 
     /**

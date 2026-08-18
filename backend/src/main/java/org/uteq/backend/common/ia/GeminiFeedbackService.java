@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
@@ -56,16 +57,19 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     private final String apiKey;
     private final String modelo;
     private final boolean habilitado;
+    private final int reintentos;
 
     public GeminiFeedbackService(
             @Value("${ia.gemini.api-key:}") String apiKey,
             @Value("${ia.gemini.modelo:gemini-2.0-flash}") String modelo,
             @Value("${ia.gemini.habilitado:false}") boolean habilitado,
-            @Value("${ia.gemini.timeout-segundos:8}") int timeoutSegundos) {
+            @Value("${ia.gemini.timeout-segundos:8}") int timeoutSegundos,
+            @Value("${ia.gemini.reintentos:2}") int reintentos) {
 
         this.apiKey = apiKey;
         this.modelo = modelo;
         this.habilitado = habilitado && apiKey != null && !apiKey.isBlank();
+        this.reintentos = Math.max(0, reintentos);
 
         var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();
         // Timeouts cortos a proposito: el entrenador califica desde el celular
@@ -166,43 +170,85 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     // Invocacion
     // ------------------------------------------------------------------
 
+    /**
+     * Reintenta ante fallos transitorios del proveedor. El nivel gratuito de
+     * Gemini devuelve 503 UNAVAILABLE de forma intermitente: midiendo 5
+     * llamadas seguidas con el mismo prompt respondieron 2 (los fallos
+     * fueron 503, no errores de la peticion). Con dos reintentos la
+     * probabilidad de quedarse sin comentario baja de ~60% a ~22% sin tocar
+     * el resto del sistema.
+     *
+     * <p>No se reintenta ante un 4xx -clave invalida, cuota agotada, cuerpo
+     * mal formado-: ahi el problema es nuestro y repetir solo suma demora.
+     */
     private ResultadoFeedback invocar(String prompt) {
-        try {
-            var cuerpo = Map.of(
-                    "systemInstruction", Map.of(
-                            "parts", List.of(Map.of("text", INSTRUCCION_SISTEMA))),
-                    "contents", List.of(Map.of(
-                            "parts", List.of(Map.of("text", prompt)))),
-                    "generationConfig", Map.of(
-                            "temperature", 0.4,
-                            // Los modelos "-latest" actuales razonan antes de responder y ese
-                            // pensamiento interno tambien consume maxOutputTokens (~600-700
-                            // tokens tipicos vistos en pruebas reales); con un limite bajo la
-                            // respuesta visible quedaba cortada a mitad de frase.
-                            "maxOutputTokens", 2048));
+        Exception ultimoFallo = null;
 
-            JsonNode respuesta = restClient.post()
-                    .uri("/models/{modelo}:generateContent", modelo)
-                    .header("x-goog-api-key", apiKey)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(cuerpo)
-                    .retrieve()
-                    .body(JsonNode.class);
+        for (int intento = 0; intento <= reintentos; intento++) {
+            try {
+                return intentarUnaVez(prompt);
 
-            String texto = extraerTexto(respuesta);
-            if (texto == null || texto.isBlank()) {
-                // Ocurre cuando el filtro de seguridad del proveedor bloquea la
-                // respuesta: hay 200 OK pero sin contenido utilizable.
-                log.warn("Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)");
-                return ResultadoFeedback.noDisponible("El modelo no devolvio texto");
+            } catch (HttpClientErrorException e) {
+                // 4xx: no tiene sentido repetir.
+                log.warn("Gemini rechazo la peticion: {}", e.getStatusCode());
+                return ResultadoFeedback.noDisponible("El servicio de generacion no respondio");
+
+            } catch (Exception e) {
+                ultimoFallo = e;
+                // Se registra el tipo de fallo, nunca el prompt: aunque va
+                // seudonimizado, no hay razon para duplicarlo en los logs.
+                log.warn("Fallo transitorio de Gemini (intento {} de {}): {}",
+                        intento + 1, reintentos + 1, e.getClass().getSimpleName());
+                if (intento < reintentos) {
+                    esperarAntesDeReintentar(intento);
+                }
             }
-            return ResultadoFeedback.ok(texto.trim());
+        }
 
-        } catch (Exception e) {
-            // Se registra el tipo de fallo, nunca el prompt: aunque va
-            // seudonimizado, no hay razon para duplicarlo en los logs.
-            log.warn("No se pudo generar feedback con IA: {}", e.getClass().getSimpleName());
-            return ResultadoFeedback.noDisponible("El servicio de generacion no respondio");
+        log.warn("No se pudo generar feedback con IA tras {} intento(s): {}",
+                reintentos + 1, ultimoFallo == null ? "sin detalle" : ultimoFallo.getClass().getSimpleName());
+        return ResultadoFeedback.noDisponible("El servicio de generacion no respondio");
+    }
+
+    private ResultadoFeedback intentarUnaVez(String prompt) {
+        var cuerpo = Map.of(
+                "systemInstruction", Map.of(
+                        "parts", List.of(Map.of("text", INSTRUCCION_SISTEMA))),
+                "contents", List.of(Map.of(
+                        "parts", List.of(Map.of("text", prompt)))),
+                "generationConfig", Map.of(
+                        "temperature", 0.4,
+                        // Los modelos "-latest" actuales razonan antes de responder y ese
+                        // pensamiento interno tambien consume maxOutputTokens (~600-700
+                        // tokens tipicos vistos en pruebas reales); con un limite bajo la
+                        // respuesta visible quedaba cortada a mitad de frase.
+                        "maxOutputTokens", 2048));
+
+        JsonNode respuesta = restClient.post()
+                .uri("/models/{modelo}:generateContent", modelo)
+                .header("x-goog-api-key", apiKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(cuerpo)
+                .retrieve()
+                .body(JsonNode.class);
+
+        String texto = extraerTexto(respuesta);
+        if (texto == null || texto.isBlank()) {
+            // Ocurre cuando el filtro de seguridad del proveedor bloquea la
+            // respuesta: hay 200 OK pero sin contenido utilizable. No es
+            // transitorio, asi que no se reintenta.
+            log.warn("Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)");
+            return ResultadoFeedback.noDisponible("El modelo no devolvio texto");
+        }
+        return ResultadoFeedback.ok(texto.trim());
+    }
+
+    /** Espera creciente y corta (0,4s y 0,8s): el entrenador esta mirando la pantalla. */
+    private void esperarAntesDeReintentar(int intento) {
+        try {
+            Thread.sleep(400L * (intento + 1));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

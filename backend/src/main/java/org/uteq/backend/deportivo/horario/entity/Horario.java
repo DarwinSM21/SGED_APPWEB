@@ -14,7 +14,7 @@ import java.time.LocalTime;
  * Horario fijo semanal de un entrenador: "SUB-12 entrena Lunes y Miercoles,
  * 16:00-18:00". De aqui se generan automaticamente las filas concretas de
  * sesiones_entrenamiento el dia que corresponde (ver
- * HorarioService.generarSesionesDeHoy()); esa sesion generada queda
+ * HorarioService.generarSesionesProgramadas()); esa sesion generada queda
  * enlazada de vuelta via SesionEntrenamiento.horario.
  */
 @Entity

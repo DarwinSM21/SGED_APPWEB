@@ -17,7 +17,7 @@ import java.util.List;
  * Horario fijo semanal del entrenador. Distinto de /api/sesiones: aqui se
  * define el patron recurrente ("SUB-12, Lunes y Miercoles, 16:00-18:00");
  * las filas concretas de sesiones_entrenamiento se generan solas cada dia
- * que corresponde (HorarioService.generarSesionesDeHoy(), llamado desde
+ * que corresponde (HorarioService.generarSesionesProgramadas(), llamado desde
  * SesionEntrenamientoController.hoy()/mias()). Una jornada que no esta en
  * el horario fijo se sigue creando a mano con POST /api/sesiones.
  */

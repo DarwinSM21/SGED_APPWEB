@@ -141,7 +141,7 @@ class SesionEntrenamientoServiceTest {
 
         sesionService.sesionesDeHoy("admin@sged.test", true);
 
-        verify(horarioService).generarSesionesDeHoy();
+        verify(horarioService).generarSesionesProgramadas();
     }
 
     @Test

@@ -34,7 +34,7 @@ public class SesionEntrenamiento {
     /**
      * Horario fijo que origino esta sesion (null si es una jornada extra
      * creada a mano, fuera del patron recurrente). Ver
-     * HorarioService.generarSesionesDeHoy().
+     * HorarioService.generarSesionesProgramadas().
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_horario")

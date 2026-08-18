@@ -24,8 +24,9 @@ class GeminiFeedbackServiceTest {
             Map.of("Tecnica", 6.8),
             12, false);
 
+    /** Sin reintentos: estas pruebas comprueban la degradacion, no la insistencia. */
     private GeminiFeedbackService servicio(String apiKey, boolean habilitado) {
-        return new GeminiFeedbackService(apiKey, "gemini-2.0-flash", habilitado, 8);
+        return new GeminiFeedbackService(apiKey, "gemini-2.0-flash", habilitado, 8, 0);
     }
 
     @Test
@@ -77,6 +78,22 @@ class GeminiFeedbackServiceTest {
         var r = assertDoesNotThrow(() -> s.generarComentarioJugador(PERFIL));
 
         assertFalse(r.disponible());
+        assertNotNull(r.motivo());
+    }
+
+    @Test
+    @DisplayName("Con reintentos configurados sigue degradando limpio, sin lanzar ni colgarse")
+    void conReintentosTambienDegrada() {
+        // El nivel gratuito de Gemini devuelve 503 de forma intermitente, por
+        // eso hay reintentos. Lo que no puede pasar es que la insistencia
+        // cambie el contrato: si al final no hay texto, se responde "no
+        // disponible" igual que sin reintentos.
+        var s = new GeminiFeedbackService("clave-invalida-de-prueba", "gemini-2.0-flash", true, 2, 2);
+
+        var r = assertDoesNotThrow(() -> s.generarComentarioJugador(PERFIL));
+
+        assertFalse(r.disponible());
+        assertNull(r.texto());
         assertNotNull(r.motivo());
     }
 

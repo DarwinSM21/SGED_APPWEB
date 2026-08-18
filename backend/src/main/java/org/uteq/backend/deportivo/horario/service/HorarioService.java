@@ -1,6 +1,7 @@
 package org.uteq.backend.deportivo.horario.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.Zonas;
@@ -27,6 +28,13 @@ public class HorarioService {
     private final EntrenadorRepository entrenadorRepository;
     private final CategoriaRepository categoriaRepository;
     private final SesionEntrenamientoRepository sesionRepository;
+
+    /**
+     * Cuantos dias hacia adelante se programan de una vez. Con 7 basta una
+     * sola apertura de la pantalla para dejar cubierta la semana completa.
+     */
+    @Value("${sesiones.dias-programados:7}")
+    private int diasProgramados;
 
     @Transactional
     public HorarioResponse crear(String username, HorarioRequest request) {
@@ -75,30 +83,46 @@ public class HorarioService {
     }
 
     /**
-     * Genera hoy las sesiones que falten a partir de los horarios fijos
-     * activos que caen en el dia de hoy. Idempotente a proposito: se llama
-     * en cada GET /api/sesiones/hoy y /mias (ver SesionEntrenamientoController),
-     * y si la sesion de ese horario ya existe para hoy no crea una segunda.
+     * Materializa las sesiones que faltan a partir de los horarios fijos
+     * activos, desde hoy y hasta {@code sesiones.dias-programados} dias
+     * hacia adelante. Idempotente a proposito: se llama en cada
+     * GET /api/sesiones/hoy y /mias (ver SesionEntrenamientoController), y
+     * si la sesion de ese horario ya existe para esa fecha no crea otra.
+     *
+     * <p>Antes solo generaba la del dia en curso, y solo si alguien abria la
+     * pantalla ese dia: con el sistema apagado de lunes a jueves, al abrirlo
+     * el viernes esos cuatro dias no existian y el entrenador no tenia donde
+     * registrar nada. Programar una ventana hacia adelante hace que una sola
+     * apertura deje cubierta la semana entera.
+     *
+     * <p>Deliberadamente no se generan fechas pasadas: una sesion creada
+     * despues de su dia, sin asistencia ni evaluacion, se leeria como un
+     * entrenamiento al que no fue nadie. El horario dice lo que va a pasar,
+     * no reconstruye lo que ya paso.
      */
     @Transactional
-    public void generarSesionesDeHoy() {
+    public void generarSesionesProgramadas() {
         LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
-        short diaSemana = (short) hoy.getDayOfWeek().getValue();
 
-        for (Horario horario : horarioRepository.findByActivoTrueAndDiaSemana(diaSemana)) {
-            if (sesionRepository.existsByHorario_IdHorarioAndFecha(horario.getIdHorario(), hoy)) {
-                continue;
+        for (int desplazamiento = 0; desplazamiento <= Math.max(0, diasProgramados); desplazamiento++) {
+            LocalDate fecha = hoy.plusDays(desplazamiento);
+            short diaSemana = (short) fecha.getDayOfWeek().getValue();
+
+            for (Horario horario : horarioRepository.findByActivoTrueAndDiaSemana(diaSemana)) {
+                if (sesionRepository.existsByHorario_IdHorarioAndFecha(horario.getIdHorario(), fecha)) {
+                    continue;
+                }
+                sesionRepository.save(SesionEntrenamiento.builder()
+                        .horario(horario)
+                        .entrenador(horario.getEntrenador())
+                        .categoria(horario.getCategoria())
+                        .fecha(fecha)
+                        .horaInicio(horario.getHoraInicio())
+                        .horaFin(horario.getHoraFin())
+                        .campo(horario.getCampo())
+                        .estado("PROGRAMADA")
+                        .build());
             }
-            sesionRepository.save(SesionEntrenamiento.builder()
-                    .horario(horario)
-                    .entrenador(horario.getEntrenador())
-                    .categoria(horario.getCategoria())
-                    .fecha(hoy)
-                    .horaInicio(horario.getHoraInicio())
-                    .horaFin(horario.getHoraFin())
-                    .campo(horario.getCampo())
-                    .estado("PROGRAMADA")
-                    .build());
         }
     }
 

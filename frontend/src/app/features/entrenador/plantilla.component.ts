@@ -304,9 +304,20 @@ export class PlantillaComponent implements OnInit {
    * finalizarArrastre), no como arrastre.
    */
   iniciarArrastre(event: PointerEvent, t: Token): void {
-    (event.currentTarget as SVGGraphicsElement).setPointerCapture(event.pointerId);
     this.arrastreActual = { idEstudiante: t.jugador.idEstudiante, inicioX: event.clientX, inicioY: event.clientY, movio: false };
     this.idArrastrando.set(t.jugador.idEstudiante);
+
+    // La captura va despues de fijar el estado y entre try/catch a
+    // proposito: es una mejora -mantiene los eventos llegando aunque el
+    // puntero se salga del token-, no un requisito. Si se hiciera primero
+    // y fallara, el arrastre quedaria muerto sin haber registrado nada.
+    try {
+      (event.currentTarget as SVGGraphicsElement).setPointerCapture(event.pointerId);
+    } catch {
+      // Sin captura el arrastre sigue funcionando mientras el puntero no
+      // abandone el token; no hay nada que reportar al usuario.
+    }
+
     event.preventDefault();
   }
 
