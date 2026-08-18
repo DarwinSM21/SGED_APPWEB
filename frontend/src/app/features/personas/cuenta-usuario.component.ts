@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { RolUsuario, ROLES_USUARIO, UsuarioResponse } from './personas.models';
+import { mensajeDeError } from '../../core/mensaje-error';
 
 /**
  * Seccion "Cuenta de usuario" del panel de detalle: crear, editar y
@@ -141,6 +142,6 @@ export class CuentaUsuarioComponent {
 
   private manejarError(err: any): void {
     this.guardando.set(false);
-    this.error.set(err?.error?.detail ?? 'Error del servidor');
+    this.error.set(mensajeDeError(err));
   }
 }

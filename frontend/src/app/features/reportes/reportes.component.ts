@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { descargarBlob } from '../../core/descargar-archivo';
+import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 import { ReportesService } from './reportes.service';
 import { CategoriaOpcionReporte, EstudianteOpcionReporte, FiltrosReporte } from './reportes.models';
 
@@ -185,15 +186,23 @@ export class ReportesComponent implements OnInit {
     });
   }
 
+  /**
+   * Estos endpoints responden un PDF, asi que el cuerpo de error tambien
+   * llega como Blob y hay que leerlo antes de poder interpretarlo. Una vez
+   * parseado se reenvuelve en la forma { error } que espera el traductor
+   * comun, para no repetir aca la logica de detail/errores.
+   */
   private async mensajeDeError(err: any): Promise<string> {
+    const porDefecto = 'No se pudo generar el reporte';
+
     if (err?.error instanceof Blob) {
       try {
         const texto = await err.error.text();
-        return JSON.parse(texto)?.detail ?? 'No se pudo generar el reporte';
+        return traducirError({ error: JSON.parse(texto) }, porDefecto);
       } catch {
-        return 'No se pudo generar el reporte';
+        return porDefecto;
       }
     }
-    return err?.error?.detail ?? 'No se pudo generar el reporte';
+    return traducirError(err, porDefecto);
   }
 }

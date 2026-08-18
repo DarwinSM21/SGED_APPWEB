@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { SesionesService } from './sesiones.service';
 import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models';
 import { horaCorta, inicialesDe } from './plantilla.models';
+import { mensajeDeError } from '../../core/mensaje-error';
 
 /** Fecha local de hoy en formato "yyyy-MM-dd", la que espera un <input type="date">. */
 function fechaHoyIso(): string {
@@ -314,7 +315,7 @@ export class SesionesComponent implements OnInit {
       },
       error: (err) => {
         this.guardando.set(false);
-        this.error.set(err?.error?.detail ?? 'No se pudo crear la sesión.');
+        this.error.set(mensajeDeError(err, 'No se pudo crear la sesión.'));
       },
     });
   }
@@ -378,7 +379,7 @@ export class SesionesComponent implements OnInit {
       },
       error: (err) => {
         this.guardandoHorario.set(false);
-        this.errorHorario.set(err?.error?.detail ?? 'No se pudo guardar el horario.');
+        this.errorHorario.set(mensajeDeError(err, 'No se pudo guardar el horario.'));
       },
     });
   }

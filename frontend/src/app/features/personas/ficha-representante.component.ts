@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasService } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
+import { mensajeDeError } from '../../core/mensaje-error';
 
 /**
  * Seccion "Representante" del panel de detalle. Uno de los componentes en
@@ -66,7 +67,7 @@ export class FichaRepresentanteComponent {
       idsEstudiantesIniciales: [],
     }).subscribe({
       next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
-      error: (err) => { this.guardando.set(false); this.error.set(err?.error?.detail ?? 'Error del servidor'); },
+      error: (err) => { this.guardando.set(false); this.error.set(mensajeDeError(err)); },
     });
   }
 }

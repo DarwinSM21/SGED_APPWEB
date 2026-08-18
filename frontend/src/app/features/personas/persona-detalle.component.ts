@@ -8,6 +8,7 @@ import { CuentaUsuarioComponent } from './cuenta-usuario.component';
 import { FichaEstudianteComponent } from './ficha-estudiante.component';
 import { FichaEntrenadorComponent } from './ficha-entrenador.component';
 import { FichaRepresentanteComponent } from './ficha-representante.component';
+import { mensajeDeError } from '../../core/mensaje-error';
 
 type FormularioPersona = {
   nombre: string; apellido: string; cedula: string; correo: string; telefono: string; fechaNacimiento: string;
@@ -130,16 +131,8 @@ export class PersonaDetalleComponent {
     });
   }
 
-  private manejarError(err: any): void {
+  private manejarError(err: unknown): void {
     this.guardandoPersona.set(false);
-    // El backend manda el detalle por campo en err.error.errores (ej.
-    // "cedula: must match \"\d{10}\""), no solo el "detail" generico
-    // ("Errores de validacion"). Se muestran ambos si estan disponibles.
-    const detalles: string[] | undefined = err?.error?.errores;
-    if (detalles?.length) {
-      this.errorPersona.set(detalles.join(' · '));
-    } else {
-      this.errorPersona.set(err?.error?.detail ?? 'Error del servidor');
-    }
+    this.errorPersona.set(mensajeDeError(err));
   }
 }

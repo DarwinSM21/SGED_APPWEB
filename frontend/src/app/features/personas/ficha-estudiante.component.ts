@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
+import { mensajeDeError } from '../../core/mensaje-error';
 
 /**
  * Seccion "Ficha de estudiante" del panel de detalle: alta de la ficha y
@@ -167,7 +168,7 @@ export class FichaEstudianteComponent {
       peso: null, altura: null, idPosicion: this.formEstudiante.idPosicion,
     }).subscribe({
       next: () => { this.guardandoEstudiante.set(false); this.state.cargarPersonas(true); },
-      error: (err) => { this.guardandoEstudiante.set(false); this.errorEstudiante.set(err?.error?.detail ?? 'Error del servidor'); },
+      error: (err) => { this.guardandoEstudiante.set(false); this.errorEstudiante.set(mensajeDeError(err)); },
     });
   }
 
@@ -185,14 +186,14 @@ export class FichaEstudianteComponent {
         this.formVinculo = { idRepresentante: null, relacion: '', contactoPrincipal: false };
         this.state.cargarPersonas(true);
       },
-      error: (err) => { this.guardandoVinculo.set(false); this.errorVinculo.set(err?.error?.detail ?? 'Error del servidor'); },
+      error: (err) => { this.guardandoVinculo.set(false); this.errorVinculo.set(mensajeDeError(err)); },
     });
   }
 
   desvincularRepresentante(idRepresentante: number, idEstudiante: number): void {
     this.servicio.desvincularEstudianteDeRepresentante(idRepresentante, idEstudiante).subscribe({
       next: () => this.state.cargarPersonas(true),
-      error: (err) => this.errorVinculo.set(err?.error?.detail ?? 'Error del servidor'),
+      error: (err) => this.errorVinculo.set(mensajeDeError(err)),
     });
   }
 }

@@ -5,6 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EvaluacionService } from './evaluacion.service';
 import { EvaluacionSesion, JugadorEvaluable } from './evaluacion.models';
 import { inicialesDe } from './plantilla.models';
+import { mensajeDeError } from '../../core/mensaje-error';
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
@@ -406,7 +407,7 @@ export class EvaluacionDiariaComponent implements OnInit {
       },
       error: (err) => {
         this.guardandoLesion.set(false);
-        this.errorLesion.set(err?.error?.detail ?? 'No se pudo registrar la lesión.');
+        this.errorLesion.set(mensajeDeError(err, 'No se pudo registrar la lesión.'));
       },
     });
   }
@@ -424,7 +425,7 @@ export class EvaluacionDiariaComponent implements OnInit {
       },
       error: (err) => {
         this.dandoDeAlta.set(null);
-        this.errorLesion.set(err?.error?.detail ?? 'No se pudo dar de alta la lesión.');
+        this.errorLesion.set(mensajeDeError(err, 'No se pudo dar de alta la lesión.'));
       },
     });
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PagosService } from './pagos.service';
 import { EstudianteOpcionPago, IngresosMes, PagoResponse } from './pagos.models';
+import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 
 const NOMBRES_MES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -428,7 +429,7 @@ export class PagosComponent implements OnInit {
     });
   }
 
-  private mensajeDeError(err: any): string {
-    return err?.error?.detail ?? 'Error del servidor';
+  private mensajeDeError(err: unknown): string {
+    return traducirError(err);
   }
 }

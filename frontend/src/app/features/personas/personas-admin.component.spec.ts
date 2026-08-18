@@ -38,6 +38,7 @@ describe('PersonasAdminComponent', () => {
       listarRepresentantes: () => of({ content: [] as RepresentanteResponse[] }),
       categoriasActivas: () => of([]),
       especialidadesActivas: () => of([]),
+      posicionesActivas: () => of([]),
     };
 
     await TestBed.configureTestingModule({

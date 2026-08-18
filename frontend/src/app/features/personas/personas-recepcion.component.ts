@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { CategoriaOpcion, EstudianteResponse } from './personas.models';
+import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 
 /**
  * Vista de RECEPCIONISTA: alta rapida de Persona+Estudiante (igual que
@@ -342,12 +343,16 @@ export class PersonasRecepcionComponent implements OnInit {
     this.error.set(this.mensajeDeError(err));
   }
 
+  /**
+   * Los mensajes por codigo de estado son el ultimo recurso: solo aplican
+   * si el backend no mando ni el detalle por campo ni un detail propio.
+   */
   private mensajeDeError(err: any): string {
-    const detalle = err?.error?.detail;
-    if (detalle) return detalle;
-    if (err?.status === 422) return 'Revisa los datos: hay campos con formato inválido';
-    if (err?.status === 409) return 'Ya existe un registro con esos datos';
-    return 'Error del servidor';
+    const porDefecto = err?.status === 422 ? 'Revisa los datos: hay campos con formato inválido'
+      : err?.status === 409 ? 'Ya existe un registro con esos datos'
+      : 'Error del servidor';
+
+    return traducirError(err, porDefecto);
   }
 
   private finalizarConExito(mensaje: string): void {

@@ -7,6 +7,7 @@ import {
   ArticuloResponse, AsignacionResponse, EstadoAsignacion, MovimientoResponse,
   PersonaOpcion, TipoArticulo, TipoDestinatario, TipoMovimiento,
 } from './inventario.models';
+import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 
 type Tab = 'articulos' | 'movimientos' | 'asignaciones';
 
@@ -464,7 +465,7 @@ export class InventarioComponent implements OnInit {
       art.idArticulo === idArticulo ? { ...art, stockActual: art.stockActual + delta } : art));
   }
 
-  private mensajeDeError(err: any): string {
-    return err?.error?.detail ?? 'Error del servidor';
+  private mensajeDeError(err: unknown): string {
+    return traducirError(err);
   }
 }
