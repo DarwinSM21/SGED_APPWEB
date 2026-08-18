@@ -48,3 +48,22 @@ export interface SesionHoy {
   estado: string;
   tieneEvaluacion: boolean;
 }
+
+export interface DiaAsistencia {
+  /** ISO "YYYY-MM-DD". Se guarda como texto y se parsea a mano: `new Date(iso)`
+   *  lo interpreta como UTC y en Ecuador (-05) devuelve el día anterior. */
+  fecha: string;
+  presentes: number;
+  esperados: number;
+  porcentaje: number;
+}
+
+export interface MapaAsistencia {
+  desde: string;
+  hasta: string;
+  /** Solo los días que tuvieron entrenamiento; los demás no son cero, no existen. */
+  dias: DiaAsistencia[];
+  promedio: number;
+  mejorDia: DiaAsistencia | null;
+  peorDia: DiaAsistencia | null;
+}

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MiHistorialService } from './mi-historial.service';
 import { MiHistorial } from './mi-historial.models';
+import { horaCorta } from '../entrenador/plantilla.models';
 
 /**
  * Historial propio del ESTUDIANTE autenticado: antes solo podia marcar
@@ -45,7 +46,7 @@ import { MiHistorial } from './mi-historial.models';
                 </span>
                 <div class="fila__info">
                   <span class="fila__categoria">{{ a.categoria }}</span>
-                  <span class="fila__fecha">{{ a.fecha }}{{ a.horaEntrada ? ' · ' + a.horaEntrada : '' }}</span>
+                  <span class="fila__fecha">{{ a.fecha }}{{ a.horaEntrada ? ' · ' + horaCorta(a.horaEntrada) : '' }}</span>
                 </div>
                 <span class="badge" [class.badge--success]="a.estado === 'PRESENTE'" [class.badge--warning]="a.estado === 'TARDE'">
                   {{ a.estado === 'PRESENTE' ? 'Presente' : 'Tarde' }}
@@ -85,6 +86,8 @@ import { MiHistorial } from './mi-historial.models';
   `]
 })
 export class MiHistorialComponent implements OnInit {
+  readonly horaCorta = horaCorta;
+
   private readonly servicio = inject(MiHistorialService);
 
   readonly historial = signal<MiHistorial | null>(null);

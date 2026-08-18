@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { inicialesDe } from '../features/entrenador/plantilla.models';
+import { relojEn12 } from '../core/formato-fecha';
 
 type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago' | 'inventario'
   | 'auditoria' | 'reporte' | 'configuracion';
@@ -276,7 +277,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
 
   readonly primerNombre = computed(() => this.usuario()?.nombre?.split(' ')[0] ?? '');
   readonly horaActual = computed(() =>
-    this.ahora().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }));
+    relojEn12(this.ahora()));
   readonly fechaHoy = computed(() =>
     this.ahora().toLocaleDateString('es-EC', { weekday: 'long', day: 'numeric', month: 'long' }));
   readonly saludo = computed(() => {

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuditoriaResponse, AuditoriaService, FiltrosAuditoria } from './auditoria.service';
+import { fechaHoraCorta } from '../../core/formato-fecha';
 
 const ACCIONES = ['CREAR', 'EDITAR', 'ELIMINAR', 'LOGIN', 'LOGIN_FALLIDO', 'LOGOUT'];
 const TAMANO_PAGINA = 20;
@@ -74,7 +75,7 @@ const TAMANO_PAGINA = 20;
             </div>
             @for (a of filas(); track a.id) {
               <div class="fila">
-                <span class="fecha">{{ a.fecha | date: 'dd/MM/yyyy HH:mm' }}</span>
+                <span class="fecha">{{ fechaHora(a.fecha) }}</span>
                 <span>{{ a.usuario }}</span>
                 <span>{{ a.rol ?? '-' }}</span>
                 <span class="badge" [class.badge--success]="a.accion === 'CREAR'" [class.badge--info]="a.accion === 'EDITAR'"
@@ -129,6 +130,10 @@ const TAMANO_PAGINA = 20;
   `],
 })
 export class AuditoriasComponent implements OnInit {
+
+  /** 12 horas con AM/PM, igual que el resto de la app. */
+  readonly fechaHora = fechaHoraCorta;
+
   private readonly servicio = inject(AuditoriaService);
 
   readonly acciones = ACCIONES;

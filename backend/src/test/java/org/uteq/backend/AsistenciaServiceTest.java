@@ -3,6 +3,7 @@ package org.uteq.backend;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -253,5 +255,69 @@ class AsistenciaServiceTest {
         assertThat(respuesta.asistencias().get(0).categoria()).isEqualTo("SUB-12");
         assertThat(respuesta.asistencias().get(0).estado()).isEqualTo(Asistencia.ESTADO_PRESENTE);
         assertThat(respuesta.porcentajeUltimos30Dias()).isEqualByComparingTo("80.00");
+    }
+
+    // --- mapa de asistencia (tablero) ---
+
+    /** Fila cruda como la devuelve la consulta: fecha, presentes, esperados. */
+    private Object[] fila(LocalDate fecha, long presentes, long esperados) {
+        return new Object[]{fecha, presentes, esperados};
+    }
+
+    @Test
+    void mapaSumaLasCategoriasQueEntrenaronElMismoDia() {
+        LocalDate dia = LocalDate.now(Zonas.ECUADOR).minusDays(3);
+        when(sesionRepository.resumenAsistenciaPorDia(any(), any()))
+                .thenReturn(List.of(fila(dia, 8, 10), fila(dia, 6, 10)));
+
+        var mapa = asistenciaService.mapaDeAsistencia(30);
+
+        assertThat(mapa.dias()).hasSize(1);
+        assertThat(mapa.dias().get(0).presentes()).isEqualTo(14);
+        assertThat(mapa.dias().get(0).esperados()).isEqualTo(20);
+        assertThat(mapa.dias().get(0).porcentaje()).isEqualByComparingTo("70.00");
+    }
+
+    @Test
+    void mapaNoLlegaHastaHoyPorqueLaSesionDeHoyPuedeNoHaberOcurrido() {
+        when(sesionRepository.resumenAsistenciaPorDia(any(), any())).thenReturn(List.of());
+
+        asistenciaService.mapaDeAsistencia(30);
+
+        ArgumentCaptor<LocalDate> desde = ArgumentCaptor.forClass(LocalDate.class);
+        ArgumentCaptor<LocalDate> hasta = ArgumentCaptor.forClass(LocalDate.class);
+        verify(sesionRepository).resumenAsistenciaPorDia(desde.capture(), hasta.capture());
+
+        LocalDate ayer = LocalDate.now(Zonas.ECUADOR).minusDays(1);
+        assertThat(hasta.getValue()).isEqualTo(ayer);
+        assertThat(desde.getValue()).isEqualTo(ayer.minusDays(29));
+    }
+
+    @Test
+    void mapaPromediaSoloSobreLosDiasQueTuvieronEntrenamiento() {
+        LocalDate base = LocalDate.now(Zonas.ECUADOR).minusDays(5);
+        when(sesionRepository.resumenAsistenciaPorDia(any(), any())).thenReturn(List.of(
+                fila(base, 10, 10),          // 100%
+                fila(base.plusDays(1), 6, 10) // 60%
+        ));
+
+        var mapa = asistenciaService.mapaDeAsistencia(30);
+
+        // 80 y no 80/30: los dias sin entrenamiento no diluyen el promedio.
+        assertThat(mapa.promedio()).isEqualByComparingTo("80.00");
+        assertThat(mapa.mejorDia().porcentaje()).isEqualByComparingTo("100.00");
+        assertThat(mapa.peorDia().porcentaje()).isEqualByComparingTo("60.00");
+    }
+
+    @Test
+    void mapaSinDatosNoRompeNiInventaExtremos() {
+        when(sesionRepository.resumenAsistenciaPorDia(any(), any())).thenReturn(List.of());
+
+        var mapa = asistenciaService.mapaDeAsistencia(30);
+
+        assertThat(mapa.dias()).isEmpty();
+        assertThat(mapa.promedio()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(mapa.mejorDia()).isNull();
+        assertThat(mapa.peorDia()).isNull();
     }
 }

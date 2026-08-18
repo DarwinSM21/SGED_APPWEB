@@ -21,4 +21,27 @@ public final class AsistenciaDtos {
             List<AsistenciaResponse> asistencias,
             BigDecimal porcentajeUltimos30Dias
     ) {}
+
+    /**
+     * Un dia del mapa de calor. {@code esperados} es la cantidad de
+     * estudiantes activos de las categorias que entrenaron ese dia; sin ese
+     * denominador, 12 presentes no dice nada -puede ser excelente o
+     * pesimo segun cuantos debian venir-.
+     */
+    public record DiaAsistenciaResponse(
+            LocalDate fecha,
+            long presentes,
+            long esperados,
+            BigDecimal porcentaje
+    ) {}
+
+    public record MapaAsistenciaResponse(
+            LocalDate desde,
+            LocalDate hasta,
+            List<DiaAsistenciaResponse> dias,
+            /** Promedio sobre los dias que tuvieron entrenamiento, no sobre el calendario. */
+            BigDecimal promedio,
+            DiaAsistenciaResponse mejorDia,
+            DiaAsistenciaResponse peorDia
+    ) {}
 }

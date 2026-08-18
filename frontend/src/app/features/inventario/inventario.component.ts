@@ -8,6 +8,7 @@ import {
   PersonaOpcion, TipoArticulo, TipoDestinatario, TipoMovimiento,
 } from './inventario.models';
 import { mensajeDeError as traducirError } from '../../core/mensaje-error';
+import { fechaHoraCorta } from '../../core/formato-fecha';
 
 type Tab = 'articulos' | 'movimientos' | 'asignaciones';
 
@@ -170,7 +171,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
                 </span>
                 <span class="nombre-articulo">{{ m.articulo }}</span>
                 <span class="cantidad-movimiento">{{ m.cantidad }}</span>
-                <span class="meta-movimiento">{{ m.registradoPor }} · {{ m.fechaMovimiento | date: 'short' }}</span>
+                <span class="meta-movimiento">{{ m.registradoPor }} · {{ fechaHora(m.fechaMovimiento) }}</span>
               </div>
             }
           }
@@ -287,6 +288,10 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
   `],
 })
 export class InventarioComponent implements OnInit {
+
+  /** 12 horas con AM/PM, igual que el resto de la app. */
+  readonly fechaHora = fechaHoraCorta;
+
 
   private readonly auth = inject(AuthService);
   private readonly servicio = inject(InventarioService);

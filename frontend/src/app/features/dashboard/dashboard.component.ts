@@ -4,9 +4,10 @@ import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { homeRouteForRole } from '../../auth/home-route';
-import { HistoricoIngresos, PanelAlertas, SesionHoy } from './dashboard.models';
+import { HistoricoIngresos, MapaAsistencia, PanelAlertas, SesionHoy } from './dashboard.models';
 import { horaCorta, inicialesDe } from '../entrenador/plantilla.models';
 import { GraficosIngresosComponent } from './graficos.component';
+import { MapaAsistenciaComponent } from './mapa-asistencia.component';
 
 /** Forma minima de una pagina de Spring Data que interesa aqui. */
 interface PaginaLigera {
@@ -53,7 +54,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, GraficosIngresosComponent],
+  imports: [CommonModule, RouterLink, GraficosIngresosComponent, MapaAsistenciaComponent],
   template: `
     <div class="contenido">
       @if (esOperativo()) {
@@ -138,6 +139,10 @@ const NOMBRES_MES = [
             [datos]="historico()!"
             [estudiantesActivos]="a.estudiantesActivos"
             [pendientes]="a.conMensualidadPendiente" />
+        }
+
+        @if (esOperativo() && mapa(); as m) {
+          <app-mapa-asistencia [datos]="m" />
         }
 
         @if (esAdministrador() && alertas(); as a) {
@@ -363,6 +368,7 @@ export class DashboardComponent implements OnInit {
   /** Null mientras carga o si la peticion fallo: la seccion no se dibuja. */
   readonly alertas = signal<PanelAlertas | null>(null);
   readonly historico = signal<HistoricoIngresos | null>(null);
+  readonly mapa = signal<MapaAsistencia | null>(null);
 
   /** ADMINISTRADOR y ENTRENADOR tienen acceso operativo; USER solo consulta. */
   readonly esOperativo = computed(() => {
@@ -396,6 +402,7 @@ export class DashboardComponent implements OnInit {
         if (this.esOperativo()) {
           this.cargarSesionesDeHoy();
           this.cargarConteoDeLesiones();
+          this.cargarMapaDeAsistencia();
           if (this.esAdministrador()) {
             this.cargarConteoDeEstudiantes();
             this.cargarAlertas();
@@ -449,6 +456,15 @@ export class DashboardComponent implements OnInit {
   private cargarHistoricoIngresos(): void {
     this.http.get<HistoricoIngresos>('/api/pagos/ingresos-historico?meses=6').subscribe({
       next: (serie) => this.historico.set(serie),
+      error: () => {},
+    });
+  }
+
+  /** Catorce semanas: un trimestre completo, que es donde se empiezan a
+   *  distinguir rachas y no solo dias sueltos. */
+  private cargarMapaDeAsistencia(): void {
+    this.http.get<MapaAsistencia>('/api/asistencias/mapa?dias=98').subscribe({
+      next: (m) => this.mapa.set(m),
       error: () => {},
     });
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RepresentanteService } from './representante.service';
 import { EstudianteResumen, InformeEstudiante, Notificacion } from './representante.models';
 import { inicialesDe } from '../entrenador/plantilla.models';
+import { fechaHoraCorta } from '../../core/formato-fecha';
 
 /**
  * Portal del representante: lista de sus representados y, al elegir uno,
@@ -37,7 +38,7 @@ import { inicialesDe } from '../entrenador/plantilla.models';
               </span>
               <span class="notificacion-texto">
                 <span class="notificacion-mensaje">{{ n.mensaje }}</span>
-                <span class="notificacion-fecha">{{ n.creadaEn | date: 'medium' }}</span>
+                <span class="notificacion-fecha">{{ fechaHora(n.creadaEn) }}</span>
               </span>
               @if (!n.leida) { <span class="punto-no-leida" title="Sin leer"></span> }
             </button>
@@ -198,6 +199,10 @@ import { inicialesDe } from '../entrenador/plantilla.models';
   `]
 })
 export class RepresentanteComponent implements OnInit {
+
+  /** 12 horas con AM/PM, igual que el resto de la app. */
+  readonly fechaHora = fechaHoraCorta;
+
 
   private readonly servicio = inject(RepresentanteService);
 

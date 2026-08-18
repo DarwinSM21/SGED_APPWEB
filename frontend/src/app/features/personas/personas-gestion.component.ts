@@ -3,6 +3,7 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasStateService } from './personas-state.service';
 import { RolUsuario, ROLES_USUARIO } from './personas.models';
+import { fechaHoraCorta } from '../../core/formato-fecha';
 
 export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'representantes';
 
@@ -44,7 +45,7 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
                   @for (r of u.roles; track r) { <span class="badge badge--info">{{ r }}</span> }
                 </span>
                 <span class="col-secundaria">{{ u.estadoGeneralNombre }}</span>
-                <span class="col-secundaria">{{ u.ultimoAcceso ? (u.ultimoAcceso | date:'short') : 'sin acceso aún' }}</span>
+                <span class="col-secundaria">{{ u.ultimoAcceso ? fechaHora(u.ultimoAcceso) : 'sin acceso aún' }}</span>
                 <span class="badge" [class.badge--success]="u.activo" [class.badge--danger]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
               </button>
             }
@@ -156,6 +157,10 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
   `],
 })
 export class PersonasGestionComponent {
+
+  /** 12 horas con AM/PM, igual que el resto de la app. */
+  readonly fechaHora = fechaHoraCorta;
+
   readonly state = inject(PersonasStateService);
 
   readonly tabActiva = input.required<TabGestion>();
