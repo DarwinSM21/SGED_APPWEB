@@ -175,6 +175,14 @@ def main():
         f"corresponde al grado **{letra} ({adjetivo})** en la escala adjetival de "
         f"Bangor, Kortum y Miller (2009).\n")
 
+    # REPORT.md se regenera entero en cada corrida, asi que el analisis
+    # escrito a mano vive aparte: ya se perdio una vez al ampliar la
+    # muestra de 10 a 14 participantes.
+    add("El analisis por perfil y las amenazas a la validez estan en "
+        "[INTERPRETACION.md](INTERPRETACION.md), que este script NO "
+        "sobrescribe: al agregar participantes hay que actualizarlo a mano.")
+    add("")
+
     add("## Referencias\n")
     add("- Brooke, J. (1996). *SUS: A quick and dirty usability scale.*")
     add("- Bangor, A., Kortum, P. y Miller, J. (2009). *Determining what "
