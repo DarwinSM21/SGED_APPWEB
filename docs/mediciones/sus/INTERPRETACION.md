@@ -30,32 +30,33 @@ participante, no por variación individual:
 | Perfil | n | Puntuaciones SUS | Promedio |
 |---|---|---|---|
 | Entrenador | 3 | 85,0 / 85,0 / 90,0 | **86,7** |
-| Estudiante | 4 | 90,0 / 90,0 / 70,0 / 85,0 | **83,8** |
-| Representante | 2 | 55,0 / 67,5 | **61,2** |
-| Recepcionista | 3 | 62,5 / 37,5 / 55,0 | **51,7** |
-| Padre de familia | 2 | 37,5 / 50,0 | **43,8** |
+| Estudiante | 4 | 70,0 / 85,0 / 90,0 / 90,0 | **83,8** |
+| Representante | 4 | 37,5 / 50,0 / 55,0 / 67,5 | **52,5** |
+| Recepcionista | 3 | 37,5 / 55,0 / 62,5 | **51,7** |
 
-Entrenadores y estudiantes califican el sistema como excelente; recepcionistas
-y padres de familia, como pobre o inaceptable. La brecha entre el perfil mejor
-y el peor evaluado es de **43 puntos**, más del doble de la amplitud del
-intervalo de confianza: no es ruido de muestreo.
+Tras unificar las etiquetas (ver nota metodológica), la distribución queda
+partida en dos grupos casi sin dispersión interna: dos perfiles alrededor de
+85 y dos alrededor de 52. La diferencia dentro de cada grupo es de 2,9 y 0,8
+puntos respectivamente; entre grupos, de **35 puntos** — más de una vez y
+media la amplitud del intervalo de confianza. No es ruido de muestreo.
 
-La explicación más plausible es de alcance funcional, no de estética. El
-flujo que un rol administrativo opera a diario —dar de alta, editar y buscar
-estudiantes, registrar pagos— recibió menos atención de diseño que las
-pantallas de consulta que usan entrenador y estudiante. Quien peor califica el
-sistema es justamente quien más lo usa.
+Lo que separa a los dos grupos no es ser interno o externo a la escuela: el
+recepcionista es personal interno y de uso diario, y puntúa igual de bajo que
+el representante. La línea divisoria es **qué hace cada rol con el sistema**.
+Entrenador y estudiante sobre todo *consultan* —ver sesiones, marcar
+asistencia, revisar el equipo—, y esos son los flujos que más atención de
+diseño recibieron. Recepcionista y representante *operan o esperan
+información*: el primero da de alta, edita y cobra; el segundo busca
+visibilidad sobre su representado y hoy el sistema no le envía nada por
+iniciativa propia (RF-22 sigue sin implementarse; solo existe el registro de
+consentimiento que lo habilitará).
 
-Los cuatro participantes nuevos **no alteran** este patrón: los dos estudiantes
-(70,0 y 85,0) se suman al grupo alto y los dos representantes (55,0 y 67,5) al
-bajo. Que el patrón sobreviva a una ampliación del 40 % de la muestra lo
-refuerza.
+Dicho de otro modo: quien peor califica el sistema es quien más trabajo
+administrativo hace con él.
 
-Vale la pena notar dónde caen los representantes: 61,2, entre los dos extremos.
-Es el perfil al que apunta RF-22 (notificaciones), que sigue sin implementarse
-—solo existe el registro de consentimiento que lo habilitará—. Su puntuación
-intermedia es coherente con un rol que hoy puede consultar informes pero no
-recibe nada del sistema por iniciativa propia.
+Los cuatro participantes nuevos **no alteran** el patrón: los dos estudiantes
+(70,0 y 85,0) se suman al grupo alto y los dos representantes (55,0 y 67,5)
+al bajo. Que sobreviva a una ampliación del 40 % de la muestra lo refuerza.
 
 ## Amenazas a la validez
 
@@ -67,7 +68,7 @@ reporta así en lugar de presentar la muestra como suficiente.
 
 Para los subgrupos el problema es mayor: con 2 o 3 participantes por perfil,
 los promedios por rol son indicativos y no soportan una prueba de hipótesis
-entre grupos. El patrón bimodal se sostiene por su magnitud (43 puntos) y por
+entre grupos. El patrón bimodal se sostiene por su magnitud (35 puntos) y por
 su consistencia al ampliar la muestra, no por significancia estadística.
 
 ### Intervalo de confianza
@@ -91,17 +92,27 @@ tabla por perfil se reporta junto a la media y no como anexo.
 
 ## Notas metodológicas
 
-**Etiquetas de perfil.** Los perfiles recolectados son más específicos que las
-tres categorías genéricas del instrumento original (administrativo, entrenador,
-externo). Se preservan tal como se recolectaron.
+**Etiquetas de perfil.** Los perfiles recolectados (entrenador, estudiante,
+recepcionista, representante) son más específicos que las tres categorías
+genéricas del instrumento original (administrativo, entrenador, externo). Se
+preservan por ser más informativas, en vez de forzarlas a las categorías
+originales. La única corrección aplicada es la unificación descrita abajo.
 
-Queda una inconsistencia sin resolver: `padre de familia` (n = 2) y
-`representante` (n = 2) designan probablemente el mismo rol —el sistema lo
-llama REPRESENTANTE— y están registrados por separado porque así se
-recolectaron en tandas distintas. Unificarlos daría un solo grupo de n = 4 con
-promedio 52,5. **No se unifican sin confirmarlo con quien aplicó los
-cuestionarios**, porque reetiquetar datos ya recolectados para que cuadren
-mejor es exactamente lo que un análisis honesto no debe hacer.
+**Unificación de `padre de familia` en `representante` (2026-08-18).** Las
+respuestas llegaron en dos tandas con etiquetas distintas para el mismo rol:
+ENC-04 y ENC-08 como `padre de familia`, ENC-14 y ENC-16 como `representante`.
+Se unificaron bajo `representante`, que es como el sistema nombra ese rol,
+**por confirmación explícita de quien aplicó los cuestionarios**; no fue una
+decisión de análisis.
+
+El cambio afecta solo a la etiqueta: ninguna puntuación se modificó, y la
+media global, la desviación y el intervalo de confianza son idénticos antes y
+después (68,57 / 19,36 / ±10,14). Lo que cambia es la lectura por perfil: el
+grupo pasa de dos subgrupos de n=2 (43,8 y 61,2) a uno de n=4 con media 52,5,
+que queda junto a recepcionista en vez de aparentar una posición intermedia.
+La versión previa de este documento describía a los representantes como
+situados "entre los dos extremos" — con la muestra unificada eso ya no es
+cierto y se corrige aquí.
 
 **Numeración.** Los identificadores van de ENC-01 a ENC-10 y luego de ENC-13 a
 ENC-16: **no existen ENC-11 ni ENC-12**. El salto se conserva tal como llegaron

@@ -1,7 +1,7 @@
 # Reporte de usabilidad — SUS (Bloque C.3)
 
-- Fecha del analisis: 2026-08-18T16:49:24.616761+00:00
-- Commit: 74b037f
+- Fecha del analisis: 2026-08-18T16:52:47.223324+00:00
+- Commit: 899c442
 - Instrumento: System Usability Scale (Brooke, 1996), 10 items, escala 1-5
 - Participantes: **14** (minimo exigido: 10)
 
@@ -35,11 +35,11 @@ Umbral objetivo del proyecto: SUS >= 68 (media de la industria). Resultado: **CU
 | ENC-01 | entrenador | 85.0 | A |
 | ENC-02 | recepcionista | 62.5 | D |
 | ENC-03 | estudiante | 90.0 | A |
-| ENC-04 | padre de familia | 37.5 | F |
+| ENC-04 | representante | 37.5 | F |
 | ENC-05 | entrenador | 85.0 | A |
 | ENC-06 | recepcionista | 37.5 | F |
 | ENC-07 | estudiante | 90.0 | A |
-| ENC-08 | padre de familia | 50.0 | F |
+| ENC-08 | representante | 50.0 | F |
 | ENC-09 | entrenador | 90.0 | A |
 | ENC-10 | recepcionista | 55.0 | D |
 | ENC-13 | estudiante | 70.0 | C |
