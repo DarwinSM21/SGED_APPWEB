@@ -134,10 +134,23 @@ export class LoginComponent {
       // intentos disponibles antes del bloqueo.
       return;
     }
+    const username = this.username.trim();
+
+    // Se comprueba aqui antes de llamar al servidor por dos motivos. El
+    // mensaje: enviar el formulario vacio devolvia 422, que no estaba
+    // contemplado abajo y acababa mostrando "Error del servidor" -acusando
+    // al sistema de un fallo que no existe-. Y el coste: el backend bloquea
+    // por IP tras seis intentos fallidos (LoginAttemptService, OWASP A07),
+    // asi que un Enter dado sin querer no debe gastar uno de esos seis.
+    if (!username || !this.password) {
+      this.error.set(!username
+        ? 'Escribe tu usuario'
+        : 'Escribe tu contraseña');
+      return;
+    }
+
     this.loading.set(true);
     this.error.set('');
-
-    const username = this.username.trim();
     this.authService.login({ username, password: this.password }).subscribe({
       next: (usuario) => {
         this.router.navigate([homeRouteForRole(usuario.rol)]);
@@ -158,6 +171,12 @@ export class LoginComponent {
         // El backend ya redacta el mensaje ("Intenta de nuevo en 15
         // minutos"); mostrarlo tal cual evita duplicar ese texto aquí.
         return err.error?.detail ?? 'Demasiados intentos. Intenta más tarde';
+      case 422:
+      case 400:
+        // Datos incompletos o mal formados: es del formulario, no del
+        // servidor, y decir lo contrario manda a buscar el problema donde
+        // no esta.
+        return 'Revisa el usuario y la contraseña';
       case 0:
         return 'No hay conexión con el servidor';
       default:
