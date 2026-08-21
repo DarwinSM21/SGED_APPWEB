@@ -32,7 +32,7 @@ echo "== A01: control de acceso (rol no-admin pide recurso de admin -> 403) =="
 #    sesion con el admin sembrado para poder registrar la cuenta de prueba.
 curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"Admin2026!"}' > /dev/null
+  -d '{"username":"admin","password":"sged2026"}' > /dev/null
 # 1. el admin registra una cuenta ENTRENADOR: personal real de la escuela,
 #    pero sin ningun privilegio administrativo. Ya no existe un rol generico
 #    "sin privilegios" al que registrar sin pedirlo (rol es obligatorio en
@@ -99,7 +99,7 @@ echo "== A01 (roles nuevos): RECEPCIONISTA y REPRESENTANTE =="
 # acotados es contra el backend vivo, aqui.
 curl -s -c /tmp/sged_admin.jar -X POST "$BASE/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"Admin2026!"}' > /dev/null
+  -d '{"username":"admin","password":"sged2026"}' > /dev/null
 
 # Dos estudiantes reales cualesquiera, para no depender de ids fijos entre
 # corridas: el primero se vincula al representante de prueba (caso legitimo),

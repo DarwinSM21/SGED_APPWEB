@@ -113,7 +113,7 @@
 						"description": "",
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"Admin2026!\"\n}"
+							"raw": "{\n  \"username\": \"admin\",\n  \"password\": \"sged2026\"\n}"
 						}
 					}
 				},

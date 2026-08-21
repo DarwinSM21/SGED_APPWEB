@@ -21,7 +21,7 @@ const BASE = __ENV.BASE_URL || 'http://localhost:8080';
 
 export function setup() {
   const res = http.post(`${BASE}/api/auth/login`,
-    JSON.stringify({ username: 'admin', password: 'Admin2026!' }),
+    JSON.stringify({ username: 'admin', password: 'sged2026' }),
     { headers: { 'Content-Type': 'application/json' } });
   // Extraer cookie del header Set-Cookie (Path=/api)
   const raw = res.headers['Set-Cookie'] || res.headers['set-cookie'] || '';

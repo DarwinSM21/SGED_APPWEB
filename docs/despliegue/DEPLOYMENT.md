@@ -57,7 +57,7 @@ tipo de defecto que este proyecto ya encontró y corrigió una vez
 | `DB_URL` / `DB_USER` / `DB_PASSWORD` | Postgres local o Supabase de desarrollo | Credenciales del proyecto de Supabase de **producción** (recomendado: un proyecto Supabase separado del de desarrollo, no el mismo con datos de prueba mezclados con datos reales del tribunal). |
 | `REDIS_HOST` / `REDIS_PORT` | `localhost` / `6379` | Host y puerto que entregue Upstash (normalmente requiere también TLS — revisar si el cliente Redis de Spring necesita `rediss://` en vez de `redis://`). |
 | `JWT_SECRET` | Valor de ejemplo, público en el repo | Uno nuevo generado solo para producción, **nunca** el mismo que aparece en `.env.example`. |
-| `USUARIO_ADMIN` / `CONTRASENA_ADMIN` | `admin` / `Admin2026!` (documentado a propósito en el README para el tribunal) | Se mantiene igual **a propósito** — el Bloque A.4.1 exige un usuario demo con credenciales publicadas, así que este es el único secreto de la lista que no se rota para producción. |
+| `USUARIO_ADMIN` / `CONTRASENA_ADMIN` | `admin` / `sged2026` (documentado a propósito en el README para el tribunal) | Se mantiene igual **a propósito** — el Bloque A.4.1 exige un usuario demo con credenciales publicadas, así que este es el único secreto de la lista que no se rota para producción. |
 
 ## 4. Procedimiento de despliegue
 
@@ -96,7 +96,7 @@ fly secrets set \
   REDIS_PORT="6379" \
   JWT_SECRET="<nuevo-secreto-solo-de-produccion>" \
   USUARIO_ADMIN="admin" \
-  CONTRASENA_ADMIN="Admin2026!" \
+  CONTRASENA_ADMIN="sged2026" \
   CORS_ALLOWED_ORIGIN_PATTERNS="https://sged-profutbol-web.fly.dev" \
   IA_HABILITADO="false"
 ```

@@ -24,7 +24,7 @@ up:
 	@echo "  Frontend (HTTP, sin cookie de sesion): http://localhost:4200"
 	@echo "  API      : http://localhost:8080/api"
 	@echo "  OpenAPI  : http://localhost:8080/api/docs"
-	@echo "  Credenciales seed: admin / Admin2026!"
+	@echo "  Credenciales seed: admin / sged2026"
 	@echo "  Nota: el certificado TLS es autofirmado (desarrollo); el navegador va a advertir, es esperado."
 
 ## Apaga y elimina contenedores

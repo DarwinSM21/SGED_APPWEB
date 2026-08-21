@@ -270,7 +270,7 @@ datos reales de menores en ningún momento del desarrollo, ni en las
 mediciones de rendimiento, ni en las auditorías de seguridad.
 
 Las credenciales del usuario administrador sembrado (`admin` /
-`Admin2026!`) están documentadas públicamente en el README **a propósito**,
+`sged2026`) están documentadas públicamente en el README **a propósito**,
 porque son de un entorno de evaluación desechable. **No deben reutilizarse
 en ningún despliegue real.**
 

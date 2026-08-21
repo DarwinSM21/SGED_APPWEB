@@ -46,8 +46,41 @@ advertencia de certificado no confiable, es esperado.
 
 ```
 usuario:    admin
-contraseña: Admin2026!
+contraseña: sged2026
 ```
+
+### Credenciales de prueba por rol
+
+Además del admin, el seed trae una cuenta "simple" por rol (misma
+contraseña `sged2026`) y 13 cuentas realistas (contraseña
+`<usuario>2026`), para que todo el equipo pruebe con los mismos datos.
+
+| Rol | Usuario | Contraseña |
+|---|---|---|
+| ADMINISTRADOR | `admin` | `sged2026` |
+| RECEPCIONISTA | `recepcionista` | `sged2026` |
+| ENTRENADOR | `entrenador` | `sged2026` |
+| REPRESENTANTE | `representante` | `sged2026` |
+| ESTUDIANTE | `estudiante` | `sged2026` |
+| RECEPCIONISTA | `anatorresat` | `anatorresat2026` |
+| ENTRENADOR | `luisveralv` | `luisveralv2026` |
+| ENTRENADOR | `pedrosalazarps` | `pedrosalazarps2026` |
+| ENTRENADOR | `diegocastillodc` | `diegocastillodc2026` |
+| ENTRENADOR | `marcojimenezmj` | `marcojimenezmj2026` |
+| REPRESENTANTE | `rosachuquimarcarc` | `rosachuquimarcarc2026` |
+| REPRESENTANTE | `elenavargasev` | `elenavargasev2026` |
+| REPRESENTANTE | `fernandoriosfr` | `fernandoriosfr2026` |
+| REPRESENTANTE | `patriciagomezpg` | `patriciagomezpg2026` |
+| ESTUDIANTE | `kevinandradeka` | `kevinandradeka2026` |
+| ESTUDIANTE | `sofiaramirezsr` | `sofiaramirezsr2026` |
+| ESTUDIANTE | `mateovillacresmv` | `mateovillacresmv2026` |
+| ESTUDIANTE | `valentinaortizvo` | `valentinaortizvo2026` |
+
+De las realistas, `luisveralv` (ENTRENADOR), `rosachuquimarcarc`
+(REPRESENTANTE, vinculada a `kevinandradeka`) y `kevinandradeka`
+(ESTUDIANTE) tienen ficha completa en su dominio, además del login;
+las demás solo inician sesión. RECEPCIONISTA y ADMINISTRADOR no tienen
+tabla de dominio propia en este esquema.
 
 ## Objetivos Make
 
