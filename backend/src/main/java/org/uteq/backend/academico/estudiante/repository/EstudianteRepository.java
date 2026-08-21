@@ -42,6 +42,9 @@ public interface EstudianteRepository extends JpaRepository<Estudiante, Long> {
     /** Companeros de equipo: los demas estudiantes activos de la misma categoria. */
     List<Estudiante> findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(Long idCategoria, Long idEstudiante);
 
+    /** Todos los estudiantes activos de una categoria (evaluacion diaria: se listan todos, no solo quien marco asistencia). */
+    List<Estudiante> findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(Long idCategoria);
+
     boolean existsByUsuario_IdUsuario(Long idUsuario);
 
     @Procedure(procedureName = "academico.sp_contar_estudiantes_activos")

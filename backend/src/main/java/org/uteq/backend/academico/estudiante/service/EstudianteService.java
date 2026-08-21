@@ -172,6 +172,24 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    /**
+     * Actualizacion estrecha de solo la posicion nominal, para que ENTRENADOR
+     * pueda asignarla/cambiarla/quitarla desde evaluacion diaria sin abrir la
+     * puerta a que edite categoria, codigo o fecha de ingreso -eso sigue
+     * siendo cosa de ADMINISTRADOR/RECEPCIONISTA via editar()-. Es la misma
+     * posicion que ve y edita el admin en Personas, no una copia aparte.
+     */
+    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante")
+    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @Transactional
+    public EstudianteResponse actualizarPosicion(Long id, Long idPosicion) {
+        Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + id));
+        estudiante.setPosicion(resolverPosicion(idPosicion));
+        estudiante = estudianteRepository.save(estudiante);
+        return toResponse(estudiante);
+    }
+
     // R-09 (informe de evaluacion de calidad): las tres reasignaciones de
     // editar() seguian el mismo patron -si el id pedido difiere del actual,
     // buscar la nueva fila y reasignarla- y sumaban su propia complejidad al

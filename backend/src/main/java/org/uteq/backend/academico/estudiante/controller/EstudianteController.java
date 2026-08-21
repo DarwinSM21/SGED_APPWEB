@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.academico.estudiante.dto.ActualizarPosicionRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
 import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
@@ -60,6 +61,18 @@ public class EstudianteController {
             @PathVariable Long id,
             @Valid @RequestBody EstudianteRequest request) {
         return ResponseEntity.ok(estudianteService.editar(id, request));
+    }
+
+    /**
+     * Solo la posicion nominal, no el resto de la ficha: a diferencia de
+     * {@code editar}, esto tambien lo puede usar ENTRENADOR desde evaluacion
+     * diaria (ver EstudianteService.actualizarPosicion).
+     */
+    @PutMapping("/{id}/posicion")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    public ResponseEntity<EstudianteResponse> actualizarPosicion(
+            @PathVariable Long id, @RequestBody ActualizarPosicionRequest request) {
+        return ResponseEntity.ok(estudianteService.actualizarPosicion(id, request.idPosicion()));
     }
 
     @DeleteMapping("/{id}")

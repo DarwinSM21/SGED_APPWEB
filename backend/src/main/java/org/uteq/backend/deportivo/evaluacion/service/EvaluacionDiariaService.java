@@ -3,6 +3,8 @@ package org.uteq.backend.deportivo.evaluacion.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -48,6 +50,7 @@ public class EvaluacionDiariaService {
     private final SesionEntrenamientoRepository sesionRepository;
     private final LesionRepository lesionRepository;
     private final PosicionRepository posicionRepository;
+    private final EstudianteRepository estudianteRepository;
 
     /**
      * Abre la pantalla de evaluacion de una sesion. Si todavia no existe la
@@ -75,10 +78,24 @@ public class EvaluacionDiariaService {
         // Evaluacion previa de la misma categoria: fuente de la precarga.
         Long idEvaluacionPrevia = buscarEvaluacionPrevia(sesion);
 
-        List<JugadorEvaluableResponse> jugadores = new ArrayList<>();
+        // Se listan TODOS los estudiantes activos de la categoria de la sesion,
+        // no solo quien marco asistencia: el entrenador necesita ver a los que
+        // faltaron para saber quienes son, aunque no pueda calificarlos (esto
+        // ya lo decia el javadoc de puedeEvaluarse, pero el codigo solo
+        // recorria asistencias existentes y dejaba invisible a quien no marco).
+        Map<Long, Asistencia> asistenciaPorEstudiante = new HashMap<>();
         for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {
+            asistenciaPorEstudiante.put(asistencia.getEstudiante().getIdEstudiante(), asistencia);
+        }
+
+        List<Estudiante> estudiantesCategoria = estudianteRepository
+                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(sesion.getCategoria().getIdCategoria());
+
+        List<JugadorEvaluableResponse> jugadores = new ArrayList<>();
+        for (Estudiante estudiante : estudiantesCategoria) {
             jugadores.add(construirJugador(
-                    asistencia, evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
+                    estudiante, asistenciaPorEstudiante.get(estudiante.getIdEstudiante()),
+                    evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
         }
         jugadores.sort(Comparator.comparing(JugadorEvaluableResponse::nombreCompleto));
 
@@ -94,18 +111,19 @@ public class EvaluacionDiariaService {
                 evaluacion.getObservacionGeneral());
     }
 
-    private JugadorEvaluableResponse construirJugador(Asistencia asistencia,
+    private JugadorEvaluableResponse construirJugador(Estudiante estudiante, Asistencia asistencia,
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
                                                       Map<Long, Long> lesionActivaPorEstudiante) {
-        var estudiante = asistencia.getEstudiante();
         Long idEstudiante = estudiante.getIdEstudiante();
         var persona = estudiante.getPersona();
         String nombre = persona.getNombre() + " " + persona.getApellido();
 
-        boolean puedeEvaluarse = asistencia.habilitaEvaluacion();
+        boolean puedeEvaluarse = asistencia != null && asistencia.habilitaEvaluacion();
         String motivo = puedeEvaluarse ? null
-                : "No se puede calificar: la asistencia figura como " + asistencia.getEstado();
+                : asistencia == null
+                        ? "No marcó asistencia en esta sesión"
+                        : "No se puede calificar: la asistencia figura como " + asistencia.getEstado();
 
         // Lo ya guardado hoy tiene prioridad sobre cualquier precarga.
         var yaEvaluado = evaluacionEstudianteRepository
@@ -114,17 +132,16 @@ public class EvaluacionDiariaService {
 
         Map<String, BigDecimal> puntajes = new LinkedHashMap<>();
         boolean precargado = false;
-        Long idPosicion = null;
-        String posicion = null;
+        // Posicion nominal del estudiante (la misma que edita ADMINISTRADOR
+        // desde Personas, no la de un registro de evaluacion puntual): se
+        // muestra siempre, evaluado o no, presente o no.
+        Long idPosicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
+        String posicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getNombre() : null;
 
         if (yaEvaluado.isPresent()) {
             var ee = yaEvaluado.get();
             for (DetalleEvaluacion d : ee.getDetalles()) {
                 puntajes.put(d.getCriterio().getNombre(), d.getPuntaje());
-            }
-            if (ee.getPosicionJugada() != null) {
-                idPosicion = ee.getPosicionJugada().getIdPosicion();
-                posicion = ee.getPosicionJugada().getNombre();
             }
         } else if (idEvaluacionPrevia != null && puedeEvaluarse) {
             for (Object[] fila : evaluacionEstudianteRepository
@@ -139,7 +156,7 @@ public class EvaluacionDiariaService {
                 idEstudiante, nombre,
                 estudiante.getCategoria().getNombre(),
                 idPosicion, posicion,
-                asistencia.getEstado(),
+                asistencia == null ? null : asistencia.getEstado(),
                 puntajes, precargado,
                 idLesionActiva != null,
                 idLesionActiva,
@@ -199,10 +216,16 @@ public class EvaluacionDiariaService {
                         .categoriaDia(estudiante.getCategoria())
                         .build());
 
+        // El frontend siempre manda este campo (nunca lo omite), asi que null
+        // es una instruccion explicita de "quitar la posicion", no "no tocar
+        // nada" -- antes este if solo cubria el alta/cambio y no habia forma
+        // de borrar una posicion ya asignada.
         if (request.idPosicionJugada() != null) {
             ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())
                     .orElseThrow(() -> new RecursoNoEncontradoException(
                             "No existe la posicion " + request.idPosicionJugada())));
+        } else {
+            ee.setPosicionJugada(null);
         }
 
         lesionRepository.buscarActivaPorEstudiante(request.idEstudiante())

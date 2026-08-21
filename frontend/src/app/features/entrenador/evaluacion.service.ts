@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import {
-  EvaluacionSesion, GuardarJugadorRequest, EstadoGuardado, Lesion,
+  EvaluacionSesion, GuardarJugadorRequest, EstadoGuardado, Lesion, PosicionOpcion,
 } from './evaluacion.models';
 
 /**
@@ -47,6 +47,19 @@ export class EvaluacionService {
 
   abrirSesion(idSesion: number): Observable<EvaluacionSesion> {
     return this.http.get<EvaluacionSesion>(`${this.apiUrl}/sesion/${idSesion}`);
+  }
+
+  posicionesActivas(): Observable<PosicionOpcion[]> {
+    return this.http.get<PosicionOpcion[]>('/api/posiciones/activas');
+  }
+
+  /**
+   * Posicion nominal del estudiante (la misma que edita ADMINISTRADOR desde
+   * Personas) -- endpoint estrecho que ENTRENADOR tambien puede usar, a
+   * diferencia de PUT /api/estudiantes/{id} que reescribe toda la ficha.
+   */
+  actualizarPosicionEstudiante(idEstudiante: number, idPosicion: number | null): Observable<void> {
+    return this.http.put<void>(`/api/estudiantes/${idEstudiante}/posicion`, { idPosicion });
   }
 
   // La alineacion/plantilla vive en PlantillaService, no aqui: tiene su

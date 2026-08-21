@@ -76,10 +76,13 @@ contraseña `sged2026`) y 13 cuentas realistas (contraseña
 | ESTUDIANTE | `mateovillacresmv` | `mateovillacresmv2026` |
 | ESTUDIANTE | `valentinaortizvo` | `valentinaortizvo2026` |
 
-De las realistas, `luisveralv` (ENTRENADOR), `rosachuquimarcarc`
-(REPRESENTANTE, vinculada a `kevinandradeka`) y `kevinandradeka`
-(ESTUDIANTE) tienen ficha completa en su dominio, además del login;
-las demás solo inician sesión. RECEPCIONISTA y ADMINISTRADOR no tienen
+De las realistas, `luisveralv` (ENTRENADOR) y `rosachuquimarcarc`
+(REPRESENTANTE, vinculada a `kevinandradeka`) tienen ficha completa en
+su dominio, además del login; las demás ENTRENADOR/REPRESENTANTE solo
+inician sesión. Las 5 cuentas ESTUDIANTE (`estudiante`, `kevinandradeka`,
+`sofiaramirezsr`, `mateovillacresmv`, `valentinaortizvo`) sí tienen
+ficha completa todas — sin ella, `/api/asistencias/qr/marcar` rechaza
+al estudiante y no puede marcar asistencia por QR. RECEPCIONISTA y ADMINISTRADOR no tienen
 tabla de dominio propia en este esquema.
 
 ## Objetivos Make

@@ -149,7 +149,11 @@ JOIN seguridad.usuarios u ON u.username = v.username
 JOIN seguridad.roles r ON r.nombre = v.rol;
 
 -- Fichas de dominio: la cuenta simple de cada rol con ficha, mas una
--- cuenta realista elegida por rol.
+-- cuenta realista elegida por rol para entrenador y representante.
+-- ESTUDIANTE lleva ficha en las 5 cuentas (simple + 4 realistas): sin
+-- fila en academico.estudiantes, /api/asistencias/qr/marcar rechaza al
+-- estudiante con "No hay un estudiante asociado a esta cuenta" y no
+-- puede marcar asistencia por QR, que es el uso principal del rol.
 INSERT INTO deportivo.entrenadores (id_persona, id_usuario, experiencia_anios, certificacion)
 SELECT p.id_persona, u.id_usuario, v.experiencia, v.certificacion
 FROM (VALUES
@@ -160,13 +164,23 @@ JOIN seguridad.personas p ON p.cedula = v.cedula
 JOIN seguridad.usuarios u ON u.id_persona = p.id_persona
 ON CONFLICT (id_persona) DO NOTHING;
 
-INSERT INTO academico.estudiantes (id_persona, id_categoria, id_estado_general, codigo_estudiante, fecha_ingreso)
-SELECT p.id_persona, c.id_categoria, 1, v.codigo, '2026-01-15'
+-- id_usuario va aparte de id_persona a proposito (ver ALTER TABLE mas abajo
+-- en este mismo archivo, columna aditiva de la reestructuracion): sin este
+-- JOIN la ficha queda creada pero sin cuenta vinculada, y
+-- /api/estudiante/mi-equipo, mi-informe, mi-asistencia y el QR de
+-- asistencia rechazan al estudiante con "No hay un estudiante asociado a
+-- esta cuenta" aunque el login funcione perfecto.
+INSERT INTO academico.estudiantes (id_persona, id_usuario, id_categoria, id_estado_general, codigo_estudiante, fecha_ingreso)
+SELECT p.id_persona, u.id_usuario, c.id_categoria, 1, v.codigo, '2026-01-15'
 FROM (VALUES
     ('4000000004', 'SUB-14', 'EST-008'),
-    ('4000000014', 'SUB-16', 'EST-018')
+    ('4000000014', 'SUB-16', 'EST-018'),
+    ('4000000015', 'SUB-14', 'EST-019'),
+    ('4000000016', 'SUB-16', 'EST-020'),
+    ('4000000017', 'SUB-14', 'EST-021')
 ) AS v(cedula, categoria, codigo)
 JOIN seguridad.personas p ON p.cedula = v.cedula
+JOIN seguridad.usuarios u ON u.id_persona = p.id_persona
 JOIN deportivo.categorias c ON c.nombre = v.categoria
 ON CONFLICT (codigo_estudiante) DO NOTHING;
 

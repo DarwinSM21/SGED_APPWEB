@@ -75,7 +75,8 @@ import { PelotaAnimadaComponent } from '../pelota-animada.component';
               </svg>
               <input id="username" type="text" [(ngModel)]="username" name="username"
                      placeholder="tu.usuario@uteq.edu.ec"
-                     required autocomplete="username" autofocus />
+                     required autocomplete="username" autofocus
+                     autocapitalize="off" autocorrect="off" spellcheck="false" />
             </span>
           </label>
 

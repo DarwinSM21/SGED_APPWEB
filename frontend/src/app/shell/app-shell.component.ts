@@ -15,6 +15,8 @@ interface NavItem {
 }
 
 const CLAVE_COLAPSADA = 'sged.sidebar.colapsada';
+/** Debe coincidir con el @media (max-width: ...) del bloque de estilos. */
+const BREAKPOINT_MOVIL_PX = 680;
 
 /**
  * Entradas de navegacion por rol. Deliberadamente solo destinos reales:
@@ -80,7 +82,10 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
   imports: [CommonModule, RouterLink, RouterLinkActive, RouterOutlet],
   template: `
     <div class="shell">
-      <aside class="sidebar" [class.sidebar--colapsada]="colapsada()">
+      @if (menuMovilAbierto()) {
+        <div class="fondo-movil" (click)="cerrarMenuMovil()"></div>
+      }
+      <aside class="sidebar" [class.sidebar--colapsada]="colapsada()" [class.sidebar--movil-abierta]="menuMovilAbierto()">
         <div class="sidebar__marca">
           <span class="sidebar__logo">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,7 +98,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
 
         <nav class="sidebar__nav">
           @for (item of navItems(); track item.ruta) {
-            <a class="sidebar__item" [routerLink]="item.ruta" routerLinkActive="activo" [title]="item.etiqueta">
+            <a class="sidebar__item" [routerLink]="item.ruta" routerLinkActive="activo" [title]="item.etiqueta" (click)="cerrarMenuMovil()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 @switch (item.icono) {
                   @case ('inicio') {
@@ -138,7 +143,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
             </a>
           }
 
-          <a class="sidebar__item" routerLink="/configuracion" routerLinkActive="activo" title="Configuración">
+          <a class="sidebar__item" routerLink="/configuracion" routerLinkActive="activo" title="Configuración" (click)="cerrarMenuMovil()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
             </svg>
@@ -147,16 +152,18 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
         </nav>
 
         <button class="sidebar__colapsar" type="button" (click)="alternarColapso()"
-                [attr.aria-label]="colapsada() ? 'Expandir menú' : 'Recoger menú'"
-                [title]="colapsada() ? 'Expandir menú' : 'Recoger menú'">
+                [attr.aria-label]="menuMovilAbierto() ? 'Cerrar menú' : (colapsada() ? 'Expandir menú' : 'Recoger menú')"
+                [title]="menuMovilAbierto() ? 'Cerrar menú' : (colapsada() ? 'Expandir menú' : 'Recoger menú')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            @if (colapsada()) {
+            @if (menuMovilAbierto()) {
+              <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+            } @else if (colapsada()) {
               <polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline>
             } @else {
               <polyline points="11 17 6 12 11 7"></polyline><polyline points="18 17 13 12 18 7"></polyline>
             }
           </svg>
-          <span class="sidebar__etiqueta">Recoger menú</span>
+          <span class="sidebar__etiqueta">{{ menuMovilAbierto() ? 'Cerrar menú' : 'Recoger menú' }}</span>
         </button>
 
         @if (usuario(); as u) {
@@ -191,7 +198,14 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     .sidebar {
       width: 240px; flex-shrink: 0; display: flex; flex-direction: column;
       background: var(--color-surface); border-right: 1px solid var(--color-border);
-      padding: 1.25rem 1rem; position: sticky; top: 0; height: 100vh;
+      padding: 1.25rem 1rem; position: sticky; top: 0;
+      /* 100vh en celular no descuenta la barra de direcciones del navegador,
+         asi que el bloque de usuario/cerrar sesion -al final de la columna-
+         quedaba fuera de la pantalla visible sin forma de hacer scroll hasta
+         el. dvh sigue el viewport visible real; overflow-y auto es el
+         respaldo para cuando el contenido igual no entra (rol con muchos
+         items de navegacion + pantalla corta). */
+      height: 100vh; height: 100dvh; overflow-y: auto;
       transition: width var(--transition);
     }
     .sidebar__marca { display: flex; align-items: center; gap: .65rem; margin-bottom: 1.75rem; padding: 0 .4rem; }
@@ -268,6 +282,32 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
       .sidebar__nombre, .sidebar__etiqueta, .sidebar__usuario-texto { display: none; }
       .sidebar__item, .sidebar__colapsar { justify-content: center; padding: .7rem; }
       .sidebar__usuario { flex-direction: column; gap: .5rem; }
+
+      /* El boton "Recoger menu" del riel se convierte en el disparador del
+         cajon movil: en vez de solo iconos, muestra el sidebar completo
+         -con "Cerrar sesion" legible- superpuesto sobre el contenido, con
+         un fondo oscuro para cerrarlo tocando afuera. Es la unica forma de
+         llegar al logout en un celular sin adivinar que icono es cual.
+         Selector compuesto ".sidebar.sidebar--movil-abierta" a proposito
+         (mismo motivo que ".sidebar.sidebar--colapsada" mas arriba): mas
+         especificidad que la regla ".sidebar" de este mismo media query
+         para ganarle sin depender del orden de insercion. */
+      .sidebar.sidebar--movil-abierta {
+        position: fixed !important; inset: 0 auto 0 0; width: 240px !important; max-width: 80vw;
+        align-items: stretch; padding: 1.25rem 1rem; z-index: 60;
+        box-shadow: 8px 0 32px rgba(0, 0, 0, .35);
+      }
+      .sidebar.sidebar--movil-abierta .sidebar__marca { justify-content: flex-start; padding: 0 .4rem; }
+      .sidebar.sidebar--movil-abierta .sidebar__nombre,
+      .sidebar.sidebar--movil-abierta .sidebar__etiqueta,
+      .sidebar.sidebar--movil-abierta .sidebar__usuario-texto { display: initial; }
+      .sidebar.sidebar--movil-abierta .sidebar__item,
+      .sidebar.sidebar--movil-abierta .sidebar__colapsar { justify-content: flex-start; padding: .65rem .75rem; }
+      .sidebar.sidebar--movil-abierta .sidebar__usuario { flex-direction: row; }
+
+      .fondo-movil {
+        position: fixed; inset: 0; background: rgba(0, 0, 0, .4); z-index: 55;
+      }
     }
   `]
 })
@@ -278,6 +318,13 @@ export class AppShellComponent implements OnInit, OnDestroy {
   readonly navItems = computed<NavItem[]>(() => NAV_POR_ROL[this.usuario()?.rol ?? ''] ?? []);
 
   readonly colapsada = signal(localStorage.getItem(CLAVE_COLAPSADA) === 'true');
+  /**
+   * Cajon movil: independiente de `colapsada` (preferencia de escritorio,
+   * persistida). Este es transitorio -no se guarda- y solo aplica bajo
+   * BREAKPOINT_MOVIL_PX; en escritorio el mismo boton sigue alternando
+   * `colapsada` como siempre.
+   */
+  readonly menuMovilAbierto = signal(false);
 
   /** Reloj en vivo del topbar: un signal con la hora actual, refrescado cada segundo. */
   readonly ahora = signal(new Date());
@@ -308,9 +355,17 @@ export class AppShellComponent implements OnInit, OnDestroy {
   }
 
   alternarColapso(): void {
+    if (window.innerWidth <= BREAKPOINT_MOVIL_PX) {
+      this.menuMovilAbierto.update(v => !v);
+      return;
+    }
     const nuevoValor = !this.colapsada();
     this.colapsada.set(nuevoValor);
     localStorage.setItem(CLAVE_COLAPSADA, String(nuevoValor));
+  }
+
+  cerrarMenuMovil(): void {
+    this.menuMovilAbierto.set(false);
   }
 
   logout() {

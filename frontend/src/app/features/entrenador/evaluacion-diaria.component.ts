@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EvaluacionService } from './evaluacion.service';
-import { EvaluacionSesion, JugadorEvaluable } from './evaluacion.models';
+import { EvaluacionSesion, JugadorEvaluable, PosicionOpcion } from './evaluacion.models';
 import { inicialesDe } from './plantilla.models';
 import { mensajeDeError } from '../../core/mensaje-error';
 
@@ -35,6 +35,10 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
   imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="pantalla">
+      <a class="btn btn--ghost volver" routerLink="/entrenador/sesiones">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        Volver a mis sesiones
+      </a>
       <h1 class="titulo-pantalla">Evaluación diaria</h1>
 
       @if (cargando()) {
@@ -64,6 +68,8 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
           <span class="punto-estado"></span>{{ textoEstado() }}
         </p>
 
+        @if (errorPosicion()) { <p class="alert alert--danger">{{ errorPosicion() }}</p> }
+
         @for (j of s.jugadores; track j.idEstudiante) {
           <article class="card jugador" [class.bloqueado]="!j.puedeEvaluarse">
             <button type="button" class="jugador-cabecera" (click)="alternar(j.idEstudiante)"
@@ -77,7 +83,7 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
                   @if (j.precargado && j.puedeEvaluarse) { · Valores heredados }
                 </span>
               </span>
-              <span class="badge" [class]="'estado-' + j.estadoAsistencia.toLowerCase()">
+              <span class="badge" [class]="'estado-' + (j.estadoAsistencia ?? 'sin_marcar').toLowerCase()">
                 {{ etiquetaEstado(j.estadoAsistencia) }}
               </span>
               <svg class="chevron" [class.abierto]="estaExpandido(j.idEstudiante)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
@@ -122,6 +128,20 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
                 }
               </div>
 
+              <label class="campo-posicion">
+                <span>Posición</span>
+                <select
+                  [ngModel]="j.idPosicion"
+                  (ngModelChange)="cambiarPosicion(j, $event)"
+                  [disabled]="guardandoPosicion() === j.idEstudiante"
+                  [attr.aria-label]="'Posición de ' + j.nombreCompleto">
+                  <option [ngValue]="null">Sin posición</option>
+                  @for (p of posiciones(); track p.idPosicion) {
+                    <option [ngValue]="p.idPosicion">{{ p.nombre }} ({{ p.abreviatura }})</option>
+                  }
+                </select>
+              </label>
+
               @if (!j.puedeEvaluarse) {
                 <p class="motivo">{{ j.motivoBloqueo }}</p>
               } @else {
@@ -162,6 +182,8 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
   `,
   styles: [`
     .pantalla { max-width: 640px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
+
+    .volver { margin-bottom: 1rem; }
 
     .titulo-pantalla { font-size: 1.2rem; margin-bottom: 1.1rem; }
 
@@ -205,13 +227,24 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
 
     .badge.estado-presente { background: var(--color-success-bg); color: var(--color-success-text); }
     .badge.estado-tarde { background: var(--color-warning-bg); color: var(--color-warning-text); }
-    .badge.estado-ausente, .badge.estado-justificado { background: var(--color-neutral-bg); color: var(--color-neutral-text); }
+    .badge.estado-ausente, .badge.estado-justificado, .badge.estado-sin_marcar { background: var(--color-neutral-bg); color: var(--color-neutral-text); }
 
     .chevron { width: 19px; height: 19px; color: var(--color-text-faint); flex-shrink: 0; transition: transform .15s; }
     .chevron.abierto { transform: rotate(90deg); }
 
     .motivo { margin: 0 .95rem .9rem; color: var(--color-text-muted); font-size: .875rem; }
-    .criterios { padding: .2rem .95rem .95rem; border-top: 1px solid var(--color-border-light); }
+
+    .campo-posicion {
+      display: flex; flex-direction: column; gap: .35rem; font-size: .8rem; font-weight: 600;
+      color: var(--color-text); padding: .8rem .95rem 0; border-top: 1px solid var(--color-border-light);
+    }
+    .campo-posicion select {
+      border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
+      padding: .5rem .6rem; font-size: .85rem; font-family: inherit;
+      background: var(--color-surface); color: var(--color-text);
+    }
+
+    .criterios { padding: .2rem .95rem .95rem; }
 
     .panel-lesion { padding: .7rem .95rem; border-top: 1px solid var(--color-border-light); }
     .btn--sm { padding: .4rem .8rem; font-size: .8rem; }
@@ -260,9 +293,13 @@ export class EvaluacionDiariaComponent implements OnInit {
   private readonly servicio = inject(EvaluacionService);
 
   readonly sesion = signal<EvaluacionSesion | null>(null);
+  readonly posiciones = signal<PosicionOpcion[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly finalizando = signal(false);
+  /** idEstudiante cuya posición se está guardando ahora mismo, o null. */
+  readonly guardandoPosicion = signal<number | null>(null);
+  readonly errorPosicion = signal<string | null>(null);
   readonly expandidos = signal<Set<number>>(new Set());
 
   /** Formulario inline de "Marcar lesión": qué jugador lo tiene abierto, o null si ninguno. */
@@ -303,6 +340,7 @@ export class EvaluacionDiariaComponent implements OnInit {
 
   ngOnInit(): void {
     this.idSesion = Number(this.ruta.snapshot.paramMap.get('idSesion'));
+    this.servicio.posicionesActivas().subscribe({ next: (p) => this.posiciones.set(p) });
     this.servicio.abrirSesion(this.idSesion).subscribe({
       next: (s) => {
         this.sesion.set(s);
@@ -359,6 +397,34 @@ export class EvaluacionDiariaComponent implements OnInit {
         idCriterio: c.idCriterio,
         puntaje: jugador.puntajes[c.nombre] ?? 0,
       })),
+    });
+  }
+
+  /**
+   * Posición nominal del estudiante -- la misma que edita ADMINISTRADOR
+   * desde Personas, no un valor aparte de esta sesión. Se guarda contra
+   * PUT /api/estudiantes/{id}/posicion (no contra el autoguardado de la
+   * evaluación): a diferencia de los criterios, un fallo acá sí se muestra,
+   * y si falla se revierte el select al valor anterior en vez de dejarlo
+   * mostrando algo que no se guardó.
+   */
+  cambiarPosicion(jugador: JugadorEvaluable, idPosicion: number | null): void {
+    const anterior = { idPosicion: jugador.idPosicion, posicion: jugador.posicion };
+    jugador.idPosicion = idPosicion;
+    jugador.posicion = idPosicion === null
+      ? null
+      : (this.posiciones().find((p) => p.idPosicion === idPosicion)?.nombre ?? null);
+
+    this.guardandoPosicion.set(jugador.idEstudiante);
+    this.errorPosicion.set(null);
+    this.servicio.actualizarPosicionEstudiante(jugador.idEstudiante, idPosicion).subscribe({
+      next: () => this.guardandoPosicion.set(null),
+      error: (err) => {
+        jugador.idPosicion = anterior.idPosicion;
+        jugador.posicion = anterior.posicion;
+        this.guardandoPosicion.set(null);
+        this.errorPosicion.set(mensajeDeError(err, 'No se pudo guardar la posición.'));
+      },
     });
   }
 
@@ -434,7 +500,8 @@ export class EvaluacionDiariaComponent implements OnInit {
     return inicialesDe(nombre);
   }
 
-  etiquetaEstado(estado: string): string {
+  etiquetaEstado(estado: string | null): string {
+    if (estado === null) return 'SIN MARCAR';
     return ESTADO_ETIQUETA[estado] ?? estado;
   }
 }

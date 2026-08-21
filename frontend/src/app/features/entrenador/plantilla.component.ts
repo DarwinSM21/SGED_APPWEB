@@ -52,6 +52,11 @@ const ORDEN_BANDAS: ZonaCancha[] = ['DEL', 'MED', 'DEF', 'POR'];
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (plantilla(); as p) {
 
+        <a class="btn btn--ghost volver" [routerLink]="['/entrenador/sesion', p.idSesion]">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Volver a la evaluación
+        </a>
+
         <header class="cabecera">
           <div>
             <h1>Formación sugerida por ranking</h1>
@@ -163,11 +168,6 @@ const ORDEN_BANDAS: ZonaCancha[] = ['DEL', 'MED', 'DEF', 'POR'];
             }
           </div>
         </div>
-
-        <a class="btn btn--ghost volver" [routerLink]="['/entrenador/sesion', p.idSesion]">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-          Volver a la evaluación
-        </a>
       }
     </div>
   `,
@@ -216,7 +216,7 @@ const ORDEN_BANDAS: ZonaCancha[] = ['DEL', 'MED', 'DEF', 'POR'];
     }
     .suplente-nombre { flex: 1; }
 
-    .volver { margin-top: 1.5rem; }
+    .volver { margin-bottom: 1rem; }
 
     .aviso { padding: 1rem; text-align: center; color: var(--color-text-muted); }
   `]

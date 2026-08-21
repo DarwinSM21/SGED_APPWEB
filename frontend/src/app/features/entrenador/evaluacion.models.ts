@@ -17,7 +17,8 @@ export interface JugadorEvaluable {
   idPosicion: number | null;
   posicion: string | null;
   /** PRESENTE, TARDE, AUSENTE o JUSTIFICADO. */
-  estadoAsistencia: string;
+  /** null si el jugador no marco asistencia en esta sesion (ver puedeEvaluarse). */
+  estadoAsistencia: string | null;
   /** Clave = nombre del criterio. */
   puntajes: Record<string, number>;
   /**
@@ -54,6 +55,13 @@ export interface GuardarJugadorRequest {
   idEstudiante: number;
   idPosicionJugada: number | null;
   puntajes: PuntajeCriterio[];
+}
+
+/** Catalogo de /api/posiciones/activas. */
+export interface PosicionOpcion {
+  idPosicion: number;
+  nombre: string;
+  abreviatura: string | null;
 }
 
 // Plantilla/alineacion: ver plantilla.models.ts (dueño de ese contrato).

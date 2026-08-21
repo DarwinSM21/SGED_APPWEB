@@ -20,11 +20,46 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Ficha de estudiante</h3>
       @if (persona()?.estudiante; as e) {
-        <p class="resumen-seccion">
-          {{ e.codigoEstudiante }} · {{ e.nombreCategoria }}
-          @if (e.abreviaturaPosicion) { · {{ e.abreviaturaPosicion }} }
-          · {{ e.activo ? 'activo' : 'inactivo' }}
-        </p>
+        @if (!editandoEstudiante()) {
+          <p class="resumen-seccion">
+            {{ e.codigoEstudiante }} · {{ e.nombreCategoria }}
+            @if (e.abreviaturaPosicion) { · {{ e.abreviaturaPosicion }} }
+            · {{ e.activo ? 'activo' : 'inactivo' }}
+          </p>
+          <div class="acciones">
+            <button class="btn btn--ghost btn--sm" type="button" (click)="iniciarEdicionEstudiante(e)">Editar ficha</button>
+          </div>
+        } @else {
+          <div class="fila-2">
+            <label class="field" for="e-categoria-editar"><span class="field__label">Categoría</span>
+              <span class="field__control">
+                <select id="e-categoria-editar" [(ngModel)]="formEstudiante.idCategoria" name="e-categoria-editar">
+                  <option [ngValue]="null" disabled>Selecciona…</option>
+                  @for (c of state.categorias(); track c.idCategoria) { <option [ngValue]="c.idCategoria">{{ c.nombre }}</option> }
+                </select>
+              </span></label>
+            <label class="field" for="e-codigo-editar"><span class="field__label">Código</span>
+              <span class="field__control"><input id="e-codigo-editar" [(ngModel)]="formEstudiante.codigoEstudiante" name="e-codigo-editar" /></span></label>
+          </div>
+          <div class="fila-2">
+            <label class="field" for="e-ingreso-editar"><span class="field__label">Fecha de ingreso</span>
+              <span class="field__control"><input id="e-ingreso-editar" type="date" [(ngModel)]="formEstudiante.fechaIngreso" name="e-ingreso-editar" /></span></label>
+            <label class="field" for="e-posicion-editar"><span class="field__label">Posición</span>
+              <span class="field__control">
+                <select id="e-posicion-editar" [(ngModel)]="formEstudiante.idPosicion" name="e-posicion-editar">
+                  <option [ngValue]="null">Sin posición</option>
+                  @for (p of state.posiciones(); track p.idPosicion) { <option [ngValue]="p.idPosicion">{{ p.nombre }} ({{ p.abreviatura }})</option> }
+                </select>
+              </span></label>
+          </div>
+          @if (errorEstudiante()) { <div class="alert alert--danger" role="alert">{{ errorEstudiante() }}</div> }
+          <div class="acciones">
+            <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardandoEstudiante()" (click)="cancelarEdicionEstudiante()">Cancelar</button>
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardandoEstudiante()" (click)="guardarEdicionEstudiante(e.idEstudiante)">
+              @if (guardandoEstudiante()) { <span class="spinner"></span> Guardando… } @else { Guardar }
+            </button>
+          </div>
+        }
 
         <h4 class="subtitulo-menor">Representantes</h4>
         @if (state.representantesDelEstudiante().length === 0) {
@@ -160,6 +195,11 @@ export class FichaEstudianteComponent {
     { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10), idPosicion: null };
   readonly guardandoEstudiante = signal(false);
   readonly errorEstudiante = signal('');
+  readonly editandoEstudiante = signal(false);
+  /** Peso/altura no se editan en esta pantalla (no forman parte del pedido), pero
+   *  igual hay que reenviarlos tal cual venian: EstudianteService.editar los
+   *  sobreescribe con lo que llegue en el request, así que mandar null los borraría. */
+  private pesoAlturaEditando: { peso: number | null; altura: number | null } = { peso: null, altura: null };
 
   formVinculo: { idRepresentante: number | null; relacion: string; contactoPrincipal: boolean } =
     { idRepresentante: null, relacion: '', contactoPrincipal: false };
@@ -173,6 +213,36 @@ export class FichaEstudianteComponent {
       this.formVinculo = { idRepresentante: null, relacion: '', contactoPrincipal: false };
       this.errorEstudiante.set('');
       this.errorVinculo.set('');
+      this.editandoEstudiante.set(false);
+    });
+  }
+
+  iniciarEdicionEstudiante(e: { idCategoria: number; codigoEstudiante: string; fechaIngreso: string; idPosicion: number | null; peso: number | null; altura: number | null }): void {
+    this.formEstudiante = {
+      idCategoria: e.idCategoria, codigoEstudiante: e.codigoEstudiante,
+      fechaIngreso: e.fechaIngreso, idPosicion: e.idPosicion,
+    };
+    this.pesoAlturaEditando = { peso: e.peso, altura: e.altura };
+    this.errorEstudiante.set('');
+    this.editandoEstudiante.set(true);
+  }
+
+  cancelarEdicionEstudiante(): void {
+    this.editandoEstudiante.set(false);
+    this.errorEstudiante.set('');
+  }
+
+  guardarEdicionEstudiante(idEstudiante: number): void {
+    if (this.formEstudiante.idCategoria === null) return;
+    this.guardandoEstudiante.set(true);
+    this.errorEstudiante.set('');
+    this.servicio.editarEstudiante(idEstudiante, {
+      idPersona: this.persona()!.persona.idPersona, idCategoria: this.formEstudiante.idCategoria, idEstadoGeneral: ESTADO_GENERAL_ACTIVO,
+      codigoEstudiante: this.formEstudiante.codigoEstudiante, fechaIngreso: this.formEstudiante.fechaIngreso,
+      peso: this.pesoAlturaEditando.peso, altura: this.pesoAlturaEditando.altura, idPosicion: this.formEstudiante.idPosicion,
+    }).subscribe({
+      next: () => { this.guardandoEstudiante.set(false); this.editandoEstudiante.set(false); this.state.cargarPersonas(true); },
+      error: (err) => { this.guardandoEstudiante.set(false); this.errorEstudiante.set(mensajeDeError(err)); },
     });
   }
 
