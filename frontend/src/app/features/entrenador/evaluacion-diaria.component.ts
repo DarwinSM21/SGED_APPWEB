@@ -345,11 +345,6 @@ export class EvaluacionDiariaComponent implements OnInit {
       next: (s) => {
         this.sesion.set(s);
         this.cargando.set(false);
-        // El primer jugador habilitado arranca expandido, como en la
-        // referencia: el entrenador no tiene que tocar dos veces para
-        // empezar a calificar.
-        const primero = s.jugadores.find((j) => j.puedeEvaluarse);
-        if (primero) this.expandidos.set(new Set([primero.idEstudiante]));
       },
       error: (e) => {
         this.cargando.set(false);

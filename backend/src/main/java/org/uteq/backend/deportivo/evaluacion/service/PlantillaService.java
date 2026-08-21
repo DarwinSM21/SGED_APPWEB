@@ -23,9 +23,13 @@ import java.util.*;
  *
  * <p><b>La IA no elige a los jugadores.</b> La seleccion y el orden salen de
  * una regla explicita y auditable: se excluye a los lesionados, se ordena por
- * promedio acumulado y se cortan los primeros N. Cualquiera puede reproducir
- * el resultado a mano con los mismos datos, y el entrenador puede ajustar la
- * sugerencia.
+ * promedio acumulado y, para cada posicion nominal del catalogo (ver
+ * deportivo.posiciones), se titulariza al mejor promediado disponible que
+ * juegue ahi -no los N mejores promedios sin mirar la posicion, que podia
+ * sugerir dos porteros a la vez y ningun defensa-. Quien no tiene posicion
+ * registrada, o queda segundo en la suya, cae a suplente. Cualquiera puede
+ * reproducir el resultado a mano con los mismos datos, y el entrenador puede
+ * ajustar la sugerencia.
  *
  * <p>El modelo de lenguaje solo redacta un comentario sobre una alineacion ya
  * decidida, y solo cuando se le pide explicitamente ({@link #feedback}): dejar
@@ -99,16 +103,27 @@ public class PlantillaService {
                         e.getIdEstudiante(), BigDecimal.ZERO)).reversed()
                 .thenComparing(Estudiante::getIdEstudiante));
 
-        List<JugadorPlantillaResponse> titulares = new ArrayList<>();
+        // Un titular por posicion, no los N mejores promedios sin mirar en que
+        // juegan: eso es lo que antes podia sugerir dos porteros a la vez (o
+        // ningun defensa) si asi caian los promedios. disponibles ya viene
+        // ordenado mejor-a-peor, asi que el primero de cada posicion nominal
+        // es, por construccion, el mejor disponible para ese puesto; el resto
+        // de esa misma posicion (y quien no tiene posicion asignada, que no
+        // puede llenar ningun puesto) cae a suplentes. El limite
+        // "plantilla.titulares" sigue aplicando como tope de seguridad.
+        Map<String, JugadorPlantillaResponse> titularPorPosicion = new LinkedHashMap<>();
         List<JugadorPlantillaResponse> suplentes = new ArrayList<>();
-        for (int i = 0; i < disponibles.size(); i++) {
-            var jugador = aResponse(disponibles.get(i), promedios);
-            if (i < cantidadTitulares) {
-                titulares.add(jugador);
+        for (Estudiante e : disponibles) {
+            var jugador = aResponse(e, promedios);
+            String posicion = e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null;
+            boolean hayCupo = titularPorPosicion.size() < cantidadTitulares;
+            if (posicion != null && hayCupo && !titularPorPosicion.containsKey(posicion)) {
+                titularPorPosicion.put(posicion, jugador);
             } else {
                 suplentes.add(jugador);
             }
         }
+        List<JugadorPlantillaResponse> titulares = new ArrayList<>(titularPorPosicion.values());
 
         return new ResultadoCalculo(categoria, titulares, suplentes, excluidos);
     }

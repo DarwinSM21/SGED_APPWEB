@@ -179,7 +179,15 @@ public class EvaluacionDiariaService {
      * Guarda los puntajes de un jugador. Es la operacion del autoguardado, asi
      * que se invoca muchas veces por sesion y debe ser idempotente: vuelve a
      * escribir sobre lo que ya habia en vez de acumular filas.
+     *
+     * <p>La auditoria queda deliberadamente generica ("editó estadísticas de
+     * estudiante #X"), sin el detalle de que criterio cambio ni a que valor:
+     * el autoguardado dispara esto en cada pausa del entrenador mientras
+     * ajusta sliders, y una fila por criterio inundaria el registro sin
+     * agregar informacion util.
      */
+    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#p1.idEstudiante",
+            descripcionSpel = "'editó estadísticas de estudiante #' + #p1.idEstudiante")
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)

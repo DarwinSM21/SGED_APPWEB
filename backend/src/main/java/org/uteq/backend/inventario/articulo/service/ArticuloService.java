@@ -34,7 +34,8 @@ public class ArticuloService {
         return toResponse(buscarEntidad(id));
     }
 
-    @Auditado(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo")
+    @Auditado(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo",
+            descripcionSpel = "'creó el artículo ' + #result.nombre")
     @Transactional
     public ArticuloResponse crear(ArticuloRequest request) {
         Articulo articulo = Articulo.builder()
@@ -52,7 +53,8 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
-    @Auditado(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo")
+    @Auditado(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo",
+            descripcionSpel = "'editó el artículo ' + #result.nombre")
     @Transactional
     public ArticuloResponse editar(Long id, ArticuloRequest request) {
         Articulo articulo = buscarEntidad(id);
@@ -69,7 +71,8 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
-    @Auditado(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0")
+    @Auditado(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0",
+            descripcionSpel = "'desactivó el artículo #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Articulo articulo = buscarEntidad(id);

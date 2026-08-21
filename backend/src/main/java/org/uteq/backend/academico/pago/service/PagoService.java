@@ -71,7 +71,8 @@ public class PagoService {
         return pagoRepository.saveAll(pagos);
     }
 
-    @Auditado(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago")
+    @Auditado(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago",
+            descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
     @Transactional
     public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
         Estudiante estudiante = buscarEstudiante(idEstudiante);

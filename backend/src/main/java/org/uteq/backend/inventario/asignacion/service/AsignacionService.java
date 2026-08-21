@@ -56,7 +56,8 @@ public class AsignacionService {
                 .map(this::toResponse);
     }
 
-    @Auditado(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion")
+    @Auditado(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
+            descripcionSpel = "'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)")
     @Transactional
     public AsignacionResponse crear(AsignacionRequest request, String usernameRegistrador) {
         validarDestinatario(request.tipoDestinatario(), request.idEstudiante(), request.idEntrenador());
@@ -92,7 +93,8 @@ public class AsignacionService {
         return toResponse(asignacionRepository.save(builder.build()));
     }
 
-    @Auditado(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion")
+    @Auditado(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
+            descripcionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
     @Transactional
     public AsignacionResponse devolver(Long id, DevolucionRequest request) {
         if (request.estado() == EstadoAsignacion.ASIGNADO) {

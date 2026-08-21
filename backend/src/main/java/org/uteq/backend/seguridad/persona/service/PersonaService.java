@@ -38,7 +38,8 @@ public class PersonaService {
         return toResponse(persona);
     }
 
-    @Auditado(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona")
+    @Auditado(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona",
+            descripcionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonaResponse crear(PersonaRequest request) {
         // Validar unicidad de Cédula y Correo
@@ -59,7 +60,8 @@ public class PersonaService {
         return toResponse(persona);
     }
 
-    @Auditado(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona")
+    @Auditado(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona",
+            descripcionSpel = "'editó los datos de ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonaResponse editar(Long id, PersonaRequest request) {
         Persona persona = personaRepository.findById(id)
@@ -80,7 +82,8 @@ public class PersonaService {
         return toResponse(persona);
     }
 
-    @Auditado(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0")
+    @Auditado(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0",
+            descripcionSpel = "'desactivó la persona #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Persona persona = personaRepository.findById(id)

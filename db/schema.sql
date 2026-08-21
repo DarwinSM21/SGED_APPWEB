@@ -137,17 +137,23 @@ CREATE TABLE IF NOT EXISTS deportivo.posiciones (
     activo BOOLEAN NOT NULL DEFAULT TRUE
 );
 
+-- Las 11 posiciones de una formacion 4-3-3, una por rol de la cancha (sin
+-- duplicados): es el catalogo del que PlantillaService.calcular toma el
+-- mejor estudiante disponible por posicion para la formacion sugerida, asi
+-- que cada nombre aqui es exactamente un slot de la formacion, no una
+-- variante libre de redaccion.
 INSERT INTO deportivo.posiciones (nombre, abreviatura, descripcion) VALUES
     ('Portero', 'POR', 'Guardameta'),
-    ('Defensa central', 'DFC', 'Defensa por el centro'),
-    ('Lateral derecho', 'LD', 'Defensa por banda derecha'),
-    ('Lateral izquierdo', 'LI', 'Defensa por banda izquierda'),
-    ('Mediocentro defensivo', 'MCD', 'Contención en el mediocampo'),
-    ('Mediocentro', 'MC', 'Organización y distribución'),
-    ('Mediapunta', 'MP', 'Creación entre líneas'),
-    ('Extremo derecho', 'ED', 'Ataque por banda derecha'),
-    ('Extremo izquierdo', 'EI', 'Ataque por banda izquierda'),
-    ('Delantero centro', 'DC', 'Referencia ofensiva')
+    ('Defensa lateral izquierda', 'DLI', 'Defensa por banda izquierda'),
+    ('Defensa central izquierda', 'DCI', 'Defensa por el centro, lado izquierdo'),
+    ('Defensa central derecha', 'DCD', 'Defensa por el centro, lado derecho'),
+    ('Defensa lateral derecha', 'DLD', 'Defensa por banda derecha'),
+    ('Interior izquierda', 'II', 'Mediocampo por el lado izquierdo'),
+    ('Centrocampista', 'MC', 'Organización y distribución'),
+    ('Interior derecha', 'ID', 'Mediocampo por el lado derecho'),
+    ('Extremo izquierda', 'EI', 'Ataque por banda izquierda'),
+    ('Delantero', 'DEL', 'Referencia ofensiva'),
+    ('Extremo derecha', 'ED', 'Ataque por banda derecha')
 ON CONFLICT (nombre) DO NOTHING;
 
 -- ------------------------------------------------------------

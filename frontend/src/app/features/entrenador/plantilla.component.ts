@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PlantillaService } from './plantilla.service';
 import {
-  Plantilla, JugadorPlantilla, ZonaCancha, zonaDe, inicialesDe, apellidoDe,
+  Plantilla, JugadorPlantilla, ZonaCancha, zonaDe, inicialesDe, apellidoDe, COORDENADA_POR_ABREVIATURA,
 } from './plantilla.models';
 
 interface Token {
@@ -24,12 +24,6 @@ const COLOR_ZONA: Record<ZonaCancha, string> = {
 const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
   POR: 'Portero', DEF: 'Defensa', MED: 'Mediocampo', DEL: 'Delantero', SIN_POSICION: 'Sin posición registrada',
 };
-
-/**
- * Orden de bandas de arriba (linea de ataque) hacia abajo (arco propio),
- * como en el campo del Figma de referencia.
- */
-const ORDEN_BANDAS: ZonaCancha[] = ['DEL', 'MED', 'DEF', 'POR'];
 
 /**
  * Formacion sugerida, visualizada sobre una cancha.
@@ -249,36 +243,30 @@ export class PlantillaComponent implements OnInit {
   readonly idArrastrando = signal<number | null>(null);
   private arrastreActual: { idEstudiante: number; inicioX: number; inicioY: number; movio: boolean } | null = null;
 
+  /**
+   * Cada posicion tiene una coordenada fija (COORDENADA_POR_ABREVIATURA):
+   * como PlantillaService.calcular ahora titulariza a lo sumo un estudiante
+   * por posicion, no hace falta repartir varios jugadores dentro de una
+   * misma banda ancha como antes -- cada token va directo a su punto exacto.
+   * Sin coordenada conocida (posicion no registrada, o un dato viejo que ya
+   * no esta en el catalogo) se ubica al centro en vez de inventar una banda.
+   */
   readonly tokens = computed<Token[]>(() => {
     const p = this.plantilla();
     if (!p) return [];
     const overrides = this.arrastres();
 
-    const bandas = new Map<ZonaCancha, JugadorPlantilla[]>();
-    for (const zona of ORDEN_BANDAS) bandas.set(zona, []);
-    for (const j of p.titulares) {
-      const zona = zonaDe(j.posicion);
-      const destino = zona === 'SIN_POSICION' ? 'MED' : zona; // sin dato: se ubica al centro, no se inventa una banda propia
-      bandas.get(destino)!.push(j);
-    }
-
-    const alturaBanda = 560 / (ORDEN_BANDAS.length + 1);
-    const tokens: Token[] = [];
-    ORDEN_BANDAS.forEach((zona, i) => {
-      const jugadores = bandas.get(zona)!;
-      const y = alturaBanda * (i + 1) - 20;
-      const paso = 400 / (jugadores.length + 1);
-      jugadores.forEach((jugador, idx) => {
-        const manual = overrides.get(jugador.idEstudiante);
-        tokens.push({
-          jugador,
-          zona: zonaDe(jugador.posicion),
-          x: manual?.x ?? (paso * (idx + 1)),
-          y: manual?.y ?? y,
-        });
-      });
+    return p.titulares.map((jugador) => {
+      const manual = overrides.get(jugador.idEstudiante);
+      const coord = (jugador.posicion && COORDENADA_POR_ABREVIATURA[jugador.posicion])
+        || { x: 200, y: 280 };
+      return {
+        jugador,
+        zona: zonaDe(jugador.posicion),
+        x: manual?.x ?? coord.x,
+        y: manual?.y ?? coord.y,
+      };
     });
-    return tokens;
   });
 
   ngOnInit(): void {

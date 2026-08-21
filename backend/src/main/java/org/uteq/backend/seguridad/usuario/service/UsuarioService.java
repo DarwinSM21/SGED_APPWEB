@@ -72,7 +72,8 @@ public class UsuarioService {
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
     })
-    @Auditado(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario")
+    @Auditado(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario",
+            descripcionSpel = "'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UsuarioResponse crear(UsuarioRequest request) {
         if (request.password() == null || request.password().isBlank()) {
@@ -114,7 +115,8 @@ public class UsuarioService {
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
     })
-    @Auditado(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario")
+    @Auditado(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario",
+            descripcionSpel = "'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UsuarioResponse editar(Long id, UsuarioRequest request) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -147,7 +149,8 @@ public class UsuarioService {
         return toResponse(usuario);
     }
 
-    @Auditado(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0")
+    @Auditado(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0",
+            descripcionSpel = "'desactivó la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
     @Transactional
     public void eliminar(Long id) {

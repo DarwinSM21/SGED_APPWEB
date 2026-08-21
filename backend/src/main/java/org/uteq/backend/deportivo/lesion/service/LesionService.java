@@ -34,7 +34,8 @@ public class LesionService {
     private final EntrenadorRepository entrenadorRepository;
     private final NotificacionService notificacionService;
 
-    @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion")
+    @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion",
+            descripcionSpel = "'registró una lesión del estudiante #' + #p0")
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
                             LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
@@ -74,7 +75,7 @@ public class LesionService {
 
     /** Cierra una lesion: el jugador vuelve a entrar en las plantillas. */
     @Auditado(accion = "EDITAR", entidad = "Lesion", idSpel = "#result.idLesion",
-            descripcionSpel = "'dio de alta la Lesion #' + #result.idLesion")
+            descripcionSpel = "'dio de alta la lesión #' + #result.idLesion")
     @Transactional
     public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {
         var lesion = lesionRepository.findById(idLesion)

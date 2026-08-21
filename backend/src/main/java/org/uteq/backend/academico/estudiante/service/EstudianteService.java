@@ -74,7 +74,8 @@ public class EstudianteService {
         return toResponse(e);
     }
 
-    @Auditado(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante")
+    @Auditado(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+            descripcionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
@@ -141,7 +142,8 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
-    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante")
+    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+            descripcionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse editar(Long id, EstudianteRequest request) {
@@ -179,7 +181,8 @@ public class EstudianteService {
      * siendo cosa de ADMINISTRADOR/RECEPCIONISTA via editar()-. Es la misma
      * posicion que ve y edita el admin en Personas, no una copia aparte.
      */
-    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante")
+    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+            descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse actualizarPosicion(Long id, Long idPosicion) {
@@ -246,7 +249,8 @@ public class EstudianteService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Posición no encontrada: " + idPosicion));
     }
 
-    @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
+    @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0",
+            descripcionSpel = "'desactivó la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {

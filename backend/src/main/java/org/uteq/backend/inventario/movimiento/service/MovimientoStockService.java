@@ -40,7 +40,8 @@ public class MovimientoStockService {
                 .map(this::toResponse);
     }
 
-    @Auditado(accion = "CREAR", entidad = "MovimientoStock", idSpel = "#result.idMovimiento")
+    @Auditado(accion = "CREAR", entidad = "MovimientoStock", idSpel = "#result.idMovimiento",
+            descripcionSpel = "'registró ' + #result.tipoMovimiento + ' de ' + #result.cantidad + ' (' + #result.articulo + ')'")
     @Transactional
     public MovimientoResponse registrar(MovimientoRequest request, String usernameRegistrador) {
         Articulo articulo = buscarArticulo(request.idArticulo());
