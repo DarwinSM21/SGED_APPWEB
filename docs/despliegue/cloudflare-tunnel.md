@@ -25,6 +25,15 @@ winget install --id Cloudflare.cloudflared
 
 ## Levantar el túnel
 
+### Atajo
+
+Doble clic en `scripts/exponer-publico.bat`. Comprueba Docker, levanta el
+stack, espera a que el backend responda y abre el túnel. La dirección aparece
+al final; **la ventana debe quedar abierta**, al cerrarla se cae el túnel.
+
+### A mano
+
+
 ```bash
 cloudflared tunnel --url http://localhost:4200 --protocol http2
 ```
