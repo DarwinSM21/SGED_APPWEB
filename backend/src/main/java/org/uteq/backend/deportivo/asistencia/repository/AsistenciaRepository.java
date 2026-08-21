@@ -49,4 +49,59 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, J
             @Param("p_estudiante") Long idEstudiante,
             @Param("p_desde") LocalDate desde,
             @Param("p_hasta") LocalDate hasta);
+
+    /**
+     * Asistencia de TODOS los estudiantes activos en una sola consulta.
+     *
+     * Existe porque el panel de alertas llamaba a
+     * sp_reporte_asistencia_estudiante una vez por estudiante: con 8 alumnos
+     * eran 8 llamadas y se notaba poco, pero medido con 2.008 el panel pasaba
+     * de 0,16 s a 2,9 s. El procedimiento sigue siendo la respuesta correcta
+     * para consultar a UN estudiante -lo usan la ficha y el informe al
+     * representante-; lo que no escala es invocarlo en bucle.
+     *
+     * Devuelve, por estudiante: programadas y presentes. El calculo del
+     * porcentaje queda en el servicio para no repetir aqui la regla de que
+     * cero programadas significa "sin dato" y no "cero por ciento".
+     *
+     * Es nativa y no JPQL porque necesita CTEs, que JPQL no expresa. La
+     * primera version usaba dos subconsultas correlacionadas y seguia
+     * tardando 1,4 s con 2.008 alumnos: el plan mostraba loops=2008, o sea
+     * que Postgres las ejecutaba una vez por estudiante. Con CTEs cada
+     * agregado se calcula UNA vez y despues se une.
+     *
+     * Van separadas porque cuentan cosas distintas: el denominador es por
+     * CATEGORIA -las sesiones programadas del grupo- y el numerador por
+     * ESTUDIANTE. Unirlos en una sola agrupacion multiplicaria filas.
+     *
+     * El JOIN con programadas es interior a proposito: si la categoria no
+     * tuvo sesiones en la ventana, el estudiante no aparece y el servicio lo
+     * lee como "sin dato" en vez de como cero por ciento.
+     *
+     * No es SQL dinamico: es una consulta fija con parametros nombrados, sin
+     * concatenacion, que es lo que audita scripts/audit-sql-dynamic.sh.
+     */
+    @Query(value = """
+           WITH programadas AS (
+               SELECT id_categoria, COUNT(*) AS n
+                 FROM deportivo.sesiones_entrenamiento
+                WHERE fecha BETWEEN :desde AND :corte
+                GROUP BY id_categoria
+           ),
+           presentes AS (
+               SELECT a.id_estudiante, COUNT(*) AS n
+                 FROM deportivo.asistencias a
+                 JOIN deportivo.sesiones_entrenamiento se ON se.id_sesion = a.id_sesion
+                WHERE a.estado IN ('PRESENTE', 'TARDE')
+                  AND se.fecha BETWEEN :desde AND :corte
+                GROUP BY a.id_estudiante
+           )
+           SELECT e.id_estudiante, pr.n, COALESCE(pe.n, 0)
+             FROM academico.estudiantes e
+             JOIN programadas pr ON pr.id_categoria = e.id_categoria
+             LEFT JOIN presentes pe ON pe.id_estudiante = e.id_estudiante
+            WHERE e.activo
+           """, nativeQuery = true)
+    List<Object[]> resumenAsistenciaDeActivos(
+            @Param("desde") LocalDate desde, @Param("corte") LocalDate corte);
 }

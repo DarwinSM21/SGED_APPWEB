@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -45,6 +46,7 @@ class EvaluacionDiariaServiceTest {
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private PosicionRepository posicionRepository;
+    @Mock private EstudianteRepository estudianteRepository;
 
     @InjectMocks private EvaluacionDiariaService servicio;
 
@@ -220,6 +222,8 @@ class EvaluacionDiariaServiceTest {
                 .thenReturn(List.of());
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION))
                 .thenReturn(List.of(asistenciaCon(Asistencia.ESTADO_PRESENTE)));
+        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(3L))
+                .thenReturn(List.of(estudiante()));
         when(evaluacionEstudianteRepository.findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
 

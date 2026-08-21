@@ -15,10 +15,13 @@ import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,10 +34,18 @@ import java.util.Set;
  * la accion no es la misma si el problema es la cuota, las faltas o una
  * lesion.
  *
- * <p>El porcentaje de asistencia no se recalcula aqui: reutiliza el
- * procedimiento almacenado sp_reporte_asistencia_estudiante, que ya resuelve
- * el detalle fino de tomar como denominador las sesiones programadas de su
- * categoria y no solo las filas de asistencia existentes.
+ * <p>Las tres señales se resuelven con una consulta cada una, nunca con una
+ * por estudiante. La de asistencia lo era hasta que se midio: llamar a
+ * sp_reporte_asistencia_estudiante en bucle costaba 0,16 s con 8 alumnos
+ * pero 2,9 s con 2.008. El procedimiento sigue siendo lo correcto para
+ * consultar a UN estudiante -ficha e informe al representante lo usan-; lo
+ * que no escala es invocarlo tantas veces como alumnos haya.
+ *
+ * <p>Se conserva la misma regla del procedimiento: el denominador son las
+ * sesiones programadas de su categoria -no solo las filas de asistencia que
+ * existan- y la ventana se corta en ayer, porque una sesion de hoy puede no
+ * haber ocurrido todavia y contarla seria acusar de faltar a quien aun no
+ * tenia como asistir.
  */
 @Service
 @RequiredArgsConstructor
@@ -68,11 +79,16 @@ public class AlertaService {
                 pagoRepository.idsConMembresiaCubierta(TipoPago.MEMBRESIA, anio, mes));
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
 
+        // Se corta en ayer por el mismo motivo que el procedimiento: la sesion
+        // de hoy puede no haber ocurrido y contarla castigaria a todos.
+        LocalDate corte = hoy.minusDays(1);
         LocalDate desde = hoy.minusDays(diasAsistencia);
         BigDecimal umbral = BigDecimal.valueOf(umbralAsistencia);
 
+        Map<Long, BigDecimal> porcentajes = porcentajesPorEstudiante(desde, corte);
+
         List<EstudianteEnRiesgoResponse> enRiesgo = activos.stream()
-                .map(e -> evaluar(e, alDia, lesionados, desde, hoy, umbral))
+                .map(e -> evaluar(e, alDia, lesionados, porcentajes, umbral))
                 .filter(r -> r.totalAlertas() > 0)
                 .sorted(Comparator
                         .comparingInt(EstudianteEnRiesgoResponse::totalAlertas).reversed()
@@ -87,15 +103,38 @@ public class AlertaService {
                 enRiesgo);
     }
 
+    /**
+     * Porcentaje por estudiante a partir de una sola consulta. Un estudiante
+     * SIN entrada aqui -o con cero sesiones programadas- se deja fuera del
+     * mapa a proposito: el servicio lo leera como null, que significa "sin
+     * dato", no "cero por ciento". La diferencia importa porque marcar
+     * asistencia baja a quien no tuvo entrenamientos seria acusarlo de algo
+     * que no hizo.
+     */
+    private Map<Long, BigDecimal> porcentajesPorEstudiante(LocalDate desde, LocalDate corte) {
+        Map<Long, BigDecimal> porcentajes = new HashMap<>();
+        for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {
+            long programadas = ((Number) fila[1]).longValue();
+            if (programadas == 0) continue;
+            long presentes = ((Number) fila[2]).longValue();
+            porcentajes.put(
+                    ((Number) fila[0]).longValue(),
+                    BigDecimal.valueOf(presentes)
+                            .multiply(BigDecimal.valueOf(100))
+                            .divide(BigDecimal.valueOf(programadas), 2, RoundingMode.HALF_UP));
+        }
+        return porcentajes;
+    }
+
     private EstudianteEnRiesgoResponse evaluar(
             Estudiante e, Set<Long> alDia, Set<Long> lesionados,
-            LocalDate desde, LocalDate hasta, BigDecimal umbral) {
+            Map<Long, BigDecimal> porcentajes, BigDecimal umbral) {
 
         Long id = e.getIdEstudiante();
         boolean debe = !alDia.contains(id);
         boolean lesionada = lesionados.contains(id);
 
-        BigDecimal porcentaje = asistenciaRepository.calcularPorcentajeAsistencia(id, desde, hasta);
+        BigDecimal porcentaje = porcentajes.get(id);
         // Null significa "su categoria no tuvo sesiones programadas en el
         // rango": eso no es asistencia baja, es ausencia de datos, y marcarlo
         // como alerta acusaria al estudiante de algo que no hizo.

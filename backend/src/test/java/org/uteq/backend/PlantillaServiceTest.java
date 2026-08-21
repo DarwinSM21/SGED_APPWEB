@@ -60,7 +60,24 @@ class PlantillaServiceTest {
                 .build();
     }
 
+    /**
+     * Cada estudiante recibe una posicion propia. Desde que la sugerencia
+     * titulariza al mejor promediado DE CADA posicion -y ya no a los N
+     * mejores promedios sin mirar el puesto-, un estudiante sin posicion no
+     * puede ocupar ninguna y cae siempre a suplente. Darles una distinta a
+     * cada uno deja que el orden lo decida el promedio, que es lo que estas
+     * pruebas verifican.
+     */
     private Asistencia asistencia(long idEstudiante) {
+        return asistencia(idEstudiante, Posicion.builder()
+                .idPosicion(idEstudiante)
+                .nombre("Posicion " + idEstudiante)
+                .abreviatura("P" + idEstudiante)
+                .build());
+    }
+
+    /** Para el caso explicito de quien no tiene posicion registrada. */
+    private Asistencia asistenciaSinPosicion(long idEstudiante) {
         return asistencia(idEstudiante, null);
     }
 

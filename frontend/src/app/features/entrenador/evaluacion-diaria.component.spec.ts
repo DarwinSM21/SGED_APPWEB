@@ -16,6 +16,7 @@ describe('EvaluacionDiariaComponent', () => {
     guardarConRetardo: ReturnType<typeof vi.fn>;
     registrarLesion: ReturnType<typeof vi.fn>;
     darDeAltaLesion: ReturnType<typeof vi.fn>;
+    posicionesActivas: ReturnType<typeof vi.fn>;
     estado: ReturnType<typeof signal>;
     pendientes: ReturnType<typeof signal>;
   };
@@ -43,6 +44,7 @@ describe('EvaluacionDiariaComponent', () => {
       guardarConRetardo: vi.fn(),
       registrarLesion: vi.fn(),
       darDeAltaLesion: vi.fn(),
+      posicionesActivas: vi.fn().mockReturnValue(of([])),
       estado: signal('guardado'),
       pendientes: signal(0),
     };
@@ -60,19 +62,35 @@ describe('EvaluacionDiariaComponent', () => {
     fixture.detectChanges();
   }
 
-  it('carga la sesion y expande al primer jugador habilitado para evaluarse', async () => {
+  it('carga la sesion con todas las fichas plegadas', async () => {
     await crearComponente();
 
     expect(component.cargando()).toBe(false);
     expect(component.sesion()?.idSesion).toBe(5);
+    // Antes se expandia solo al primer jugador habilitado. Se quito al pasar
+    // la pantalla a listar a TODOS los estudiantes de la categoria y no solo
+    // a los presentes: con la lista completa, abrir una ficha por decision
+    // propia deja de ser un atajo util y pasa a ser una fila desalineada.
+    expect(component.estaExpandido(1)).toBe(false);
+    expect(component.estaExpandido(2)).toBe(false);
+  });
+
+  it('alternar abre y cierra la ficha de un jugador', async () => {
+    await crearComponente();
+
+    component.alternar(1);
     expect(component.estaExpandido(1)).toBe(true);
     expect(component.estaExpandido(2)).toBe(false);
+
+    component.alternar(1);
+    expect(component.estaExpandido(1)).toBe(false);
   });
 
   it('sesion inexistente (404) muestra el mensaje correspondiente', async () => {
     servicioMock = {
       abrirSesion: vi.fn().mockReturnValue(throwError(() => ({ status: 404 }))),
       finalizar: vi.fn(), guardarConRetardo: vi.fn(), registrarLesion: vi.fn(), darDeAltaLesion: vi.fn(),
+      posicionesActivas: vi.fn().mockReturnValue(of([])),
       estado: signal('guardado'), pendientes: signal(0),
     };
     await TestBed.configureTestingModule({
