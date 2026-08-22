@@ -28,6 +28,8 @@ public class Asistencia {
     public static final String METODO_MANUAL = "MANUAL";
     public static final String ESTADO_PRESENTE = "PRESENTE";
     public static final String ESTADO_TARDE = "TARDE";
+    public static final String ESTADO_AUSENTE = "AUSENTE";
+    public static final String ESTADO_JUSTIFICADO = "JUSTIFICADO";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

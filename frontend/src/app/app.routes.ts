@@ -20,6 +20,12 @@ export const routes: Routes = [
           .then(m => m.EvaluacionDiariaComponent),
       },
       {
+        path: 'entrenador/sesion/:idSesion/asistencia',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
+        loadComponent: () => import('./features/entrenador/lista-asistencia.component')
+          .then(m => m.ListaAsistenciaComponent),
+      },
+      {
         path: 'entrenador/sesion/:idSesion/plantilla',
         loadComponent: () => import('./features/entrenador/plantilla.component')
           .then(m => m.PlantillaComponent),
@@ -36,7 +42,10 @@ export const routes: Routes = [
       },
       {
         path: 'categorias',
-        canActivate: [roleGuard(['ADMINISTRADOR'])],
+        // El entrenador entra en modo consulta: el propio componente le oculta
+        // el formulario y los botones, y el backend ya le niega POST/PUT/DELETE
+        // con 403 aunque llegara por otra via.
+        canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
         loadComponent: () => import('./features/categorias/categorias.component').then(m => m.CategoriasComponent),
       },
       {

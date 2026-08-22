@@ -535,13 +535,36 @@ si es una jornada extra).
 
 ---
 
-**RF-19 — Registro de asistencia** 🟡 Modelado
+**RF-19 — Registro de asistencia** 🟢 Implementado (parcial: QR y manual; RFID no)
 *El sistema deberá registrar la asistencia de cada estudiante a cada sesión,
 admitiendo el marcaje por RFID o manual, con estado PRESENTE, TARDE, AUSENTE
 o JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
 mismo estudiante en la misma sesión.*
 Esquema: `deportivo.asistencias`, con
 `UNIQUE (id_sesion, id_estudiante)` y `CHECK` sobre `metodo` y `estado`.
+
+Dos vías de marcaje, y la distinción entre ambas se conserva en el dato:
+
+| Vía | Quién marca | `metodo` | `hora_entrada` |
+|---|---|---|---|
+| QR rotativo | el propio estudiante | `QR` | hora real de llegada, medida |
+| Lista manual | el entrenador | `MANUAL` | vacía |
+
+La lista manual **no escribe una hora de llegada**. El entrenador afirma que
+el estudiante estuvo, no a qué hora entró; si pasa lista al terminar el
+entrenamiento, un `LocalTime.now()` guardaría la hora en que tecleó y quedaría
+escrito como si el chico hubiera llegado dos horas tarde a una sesión a la que
+llegó puntual. Así la columna significa algo preciso: si hay hora, la midió el
+QR; si no la hay, es palabra del entrenador.
+
+El marcaje **RFID sigue sin implementar**: exige un lector físico del que la
+escuela no dispone. El `CHECK` de `metodo` ya admite el valor `'RFID'`, de modo
+que incorporarlo no requiere migración de esquema.
+
+Endpoints: `GET /api/asistencias/sesion/{id}` (nómina completa de la categoría,
+no solo quienes ya marcaron) y `PUT /api/asistencias/sesion/{id}` (upsert
+idempotente por estudiante). Una sesión con fecha posterior a hoy se puede
+consultar pero no editar: nadie pudo asistir todavía.
 
 ---
 
