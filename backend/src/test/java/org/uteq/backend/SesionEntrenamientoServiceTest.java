@@ -152,7 +152,7 @@ class SesionEntrenamientoServiceTest {
         pasada.setFecha(LocalDate.now().minusDays(4));
 
         when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
-        when(sesionRepository.findByEntrenadorIdEntrenadorOrderByFechaDesc(eq(1L), any(PageRequest.class)))
+        when(sesionRepository.sesionesDelEntrenador(eq(1L), any(PageRequest.class)))
                 .thenReturn(new PageImpl<>(List.of(pasada)));
         when(evaluacionRepository.existsBySesionIdSesion(any())).thenReturn(false);
 

@@ -90,7 +90,7 @@ public class SesionEntrenamientoService {
             return List.of();
         }
 
-        Page<SesionEntrenamiento> pagina = sesionRepository.findByEntrenadorIdEntrenadorOrderByFechaDesc(
+        Page<SesionEntrenamiento> pagina = sesionRepository.sesionesDelEntrenador(
                 entrenador.getIdEntrenador(), PageRequest.of(page, size));
         return pagina.map(this::aResponse).getContent();
     }
@@ -114,6 +114,16 @@ public class SesionEntrenamientoService {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
+
+        // La generacion automatica ya evita repetir la sesion de un horario,
+        // pero el alta manual no comprobaba nada: se podian crear tres
+        // sesiones identicas del mismo grupo a la misma hora, que en Recepcion
+        // aparecen tres veces y reparten la asistencia sin criterio.
+        if (sesionRepository.existeSolape(request.idCategoria(), request.fecha(),
+                                          request.horaInicio(), request.horaFin())) {
+            throw new IllegalArgumentException(
+                    "Ya hay una sesión de esa categoría ese día en ese horario");
+        }
 
         SesionEntrenamiento sesion = SesionEntrenamiento.builder()
                 .entrenador(entrenador)
