@@ -41,14 +41,15 @@ public class CategoriaService {
 
     @Transactional
     public CategoriaResponse crear(CategoriaRequest request) {
-        if (categoriaRepository.existsByNombreIgnoreCase(request.nombre())) {
+        String nombre = normalizarNombre(request.nombre());
+        if (categoriaRepository.existsByNombreIgnoreCase(nombre)) {
             throw new IllegalArgumentException(
-                    "Ya existe una categoría llamada \"" + request.nombre() + "\"");
+                    "Ya existe una categoría llamada \"" + nombre + "\"");
         }
         validarEdades(request.edadMin(), request.edadMax());
 
         Categoria categoria = Categoria.builder()
-                .nombre(request.nombre())
+                .nombre(nombre)
                 .edadMin(request.edadMin())
                 .edadMax(request.edadMax())
                 .descripcion(request.descripcion())
@@ -60,16 +61,17 @@ public class CategoriaService {
 
     @Transactional
     public CategoriaResponse editar(Long id, CategoriaRequest request) {
-        if (categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot(request.nombre(), id)) {
+        String nombre = normalizarNombre(request.nombre());
+        if (categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot(nombre, id)) {
             throw new IllegalArgumentException(
-                    "Ya existe otra categoría llamada \"" + request.nombre() + "\"");
+                    "Ya existe otra categoría llamada \"" + nombre + "\"");
         }
         validarEdades(request.edadMin(), request.edadMax());
 
         Categoria categoria = categoriaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
 
-        categoria.setNombre(request.nombre());
+        categoria.setNombre(nombre);
         categoria.setEdadMin(request.edadMin());
         categoria.setEdadMax(request.edadMax());
         categoria.setDescripcion(request.descripcion());
@@ -97,6 +99,18 @@ public class CategoriaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
         categoria.setActivo(false);
         categoriaRepository.save(categoria);
+    }
+
+    /**
+     * Deja el nombre en la forma canonica SUB-<edad>. La validacion del DTO
+     * acepta variantes ("sub12", "Sub 12") para no pelear con quien escribe;
+     * aqui se unifican, porque el problema real no es como se teclea sino que
+     * el catalogo termine con tres filas distintas que son la misma categoria
+     * y ningun desplegable permita distinguirlas.
+     */
+    private String normalizarNombre(String nombre) {
+        String digitos = nombre.replaceAll("\\D+", "");
+        return "SUB-" + digitos;
     }
 
     private void validarEdades(Short edadMin, Short edadMax) {

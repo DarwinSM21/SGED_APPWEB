@@ -114,7 +114,10 @@ class CategoriaControllerTest {
 
         mockMvc.perform(post("/api/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Sub-X\",\"edadMin\":15,\"edadMax\":10}"))
+                        // El nombre va valido a proposito: esta prueba mira la validacion de
+                        // EDADES (minima mayor que maxima). Con "Sub-X" fallaba antes por
+                        // formato de nombre y devolvia 422, tapando lo que se queria probar.
+                        .content("{\"nombre\":\"SUB-12\",\"edadMin\":15,\"edadMax\":10}"))
                 .andExpect(status().isBadRequest());
     }
 

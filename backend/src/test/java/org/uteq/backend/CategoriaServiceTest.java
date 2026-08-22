@@ -100,7 +100,9 @@ class CategoriaServiceTest {
         CategoriaResponse resultado = categoriaService.crear(request);
 
         assertThat(resultado.idCategoria()).isEqualTo(2L);
-        assertThat(resultado.nombre()).isEqualTo("Sub-15");
+        // El servicio normaliza a la forma canonica: se escribio "Sub-15" y se
+        // guarda "SUB-15", para que el catalogo no acumule variantes de lo mismo.
+        assertThat(resultado.nombre()).isEqualTo("SUB-15");
         verify(categoriaRepository).save(any(Categoria.class));
     }
 
@@ -123,10 +125,10 @@ class CategoriaServiceTest {
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(categoriaRepository.save(any(Categoria.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        CategoriaRequest request = new CategoriaRequest("Sub-12 renombrada", (short) 10, (short) 12, "actualizada");
+        CategoriaRequest request = new CategoriaRequest("Sub-13", (short) 10, (short) 13, "actualizada");
         CategoriaResponse resultado = categoriaService.editar(1L, request);
 
-        assertThat(resultado.nombre()).isEqualTo("Sub-12 renombrada");
+        assertThat(resultado.nombre()).isEqualTo("SUB-13");
         assertThat(resultado.descripcion()).isEqualTo("actualizada");
     }
 
@@ -149,7 +151,7 @@ class CategoriaServiceTest {
         // El repositorio ya tenia este metodo, pero el servicio no lo llamaba:
         // el catalogo aceptaba dos "SUB-12" y el formulario de estudiante
         // mostraba dos opciones identicas, imposibles de distinguir.
-        when(categoriaRepository.existsByNombreIgnoreCase("sub-12")).thenReturn(true);
+        when(categoriaRepository.existsByNombreIgnoreCase("SUB-12")).thenReturn(true);
 
         assertThatThrownBy(() -> categoriaService.crear(
                 new CategoriaRequest("sub-12", (short) 10, (short) 12, null)))
@@ -162,7 +164,7 @@ class CategoriaServiceTest {
     @Test
     @DisplayName("editar deja renombrar sin chocar consigo misma")
     void editar_no_se_considera_duplicado_de_si_misma() {
-        when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("Sub-12", 1L))
+        when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("SUB-12", 1L))
                 .thenReturn(false);
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaSub12()));
         when(categoriaRepository.save(any())).thenAnswer(i -> i.getArgument(0));
@@ -176,7 +178,7 @@ class CategoriaServiceTest {
     @Test
     @DisplayName("editar rechaza tomar el nombre de otra categoria")
     void editar_rechaza_nombre_de_otra() {
-        when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("Sub-14", 1L))
+        when(categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot("SUB-14", 1L))
                 .thenReturn(true);
 
         assertThatThrownBy(() -> categoriaService.editar(

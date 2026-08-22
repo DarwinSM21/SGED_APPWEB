@@ -5,6 +5,9 @@ import { CategoriasService } from './categorias.service';
 import { Categoria, CategoriaRequest } from './categorias.models';
 import { mensajeDeError } from '../../core/mensaje-error';
 
+/** SUB seguido de la edad, con guion o sin el; el componente lo normaliza. */
+const FORMATO_NOMBRE = /^\s*sub[\s-]?\d{1,2}\s*$/i;
+
 const FORMULARIO_VACIO: CategoriaRequest = {
   nombre: '', edadMin: null, edadMax: null, descripcion: null,
 };
@@ -42,8 +45,10 @@ const FORMULARIO_VACIO: CategoriaRequest = {
             <span class="field__label">Nombre</span>
             <span class="field__control">
               <input id="cat-nombre" [(ngModel)]="formulario.nombre" name="cat-nombre"
-                     placeholder="SUB-14" maxlength="100" />
+                     placeholder="SUB-14" maxlength="10" inputmode="text"
+                     (blur)="normalizarNombre()" />
             </span>
+            <span class="field__hint">Formato SUB-14. Se corrige solo al salir del campo.</span>
           </label>
 
           <label class="field" for="cat-min">
@@ -171,9 +176,19 @@ export class CategoriasComponent implements OnInit {
    * El backend valida lo mismo y con más autoridad; esto solo evita el viaje
    * y el mensaje de error cuando el formulario está a medio llenar.
    */
+  /**
+   * Deja lo escrito en la forma SUB-<edad>. Se corrige en vez de rechazar:
+   * quien teclea "sub12" quiso decir SUB-12, y devolverle un error por eso
+   * es hacerle perder el tiempo con algo que la aplicación sabe resolver.
+   */
+  normalizarNombre(): void {
+    const digitos = this.formulario.nombre.replace(/\D+/g, '');
+    if (digitos) this.formulario.nombre = 'SUB-' + digitos;
+  }
+
   formularioValido(): boolean {
     const f = this.formulario;
-    return f.nombre.trim().length > 0
+    return FORMATO_NOMBRE.test(f.nombre.trim())
       && f.edadMin !== null && f.edadMax !== null
       && f.edadMin >= 4 && f.edadMax > f.edadMin;
   }
