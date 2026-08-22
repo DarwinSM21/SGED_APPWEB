@@ -191,7 +191,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
             } catch (HttpClientErrorException e) {
                 // 4xx: no tiene sentido repetir.
                 log.warn("Gemini rechazo la peticion: {}", e.getStatusCode());
-                return ResultadoFeedback.noDisponible("El servicio de generacion no respondio");
+                return ResultadoFeedback.noDisponible(motivoDeRechazo(e));
 
             } catch (Exception e) {
                 ultimoFallo = e;
@@ -208,6 +208,26 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         log.warn("No se pudo generar feedback con IA tras {} intento(s): {}",
                 reintentos + 1, ultimoFallo == null ? "sin detalle" : ultimoFallo.getClass().getSimpleName());
         return ResultadoFeedback.noDisponible("El servicio de generacion no respondio");
+    }
+
+    /**
+     * Traduce el 4xx a algo que el entrenador pueda entender y actuar.
+     *
+     * <p>Decir "no respondio" ante un 429 es directamente falso -si respondio,
+     * y respondio que se acabo la cuota del dia- y manda a buscar el problema
+     * en la red, que es donde no esta. El nivel gratuito de Gemini tiene un
+     * limite diario: una tarde de pruebas lo agota, y al dia siguiente vuelve
+     * solo.
+     */
+    private String motivoDeRechazo(HttpClientErrorException e) {
+        int codigo = e.getStatusCode().value();
+        if (codigo == 429) {
+            return "Se agoto la cuota diaria del servicio de IA; se restablece manana";
+        }
+        if (codigo == 401 || codigo == 403) {
+            return "La clave del servicio de IA no es valida o no tiene permisos";
+        }
+        return "El servicio de IA rechazo la peticion (codigo " + codigo + ")";
     }
 
     private ResultadoFeedback intentarUnaVez(String prompt) {

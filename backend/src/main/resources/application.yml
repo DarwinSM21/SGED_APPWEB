@@ -60,8 +60,17 @@ ia:
     api-key: ${GEMINI_API_KEY:}
     # gemini-2.0-flash ya no tiene nivel gratuito para keys nuevas (ver .env.example).
     modelo: ${GEMINI_MODELO:gemini-flash-latest}
-    # Los modelos "-latest" piensan antes de responder (~5s medidos); 8s quedaba ajustado.
-    timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:15}
+    # Los modelos "-latest" piensan antes de responder (~5,7s medidos en una
+    # generacion real), asi que 8s queda ajustado y 10s deja margen.
+    #
+    # Lo que manda aqui no es el caso bueno sino el malo: el nivel gratuito de
+    # Gemini devuelve 503 "high demand" de forma intermitente (medido: 200,
+    # 503, 200, 503, timeout en cinco peticiones identicas). Con 15s y dos
+    # reintentos, rendirse costaba ~45s de pantalla congelada. Con 10s y un
+    # reintento el aviso "IA no disponible" aparece en ~21s en el peor caso,
+    # y el 503 -que vuelve en ~2,4s- sigue teniendo su segunda oportunidad.
+    timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:10}
+    reintentos: ${IA_REINTENTOS:1}
 
 asistencia:
   qr:
