@@ -7,6 +7,11 @@ services:
     image: postgres@sha256:33f923b05f64ca54ac4401c01126a6b92afe839a0aa0a52bc5aeb5cc958e5f20
     container_name: sged_postgres
     environment:
+      # Sin esto el contenedor corre en UTC y CURRENT_DATE adelanta un dia
+      # desde las 19:00 de Ecuador: la sesion de hoy pasa a contarse como
+      # de ayer y el recorte de asistencia se corre una jornada.
+      TZ: America/Guayaquil
+      PGTZ: America/Guayaquil
       POSTGRES_DB: sged_db
       POSTGRES_USER: ${DB_USER:-postgres}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
@@ -49,6 +54,7 @@ services:
       DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/sged_db}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      TZ: America/Guayaquil
       FLYWAY_ENABLED: "false"
     depends_on:
       postgres:
