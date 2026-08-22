@@ -2,6 +2,7 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoriasService } from './categorias.service';
+import { AuthService } from '../../auth/auth.service';
 import { Categoria, CategoriaRequest } from './categorias.models';
 import { mensajeDeError } from '../../core/mensaje-error';
 
@@ -32,11 +33,15 @@ const FORMULARIO_VACIO: CategoriaRequest = {
       <h1 class="titulo-panel">Categorías</h1>
       <p class="subtitulo-pantalla">
         Los grupos por edad a los que se asignan los estudiantes, los horarios y las sesiones.
+        @if (!puedeGestionar()) {
+          Crearlas y modificarlas corresponde a un administrador.
+        }
       </p>
 
       @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
       @if (exito()) { <div class="alert alert--success" role="status">{{ exito() }}</div> }
 
+      @if (puedeGestionar()) {
       <section class="card formulario">
         <h2 class="titulo-card">{{ editando() ? 'Editar categoría' : 'Nueva categoría' }}</h2>
 
@@ -86,6 +91,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
           }
         </div>
       </section>
+      }
 
       <section class="card lista">
         <div class="lista__cabecera">
@@ -96,7 +102,10 @@ const FORMULARIO_VACIO: CategoriaRequest = {
         @if (cargando()) {
           <p class="aviso">Cargando…</p>
         } @else if (categorias().length === 0) {
-          <p class="aviso">Todavía no hay categorías. Crea la primera arriba.</p>
+          <p class="aviso">
+            {{ puedeGestionar() ? 'Todavía no hay categorías. Crea la primera arriba.'
+                                : 'Todavía no hay categorías registradas.' }}
+          </p>
         } @else {
           @for (c of categorias(); track c.idCategoria) {
             <div class="fila-categoria" [class.fila-categoria--inactiva]="!c.activo">
@@ -110,6 +119,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
                   @if (c.descripcion) { · {{ c.descripcion }} }
                 </span>
               </div>
+              @if (puedeGestionar()) {
               <div class="botones">
                 <button class="btn btn--ghost btn--sm" type="button" (click)="editar(c)">Editar</button>
                 @if (c.activo) {
@@ -120,6 +130,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
                           [disabled]="guardando()" (click)="reactivar(c)">Reactivar</button>
                 }
               </div>
+              }
             </div>
           }
         }
@@ -159,6 +170,17 @@ const FORMULARIO_VACIO: CategoriaRequest = {
 export class CategoriasComponent implements OnInit {
 
   private readonly servicio = inject(CategoriasService);
+  private readonly authService = inject(AuthService);
+
+  /**
+   * El entrenador consulta el catalogo pero no lo edita: el backend le
+   * responde 403 a crear, editar, reactivar y dar de baja
+   * (CategoriaController), asi que mostrarle esos botones seria ofrecerle
+   * algo que va a fallar. Misma regla que ya aplica la pantalla de sesiones
+   * con el boton "Nueva sesion" cuando quien mira es un administrador.
+   */
+  readonly puedeGestionar = computed(() =>
+    this.authService.currentUser()?.rol === 'ADMINISTRADOR');
 
   readonly categorias = signal<Categoria[]>([]);
   readonly cargando = signal(true);

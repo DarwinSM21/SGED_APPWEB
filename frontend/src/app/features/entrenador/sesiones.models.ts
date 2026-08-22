@@ -13,6 +13,9 @@ export interface Sesion {
 export interface CategoriaOpcion {
   idCategoria: number;
   nombre: string;
+  /** La API ya las envia; sirven de subtitulo al elegir ("17 a 18 años"). */
+  edadMin?: number;
+  edadMax?: number;
 }
 
 export interface SesionCrearRequest {

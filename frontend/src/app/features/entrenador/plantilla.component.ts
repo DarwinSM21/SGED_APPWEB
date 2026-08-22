@@ -74,6 +74,30 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
           </div>
         }
 
+        @if (p.titulares.length === 0) {
+          <div class="card sin-alineacion">
+            <h2>Todavía no hay alineación</h2>
+            @if (p.suplentes.length === 0) {
+              <p>
+                Nadie tiene asistencia registrada en esta sesión, y la formación se arma
+                solo con quienes estuvieron en la cancha.
+              </p>
+              <a class="btn btn--primary" [routerLink]="['/entrenador/sesion', p.idSesion, 'asistencia']">
+                Pasar lista de asistencia
+              </a>
+            } @else {
+              <p>
+                {{ p.suplentes.length }} jugador{{ p.suplentes.length === 1 ? '' : 'es' }} con
+                asistencia, pero ninguno tiene posición asignada: sin posición no se le puede
+                dar un puesto en el campo.
+              </p>
+              <a class="btn btn--primary" [routerLink]="['/entrenador/sesion', p.idSesion]">
+                Asignar posiciones en la evaluación
+              </a>
+            }
+          </div>
+        }
+
         <div class="cuerpo">
           <div class="campo-envoltura">
             <svg class="campo" viewBox="0 0 400 560" preserveAspectRatio="xMidYMid meet">
@@ -198,6 +222,10 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
     .promedio .valor { font-size: 2rem; font-weight: 700; color: var(--color-primary-600); }
     .promedio .unidad { font-size: .8rem; color: var(--color-text-muted); margin-left: .3rem; }
 
+    .sin-alineacion { text-align: center; padding: 2rem 1.5rem; margin-bottom: 1rem; }
+    .sin-alineacion h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
+    .sin-alineacion p { color: var(--color-text-muted); font-size: .88rem; max-width: 46ch;
+                        margin: 0 auto 1.1rem; line-height: 1.5; }
     .vacio { display: flex; flex-direction: column; align-items: center; gap: .65rem; text-align: center; color: var(--color-text-faint); padding: 1.5rem 0; }
     .vacio svg { width: 32px; height: 32px; opacity: .6; }
     .vacio p { font-size: .85rem; color: var(--color-text-muted); }

@@ -1,5 +1,7 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { computed, Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
+import { AuthService } from '../../auth/auth.service';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SesionesService } from './sesiones.service';
@@ -26,16 +28,28 @@ function fechaHoyIso(): string {
 @Component({
   selector: 'app-sesiones',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [BuscadorOpcionesComponent, CommonModule, FormsModule, RouterLink],
   template: `
     <div class="pantalla">
       <div class="cabecera-pantalla">
-        <h1 class="titulo-pantalla">Mis sesiones</h1>
-        <button class="btn btn--primary" type="button" (click)="alternarFormulario()">
-          {{ mostrarFormulario() ? 'Cancelar' : '+ Nueva sesión' }}
-        </button>
+        <h1 class="titulo-pantalla">{{ esEntrenador() ? 'Mis sesiones' : 'Sesiones de la escuela' }}</h1>
+        @if (esEntrenador()) {
+          <button class="btn btn--primary" type="button" (click)="alternarFormulario()">
+            {{ mostrarFormulario() ? 'Cancelar' : '+ Nueva sesión' }}
+          </button>
+        }
       </div>
 
+      @if (!esEntrenador()) {
+        <p class="alert alert--info">
+          Estás viendo todas las sesiones de la escuela. Crearlas y programar horarios le
+          corresponde al entrenador de cada categoría: el servidor resuelve de quién es cada
+          sesión a partir de la cuenta que la crea, para que nadie pueda registrarla a nombre
+          de otro.
+        </p>
+      }
+
+      @if (esEntrenador()) {
       <section class="card horario-semanal">
         <div class="cabecera-seccion">
           <h2 class="subtitulo">Mi horario semanal</h2>
@@ -47,18 +61,17 @@ function fechaHoyIso(): string {
 
         @if (mostrarFormularioHorario()) {
           <form class="formulario-horario" (ngSubmit)="onCrearHorario()">
+            @if (errorCategorias()) {
+              <p class="alert alert--warning">{{ errorCategorias() }}</p>
+            }
             <div class="fila-2">
-              <label class="field" for="categoriaHorario">
-                <span class="field__label">Categoría</span>
-                <span class="field__control">
-                  <select id="categoriaHorario" [ngModel]="idCategoriaHorario" (ngModelChange)="idCategoriaHorario = $event" name="categoriaHorario" required>
-                    <option [ngValue]="null" disabled>Selecciona...</option>
-                    @for (c of categorias(); track c.idCategoria) {
-                      <option [ngValue]="c.idCategoria">{{ c.nombre }}</option>
-                    }
-                  </select>
-                </span>
-              </label>
+              <app-buscador-opciones
+                etiqueta="Categoría"
+                marcador="Escribe SUB para ver todas…"
+                [opciones]="opcionesCategorias()"
+                [textoSeleccionado]="nombreCategoria(idCategoriaHorario)"
+                (seleccionada)="idCategoriaHorario = $event.id"
+                (limpiada)="idCategoriaHorario = null" />
               <label class="field" for="diaSemana">
                 <span class="field__label">Día</span>
                 <span class="field__control">
@@ -108,21 +121,21 @@ function fechaHoyIso(): string {
           </div>
         }
       </section>
+      }
 
       @if (mostrarFormulario()) {
         <form class="card formulario" (ngSubmit)="onCrear()">
+          @if (errorCategorias()) {
+            <p class="alert alert--warning">{{ errorCategorias() }}</p>
+          }
           <div class="fila-2">
-            <label class="field" for="categoria">
-              <span class="field__label">Categoría</span>
-              <span class="field__control">
-                <select id="categoria" [ngModel]="idCategoria" (ngModelChange)="idCategoria = $event" name="categoria" required>
-                  <option [ngValue]="null" disabled>Selecciona...</option>
-                  @for (c of categorias(); track c.idCategoria) {
-                    <option [ngValue]="c.idCategoria">{{ c.nombre }}</option>
-                  }
-                </select>
-              </span>
-            </label>
+            <app-buscador-opciones
+              etiqueta="Categoría"
+              marcador="Escribe SUB para ver todas…"
+              [opciones]="opcionesCategorias()"
+              [textoSeleccionado]="nombreCategoria(idCategoria)"
+              (seleccionada)="idCategoria = $event.id"
+              (limpiada)="idCategoria = null" />
             <label class="field" for="fecha">
               <span class="field__label">Fecha</span>
               <span class="field__control">
@@ -240,11 +253,42 @@ function fechaHoyIso(): string {
 })
 export class SesionesComponent implements OnInit {
   private readonly sesionesService = inject(SesionesService);
+  private readonly authService = inject(AuthService);
 
   readonly horaCorta = horaCorta;
 
   readonly sesiones = signal<Sesion[]>([]);
   readonly categorias = signal<CategoriaOpcion[]>([]);
+  readonly errorCategorias = signal<string>('');
+
+  /**
+   * Solo un ENTRENADOR puede crear sesiones y horarios: el backend resuelve
+   * de quien es la sesion a partir del usuario autenticado
+   * (SesionEntrenamientoService.crear), y una cuenta de administrador no
+   * tiene fila en `entrenadores`. Antes el administrador veia el formulario
+   * completo, lo llenaba y recibia un 404 al final; ahora no se le ofrece lo
+   * que no puede hacer.
+   */
+  readonly esEntrenador = computed(() => this.authService.currentUser()?.rol === 'ENTRENADOR');
+
+  /**
+   * El desplegable nativo de Windows recorta la lista cuando no cabe -y no
+   * avisa: se ve una lista completa que en realidad esta cortada, y una
+   * categoria recien creada parece no existir-. El buscador propio la pinta
+   * entera, se filtra escribiendo y respeta el tema oscuro, que es el mismo
+   * motivo por el que ya sustituyo a los <select> de Pagos y Reportes.
+   */
+  readonly opcionesCategorias = computed<OpcionBuscable[]>(() =>
+    this.categorias().map((c) => ({
+      id: c.idCategoria,
+      titulo: c.nombre,
+      subtitulo: c.edadMin && c.edadMax ? `${c.edadMin} a ${c.edadMax} años` : undefined,
+    })));
+
+  nombreCategoria(id: number | null): string | null {
+    if (id == null) return null;
+    return this.categorias().find((c) => c.idCategoria === id)?.nombre ?? null;
+  }
   readonly cargando = signal(false);
   readonly guardando = signal(false);
   readonly error = signal('');
@@ -273,15 +317,37 @@ export class SesionesComponent implements OnInit {
   ngOnInit(): void {
     this.cargarSesiones();
     this.cargarHorarios();
+    this.cargarCategorias();
+  }
+
+  /**
+   * Se vuelve a pedir cada vez que se abre un formulario, no solo al entrar a
+   * la pantalla.
+   *
+   * <p>Una categoria recien creada -en otra pestaña, o en esta misma antes de
+   * volver aqui sin recargar- no aparecia en el desplegable, y no habia forma
+   * de notarlo: el reloj de la cabecera sigue corriendo, asi que una pagina
+   * vieja se ve igual de fresca que una recien cargada.
+   */
+  private cargarCategorias(): void {
     this.sesionesService.listarCategoriasActivas().subscribe({
-      next: (categorias) => this.categorias.set(categorias),
-      error: () => {},
+      next: (categorias) => {
+        this.categorias.set(categorias);
+        this.errorCategorias.set('');
+      },
+      // Antes esto era un bloque vacio. Si la peticion fallaba -el backend
+      // reiniciandose, la red del celular- el desplegable se quedaba corto en
+      // silencio y parecia que la categoria no existia.
+      error: () => this.errorCategorias.set(
+        'No se pudo cargar la lista de categorías. Revisa la conexión y vuelve a abrir el formulario.'),
     });
   }
 
   alternarFormulario(): void {
-    this.mostrarFormulario.set(!this.mostrarFormulario());
+    const abriendo = !this.mostrarFormulario();
+    this.mostrarFormulario.set(abriendo);
     this.error.set('');
+    if (abriendo) this.cargarCategorias();
   }
 
   onCrear(): void {
@@ -343,6 +409,7 @@ export class SesionesComponent implements OnInit {
   }
 
   alternarFormularioHorario(): void {
+    if (!this.mostrarFormularioHorario()) this.cargarCategorias();
     this.mostrarFormularioHorario.set(!this.mostrarFormularioHorario());
     this.errorHorario.set('');
   }
