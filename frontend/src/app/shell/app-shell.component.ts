@@ -2,6 +2,7 @@ import { Component, OnDestroy, OnInit, computed, inject, signal } from '@angular
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
+import { SwUpdate } from '@angular/service-worker';
 import { inicialesDe } from '../features/entrenador/plantilla.models';
 import { relojEn12 } from '../core/formato-fecha';
 
@@ -41,6 +42,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
   ENTRENADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Mis sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
+    { etiqueta: 'Categorías', ruta: '/categorias', icono: 'capas' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
     { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },
   ],
@@ -313,6 +315,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
 })
 export class AppShellComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
+  private readonly actualizaciones = inject(SwUpdate);
 
   readonly usuario = this.authService.currentUser;
   readonly navItems = computed<NavItem[]>(() => NAV_POR_ROL[this.usuario()?.rol ?? ''] ?? []);
@@ -343,7 +346,29 @@ export class AppShellComponent implements OnInit, OnDestroy {
   });
 
   ngOnInit(): void {
+    this.vigilarActualizaciones();
     this.intervaloReloj = setInterval(() => this.ahora.set(new Date()), 1000);
+  }
+
+  /**
+   * Recarga sola cuando hay una version nueva desplegada.
+   *
+   * <p>Sin esto, una pestaña abierta se queda con el index.html que cacheo el
+   * service worker y sigue pidiendo archivos de codigo que el servidor ya no
+   * tiene: fallan con 404 (NG05604) y partes de la pantalla dejan de
+   * responder sin ningun aviso, que es de lo peor que puede pasar en una
+   * demostracion. La actualizacion se aplica al momento en vez de esperar a
+   * que se cierren todas las pestañas, que es el comportamiento por defecto.
+   */
+  private vigilarActualizaciones(): void {
+    if (!this.actualizaciones.isEnabled) {
+      return;
+    }
+    this.actualizaciones.versionUpdates.subscribe((evento) => {
+      if (evento.type === 'VERSION_READY') {
+        this.actualizaciones.activateUpdate().then(() => document.location.reload());
+      }
+    });
   }
 
   ngOnDestroy(): void {

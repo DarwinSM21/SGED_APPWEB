@@ -29,14 +29,15 @@
   ],
   "dataGroups": [
     {
-      "comment": "Catalogos que casi nunca cambian (criterios de evaluacion, posiciones, categorias). Se sirven de cache primero para que la pantalla abra al instante y siga funcionando sin red.",
+      "comment": "Catalogos (categorias, estados). Antes iban con strategy performance -cache primero, 1 dia-. Era un error: el catalogo lo edita un administrador dentro de esta misma aplicacion, asi que una categoria recien creada no aparecia en los desplegables durante 24 horas y recargar no servia de nada, porque el service worker respondia sin consultar al servidor. Con freshness se pide siempre a la red y solo se cae al cache si no contesta en 3 segundos, que es lo que de verdad hacia falta en la cancha.",
       "name": "catalogos",
       "urls": [
         "/api/categorias/activas",
         "/api/estados_generales"
       ],
       "cacheConfig": {
-        "strategy": "performance",
+        "strategy": "freshness",
+        "timeout": "3s",
         "maxSize": 20,
         "maxAge": "1d"
       }
@@ -55,7 +56,7 @@
       }
     }
   ],
-  "navigationRequestStrategy": "performance",
+  "navigationRequestStrategy": "freshness",
   "navigationUrls": [
     "/**",
     "!/**/*.*",
