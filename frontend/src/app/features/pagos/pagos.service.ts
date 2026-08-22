@@ -4,7 +4,8 @@ import { map } from 'rxjs';
 import { EstudianteOpcionPago, IngresosMes, PagoResponse, RegistrarDiarioRequest, RegistrarMembresiaRequest } from './pagos.models';
 
 interface EstudiantePagina {
-  content: { idEstudiante: number; nombrePersona: string; apellidoPersona: string; nombreCategoria: string }[];
+  content: { idEstudiante: number; nombrePersona: string; apellidoPersona: string;
+             nombreCategoria: string; fechaIngreso: string }[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -19,6 +20,7 @@ export class PagosService {
             idEstudiante: e.idEstudiante,
             nombreCompleto: `${e.nombrePersona} ${e.apellidoPersona}`,
             categoria: e.nombreCategoria,
+            fechaIngreso: e.fechaIngreso,
           }),
         ),
       ),

@@ -103,14 +103,26 @@ const NOMBRES_MES = [
               </div>
               <div class="meses">
                 @for (m of meses; track m) {
-                  <button type="button" class="pill-mes" [class.pill-mes--activo]="mesesSeleccionados().has(m)" (click)="alternarMes(m)">
+                  <button type="button" class="pill-mes"
+                          [class.pill-mes--activo]="mesesSeleccionados().has(m)"
+                          [class.pill-mes--bloqueado]="!mesDisponible(m)"
+                          [disabled]="!mesDisponible(m)"
+                          [attr.title]="motivoMesNoDisponible(m)"
+                          (click)="alternarMes(m)">
                     @if (mesesSeleccionados().has(m)) {
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
+                    } @else if (mesesPagados().has(m)) {
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7"/></svg>
                     }
                     {{ nombreMes(m) }}
                   </button>
                 }
               </div>
+              @if (mesesPagados().size > 0) {
+                <p class="leyenda-meses">
+                  Los meses con visto ya están pagados y no se pueden volver a cobrar.
+                </p>
+              }
 
               <div class="resumen-total">
                 <div class="resumen-total__info">
@@ -137,6 +149,13 @@ const NOMBRES_MES = [
                   <input id="montoDiario" type="number" step="0.01" min="0.01" [(ngModel)]="montoDiario" name="montoDiario" />
                 </span>
               </label>
+              @if (tieneMembresiaVigente()) {
+                <div class="alert alert--warning" role="status">
+                  Este estudiante ya tiene la membresía de {{ nombreMes(mesActual) }} pagada.
+                  Registra un pago diario solo si es un extra (torneo, clase suelta);
+                  de lo contrario estarías cobrando dos veces el mismo mes.
+                </div>
+              }
               <button class="btn btn--primary btn--block" type="button" [disabled]="guardando()" (click)="registrarDiario()">
                 @if (guardando()) { <span class="spinner"></span> Guardando… } @else { Registrar pago diario }
               </button>
@@ -242,6 +261,14 @@ const NOMBRES_MES = [
     .enlace:hover { text-decoration: underline; }
 
     .meses { display: flex; flex-wrap: wrap; gap: .5rem; }
+    /* El mes bloqueado se ve apagado pero sigue legible: se apaga el
+       contraste, no se esconde, para que se entienda que existe y por que
+       no se puede elegir. */
+    .pill-mes--bloqueado {
+      opacity: .45; cursor: not-allowed; text-decoration: line-through;
+    }
+    .pill-mes--bloqueado:hover { background: inherit; }
+    .leyenda-meses { margin: .5rem 0 0; font-size: .76rem; color: var(--color-text-faint); }
     .pill-mes {
       display: inline-flex; align-items: center; gap: .35rem;
       border: 1.5px solid var(--color-border); background: var(--color-surface); color: var(--color-text-muted);
@@ -302,13 +329,17 @@ export class PagosComponent implements OnInit {
   readonly tipo = signal<'MEMBRESIA' | 'DIARIO'>('MEMBRESIA');
   readonly meses = Array.from({ length: 12 }, (_, i) => i + 1);
   readonly mesesSeleccionados = signal<Set<number>>(new Set());
-  readonly todosLosMesesSeleccionados = computed(() => this.mesesSeleccionados().size === 12);
+  readonly todosLosMesesSeleccionados = computed(() => {
+    const disponibles = this.meses.filter((m) => this.mesDisponible(m));
+    return disponibles.length > 0 && disponibles.every((m) => this.mesesSeleccionados().has(m));
+  });
 
   readonly aniosDisponibles = (() => {
     const actual = new Date().getFullYear();
     return [actual - 1, actual, actual + 1];
   })();
   anio = new Date().getFullYear();
+  readonly mesActual = new Date().getMonth() + 1;
   montoMembresia: number | null = null;
   montoDiario: number | null = null;
 
@@ -361,14 +392,67 @@ export class PagosComponent implements OnInit {
     });
   }
 
+  /**
+   * Por que un mes no se puede cobrar, o null si si se puede.
+   *
+   * Son dos reglas distintas y conviene no mezclarlas. "Ya pagado" evita el
+   * viaje al servidor para recibir el error que el backend ya sabe dar. "Antes
+   * de su ingreso" es la que se pedia: a un estudiante matriculado en agosto
+   * no tiene sentido ofrecerle enero, no estaba en la escuela.
+   *
+   * Un mes pasado POSTERIOR al ingreso si se puede cobrar: es justo el caso de
+   * quien viene a ponerse al dia con una cuota atrasada.
+   */
+  motivoMesNoDisponible(mes: number): string | null {
+    if (this.mesesPagados().has(mes)) return 'Ya pagado';
+
+    const est = this.estudianteSeleccionado();
+    if (!est) return null;
+
+    const [anioIngreso, mesIngreso] = est.fechaIngreso.split('-').map(Number);
+    if (this.anio < anioIngreso || (this.anio === anioIngreso && mes < mesIngreso)) {
+      return 'Antes de su ingreso';
+    }
+    return null;
+  }
+
+  mesDisponible(mes: number): boolean {
+    return this.motivoMesNoDisponible(mes) === null;
+  }
+
+  /** Meses del anio elegido que ya tienen membresia registrada. */
+  readonly mesesPagados = computed(() => {
+    const pagados = new Set<number>();
+    for (const p of this.historial()) {
+      if (p.tipo === 'MEMBRESIA' && p.anio === this.anio && p.mes) pagados.add(p.mes);
+    }
+    return pagados;
+  });
+
+  /**
+   * Si su membresia cubre el mes corriente, cobrarle el dia otra vez seria
+   * cobrar dos veces lo mismo. No se bloquea -puede ser un extra real, un
+   * torneo o una clase suelta- pero se avisa, que es lo que quien cobra
+   * necesita para decidir.
+   */
+  readonly tieneMembresiaVigente = computed(() => {
+    const hoy = new Date();
+    return this.historial().some((p) =>
+      p.tipo === 'MEMBRESIA' && p.anio === hoy.getFullYear() && p.mes === hoy.getMonth() + 1);
+  });
+
   alternarMes(mes: number): void {
+    if (!this.mesDisponible(mes)) return;
+
     const actuales = new Set(this.mesesSeleccionados());
     if (actuales.has(mes)) actuales.delete(mes); else actuales.add(mes);
     this.mesesSeleccionados.set(actuales);
   }
 
   alternarTodosLosMeses(): void {
-    this.mesesSeleccionados.set(this.todosLosMesesSeleccionados() ? new Set() : new Set(this.meses));
+    const disponibles = this.meses.filter((m) => this.mesDisponible(m));
+    const todosPuestos = disponibles.every((m) => this.mesesSeleccionados().has(m));
+    this.mesesSeleccionados.set(todosPuestos ? new Set() : new Set(disponibles));
   }
 
   totalEstimado(): number {

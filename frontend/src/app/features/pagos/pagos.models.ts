@@ -4,6 +4,8 @@ export interface EstudianteOpcionPago {
   idEstudiante: number;
   nombreCompleto: string;
   categoria: string;
+  /** ISO "YYYY-MM-DD". Marca desde que mes tiene sentido cobrarle. */
+  fechaIngreso: string;
 }
 
 export interface RegistrarMembresiaRequest {
