@@ -49,6 +49,15 @@ public class PagoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));
     }
 
+    @PostMapping("/{idPago}/anular")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    @Transactional
+    public ResponseEntity<PagoResponse> anular(@PathVariable Long idPago,
+                                               @Valid @RequestBody AnularPagoRequest request) {
+        return ResponseEntity.ok(aResponse(
+                pagoService.anular(idPago, request.motivo(), usernameAutenticado())));
+    }
+
     @GetMapping("/estudiante/{idEstudiante}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)
@@ -87,6 +96,11 @@ public class PagoController {
                 p.getMes() != null ? p.getMes().intValue() : null,
                 p.getMonto(),
                 p.getFechaPago(),
-                registrador.getNombre() + " " + registrador.getApellido());
+                registrador.getNombre() + " " + registrador.getApellido(),
+                p.getAnuladoEn(),
+                p.getAnuladoPor() == null ? null
+                        : p.getAnuladoPor().getPersona().getNombre() + " "
+                          + p.getAnuladoPor().getPersona().getApellido(),
+                p.getMotivoAnulacion());
     }
 }

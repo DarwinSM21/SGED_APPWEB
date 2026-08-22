@@ -49,7 +49,7 @@ public class PagoService {
 
         List<Integer> mesesUnicos = meses.stream().distinct().sorted().toList();
         for (Integer mes : mesesUnicos) {
-            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(
+            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
                     idEstudiante, TipoPago.MEMBRESIA, (short) anio, mes.shortValue())) {
                 throw new IllegalArgumentException(
                         "El mes " + mes + "/" + anio + " ya está cubierto para este estudiante");
@@ -103,7 +103,7 @@ public class PagoService {
         LocalDate fin = mesActual.atEndOfMonth();
 
         BigDecimal total = pagoRepository.sumarMontoEntreFechas(inicio, fin);
-        long cantidad = pagoRepository.countByFechaPagoBetween(inicio, fin);
+        long cantidad = pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin);
         return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
     }
 
@@ -150,6 +150,33 @@ public class PagoService {
                 .orElse(null);
 
         return new HistoricoIngresosResponse(serie, total, promedio, mejor);
+    }
+
+    /**
+     * Anula un pago mal registrado. No lo edita ni lo borra: el registro se
+     * queda con quien lo anulo, cuando y por que, y el correcto se registra
+     * aparte. Asi el historial cuenta lo que de verdad paso -hubo un error y
+     * se corrigio- en vez de esconderlo, que es lo que hace falta cuando
+     * alguien revisa las cuentas meses despues.
+     *
+     * Anular dos veces se rechaza en vez de ignorarse en silencio: si alguien
+     * lo intenta es que cree estar anulando algo vigente, y conviene decirle
+     * que no lo esta.
+     */
+    @Auditado(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
+    @Transactional
+    public Pago anular(Long idPago, String motivo, String usernameAnulador) {
+        Pago pago = pagoRepository.findById(idPago)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pago no encontrado con id: " + idPago));
+
+        if (!pago.estaVigente()) {
+            throw new IllegalArgumentException("Este pago ya estaba anulado");
+        }
+
+        pago.setAnuladoEn(java.time.OffsetDateTime.now());
+        pago.setAnuladoPor(buscarUsuario(usernameAnulador));
+        pago.setMotivoAnulacion(motivo);
+        return pagoRepository.save(pago);
     }
 
     private Estudiante buscarEstudiante(Long id) {

@@ -910,8 +910,19 @@ CREATE TABLE IF NOT EXISTS academico.pagos (
     monto NUMERIC(8,2) NOT NULL CHECK (monto > 0),
     fecha_pago DATE NOT NULL,
     registrado_por_id_usuario BIGINT NOT NULL REFERENCES seguridad.usuarios(id_usuario),
+    -- Anulacion: un pago no se edita ni se borra, se anula. Las tres columnas
+    -- viajan juntas (ver chk_pago_anulacion_completa) porque un registro
+    -- anulado sin motivo no le explica nada a quien revise las cuentas.
+    anulado_en TIMESTAMPTZ,
+    anulado_por_id_usuario BIGINT REFERENCES seguridad.usuarios(id_usuario),
+    motivo_anulacion VARCHAR(255),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT chk_pago_anulacion_completa CHECK (
+        (anulado_en IS NULL AND anulado_por_id_usuario IS NULL AND motivo_anulacion IS NULL)
+        OR (anulado_en IS NOT NULL AND anulado_por_id_usuario IS NOT NULL
+            AND motivo_anulacion IS NOT NULL)
+    ),
     CONSTRAINT chk_pago_periodo_segun_tipo CHECK (
         (tipo = 'MEMBRESIA' AND anio IS NOT NULL AND mes IS NOT NULL)
         OR (tipo = 'DIARIO' AND anio IS NULL AND mes IS NULL)
@@ -924,7 +935,7 @@ FOR EACH ROW EXECUTE FUNCTION academico.set_updated_at();
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_pago_membresia_unico
     ON academico.pagos(id_estudiante, anio, mes)
-    WHERE tipo = 'MEMBRESIA';
+    WHERE tipo = 'MEMBRESIA' AND anulado_en IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_pagos_estudiante
     ON academico.pagos(id_estudiante, fecha_pago DESC);

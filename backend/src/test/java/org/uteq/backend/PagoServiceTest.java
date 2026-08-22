@@ -71,7 +71,7 @@ class PagoServiceTest {
         LocalDate fin = hoy.atEndOfMonth();
 
         when(pagoRepository.sumarMontoEntreFechas(inicio, fin)).thenReturn(new BigDecimal("150.00"));
-        when(pagoRepository.countByFechaPagoBetween(inicio, fin)).thenReturn(3L);
+        when(pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin)).thenReturn(3L);
 
         var response = service.ingresosDelMes();
 
@@ -85,7 +85,7 @@ class PagoServiceTest {
     @DisplayName("ingresosDelMes devuelve cero, no null, cuando no hay pagos este mes")
     void ingresosDelMes_sin_pagos_devuelve_cero() {
         when(pagoRepository.sumarMontoEntreFechas(any(), any())).thenReturn(BigDecimal.ZERO);
-        when(pagoRepository.countByFechaPagoBetween(any(), any())).thenReturn(0L);
+        when(pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(any(), any())).thenReturn(0L);
 
         var response = service.ingresosDelMes();
 
@@ -99,7 +99,7 @@ class PagoServiceTest {
     @DisplayName("registrarMembresia guarda un pago por cada mes, sin duplicados y en orden")
     void registrarMembresia_guarda_un_pago_por_mes_distinto_y_ordenado() {
         existenEstudianteYUsuario();
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(
+        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
                 any(), any(), any(), any())).thenReturn(false);
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
@@ -118,7 +118,7 @@ class PagoServiceTest {
     @DisplayName("registrarMembresia usa la fecha dada en vez de la de hoy si se especifica")
     void registrarMembresia_usa_la_fecha_dada() {
         existenEstudianteYUsuario();
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(
+        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
                 any(), any(), any(), any())).thenReturn(false);
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
@@ -132,9 +132,9 @@ class PagoServiceTest {
     @DisplayName("registrarMembresia rechaza si algun mes solicitado ya esta cubierto")
     void registrarMembresia_rechaza_mes_ya_cubierto() {
         existenEstudianteYUsuario();
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(
+        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
                 ID_EST, TipoPago.MEMBRESIA, (short) 2026, (short) 1)).thenReturn(false);
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(
+        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
                 ID_EST, TipoPago.MEMBRESIA, (short) 2026, (short) 2)).thenReturn(true);
 
         var e = assertThrows(IllegalArgumentException.class, () ->
@@ -217,5 +217,56 @@ class PagoServiceTest {
         var pagos = service.historialDe(ID_EST);
 
         assertThat(pagos).isEqualTo(esperado);
+    }
+
+    // --- anulacion ---
+
+    @Test
+    @DisplayName("anular deja constancia de quien, cuando y por que")
+    void anular_registra_la_trazabilidad() {
+        Pago pago = Pago.builder()
+                .idPago(9L).tipo(Pago.TipoPago.DIARIO)
+                .monto(new BigDecimal("250.00")).fechaPago(LocalDate.now())
+                .build();
+        when(pagoRepository.findById(9L)).thenReturn(Optional.of(pago));
+        when(usuarioRepository.findByUsername(USERNAME)).thenReturn(Optional.of(registrador()));
+        when(pagoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        Pago resultado = service.anular(9L, "Monto mal digitado", USERNAME);
+
+        assertThat(resultado.getAnuladoEn()).isNotNull();
+        assertThat(resultado.getAnuladoPor()).isNotNull();
+        assertThat(resultado.getMotivoAnulacion()).isEqualTo("Monto mal digitado");
+        // El monto NO se toca: anular no es corregir, es dejar constancia de
+        // que ese cobro no vale. El correcto se registra aparte.
+        assertThat(resultado.getMonto()).isEqualByComparingTo("250.00");
+    }
+
+    @Test
+    @DisplayName("anular dos veces se rechaza en vez de pasar en silencio")
+    void anular_dos_veces_falla() {
+        Pago yaAnulado = Pago.builder()
+                .idPago(9L).tipo(Pago.TipoPago.DIARIO)
+                .monto(new BigDecimal("25.00")).fechaPago(LocalDate.now())
+                .anuladoEn(java.time.OffsetDateTime.now())
+                .motivoAnulacion("ya estaba")
+                .build();
+        when(pagoRepository.findById(9L)).thenReturn(Optional.of(yaAnulado));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.anular(9L, "otra vez", USERNAME));
+
+        // Si alguien lo intenta es que cree estar anulando algo vigente:
+        // conviene decirle que no lo esta, no guardar por segunda vez.
+        verify(pagoRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("anular un pago que no existe da recurso no encontrado")
+    void anular_inexistente() {
+        when(pagoRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> service.anular(404L, "motivo", USERNAME));
     }
 }

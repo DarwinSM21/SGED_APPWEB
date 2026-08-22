@@ -31,6 +31,10 @@ export class PagosService {
     return this.http.post<PagoResponse[]>('/api/pagos/membresia', request);
   }
 
+  anular(idPago: number, motivo: string) {
+    return this.http.post<PagoResponse>(`/api/pagos/${idPago}/anular`, { motivo });
+  }
+
   registrarDiario(request: RegistrarDiarioRequest) {
     return this.http.post<PagoResponse>('/api/pagos/diario', request);
   }

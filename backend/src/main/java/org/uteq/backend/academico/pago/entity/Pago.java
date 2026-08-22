@@ -54,6 +54,24 @@ public class Pago {
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
     private Usuario registradoPor;
 
+    // Anulacion. Las tres viajan juntas o ninguna: la base lo exige con
+    // chk_pago_anulacion_completa, porque un pago anulado sin motivo no le
+    // explica nada a quien revise las cuentas despues.
+    @Column(name = "anulado_en")
+    private java.time.OffsetDateTime anuladoEn;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "anulado_por_id_usuario")
+    private Usuario anuladoPor;
+
+    @Column(name = "motivo_anulacion", length = 255)
+    private String motivoAnulacion;
+
+    /** Un pago cuenta para los totales solo mientras no este anulado. */
+    public boolean estaVigente() {
+        return anuladoEn == null;
+    }
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;

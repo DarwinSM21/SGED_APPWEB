@@ -34,6 +34,10 @@ export interface PagoResponse {
   monto: number;
   fechaPago: string;
   registradoPor: string;
+  /** Null mientras el pago siga vigente. */
+  anuladoEn: string | null;
+  anuladoPor: string | null;
+  motivoAnulacion: string | null;
 }
 
 export interface IngresosMes {

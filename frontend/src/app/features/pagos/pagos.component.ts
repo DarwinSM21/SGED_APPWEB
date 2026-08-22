@@ -186,13 +186,29 @@ const NOMBRES_MES = [
                 </div>
               } @else {
                 @for (p of historial(); track p.idPago) {
-                  <div class="fila-pago">
-                    <span class="badge" [class.badge--info]="p.tipo === 'MEMBRESIA'" [class.badge--success]="p.tipo === 'DIARIO'">
+                  <div class="fila-pago" [class.fila-pago--anulada]="p.anuladoEn">
+                    <span class="badge"
+                          [class.badge--info]="p.tipo === 'MEMBRESIA' && !p.anuladoEn"
+                          [class.badge--success]="p.tipo === 'DIARIO' && !p.anuladoEn"
+                          [class.badge--neutral]="!!p.anuladoEn">
                       {{ p.tipo === 'MEMBRESIA' ? (nombreMes(p.mes!) + ' ' + p.anio) : 'Diario' }}
                     </span>
                     <span class="monto-pago">{{ p.monto | number: '1.2-2' }}</span>
                     <span class="fecha-pago">{{ p.fechaPago }}</span>
+                    @if (p.anuladoEn) {
+                      <span class="badge badge--danger">Anulado</span>
+                    } @else {
+                      <button type="button" class="btn btn--ghost btn--sm"
+                              [disabled]="anulando() === p.idPago" (click)="pedirAnulacion(p)">
+                        {{ anulando() === p.idPago ? 'Anulando…' : 'Anular' }}
+                      </button>
+                    }
                   </div>
+                  @if (p.anuladoEn) {
+                    <p class="motivo-anulacion">
+                      {{ p.motivoAnulacion }} — {{ p.anuladoPor }}
+                    </p>
+                  }
                 }
               }
             </div>
@@ -290,6 +306,15 @@ const NOMBRES_MES = [
 
     .columna-historial { display: flex; flex-direction: column; gap: 1rem; }
     .historial { padding: 1.25rem 1.5rem; }
+    /* El anulado se atenua y se tacha el monto, pero la fila sigue ahi: el
+       registro no desaparece, que es justo el punto de anular en vez de
+       borrar. */
+    .fila-pago--anulada { opacity: .6; }
+    .fila-pago--anulada .monto-pago { text-decoration: line-through; }
+    .motivo-anulacion {
+      margin: -.2rem 0 .5rem; padding-left: .2rem;
+      font-size: .74rem; color: var(--color-text-faint);
+    }
     .fila-pago { display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem; }
     .fila-pago:last-child { border-bottom: none; }
     .monto-pago { font-weight: 600; flex: 1; }
@@ -491,6 +516,41 @@ export class PagosComponent implements OnInit {
         this.cargarIngresosMes();
       },
       error: (err) => { this.guardando.set(false); this.error.set(this.mensajeDeError(err)); },
+    });
+  }
+
+  readonly anulando = signal<number | null>(null);
+
+  /**
+   * Pide el motivo y anula. Es obligatorio a proposito -el backend tambien lo
+   * exige-: un pago anulado sin explicacion deja el historial con un hueco que
+   * nadie sabra justificar dentro de tres meses.
+   */
+  pedirAnulacion(pago: PagoResponse): void {
+    const motivo = window.prompt(
+      'Motivo de la anulación (queda registrado en el historial):', '');
+    if (motivo === null) return;
+    if (!motivo.trim()) {
+      this.error.set('Hay que indicar por qué se anula el pago');
+      return;
+    }
+
+    const idEstudiante = this.idEstudiante();
+    if (idEstudiante === null) return;
+
+    this.anulando.set(pago.idPago);
+    this.error.set('');
+    this.exito.set('');
+    this.servicio.anular(pago.idPago, motivo.trim()).subscribe({
+      next: () => {
+        this.anulando.set(null);
+        this.exito.set('Pago anulado. Queda en el historial y ya no cuenta en los totales.');
+        this.cargarHistorial(idEstudiante);
+      },
+      error: (e) => {
+        this.anulando.set(null);
+        this.error.set(this.mensajeDeError(e));
+      },
     });
   }
 
