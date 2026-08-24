@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CategoriasService } from './categorias.service';
@@ -27,7 +28,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
 @Component({
   selector: 'app-categorias',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargandoComponent],
   template: `
     <div class="contenido">
       <h1 class="titulo-panel">Categorías</h1>
@@ -100,7 +101,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
         </div>
 
         @if (cargando()) {
-          <p class="aviso">Cargando…</p>
+          <app-cargando />
         } @else if (categorias().length === 0) {
           <p class="aviso">
             {{ puedeGestionar() ? 'Todavía no hay categorías. Crea la primera arriba.'

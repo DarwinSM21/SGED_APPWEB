@@ -1,4 +1,5 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -32,7 +33,7 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
 @Component({
   selector: 'app-evaluacion-diaria',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CargandoComponent],
   template: `
     <div class="pantalla">
       <a class="btn btn--ghost volver" routerLink="/entrenador/sesiones">
@@ -42,7 +43,7 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
       <h1 class="titulo-pantalla">Evaluación diaria</h1>
 
       @if (cargando()) {
-        <p class="aviso">Cargando la sesión…</p>
+        <app-cargando mensaje="Cargando la sesión…" />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (sesion(); as s) {

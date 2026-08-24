@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -38,11 +39,11 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
 @Component({
   selector: 'app-plantilla',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CargandoComponent],
   template: `
     <div class="pantalla">
       @if (cargando()) {
-        <p class="aviso">Calculando la alineación…</p>
+        <app-cargando mensaje="Calculando la alineación…" />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (plantilla(); as p) {

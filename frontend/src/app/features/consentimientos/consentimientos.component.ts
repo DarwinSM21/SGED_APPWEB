@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ConsentimientosService } from './consentimientos.service';
@@ -46,7 +47,7 @@ interface RepresentanteDelEstudiante {
 @Component({
   selector: 'app-consentimientos',
   standalone: true,
-  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent, CargandoComponent],
   template: `
     <div class="contenido">
       <h1 class="titulo-panel">Consentimientos</h1>
@@ -85,7 +86,7 @@ interface RepresentanteDelEstudiante {
       @if (idEstudiante() !== null) {
         <section class="card bloque">
           @if (cargandoConsentimientos()) {
-            <p class="aviso">Cargando…</p>
+            <app-cargando />
           } @else if (representantes().length === 0) {
             <div class="vacio">
               <p><strong>Este estudiante no tiene representantes vinculados.</strong></p>

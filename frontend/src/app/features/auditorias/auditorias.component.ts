@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuditoriaResponse, AuditoriaService, FiltrosAuditoria } from './auditoria.service';
@@ -15,7 +16,7 @@ const TAMANO_PAGINA = 20;
 @Component({
   selector: 'app-auditorias',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <div class="encabezado">
@@ -62,7 +63,7 @@ const TAMANO_PAGINA = 20;
 
       <div class="card tabla-card">
         @if (cargando()) {
-          <p class="aviso">Cargando…</p>
+          <app-cargando />
         } @else if (filas().length === 0) {
           <div class="vacio">
             <p class="vacio__titulo">Sin resultados</p>

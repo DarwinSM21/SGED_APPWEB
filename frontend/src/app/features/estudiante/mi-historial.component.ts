@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { MiHistorialService } from './mi-historial.service';
 import { MiHistorial } from './mi-historial.models';
@@ -11,13 +12,13 @@ import { horaCorta } from '../entrenador/plantilla.models';
 @Component({
   selector: 'app-mi-historial',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Mi historial de asistencia</h1>
 
       @if (cargando()) {
-        <p class="aviso">Cargando…</p>
+        <app-cargando />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (historial(); as h) {

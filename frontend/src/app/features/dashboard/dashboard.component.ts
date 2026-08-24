@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Router, RouterLink } from '@angular/router';
@@ -54,7 +55,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, GraficosIngresosComponent, MapaAsistenciaComponent],
+  imports: [CommonModule, RouterLink, GraficosIngresosComponent, MapaAsistenciaComponent, CargandoComponent],
   template: `
     <div class="contenido">
       @if (esOperativo()) {
@@ -203,7 +204,7 @@ const NOMBRES_MES = [
           </div>
 
           @if (cargandoSesiones()) {
-            <p class="aviso">Cargando…</p>
+            <app-cargando />
           } @else if (sesiones().length === 0) {
             <div class="vacio">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>

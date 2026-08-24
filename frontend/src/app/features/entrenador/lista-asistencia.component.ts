@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -18,11 +19,11 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
   selector: 'app-lista-asistencia',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, CargandoComponent],
   template: `
     <div class="pantalla">
       @if (cargando()) {
-        <p class="aviso">Cargando la nómina…</p>
+        <app-cargando mensaje="Cargando la nómina…" />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (nomina(); as n) {

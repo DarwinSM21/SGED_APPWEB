@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasStateService } from './personas-state.service';
@@ -11,7 +12,7 @@ import { PersonasStateService } from './personas-state.service';
 @Component({
   selector: 'app-personas-lista',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargandoComponent],
   template: `
     <div class="card panel-lista">
       <input class="buscador" type="search" placeholder="Buscar por nombre o cédula…"
@@ -19,7 +20,7 @@ import { PersonasStateService } from './personas-state.service';
       <button class="btn btn--primary btn--block" type="button" (click)="state.nuevaPersona()">+ Nueva persona</button>
 
       @if (state.cargando()) {
-        <p class="aviso">Cargando…</p>
+        <app-cargando />
       } @else {
         <div class="lista-personas">
           @for (p of personasFiltradas(); track p.persona.idPersona) {

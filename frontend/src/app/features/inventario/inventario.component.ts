@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
@@ -29,7 +30,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
 @Component({
   selector: 'app-inventario',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Inventario</h1>
@@ -94,7 +95,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
 
           <h2 class="subtitulo">Catálogo</h2>
           @if (cargandoArticulos()) {
-            <p class="aviso">Cargando…</p>
+            <app-cargando />
           } @else if (articulos().length === 0) {
             <p class="aviso">Sin artículos registrados todavía.</p>
           } @else {
@@ -160,7 +161,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
 
           <h2 class="subtitulo">Historial</h2>
           @if (cargandoMovimientos()) {
-            <p class="aviso">Cargando…</p>
+            <app-cargando />
           } @else if (movimientos().length === 0) {
             <p class="aviso">Sin movimientos registrados todavía.</p>
           } @else {
@@ -228,7 +229,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
 
           <h2 class="subtitulo">Asignaciones</h2>
           @if (cargandoAsignaciones()) {
-            <p class="aviso">Cargando…</p>
+            <app-cargando />
           } @else if (asignaciones().length === 0) {
             <p class="aviso">Sin asignaciones registradas todavía.</p>
           } @else {

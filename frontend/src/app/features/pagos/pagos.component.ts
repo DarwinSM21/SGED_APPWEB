@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PagosService } from './pagos.service';
@@ -20,7 +21,7 @@ const NOMBRES_MES = [
 @Component({
   selector: 'app-pagos',
   standalone: true,
-  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent, CargandoComponent],
   template: `
     <div class="pantalla">
       <div class="encabezado">
@@ -171,7 +172,7 @@ const NOMBRES_MES = [
             <div class="card historial">
               <h2 class="titulo-card">Historial de pagos</h2>
               @if (cargandoHistorial()) {
-                <p class="aviso">Cargando…</p>
+                <app-cargando />
               } @else if (historial().length === 0) {
                 <div class="vacio">
                   <span class="vacio__icono">

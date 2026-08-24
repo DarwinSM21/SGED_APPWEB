@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
@@ -16,7 +17,7 @@ import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 @Component({
   selector: 'app-personas-recepcion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">{{ editando() ? 'Editar estudiante' : 'Registrar estudiante' }}</h1>
@@ -85,7 +86,7 @@ import { mensajeDeError as traducirError } from '../../core/mensaje-error';
       <div class="card lista">
         <h2 class="subtitulo">Estudiantes registrados</h2>
         @if (cargandoLista()) {
-          <p class="aviso">Cargando…</p>
+          <app-cargando />
         } @else {
           @for (e of estudiantes(); track e.idEstudiante) {
             <div class="fila-estudiante">

@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { RepresentanteService } from './representante.service';
 import { EstudianteResumen, InformeEstudiante, Notificacion } from './representante.models';
@@ -14,7 +15,7 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
 @Component({
   selector: 'app-representante',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Mis representados</h1>
@@ -47,7 +48,7 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
       }
 
       @if (cargando()) {
-        <p class="aviso">Cargando…</p>
+        <app-cargando />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (representados().length === 0) {
@@ -72,7 +73,7 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
 
           <div class="card detalle">
             @if (cargandoInforme()) {
-              <p class="aviso">Cargando informe…</p>
+              <app-cargando mensaje="Cargando informe…" />
             } @else if (informe(); as inf) {
               <h2>{{ inf.nombreCompleto }}</h2>
               <p class="categoria-detalle">{{ inf.categoria }}</p>

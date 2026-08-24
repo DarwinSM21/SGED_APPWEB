@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toDataURL } from 'qrcode';
@@ -20,13 +21,13 @@ import { horaCorta } from '../entrenador/plantilla.models';
 @Component({
   selector: 'app-recepcion',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Recepción — Asistencia por QR</h1>
 
       @if (cargandoSesiones()) {
-        <p class="aviso">Cargando sesiones de hoy…</p>
+        <app-cargando mensaje="Cargando sesiones de hoy…" />
       } @else if (sesiones().length === 0) {
         <div class="card vacio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>

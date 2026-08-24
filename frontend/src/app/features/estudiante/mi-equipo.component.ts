@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { MiEquipoService } from './mi-equipo.service';
 import { MiEquipo } from './mi-equipo.models';
@@ -18,13 +19,13 @@ import { inicialesDe } from '../entrenador/plantilla.models';
 @Component({
   selector: 'app-mi-equipo',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CargandoComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Mi equipo</h1>
 
       @if (cargando()) {
-        <p class="aviso">Cargando…</p>
+        <app-cargando />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else {
