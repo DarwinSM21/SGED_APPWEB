@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
@@ -12,7 +13,6 @@ import org.springframework.web.client.RestClient;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Implementacion de {@link GeneradorFeedbackIA} contra la API de Gemini.
@@ -28,30 +28,12 @@ import java.util.stream.Collectors;
  * cabecera es la unica opcion defendible.
  */
 @Service
+@ConditionalOnProperty(name = "ia.proveedor", havingValue = "gemini", matchIfMissing = true)
 public class GeminiFeedbackService implements GeneradorFeedbackIA {
 
     private static final Logger log = LoggerFactory.getLogger(GeminiFeedbackService.class);
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
-    /**
-     * Instruccion de sistema. Acota el registro y, sobre todo, prohibe al
-     * modelo inventar datos: el entrenador tiene que poder confiar en que el
-     * texto describe lo que realmente se midio.
-     */
-    private static final String INSTRUCCION_SISTEMA = """
-            Eres un asistente que redacta retroalimentacion deportiva para una escuela
-            de futbol formativo con jugadores en edad escolar.
-
-            Reglas que debes cumplir siempre:
-            - Escribe en espanol neutro, en segunda persona del plural o impersonal.
-            - Maximo 3 frases. Sin listas, sin titulos, sin emojis.
-            - Basate unicamente en los datos numericos que recibes. No inventes
-              hechos, incidentes ni cualidades que no esten en los datos.
-            - Tono constructivo y apropiado para un menor de edad: senala un punto
-              fuerte y un aspecto a mejorar, nunca descalifiques a la persona.
-            - No hagas diagnosticos medicos ni recomendaciones de salud.
-            - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
-            """;
 
     private final RestClient restClient;
     private final String apiKey;
@@ -99,7 +81,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         if (!habilitado) {
             return ResultadoFeedback.noDisponible("Generacion de texto deshabilitada");
         }
-        return invocar(construirPromptJugador(perfil));
+        return invocar(PromptsFeedback.deJugador(perfil));
     }
 
     @Override
@@ -110,60 +92,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         if (alineacion == null || alineacion.isEmpty()) {
             return ResultadoFeedback.noDisponible("La alineacion esta vacia");
         }
-        return invocar(construirPromptPlantilla(alineacion));
-    }
-
-    // ------------------------------------------------------------------
-    // Construccion de prompts
-    //
-    // Solo se serializan campos de PerfilJugadorAnonimo. Ese record no tiene
-    // nombre, cedula, correo ni fecha de nacimiento, de modo que aqui no hay
-    // forma de filtrar identidad aunque se quisiera.
-    // ------------------------------------------------------------------
-
-    private String construirPromptJugador(PerfilJugadorAnonimo p) {
-        var sb = new StringBuilder();
-        sb.append("Redacta la retroalimentacion del entrenamiento de hoy para este jugador.\n\n");
-        sb.append("Categoria: ").append(p.categoria()).append('\n');
-        if (p.posicion() != null) {
-            sb.append("Posicion en la que jugo: ").append(p.posicion()).append('\n');
-        }
-        sb.append("Puntajes de hoy (sobre 10): ").append(formatear(p.puntajes())).append('\n');
-        if (!p.puntajesPrevios().isEmpty()) {
-            sb.append("Promedio historico: ").append(formatear(p.puntajesPrevios())).append('\n');
-        }
-        if (p.asistenciasUltimoMes() != null) {
-            sb.append("Sesiones asistidas en el ultimo mes: ").append(p.asistenciasUltimoMes()).append('\n');
-        }
-        if (p.lesionado()) {
-            sb.append("Arrastra una lesion activa: no sugieras aumentar la carga fisica.\n");
-        }
-        return sb.toString();
-    }
-
-    private String construirPromptPlantilla(List<PerfilJugadorAnonimo> alineacion) {
-        var sb = new StringBuilder();
-        sb.append("Comenta brevemente esta alineacion, ya seleccionada por el sistema ")
-          .append("segun puntaje acumulado. No propongas cambios de jugadores ni de posiciones: ")
-          .append("eso ya lo decidio el algoritmo. Basandote solo en los puntajes dados, ")
-          .append("señala una fortaleza del once planteado y un aspecto a vigilar ")
-          .append("(por ejemplo un puntaje mas bajo en alguna posicion o criterio).\n\n");
-        for (var p : alineacion) {
-            sb.append("- ").append(p.referencia())
-              .append(" (").append(p.posicion() == null ? "sin posicion" : p.posicion()).append("): ")
-              .append(formatear(p.puntajes())).append('\n');
-        }
-        return sb.toString();
-    }
-
-    private String formatear(Map<String, Double> puntajes) {
-        if (puntajes.isEmpty()) {
-            return "sin datos";
-        }
-        return puntajes.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .map(e -> e.getKey() + " " + e.getValue())
-                .collect(Collectors.joining(", "));
+        return invocar(PromptsFeedback.dePlantilla(alineacion));
     }
 
     // ------------------------------------------------------------------
@@ -233,7 +162,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     private ResultadoFeedback intentarUnaVez(String prompt) {
         var cuerpo = Map.of(
                 "systemInstruction", Map.of(
-                        "parts", List.of(Map.of("text", INSTRUCCION_SISTEMA))),
+                        "parts", List.of(Map.of("text", PromptsFeedback.INSTRUCCION_SISTEMA))),
                 "contents", List.of(Map.of(
                         "parts", List.of(Map.of("text", prompt)))),
                 "generationConfig", Map.of(

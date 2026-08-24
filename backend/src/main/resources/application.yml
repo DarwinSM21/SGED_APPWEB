@@ -55,6 +55,19 @@ spring:
 # Deshabilitada por defecto: el sistema debe funcionar completo sin ella.
 # Solo se envian datos seudonimizados (ver PerfilJugadorAnonimo).
 ia:
+  # Que proveedor genera el texto: 'gemini' u 'openai'. Solo se crea el bean
+  # del elegido, asi que cambiar de proveedor no toca ni una linea del dominio
+  # -PlantillaService depende de la interfaz GeneradorFeedbackIA, no de una
+  # implementacion concreta-.
+  proveedor: ${IA_PROVEEDOR:gemini}
+
+  openai:
+    # La clave NO se escribe aqui: se pone en .env, que esta fuera de git.
+    api-key: ${OPENAI_API_KEY:}
+    modelo: ${OPENAI_MODELO:gpt-4o-mini}
+    timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:10}
+    reintentos: ${IA_REINTENTOS:1}
+
   gemini:
     habilitado: ${IA_HABILITADO:false}
     api-key: ${GEMINI_API_KEY:}
