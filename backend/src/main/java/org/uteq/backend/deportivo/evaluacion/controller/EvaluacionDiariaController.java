@@ -4,8 +4,12 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.*;
+import org.uteq.backend.deportivo.evaluacion.dto.AlineacionDtos.AlineacionResponse;
+import org.uteq.backend.deportivo.evaluacion.dto.AlineacionDtos.GuardarAlineacionRequest;
+import org.uteq.backend.deportivo.evaluacion.service.AlineacionService;
 import org.uteq.backend.deportivo.evaluacion.service.EvaluacionDiariaService;
 import org.uteq.backend.deportivo.evaluacion.service.PlantillaService;
 
@@ -23,6 +27,7 @@ import org.uteq.backend.deportivo.evaluacion.service.PlantillaService;
 public class EvaluacionDiariaController {
 
     private final EvaluacionDiariaService evaluacionService;
+    private final AlineacionService alineacionService;
     private final PlantillaService plantillaService;
 
     /** Abre la pantalla de evaluacion de una sesion, con precarga y bloqueos. */
@@ -73,5 +78,38 @@ public class EvaluacionDiariaController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<FeedbackPlantillaResponse> feedbackPlantilla(@PathVariable Long idSesion) {
         return ResponseEntity.ok(plantillaService.feedback(idSesion));
+    }
+
+    // ------------------------------------------------------------------
+    // Alineacion puesta en cancha
+    //
+    // Distinta de /plantilla, que devuelve la sugerencia calculada. Aqui vive
+    // la decision del entrenador: si guardo una, se devuelve esa; si no, la
+    // sugerida. Por eso abrir una sesion pasada muestra el once real con el
+    // que se jugo.
+    // ------------------------------------------------------------------
+
+    @GetMapping("/sesion/{idSesion}/alineacion")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<AlineacionResponse> verAlineacion(@PathVariable Long idSesion) {
+        return ResponseEntity.ok(alineacionService.verDeSesion(idSesion));
+    }
+
+    @PutMapping("/sesion/{idSesion}/alineacion")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional
+    public ResponseEntity<AlineacionResponse> guardarAlineacion(
+            @PathVariable Long idSesion,
+            @Valid @RequestBody GuardarAlineacionRequest request) {
+        return ResponseEntity.ok(alineacionService.guardar(idSesion, request));
+    }
+
+    /** Descarta los cambios y vuelve a la sugerencia del sistema. */
+    @DeleteMapping("/sesion/{idSesion}/alineacion")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional
+    public ResponseEntity<AlineacionResponse> restablecerAlineacion(@PathVariable Long idSesion) {
+        return ResponseEntity.ok(alineacionService.restablecer(idSesion));
     }
 }
