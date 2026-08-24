@@ -64,6 +64,12 @@ ia:
   openai:
     # La clave NO se escribe aqui: se pone en .env, que esta fuera de git.
     api-key: ${OPENAI_API_KEY:}
+    # Sirve para cualquier API compatible con OpenAI, no solo la de OpenAI:
+    #   OpenAI      https://api.openai.com/v1
+    #   Groq        https://api.groq.com/openai/v1
+    #   OpenRouter  https://openrouter.ai/api/v1
+    #   NVIDIA NIM  https://integrate.api.nvidia.com/v1
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
     modelo: ${OPENAI_MODELO:gpt-4o-mini}
     timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:10}
     reintentos: ${IA_REINTENTOS:1}

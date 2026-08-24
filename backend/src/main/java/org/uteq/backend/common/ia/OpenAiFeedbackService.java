@@ -28,6 +28,14 @@ import java.util.Map;
  * predeterminado, asi que este archivo no cambia el comportamiento de nadie
  * que no lo pida explicitamente.
  *
+ * <p>La URL base es configurable porque el protocolo de OpenAI se volvio un
+ * estandar de hecho: Groq, OpenRouter y NVIDIA NIM exponen el mismo
+ * {@code /chat/completions} con el mismo cuerpo. Eso convierte a esta clase en
+ * un adaptador para cualquiera de ellos con solo cambiar dos variables de
+ * entorno, sin recompilar. Importa porque los niveles gratuitos van y vienen:
+ * cuando uno se satura o deja de ser gratis, se cambia de proveedor sin tocar
+ * codigo.
+ *
  * <p>La clave viaja en la cabecera {@code Authorization}, nunca en la URL: un
  * parametro de consulta termina en logs de acceso, historiales de proxy y
  * cabeceras {@code Referer}.
@@ -37,7 +45,6 @@ import java.util.Map;
 public class OpenAiFeedbackService implements GeneradorFeedbackIA {
 
     private static final Logger log = LoggerFactory.getLogger(OpenAiFeedbackService.class);
-    private static final String BASE_URL = "https://api.openai.com/v1";
 
     private final RestClient restClient;
     private final String apiKey;
@@ -47,6 +54,7 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
 
     public OpenAiFeedbackService(
             @Value("${ia.openai.api-key:}") String apiKey,
+            @Value("${ia.openai.base-url:https://api.openai.com/v1}") String baseUrl,
             @Value("${ia.openai.modelo:gpt-4o-mini}") String modelo,
             @Value("${ia.openai.timeout-segundos:10}") int timeoutSegundos,
             @Value("${ia.openai.reintentos:1}") int reintentos) {
@@ -61,14 +69,14 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
         factory.setReadTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());
 
         this.restClient = RestClient.builder()
-                .baseUrl(BASE_URL)
+                .baseUrl(baseUrl)
                 .requestFactory(factory)
                 .build();
 
         if (!habilitado) {
             log.warn("Proveedor de IA 'openai' seleccionado pero sin clave: el feedback quedara no disponible");
         } else {
-            log.info("Generacion de texto con OpenAI, modelo {}", modelo);
+            log.info("Generacion de texto por API compatible con OpenAI: {} , modelo {}", baseUrl, modelo);
         }
     }
 
