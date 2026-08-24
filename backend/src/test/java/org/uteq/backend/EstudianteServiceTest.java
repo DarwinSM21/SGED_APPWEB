@@ -366,4 +366,71 @@ class EstudianteServiceTest {
         assertThrows(RecursoNoEncontradoException.class,
                 () -> service.habilitarAcceso(99L, new HabilitarAccesoRequest("x@sged.test", "password123")));
     }
+
+    // --- La edad tiene que encajar con la categoria ---------------------------
+    //
+    // Antes de esto se podia matricular a alguien de 18 anios en la SUB-12 y el
+    // sistema respondia 201. La categoria decide en que sesiones aparece para
+    // pasar lista y en que formacion entra, asi que el error no se descubria
+    // hasta ver al chico entrenando con un grupo que no era el suyo.
+
+    private Persona personaDeEdad(int anios) {
+        return Persona.builder()
+                .idPersona(1L)
+                .nombre("Ana")
+                .apellido("Gomez")
+                .fechaNacimiento(LocalDate.now().minusYears(anios).minusDays(1))
+                .activo(true)
+                .build();
+    }
+
+    private void prepararCrear(Persona persona) {
+        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
+        when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
+    }
+
+    @Test
+    void crear_con_edad_fuera_del_rango_de_la_categoria_lanza_excepcion() {
+        prepararCrear(personaDeEdad(18));
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> service.crear(crearRequestValido()));
+
+        assertTrue(e.getMessage().contains("18"), e.getMessage());
+        assertTrue(e.getMessage().contains("SUB-12"), e.getMessage());
+        verify(estudianteRepository, never()).save(any(Estudiante.class));
+    }
+
+    @Test
+    void crear_con_edad_dentro_del_rango_guarda_normalmente() {
+        prepararCrear(personaDeEdad(11));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
+        when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertNotNull(service.crear(crearRequestValido()));
+    }
+
+    @Test
+    void crear_en_el_borde_del_rango_es_valido() {
+        // 12 anios con SUB-12 (10 a 12): el limite superior entra.
+        prepararCrear(personaDeEdad(12));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
+        when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertNotNull(service.crear(crearRequestValido()));
+    }
+
+    @Test
+    void crear_sin_fecha_de_nacimiento_no_bloquea() {
+        // Es obligatoria desde PersonaRequest, pero los datos anteriores a esa
+        // regla podrian no tenerla: rechazar por un dato que falta seria
+        // bloquear a quien no tiene la culpa.
+        prepararCrear(personaDummy);
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
+        when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
+
+        assertNotNull(service.crear(crearRequestValido()));
+    }
 }

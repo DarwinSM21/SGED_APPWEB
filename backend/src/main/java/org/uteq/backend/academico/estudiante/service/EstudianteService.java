@@ -29,6 +29,7 @@ import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.time.LocalDate;
+import java.time.Period;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
@@ -123,6 +124,8 @@ public class EstudianteService {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
 
+        validarEdadEnCategoria(persona, categoria);
+
         EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
@@ -210,12 +213,50 @@ public class EstudianteService {
         estudiante.setPersona(nuevaPersona);
     }
 
+    /**
+     * La edad del estudiante tiene que caer dentro del rango de su categoria.
+     *
+     * <p>Sin esta comprobacion se podia matricular a alguien de 18 anios en la
+     * SUB-12 y el sistema respondia 201 sin una sola advertencia. No es un
+     * detalle cosmetico: la categoria decide en que sesiones aparece para
+     * pasar lista, en que formacion entra y en que informe sale, de modo que
+     * un error de dedo mete a un chico a entrenar con un grupo que no es el
+     * suyo y no se descubre hasta verlo en la cancha.
+     *
+     * <p>Se comprueba solo al ASIGNAR o CAMBIAR la categoria, nunca en toda
+     * edicion: un estudiante que cumple anios a mitad de temporada se sale del
+     * rango sin que nadie haya hecho nada mal, y si la regla corriera siempre
+     * quedaria imposible corregirle el peso o el telefono hasta cambiarlo de
+     * grupo. Sacarlo del rango es una decision de la escuela, no un efecto
+     * secundario de editar su ficha.
+     *
+     * <p>Sin fecha de nacimiento no se valida nada: es obligatoria desde
+     * PersonaRequest, pero los datos anteriores a esa regla podrian no
+     * tenerla, y rechazar por un dato que falta seria bloquear a quien no
+     * tiene la culpa.
+     */
+    private void validarEdadEnCategoria(Persona persona, Categoria categoria) {
+        LocalDate nacimiento = persona.getFechaNacimiento();
+        if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {
+            return;
+        }
+
+        int edad = Period.between(nacimiento, LocalDate.now(Zonas.ECUADOR)).getYears();
+        if (edad < categoria.getEdadMin() || edad > categoria.getEdadMax()) {
+            throw new IllegalArgumentException(
+                    persona.getNombre() + " " + persona.getApellido() + " tiene " + edad
+                    + " años y " + categoria.getNombre() + " es para edades de "
+                    + categoria.getEdadMin() + " a " + categoria.getEdadMax() + " años");
+        }
+    }
+
     private void reasignarCategoriaSiCambio(Estudiante estudiante, Long idCategoriaNueva) {
         if (estudiante.getCategoria().getIdCategoria().equals(idCategoriaNueva)) {
             return;
         }
         Categoria categoria = categoriaRepository.findById(idCategoriaNueva)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + idCategoriaNueva));
+        validarEdadEnCategoria(estudiante.getPersona(), categoria);
         estudiante.setCategoria(categoria);
     }
 

@@ -176,10 +176,18 @@ class HorarioServiceTest {
 
         service.generarSesionesProgramadas();
 
-        // 8 dias recorridos (hoy + 7) tocan cada dia habil al menos una vez y
-        // uno de ellos dos veces, pero nunca sabado ni domingo.
+        // Cuantos dias habiles caen en la ventana depende del dia en que se
+        // ejecute la prueba: de lunes a viernes son 6, pero un sabado o un
+        // domingo son 5. Fijar el 6 hacia que la suite fallara los fines de
+        // semana por un motivo que no tenia nada que ver con el codigo, asi
+        // que el numero se calcula igual que lo hace el servicio.
+        long esperadas = java.util.stream.IntStream.rangeClosed(0, 7)
+                .mapToObj(i -> LocalDate.now(Zonas.ECUADOR).plusDays(i))
+                .filter(fecha -> fecha.getDayOfWeek().getValue() <= 5)
+                .count();
+
         var guardadas = org.mockito.ArgumentCaptor.forClass(SesionEntrenamiento.class);
-        verify(sesionRepository, times(6)).save(guardadas.capture());
+        verify(sesionRepository, times((int) esperadas)).save(guardadas.capture());
         assertThat(guardadas.getAllValues())
                 .allSatisfy(s -> assertThat(s.getFecha().getDayOfWeek().getValue()).isBetween(1, 5));
     }
