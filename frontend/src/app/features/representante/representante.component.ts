@@ -1,4 +1,5 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { RepresentanteService } from './representante.service';
@@ -227,9 +228,9 @@ export class RepresentanteComponent implements OnInit {
           this.seleccionar(representados[0].idEstudiante);
         }
       },
-      error: () => {
+      error: (e) => {
         this.cargando.set(false);
-        this.error.set('No se pudo cargar la lista de representados.');
+        this.error.set(mensajeDeError(e, 'No se pudo cargar la lista de representados.'));
       },
     });
 

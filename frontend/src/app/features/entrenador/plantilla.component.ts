@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -484,9 +485,9 @@ export class PlantillaComponent implements OnInit {
         this.guardando.set(false);
         this.mensaje.set('Se volvió a la sugerencia del sistema');
       },
-      error: () => {
+      error: (e) => {
         this.guardando.set(false);
-        this.error.set('No se pudo restablecer.');
+        this.error.set(mensajeDeError(e, 'No se pudo restablecer.'));
       },
     });
   }

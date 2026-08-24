@@ -414,7 +414,7 @@ export class SesionesComponent implements OnInit {
   private cargarHorarios(): void {
     this.sesionesService.misHorarios().subscribe({
       next: (horarios) => this.horarios.set(horarios),
-      error: () => {},
+      error: (e) => {},
     });
   }
 

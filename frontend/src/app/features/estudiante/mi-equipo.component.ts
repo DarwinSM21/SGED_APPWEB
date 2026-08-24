@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { MiEquipoService } from './mi-equipo.service';
@@ -192,9 +193,9 @@ export class MiEquipoComponent implements OnInit {
   ngOnInit(): void {
     this.servicio.miEquipo().subscribe({
       next: (eq) => { this.equipo.set(eq); this.cargando.set(false); },
-      error: () => {
+      error: (e) => {
         this.cargando.set(false);
-        this.error.set('No se pudo cargar la información de tu equipo.');
+        this.error.set(mensajeDeError(e, 'No se pudo cargar la información de tu equipo.'));
       },
     });
 

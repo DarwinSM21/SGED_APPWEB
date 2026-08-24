@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -227,8 +228,8 @@ export class ListaAsistenciaComponent {
     this.cargando.set(true);
     this.servicio.nomina(idSesion).subscribe({
       next: (n) => this.recibir(n),
-      error: () => {
-        this.error.set('No se pudo cargar la nómina de esta sesión.');
+      error: (e) => {
+        this.error.set(mensajeDeError(e, 'No se pudo cargar la nómina de esta sesión.'));
         this.cargando.set(false);
       },
     });

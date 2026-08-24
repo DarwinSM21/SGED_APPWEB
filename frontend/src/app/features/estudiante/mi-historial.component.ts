@@ -1,4 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { MiHistorialService } from './mi-historial.service';
@@ -98,9 +99,9 @@ export class MiHistorialComponent implements OnInit {
   ngOnInit(): void {
     this.servicio.miHistorial().subscribe({
       next: (h) => { this.historial.set(h); this.cargando.set(false); },
-      error: () => {
+      error: (e) => {
         this.cargando.set(false);
-        this.error.set('No se pudo cargar tu historial de asistencia. Contacta a un administrador si el problema continúa.');
+        this.error.set(mensajeDeError(e, 'No se pudo cargar tu historial de asistencia. Contacta a un administrador si el problema continúa.'));
       },
     });
   }

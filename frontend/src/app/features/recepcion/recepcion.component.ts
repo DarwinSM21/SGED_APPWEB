@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit, inject, signal } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -108,9 +109,9 @@ export class RecepcionComponent implements OnInit, OnDestroy {
           this.seleccionar(sesiones[0].idSesion);
         }
       },
-      error: () => {
+      error: (e) => {
         this.cargandoSesiones.set(false);
-        this.error.set('No se pudieron cargar las sesiones de hoy.');
+        this.error.set(mensajeDeError(e, 'No se pudieron cargar las sesiones de hoy.'));
       },
     });
   }
@@ -138,10 +139,10 @@ export class RecepcionComponent implements OnInit, OnDestroy {
         const renovarEnMs = Math.max(expiraEnSegundos * 0.8, 5) * 1000;
         this.intervaloRenovacion = setTimeout(() => this.pedirYPintarToken(idSesion), renovarEnMs);
       },
-      error: () => {
+      error: (e) => {
         this.cargandoToken.set(false);
         this.qrDataUrl.set(null);
-        this.error.set('No se pudo generar el código. Intenta de nuevo.');
+        this.error.set(mensajeDeError(e, 'No se pudo generar el código. Intenta de nuevo.'));
       },
     });
   }

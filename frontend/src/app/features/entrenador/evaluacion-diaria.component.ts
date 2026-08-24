@@ -438,7 +438,7 @@ export class EvaluacionDiariaComponent implements OnInit {
         this.finalizando.set(false);
         this.sesion.set({ ...s, estado: 'FINALIZADA' });
       },
-      error: () => { this.finalizando.set(false); },
+      error: (e) => { this.finalizando.set(false); },
     });
   }
 

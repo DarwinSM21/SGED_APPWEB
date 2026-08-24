@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { mensajeDeError } from '../../core/mensaje-error';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { descargarBlob } from '../../core/descargar-archivo';
@@ -191,9 +192,9 @@ export class ConfiguracionComponent {
         descargarBlob(blob, 'mis-datos.pdf');
         this.descargando.set(false);
       },
-      error: () => {
+      error: (e) => {
         this.descargando.set(false);
-        this.error.set('No se pudo generar el PDF de tus datos');
+        this.error.set(mensajeDeError(e, 'No se pudo generar el PDF de tus datos'));
       },
     });
   }
