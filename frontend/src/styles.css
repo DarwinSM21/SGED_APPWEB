@@ -341,3 +341,10 @@ select option, select optgroup {
   .auth-shell { grid-template-columns: 1fr; }
   .auth-brand { display: none; }
 }
+
+/* ---------- Aviso de fallo con causa y salida ----------
+   El "que paso" y el "que puedo hacer" se separan visualmente: el segundo va
+   mas apagado para que el primero se lea de un golpe. Los usa el login, que
+   distingue si el fallo vino del dispositivo, del camino o del servidor. */
+.fallo-que { display: block; font-weight: 500; }
+.fallo-como { display: block; margin-top: .3rem; font-size: .84rem; opacity: .85; }

@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { homeRouteForRole } from '../home-route';
 import { PelotaAnimadaComponent } from '../pelota-animada.component';
+import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
 
 /**
  * `loading`/`error` viven en signals, no en propiedades sueltas: este
@@ -100,8 +101,15 @@ import { PelotaAnimadaComponent } from '../pelota-animada.component';
             </span>
           </label>
 
-          @if (error()) {
-            <div class="alert alert--danger" role="alert" aria-live="assertive">{{ error() }}</div>
+          @if (fallo(); as f) {
+            <div class="alert" role="alert" aria-live="assertive"
+                 [class.alert--danger]="f.origen === 'peticion' || f.origen === 'servidor'"
+                 [class.alert--warning]="f.origen === 'dispositivo' || f.origen === 'camino'">
+              <span class="fallo-que">{{ f.mensaje }}</span>
+              @if (f.sugerencia) {
+                <span class="fallo-como">{{ f.sugerencia }}</span>
+              }
+            </div>
           }
 
           <button class="btn btn--primary btn--block" type="submit" [disabled]="loading()">
@@ -124,7 +132,13 @@ export class LoginComponent {
   username = '';
   password = '';
   readonly loading = signal(false);
-  readonly error = signal('');
+  /**
+   * El fallo completo, no solo su texto: la pantalla necesita saber de donde
+   * viene para pintarlo distinto. Un servidor caido no es culpa de quien
+   * escribe la contrasena, y no deberia verse igual de rojo que un dato mal
+   * puesto.
+   */
+  readonly fallo = signal<Diagnostico | null>(null);
   readonly mostrarPassword = signal(false);
 
   onSubmit() {
@@ -143,14 +157,14 @@ export class LoginComponent {
     // por IP tras seis intentos fallidos (LoginAttemptService, OWASP A07),
     // asi que un Enter dado sin querer no debe gastar uno de esos seis.
     if (!username || !this.password) {
-      this.error.set(!username
+      this.fallo.set({ origen: 'peticion', mensaje: !username
         ? 'Escribe tu usuario'
-        : 'Escribe tu contraseña');
+        : 'Escribe tu contraseña' });
       return;
     }
 
     this.loading.set(true);
-    this.error.set('');
+    this.fallo.set(null);
     this.authService.login({ username, password: this.password }).subscribe({
       next: (usuario) => {
         this.router.navigate([homeRouteForRole(usuario.rol)]);
@@ -158,29 +172,9 @@ export class LoginComponent {
       error: (err) => {
         this.loading.set(false);
         this.password = '';
-        this.error.set(this.mensajeDeError(err));
+        this.fallo.set(diagnosticar(err));
       }
     });
   }
 
-  private mensajeDeError(err: { status: number; error?: { detail?: string } }): string {
-    switch (err.status) {
-      case 401:
-        return 'Usuario o contraseña incorrectos';
-      case 429:
-        // El backend ya redacta el mensaje ("Intenta de nuevo en 15
-        // minutos"); mostrarlo tal cual evita duplicar ese texto aquí.
-        return err.error?.detail ?? 'Demasiados intentos. Intenta más tarde';
-      case 422:
-      case 400:
-        // Datos incompletos o mal formados: es del formulario, no del
-        // servidor, y decir lo contrario manda a buscar el problema donde
-        // no esta.
-        return 'Revisa el usuario y la contraseña';
-      case 0:
-        return 'No hay conexión con el servidor';
-      default:
-        return 'Error del servidor. Intenta de nuevo';
-    }
-  }
 }
