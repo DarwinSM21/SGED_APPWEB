@@ -15,6 +15,8 @@ import org.uteq.backend.deportivo.horario.dto.HorarioResponse;
 import org.uteq.backend.deportivo.horario.entity.Horario;
 import org.uteq.backend.deportivo.horario.repository.HorarioRepository;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
 import java.time.LocalDate;
@@ -28,6 +30,8 @@ public class HorarioService {
     private final EntrenadorRepository entrenadorRepository;
     private final CategoriaRepository categoriaRepository;
     private final SesionEntrenamientoRepository sesionRepository;
+    private final AsistenciaRepository asistenciaRepository;
+    private final EvaluacionDiariaRepository evaluacionRepository;
 
     /**
      * Cuantos dias hacia adelante se programan de una vez. Con 7 basta una
@@ -83,6 +87,74 @@ public class HorarioService {
     }
 
     /**
+     * Cambia un horario fijo del entrenador.
+     *
+     * <p>Antes solo se podia crear y dar de baja: corregir "entreno a las 16
+     * y no a las 15" obligaba a borrar el horario y volver a escribirlo
+     * entero, y las sesiones ya generadas de esa semana se quedaban con la
+     * hora vieja.
+     *
+     * <p>404 uniforme si no existe o no es suyo, mismo criterio IDOR que
+     * desactivar().
+     */
+    @Transactional
+    public HorarioResponse editar(String username, Long idHorario, HorarioRequest request) {
+        Entrenador entrenador = entrenadorAutenticado(username);
+        Horario horario = horarioRepository
+                .findByIdHorarioAndEntrenador_IdEntrenador(idHorario, entrenador.getIdEntrenador())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Horario no encontrado con id: " + idHorario));
+
+        if (!request.horaFin().isAfter(request.horaInicio())) {
+            throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
+        }
+
+        Categoria categoria = categoriaRepository.findById(request.idCategoria())
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Categoria no encontrada con id: " + request.idCategoria()));
+
+        horario.setCategoria(categoria);
+        horario.setDiaSemana(request.diaSemana().shortValue());
+        horario.setHoraInicio(request.horaInicio());
+        horario.setHoraFin(request.horaFin());
+        horario.setCampo(request.campo());
+        horario.setDescripcion(request.descripcion());
+        horarioRepository.save(horario);
+
+        rehacerSesionesFuturas(horario);
+        return aResponse(horario);
+    }
+
+    /**
+     * Vuelve a materializar la ventana de este horario tras un cambio.
+     *
+     * <p>Solo se borran las sesiones que aun no ocurrieron Y en las que nadie
+     * registro nada. Una sesion con asistencia o con evaluacion se queda como
+     * esta aunque el horario haya cambiado: son hechos que ya pasaron, y
+     * moverlos de hora reescribiria el historial de a que entrenamiento fue
+     * cada estudiante. Es el mismo criterio por el que un pago se anula en
+     * vez de editarse.
+     *
+     * <p>Consecuencia practica: al cambiar el dia o la hora, la semana en
+     * curso se rehace salvo los entrenamientos que ya se dictaron.
+     */
+    private void rehacerSesionesFuturas(Horario horario) {
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+
+        for (SesionEntrenamiento sesion : sesionRepository
+                .findByHorario_IdHorarioAndFechaGreaterThanEqual(horario.getIdHorario(), hoy)) {
+
+            boolean tieneAsistencia = !asistenciaRepository.findBySesionIdSesion(sesion.getIdSesion()).isEmpty();
+            boolean tieneEvaluacion = evaluacionRepository.existsBySesionIdSesion(sesion.getIdSesion());
+            if (tieneAsistencia || tieneEvaluacion) {
+                continue;
+            }
+            sesionRepository.delete(sesion);
+        }
+
+        generarSesionesProgramadas();
+    }
+
+    /**
      * Materializa las sesiones que faltan a partir de los horarios fijos
      * activos, desde hoy y hasta {@code sesiones.dias-programados} dias
      * hacia adelante. Idempotente a proposito: se llama en cada
@@ -133,7 +205,8 @@ public class HorarioService {
 
     private HorarioResponse aResponse(Horario h) {
         return new HorarioResponse(
-                h.getIdHorario(), h.getCategoria().getNombre(), h.getDiaSemana().intValue(),
+                h.getIdHorario(), h.getCategoria().getIdCategoria(), h.getCategoria().getNombre(),
+                h.getDiaSemana().intValue(),
                 h.getHoraInicio(), h.getHoraFin(), h.getCampo(), h.getDescripcion(), h.getActivo());
     }
 }

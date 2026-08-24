@@ -49,6 +49,13 @@ public interface SesionEntrenamientoRepository extends JpaRepository<SesionEntre
     boolean existsByHorario_IdHorarioAndFecha(Long idHorario, LocalDate fecha);
 
     /**
+     * Sesiones de un horario que todavia no han ocurrido. Las usa
+     * HorarioService.editar para rehacer la semana cuando el entrenador
+     * cambia el dia o la hora: lo ya ocurrido no se toca.
+     */
+    List<SesionEntrenamiento> findByHorario_IdHorarioAndFechaGreaterThanEqual(Long idHorario, LocalDate desde);
+
+    /**
      * Sesion futura mas proxima de una categoria, para saber "quien es mi
      * entrenador" desde el punto de vista del estudiante. Se usa con
      * PageRequest.of(0, 1): la primera fila es la respuesta, lista vacia

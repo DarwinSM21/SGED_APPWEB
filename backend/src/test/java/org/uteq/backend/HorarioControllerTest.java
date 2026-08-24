@@ -67,7 +67,7 @@ class HorarioControllerTest {
     void crear_devuelve_201() throws Exception {
         autenticarComo("carlos@sged.test");
         when(horarioService.crear(eq("carlos@sged.test"), any()))
-                .thenReturn(new HorarioResponse(1L, "SUB-12", 1, LocalTime.of(16, 0), LocalTime.of(18, 0), "Cancha 1", null, true));
+                .thenReturn(new HorarioResponse(1L, 5L, "SUB-12", 1, LocalTime.of(16, 0), LocalTime.of(18, 0), "Cancha 1", null, true));
 
         mockMvc.perform(post("/api/horarios")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,7 +81,7 @@ class HorarioControllerTest {
     void mios_devuelve_200() throws Exception {
         autenticarComo("carlos@sged.test");
         when(horarioService.misHorarios("carlos@sged.test")).thenReturn(List.of(
-                new HorarioResponse(1L, "SUB-12", 1, LocalTime.of(16, 0), LocalTime.of(18, 0), null, null, true)));
+                new HorarioResponse(1L, 5L, "SUB-12", 1, LocalTime.of(16, 0), LocalTime.of(18, 0), null, null, true)));
 
         mockMvc.perform(get("/api/horarios/mios"))
                 .andExpect(status().isOk())

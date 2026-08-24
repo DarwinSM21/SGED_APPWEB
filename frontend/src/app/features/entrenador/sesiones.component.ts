@@ -58,6 +58,12 @@ function fechaHoyIso(): string {
           </button>
         </div>
         <p class="ayuda">Las sesiones de estos días se generan solas. Usa "+ Nueva sesión" solo para una jornada extra.</p>
+        @if (editandoHorario()) {
+          <p class="alert alert--info">
+            Al cambiar el horario se rehacen las sesiones que aún no ocurren. Las que ya
+            tienen asistencia o evaluación se quedan como están.
+          </p>
+        }
 
         @if (mostrarFormularioHorario()) {
           <form class="formulario-horario" (ngSubmit)="onCrearHorario()">
@@ -104,7 +110,7 @@ function fechaHoyIso(): string {
             @if (errorHorario()) { <div class="alert alert--danger" role="alert">{{ errorHorario() }}</div> }
 
             <button class="btn btn--primary btn--block" type="submit" [disabled]="guardandoHorario()">
-              {{ guardandoHorario() ? 'Guardando…' : 'Guardar horario' }}
+              {{ guardandoHorario() ? 'Guardando…' : (editandoHorario() ? 'Guardar cambios' : 'Guardar horario') }}
             </button>
           </form>
         }
@@ -115,6 +121,7 @@ function fechaHoyIso(): string {
               <div class="fila-horario">
                 <span class="badge badge--info">{{ nombreDia(h.diaSemana) }}</span>
                 <span class="horario-info">{{ h.categoria }} · {{ horaCorta(h.horaInicio) }}–{{ horaCorta(h.horaFin) }}{{ h.campo ? ' · ' + h.campo : '' }}</span>
+                <button type="button" class="btn btn--ghost btn--sm" (click)="editarHorario(h)">Editar</button>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="onDesactivarHorario(h.idHorario)">Quitar</button>
               </div>
             }
@@ -305,6 +312,8 @@ export class SesionesComponent implements OnInit {
   readonly horarios = signal<Horario[]>([]);
   readonly mostrarFormularioHorario = signal(false);
   readonly guardandoHorario = signal(false);
+  /** id del horario que se esta editando, o null si se esta creando uno nuevo. */
+  readonly editandoHorario = signal<number | null>(null);
   readonly errorHorario = signal('');
   readonly diasSemana = DIAS_SEMANA;
 
@@ -409,9 +418,35 @@ export class SesionesComponent implements OnInit {
   }
 
   alternarFormularioHorario(): void {
-    if (!this.mostrarFormularioHorario()) this.cargarCategorias();
+    if (this.mostrarFormularioHorario()) {
+      this.limpiarFormularioHorario();
+    } else {
+      this.cargarCategorias();
+    }
     this.mostrarFormularioHorario.set(!this.mostrarFormularioHorario());
     this.errorHorario.set('');
+  }
+
+  /** Carga un horario existente en el mismo formulario, en modo edicion. */
+  editarHorario(h: Horario): void {
+    this.editandoHorario.set(h.idHorario);
+    this.idCategoriaHorario = h.idCategoria;
+    this.diaSemana = h.diaSemana;
+    this.horaInicioHorario = (h.horaInicio ?? '').slice(0, 5);
+    this.horaFinHorario = (h.horaFin ?? '').slice(0, 5);
+    this.campoHorario = h.campo ?? '';
+    this.errorHorario.set('');
+    this.mostrarFormularioHorario.set(true);
+    this.cargarCategorias();
+  }
+
+  private limpiarFormularioHorario(): void {
+    this.editandoHorario.set(null);
+    this.idCategoriaHorario = null;
+    this.diaSemana = null;
+    this.horaInicioHorario = '';
+    this.horaFinHorario = '';
+    this.campoHorario = '';
   }
 
   onCrearHorario(): void {
@@ -426,23 +461,28 @@ export class SesionesComponent implements OnInit {
 
     this.guardandoHorario.set(true);
     this.errorHorario.set('');
-    this.sesionesService.crearHorario({
+    const cuerpo = {
       idCategoria: this.idCategoriaHorario,
       diaSemana: this.diaSemana,
       horaInicio: this.horaInicioHorario,
       horaFin: this.horaFinHorario,
       campo: this.campoHorario || null,
       descripcion: null,
-    }).subscribe({
+    };
+    const idEnEdicion = this.editandoHorario();
+    const peticion = idEnEdicion
+      ? this.sesionesService.editarHorario(idEnEdicion, cuerpo)
+      : this.sesionesService.crearHorario(cuerpo);
+
+    peticion.subscribe({
       next: () => {
         this.guardandoHorario.set(false);
         this.mostrarFormularioHorario.set(false);
-        this.idCategoriaHorario = null;
-        this.diaSemana = null;
-        this.horaInicioHorario = '';
-        this.horaFinHorario = '';
-        this.campoHorario = '';
+        this.limpiarFormularioHorario();
         this.cargarHorarios();
+        // El cambio de horario rehace las sesiones futuras: la lista de abajo
+        // se queda con las horas viejas si no se vuelve a pedir.
+        this.cargarSesiones();
       },
       error: (err) => {
         this.guardandoHorario.set(false);

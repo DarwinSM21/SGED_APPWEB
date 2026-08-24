@@ -27,6 +27,15 @@ export class SesionesService {
     return this.http.post<Horario>('/api/horarios', request);
   }
 
+  /**
+   * Cambia un horario existente. El backend rehace las sesiones futuras de
+   * ese horario que todavia no tienen nada registrado; las que ya se
+   * dictaron se quedan como estan.
+   */
+  editarHorario(idHorario: number, request: HorarioCrearRequest) {
+    return this.http.put<Horario>(`/api/horarios/${idHorario}`, request);
+  }
+
   desactivarHorario(idHorario: number) {
     return this.http.delete<void>(`/api/horarios/${idHorario}`);
   }

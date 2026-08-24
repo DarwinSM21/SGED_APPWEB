@@ -39,6 +39,12 @@ public class HorarioController {
         return ResponseEntity.ok(horarioService.misHorarios(usernameAutenticado()));
     }
 
+    @PutMapping("/{idHorario}")
+    public ResponseEntity<HorarioResponse> editar(@PathVariable Long idHorario,
+                                                  @Valid @RequestBody HorarioRequest request) {
+        return ResponseEntity.ok(horarioService.editar(usernameAutenticado(), idHorario, request));
+    }
+
     @DeleteMapping("/{idHorario}")
     public ResponseEntity<Void> desactivar(@PathVariable Long idHorario) {
         horarioService.desactivar(usernameAutenticado(), idHorario);

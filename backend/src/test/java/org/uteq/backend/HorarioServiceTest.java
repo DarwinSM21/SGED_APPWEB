@@ -29,6 +29,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -48,6 +49,8 @@ class HorarioServiceTest {
     @Mock private EntrenadorRepository entrenadorRepository;
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
+    @Mock private org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository asistenciaRepository;
+    @Mock private org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository evaluacionRepository;
 
     @InjectMocks private HorarioService service;
 
@@ -213,5 +216,111 @@ class HorarioServiceTest {
         LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
         assertThat(guardadas.getAllValues())
                 .allSatisfy(s -> assertThat(s.getFecha()).isAfterOrEqualTo(hoy));
+    }
+
+    // --- Editar un horario -----------------------------------------------
+    //
+    // Antes solo se podia crear y dar de baja. Corregir "entreno a las 16 y no
+    // a las 15" obligaba a borrar el horario y reescribirlo entero, y las
+    // sesiones ya generadas de esa semana se quedaban con la hora vieja.
+
+    private Horario horarioDe(Entrenador duenio) {
+        return Horario.builder().idHorario(9L).entrenador(duenio)
+                .categoria(Categoria.builder().idCategoria(5L).nombre("SUB-12").build())
+                .diaSemana((short) 1).horaInicio(LocalTime.of(15, 0)).horaFin(LocalTime.of(17, 0))
+                .activo(true).build();
+    }
+
+    private HorarioRequest peticion(LocalTime inicio, LocalTime fin) {
+        return new HorarioRequest(5L, 1, inicio, fin, "Cancha 2", null);
+    }
+
+    @Test
+    @DisplayName("editar cambia la hora del horario")
+    void editar_cambia_la_hora() {
+        var yo = entrenador(1L);
+        var horario = horarioDe(yo);
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
+        when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
+                .thenReturn(java.util.Optional.of(horario));
+        when(categoriaRepository.findById(5L)).thenReturn(java.util.Optional.of(horario.getCategoria()));
+        when(sesionRepository.findByHorario_IdHorarioAndFechaGreaterThanEqual(eq(9L), any()))
+                .thenReturn(java.util.List.of());
+
+        service.editar("carlos@sged.test", 9L, peticion(LocalTime.of(16, 0), LocalTime.of(18, 0)));
+
+        assertThat(horario.getHoraInicio()).isEqualTo(LocalTime.of(16, 0));
+        assertThat(horario.getHoraFin()).isEqualTo(LocalTime.of(18, 0));
+    }
+
+    @Test
+    @DisplayName("editar el horario de otro entrenador da 404, no 403")
+    void editar_horario_ajeno_da_404() {
+        var yo = entrenador(1L);
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
+        when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
+                .thenReturn(java.util.Optional.empty());
+
+        // 404 y no 403 a proposito: un 403 confirmaria que ese horario existe.
+        assertThrows(RecursoNoEncontradoException.class,
+                () -> service.editar("carlos@sged.test", 9L, peticion(LocalTime.of(16, 0), LocalTime.of(18, 0))));
+    }
+
+    @Test
+    @DisplayName("editar rechaza una hora de fin que no es posterior a la de inicio")
+    void editar_rechaza_horaFin_no_posterior() {
+        var yo = entrenador(1L);
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
+        when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
+                .thenReturn(java.util.Optional.of(horarioDe(yo)));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> service.editar("carlos@sged.test", 9L, peticion(LocalTime.of(18, 0), LocalTime.of(18, 0))));
+    }
+
+    @Test
+    @DisplayName("al editar NO se borra una sesion futura que ya tiene asistencia registrada")
+    void editar_respeta_la_sesion_con_asistencia() {
+        var yo = entrenador(1L);
+        var horario = horarioDe(yo);
+        var yaUsada = SesionEntrenamiento.builder().idSesion(50L).horario(horario)
+                .fecha(LocalDate.now(Zonas.ECUADOR)).build();
+
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
+        when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
+                .thenReturn(java.util.Optional.of(horario));
+        when(categoriaRepository.findById(5L)).thenReturn(java.util.Optional.of(horario.getCategoria()));
+        when(sesionRepository.findByHorario_IdHorarioAndFechaGreaterThanEqual(eq(9L), any()))
+                .thenReturn(java.util.List.of(yaUsada));
+        when(asistenciaRepository.findBySesionIdSesion(50L)).thenReturn(java.util.List.of(
+                org.uteq.backend.deportivo.asistencia.entity.Asistencia.builder().idAsistencia(1L).build()));
+
+        service.editar("carlos@sged.test", 9L, peticion(LocalTime.of(16, 0), LocalTime.of(18, 0)));
+
+        // Un entrenamiento que ya se dicto es un hecho: moverlo de hora
+        // reescribiria a que sesion fue cada estudiante.
+        verify(sesionRepository, never()).delete(yaUsada);
+    }
+
+    @Test
+    @DisplayName("al editar SI se rehace una sesion futura en la que nadie registro nada")
+    void editar_rehace_la_sesion_vacia() {
+        var yo = entrenador(1L);
+        var horario = horarioDe(yo);
+        var vacia = SesionEntrenamiento.builder().idSesion(51L).horario(horario)
+                .fecha(LocalDate.now(Zonas.ECUADOR).plusDays(3)).build();
+
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
+        when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
+                .thenReturn(java.util.Optional.of(horario));
+        when(categoriaRepository.findById(5L)).thenReturn(java.util.Optional.of(horario.getCategoria()));
+        when(sesionRepository.findByHorario_IdHorarioAndFechaGreaterThanEqual(eq(9L), any()))
+                .thenReturn(java.util.List.of(vacia));
+        when(asistenciaRepository.findBySesionIdSesion(51L)).thenReturn(java.util.List.of());
+        when(evaluacionRepository.existsBySesionIdSesion(51L)).thenReturn(false);
+
+        service.editar("carlos@sged.test", 9L, peticion(LocalTime.of(16, 0), LocalTime.of(18, 0)));
+
+        verify(sesionRepository).delete(vacia);
     }
 }

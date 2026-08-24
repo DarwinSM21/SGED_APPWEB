@@ -29,6 +29,7 @@ export interface SesionCrearRequest {
 /** 1=Lunes ... 7=Domingo, igual que el CHECK de deportivo.horarios_entrenamiento. */
 export interface Horario {
   idHorario: number;
+  idCategoria: number;
   categoria: string;
   diaSemana: number;
   horaInicio: string;
