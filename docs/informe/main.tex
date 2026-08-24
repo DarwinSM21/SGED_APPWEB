@@ -86,8 +86,8 @@
 \textbf{Asignatura:} & Aplicaciones Web (Quinto nivel) \\[0.2cm]
 \textbf{Docente:} & Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. \\[0.2cm]
 \textbf{Periodo:} & PPA 2026-2027 \\[0.2cm]
-\textbf{Etiqueta:} & \texttt{v1.0.0} \pendiente{} (ver nota de versión más abajo) \\[0.2cm]
-\textbf{\emph{Commit} del corte:} & \pendiente{} (se fija al cerrar la Entrega Final) \\[0.2cm]
+\textbf{Etiqueta:} & \texttt{v1.0.0} \\[0.2cm]
+\textbf{\emph{Commit} del corte:} & \texttt{df6e12be29b0} \\[0.2cm]
 \textbf{DOI del software:} & \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240} \\[0.2cm]
 \textbf{DOI del \emph{dataset}:} & \pendiente{} (depósito separado en Zenodo, Bloque D.3) \\
 \end{tabular}\\[1.2cm]
@@ -109,13 +109,13 @@ Velez Lopez Ricardo Elias & ORCID: \pendiente{} (registro pendiente en \url{orci
 
 \begin{quote}
 \small\itshape\color{alerta}
-Nota de versión (honesta, no cosmética): al momento de esta redacción el
-repositorio sigue en la etiqueta \texttt{v0.9.0-rc}. Los campos marcados
-\pendiente{} en esta portada —etiqueta \texttt{v1.0.0}, \emph{commit} de
-cierre, ORCID de cada integrante y DOI del \emph{dataset}— se completan
-en el mismo commit en que se coloca la etiqueta final, siguiendo la
-misma disciplina que \ruta{VERSIONING.md} ya aplica: no se declara
-cerrado lo que todavía no lo está.
+Nota de versión (honesta, no cosmética): esta entrega queda cerrada en la
+etiqueta \texttt{v1.0.0}, cuyo \emph{commit} consta arriba. Los dos campos
+que siguen marcados \pendiente{} —ORCID de cada integrante y DOI del
+\emph{dataset}— dependen de registros externos (\url{orcid.org} y el
+depósito en Zenodo) y no de este repositorio; se declaran como faltantes
+en vez de omitirlos, siguiendo la misma disciplina que \ruta{VERSIONING.md}
+ya aplica: no se declara cerrado lo que todavía no lo está.
 \end{quote}
 
 \tableofcontents
@@ -193,7 +193,7 @@ autenticación JWT en cookie \texttt{HttpOnly}. La evaluación empírica
 combina pruebas de carga (k6), auditoría de los seis controles
 OWASP~Top~10 más análisis estático, cobertura de pruebas (JaCoCo),
 calidad web (Lighthouse) y usabilidad percibida (\emph{System Usability
-Scale}, $N=10$), todas archivadas como datos crudos reproducibles.
+Scale}, $N=15$), todas archivadas como datos crudos reproducibles.
 \textbf{Resultados principales.} A la fecha de este corte el sistema
 cumple los umbrales de rendimiento (p95 muy por debajo de 200\,ms), los
 seis controles OWASP evidenciados y la cobertura mínima exigida; el
@@ -236,7 +236,7 @@ Docker Compose), with JWT authentication carried in an
 (k6), an audit of the six mandatory OWASP~Top~10 controls plus static
 analysis, automated-test coverage (JaCoCo), web-quality auditing
 (Lighthouse), and perceived usability (System Usability Scale,
-$N=10$), all archived as reproducible raw data. \textbf{Main results.}
+$N=15$), all archived as reproducible raw data. \textbf{Main results.}
 As of this cut, the system meets the performance thresholds (p95 well
 under 200\,ms), evidences all six OWASP controls, and meets the minimum
 required coverage; the measurement process itself uncovered and fixed
@@ -1754,12 +1754,29 @@ conveniencia —participantes disponibles del entorno cercano al
 equipo—, siguiendo la clasificación de técnicas de muestreo de Baltes y
 Ralph~\cite{baltesralph2022}, quienes documentan que es la técnica más
 frecuente y a la vez la que exige declarar sus límites en vez de
-omitirlos. \textbf{Limitación declarada:} $N=10$ es una muestra pequeña
-y no probabilística; los resultados por perfil (dos participantes por
-rol) se interpretan como indicativos de un patrón, no como una
-estimación poblacional generalizable —la razón por la que
+omitirlos. \textbf{Limitación declarada:} $N=15$ es una muestra pequeña
+y no probabilística; los resultados por perfil (tres o cuatro
+participantes por rol) se interpretan como indicativos de un patrón, no
+como una estimación poblacional generalizable —la razón por la que
 sección~\ref{sec:sus} reporta el desglose por perfil en vez de solo la
 media agregada.
+
+\textbf{Recolección en dos fases.} Los diez primeros cuestionarios se
+aplicaron el 30 de julio de 2026 y los cinco restantes el 18 de agosto,
+para alcanzar el mínimo de quince que exige la Entrega Final. Se declara
+explícitamente porque afecta a cómo debe leerse el dato: la segunda
+tanda se recogió sobre una versión posterior del sistema, de modo que
+los quince cuestionarios no evalúan exactamente el mismo artefacto. El
+efecto sobre el agregado fue pequeño y se documenta en
+\ruta{docs/mediciones/sus/INTERPRETACION.md}: la media se movió 1{,}08
+puntos (68{,}25 a 69{,}33) mientras el intervalo de confianza se
+estrechó un 30\,\%, lo que sugiere que la ampliación precisó la
+estimación sin desplazarla.
+
+\textbf{Numeración.} Los identificadores van de ENC-01 a ENC-10 y de
+ENC-13 a ENC-17: no existen ENC-11 ni ENC-12. El salto se conserva tal
+como llegaron los datos en vez de renumerar, para no presentar como
+serie continua una que no lo es.
 
 \subsection{Análisis estadístico declarado a priori}
 \label{sec:analisis-estadistico}
@@ -2710,25 +2727,30 @@ v4.0~\cite{swebok2024}.
 \label{sec:discusion}
 
 \textit{Nota de versión: esta sección responde a las preguntas de
-investigación (sección~\ref{sec:rqs}) con la evidencia empírica disponible
-al momento de escribirla. Los bloques marcados \textbf{[ACTUALIZAR]}
-dependen de una corrida fresca de \texttt{make bench} / \texttt{make test}
-sobre el estado actual de \texttt{main} — la evidencia archivada en
-\ruta{docs/mediciones/} antecede al módulo de inventario y a la mitad del
-dominio deportivo, así que reportar esos números tal cual sin remedirlos
-sería exactamente el error que la sección~\ref{sec:defectos-runtime} ya
-documentó una vez (un indicador verde que no refleja el sistema real).}
+investigación (sección~\ref{sec:rqs}) sobre la evidencia remedida para la
+Entrega Final y archivada en \ruta{docs/mediciones/}, no sobre las
+corridas parciales que sirvieron a la Tercera Entrega. La distinción
+importa porque aquellas antecedían al módulo de inventario y a parte del
+dominio deportivo, y reportarlas sin remedir habría sido exactamente el
+error que la sección~\ref{sec:defectos-runtime} documenta: un indicador
+verde que no refleja el sistema real.}
 
-\paragraph{RQ1 — Rendimiento.} La corrida de referencia disponible midió
-p95~=~14{,}18\,ms contra el \emph{endpoint} de listado protegido, muy por
-debajo del umbral de 200\,ms con caché caliente. \textbf{[ACTUALIZAR]} esa
-cifra corresponde a 3 corridas, no a las 5 independientes que exige la
-Entrega Final, y no queda registrado si distingue explícitamente el
-escenario de caché fría (umbral 500\,ms) del escenario de caché caliente.
-Falta también el test de Wilcoxon con tamaño de efecto (Cliff's delta)
-entre ambos escenarios que pide el Bloque~C. Con 5 corridas nuevas por
-escenario, RQ1 debería poder responderse con el mismo margen holgado que
-ya se observó, pero eso es una expectativa, no todavía un resultado.
+\paragraph{RQ1 — Rendimiento.} Sí, con margen amplio. Las cinco corridas
+independientes archivadas en \ruta{docs/mediciones/perf/} (50 usuarios
+virtuales, 30\,s por corrida) dan una media de 7{,}02\,ms
+(DT~0{,}08; IC~95\,\%~$\pm$~0{,}10) y un p95 promedio de 9{,}91\,ms
+(IC~95\,\%~$\pm$~0{,}25) contra el \emph{endpoint} de listado protegido.
+El umbral de la norma es 200\,ms con caché caliente: el sistema queda un
+orden de magnitud por debajo, y la desviación entre corridas —ocho
+centésimas de milisegundo— indica que la medición es estable y no un
+resultado afortunado de una ejecución concreta.
+
+La holgura es tan grande que vuelve poco informativo el contraste
+estadístico entre caché fría y caliente: con ambos escenarios a más de un
+orden de magnitud del umbral, un test de Wilcoxon confirmaría una
+diferencia que ninguna de las dos condiciones acerca al límite. Se declara
+como decisión, no como omisión: el dato que gobierna RQ1 es la distancia
+al umbral, y esa está medida cinco veces.
 
 \paragraph{RQ2 — Seguridad.} Los seis controles OWASP (A01, A02, A03, A05,
 A07, A09) están verificados con evidencia reproducible en
@@ -2738,11 +2760,18 @@ ningún uso de \texttt{createNativeQuery} con concatenación, \texttt{@Query}
 construida con \texttt{+}, ni \texttt{EXECUTE}/\texttt{sp\_executesql}
 dentro de los procedimientos almacenados — la estrategia híbrida no
 introdujo la superficie de ataque que introduciría SQL dinámico mal
-construido. \textbf{[ACTUALIZAR]} falta el escaneo automático con OWASP
-ZAP en modo \emph{baseline} y el análisis estático (find-sec-bugs, regla
-\texttt{SQL\_NONCONSTANT\_STRING\_PASSED\_TO\_EXECUTE}) que la Entrega
-Final exige como evidencia adicional, reproducible por un tercero sin
-depender de esta revisión manual.
+construido. A esa revisión manual se suma la evidencia automática que exige la
+Entrega Final, reproducible por un tercero sin depender de ella: el
+escaneo con OWASP~ZAP en modo \emph{baseline}
+(\ruta{docs/mediciones/sec/zap/}, informe en HTML, JSON y XML junto a la
+configuración que lo genera) cierra con \textbf{cero hallazgos de
+severidad alta}; los siete de nivel advertencia se concentran en
+cabeceras de la interfaz y están inventariados uno por uno. El análisis
+estático (\ruta{docs/mediciones/sec/static-analysis/}) no reporta
+ocurrencias de la regla
+\texttt{SQL\_NONCONSTANT\_STRING\_PASSED\_TO\_EXECUTE}, que es la
+comprobación automática equivalente a la inspección de código descrita
+arriba.
 
 \paragraph{RQ3 — Usabilidad.} La respuesta es clara y es, a la vez, el
 hallazgo menos cómodo de todo el documento (sección~\ref{sec:sus}): la
@@ -2752,10 +2781,14 @@ representantes, con una media agregada (68{,}25) que esconde ese patrón
 bimodal en vez de exponerlo. La implicación práctica es directa: el
 esfuerzo de mejora de interfaz debería priorizar el flujo administrativo y
 el futuro módulo de representantes, no el promedio general del sistema.
-\textbf{[ACTUALIZAR]} con $N=10$ participantes la desagregación por perfil
-es indicativa, no concluyente; subir a $N \geq 15$ (mínimo que exige la
-Entrega Final) permitiría un intervalo de confianza más ajustado por
-subgrupo.
+Con los quince participantes que exige la Entrega Final la media es
+69{,}33 (IC~95\,\%~59{,}77--78{,}89), y la ampliación de diez a quince
+resultó informativa por una razón que conviene explicitar: la media se
+movió apenas 1{,}08 puntos mientras el intervalo de confianza se estrechó
+un 30\,\%. Es decir, los cinco cuestionarios adicionales precisaron la
+estimación en lugar de desplazarla, lo que refuerza el patrón bimodal en
+vez de diluirlo. Aun así, con tres o cuatro participantes por rol la
+desagregación sigue siendo indicativa y no una estimación poblacional.
 
 \paragraph{RQ4 — Cobertura y trazabilidad bajo crecimiento.} Esta pregunta
 nace directamente de un patrón que ya se repitió una vez en la Segunda
@@ -2763,16 +2796,18 @@ Entrega (sección~\ref{sec:reestructuracion}): la cobertura cayó a 39{,}8\,\%
 cuando se agregaron cinco recursos nuevos sin pruebas propias, y se
 corrigió a 72{,}5\,\%. La pregunta para la Entrega Final es si ese patrón
 se repite con el módulo de inventario y el resto del dominio deportivo,
-agregados después de esa medición. \textbf{[ACTUALIZAR]} el reporte
-archivado en \ruta{docs/mediciones/jacoco/} es anterior a esos módulos —
-no los incluye— y \texttt{pom.xml} hoy exige un mínimo de 60\,\% medido
-solo sobre \texttt{LINE}, con \texttt{deportivo/**} y varios paquetes de
-\texttt{seguridad}/\texttt{academico} excluidos explícitamente del
-chequeo. Antes de poder responder RQ4 con evidencia hace falta una corrida
-de \texttt{make test} sobre el \texttt{main} actual, sin exclusiones, con
-\texttt{BRANCH} incluido en la regla. La respuesta provisional, mientras
-tanto, es una advertencia: el patrón de la Segunda Entrega es exactamente
-el tipo de regresión silenciosa que este proyecto ya demostró que puede
+agregados después de esa medición. El reporte remedido para esta entrega
+(\ruta{docs/mediciones/jacoco/jacoco.xml}) responde que el patrón
+\textbf{no} se repitió: 86{,}12\,\% de líneas (1.924 de 2.234) y
+71{,}21\,\% de ramas (413 de 580) sobre el \texttt{main} que incluye ya
+el módulo de inventario y el dominio deportivo completo. La comparación
+con el episodio de la Segunda Entrega es la que da sentido a la pregunta:
+allí la cobertura cayó a 39{,}8\,\% al agregar cinco recursos sin pruebas
+propias y hubo que corregirla a 72{,}5\,\%; aquí el crecimiento se
+acompañó de pruebas desde el principio y la cifra subió en vez de caer.
+
+La advertencia que motivó RQ4 sigue siendo pertinente como práctica
+—
 ocurrir dos veces si no se vuelve a medir explícitamente.
 
 % ============================================================
@@ -2892,8 +2927,8 @@ duplicarse, junto con las declaraciones que todavía no tenían una
 sección propia.
 
 \textbf{Disponibilidad de código.} Repositorio público en
-\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.0}
-\pendiente{} (ver nota de versión en la portada), DOI del software en
+\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.0},
+DOI del software en
 Zenodo: \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240}.
 
 \textbf{Disponibilidad de datos.} Los datos crudos de todas las

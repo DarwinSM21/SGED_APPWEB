@@ -7,7 +7,7 @@
 Aplicación web para la gestión administrativa y deportiva de la escuela
 ProFútbol: estudiantes, entrenadores, asistencias, evaluaciones y reportes.
 
-**Versión de esta entrega:** `v0.9.0-rc` (Tercera Entrega, PFC Aplicaciones Web, UTEQ)
+**Versión de esta entrega:** `v1.0.0` (Entrega Final, PFC Aplicaciones Web, UTEQ)
 
 ## Pila tecnológica
 
@@ -23,7 +23,7 @@ Requisitos: Docker + Docker Compose + GNU Make.
 ```bash
 git clone https://github.com/DarwinSM21/SGED_APPWEB.git
 cd SGED_APPWEB
-git checkout v0.9.0-rc
+git checkout v1.0.0
 cp .env.example .env
 make up
 ```
