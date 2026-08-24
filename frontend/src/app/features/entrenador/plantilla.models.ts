@@ -3,6 +3,9 @@ export interface JugadorPlantilla {
   nombreCompleto: string;
   /** Abreviatura de la posicion nominal del estudiante (ej. "ED", "DFC"), o null si no la tiene registrada. */
   posicion: string | null;
+  /** Id del puesto. Hace falta para poder GUARDAR la alineacion: sin el, se
+   *  reenviarian posiciones nulas y el once perderia sus puestos. */
+  idPosicion?: number | null;
   promedioAcumulado: number;
 }
 
@@ -12,6 +15,30 @@ export interface Plantilla {
   titulares: JugadorPlantilla[];
   suplentes: JugadorPlantilla[];
   excluidosPorLesion: number[];
+}
+
+/**
+ * La alineacion de una sesion. `guardada` distingue las dos cosas que el
+ * sistema maneja: la sugerencia que calcula el servidor por promedio, y el
+ * once que el entrenador decidio poner en cancha.
+ */
+export interface Alineacion {
+  idSesion: number;
+  categoria: string;
+  fecha: string;
+  guardada: boolean;
+  valoracion: number | null;
+  observacion: string | null;
+  titulares: JugadorPlantilla[];
+  suplentes: JugadorPlantilla[];
+  /** Presentes que no estan en el once: de aqui salen los cambios. */
+  disponibles: JugadorPlantilla[];
+}
+
+export interface JugadorEnCancha {
+  idEstudiante: number;
+  idPosicion: number | null;
+  titular: boolean;
 }
 
 export interface FeedbackPlantilla {

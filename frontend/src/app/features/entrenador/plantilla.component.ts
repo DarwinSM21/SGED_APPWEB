@@ -1,9 +1,10 @@
 import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { PlantillaService } from './plantilla.service';
 import {
-  Plantilla, JugadorPlantilla, ZonaCancha, zonaDe, inicialesDe, apellidoDe, COORDENADA_POR_ABREVIATURA,
+  Plantilla, JugadorPlantilla, ZonaCancha, zonaDe, inicialesDe, apellidoDe, COORDENADA_POR_ABREVIATURA, Alineacion, JugadorEnCancha,
 } from './plantilla.models';
 
 interface Token {
@@ -37,7 +38,7 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
 @Component({
   selector: 'app-plantilla',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   template: `
     <div class="pantalla">
       @if (cargando()) {
@@ -55,7 +56,12 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
           <div>
             <h1>Formación sugerida por ranking</h1>
             <p class="subt">
-              {{ p.categoria }} · ordenada por promedio acumulado
+              {{ p.categoria }} ·
+              @if (alineacion()?.guardada) {
+                <strong>formación puesta por el entrenador</strong>
+              } @else {
+                sugerida por el sistema, ordenada por promedio
+              }
               @if (p.excluidosPorLesion.length > 0) {
                 · {{ p.excluidosPorLesion.length }}
                 jugador{{ p.excluidosPorLesion.length === 1 ? '' : 'es' }}
@@ -172,18 +178,64 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
               }
             </aside>
 
-            @if (p.suplentes.length > 0) {
+            @if (banco().length > 0) {
               <section class="card suplentes">
-                <h2>Suplentes</h2>
-                @for (s of p.suplentes; track s.idEstudiante) {
+                <h2>Banco</h2>
+                <p class="ayuda-banco">Asistieron y están fuera del once. Pulsa «Entra» para hacer el cambio.</p>
+                @for (s of banco(); track s.idEstudiante) {
                   <div class="suplente">
                     <span class="avatar avatar--muted">{{ iniciales(s.nombreCompleto) }}</span>
-                    <span class="suplente-nombre">{{ s.nombreCompleto }}</span>
+                    <span class="suplente-nombre">
+                      {{ s.nombreCompleto }}
+                      @if (s.posicion) { <span class="puesto-banco">{{ s.posicion }}</span> }
+                    </span>
                     <span class="badge badge--info">{{ s.promedioAcumulado }}</span>
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="cambiar(s)">Entra</button>
                   </div>
                 }
               </section>
             }
+
+            <section class="card decision">
+              <h2>La formación que pongo en cancha</h2>
+
+              @if (detalle(); as d) {
+                <button type="button" class="btn btn--ghost btn--sm sacar"
+                        (click)="sacar(d)">Sacar a {{ apellido(d.nombreCompleto) }}</button>
+              }
+
+              <p class="etiqueta-val">¿Cómo funcionó?</p>
+              <div class="estrellas" role="group" aria-label="Valoración de la formación">
+                @for (v of estrellas; track v) {
+                  <button type="button"
+                          class="estrella"
+                          [class.estrella--activa]="(valoracion() ?? 0) >= v"
+                          [attr.aria-pressed]="valoracion() === v"
+                          [attr.aria-label]="v + ' de 5'"
+                          (click)="calificar(v)">★</button>
+                }
+                @if (valoracion()) { <span class="val-num">{{ valoracion() }}/5</span> }
+              </div>
+
+              <input class="obs" type="text" maxlength="500"
+                     [ngModel]="observacion()" (ngModelChange)="observacion.set($event); sinGuardar.set(true)"
+                     placeholder="Por qué este once (opcional)" />
+
+              @if (mensaje(); as m) { <p class="ok">{{ m }}</p> }
+
+              <div class="acciones">
+                <button type="button" class="btn btn--primary btn--block"
+                        [disabled]="guardando()" (click)="guardar()">
+                  {{ guardando() ? 'Guardando…' : (sinGuardar() ? 'Guardar formación' : 'Guardar de nuevo') }}
+                </button>
+                @if (alineacion()?.guardada) {
+                  <button type="button" class="btn btn--ghost btn--block"
+                          [disabled]="guardando()" (click)="restablecer()">
+                    Volver a la sugerencia del sistema
+                  </button>
+                }
+              </div>
+            </section>
           </div>
         </div>
       }
@@ -230,6 +282,29 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
     .vacio svg { width: 32px; height: 32px; opacity: .6; }
     .vacio p { font-size: .85rem; color: var(--color-text-muted); }
 
+    .ayuda-banco { font-size: .76rem; color: var(--color-text-muted); margin: 0 0 .6rem; line-height: 1.4; }
+    .puesto-banco { font-size: .7rem; color: var(--color-text-faint); margin-left: .35rem;
+                    font-family: ui-monospace, monospace; }
+
+    .decision { padding: 1.1rem 1.2rem; }
+    .decision h2 { font-size: 1rem; margin-bottom: .7rem; }
+    .sacar { width: 100%; margin-bottom: .8rem; }
+    .etiqueta-val { font-size: .78rem; color: var(--color-text-muted); margin: 0 0 .3rem; }
+    .estrellas { display: flex; align-items: center; gap: .15rem; margin-bottom: .7rem; }
+    .estrella { background: none; border: none; cursor: pointer; padding: .1rem .15rem;
+                font-size: 1.35rem; line-height: 1; color: var(--color-border);
+                transition: color .12s, transform .12s; }
+    .estrella:hover { transform: scale(1.12); }
+    .estrella--activa { color: #f59e0b; }
+    .estrella:focus-visible { outline: 2px solid var(--color-primary-600); outline-offset: 2px; }
+    .val-num { font-size: .78rem; color: var(--color-text-muted); margin-left: .4rem;
+               font-variant-numeric: tabular-nums; }
+    .obs { width: 100%; padding: .45rem .6rem; font-size: .82rem; margin-bottom: .7rem;
+           border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+           background: var(--color-surface); color: var(--color-text); }
+    .acciones { display: flex; flex-direction: column; gap: .4rem; }
+    .ok { font-size: .8rem; color: var(--color-success-text); margin: 0 0 .5rem; }
+
     .suplentes { padding: 1.1rem 1.2rem; }
     .suplentes h2 { font-size: 1rem; margin-bottom: .6rem; }
     .suplente {
@@ -253,6 +328,17 @@ export class PlantillaComponent implements OnInit {
   readonly zonasLeyenda: ZonaCancha[] = ['POR', 'DEF', 'MED', 'DEL', 'SIN_POSICION'];
 
   readonly plantilla = signal<Plantilla | null>(null);
+  readonly alineacion = signal<Alineacion | null>(null);
+  /** Suplentes + presentes fuera del once: de aqui salen los cambios. */
+  readonly banco = signal<JugadorPlantilla[]>([]);
+  readonly valoracion = signal<number | null>(null);
+  readonly observacion = signal<string>('');
+  readonly guardando = signal(false);
+  readonly mensaje = signal<string | null>(null);
+  /** Hay cambios en pantalla que todavia no se mandaron al servidor. */
+  readonly sinGuardar = signal(false);
+  readonly estrellas = [1, 2, 3, 4, 5];
+  private idSesion = 0;
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly detalle = signal<JugadorPlantilla | null>(null);
@@ -266,7 +352,7 @@ export class PlantillaComponent implements OnInit {
    * que calcula el servidor por promedio; esto es un ajuste visual puntual
    * para la demo, no una nueva fuente de verdad.
    */
-  private readonly arrastres = signal<Map<number, { x: number; y: number }>>(new Map());
+  readonly arrastres = signal<Map<number, { x: number; y: number }>>(new Map());
   readonly huboArrastre = computed(() => this.arrastres().size > 0);
   readonly idArrastrando = signal<number | null>(null);
   private arrastreActual: { idEstudiante: number; inicioX: number; inicioY: number; movio: boolean } | null = null;
@@ -298,14 +384,115 @@ export class PlantillaComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const idSesion = Number(this.ruta.snapshot.paramMap.get('idSesion'));
-    this.servicio.obtener(idSesion).subscribe({
-      next: (p) => { this.plantilla.set(p); this.cargando.set(false); },
+    this.idSesion = Number(this.ruta.snapshot.paramMap.get('idSesion'));
+    this.cargar();
+  }
+
+  /**
+   * Pide la alineacion, no la sugerencia. El servidor decide cual devolver:
+   * la que guardo el entrenador si existe, la calculada si no. La pantalla
+   * solo necesita saber cual es para decirlo, via `guardada`.
+   */
+  private cargar(): void {
+    this.cargando.set(true);
+    this.servicio.obtenerAlineacion(this.idSesion).subscribe({
+      next: (a) => this.recibir(a),
       error: (e) => {
         this.cargando.set(false);
         this.error.set(e.status === 404 ? 'Esa sesión no existe.' : 'No se pudo calcular la alineación.');
       },
     });
+  }
+
+  private recibir(a: Alineacion): void {
+    this.alineacion.set(a);
+    this.plantilla.set({
+      idSesion: a.idSesion, categoria: a.categoria,
+      titulares: a.titulares, suplentes: a.suplentes, excluidosPorLesion: [],
+    });
+    this.banco.set([...a.suplentes, ...a.disponibles]);
+    this.valoracion.set(a.valoracion);
+    this.observacion.set(a.observacion ?? '');
+    this.sinGuardar.set(false);
+    this.cargando.set(false);
+  }
+
+  /** Mete a un suplente por el titular del mismo puesto. */
+  cambiar(entra: JugadorPlantilla): void {
+    const p = this.plantilla();
+    if (!p) return;
+
+    const sale = p.titulares.find((t) => t.posicion === entra.posicion);
+    const titulares = sale
+      ? p.titulares.map((t) => (t.idEstudiante === sale.idEstudiante ? entra : t))
+      : [...p.titulares, entra];
+    const banco = this.banco().filter((b) => b.idEstudiante !== entra.idEstudiante);
+    if (sale) banco.push(sale);
+
+    this.plantilla.set({ ...p, titulares });
+    this.banco.set(banco);
+    this.sinGuardar.set(true);
+    this.mensaje.set(null);
+  }
+
+  /** Saca a un titular al banco sin meter a nadie. */
+  sacar(sale: JugadorPlantilla): void {
+    const p = this.plantilla();
+    if (!p) return;
+    this.plantilla.set({ ...p, titulares: p.titulares.filter((t) => t.idEstudiante !== sale.idEstudiante) });
+    this.banco.set([...this.banco(), sale]);
+    this.sinGuardar.set(true);
+    this.mensaje.set(null);
+  }
+
+  guardar(): void {
+    const p = this.plantilla();
+    if (!p || this.guardando()) return;
+
+    const jugadores: JugadorEnCancha[] = [
+      ...p.titulares.map((t) => ({
+        idEstudiante: t.idEstudiante, idPosicion: t.idPosicion ?? null, titular: true })),
+      ...this.banco().map((b) => ({
+        idEstudiante: b.idEstudiante, idPosicion: b.idPosicion ?? null, titular: false })),
+    ];
+
+    this.guardando.set(true);
+    this.error.set(null);
+    this.servicio.guardarAlineacion(this.idSesion, jugadores,
+                                    this.valoracion(), this.observacion().trim() || null)
+      .subscribe({
+        next: (a) => {
+          this.recibir(a);
+          this.guardando.set(false);
+          this.mensaje.set('Formación guardada');
+        },
+        error: (e) => {
+          this.guardando.set(false);
+          this.error.set(e?.error?.detail ?? 'No se pudo guardar la formación.');
+        },
+      });
+  }
+
+  restablecer(): void {
+    if (this.guardando()) return;
+    this.guardando.set(true);
+    this.servicio.restablecerAlineacion(this.idSesion).subscribe({
+      next: (a) => {
+        this.recibir(a);
+        this.arrastres.set(new Map());
+        this.guardando.set(false);
+        this.mensaje.set('Se volvió a la sugerencia del sistema');
+      },
+      error: () => {
+        this.guardando.set(false);
+        this.error.set('No se pudo restablecer.');
+      },
+    });
+  }
+
+  calificar(valor: number): void {
+    this.valoracion.set(this.valoracion() === valor ? null : valor);
+    this.sinGuardar.set(true);
   }
 
   verDetalle(jugador: JugadorPlantilla): void {
