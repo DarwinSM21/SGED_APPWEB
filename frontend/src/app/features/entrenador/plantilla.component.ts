@@ -70,7 +70,7 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
             </p>
           </div>
           <button class="btn btn--primary" (click)="pedirFeedback()" [disabled]="cargandoFeedback() || p.titulares.length === 0">
-            @if (cargandoFeedback()) { <span class="spinner"></span> Pensando… } @else { ✦ Feedback IA (Gemini) }
+            @if (cargandoFeedback()) { <span class="spinner"></span> Pensando… } @else { ✦ Comentario con IA }
           </button>
         </header>
 
