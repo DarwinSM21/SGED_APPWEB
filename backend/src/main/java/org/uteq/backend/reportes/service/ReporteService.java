@@ -1,6 +1,7 @@
 package org.uteq.backend.reportes.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,23 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ReporteService {
 
+    /**
+     * Tope de filas por reporte.
+     *
+     * <p>Los cuatro reportes hacian {@code findAll(spec, sort)} sin limite. Con
+     * los filtros vacios eso significa traerse la tabla entera: en una prueba
+     * de carga con un millon de asistencias, el backend cayo con
+     * OutOfMemoryError tras 15 segundos, y no solo fallaba esa peticion —el
+     * proceso entero se quedaba sin heap, afectando a todos los usuarios
+     * conectados.
+     *
+     * <p>El tope no es una limitacion tecnica disfrazada: un PDF de un millon
+     * de filas no es un documento que nadie pueda leer. Si el reporte se corta,
+     * lo que hace falta es afinar los filtros, y eso se le dice al usuario en
+     * el propio documento en vez de dejarle creer que lo tiene todo.
+     */
+    private static final int TOPE_FILAS = 5000;
+
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ReportePdfService pdfService;
@@ -52,8 +70,8 @@ public class ReporteService {
                         Boolean.TRUE.equals(e.getActivo()) ? "Activo" : "Inactivo",
                         e.getFechaIngreso().format(FECHA)))
                 .toList();
-        return pdfService.generar("Reporte de Fichas de Estudiantes",
-                List.of("Código", "Estudiante", "Categoría", "Estado", "Fecha ingreso"), filas);
+        return pdfService.generar(titulo("Reporte de Fichas de Estudiantes", filas),
+                List.of("Código", "Estudiante", "Categoría", "Estado", "Fecha ingreso"), recortar(filas));
     }
 
     @Transactional(readOnly = true)
@@ -61,11 +79,11 @@ public class ReporteService {
         Specification<Pago> spec = Specification.<Pago>where(igualA("estudiante.idEstudiante", idEstudiante))
                 .and(this.<Pago>desdeDe("fechaPago", desde))
                 .and(this.<Pago>hastaDe("fechaPago", hasta));
-        var filas = sinVacio(pagoRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "fechaPago"))).stream()
+        var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaPago"))).getContent()).stream()
                 .map(this::filaPago)
                 .toList();
-        return pdfService.generar("Reporte de Pagos",
-                List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), filas);
+        return pdfService.generar(titulo("Reporte de Pagos", filas),
+                List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), recortar(filas));
     }
 
     @Transactional(readOnly = true)
@@ -74,11 +92,11 @@ public class ReporteService {
                 .and(this.<Asistencia>igualA("estudiante.categoria.idCategoria", idCategoria))
                 .and(this.<Asistencia>desdeDe("sesion.fecha", desde))
                 .and(this.<Asistencia>hastaDe("sesion.fecha", hasta));
-        var filas = sinVacio(asistenciaRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).stream()
+        var filas = sinVacio(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
                 .map(this::filaAsistencia)
                 .toList();
-        return pdfService.generar("Reporte de Asistencias",
-                List.of("Estudiante", "Categoría", "Fecha sesión", "Estado", "Método"), filas);
+        return pdfService.generar(titulo("Reporte de Asistencias", filas),
+                List.of("Estudiante", "Categoría", "Fecha sesión", "Estado", "Método"), recortar(filas));
     }
 
     @Transactional(readOnly = true)
@@ -87,11 +105,11 @@ public class ReporteService {
                 .and(this.<EvaluacionEstudiante>igualA("categoriaDia.idCategoria", idCategoria))
                 .and(this.<EvaluacionEstudiante>desdeDe("evaluacion.fecha", desde))
                 .and(this.<EvaluacionEstudiante>hastaDe("evaluacion.fecha", hasta));
-        var filas = sinVacio(evaluacionEstudianteRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).stream()
+        var filas = sinVacio(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
                 .map(this::filaEvaluacion)
                 .toList();
-        return pdfService.generar("Reporte de Evaluaciones",
-                List.of("Estudiante", "Categoría", "Fecha", "Posición", "Promedio"), filas);
+        return pdfService.generar(titulo("Reporte de Evaluaciones", filas),
+                List.of("Estudiante", "Categoría", "Fecha", "Posición", "Promedio"), recortar(filas));
     }
 
     @Transactional(readOnly = true)
@@ -100,11 +118,11 @@ public class ReporteService {
                 .and(this.<Lesion>igualA("estudiante.categoria.idCategoria", idCategoria))
                 .and(this.<Lesion>desdeDe("fechaLesion", desde))
                 .and(this.<Lesion>hastaDe("fechaLesion", hasta));
-        var filas = sinVacio(lesionRepository.findAll(spec, Sort.by(Sort.Direction.DESC, "fechaLesion"))).stream()
+        var filas = sinVacio(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()
                 .map(this::filaLesion)
                 .toList();
-        return pdfService.generar("Reporte de Lesiones",
-                List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), filas);
+        return pdfService.generar(titulo("Reporte de Lesiones", filas),
+                List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), recortar(filas));
     }
 
     /**
@@ -193,4 +211,25 @@ public class ReporteService {
         BigDecimal suma = detalles.stream().map(DetalleEvaluacion::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);
         return suma.divide(BigDecimal.valueOf(detalles.size()), 2, RoundingMode.HALF_UP).toPlainString();
     }
+    /**
+     * Se pide una fila de mas que el tope: si vuelve, es que habia mas datos de
+     * los que caben y el reporte esta incompleto. Contarlas todas con un
+     * {@code count} aparte seria una segunda consulta sobre la misma tabla
+     * grande para averiguar algo que esta lectura ya sabe.
+     */
+    private boolean seQuedoCorto(List<List<String>> filas) {
+        return filas.size() > TOPE_FILAS;
+    }
+
+    private List<List<String>> recortar(List<List<String>> filas) {
+        return seQuedoCorto(filas) ? filas.subList(0, TOPE_FILAS) : filas;
+    }
+
+    /** El aviso va en el titulo para que viaje impreso dentro del PDF. */
+    private String titulo(String base, List<List<String>> filas) {
+        return seQuedoCorto(filas)
+                ? base + " (primeras " + TOPE_FILAS + " filas — afine los filtros para ver el resto)"
+                : base;
+    }
+
 }
