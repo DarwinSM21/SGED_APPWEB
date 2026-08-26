@@ -40,3 +40,15 @@ export interface Notificacion {
   leida: boolean;
   creadaEn: string;
 }
+
+/**
+ * El informe puesto en palabras, para quien no lee numeros.
+ *
+ * `disponible` en false no es un error: el informe se muestra igual con sus
+ * numeros, solo falta el texto.
+ */
+export interface ComentarioInforme {
+  comentario: string | null;
+  disponible: boolean;
+  motivo: string | null;
+}

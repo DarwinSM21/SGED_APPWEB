@@ -12,6 +12,8 @@ import org.uteq.backend.academico.representante.repository.RepresentanteEstudian
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.ia.GeneradorFeedbackIA;
+import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -19,7 +21,9 @@ import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Lectura de informes para el representante autenticado.
@@ -48,6 +52,7 @@ public class InformeService {
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     private final AsistenciaRepository asistenciaRepository;
+    private final GeneradorFeedbackIA generadorFeedback;
 
     @Transactional(readOnly = true)
     public List<EstudianteResumenResponse> misRepresentados(String username) {
@@ -93,6 +98,75 @@ public class InformeService {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
         return construirInforme(estudiante);
+    }
+
+    /**
+     * El informe puesto en palabras.
+     *
+     * <p>Se pide aparte y no dentro de {@link #informeDe}: hablar con un
+     * servicio externo tarda y puede fallar, y los numeros del informe tienen
+     * que aparecer igual aunque el modelo este caido. Ademas asi no se gasta
+     * cuota cada vez que alguien abre la pantalla, solo cuando la pide.
+     *
+     * <p>Se apoya en {@code informeDe} en lugar de repetir el chequeo de
+     * pertenencia. No es por ahorrar lineas: si algun dia cambia la regla de
+     * quien puede ver a quien, un segundo chequeo copiado aqui quedaria
+     * desactualizado sin que nadie lo note, y eso es exactamente como se
+     * filtran datos de un menor a quien no es su representante.
+     */
+    @Transactional(readOnly = true)
+    public ComentarioInformeResponse comentarioDe(String username, Long idEstudiante) {
+        InformeEstudianteResponse informe = informeDe(username, idEstudiante);
+        return comentarSobre(informe);
+    }
+
+    /** Lo mismo para el estudiante que consulta su propio informe. */
+    @Transactional(readOnly = true)
+    public ComentarioInformeResponse miComentario(String username) {
+        return comentarSobre(miInforme(username));
+    }
+
+    /**
+     * Arma el perfil seudonimizado y pide el texto.
+     *
+     * <p>Al modelo va {@link PerfilJugadorAnonimo}, que no tiene nombre,
+     * cedula, correo ni fecha de nacimiento -no existen esos campos-. Lo unico
+     * que sale del sistema son promedios, categoria y cuantos entrenamientos
+     * asistio. Es la misma restriccion que ya aplica la sugerencia de
+     * alineacion, y aqui pesa mas: el titular de estos datos es un menor cuyo
+     * representante todavia no tiene un consentimiento modelado (H-04).
+     */
+    private ComentarioInformeResponse comentarSobre(InformeEstudianteResponse informe) {
+        if (informe.promediosPorCriterio().isEmpty()) {
+            return new ComentarioInformeResponse(null, false,
+                    "Todavía no hay evaluaciones registradas para comentar");
+        }
+
+        Map<String, Double> promedios = new HashMap<>();
+        for (PromedioCriterioResponse c : informe.promediosPorCriterio()) {
+            promedios.put(c.criterio(), c.promedio());
+        }
+
+        boolean lesionado = informe.historialLesiones().stream()
+                .anyMatch(LesionResumenResponse::activa);
+
+        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        long asistencias = asistenciaRepository
+                .contarAsistenciasDesde(informe.idEstudiante(), hoy.minusDays(30));
+
+        var perfil = new PerfilJugadorAnonimo(
+                // Referencia opaca: el modelo no necesita saber de quien habla.
+                "Jugador",
+                informe.categoria(),
+                null,
+                promedios,
+                Map.of(),
+                (int) asistencias,
+                lesionado);
+
+        var resultado = generadorFeedback.generarComentarioJugador(perfil);
+        return new ComentarioInformeResponse(
+                resultado.texto(), resultado.disponible(), resultado.motivo());
     }
 
     private InformeEstudianteResponse construirInforme(Estudiante estudiante) {

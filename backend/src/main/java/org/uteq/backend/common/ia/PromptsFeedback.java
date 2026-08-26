@@ -42,19 +42,33 @@ final class PromptsFeedback {
             - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
             """;
 
+    /**
+     * Resumen del rendimiento acumulado de un jugador, escrito para su
+     * familia.
+     *
+     * <p>El destinatario cambia el texto. Un representante ve "Tactica 5.5"
+     * y no sabe si eso es bueno, malo o normal para la edad, asi que se le
+     * pide al modelo que TRADUZCA los numeros en vez de repetirlos, y que no
+     * los presente como un veredicto sobre el chico.
+     */
     static String deJugador(PerfilJugadorAnonimo p) {
         var sb = new StringBuilder();
-        sb.append("Redacta la retroalimentacion del entrenamiento de hoy para este jugador.\n\n");
+        sb.append("Resume como viene rindiendo este jugador, para que lo lea su padre, ")
+          .append("madre o representante. Traduce los numeros a lenguaje corriente en vez ")
+          .append("de repetirlos: quien lo lee no sabe si un 5.5 es bueno o malo. Di en que ")
+          .append("viene mejor y en que le cuesta mas, sin emitir un veredicto sobre el ")
+          .append("chico.\n\n");
         sb.append("Categoria: ").append(p.categoria()).append('\n');
         if (p.posicion() != null) {
-            sb.append("Posicion en la que jugo: ").append(p.posicion()).append('\n');
+            sb.append("Posicion en la que juega: ").append(p.posicion()).append('\n');
         }
-        sb.append("Puntajes de hoy (sobre 10): ").append(formatear(p.puntajes())).append('\n');
+        sb.append("Promedio por criterio (sobre 10): ").append(formatear(p.puntajes())).append('\n');
         if (!p.puntajesPrevios().isEmpty()) {
             sb.append("Promedio historico: ").append(formatear(p.puntajesPrevios())).append('\n');
         }
         if (p.asistenciasUltimoMes() != null) {
-            sb.append("Sesiones asistidas en el ultimo mes: ").append(p.asistenciasUltimoMes()).append('\n');
+            sb.append("Entrenamientos a los que asistio en el ultimo mes: ")
+              .append(p.asistenciasUltimoMes()).append('\n');
         }
         if (p.lesionado()) {
             sb.append("Arrastra una lesion activa: no sugieras aumentar la carga fisica.\n");

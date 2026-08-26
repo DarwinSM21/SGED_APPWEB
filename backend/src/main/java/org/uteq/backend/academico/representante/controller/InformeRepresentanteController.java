@@ -48,6 +48,17 @@ public class InformeRepresentanteController {
         return ResponseEntity.ok(informeService.informeDe(usernameAutenticado(), idEstudiante));
     }
 
+    /**
+     * El informe puesto en palabras. Va en POST y no en GET porque no es una
+     * lectura barata: cada llamada consume cuota de un servicio externo. Se
+     * pide cuando el representante toca el boton, no al abrir la pantalla.
+     */
+    @PostMapping("/estudiantes/{idEstudiante}/informe/comentario")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ComentarioInformeResponse> comentario(@PathVariable Long idEstudiante) {
+        return ResponseEntity.ok(informeService.comentarioDe(usernameAutenticado(), idEstudiante));
+    }
+
     /** RF-22: notificaciones en-app, mas recientes primero. */
     @GetMapping("/notificaciones")
     @Transactional(readOnly = true)

@@ -3,9 +3,12 @@ package org.uteq.backend;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.uteq.backend.common.ia.GeneradorFeedbackIA;
+import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
@@ -34,6 +37,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -54,6 +59,7 @@ class InformeServiceTest {
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
+    @Mock private GeneradorFeedbackIA generadorFeedback;
 
     @InjectMocks
     private InformeService informeService;
@@ -189,5 +195,115 @@ class InformeServiceTest {
         assertThat(informe.promediosPorCriterio()).hasSize(1);
         assertThat(informe.historialLesiones()).hasSize(1);
         assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
+    }
+
+    // ------------------------------------------------------------------
+    // Comentario de IA sobre el informe
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("pedir el comentario de un estudiante ajeno da 404 y NO llega al modelo")
+    void comentarioDe_lanza404_cuandoEstudianteNoEsSuyo() {
+        Representante r = representante();
+        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 999L))
+                .thenReturn(false);
+
+        assertThatThrownBy(() -> informeService.comentarioDe("ana.vera@sged.test", 999L))
+                .isInstanceOf(RecursoNoEncontradoException.class);
+
+        // Lo que esta prueba realmente cuida: que un id ajeno no solo no
+        // devuelva datos, sino que ni siquiera salga del sistema hacia un
+        // proveedor externo.
+        verifyNoInteractions(generadorFeedback);
+    }
+
+    @Test
+    @DisplayName("sin evaluaciones no se llama al modelo: no hay nada que comentar")
+    void comentarioDe_sinEvaluaciones_noLlamaAlModelo() {
+        Representante r = representante();
+        Estudiante hijo = estudiante(10L, "Juan");
+        RepresentanteEstudiante vinculo = RepresentanteEstudiante.builder()
+                .representante(r).estudiante(hijo).activo(true).build();
+
+        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+                .thenReturn(true);
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+                .thenReturn(Optional.of(vinculo));
+        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L)).thenReturn(List.of());
+        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
+                .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
+
+        var respuesta = informeService.comentarioDe("ana.vera@sged.test", 10L);
+
+        assertThat(respuesta.disponible()).isFalse();
+        assertThat(respuesta.motivo()).contains("evaluaciones");
+        verifyNoInteractions(generadorFeedback);
+    }
+
+    @Test
+    @DisplayName("al modelo solo le llegan promedios y categoria: ningun dato que identifique al menor")
+    void comentarioDe_noEnviaIdentidadAlModelo() {
+        Representante r = representante();
+        Estudiante hijo = estudiante(10L, "Juan");
+        RepresentanteEstudiante vinculo = RepresentanteEstudiante.builder()
+                .representante(r).estudiante(hijo).activo(true).build();
+
+        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+                .thenReturn(true);
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+                .thenReturn(Optional.of(vinculo));
+        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+                .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
+        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
+                .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
+        when(asistenciaRepository.contarAsistenciasDesde(eq(10L), any(LocalDate.class))).thenReturn(12L);
+        when(generadorFeedback.generarComentarioJugador(any()))
+                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.ok("Viene creciendo en actitud."));
+
+        var respuesta = informeService.comentarioDe("ana.vera@sged.test", 10L);
+
+        assertThat(respuesta.disponible()).isTrue();
+        assertThat(respuesta.comentario()).isEqualTo("Viene creciendo en actitud.");
+
+        ArgumentCaptor<PerfilJugadorAnonimo> captor = ArgumentCaptor.forClass(PerfilJugadorAnonimo.class);
+        verify(generadorFeedback).generarComentarioJugador(captor.capture());
+        PerfilJugadorAnonimo enviado = captor.getValue();
+
+        // El apellido del estudiante de prueba es "Hijo": no debe aparecer por
+        // ningun lado en lo que sale hacia el proveedor.
+        assertThat(enviado.referencia()).doesNotContain("Juan").doesNotContain("Hijo");
+        assertThat(enviado.puntajes()).containsEntry("Tecnica", 7.5);
+        assertThat(enviado.asistenciasUltimoMes()).isEqualTo(12);
+    }
+
+    @Test
+    @DisplayName("si el modelo no responde, el informe no se cae: devuelve el motivo")
+    void comentarioDe_modeloCaido_noRompeElInforme() {
+        Representante r = representante();
+        Estudiante hijo = estudiante(10L, "Juan");
+        RepresentanteEstudiante vinculo = RepresentanteEstudiante.builder()
+                .representante(r).estudiante(hijo).activo(true).build();
+
+        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+                .thenReturn(true);
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+                .thenReturn(Optional.of(vinculo));
+        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+                .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
+        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
+                .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
+        when(asistenciaRepository.contarAsistenciasDesde(eq(10L), any(LocalDate.class))).thenReturn(3L);
+        when(generadorFeedback.generarComentarioJugador(any()))
+                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.noDisponible("El servicio no respondio"));
+
+        var respuesta = informeService.comentarioDe("ana.vera@sged.test", 10L);
+
+        assertThat(respuesta.disponible()).isFalse();
+        assertThat(respuesta.comentario()).isNull();
+        assertThat(respuesta.motivo()).isEqualTo("El servicio no respondio");
     }
 }

@@ -6,10 +6,12 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.MiEquipoResponse;
 import org.uteq.backend.academico.estudiante.service.MiEquipoService;
+import org.uteq.backend.academico.representante.dto.InformeDtos.ComentarioInformeResponse;
 import org.uteq.backend.academico.representante.dto.InformeDtos.InformeEstudianteResponse;
 import org.uteq.backend.academico.representante.service.InformeService;
 
@@ -36,6 +38,17 @@ public class MiEquipoController {
     @Transactional(readOnly = true)
     public ResponseEntity<InformeEstudianteResponse> miInforme() {
         return ResponseEntity.ok(informeService.miInforme(usernameAutenticado()));
+    }
+
+    /**
+     * Su informe puesto en palabras. Mismo criterio que el del
+     * representante: va en POST porque cada llamada gasta cuota de un
+     * servicio externo, asi que se pide a demanda y no al abrir la pantalla.
+     */
+    @PostMapping("/mi-informe/comentario")
+    @Transactional(readOnly = true)
+    public ResponseEntity<ComentarioInformeResponse> miComentario() {
+        return ResponseEntity.ok(informeService.miComentario(usernameAutenticado()));
     }
 
     @GetMapping("/mi-equipo")

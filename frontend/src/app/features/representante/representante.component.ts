@@ -3,7 +3,7 @@ import { mensajeDeError } from '../../core/mensaje-error';
 import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { RepresentanteService } from './representante.service';
-import { EstudianteResumen, InformeEstudiante, Notificacion } from './representante.models';
+import { ComentarioInforme, EstudianteResumen, InformeEstudiante, Notificacion } from './representante.models';
 import { inicialesDe } from '../../core/formato-texto';
 import { fechaHoraCorta } from '../../core/formato-fecha';
 
@@ -87,6 +87,27 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
                   <span class="badge" [class.badge--success]="inf.porcentajeAsistencia >= 75" [class.badge--warning]="inf.porcentajeAsistencia < 75">
                     {{ inf.porcentajeAsistencia | number: '1.0-0' }}%
                   </span>
+                }
+              </div>
+
+              <div class="bloque-comentario">
+                <button type="button" class="btn btn--secondary btn--sm"
+                        (click)="pedirComentario(inf.idEstudiante)"
+                        [disabled]="cargandoComentario() || inf.promediosPorCriterio.length === 0">
+                  @if (cargandoComentario()) { <span class="spinner"></span> Redactando… }
+                  @else { ✦ Explicame estos números }
+                </button>
+
+                @if (comentario(); as c) {
+                  <p class="comentario" [class.comentario--sin]="!c.disponible">
+                    {{ c.disponible ? c.comentario : c.motivo }}
+                  </p>
+                  @if (c.disponible) {
+                    <p class="comentario-nota">
+                      Redactado automáticamente a partir de los mismos números de abajo.
+                      Ante cualquier duda, hablá con el entrenador.
+                    </p>
+                  }
                 }
               </div>
 
@@ -186,6 +207,16 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
     .detalle h3 { font-size: .88rem; color: var(--color-text-muted); margin: 1.1rem 0 .6rem; text-transform: uppercase; letter-spacing: .03em; }
     .detalle h3:first-of-type { margin-top: 0; }
 
+    .bloque-comentario { margin: 1rem 0 1.25rem; padding-bottom: 1rem;
+                         border-bottom: 1px solid var(--color-border-light); }
+    .comentario { margin: .7rem 0 0; font-size: .92rem; line-height: 1.6;
+                  color: var(--color-text); }
+    .comentario--sin { font-size: .85rem; color: var(--color-text-muted); }
+    /* Quien lee esto es el padre, no el entrenador: tiene que quedar claro
+       que el texto lo redacto una maquina y a quien preguntarle de verdad. */
+    .comentario-nota { margin: .45rem 0 0; font-size: .74rem;
+                       color: var(--color-text-faint); line-height: 1.5; }
+
     .criterios { display: flex; flex-direction: column; gap: .4rem; }
     .criterio-fila {
       display: flex; justify-content: space-between; align-items: center;
@@ -215,6 +246,8 @@ export class RepresentanteComponent implements OnInit {
   readonly idSeleccionado = signal<number | null>(null);
   readonly informe = signal<InformeEstudiante | null>(null);
   readonly cargandoInforme = signal(false);
+  readonly comentario = signal<ComentarioInforme | null>(null);
+  readonly cargandoComentario = signal(false);
 
   readonly notificaciones = signal<Notificacion[]>([]);
   readonly noLeidas = computed(() => this.notificaciones().filter((n) => !n.leida).length);
@@ -252,6 +285,9 @@ export class RepresentanteComponent implements OnInit {
     this.idSeleccionado.set(idEstudiante);
     this.cargandoInforme.set(true);
     this.informe.set(null);
+    // Sin esto, al cambiar de hijo quedaria en pantalla el texto del anterior
+    // junto a los numeros del nuevo.
+    this.comentario.set(null);
 
     this.servicio.informeDe(idEstudiante).subscribe({
       next: (informe) => {
@@ -266,5 +302,23 @@ export class RepresentanteComponent implements OnInit {
 
   iniciales(nombre: string): string {
     return inicialesDe(nombre);
+  }
+
+  /**
+   * Pide el texto solo cuando el representante lo toca. Si el modelo no
+   * responde se muestra el motivo y los numeros siguen ahi: el informe no
+   * depende de un servicio externo.
+   */
+  pedirComentario(idEstudiante: number): void {
+    if (this.cargandoComentario()) return;
+    this.cargandoComentario.set(true);
+    this.servicio.comentarioDe(idEstudiante).subscribe({
+      next: (c) => { this.comentario.set(c); this.cargandoComentario.set(false); },
+      error: () => {
+        this.comentario.set({ comentario: null, disponible: false,
+          motivo: 'No se pudo generar el resumen en este momento.' });
+        this.cargandoComentario.set(false);
+      },
+    });
   }
 }
