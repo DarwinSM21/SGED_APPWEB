@@ -93,33 +93,4 @@ public final class EvaluacionDtos {
             boolean generadoPorIa,
             String motivoNoDisponible
     ) {}
-
-    /**
-     * Alineacion sugerida. Deliberadamente sin comentario de IA: ese texto se
-     * pide aparte, con el endpoint de feedback, solo cuando el entrenador lo
-     * toca. Calcular la alineacion es gratis y determinista; llamar al
-     * modelo de lenguaje no lo es, y no hay razon para pagarlo en cada
-     * apertura de pantalla si nadie va a leer el comentario.
-     */
-    public record PlantillaResponse(
-            Long idSesion,
-            String categoria,
-            List<JugadorPlantillaResponse> titulares,
-            List<JugadorPlantillaResponse> suplentes,
-            List<Long> excluidosPorLesion
-    ) {}
-
-    /** Comentario de IA sobre una alineacion ya calculada, pedido a demanda. */
-    public record FeedbackPlantillaResponse(
-            String comentario,
-            boolean generadoPorIa,
-            String motivoNoDisponible
-    ) {}
-
-    public record JugadorPlantillaResponse(
-            Long idEstudiante,
-            String nombreCompleto,
-            String posicion,
-            BigDecimal promedioAcumulado
-    ) {}
 }

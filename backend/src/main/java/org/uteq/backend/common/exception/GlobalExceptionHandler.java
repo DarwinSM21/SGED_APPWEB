@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
@@ -119,6 +120,26 @@ public class GlobalExceptionHandler {
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/ParametroInvalido"));
         pd.setTitle("Bad Request");
         pd.setProperty("parametro", ex.getName());
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
+    /**
+     * Ruta que el servidor no conoce. Sin este manejador caia en el catch-all
+     * de Exception y salia como 500, que es una mentira con consecuencias: el
+     * frontend clasifica el 500 como "no es problema tuyo, avisa al
+     * administrador" y el 404 como "puede que la aplicacion y el servidor
+     * esten en versiones distintas, recarga la pagina" -- justo lo que pasa
+     * cuando una pestana vieja sigue llamando a un endpoint que ya no existe.
+     * Es exactamente el caso de /api/evaluaciones/sesion/{id}/plantilla, que
+     * V22 movio a /api/partidos.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ProblemDetail handleRutaDesconocida(NoResourceFoundException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND, "El servidor no reconoce esta operacion");
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/RutaDesconocida"));
+        pd.setTitle("Not Found");
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
     }

@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../auth/auth.service';
 import { SwUpdate } from '@angular/service-worker';
-import { inicialesDe } from '../features/entrenador/plantilla.models';
+import { inicialesDe } from '../core/formato-texto';
 import { relojEn12 } from '../core/formato-fecha';
 
 type Icono = 'inicio' | 'usuario-mas' | 'qr' | 'familia' | 'calendario' | 'pago' | 'inventario'
-  | 'capas' | 'escudo' | 'auditoria' | 'reporte' | 'configuracion';
+  | 'capas' | 'escudo' | 'auditoria' | 'reporte' | 'configuracion' | 'balon';
 
 interface NavItem {
   etiqueta: string;
@@ -33,6 +33,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     { etiqueta: 'Categorías', ruta: '/categorias', icono: 'capas' },
     { etiqueta: 'Recepción', ruta: '/recepcion', icono: 'qr' },
     { etiqueta: 'Sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
+    { etiqueta: 'Partidos', ruta: '/partidos', icono: 'balon' },
     { etiqueta: 'Pagos', ruta: '/pagos', icono: 'pago' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
     { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },
@@ -42,6 +43,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
   ENTRENADOR: [
     { etiqueta: 'Inicio', ruta: '/dashboard', icono: 'inicio' },
     { etiqueta: 'Mis sesiones', ruta: '/entrenador/sesiones', icono: 'calendario' },
+    { etiqueta: 'Partidos', ruta: '/partidos', icono: 'balon' },
     { etiqueta: 'Categorías', ruta: '/categorias', icono: 'capas' },
     { etiqueta: 'Inventario', ruta: '/inventario', icono: 'inventario' },
     { etiqueta: 'Reportes', ruta: '/reportes', icono: 'reporte' },
@@ -135,6 +137,9 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
                   }
                   @case ('reporte') {
                     <line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line>
+                  }
+                  @case ('balon') {
+                    <circle cx="12" cy="12" r="10"></circle><path d="m12 7 4.7 3.4-1.8 5.5H9.1l-1.8-5.5Z"></path><path d="M12 2v5M2.6 9.2l4.7 3.4M21.4 9.2l-4.7 3.4M6.3 20.3l2.8-4.4M17.7 20.3l-2.8-4.4"></path>
                   }
                   @case ('configuracion') {
                     <circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>

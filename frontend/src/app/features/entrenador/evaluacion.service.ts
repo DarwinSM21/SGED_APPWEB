@@ -62,8 +62,8 @@ export class EvaluacionService {
     return this.http.put<void>(`/api/estudiantes/${idEstudiante}/posicion`, { idPosicion });
   }
 
-  // La alineacion/plantilla vive en PlantillaService, no aqui: tiene su
-  // propia llamada de IA a demanda que no pertenece a este servicio.
+  // La alineacion no vive aqui ni en ninguna pantalla de sesion: es la
+  // decision de un partido, y esta en features/partidos (PartidosService).
 
   finalizar(idSesion: number, observacionGeneral: string): Observable<void> {
     return this.http.post<void>(

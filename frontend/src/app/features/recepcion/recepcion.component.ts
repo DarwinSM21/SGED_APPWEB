@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { toDataURL } from 'qrcode';
 import { RecepcionService } from './recepcion.service';
 import { SesionHoy } from '../dashboard/dashboard.models';
-import { horaCorta } from '../entrenador/plantilla.models';
+import { horaCorta } from '../../core/formato-texto';
 
 /**
  * Pantalla de recepcion: elegir una sesion de hoy y mostrar su QR de

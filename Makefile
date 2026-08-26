@@ -98,9 +98,14 @@ diagrams:
 	  rm -f structurizr-*.puml
 	@echo "Diagramas C4 regenerados en docs/arquitectura/"
 
-## Regenera db/schema.sql a partir de las migraciones (uso interno)
+## db/schema.sql se mantiene A MANO -- no se regenera
 schema:
-	cat backend/src/main/resources/db/migration/V*.sql > db/schema.sql
+	@echo "db/schema.sql no se genera automaticamente."
+	@echo "Es un esquema consolidado, mas estricto que la suma de las"
+	@echo "migraciones (NOT NULL e indices unicos que se anadieron despues),"
+	@echo "y ademas 'cat V*.sql' ordenaba V10 antes de V1. Al tocar una"
+	@echo "migracion, refleja el cambio en db/schema.sql en el mismo commit."
+	@exit 1
 
 logs:
 	docker compose logs -f backend

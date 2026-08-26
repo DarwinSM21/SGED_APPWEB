@@ -587,6 +587,65 @@ Esquema: vista `deportivo.v_promedio_evaluacion`.
 
 ---
 
+**RF-33 — Agenda de partidos** ✅ Implementado (2026-08-25)
+*El sistema deberá permitir al entrenador agendar un partido de una
+categoría y registrar su resultado después de jugado.*
+`deportivo.partidos` (`GET-POST-PUT-DELETE /api/partidos`). Los goles admiten
+nulo y no tienen valor por defecto: un partido recién agendado no va 0-0,
+todavía no se jugó, y `NULL` («sin resultado») y `0` («no metió ninguno») son
+cosas distintas. Un `CHECK` exige que estén los dos marcadores o ninguno: un
+marcador a medias no dice si se ganó. `GANADO/EMPATADO/PERDIDO/PENDIENTE` se
+calcula, no se almacena, para que no puedan contradecir al marcador.
+
+Solo se lleva el marcador propio. El sistema es de **una** academia:
+«local/visitante» exigiría un catálogo de rivales que nadie va a mantener.
+
+---
+
+**RF-34 — Convocatoria y once del partido** ✅ Implementado (2026-08-25)
+*El sistema deberá sugerir el once inicial de un partido a partir del
+rendimiento acumulado de las semanas previas, y deberá permitir al entrenador
+modificarlo y guardar la formación con la que efectivamente jugó.*
+`deportivo.alineaciones` + `deportivo.alineacion_jugador`
+(`GET-PUT-DELETE /api/partidos/{id}/alineacion`).
+
+**La IA no elige a los jugadores.** La regla es explícita y reproducible a
+mano: universo = plantel activo de la categoría; quedan fuera —**con el
+motivo a la vista**— el lesionado y quien no pisó un entrenamiento en la
+ventana; se ordena por promedio de evaluación de las últimas 4 semanas
+(`plantilla.semanas-rendimiento`), desempatando por presencias y después por
+id para que dos llamadas con los mismos datos den lo mismo; y se titulariza
+al mejor de cada posición nominal, no a los once mejores promedios —eso podía
+sugerir dos porteros y ningún defensa—. El modelo de lenguaje solo redacta un
+comentario sobre un once **ya decidido**, y solo cuando se le pide.
+
+La ventana es lo que hace que la sugerencia se alimente semana a semana: el
+promedio histórico completo premia al que jugó bien hace un año por encima
+del que viene mejor ahora.
+
+Sugerencia y decisión se guardan por separado: **si el entrenador guardó una
+alineación se devuelve esa; si no, la sugerida**. La sugerencia no se
+persiste sola —hacerlo convertiría una recomendación en un hecho histórico
+sin que nadie lo decidiera—.
+
+Hasta V21 la alineación colgaba de la sesión de entrenamiento. V22 la movió
+al partido: decidir con quién se sale a jugar no es un hecho del
+entrenamiento, y atarla a la sesión obligaba a que solo pudieran alinearse
+los que fueron a **ese** entrenamiento.
+
+---
+
+**RF-35 — Historial de asistencia de una sesión** ✅ Implementado (2026-08-25)
+*El sistema deberá mostrar, para una sesión ya ocurrida, quiénes asistieron y
+quiénes no.*
+`GET /api/sesiones/{id}/historial`. Se parte del **plantel** de la categoría
+y no de las filas de asistencia: si nadie pasó lista, la tabla está vacía y
+una consulta que solo lea de ahí diría «no había nadie convocado», que es
+distinto de «no se registró la asistencia de nadie». Por eso existe el estado
+`SIN_REGISTRO`, separado de `AUSENTE`.
+
+---
+
 **RF-22 — Notificación a representantes** ✅ Implementado (2026-08-09)
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*

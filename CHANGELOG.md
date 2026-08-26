@@ -7,6 +7,56 @@ cuándo y en qué commit), ver
 [`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) —
 complementario a este, no un duplicado.
 
+## [Sin publicar]
+
+### Añadido
+- **Módulo de partidos** (`/api/partidos`, pantalla «Partidos»): agenda por
+  categoría y marcador cargado después de jugar. Los goles admiten nulo y no
+  tienen valor por defecto — un partido recién agendado no va 0-0 —, y un
+  `CHECK` exige los dos marcadores o ninguno.
+- **Convocatoria alimentada por el rendimiento de las últimas semanas**
+  (`ConvocatoriaService`): promedio de evaluación de la ventana, desempate
+  por presencias y por id, un titular por posición nominal. Cada jugador
+  viaja con los números que lo pusieron donde está, y quien no puede jugar
+  aparece **con el motivo**, no desaparece de la lista.
+- **Historial de asistencia por sesión** (`GET /api/sesiones/{id}/historial`,
+  botón «Quiénes fueron»): parte del plantel y no de las marcas, así que
+  distingue `SIN_REGISTRO` de `AUSENTE` — «nadie pasó lista» no es «no vino
+  nadie».
+
+### Cambiado
+- **La formación salió de las sesiones de entrenamiento** (migración V22).
+  Una alineación es la decisión de con quién se sale a jugar un partido, no
+  un hecho del entrenamiento; atarla a la sesión obligaba además a que solo
+  pudieran alinearse los que fueron a **ese** entrenamiento, cuando lo que
+  corresponde mirar es el rendimiento acumulado. `deportivo.alineaciones`
+  pasa de `id_sesion` a `id_partido`; se retiran
+  `GET /api/evaluaciones/sesion/{id}/plantilla` y `.../alineacion`.
+- `deportivo.partidos` existía vacía y sin uso desde antes del control de
+  versiones (documentada tal cual en V16). Se le dio forma en vez de crear
+  una segunda tabla que significara lo mismo.
+- Los ayudantes de formato compartidos (`inicialesDe`, `apellidoDe`,
+  `horaCorta`) bajan de `features/entrenador/plantilla.models.ts` a
+  `core/formato-texto.ts`: nueve pantallas sin relación con una alineación
+  importaban de ahí solo para escribir una hora.
+
+### Corregido
+- **El entrenador ya puede elegir a quién saca.** El cambio emparejaba por
+  posición nominal y decidía por él; si el suplente jugaba en un puesto que
+  nadie ocupaba no sustituía a nadie, lo agregaba, y el equipo terminaba con
+  **doce en la cancha**. La cancha son ahora once huecos fijos: sacar y meter
+  son la misma operación sobre el mismo hueco, y pasar de once es imposible.
+  El backend además rechaza más de once titulares aunque la pantalla falle.
+- Una ruta desconocida bajo `/api` devolvía **500** en vez de 404
+  (`NoResourceFoundException` caía en el catch-all). El 500 le decía al
+  usuario «no es problema tuyo, avisá al administrador» cuando lo correcto
+  era «puede que la aplicación y el servidor estén en versiones distintas,
+  recargá la página».
+- `make schema` regeneraba `db/schema.sql` con `cat V*.sql`, que ordena V10
+  antes de V1 y además ignora los `NOT NULL` e índices únicos que el esquema
+  consolidado añadió después. El target ahora falla explicando por qué, en
+  vez de destruir el archivo.
+
 ## [v0.9.0-rc] - 2026-07-30
 
 ### Reestructuración (mergeada desde `feature/entrega3`)

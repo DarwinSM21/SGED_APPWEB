@@ -6,7 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { homeRouteForRole } from '../../auth/home-route';
 import { HistoricoIngresos, MapaAsistencia, PanelAlertas, SesionHoy } from './dashboard.models';
-import { horaCorta, inicialesDe } from '../entrenador/plantilla.models';
+import { horaCorta, inicialesDe } from '../../core/formato-texto';
 import { GraficosIngresosComponent } from './graficos.component';
 import { MapaAsistenciaComponent } from './mapa-asistencia.component';
 

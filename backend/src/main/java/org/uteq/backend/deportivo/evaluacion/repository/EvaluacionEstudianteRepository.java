@@ -55,4 +55,27 @@ public interface EvaluacionEstudianteRepository extends JpaRepository<Evaluacion
            GROUP BY ee.estudiante.idEstudiante
            """)
     List<Object[]> promedioGeneralPorEstudiante(@Param("ids") List<Long> ids);
+
+    /**
+     * Promedio de cada estudiante en una ventana de fechas, mirando la fecha
+     * de la SESION evaluada y no la de creacion de la fila: una evaluacion
+     * cargada tarde sigue perteneciendo al dia que se entreno.
+     *
+     * <p>Es lo que alimenta la convocatoria de un partido. El promedio
+     * historico completo -promedioGeneralPorEstudiante- no sirve ahi: premia
+     * al que jugo bien hace un anio por encima del que viene mejor ahora, que
+     * es justamente lo contrario de lo que el entrenador necesita para decidir
+     * con quien sale el sabado.
+     */
+    @Query("""
+           SELECT ee.estudiante.idEstudiante, AVG(d.puntaje)
+           FROM DetalleEvaluacion d
+           JOIN d.evaluacionEstudiante ee
+           WHERE ee.estudiante.idEstudiante IN :ids
+             AND ee.evaluacion.sesion.fecha BETWEEN :desde AND :hasta
+           GROUP BY ee.estudiante.idEstudiante
+           """)
+    List<Object[]> promedioEnVentana(@Param("ids") List<Long> ids,
+                                     @Param("desde") LocalDate desde,
+                                     @Param("hasta") LocalDate hasta);
 }

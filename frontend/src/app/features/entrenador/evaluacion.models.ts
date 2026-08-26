@@ -64,7 +64,8 @@ export interface PosicionOpcion {
   abreviatura: string | null;
 }
 
-// Plantilla/alineacion: ver plantilla.models.ts (dueño de ese contrato).
+// La alineacion se movio a features/partidos: es la decision de un partido,
+// no un hecho del entrenamiento. Ver partidos.models.ts.
 
 export interface Lesion {
   idLesion: number;

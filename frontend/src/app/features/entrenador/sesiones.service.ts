@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { CategoriaOpcion, Horario, HorarioCrearRequest, Sesion, SesionCrearRequest } from './sesiones.models';
+import { CategoriaOpcion, HistorialSesion, Horario, HorarioCrearRequest, Sesion, SesionCrearRequest } from './sesiones.models';
 
 @Injectable({ providedIn: 'root' })
 export class SesionesService {
@@ -9,6 +9,11 @@ export class SesionesService {
   /** Historial completo del entrenador autenticado, no solo las de hoy. */
   listarMias(page = 0, size = 20) {
     return this.http.get<Sesion[]>(`/api/sesiones/mias?page=${page}&size=${size}`);
+  }
+
+  /** Quien estuvo y quien no en una sesion que ya ocurrio. */
+  historial(idSesion: number) {
+    return this.http.get<HistorialSesion>(`/api/sesiones/${idSesion}/historial`);
   }
 
   crear(request: SesionCrearRequest) {

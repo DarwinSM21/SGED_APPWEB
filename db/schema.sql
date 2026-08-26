@@ -1094,17 +1094,36 @@ CREATE TABLE IF NOT EXISTS deportivo.equipos (
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );
 
--- id_equipo_local / id_equipo_visitante SIN foreign key hacia
--- deportivo.equipos: asi esta la tabla real, se documenta tal cual.
+-- V22 le dio forma y uso: la tabla existia vacia desde antes del control de
+-- versiones (V16 la documento tal cual) y se reutilizo en lugar de crear una
+-- segunda tabla que significara lo mismo. Solo se lleva el marcador propio:
+-- el sistema es de UNA academia, y "local/visitante" pediria un catalogo de
+-- rivales que nadie va a mantener.
 CREATE TABLE IF NOT EXISTS deportivo.partidos (
-    id_partido BIGSERIAL PRIMARY KEY,
-    id_equipo_local BIGINT,
-    id_equipo_visitante BIGINT,
-    fecha_partido DATE NOT NULL,
-    ubicacion VARCHAR(255),
-    goles_local SMALLINT DEFAULT 0,
-    goles_visitante SMALLINT DEFAULT 0
+    id_partido      BIGSERIAL PRIMARY KEY,
+    id_categoria    BIGINT NOT NULL REFERENCES deportivo.categorias(id_categoria),
+    fecha           DATE NOT NULL,
+    hora            TIME,
+
+    -- Nulos hasta que se juegue. NULL es "sin resultado" y 0 es "no metio
+    -- ninguno"; con DEFAULT 0 las dos cosas se veian igual.
+    goles_favor     SMALLINT,
+    goles_contra    SMALLINT,
+    observacion     VARCHAR(500),
+
+    creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    actualizado_en  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    CONSTRAINT chk_partido_goles_no_negativos
+        CHECK (goles_favor >= 0 AND goles_contra >= 0),
+    -- O estan los dos goles o no esta ninguno: un marcador a medias -"metimos
+    -- 3" sin saber cuantos recibimos- no dice si se gano o se perdio.
+    CONSTRAINT chk_partido_marcador_completo
+        CHECK ((goles_favor IS NULL) = (goles_contra IS NULL))
 );
+
+CREATE INDEX IF NOT EXISTS idx_partido_categoria_fecha
+    ON deportivo.partidos(id_categoria, fecha DESC);
 
 -- id_estudiante SIN foreign key hacia academico.estudiantes: mismo caso.
 CREATE TABLE IF NOT EXISTS deportivo.estadistica_partidos (
@@ -1141,16 +1160,19 @@ CREATE INDEX IF NOT EXISTS idx_auditoria_usuario ON seguridad.auditoria (id_usua
 CREATE INDEX IF NOT EXISTS idx_auditoria_entidad ON seguridad.auditoria (entidad);
 CREATE INDEX IF NOT EXISTS idx_auditoria_accion ON seguridad.auditoria (accion);
 
--- ===== Alineacion puesta en cancha (V21) =====
+-- ===== Alineacion del partido (V21, movida a partidos en V22) =====
 -- V21: guardar la alineacion que el entrenador puso realmente en la cancha.
 --
 -- Hasta ahora la formacion era solo una sugerencia recalculada: el entrenador
 -- podia arrastrar jugadores en la pantalla, pero ese cambio vivia solo en el
--- navegador y se perdia al refrescar. Eso deja fuera lo que de verdad ocurre
--- en un entrenamiento: el entrenador mira la sugerencia, decide otra cosa
--- -mete al suplente que viene entrenando mejor, cambia a alguien de banda- y
--- juega con ESA. Sin guardarla no hay forma de saber despues que once se uso
--- ni de evaluar si funciono.
+-- navegador y se perdia al refrescar. Sin guardarla no hay forma de saber
+-- despues que once se uso ni de evaluar si funciono.
+--
+-- V22 la movio de la sesion de entrenamiento al partido: una alineacion no es
+-- un hecho del entrenamiento -es la decision de con quien se sale a jugar-, y
+-- colgarla de la sesion obligaba a que solo pudieran alinearse los que
+-- asistieron a ESE entrenamiento, cuando para un partido lo que corresponde
+-- mirar es el rendimiento acumulado de las semanas anteriores.
 --
 -- La sugerencia NO desaparece. Sigue calculandose igual y es lo que se ofrece
 -- mientras nadie haya guardado nada. La tabla solo registra la decision del
@@ -1159,8 +1181,8 @@ CREATE INDEX IF NOT EXISTS idx_auditoria_accion ON seguridad.auditoria (accion);
 
 CREATE TABLE IF NOT EXISTS deportivo.alineaciones (
     id_alineacion   BIGSERIAL PRIMARY KEY,
-    id_sesion       BIGINT NOT NULL UNIQUE
-                    REFERENCES deportivo.sesiones_entrenamiento(id_sesion) ON DELETE CASCADE,
+    id_partido      BIGINT NOT NULL UNIQUE
+                    REFERENCES deportivo.partidos(id_partido) ON DELETE CASCADE,
     -- Como le fue al equipo con esta alineacion. Nullable porque el entrenador
     -- la guarda antes de jugar y la califica despues, si es que la califica.
     valoracion      SMALLINT CHECK (valoracion BETWEEN 1 AND 5),
@@ -1169,9 +1191,9 @@ CREATE TABLE IF NOT EXISTS deportivo.alineaciones (
     actualizado_en  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- UNIQUE sobre id_sesion: una sesion tiene una sola alineacion puesta en
--- cancha. Guardar de nuevo la reemplaza, no acumula versiones; lo que importa
--- historicamente es con que once se jugo, no cuantas veces la retoco antes.
+-- UNIQUE sobre id_partido: un partido tiene una sola alineacion. Guardar de
+-- nuevo la reemplaza, no acumula versiones; lo que importa historicamente es
+-- con que once se jugo, no cuantas veces la retoco antes.
 
 CREATE TABLE IF NOT EXISTS deportivo.alineacion_jugador (
     id_alineacion_jugador BIGSERIAL PRIMARY KEY,
@@ -1179,7 +1201,7 @@ CREATE TABLE IF NOT EXISTS deportivo.alineacion_jugador (
                     REFERENCES deportivo.alineaciones(id_alineacion) ON DELETE CASCADE,
     id_estudiante   BIGINT NOT NULL REFERENCES academico.estudiantes(id_estudiante),
     -- El puesto en el que el entrenador lo puso ESE dia, que no tiene por que
-    -- ser su posicion nominal: de eso se trata poder hacer cambios.
+    -- ser su posicion nominal: de eso se trata poder mover gente.
     id_posicion     BIGINT REFERENCES deportivo.posiciones(id_posicion),
     titular         BOOLEAN NOT NULL DEFAULT TRUE,
     creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),

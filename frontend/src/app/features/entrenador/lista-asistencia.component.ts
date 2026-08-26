@@ -6,7 +6,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AsistenciaSesionService } from './asistencia.service';
 import { EstadoAsistencia, Nomina } from './asistencia.models';
-import { horaCorta } from './plantilla.models';
+import { horaCorta } from '../../core/formato-texto';
 
 /** Un estado por columna, en el orden en que se usan de verdad. */
 const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; corta: string }[] = [

@@ -14,11 +14,8 @@ import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.evaluacion.controller.EvaluacionDiariaController;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.EvaluacionSesionResponse;
-import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.FeedbackPlantillaResponse;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.GuardarJugadorRequest;
-import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.PlantillaResponse;
 import org.uteq.backend.deportivo.evaluacion.service.EvaluacionDiariaService;
-import org.uteq.backend.deportivo.evaluacion.service.PlantillaService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -41,7 +38,6 @@ class EvaluacionDiariaControllerTest {
     private MockMvc mockMvc;
 
     @Mock private EvaluacionDiariaService evaluacionService;
-    @Mock private PlantillaService plantillaService;
 
     @InjectMocks private EvaluacionDiariaController evaluacionDiariaController;
 
@@ -104,27 +100,5 @@ class EvaluacionDiariaControllerTest {
                         .contentType(MediaType.TEXT_PLAIN)
                         .content("Buen entrenamiento"))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    @DisplayName("GET /api/evaluaciones/sesion/{id}/plantilla - alineacion sugerida")
-    void plantilla_devuelve_200() throws Exception {
-        when(plantillaService.sugerir(1L)).thenReturn(
-                new PlantillaResponse(1L, "SUB-12", List.of(), List.of(), List.of()));
-
-        mockMvc.perform(get("/api/evaluaciones/sesion/1/plantilla"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.categoria").value("SUB-12"));
-    }
-
-    @Test
-    @DisplayName("POST /api/evaluaciones/sesion/{id}/plantilla/feedback - comentario de IA a demanda")
-    void feedbackPlantilla_devuelve_200() throws Exception {
-        when(plantillaService.feedback(1L)).thenReturn(
-                new FeedbackPlantillaResponse("Buen orden de titulares", true, null));
-
-        mockMvc.perform(post("/api/evaluaciones/sesion/1/plantilla/feedback"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.generadoPorIa").value(true));
     }
 }

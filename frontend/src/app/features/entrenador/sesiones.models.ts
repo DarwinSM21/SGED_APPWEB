@@ -57,3 +57,43 @@ export const DIAS_SEMANA = [
   { valor: 6, nombre: 'Sábado' },
   { valor: 7, nombre: 'Domingo' },
 ];
+
+/** Una fila del historial de asistencia de una sesion ya ocurrida. */
+export interface FilaAsistenciaHistorial {
+  idEstudiante: number;
+  nombreCompleto: string;
+  posicion: string | null;
+  /** PRESENTE | TARDE | AUSENTE | JUSTIFICADO | SIN_REGISTRO */
+  estado: string;
+  /** Hora medida por el QR. Vacia cuando la marco el entrenador a mano. */
+  horaEntrada: string | null;
+  metodo: string | null;
+  observacion: string | null;
+}
+
+/**
+ * Que paso en un entrenamiento. Sin formacion: eso es de partidos, no de
+ * sesiones.
+ */
+export interface HistorialSesion {
+  idSesion: number;
+  categoria: string;
+  entrenador: string;
+  fecha: string;
+  horaInicio: string | null;
+  horaFin: string | null;
+  campo: string | null;
+  estado: string;
+  tieneEvaluacion: boolean;
+  estadoEvaluacion: string | null;
+  resumen: {
+    convocados: number;
+    presentes: number;
+    tarde: number;
+    ausentes: number;
+    justificados: number;
+    /** Nadie paso lista por ellos. No es lo mismo que ausente. */
+    sinRegistro: number;
+  };
+  asistencias: FilaAsistenciaHistorial[];
+}

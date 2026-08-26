@@ -7,7 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { SesionesService } from './sesiones.service';
 import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models';
-import { horaCorta, inicialesDe } from './plantilla.models';
+import { horaCorta, inicialesDe } from '../../core/formato-texto';
 import { mensajeDeError } from '../../core/mensaje-error';
 
 /** Fecha local de hoy en formato "yyyy-MM-dd", la que espera un <input type="date">. */
@@ -194,20 +194,26 @@ function fechaHoyIso(): string {
           </div>
         } @else {
           @for (s of sesiones(); track s.idSesion) {
-            <a class="sesion" [routerLink]="['/entrenador/sesion', s.idSesion]">
-              <span class="avatar avatar--muted">{{ iniciales(s.categoria) }}</span>
-              <div class="sesion-info">
-                <span class="categoria">{{ s.categoria }} · {{ s.fecha }}</span>
-                <span class="detalle">
-                  @if (s.horaInicio) { {{ horaCorta(s.horaInicio) }} }
-                  @if (s.campo) { · {{ s.campo }} }
+            <div class="sesion-fila">
+              <a class="sesion" [routerLink]="['/entrenador/sesion', s.idSesion]">
+                <span class="avatar avatar--muted">{{ iniciales(s.categoria) }}</span>
+                <div class="sesion-info">
+                  <span class="categoria">{{ s.categoria }} · {{ s.fecha }}</span>
+                  <span class="detalle">
+                    @if (s.horaInicio) { {{ horaCorta(s.horaInicio) }} }
+                    @if (s.campo) { · {{ s.campo }} }
+                  </span>
+                </div>
+                <span class="badge" [class.badge--warning]="s.tieneEvaluacion" [class.badge--info]="!s.tieneEvaluacion">
+                  {{ s.tieneEvaluacion ? 'En evaluación' : 'Sin iniciar' }}
                 </span>
-              </div>
-              <span class="badge" [class.badge--warning]="s.tieneEvaluacion" [class.badge--info]="!s.tieneEvaluacion">
-                {{ s.tieneEvaluacion ? 'En evaluación' : 'Sin iniciar' }}
-              </span>
-              <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </a>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </a>
+              <a class="btn btn--ghost btn--sm ver-historial"
+                 [routerLink]="['/entrenador/sesion', s.idSesion, 'historial']">
+                Quiénes fueron
+              </a>
+            </div>
           }
         }
       </section>
@@ -237,6 +243,13 @@ function fechaHoyIso(): string {
     .horario-info { flex: 1; font-size: .85rem; }
 
     .lista { padding: 1.25rem; }
+    .sesion-fila { display: flex; align-items: center; gap: .5rem; }
+    .sesion-fila .sesion { flex: 1; min-width: 0; }
+    .ver-historial { white-space: nowrap; }
+    @media (max-width: 560px) {
+      .sesion-fila { flex-direction: column; align-items: stretch; }
+      .ver-historial { text-align: center; }
+    }
     .aviso { color: var(--color-text-muted); font-size: .9rem; padding: .5rem 0; }
     .vacio {
       display: flex; flex-direction: column; align-items: center; gap: .75rem;

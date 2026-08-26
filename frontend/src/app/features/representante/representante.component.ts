@@ -4,7 +4,7 @@ import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { RepresentanteService } from './representante.service';
 import { EstudianteResumen, InformeEstudiante, Notificacion } from './representante.models';
-import { inicialesDe } from '../entrenador/plantilla.models';
+import { inicialesDe } from '../../core/formato-texto';
 import { fechaHoraCorta } from '../../core/formato-fecha';
 
 /**

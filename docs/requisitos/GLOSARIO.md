@@ -43,7 +43,8 @@ participa cada estudiante. Entidad `Categoria`.
 
 Registro del desempeño de un estudiante en una sesión de entrenamiento
 concreta, calificado por el entrenador. Es la fuente de datos que usa
-`PlantillaService` para ordenar a los jugadores al sugerir una alineación.
+`ConvocatoriaService` para ordenar a los jugadores al sugerir el once de un
+partido.
 Entidad `EvaluacionEstudiante`.
 
 ### Membresía

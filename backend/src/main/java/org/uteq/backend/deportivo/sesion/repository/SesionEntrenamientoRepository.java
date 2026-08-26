@@ -110,4 +110,7 @@ public interface SesionEntrenamientoRepository extends JpaRepository<SesionEntre
                          @Param("fecha") LocalDate fecha,
                          @Param("horaInicio") java.time.LocalTime horaInicio,
                          @Param("horaFin") java.time.LocalTime horaFin);
+
+    /** Entrenamientos programados de una categoria en una ventana: el denominador. */
+    long countByCategoriaIdCategoriaAndFechaBetween(Long idCategoria, LocalDate desde, LocalDate hasta);
 }

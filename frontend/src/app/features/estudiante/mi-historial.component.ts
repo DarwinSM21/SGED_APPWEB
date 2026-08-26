@@ -4,7 +4,7 @@ import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { MiHistorialService } from './mi-historial.service';
 import { MiHistorial } from './mi-historial.models';
-import { horaCorta } from '../entrenador/plantilla.models';
+import { horaCorta } from '../../core/formato-texto';
 
 /**
  * Historial propio del ESTUDIANTE autenticado: antes solo podia marcar

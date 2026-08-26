@@ -5,10 +5,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.deportivo.sesion.dto.SesionCrearRequest;
+import org.uteq.backend.deportivo.sesion.dto.SesionHistorialResponse;
 import org.uteq.backend.deportivo.sesion.dto.SesionHoyResponse;
 import org.uteq.backend.deportivo.sesion.service.SesionEntrenamientoService;
 
@@ -65,6 +67,21 @@ public class SesionEntrenamientoController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
 
         return ResponseEntity.ok(sesionService.misSesiones(auth.getName(), veTodasLasSesiones, page, size));
+    }
+
+    /**
+     * Que paso en una sesion concreta: la lista de quien estuvo y quien no.
+     *
+     * <p>@Transactional aqui y no solo en el servicio: con
+     * {@code open-in-view: false} la sesion de Hibernate se cierra al salir
+     * del servicio, y cualquier lazy que quede sin resolver revienta al
+     * serializar. Ya paso en LesionController y en este mismo controlador.
+     */
+    @GetMapping("/{idSesion}/historial")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
+    @Transactional(readOnly = true)
+    public ResponseEntity<SesionHistorialResponse> historial(@PathVariable Long idSesion) {
+        return ResponseEntity.ok(sesionService.historial(idSesion));
     }
 
     /**

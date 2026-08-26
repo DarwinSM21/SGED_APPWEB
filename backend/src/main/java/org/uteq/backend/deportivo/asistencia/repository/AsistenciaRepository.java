@@ -104,4 +104,34 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, J
            """, nativeQuery = true)
     List<Object[]> resumenAsistenciaDeActivos(
             @Param("desde") LocalDate desde, @Param("corte") LocalDate corte);
+
+    /**
+     * Presencias de varios estudiantes en una ventana, en UNA consulta.
+     *
+     * <p>Alimenta la convocatoria del partido junto con el promedio: sirve
+     * para no titularizar a quien lleva semanas sin aparecer por mas alto que
+     * tenga el promedio de cuando venia.
+     */
+    @Query("""
+           SELECT a.estudiante.idEstudiante, COUNT(a)
+           FROM Asistencia a
+           WHERE a.estudiante.idEstudiante IN :ids
+             AND a.estado IN ('PRESENTE', 'TARDE')
+             AND a.sesion.fecha BETWEEN :desde AND :hasta
+           GROUP BY a.estudiante.idEstudiante
+           """)
+    List<Object[]> presenciasEnVentana(@Param("ids") List<Long> ids,
+                                       @Param("desde") LocalDate desde,
+                                       @Param("hasta") LocalDate hasta);
+
+    /** Asistencia de una sesion con el estudiante y su persona ya cargados. */
+    @Query("""
+           SELECT a FROM Asistencia a
+           JOIN FETCH a.estudiante e
+           JOIN FETCH e.persona
+           LEFT JOIN FETCH e.posicion
+           WHERE a.sesion.idSesion = :idSesion
+           ORDER BY e.persona.apellido ASC
+           """)
+    List<Asistencia> historialDeSesion(@Param("idSesion") Long idSesion);
 }

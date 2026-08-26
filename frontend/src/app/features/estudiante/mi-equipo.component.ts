@@ -5,7 +5,7 @@ import { CommonModule } from '@angular/common';
 import { MiEquipoService } from './mi-equipo.service';
 import { MiEquipo } from './mi-equipo.models';
 import { InformeEstudiante } from '../representante/representante.models';
-import { inicialesDe } from '../entrenador/plantilla.models';
+import { inicialesDe } from '../../core/formato-texto';
 
 /**
  * "Mi equipo": lo que el estudiante ve sobre si mismo mas alla de su

@@ -1,220 +1,204 @@
 package org.uteq.backend;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.evaluacion.dto.AlineacionDtos.GuardarAlineacionRequest;
-import org.uteq.backend.deportivo.evaluacion.dto.AlineacionDtos.JugadorEnCancha;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
-import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
-import org.uteq.backend.deportivo.evaluacion.service.AlineacionService;
-import org.uteq.backend.deportivo.evaluacion.service.PlantillaService;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.partido.dto.AlineacionDtos.GuardarAlineacionRequest;
+import org.uteq.backend.deportivo.partido.dto.AlineacionDtos.JugadorEnCancha;
+import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.VentanaRendimiento;
+import org.uteq.backend.deportivo.partido.entity.Partido;
+import org.uteq.backend.deportivo.partido.service.AlineacionService;
+import org.uteq.backend.deportivo.partido.service.ConvocatoriaService;
+import org.uteq.backend.deportivo.partido.service.ConvocatoriaService.Convocatoria;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
-import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
-import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
 /**
- * La alineacion que el entrenador pone en cancha.
- *
- * <p>Lo que estas pruebas fijan es la regla que hace que el modulo tenga
- * sentido: la sugerencia y la decision del entrenador son cosas distintas, y
- * solo se guarda la segunda.
+ * Las reglas al guardar un once. Son las que impiden que la pantalla mande a
+ * la cancha algo imposible: doce jugadores, dos en el mismo puesto, alguien de
+ * otra categoria o un lesionado.
  */
 @ExtendWith(MockitoExtension.class)
 class AlineacionServiceTest {
 
     @Mock private AlineacionRepository alineacionRepository;
-    @Mock private SesionEntrenamientoRepository sesionRepository;
-    @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private PosicionRepository posicionRepository;
-    @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private LesionRepository lesionRepository;
-    @Mock private PlantillaService plantillaService;
+    @Mock private ConvocatoriaService convocatoriaService;
 
-    @InjectMocks private AlineacionService service;
+    @InjectMocks private AlineacionService servicio;
 
-    private static final Long ID_SESION = 50L;
+    private static final Long ID_PARTIDO = 7L;
+    private static final Long ID_CATEGORIA = 3L;
 
-    private Estudiante estudiante(long id, String apellido) {
+    private final Categoria categoria = Categoria.builder()
+            .idCategoria(ID_CATEGORIA).nombre("SUB-14").activo(true).build();
+    private final Categoria otraCategoria = Categoria.builder()
+            .idCategoria(99L).nombre("SUB-17").activo(true).build();
+
+    @BeforeEach
+    void configurar() {
+        ReflectionTestUtils.setField(servicio, "cupoTitulares", 11);
+    }
+
+    private Partido partido() {
+        return Partido.builder().idPartido(ID_PARTIDO).categoria(categoria)
+                .fecha(LocalDate.of(2026, 8, 29)).build();
+    }
+
+    private Convocatoria convocatoriaVacia() {
+        return new Convocatoria(partido(),
+                new VentanaRendimiento(4, LocalDate.of(2026, 8, 1), LocalDate.of(2026, 8, 29), 8L),
+                List.of(), List.of(), List.of(), Map.of(), Map.of(), 8L);
+    }
+
+    private Estudiante jugador(long id, Categoria suCategoria) {
         return Estudiante.builder()
-                .idEstudiante(id)
-                .persona(Persona.builder().nombre("Jugador").apellido(apellido).build())
+                .idEstudiante(id).activo(true).categoria(suCategoria)
+                .persona(Persona.builder().idPersona(id).nombre("Jugador").apellido("N" + id).build())
                 .build();
     }
 
-    private SesionEntrenamiento sesion() {
-        return SesionEntrenamiento.builder()
-                .idSesion(ID_SESION)
-                .fecha(LocalDate.now())
-                .categoria(Categoria.builder().idCategoria(3L).nombre("SUB-16").build())
-                .build();
+    private Posicion posicion(long id) {
+        return Posicion.builder().idPosicion(id).abreviatura("P" + id).nombre("Puesto " + id).build();
     }
 
-    private Asistencia presente(Estudiante e) {
-        return Asistencia.builder().estudiante(e).estado(Asistencia.ESTADO_PRESENTE).build();
-    }
-
-    private GuardarAlineacionRequest pide(JugadorEnCancha... jugadores) {
-        return new GuardarAlineacionRequest(List.of(jugadores), null, null);
+    private GuardarAlineacionRequest conJugadores(List<JugadorEnCancha> jugadores) {
+        return new GuardarAlineacionRequest(jugadores, null, null);
     }
 
     @Test
-    @DisplayName("guardar registra el once que decidio el entrenador")
-    void guardar_registra_la_decision() {
-        var uno = estudiante(1L, "Uno");
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
-                .thenReturn(List.of(presente(uno)));
+    @DisplayName("no deja pasar de once titulares: el defecto que dejaba doce en la cancha")
+    void topeDeOnceTitulares() {
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L)).thenReturn(Optional.of(uno));
-        // La segunda lectura devuelve lo ya guardado: guardar() relee al final
-        // para responder siempre el estado real, no lo que se creia haber escrito.
-        var guardada = Alineacion.builder().idAlineacion(1L).sesion(sesion()).build();
-        when(alineacionRepository.findBySesion_IdSesion(ID_SESION))
-                .thenReturn(Optional.empty(), Optional.of(guardada));
+        for (long i = 1; i <= 12; i++) {
+            when(estudianteRepository.findByIdEstudianteAndActivoTrue(i))
+                    .thenReturn(Optional.of(jugador(i, categoria)));
+            when(posicionRepository.findById(i)).thenReturn(Optional.of(posicion(i)));
+        }
 
-        var r = service.guardar(ID_SESION, pide(new JugadorEnCancha(1L, null, true)));
+        var request = conJugadores(java.util.stream.LongStream.rangeClosed(1, 12)
+                .mapToObj(i -> new JugadorEnCancha(i, i, true)).toList());
 
-        var capturada = org.mockito.ArgumentCaptor.forClass(Alineacion.class);
-        verify(alineacionRepository).save(capturada.capture());
-        assertThat(capturada.getValue().getJugadores()).hasSize(1);
-        assertThat(capturada.getValue().getJugadores().get(0).getEstudiante().getIdEstudiante())
-                .isEqualTo(1L);
-        assertThat(r.guardada()).isTrue();
-    }
-
-    @Test
-    @DisplayName("no se puede alinear a quien no asistio")
-    void guardar_rechaza_al_ausente() {
-        var ausente = estudiante(9L, "Ausente");
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION)).thenReturn(List.of());
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(9L)).thenReturn(Optional.of(ausente));
-
-        // Alinear a quien no estuvo rompe la relacion entre lo que se midio y
-        // lo que se jugo, que es lo que este modulo existe para sostener.
-        assertThatThrownBy(() -> service.guardar(ID_SESION, pide(new JugadorEnCancha(9L, null, true))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no tiene asistencia registrada");
-
-        verify(alineacionRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("no se puede alinear a un lesionado aunque haya asistido")
-    void guardar_rechaza_al_lesionado() {
-        var lesionado = estudiante(7L, "Lesionado");
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
-                .thenReturn(List.of(presente(lesionado)));
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(7L));
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(7L)).thenReturn(Optional.of(lesionado));
-
-        assertThatThrownBy(() -> service.guardar(ID_SESION, pide(new JugadorEnCancha(7L, null, true))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("lesión activa");
-
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> servicio.guardar(ID_PARTIDO, request));
+        assertTrue(error.getMessage().contains("11"));
         verify(alineacionRepository, never()).save(any());
     }
 
     @Test
     @DisplayName("dos titulares no pueden ocupar el mismo puesto")
-    void guardar_rechaza_puesto_duplicado() {
-        var uno = estudiante(1L, "Uno");
-        var dos = estudiante(2L, "Dos");
-        var portero = Posicion.builder().idPosicion(1L).abreviatura("POR").nombre("Portero").build();
-
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION))
-                .thenReturn(List.of(presente(uno), presente(dos)));
+    void puestoUnicoEntreTitulares() {
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L)).thenReturn(Optional.of(uno));
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(2L)).thenReturn(Optional.of(dos));
-        when(posicionRepository.findById(1L)).thenReturn(Optional.of(portero));
+        when(estudianteRepository.findByIdEstudianteAndActivoTrue(anyLong()))
+                .thenAnswer(inv -> Optional.of(jugador(inv.getArgument(0), categoria)));
+        when(posicionRepository.findById(1L)).thenReturn(Optional.of(posicion(1L)));
 
-        assertThatThrownBy(() -> service.guardar(ID_SESION,
-                pide(new JugadorEnCancha(1L, 1L, true), new JugadorEnCancha(2L, 1L, true))))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("no pueden ocupar el puesto POR");
+        var request = conJugadores(List.of(
+                new JugadorEnCancha(1L, 1L, true),
+                new JugadorEnCancha(2L, 1L, true)));
 
+        assertThrows(IllegalArgumentException.class, () -> servicio.guardar(ID_PARTIDO, request));
         verify(alineacionRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("el mismo jugador no puede estar dos veces")
-    void guardar_rechaza_jugador_repetido() {
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION)).thenReturn(List.of());
+    @DisplayName("no se alinea a alguien de otra categoria")
+    void categoriaAjena() {
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L))
-                .thenReturn(Optional.of(estudiante(1L, "Uno")));
+                .thenReturn(Optional.of(jugador(1L, otraCategoria)));
 
-        assertThatThrownBy(() -> service.guardar(ID_SESION,
-                pide(new JugadorEnCancha(1L, null, true), new JugadorEnCancha(1L, null, false))))
-                .isInstanceOf(IllegalArgumentException.class);
+        var request = conJugadores(List.of(new JugadorEnCancha(1L, null, true)));
 
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> servicio.guardar(ID_PARTIDO, request));
+        assertTrue(error.getMessage().contains("SUB-14"));
+    }
+
+    @Test
+    @DisplayName("un parte medico abierto si bloquea")
+    void lesionadoNoJuega() {
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
+        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(1L));
+        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L))
+                .thenReturn(Optional.of(jugador(1L, categoria)));
+
+        var request = conJugadores(List.of(new JugadorEnCancha(1L, null, true)));
+
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> servicio.guardar(ID_PARTIDO, request));
+        assertTrue(error.getMessage().contains("lesión"));
         verify(alineacionRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("sin alineacion guardada se devuelve la sugerencia del sistema")
-    void ver_sin_guardar_devuelve_la_sugerida() {
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(alineacionRepository.findBySesion_IdSesion(ID_SESION)).thenReturn(Optional.empty());
-        when(plantillaService.sugerir(ID_SESION)).thenReturn(
-                new org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.PlantillaResponse(
-                        ID_SESION, "SUB-16", List.of(), List.of(), List.of()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION)).thenReturn(List.of());
+    @DisplayName("no admite al mismo jugador dos veces")
+    void sinRepetidos() {
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
+        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L))
+                .thenReturn(Optional.of(jugador(1L, categoria)));
 
-        var r = service.verDeSesion(ID_SESION);
+        var request = conJugadores(List.of(
+                new JugadorEnCancha(1L, null, true),
+                new JugadorEnCancha(1L, null, false)));
 
-        // La bandera es lo que permite a la pantalla decir "sugerida por el
-        // sistema" frente a "puesta por el entrenador".
-        assertThat(r.guardada()).isFalse();
+        assertThrows(IllegalArgumentException.class, () -> servicio.guardar(ID_PARTIDO, request));
     }
 
     @Test
-    @DisplayName("restablecer borra la alineacion y vuelve a la sugerida")
-    void restablecer_vuelve_a_la_sugerencia() {
-        var guardada = Alineacion.builder().idAlineacion(1L).sesion(sesion()).build();
-        when(alineacionRepository.findBySesion_IdSesion(ID_SESION))
-                .thenReturn(Optional.of(guardada), Optional.empty());
-        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion()));
-        when(plantillaService.sugerir(ID_SESION)).thenReturn(
-                new org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.PlantillaResponse(
-                        ID_SESION, "SUB-16", List.of(), List.of(), List.of()));
-        when(asistenciaRepository.listarHabilitadosParaEvaluar(ID_SESION)).thenReturn(List.of());
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
+    @DisplayName("sin nada guardado devuelve la sugerencia, y marca que NO es decision del entrenador")
+    void sinGuardarDevuelveLaSugerencia() {
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
+        when(alineacionRepository.findByPartido_IdPartido(ID_PARTIDO)).thenReturn(Optional.empty());
 
-        var r = service.restablecer(ID_SESION);
+        var respuesta = servicio.ver(ID_PARTIDO);
+
+        assertFalse(respuesta.guardada(),
+                "confundir la sugerencia con la decision del entrenador borraria la diferencia "
+                        + "entre 'jugo con este once' y 'el sistema lo propuso y nadie miro'");
+        assertEquals("SUB-14", respuesta.categoria());
+        assertEquals(11, respuesta.cupoTitulares());
+    }
+
+    @Test
+    @DisplayName("restablecer borra la alineacion guardada y vuelve a la sugerencia")
+    void restablecerBorra() {
+        Alineacion guardada = Alineacion.builder().idAlineacion(1L).partido(partido()).build();
+        when(alineacionRepository.findByPartido_IdPartido(ID_PARTIDO))
+                .thenReturn(Optional.of(guardada), Optional.empty());
+        when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
+
+        var respuesta = servicio.restablecer(ID_PARTIDO);
 
         verify(alineacionRepository).delete(guardada);
-        assertThat(r.guardada()).isFalse();
+        assertFalse(respuesta.guardada());
     }
 }

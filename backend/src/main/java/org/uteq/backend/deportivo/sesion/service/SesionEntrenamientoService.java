@@ -13,14 +13,22 @@ import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.horario.service.HorarioService;
 import org.uteq.backend.deportivo.sesion.dto.SesionCrearRequest;
+import org.uteq.backend.deportivo.sesion.dto.SesionHistorialResponse;
 import org.uteq.backend.deportivo.sesion.dto.SesionHoyResponse;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Logica de negocio de sesiones de entrenamiento, antes embebida en
@@ -40,6 +48,8 @@ public class SesionEntrenamientoService {
     private final EvaluacionDiariaRepository evaluacionRepository;
     private final CategoriaRepository categoriaRepository;
     private final HorarioService horarioService;
+    private final AsistenciaRepository asistenciaRepository;
+    private final EstudianteRepository estudianteRepository;
 
     /**
      * Sesiones de hoy. veTodasLasSesiones=true (ADMINISTRADOR/RECEPCIONISTA)
@@ -137,6 +147,84 @@ public class SesionEntrenamientoService {
 
         sesion = sesionRepository.save(sesion);
         return aResponse(sesion);
+    }
+
+    /**
+     * Que paso en una sesion: quien estuvo, quien falto y quien no tiene
+     * registro. Se parte del PLANTEL de la categoria y no de las filas de
+     * asistencia: si nadie paso lista, la tabla de asistencias esta vacia y
+     * una consulta que solo lea de ahi diria "no habia nadie convocado", que
+     * es distinto de "no se registro la asistencia de nadie". Esa diferencia
+     * es justamente lo que el entrenador necesita ver en el historial.
+     */
+    @Transactional(readOnly = true)
+    public SesionHistorialResponse historial(Long idSesion) {
+        SesionEntrenamiento s = sesionRepository.findById(idSesion)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la sesion " + idSesion));
+
+        Map<Long, Asistencia> porEstudiante = new HashMap<>();
+        for (Asistencia a : asistenciaRepository.historialDeSesion(idSesion)) {
+            porEstudiante.put(a.getEstudiante().getIdEstudiante(), a);
+        }
+
+        List<Estudiante> plantel = estudianteRepository
+                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(
+                        s.getCategoria().getIdCategoria());
+
+        List<SesionHistorialResponse.FilaAsistencia> filas = new ArrayList<>();
+        int presentes = 0, tarde = 0, ausentes = 0, justificados = 0, sinRegistro = 0;
+        for (Estudiante e : plantel) {
+            Asistencia a = porEstudiante.remove(e.getIdEstudiante());
+            String estado = a == null ? "SIN_REGISTRO" : a.getEstado();
+            switch (estado) {
+                case Asistencia.ESTADO_PRESENTE -> presentes++;
+                case Asistencia.ESTADO_TARDE -> tarde++;
+                case Asistencia.ESTADO_AUSENTE -> ausentes++;
+                case Asistencia.ESTADO_JUSTIFICADO -> justificados++;
+                default -> sinRegistro++;
+            }
+            filas.add(new SesionHistorialResponse.FilaAsistencia(
+                    e.getIdEstudiante(),
+                    e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
+                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),
+                    estado,
+                    a == null ? null : a.getHoraEntrada(),
+                    a == null ? null : a.getMetodo(),
+                    a == null ? null : a.getObservacion()));
+        }
+
+        // Lo que quede en el mapa son marcas de chicos que ya no estan en la
+        // categoria -cambiaron de grupo o se dieron de baja despues-. Estuvieron
+        // en ese entrenamiento y borrarlos del historial seria mentir sobre lo
+        // que paso ese dia.
+        for (Asistencia a : porEstudiante.values()) {
+            Estudiante e = a.getEstudiante();
+            switch (a.getEstado()) {
+                case Asistencia.ESTADO_PRESENTE -> presentes++;
+                case Asistencia.ESTADO_TARDE -> tarde++;
+                case Asistencia.ESTADO_AUSENTE -> ausentes++;
+                case Asistencia.ESTADO_JUSTIFICADO -> justificados++;
+                default -> { }
+            }
+            filas.add(new SesionHistorialResponse.FilaAsistencia(
+                    e.getIdEstudiante(),
+                    e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
+                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),
+                    a.getEstado(), a.getHoraEntrada(), a.getMetodo(), a.getObservacion()));
+        }
+
+        var evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion);
+        var persona = s.getEntrenador().getPersona();
+        return new SesionHistorialResponse(
+                s.getIdSesion(),
+                s.getCategoria().getNombre(),
+                persona.getNombre() + " " + persona.getApellido(),
+                s.getFecha(), s.getHoraInicio(), s.getHoraFin(), s.getCampo(), s.getEstado(),
+                evaluacion.isPresent(),
+                evaluacion.map(ev -> ev.getEstado()).orElse(null),
+                new SesionHistorialResponse.Resumen(filas.size(), presentes, tarde,
+                        ausentes, justificados, sinRegistro),
+                filas);
     }
 
     private Entrenador entrenadorPorUsername(String username) {

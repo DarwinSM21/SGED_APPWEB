@@ -26,9 +26,24 @@ export const routes: Routes = [
           .then(m => m.ListaAsistenciaComponent),
       },
       {
-        path: 'entrenador/sesion/:idSesion/plantilla',
-        loadComponent: () => import('./features/entrenador/plantilla.component')
-          .then(m => m.PlantillaComponent),
+        path: 'entrenador/sesion/:idSesion/historial',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
+        loadComponent: () => import('./features/entrenador/historial-sesion.component')
+          .then(m => m.HistorialSesionComponent),
+      },
+      // La formacion salio de las sesiones: es la decision de un partido, no
+      // un hecho del entrenamiento.
+      {
+        path: 'partidos',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
+        loadComponent: () => import('./features/partidos/partidos.component')
+          .then(m => m.PartidosComponent),
+      },
+      {
+        path: 'partidos/:idPartido/alineacion',
+        canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
+        loadComponent: () => import('./features/partidos/alineacion.component')
+          .then(m => m.AlineacionComponent),
       },
       {
         path: 'recepcion',

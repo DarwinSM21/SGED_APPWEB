@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { EvaluacionService } from './evaluacion.service';
 import { EvaluacionSesion, JugadorEvaluable, PosicionOpcion } from './evaluacion.models';
-import { inicialesDe } from './plantilla.models';
+import { inicialesDe } from '../../core/formato-texto';
 import { mensajeDeError } from '../../core/mensaje-error';
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -177,11 +177,6 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
         <a class="btn btn--secondary btn--block pasar-lista" [routerLink]="['/entrenador/sesion', s.idSesion, 'asistencia']">
           Pasar lista de asistencia
         </a>
-
-        <a class="btn btn--secondary btn--block ver-plantilla" [routerLink]="['/entrenador/sesion', s.idSesion, 'plantilla']">
-          Ver formación sugerida
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-        </a>
       }
     </div>
   `,
@@ -290,7 +285,6 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
     }
 
     .pasar-lista { margin-top: 1.4rem; }
-    .ver-plantilla { margin-top: .5rem; }
   `]
 })
 export class EvaluacionDiariaComponent implements OnInit {
