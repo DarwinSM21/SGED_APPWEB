@@ -3,7 +3,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := up
 
-.PHONY: up down test bench reports audit clean schema logs diagrams docs all
+.PHONY: up down test bench reports audit clean schema logs diagrams docs all carga limpiar-carga
 
 ## Reproduccion end-to-end en un solo comando desde clonacion limpia (Bloque D.1).
 ## clean va primero a proposito: garantiza volumen de Postgres nuevo en cada
@@ -106,6 +106,19 @@ schema:
 	@echo "y ademas 'cat V*.sql' ordenaba V10 antes de V1. Al tocar una"
 	@echo "migracion, refleja el cambio en db/schema.sql en el mismo commit."
 	@exit 1
+
+## Carga un millon de asistencias sinteticas para medir con volumen.
+## NO dejar cargado para mostrar el sistema: mil chicos en SUB-12 no existen
+## en ninguna academia y esa pantalla hace dudar del dato entero.
+carga:
+	@echo "Cargando volumen sintetico (tarda ~1 min)..."
+	docker compose exec -T postgres psql -U postgres -d sged_db -f /dev/stdin < db/carga-volumen.sql
+	@echo ""
+	@echo "Listo. Para volver al plantel real: make limpiar-carga"
+
+## Quita todo lo sintetico y deja solo el plantel real.
+limpiar-carga:
+	docker compose exec -T postgres psql -U postgres -d sged_db -f /dev/stdin < db/limpiar-carga.sql
 
 logs:
 	docker compose logs -f backend

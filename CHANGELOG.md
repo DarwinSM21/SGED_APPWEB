@@ -40,6 +40,14 @@ complementario a este, no un duplicado.
   `core/formato-texto.ts`: nueve pantallas sin relación con una alineación
   importaban de ahí solo para escribir una hora.
 
+### Añadido
+- `make carga` / `make limpiar-carga` y los scripts `db/carga-volumen.sql` y
+  `db/limpiar-carga.sql`. El dato de volumen y el de la demostración son dos
+  cosas distintas y ahora se conmutan en un comando: **mil chicos en SUB-12 no
+  existen en ninguna academia**, y esa pantalla hace dudar del dato entero.
+  Los datos siguen siendo sintéticos a propósito — usar los de una academia
+  real sería cometer H-04 y H-07 de `docs/etica/ETHICS.md`.
+
 ### Corregido
 - **Tres pantallas se rompían por volumen, no por lentitud.** Medido con
   3.000 estudiantes activos y un millón de asistencias: el problema no era
@@ -56,6 +64,22 @@ complementario a este, no un duplicado.
     empujaba la cancha fuera de la pantalla — para meter un suplente había
     que dejar de ver el campo. Ahora la lista scrollea dentro de sí misma,
     se dibujan 60 y hay buscador por nombre o puesto. → **569 px**.
+- **El generador de datos sintéticos mentía de dos maneras**, y las dos
+  invalidaban lo que se quería medir.
+  - Los nombres salían de `(SELECT … ORDER BY md5(i) LIMIT 1)`, una
+    subconsulta correlacionada que Postgres evalúa **una vez**: los 3.000
+    salieron con 3 nombres distintos. Con 574 jugadores llamados igual no se
+    puede probar un buscador — que era justo uno de los defectos a destapar.
+  - La asistencia salía de `(id * 7 + sesion) % 10`, exactamente 70/10/10/10
+    **para todos por igual**. Sin nadie que destaque por faltar, el panel de
+    alertas no tiene a quién señalar y la convocatoria desempata siempre por
+    id. Ahora cada estudiante tiene su propia tendencia: 858 muy regulares,
+    161 regulares, 99 irregulares, 130 que preocupan.
+  - Y el `LIMIT 1000000` cortaba en un punto arbitrario, dejando ~1.700 chicos
+    **sin ninguna fila**: el sistema los leía como 0 % y llenaba «Requieren
+    atención» con un artefacto de la carga. Llenando de la sesión más nueva
+    hacia atrás, `asistencia baja` pasó de 2.009 (falso) a 590 (real).
+
   - *Historial de sesión*: 585 filas, **32.390 px**, y el resumen quedaba
     fuera de vista al primer scroll. Mismo tratamiento: scroll propio,
     80 filas y buscador que se combina con los filtros. → **969 px**.
