@@ -242,7 +242,20 @@ type Seleccion =
                 <p class="ayuda">
                   Elegí primero a quién sacás (o un hueco libre) y después tocá a quien entra.
                 </p>
-                @for (s of banco(); track s.idEstudiante) {
+
+                @if (banco().length > UMBRAL_BUSCADOR) {
+                  <input class="buscar-banco" type="search" [ngModel]="filtroBanco()"
+                         (ngModelChange)="filtroBanco.set($event)"
+                         [attr.placeholder]="'Buscar entre ' + banco().length + ' jugadores…'"
+                         aria-label="Buscar en el banco" />
+                }
+
+                @if (bancoVisible().length === 0) {
+                  <p class="ayuda">Nadie coincide con «{{ filtroBanco() }}».</p>
+                }
+
+                <div class="banco-lista">
+                @for (s of bancoVisible(); track s.idEstudiante) {
                   <button type="button" class="suplente"
                           [class.suplente--elegido]="esElegido(s.idEstudiante)"
                           (click)="tocarBanco(s)">
@@ -255,6 +268,14 @@ type Seleccion =
                       {{ s.promedio ?? '—' }} · {{ s.presencias }}/{{ s.entrenamientos }}
                     </span>
                   </button>
+                }
+                </div>
+
+                @if (bancoVisible().length < banco().length) {
+                  <p class="ayuda recorte">
+                    Se muestran {{ bancoVisible().length }} de {{ banco().length }}.
+                    @if (!filtroBanco()) { Buscá por nombre para encontrar al resto. }
+                  </p>
                 }
               }
             </section>
@@ -366,6 +387,18 @@ type Seleccion =
     .banco h2, .fuera h2, .decision h2 { font-size: 1rem; margin-bottom: .6rem; }
     .cuenta { font-size: .78rem; color: var(--color-text-faint); font-weight: 500; }
     .ayuda { font-size: .76rem; color: var(--color-text-muted); margin: 0 0 .6rem; line-height: 1.45; }
+    .recorte { margin: .5rem 0 0; }
+
+    .buscar-banco { width: 100%; padding: .4rem .6rem; font-size: .82rem; margin-bottom: .55rem;
+                    border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+                    background: var(--color-surface); color: var(--color-text); }
+
+    /* Con el plantel entero en el banco -que es lo normal en una categoría
+       grande- la tarjeta medía 36.000 px y empujaba la cancha fuera de la
+       vista: para meter un suplente había que dejar de ver el campo. Ahora
+       la lista scrollea dentro de sí misma. */
+    .banco-lista { max-height: 22rem; overflow-y: auto; overscroll-behavior: contain;
+                   margin: 0 -.2rem; padding: 0 .2rem; }
     .suplente { display: flex; width: 100%; align-items: center; gap: .65rem; padding: .55rem .7rem;
                 border: 1px solid var(--color-border-light); border-radius: var(--radius-sm);
                 margin-bottom: .4rem; font-size: .88rem; background: var(--color-surface);
@@ -418,6 +451,12 @@ export class AlineacionComponent implements OnInit {
   readonly enCanchaPorPuesto = signal<Map<number, JugadorConvocado>>(new Map());
   readonly banco = signal<JugadorConvocado[]>([]);
   readonly seleccion = signal<Seleccion>(null);
+  readonly filtroBanco = signal('');
+
+  /** A partir de aquí buscar es más rápido que recorrer con el dedo. */
+  readonly UMBRAL_BUSCADOR = 12;
+  /** Cuántos se dibujan de una. El resto sale por búsqueda. */
+  private readonly TOPE_BANCO = 60;
 
   readonly valoracion = signal<number | null>(null);
   readonly observacion = signal('');
@@ -450,6 +489,22 @@ export class AlineacionComponent implements OnInit {
   });
 
   readonly enCancha = computed(() => [...this.enCanchaPorPuesto().values()]);
+
+  /**
+   * El banco que se dibuja. Se filtra por nombre y se corta en TOPE_BANCO
+   * porque en una categoría grande el banco ES el plantel entero: pintar 574
+   * botones daba una tarjeta de 36.000 px que empujaba la cancha fuera de la
+   * pantalla. El corte no esconde a nadie —el buscador llega a todos— y la
+   * pantalla dice cuántos quedan sin mostrar.
+   */
+  readonly bancoVisible = computed<JugadorConvocado[]>(() => {
+    const texto = this.filtroBanco().trim().toLowerCase();
+    const lista = texto
+      ? this.banco().filter((j) => j.nombreCompleto.toLowerCase().includes(texto)
+          || (j.posicion ?? '').toLowerCase().includes(texto))
+      : this.banco();
+    return lista.slice(0, this.TOPE_BANCO);
+  });
 
   /** El jugador cuya ficha se muestra al costado. */
   readonly detalle = computed<JugadorConvocado | null>(() => {
@@ -512,6 +567,7 @@ export class AlineacionComponent implements OnInit {
     this.valoracion.set(a.valoracion);
     this.observacion.set(a.observacion ?? '');
     this.seleccion.set(null);
+    this.filtroBanco.set('');
     this.sinGuardar.set(false);
     this.aviso.set(sinPuesto.length > 0
       ? `${sinPuesto.length} jugador${sinPuesto.length === 1 ? '' : 'es'} sin puesto asignado quedó en el banco: `

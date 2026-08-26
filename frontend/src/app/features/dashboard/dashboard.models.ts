@@ -18,6 +18,8 @@ export interface PanelAlertas {
   conMensualidadPendiente: number;
   conAsistenciaBaja: number;
   conLesionActiva: number;
+  /** Cuántos están en riesgo en total. `estudiantes` viene recortado. */
+  totalEnRiesgo: number;
   estudiantes: EstudianteEnRiesgo[];
 }
 

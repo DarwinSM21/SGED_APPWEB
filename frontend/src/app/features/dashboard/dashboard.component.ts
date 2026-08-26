@@ -152,7 +152,7 @@ const NOMBRES_MES = [
               <div>
                 <h2>Requieren atención</h2>
                 <p class="panel-alertas__sub">
-                  {{ a.estudiantes.length }} de {{ a.estudiantesActivos }} estudiantes ·
+                  {{ a.totalEnRiesgo }} de {{ a.estudiantesActivos }} estudiantes ·
                   cuota de {{ nombreMes(a.mes) }} {{ a.anio }}
                 </p>
               </div>
@@ -193,6 +193,14 @@ const NOMBRES_MES = [
                     @if (e.lesionActiva) { <span class="chip chip--lesion">Lesión activa</span> }
                   </div>
                 </div>
+              }
+
+              @if (a.totalEnRiesgo > a.estudiantes.length) {
+                <p class="panel-alertas__resto">
+                  Se muestran los {{ a.estudiantes.length }} casos más urgentes de
+                  {{ a.totalEnRiesgo }}. Los contadores de arriba sí cuentan a todos.
+                  <a routerLink="/reportes">Ver el listado completo en Reportes</a>
+                </p>
               }
             }
           </section>
@@ -262,6 +270,15 @@ const NOMBRES_MES = [
     .panel-alertas__cabecera h2 { font-size: 1rem; }
     .panel-alertas__sub { margin: .2rem 0 0; font-size: .78rem; color: var(--color-text-muted); }
     .resumen-alertas { display: flex; flex-wrap: wrap; gap: .4rem; }
+
+    /* El panel es una lista de a quién llamar hoy, no un censo: con 3.000
+       alumnos activos pintaba 2.995 filas -180.000 px, 265 pantallas- y
+       dejaba de ser legible justamente por tener demasiado. */
+    .panel-alertas__resto {
+      margin: .9rem 0 0; padding-top: .75rem; font-size: .78rem;
+      color: var(--color-text-muted); line-height: 1.5;
+      border-top: 1px solid var(--color-border-light);
+    }
 
     /* El color codifica el tipo de problema, no solo decora: el mismo tono
        se repite en el resumen de arriba y en la fila de cada estudiante. */

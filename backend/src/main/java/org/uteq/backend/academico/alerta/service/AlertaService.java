@@ -64,6 +64,17 @@ public class AlertaService {
     @Value("${alertas.dias-asistencia:30}")
     private int diasAsistencia;
 
+    /**
+     * Cuantos estudiantes se detallan. El panel es una lista de a quien
+     * llamar hoy, no un censo: con 3.000 alumnos activos la respuesta pasaba
+     * de medio mega y el navegador pintaba 2.995 filas -180.000 px de alto,
+     * 265 pantallas de scroll-, que no se lee ni se usa. Los CONTADORES se
+     * siguen calculando sobre la lista completa, asi que el recorte no
+     * miente sobre cuantos hay: solo deja de dibujarlos.
+     */
+    @Value("${alertas.tope-detalle:25}")
+    private int topeDetalle;
+
     @Transactional(readOnly = true)
     public PanelAlertasResponse panel() {
         LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
@@ -95,12 +106,20 @@ public class AlertaService {
                         .thenComparing(EstudianteEnRiesgoResponse::nombreCompleto))
                 .toList();
 
+        // El orden ya puso primero a los que acumulan mas señales, asi que
+        // recortar por arriba se queda con los mas urgentes y no con los
+        // primeros alfabeticamente.
+        List<EstudianteEnRiesgoResponse> detalle = enRiesgo.size() > topeDetalle
+                ? enRiesgo.subList(0, topeDetalle)
+                : enRiesgo;
+
         return new PanelAlertasResponse(
                 anio, mes, umbralAsistencia, activos.size(),
                 enRiesgo.stream().filter(EstudianteEnRiesgoResponse::mensualidadPendiente).count(),
                 enRiesgo.stream().filter(EstudianteEnRiesgoResponse::asistenciaBaja).count(),
                 enRiesgo.stream().filter(EstudianteEnRiesgoResponse::lesionActiva).count(),
-                enRiesgo);
+                enRiesgo.size(),
+                detalle);
     }
 
     /**

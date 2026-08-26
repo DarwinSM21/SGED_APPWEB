@@ -41,6 +41,25 @@ complementario a este, no un duplicado.
   importaban de ahí solo para escribir una hora.
 
 ### Corregido
+- **Tres pantallas se rompían por volumen, no por lentitud.** Medido con
+  3.000 estudiantes activos y un millón de asistencias: el problema no era
+  el tiempo de respuesta —todo por debajo de 300 ms— sino cuánto se dibujaba.
+  - *Requieren atención* (dashboard) mandaba **568 KB** con los 2.995
+    estudiantes en riesgo y pintaba 2.995 filas: **181.859 px de alto, 265
+    pantallas de scroll, 27.802 nodos**. El panel es una lista de a quién
+    llamar hoy, no un censo. Ahora el backend detalla los 25 más urgentes
+    (`alertas.tope-detalle`) y manda **5 KB**; los contadores se siguen
+    calculando sobre la lista completa, así que el recorte no miente sobre
+    cuántos hay. → **3.632 px**.
+  - *Plantilla del partido*: en una categoría grande el banco **es** el
+    plantel entero. 574 botones daban una tarjeta de **35.969 px** que
+    empujaba la cancha fuera de la pantalla — para meter un suplente había
+    que dejar de ver el campo. Ahora la lista scrollea dentro de sí misma,
+    se dibujan 60 y hay buscador por nombre o puesto. → **569 px**.
+  - *Historial de sesión*: 585 filas, **32.390 px**, y el resumen quedaba
+    fuera de vista al primer scroll. Mismo tratamiento: scroll propio,
+    80 filas y buscador que se combina con los filtros. → **969 px**.
+
 - **El entrenador ya puede elegir a quién saca.** El cambio emparejaba por
   posición nominal y decidía por él; si el suplente jugaba en un puesto que
   nadie ocupaba no sustituía a nadie, lo agregaba, y el equipo terminaba con

@@ -34,6 +34,13 @@ public final class AlertaDtos {
             long conMensualidadPendiente,
             long conAsistenciaBaja,
             long conLesionActiva,
+            /**
+             * Cuantos estan en riesgo EN TOTAL. Puede ser mayor que
+             * estudiantes.size(): el detalle viene recortado a los mas
+             * urgentes -ver AlertaService.panel()- y sin este numero la
+             * pantalla no tendria como decir que hay mas.
+             */
+            long totalEnRiesgo,
             List<EstudianteEnRiesgoResponse> estudiantes
     ) {}
 }

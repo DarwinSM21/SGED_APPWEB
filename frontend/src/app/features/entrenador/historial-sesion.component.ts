@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { CargandoComponent } from '../../core/cargando.component';
 import { mensajeDeError } from '../../core/mensaje-error';
@@ -33,7 +34,7 @@ const COLOR_ESTADO: Record<string, string> = {
 @Component({
   selector: 'app-historial-sesion',
   standalone: true,
-  imports: [CommonModule, RouterLink, CargandoComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CargandoComponent],
   template: `
     <div class="pantalla">
       <a class="btn btn--ghost volver" routerLink="/entrenador/sesiones">
@@ -105,11 +106,22 @@ const COLOR_ESTADO: Record<string, string> = {
           }
         </div>
 
+        @if (h.asistencias.length > UMBRAL_BUSCADOR) {
+          <input class="buscar" type="search" [ngModel]="busqueda()"
+                 (ngModelChange)="busqueda.set($event)"
+                 [attr.placeholder]="'Buscar entre ' + h.asistencias.length + ' convocados…'"
+                 aria-label="Buscar jugador" />
+        }
+
         <section class="card lista">
           @if (filas().length === 0) {
-            <p class="aviso">No hay jugadores en este filtro.</p>
+            <p class="aviso">
+              @if (busqueda()) { Nadie coincide con «{{ busqueda() }}». }
+              @else { No hay jugadores en este filtro. }
+            </p>
           } @else {
-            @for (f of filas(); track f.idEstudiante) {
+            <div class="lista-scroll">
+            @for (f of visibles(); track f.idEstudiante) {
               <div class="fila">
                 <span class="avatar avatar--muted">{{ iniciales(f.nombreCompleto) }}</span>
                 <div class="fila-info">
@@ -131,6 +143,14 @@ const COLOR_ESTADO: Record<string, string> = {
                   {{ etiqueta(f.estado) }}
                 </span>
               </div>
+            }
+            </div>
+
+            @if (visibles().length < filas().length) {
+              <p class="aviso recorte">
+                Se muestran {{ visibles().length }} de {{ filas().length }}.
+                @if (!busqueda()) { Buscá por nombre para llegar al resto. }
+              </p>
             }
           }
         </section>
@@ -164,7 +184,15 @@ const COLOR_ESTADO: Record<string, string> = {
     .chip--activo { border-color: var(--color-primary-600); color: var(--color-primary-700);
                     background: var(--color-primary-50); }
 
+    .buscar { width: 100%; padding: .45rem .65rem; font-size: .85rem; margin-bottom: .7rem;
+              border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+              background: var(--color-surface); color: var(--color-text); }
+
     .lista { padding: .8rem 1rem; }
+    /* Una categoría con cientos de inscritos daba una página de 32.000 px:
+       el resumen de arriba quedaba fuera de vista al primer scroll. */
+    .lista-scroll { max-height: 28rem; overflow-y: auto; overscroll-behavior: contain; }
+    .recorte { margin: .6rem 0 0; }
     .fila { display: flex; align-items: center; gap: .7rem; padding: .55rem 0;
             border-bottom: 1px solid var(--color-border-light); font-size: .9rem; }
     .fila:last-child { border-bottom: none; }
@@ -190,6 +218,12 @@ export class HistorialSesionComponent implements OnInit {
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly filtro = signal<'TODOS' | 'ENTRENARON' | 'FALTARON' | 'SIN_REGISTRO'>('TODOS');
+  readonly busqueda = signal('');
+
+  /** A partir de aquí buscar es más rápido que recorrer con el dedo. */
+  readonly UMBRAL_BUSCADOR = 25;
+  /** Cuántas filas se dibujan de una. El resto sale por búsqueda o filtro. */
+  private readonly TOPE_FILAS = 80;
 
   readonly filtros = [
     { valor: 'TODOS' as const, etiqueta: 'Todos' },
@@ -198,18 +232,27 @@ export class HistorialSesionComponent implements OnInit {
     { valor: 'SIN_REGISTRO' as const, etiqueta: 'Sin registro' },
   ];
 
+  /** Lo que dibuja la pantalla: recortado, para no pintar cientos de filas. */
+  readonly visibles = computed<FilaAsistenciaHistorial[]>(
+    () => this.filas().slice(0, this.TOPE_FILAS));
+
   readonly filas = computed<FilaAsistenciaHistorial[]>(() => {
     const h = this.historial();
     if (!h) return [];
+    const texto = this.busqueda().trim().toLowerCase();
+    const porNombre = (f: FilaAsistenciaHistorial) =>
+      !texto || f.nombreCompleto.toLowerCase().includes(texto);
     switch (this.filtro()) {
       case 'ENTRENARON':
-        return h.asistencias.filter((f) => f.estado === 'PRESENTE' || f.estado === 'TARDE');
+        return h.asistencias.filter((f) => porNombre(f)
+          && (f.estado === 'PRESENTE' || f.estado === 'TARDE'));
       case 'FALTARON':
-        return h.asistencias.filter((f) => f.estado === 'AUSENTE' || f.estado === 'JUSTIFICADO');
+        return h.asistencias.filter((f) => porNombre(f)
+          && (f.estado === 'AUSENTE' || f.estado === 'JUSTIFICADO'));
       case 'SIN_REGISTRO':
-        return h.asistencias.filter((f) => f.estado === 'SIN_REGISTRO');
+        return h.asistencias.filter((f) => porNombre(f) && f.estado === 'SIN_REGISTRO');
       default:
-        return h.asistencias;
+        return h.asistencias.filter(porNombre);
     }
   });
 
