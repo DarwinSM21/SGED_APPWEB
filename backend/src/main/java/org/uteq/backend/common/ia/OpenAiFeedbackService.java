@@ -144,7 +144,14 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
                         Map.of("role", "system", "content", PromptsFeedback.INSTRUCCION_SISTEMA),
                         Map.of("role", "user", "content", prompt)),
                 "temperature", 0.4,
-                "max_tokens", 300);
+                // 300 no alcanzaba. Los modelos de razonamiento -como el
+                // gpt-oss que sirve Groq- gastan parte del presupuesto
+                // pensando ANTES de escribir, y ese gasto cuenta contra
+                // max_tokens: medido con el prompt real, 298 de los 300 se
+                // iban en razonamiento y la respuesta llegaba vacia con
+                // finish_reason "length". Con 800 quedan ~380 libres para el
+                // texto, que es de sobra para las 3 frases que se piden.
+                "max_tokens", 800);
 
         JsonNode respuesta = restClient.post()
                 .uri("/chat/completions")
@@ -156,9 +163,19 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
 
         String texto = extraerTexto(respuesta);
         if (texto == null || texto.isBlank()) {
-            // Ocurre cuando el filtro de seguridad del proveedor bloquea la
-            // respuesta. No es transitorio, asi que no se reintenta.
-            log.warn("OpenAI respondio sin texto utilizable");
+            // Dos causas distintas y conviene no confundirlas al diagnosticar:
+            // "length" es que el presupuesto de tokens se agoto -sube
+            // max_tokens-; cualquier otra cosa suele ser el filtro de
+            // seguridad del proveedor. Ninguna es transitoria, asi que no se
+            // reintenta.
+            String motivoCorte = respuesta.path("choices").path(0).path("finish_reason").asText("");
+            if ("length".equals(motivoCorte)) {
+                log.warn("El modelo agoto el presupuesto de tokens antes de escribir "
+                        + "(finish_reason=length); revisar max_tokens");
+                return ResultadoFeedback.noDisponible(
+                        "El modelo se quedo sin espacio para responder");
+            }
+            log.warn("OpenAI respondio sin texto utilizable (finish_reason={})", motivoCorte);
             return ResultadoFeedback.noDisponible("El modelo no devolvio texto");
         }
         return ResultadoFeedback.ok(texto.trim());

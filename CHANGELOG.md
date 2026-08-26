@@ -41,6 +41,17 @@ complementario a este, no un duplicado.
   importaban de ahí solo para escribir una hora.
 
 ### Añadido
+- **El informe del representante, puesto en palabras** («Explicame estos
+  números»). `generarComentarioJugador` estaba implementado en los dos
+  proveedores y con pruebas, pero **ningún feature lo llamaba**. Un padre veía
+  `Táctica 5.5` y no sabía si eso era bueno; ahora un párrafo lo traduce. Va en
+  POST y aparte del informe: si el modelo falla, los números aparecen igual.
+  El mismo endpoint existe para el estudiante sobre su propio informe.
+- `db/demo-representantes.sql`: ocho representantes que cubren los casos que
+  el módulo tiene que resolver — un tutor con tres representados, padre y madre
+  del mismo chico, y un vínculo **desactivado** (custodia revocada) para poder
+  comprobar que deja de verlo y sigue viendo a los otros.
+
 - `make carga` / `make limpiar-carga` y los scripts `db/carga-volumen.sql` y
   `db/limpiar-carga.sql`. El dato de volumen y el de la demostración son dos
   cosas distintas y ahora se conmutan en un comando: **mil chicos en SUB-12 no
@@ -64,6 +75,14 @@ complementario a este, no un duplicado.
     empujaba la cancha fuera de la pantalla — para meter un suplente había
     que dejar de ver el campo. Ahora la lista scrollea dentro de sí misma,
     se dibujan 60 y hay buscador por nombre o puesto. → **569 px**.
+- **El comentario de IA volvía vacío contra Groq.** `max_tokens` era 300, pero
+  los modelos de razonamiento gastan parte del presupuesto pensando *antes* de
+  escribir y ese gasto cuenta: medido con el prompt real, **298 de los 300 se
+  iban en razonamiento** y la respuesta llegaba vacía con
+  `finish_reason: length`. Subido a 800. Además ahora se distingue el truncado
+  del bloqueo por filtro de contenido, que son causas distintas y pedían
+  arreglos distintos.
+
 - **El generador de datos sintéticos mentía de dos maneras**, y las dos
   invalidaban lo que se quería medir.
   - Los nombres salían de `(SELECT … ORDER BY md5(i) LIMIT 1)`, una
