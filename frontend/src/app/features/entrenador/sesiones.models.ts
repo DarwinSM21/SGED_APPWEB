@@ -37,6 +37,12 @@ export interface Horario {
   campo: string | null;
   descripcion: string | null;
   activo: boolean;
+  /**
+   * Con qué otro horario se cruza, si se cruza. null cuando está bien.
+   * El entrenador no puede estar en dos canchas a la vez; la cancha sí se
+   * puede compartir entre dos grupos, por eso no se valida.
+   */
+  chocaCon: string | null;
 }
 
 export interface HorarioCrearRequest {

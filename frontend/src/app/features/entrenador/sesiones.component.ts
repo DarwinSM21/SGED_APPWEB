@@ -119,9 +119,14 @@ function fechaHoyIso(): string {
         @if (horarios().length > 0) {
           <div class="lista-horarios">
             @for (h of horarios(); track h.idHorario) {
-              <div class="fila-horario">
+              <div class="fila-horario" [class.fila-horario--choca]="h.chocaCon">
                 <span class="badge badge--info">{{ nombreDia(h.diaSemana) }}</span>
-                <span class="horario-info">{{ h.categoria }} · {{ horaCorta(h.horaInicio) }}–{{ horaCorta(h.horaFin) }}{{ h.campo ? ' · ' + h.campo : '' }}</span>
+                <span class="horario-info">
+                  {{ h.categoria }} · {{ horaCorta(h.horaInicio) }}–{{ horaCorta(h.horaFin) }}{{ h.campo ? ' · ' + h.campo : '' }}
+                  @if (h.chocaCon) {
+                    <span class="choque">Se cruza con {{ h.chocaCon }} — no podés estar en dos canchas a la vez</span>
+                  }
+                </span>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="editarHorario(h)">Editar</button>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="onDesactivarHorario(h.idHorario)">Quitar</button>
               </div>
@@ -241,6 +246,13 @@ function fechaHoyIso(): string {
     .fila-horario { display: flex; align-items: center; gap: .6rem; padding: .5rem .1rem; border-bottom: 1px solid var(--color-border-light); }
     .fila-horario:last-child { border-bottom: none; }
     .horario-info { flex: 1; font-size: .85rem; }
+    /* Un choque no impide usar el sistema, pero mientras exista genera una
+       sesión por semana a la que nadie puede ir. Se señala donde el
+       entrenador ya mira, no en una pantalla aparte. */
+    .fila-horario--choca { background: var(--color-warning-bg); border-radius: var(--radius-sm);
+                           padding-left: .5rem; padding-right: .5rem; }
+    .choque { display: block; margin-top: .2rem; font-size: .76rem;
+              color: var(--color-warning-text); line-height: 1.4; }
 
     .lista { padding: 1.25rem; }
     .sesion-fila { display: flex; align-items: center; gap: .5rem; }

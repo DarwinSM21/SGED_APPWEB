@@ -40,6 +40,9 @@ public class HorarioService {
     @Value("${sesiones.dias-programados:7}")
     private int diasProgramados;
 
+    /** Id imposible, para el alta: no hay horario propio que excluir todavia. */
+    private static final Long SIN_ID_TODAVIA = -1L;
+
     @Transactional
     public HorarioResponse crear(String username, HorarioRequest request) {
         Entrenador entrenador = entrenadorAutenticado(username);
@@ -51,6 +54,9 @@ public class HorarioService {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
+
+        // SIN_ID_TODAVIA porque el horario aun no existe: no hay nada que excluir.
+        validarQueNoSeCruce(entrenador.getIdEntrenador(), request, SIN_ID_TODAVIA);
 
         Horario horario = Horario.builder()
                 .entrenador(entrenador)
@@ -66,13 +72,68 @@ public class HorarioService {
         return aResponse(horarioRepository.save(horario));
     }
 
+    /**
+     * Un entrenador no puede tener dos horarios cruzados el mismo dia.
+     *
+     * <p>Es la validacion que faltaba, y faltaba en el peor lugar. Un choque
+     * en una sesion suelta es un dia mal cargado; un choque en el HORARIO se
+     * materializa una vez por semana durante meses. En esta base habia tres
+     * horarios del mismo entrenador a las 16:00 -SUB-12, SUB-14 y SUB-16, de
+     * martes a viernes-, que generaron 248 sesiones imposibles: la persona no
+     * puede estar en tres canchas, asi que dos de cada tres quedaban sin lista
+     * y el sistema le cobraba esa ausencia a los chicos.
+     *
+     * <p>La cancha NO se valida. Dos grupos pueden compartirla; una persona no
+     * se parte en dos. Bloquear la cancha impediria registrar algo que en la
+     * escuela pasa de verdad.
+     *
+     * <p>El mensaje nombra el horario con el que choca. Con pocos entrenadores
+     * -uno cubre varias categorias- reorganizar la semana hace saltar esto a
+     * menudo, y un "no se puede" a secas obliga a ir a buscar cual era.
+     */
+    private void validarQueNoSeCruce(Long idEntrenador, HorarioRequest request, Long idExcluir) {
+        List<Horario> choques = horarioRepository.cruzadosCon(
+                idEntrenador, request.diaSemana().shortValue(),
+                request.horaInicio(), request.horaFin(), idExcluir);
+        if (choques.isEmpty()) {
+            return;
+        }
+        Horario otro = choques.get(0);
+        throw new IllegalArgumentException(
+                "Ese día ya tenés " + otro.getCategoria().getNombre() + " de "
+                        + otro.getHoraInicio() + " a " + otro.getHoraFin()
+                        + ". No podés estar en dos canchas a la vez: movelo de hora.");
+    }
+
     @Transactional(readOnly = true)
     public List<HorarioResponse> misHorarios(String username) {
         return entrenadorRepository.findByUsuario_Username(username)
-                .map(entrenador -> horarioRepository
-                        .findByEntrenador_IdEntrenadorAndActivoTrueOrderByDiaSemanaAscHoraInicioAsc(entrenador.getIdEntrenador())
-                        .stream().map(this::aResponse).toList())
+                .map(entrenador -> {
+                    List<Horario> horarios = horarioRepository
+                            .findByEntrenador_IdEntrenadorAndActivoTrueOrderByDiaSemanaAscHoraInicioAsc(
+                                    entrenador.getIdEntrenador());
+                    // Se comparan en memoria y no con una consulta por fila: la
+                    // semana de un entrenador son unos pocos horarios, y asi la
+                    // pantalla no dispara un N+1 por marcar un aviso.
+                    return horarios.stream().map(h -> aResponse(h, choqueDe(h, horarios))).toList();
+                })
                 .orElseGet(List::of);
+    }
+
+    /**
+     * El primer horario del mismo dia que se cruza con este, descrito para
+     * mostrarlo. null si no hay choque.
+     */
+    private String choqueDe(Horario horario, List<Horario> todos) {
+        return todos.stream()
+                .filter(o -> !o.getIdHorario().equals(horario.getIdHorario()))
+                .filter(o -> o.getDiaSemana().equals(horario.getDiaSemana()))
+                .filter(o -> o.getHoraInicio().isBefore(horario.getHoraFin())
+                        && o.getHoraFin().isAfter(horario.getHoraInicio()))
+                .findFirst()
+                .map(o -> o.getCategoria().getNombre() + " (" + o.getHoraInicio()
+                        + "–" + o.getHoraFin() + ")")
+                .orElse(null);
     }
 
     /** 404 uniforme si el horario no existe o no es suyo: mismo criterio IDOR del resto de la app. */
@@ -111,6 +172,9 @@ public class HorarioService {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
+
+        // Se excluye a si mismo: mover un horario media hora no es chocar consigo.
+        validarQueNoSeCruce(entrenador.getIdEntrenador(), request, idHorario);
 
         horario.setCategoria(categoria);
         horario.setDiaSemana(request.diaSemana().shortValue());
@@ -204,9 +268,14 @@ public class HorarioService {
     }
 
     private HorarioResponse aResponse(Horario h) {
+        return aResponse(h, null);
+    }
+
+    private HorarioResponse aResponse(Horario h, String chocaCon) {
         return new HorarioResponse(
                 h.getIdHorario(), h.getCategoria().getIdCategoria(), h.getCategoria().getNombre(),
                 h.getDiaSemana().intValue(),
-                h.getHoraInicio(), h.getHoraFin(), h.getCampo(), h.getDescripcion(), h.getActivo());
+                h.getHoraInicio(), h.getHoraFin(), h.getCampo(), h.getDescripcion(), h.getActivo(),
+                chocaCon);
     }
 }

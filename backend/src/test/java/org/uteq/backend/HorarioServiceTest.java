@@ -323,4 +323,128 @@ class HorarioServiceTest {
 
         verify(sesionRepository).delete(vacia);
     }
+
+    // ------------------------------------------------------------------
+    // Un entrenador no se parte en dos
+    //
+    // La escuela tiene POCOS entrenadores y uno cubre varias categorias, asi
+    // que encadenarlas el mismo dia es lo normal. Lo que no puede es tenerlas
+    // a la vez: eso genera una sesion por semana a la que nadie va, y el
+    // sistema termina cobrandole esa ausencia a los chicos.
+    // ------------------------------------------------------------------
+
+    private Horario horarioDe(long id, String categoria, LocalTime inicio, LocalTime fin) {
+        return Horario.builder()
+                .idHorario(id)
+                .categoria(Categoria.builder().idCategoria(id).nombre(categoria).build())
+                .diaSemana((short) 2)
+                .horaInicio(inicio).horaFin(fin)
+                .activo(true)
+                .build();
+    }
+
+    @Test
+    @DisplayName("no deja crear un horario que se cruza con otro del mismo entrenador")
+    void crear_rechaza_cruce() {
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test"))
+                .thenReturn(Optional.of(entrenador(1L)));
+        when(categoriaRepository.findById(5L))
+                .thenReturn(Optional.of(Categoria.builder().idCategoria(5L).nombre("SUB-16").build()));
+        when(horarioRepository.cruzadosCon(eq(1L), eq((short) 2), any(), any(), any()))
+                .thenReturn(List.of(horarioDe(9L, "SUB-14", LocalTime.of(16, 0), LocalTime.of(18, 0))));
+
+        var request = new HorarioRequest(5L, 2, LocalTime.of(16, 0), LocalTime.of(18, 0), null, null);
+
+        var error = assertThrows(IllegalArgumentException.class,
+                () -> service.crear("carlos@sged.test", request));
+        // El mensaje tiene que nombrar el culpable: con pocos entrenadores se
+        // choca seguido y un "no se puede" a secas obliga a ir a buscarlo.
+        assertThat(error.getMessage()).contains("SUB-14");
+        verify(horarioRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("dos categorias seguidas SI se permiten: terminar 18:00 y empezar 18:00 no es cruzarse")
+    void crear_permite_encadenar() {
+        var yo = entrenador(1L);
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(categoriaRepository.findById(5L))
+                .thenReturn(Optional.of(Categoria.builder().idCategoria(5L).nombre("SUB-16").build()));
+        // La consulta ya excluye los que solo se tocan por el extremo.
+        when(horarioRepository.cruzadosCon(eq(1L), eq((short) 2), any(), any(), any()))
+                .thenReturn(List.of());
+        when(horarioRepository.save(any(Horario.class))).thenAnswer(inv -> {
+            Horario h = inv.getArgument(0);
+            h.setIdHorario(7L);
+            return h;
+        });
+
+        var request = new HorarioRequest(5L, 2, LocalTime.of(18, 0), LocalTime.of(20, 0), null, null);
+        var respuesta = service.crear("carlos@sged.test", request);
+
+        assertThat(respuesta.idHorario()).isEqualTo(7L);
+        verify(horarioRepository).save(any(Horario.class));
+    }
+
+    @Test
+    @DisplayName("la cancha NO bloquea: dos grupos pueden compartirla")
+    void crear_no_valida_la_cancha() {
+        var yo = entrenador(1L);
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(categoriaRepository.findById(5L))
+                .thenReturn(Optional.of(Categoria.builder().idCategoria(5L).nombre("SUB-16").build()));
+        when(horarioRepository.cruzadosCon(eq(1L), eq((short) 2), any(), any(), any()))
+                .thenReturn(List.of());
+        when(horarioRepository.save(any(Horario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // Misma cancha, misma hora, pero es otro entrenador: se permite.
+        var request = new HorarioRequest(5L, 2, LocalTime.of(16, 0), LocalTime.of(18, 0),
+                "Cancha principal", null);
+        service.crear("carlos@sged.test", request);
+
+        verify(horarioRepository).save(any(Horario.class));
+    }
+
+    @Test
+    @DisplayName("al editar, el horario no choca consigo mismo")
+    void editar_se_excluye_a_si_mismo() {
+        var yo = entrenador(1L);
+        Horario existente = horarioDe(7L, "SUB-16", LocalTime.of(16, 0), LocalTime.of(18, 0));
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(7L, 1L))
+                .thenReturn(Optional.of(existente));
+        when(categoriaRepository.findById(5L))
+                .thenReturn(Optional.of(Categoria.builder().idCategoria(5L).nombre("SUB-16").build()));
+        when(horarioRepository.cruzadosCon(eq(1L), eq((short) 2), any(), any(), eq(7L)))
+                .thenReturn(List.of());
+        when(horarioRepository.save(any(Horario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        var request = new HorarioRequest(5L, 2, LocalTime.of(16, 30), LocalTime.of(18, 30), null, null);
+        service.editar("carlos@sged.test", 7L, request);
+
+        // Lo que se comprueba es el 7L del ultimo parametro: sin esa exclusion,
+        // mover un horario media hora chocaria contra su propia version vieja.
+        verify(horarioRepository).cruzadosCon(eq(1L), eq((short) 2), any(), any(), eq(7L));
+    }
+
+    @Test
+    @DisplayName("la lista marca los horarios que YA estaban cruzados")
+    void misHorarios_marca_los_cruces_existentes() {
+        var yo = entrenador(1L);
+        when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
+        when(horarioRepository
+                .findByEntrenador_IdEntrenadorAndActivoTrueOrderByDiaSemanaAscHoraInicioAsc(1L))
+                .thenReturn(List.of(
+                        horarioDe(1L, "SUB-12", LocalTime.of(16, 0), LocalTime.of(18, 0)),
+                        horarioDe(2L, "SUB-14", LocalTime.of(16, 0), LocalTime.of(18, 0)),
+                        horarioDe(3L, "SUB-18", LocalTime.of(18, 0), LocalTime.of(20, 0))));
+
+        var lista = service.misHorarios("carlos@sged.test");
+
+        // Validar el alta no arregla lo ya cargado: hay que poder verlo.
+        assertThat(lista.get(0).chocaCon()).contains("SUB-14");
+        assertThat(lista.get(1).chocaCon()).contains("SUB-12");
+        // El de 18:00 arranca cuando el otro termina: no se cruza.
+        assertThat(lista.get(2).chocaCon()).isNull();
+    }
 }

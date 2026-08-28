@@ -41,6 +41,16 @@ complementario a este, no un duplicado.
   importaban de ahí solo para escribir una hora.
 
 ### Añadido
+- **Un entrenador ya no puede quedar con dos horarios cruzados.** El aviso
+  nombra con qué choca —«Ese día ya tenés SUB-12 de 16:00 a 18:00»— porque la
+  escuela tiene pocos entrenadores: uno cubre varias categorías y reorganizar
+  la semana hace saltar esto a menudo. Encadenar sí se permite: terminar a las
+  18:00 y empezar a las 18:00 no es cruzarse. **La cancha no se valida** —dos
+  grupos pueden compartirla, una persona no se parte en dos—.
+- La lista de horarios marca en ámbar los que **ya estaban** cruzados, con cuál.
+  Validar el alta no arregla lo cargado: en esta base había 12 horarios
+  cruzados de 17.
+
 - **El informe del representante, puesto en palabras** («Explicame estos
   números»). `generarComentarioJugador` estaba implementado en los dos
   proveedores y con pruebas, pero **ningún feature lo llamaba**. Un padre veía
