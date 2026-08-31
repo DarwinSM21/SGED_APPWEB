@@ -7,7 +7,6 @@ export interface Partido {
   golesFavor: number | null;
   golesContra: number | null;
   observacion: string | null;
-  /** GANADO | EMPATADO | PERDIDO | PENDIENTE. Lo calcula el backend. */
   resultado: 'GANADO' | 'EMPATADO' | 'PERDIDO' | 'PENDIENTE';
   tieneAlineacion: boolean;
   titulares: number;
@@ -34,20 +33,12 @@ export interface Resultado {
   observacion: string | null;
 }
 
-/**
- * Un jugador dentro de la convocatoria, con los números que lo pusieron
- * donde está. Se muestran en pantalla a propósito: el entrenador tiene que
- * poder ver por qué el sistema lo sugirió ahí, y tener con qué responder
- * cuando un padre pregunta por qué su hijo quedó en el banco.
- */
 export interface JugadorConvocado {
   idEstudiante: number;
   nombreCompleto: string;
-  /** Abreviatura del puesto que ocupa. null si está sin puesto asignado. */
   posicion: string | null;
   idPosicion: number | null;
   titular: boolean;
-  /** null = no lo evaluaron ni una vez en la ventana. No es lo mismo que cero. */
   promedio: number | null;
   presencias: number;
   entrenamientos: number;
@@ -59,7 +50,6 @@ export interface NoConvocable {
   motivo: string;
 }
 
-/** La ventana de rendimiento con la que se calculó la sugerencia. */
 export interface VentanaRendimiento {
   semanas: number;
   desde: string;
@@ -72,7 +62,6 @@ export interface Alineacion {
   idCategoria: number;
   categoria: string;
   fecha: string;
-  /** true = la guardó el entrenador; false = es la sugerencia del sistema. */
   guardada: boolean;
   valoracion: number | null;
   observacion: string | null;

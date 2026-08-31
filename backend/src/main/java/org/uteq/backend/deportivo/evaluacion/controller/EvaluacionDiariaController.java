@@ -8,38 +8,18 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.*;
 import org.uteq.backend.deportivo.evaluacion.service.EvaluacionDiariaService;
 
-/**
- * Evaluacion diaria de una sesion de entrenamiento.
- *
- * <p>La alineacion ya no vive aqui: se movio a /api/partidos. Una formacion
- * es la decision de con quien se sale a jugar un partido, no un hecho del
- * entrenamiento, y colgarla de la sesion obligaba a que solo pudieran
- * alinearse los que fueron a ESE entrenamiento.
- *
- * <p>Todos los endpoints exigen rol ENTRENADOR o ADMINISTRADOR. Se anota desde
- * el primer commit y no despues: los cinco recursos que la reestructuracion
- * agrego sin {@code @PreAuthorize} dejaron accesibles datos de menores a
- * cualquier cuenta autenticada (hallazgo H-08). No se repite.
- */
 @RestController
 @RequestMapping("/api/evaluaciones")
 @RequiredArgsConstructor
 public class EvaluacionDiariaController {
-
     private final EvaluacionDiariaService evaluacionService;
 
-    /** Abre la pantalla de evaluacion de una sesion, con precarga y bloqueos. */
     @GetMapping("/sesion/{idSesion}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<EvaluacionSesionResponse> abrir(@PathVariable Long idSesion) {
         return ResponseEntity.ok(evaluacionService.abrir(idSesion));
     }
 
-    /**
-     * Autoguardado de un jugador. La interfaz lo llama cada vez que el
-     * entrenador suelta un slider, de modo que se invoca con frecuencia y es
-     * idempotente: reescribe en vez de acumular.
-     */
     @PutMapping("/sesion/{idSesion}/jugadores")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<Void> guardarJugador(@PathVariable Long idSesion,
@@ -48,7 +28,6 @@ public class EvaluacionDiariaController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Cierra la evaluacion. A partir de aqui no admite cambios. */
     @PostMapping("/sesion/{idSesion}/finalizar")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<Void> finalizar(@PathVariable Long idSesion,

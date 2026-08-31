@@ -15,14 +15,7 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
-    // Sin esto el pipe `date` (usado en Inventario, Personas, Notificaciones)
-    // cae al locale por defecto de Angular (en-US): fechas en ingles y en
-    // orden mes/dia en una app que es 100% en espanol para Ecuador.
     { provide: LOCALE_ID, useValue: 'es-EC' },
-    // Solo fuera de desarrollo: un service worker cacheando durante `ng serve`
-    // sirve versiones viejas del codigo y confunde mas de lo que ayuda.
-    // registerWhenStable evita competir con la carga inicial por el ancho de
-    // banda, que en un celular en la cancha es escaso.
     provideServiceWorker('ngsw-worker.js', {
       enabled: !isDevMode(),
       registrationStrategy: 'registerWhenStable:30000',

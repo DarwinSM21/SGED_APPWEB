@@ -40,7 +40,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EstudianteServiceTest {
-
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private PersonaRepository personaRepository;
     @Mock private CategoriaRepository categoriaRepository;
@@ -103,8 +102,6 @@ class EstudianteServiceTest {
         );
     }
 
-    // --- PRUEBAS DE LISTADO Y BÚSQUEDA ---
-
     @Test
     @DisplayName("listar - Devuelve página envuelta de estudiantes activos")
     void listar_devuelve_pagina_envuelta() {
@@ -138,8 +135,6 @@ class EstudianteServiceTest {
 
         assertThrows(RecursoNoEncontradoException.class, () -> service.buscarPorId(99L));
     }
-
-    // --- PRUEBAS DE CREACIÓN ---
 
     @Test
     @DisplayName("crear - Persiste un nuevo estudiante correctamente cuando no existía previo")
@@ -186,9 +181,6 @@ class EstudianteServiceTest {
     @Test
     @DisplayName("crear - Acepta a la persona cuya cuenta ya tiene rol ESTUDIANTE")
     void crear_persona_con_cuenta_de_estudiante_pasa() {
-        // No se stubea estudianteAccesoService.validarCoherenciaConFichaEstudiante:
-        // un mock de un metodo void no hace nada por defecto, que es
-        // exactamente el resultado de "la cuenta ya es de rol ESTUDIANTE".
         EstudianteRequest request = crearRequestValido();
         when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
@@ -219,10 +211,8 @@ class EstudianteServiceTest {
         EstudianteResponse resp = service.crear(request);
 
         assertNotNull(resp);
-        assertTrue(estudianteInactivo.getActivo()); // Se verifica la reactivación
+        assertTrue(estudianteInactivo.getActivo());
     }
-
-    // --- PRUEBAS DE EDICIÓN ---
 
     @Test
     @DisplayName("editar - Actualiza los datos correctamente")
@@ -250,8 +240,6 @@ class EstudianteServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> service.editar(1L, request));
     }
-
-    // --- PRUEBAS DE ELIMINACIÓN Y CONTEO ---
 
     @Test
     @DisplayName("eliminar - Marca al estudiante como inactivo (Baja Lógica)")
@@ -313,8 +301,6 @@ class EstudianteServiceTest {
         verify(representanteEstudianteRepository, never()).contactoDe(any());
     }
 
-    // --- PRUEBAS DE HABILITAR ACCESO (rol ESTUDIANTE) ---
-
     @Test
     @DisplayName("habilitarAcceso - Crea el usuario sobre la Persona YA existente, no una nueva")
     void habilitarAcceso_crea_usuario_sobre_persona_existente() {
@@ -367,13 +353,6 @@ class EstudianteServiceTest {
                 () -> service.habilitarAcceso(99L, new HabilitarAccesoRequest("x@sged.test", "password123")));
     }
 
-    // --- La edad tiene que encajar con la categoria ---------------------------
-    //
-    // Antes de esto se podia matricular a alguien de 18 anios en la SUB-12 y el
-    // sistema respondia 201. La categoria decide en que sesiones aparece para
-    // pasar lista y en que formacion entra, asi que el error no se descubria
-    // hasta ver al chico entrenando con un grupo que no era el suyo.
-
     private Persona personaDeEdad(int anios) {
         return Persona.builder()
                 .idPersona(1L)
@@ -414,7 +393,6 @@ class EstudianteServiceTest {
 
     @Test
     void crear_en_el_borde_del_rango_es_valido() {
-        // 12 anios con SUB-12 (10 a 12): el limite superior entra.
         prepararCrear(personaDeEdad(12));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
         when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));
@@ -424,9 +402,6 @@ class EstudianteServiceTest {
 
     @Test
     void crear_sin_fecha_de_nacimiento_no_bloquea() {
-        // Es obligatoria desde PersonaRequest, pero los datos anteriores a esa
-        // regla podrian no tenerla: rechazar por un dato que falta seria
-        // bloquear a quien no tiene la culpa.
         prepararCrear(personaDummy);
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
         when(estudianteRepository.save(any(Estudiante.class))).thenAnswer(i -> i.getArgument(0));

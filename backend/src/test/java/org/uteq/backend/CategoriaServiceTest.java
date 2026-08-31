@@ -26,7 +26,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class CategoriaServiceTest {
-
     @Mock
     private CategoriaRepository categoriaRepository;
 
@@ -100,8 +99,7 @@ class CategoriaServiceTest {
         CategoriaResponse resultado = categoriaService.crear(request);
 
         assertThat(resultado.idCategoria()).isEqualTo(2L);
-        // El servicio normaliza a la forma canonica: se escribio "Sub-15" y se
-        // guarda "SUB-15", para que el catalogo no acumule variantes de lo mismo.
+
         assertThat(resultado.nombre()).isEqualTo("SUB-15");
         verify(categoriaRepository).save(any(Categoria.class));
     }
@@ -148,9 +146,6 @@ class CategoriaServiceTest {
     @Test
     @DisplayName("crear rechaza un nombre que ya existe, sin importar mayusculas")
     void crear_rechaza_nombre_duplicado() {
-        // El repositorio ya tenia este metodo, pero el servicio no lo llamaba:
-        // el catalogo aceptaba dos "SUB-12" y el formulario de estudiante
-        // mostraba dos opciones identicas, imposibles de distinguir.
         when(categoriaRepository.existsByNombreIgnoreCase("SUB-12")).thenReturn(true);
 
         assertThatThrownBy(() -> categoriaService.crear(
@@ -199,8 +194,6 @@ class CategoriaServiceTest {
 
         CategoriaResponse r = categoriaService.reactivar(1L);
 
-        // Sin este camino, una categoria desactivada por error solo se
-        // recuperaba tocando la base a mano.
         assertThat(r.activo()).isTrue();
     }
 }

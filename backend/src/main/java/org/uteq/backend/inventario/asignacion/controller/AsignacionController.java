@@ -13,17 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.inventario.asignacion.dto.AsignacionDtos.*;
 import org.uteq.backend.inventario.asignacion.service.AsignacionService;
 
-/**
- * Asignacion/devolucion de articulos de inventario a estudiantes o
- * entrenadores. Los 3 roles operativos pueden crear y devolver (un
- * entrenador puede entregar implementos a su equipo); ninguno gestiona
- * aqui el catalogo ni los movimientos de stock genericos.
- */
 @RestController
 @RequestMapping("/api/inventario/asignaciones")
 @RequiredArgsConstructor
 public class AsignacionController {
-
     private final AsignacionService asignacionService;
 
     @GetMapping

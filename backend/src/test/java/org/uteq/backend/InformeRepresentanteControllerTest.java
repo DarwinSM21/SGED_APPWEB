@@ -34,15 +34,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * La propiedad que importa: el id del estudiante nunca sale de un parametro
- * de confianza, sale de resolver quien esta autenticado (aqui, mockeado via
- * SecurityContextHolder, igual que SesionEntrenamientoControllerTest) y de
- * ahi al servicio. Un id ajeno debe dar 404, nunca 200 con datos de otro.
- */
 @ExtendWith(MockitoExtension.class)
 class InformeRepresentanteControllerTest {
-
     private MockMvc mockMvc;
 
     @Mock

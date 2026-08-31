@@ -34,16 +34,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Registra la asistencia del ESTUDIANTE autenticado. El token QR ya se
- * canjeo en el controller (AsistenciaQrController.marcar) antes de llamar
- * aqui; este servicio solo resuelve quien es el estudiante, decide
- * PRESENTE vs TARDE, y persiste.
- */
 @Service
 @RequiredArgsConstructor
 public class AsistenciaService {
-
     private final AsistenciaRepository asistenciaRepository;
     private final EstudianteRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
@@ -85,16 +78,6 @@ public class AsistenciaService {
         return asistencia;
     }
 
-
-    /**
-     * Nomina de la sesion: TODOS los estudiantes activos de la categoria, con
-     * lo que ya este registrado de cada uno.
-     *
-     * <p>Se parte de la categoria y no de la tabla de asistencias porque el
-     * entrenador necesita ver a quien le falta marcar; una lista construida
-     * desde las asistencias existentes solo muestra a los que ya escanearon,
-     * que es justo la mitad que no hace falta revisar.
-     */
     @Transactional(readOnly = true)
     public NominaResponse nomina(Long idSesion) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
@@ -124,12 +107,6 @@ public class AsistenciaService {
                 sesion.getHoraInicio(), motivo == null, motivo, filas);
     }
 
-    /**
-     * Lista manual del entrenador. Es un upsert por (sesion, estudiante): se
-     * puede volver a pasar lista para corregir, y sobrescribe incluso lo que
-     * vino por QR -si alguien escaneo por otro, el entrenador es quien tiene
-     * la ultima palabra sobre quien estuvo en la cancha-.
-     */
     @Transactional
     public NominaResponse pasarLista(Long idSesion, PasarListaRequest request) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
@@ -151,16 +128,6 @@ public class AsistenciaService {
                     .orElseThrow(() -> new RecursoNoEncontradoException(
                             "Estudiante no encontrado o inactivo: " + marca.idEstudiante()));
 
-            // Un estudiante de otra categoria en la lista no es un dato mas:
-            // ensuciaria el porcentaje de asistencia de ambas categorias.
-            //
-            // La misma regla la comprueba marcarPorQr() llamando al
-            // procedimiento sp_validar_categoria_estudiante_sesion. Aqui se
-            // resuelve en Java a proposito: el QR valida a un estudiante por
-            // llamada, mientras que pasar lista valida a los veinticinco de
-            // una categoria; usar el procedimiento seria un N+1 de veinticinco
-            // idas a la base para comparar dos identificadores que ya estan
-            // cargados en memoria.
             if (!estudiante.getCategoria().getIdCategoria()
                     .equals(sesion.getCategoria().getIdCategoria())) {
                 throw new IllegalArgumentException(estudiante.getPersona().getNombre() + " "
@@ -178,15 +145,6 @@ public class AsistenciaService {
             a.setEstado(marca.estado());
             a.setObservacion(marca.observacion());
 
-            // La lista manual NO inventa una hora de llegada. El entrenador
-            // afirma que el chico estuvo, no a que hora entro -si pasa lista
-            // al terminar, LocalTime.now() seria la hora en que tecleo, y
-            // quedaria escrito como si el estudiante hubiera llegado dos horas
-            // tarde a un entrenamiento al que llego puntual-.
-            //
-            // Asi la columna dice algo preciso: hora presente => la midio el
-            // QR; hora vacia => es palabra del entrenador. Quien no vino no
-            // tiene hora en ningun caso.
             if (!estuvo) {
                 a.setHoraEntrada(null);
                 a.setMetodo(Asistencia.METODO_MANUAL);
@@ -199,11 +157,6 @@ public class AsistenciaService {
         return nomina(idSesion);
     }
 
-    /**
-     * Una sesion que todavia no ocurrio no admite lista: nadie pudo asistir.
-     * Es la misma regla que aplica sp_reporte_asistencia_estudiante al recortar
-     * el rango, aqui puesta antes de que el dato malo entre.
-     */
     private String motivoNoEditable(SesionEntrenamiento sesion) {
         if (sesion.getFecha().isAfter(LocalDate.now(Zonas.ECUADOR))) {
             return "La sesión es del " + sesion.getFecha() + ": todavía no ocurre";
@@ -211,7 +164,6 @@ public class AsistenciaService {
         return null;
     }
 
-    /** Sin hora_inicio programada no hay contra que medir la tardanza: PRESENTE. */
     private String calcularEstado(LocalTime horaInicio, LocalTime ahora) {
         if (horaInicio == null) {
             return Asistencia.ESTADO_PRESENTE;
@@ -220,10 +172,6 @@ public class AsistenciaService {
         return ahora.isAfter(limite) ? Asistencia.ESTADO_TARDE : Asistencia.ESTADO_PRESENTE;
     }
 
-    /**
-     * Historial propio del ESTUDIANTE autenticado. Antes solo podia marcar
-     * asistencia, no consultar lo que ya habia marcado.
-     */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
@@ -251,23 +199,12 @@ public class AsistenciaService {
                 a.getEstado());
     }
 
-    /**
-     * Mapa de asistencia de los ultimos {@code dias} dias. Solo devuelve los
-     * dias que tuvieron entrenamiento: un sabado sin sesion no es un dia de
-     * asistencia cero, es un dia que no cuenta, y pintarlo igual que un
-     * martes al que no fue nadie seria mentir con el color.
-     *
-     * El corte es ayer por el mismo motivo que el reporte por estudiante: la
-     * sesion de hoy puede no haber ocurrido todavia.
-     */
     @Transactional(readOnly = true)
     public MapaAsistenciaResponse mapaDeAsistencia(int dias) {
         int ventana = Math.max(7, Math.min(dias, 120));
         LocalDate hasta = LocalDate.now(Zonas.ECUADOR).minusDays(1);
         LocalDate desde = hasta.minusDays(ventana - 1L);
 
-        // Una fila por dia y categoria; si dos categorias entrenaron el mismo
-        // dia se acumulan, porque el mapa mide el dia completo.
         Map<LocalDate, long[]> porDia = new LinkedHashMap<>();
         for (Object[] fila : sesionRepository.resumenAsistenciaPorDia(desde, hasta)) {
             LocalDate fecha = (LocalDate) fila[0];

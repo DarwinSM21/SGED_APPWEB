@@ -14,33 +14,14 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.Set;
 
-/**
- * Colaborador que concentra la relacion Estudiante-Usuario: la unica
- * porcion de EstudianteService que cruzaba de lleno al dominio de
- * seguridad (Usuario, Rol, PasswordEncoder). Extraido para bajar el
- * fan-out de EstudianteService (hallazgo MET-01 / R-06 del informe de
- * evaluacion de calidad: 18 dependencias internas, el mas alto del
- * sistema). No es un orquestador de alta completa -eso lo sigue llamando
- * EstudianteService, que es quien conoce cuando corresponde- sino el
- * lugar donde vive el conocimiento de como se arma y valida una cuenta
- * de rol ESTUDIANTE.
- */
 @Service
 @RequiredArgsConstructor
 public class EstudianteAccesoService {
-
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
 
-    /**
-     * Guarda simetrica a UsuarioService.validarRolCoherente: si la persona
-     * ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin cuenta
-     * no hay nada que validar -- lo normal es que un estudiante no tenga
-     * acceso al sistema, y si despues se le habilita, crearCuentaDeEstudiante
-     * ya fija el rol ESTUDIANTE.
-     */
     public void validarCoherenciaConFichaEstudiante(Long idPersona) {
         usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -> {
             boolean esEstudiante = usuario.getRoles() != null && usuario.getRoles().stream()
@@ -52,11 +33,6 @@ public class EstudianteAccesoService {
         });
     }
 
-    /**
-     * Crea el Usuario (rol ESTUDIANTE) sobre una Persona que ya existe; no
-     * lo asocia a la ficha de Estudiante, eso lo hace el llamador una vez
-     * que tiene el Usuario guardado.
-     */
     public Usuario crearCuentaDeEstudiante(Persona persona, HabilitarAccesoRequest request) {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");

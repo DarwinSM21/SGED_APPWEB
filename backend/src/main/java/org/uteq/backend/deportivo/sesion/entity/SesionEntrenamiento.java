@@ -12,11 +12,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * Instancia concreta de un entrenamiento en una fecha. Es la unidad a la que
- * se asocian tanto la asistencia como la evaluacion diaria: sin sesion no hay
- * nada que calificar.
- */
 @Entity
 @Table(name = "sesiones_entrenamiento", schema = "deportivo")
 @Getter
@@ -25,17 +20,11 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 public class SesionEntrenamiento {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_sesion")
     private Long idSesion;
 
-    /**
-     * Horario fijo que origino esta sesion (null si es una jornada extra
-     * creada a mano, fuera del patron recurrente). Ver
-     * HorarioService.generarSesionesProgramadas().
-     */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_horario")
     private Horario horario;
@@ -44,11 +33,6 @@ public class SesionEntrenamiento {
     @JoinColumn(name = "id_entrenador", nullable = false)
     private Entrenador entrenador;
 
-    /**
-     * Categoria convocada. Desde V7 es clave foranea al catalogo, no el texto
-     * libre que era antes: permite comparar de forma fiable la categoria de la
-     * sesion con la del estudiante.
-     */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;

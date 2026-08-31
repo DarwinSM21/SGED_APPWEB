@@ -10,14 +10,11 @@ interface Pagina<T> {
   content: T[];
 }
 
-/** ID de seguridad.estados_general para "Activo" (ver db/seed.sql). */
 export const ESTADO_GENERAL_ACTIVO = 1;
 
 @Injectable({ providedIn: 'root' })
 export class PersonasService {
   private readonly http = inject(HttpClient);
-
-  // -- Persona --
 
   listarPersonas() {
     return this.http.get<Pagina<PersonaResponse>>('/api/personas?size=200&sort=apellido');
@@ -31,10 +28,6 @@ export class PersonasService {
     return this.http.put<PersonaResponse>(`/api/personas/${id}`, request);
   }
 
-  // Listas independientes (no combinadas con forkJoin a proposito: el
-  // maestro-detalle de ADMINISTRADOR las cruza en el cliente por
-  // idPersona una vez que cada una llega, asi una sola que tarde o
-  // falle no tumba a las demas -- mismo criterio que InventarioComponent).
   listarUsuarios() {
     return this.http.get<Pagina<UsuarioResponse>>('/api/usuarios?size=500');
   }
@@ -47,8 +40,6 @@ export class PersonasService {
     return this.http.get<Pagina<RepresentanteResponse>>('/api/representantes?size=500');
   }
 
-  // -- Usuario --
-
   crearUsuario(request: UsuarioRequest) {
     return this.http.post<UsuarioResponse>('/api/usuarios', request);
   }
@@ -60,8 +51,6 @@ export class PersonasService {
   desactivarUsuario(id: number) {
     return this.http.delete<void>(`/api/usuarios/${id}`);
   }
-
-  // -- Estudiante --
 
   categoriasActivas() {
     return this.http.get<CategoriaOpcion[]>('/api/categorias/activas');
@@ -93,8 +82,6 @@ export class PersonasService {
     return this.http.post<EstudianteResponse>(`/api/estudiantes/${idEstudiante}/acceso`, request);
   }
 
-  // -- Entrenador --
-
   especialidadesActivas() {
     return this.http.get<EspecialidadOpcion[]>('/api/especialidades/activas');
   }
@@ -106,8 +93,6 @@ export class PersonasService {
   editarEntrenador(id: number, request: EntrenadorRequest) {
     return this.http.put<EntrenadorResponse>(`/api/entrenadores/${id}`, request);
   }
-
-  // -- Representante --
 
   crearRepresentante(request: RepresentanteRequest) {
     return this.http.post<RepresentanteResponse>('/api/representantes', request);

@@ -29,7 +29,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PartidoServiceTest {
-
     @Mock private PartidoRepository partidoRepository;
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private AlineacionRepository alineacionRepository;
@@ -54,8 +53,7 @@ class PartidoServiceTest {
     @DisplayName("sin marcador el partido esta PENDIENTE, no empatado 0-0")
     void sinMarcadorEsPendiente() {
         devuelve(conMarcador(null, null));
-        // Un partido recien agendado no va 0-0: todavia no se jugo. Es la razon
-        // de que las columnas de goles no tengan DEFAULT 0.
+
         assertEquals("PENDIENTE", servicio.buscarPorId(ID_PARTIDO).resultado());
     }
 

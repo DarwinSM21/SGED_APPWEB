@@ -23,26 +23,9 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Registra filas en seguridad.auditoria. A diferencia del resto de
- * servicios del proyecto (que reciben el username ya resuelto desde el
- * controller, ver comentario en InformeService), este lee
- * SecurityContextHolder directamente: es el unico punto que se invoca
- * desde un aspecto AOP envolviendo metodos arbitrarios, que no puede
- * agregarles un parametro de username.
- *
- * <p>Nunca debe romper la operacion de negocio que audita: cualquier
- * fallo al resolver el contexto o guardar la fila se loguea y se ignora.
- * Por eso mismo los metodos de escritura usan REQUIRES_NEW -- login()
- * corre en una transaccion @Transactional(readOnly = true), y sin una
- * transaccion propia el INSERT de auditoria fallaria con "cannot execute
- * INSERT in a read-only transaction" y de paso dejaria abortada la
- * transaccion de login entero.
- */
 @Service
 @RequiredArgsConstructor
 public class AuditoriaService {
-
     private static final Logger log = LoggerFactory.getLogger(AuditoriaService.class);
 
     private final AuditoriaRepository auditoriaRepository;
@@ -58,12 +41,6 @@ public class AuditoriaService {
         registrarConIdentidad(username, rol, accion, entidad, entidadId, descripcion);
     }
 
-    /**
-     * Variante para llamadores que ya conocen la identidad (ej.
-     * AuthController en login/logout, donde SecurityContextHolder todavia
-     * no tiene autenticacion resuelta porque la sesion es stateless por
-     * JWT y ese token recien se esta emitiendo).
-     */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void registrarConIdentidad(String username, String rol, String accion, String entidad,
                                        Long entidadId, String descripcion) {
@@ -87,14 +64,6 @@ public class AuditoriaService {
         }
     }
 
-    /**
-     * Filtros con Specification (no JPQL "@Query" con "IS NULL OR"): con
-     * parametros null combinados en un OR, PostgreSQL no siempre puede
-     * inferir el tipo del parametro preparado y el driver JDBC responde
-     * "could not determine data type of parameter" -- con Specification
-     * cada predicado se agrega solo si el filtro esta presente, sin ese
-     * problema.
-     */
     @Transactional(readOnly = true)
     public Page<AuditoriaResponse> buscar(String usuario, String accion, String entidad,
                                            OffsetDateTime fechaDesde, OffsetDateTime fechaHasta,

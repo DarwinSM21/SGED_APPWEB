@@ -10,37 +10,26 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 public final class AsignacionDtos {
-
     private AsignacionDtos() {}
 
     public record AsignacionRequest(
             @NotNull(message = "El artículo es obligatorio")
             Long idArticulo,
-
             @NotNull(message = "La cantidad es obligatoria")
             @Min(value = 1, message = "La cantidad debe ser mayor a cero")
             Integer cantidad,
-
             @NotNull(message = "El tipo de destinatario es obligatorio")
             TipoDestinatario tipoDestinatario,
-
-            /** Obligatorio si tipoDestinatario = ESTUDIANTE, ignorado si no. */
             Long idEstudiante,
-
-            /** Obligatorio si tipoDestinatario = ENTRENADOR, ignorado si no. */
             Long idEntrenador,
-
             LocalDate fechaDevolucionEsperada,
-
             @Size(max = 255, message = "Las observaciones no pueden superar los 255 caracteres")
             String observaciones
     ) {}
 
     public record DevolucionRequest(
-            /** ASIGNADO no es válido aquí: solo se devuelve a DEVUELTO o se reporta PERDIDO. */
             @NotNull(message = "El estado de devolución es obligatorio")
             EstadoAsignacion estado,
-
             @Size(max = 255, message = "Las observaciones no pueden superar los 255 caracteres")
             String observaciones
     ) {}

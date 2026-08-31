@@ -7,16 +7,6 @@ import { MiEquipo } from './mi-equipo.models';
 import { InformeEstudiante } from '../representante/representante.models';
 import { inicialesDe } from '../../core/formato-texto';
 
-/**
- * "Mi equipo": lo que el estudiante ve sobre si mismo mas alla de su
- * asistencia (esa vive en mi-historial) -su categoria, su posicion, quien
- * es su entrenador y sus companeros- mas sus estadisticas de evaluacion,
- * con el mismo layout que ya usa el representante para el informe de un
- * representado (misma forma de datos, misma pantalla validada).
- *
- * Companeros muestra deliberadamente solo nombre y posicion: son menores
- * de edad, sin datos de contacto ni promedios entre compañeros.
- */
 @Component({
   selector: 'app-mi-equipo',
   standalone: true,
@@ -137,7 +127,6 @@ import { inicialesDe } from '../../core/formato-texto';
     .pantalla { max-width: 760px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     .titulo-pantalla { font-size: 1.2rem; margin-bottom: 1.1rem; }
     .aviso { color: var(--color-text-muted); font-size: .9rem; }
-
     .tarjetas-resumen {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: .9rem; margin-bottom: 1.1rem;
@@ -147,7 +136,6 @@ import { inicialesDe } from '../../core/formato-texto';
     .tarjeta-resumen__valor { font-size: 1.05rem; font-weight: 700; margin-top: .15rem; }
     .tarjeta-resumen__detalle { font-size: .8rem; color: var(--color-text-muted); }
     .tarjeta-resumen__vacio { font-size: .85rem; color: var(--color-text-faint); margin-top: .15rem; }
-
     .detalle { padding: 1.5rem; margin-bottom: 1.1rem; }
     .detalle h2 { font-size: 1.05rem; margin-bottom: 1rem; }
     .asistencia-resumen {
@@ -158,20 +146,17 @@ import { inicialesDe } from '../../core/formato-texto';
     .asistencia-etiqueta { font-size: .85rem; color: var(--color-text-muted); }
     .detalle h3 { font-size: .88rem; color: var(--color-text-muted); margin: 1.1rem 0 .6rem; text-transform: uppercase; letter-spacing: .03em; }
     .detalle h3:first-of-type { margin-top: 0; }
-
     .criterios { display: flex; flex-direction: column; gap: .4rem; }
     .criterio-fila {
       display: flex; justify-content: space-between; align-items: center;
       padding: .55rem .7rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); font-size: .9rem;
     }
-
     .lesion-fila {
       display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem;
       border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); margin-bottom: .4rem; font-size: .85rem;
     }
     .lesion-descripcion { flex: 1; min-width: 0; }
     .lesion-fecha { color: var(--color-text-faint); font-size: .78rem; white-space: nowrap; }
-
     .companeros { padding: 1.5rem; }
     .companeros h2 { font-size: 1.05rem; margin-bottom: 1rem; }
     .companero-fila { display: flex; align-items: center; gap: .7rem; padding: .6rem 0; border-top: 1px solid var(--color-border-light); }
@@ -182,7 +167,6 @@ import { inicialesDe } from '../../core/formato-texto';
   `]
 })
 export class MiEquipoComponent implements OnInit {
-
   private readonly servicio = inject(MiEquipoService);
 
   readonly equipo = signal<MiEquipo | null>(null);

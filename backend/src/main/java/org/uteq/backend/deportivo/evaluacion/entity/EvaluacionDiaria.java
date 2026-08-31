@@ -12,18 +12,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Cabecera de la evaluacion de una sesion: una por sesion de entrenamiento.
- *
- * <p>Nace en BORRADOR y se guarda sola mientras el entrenador trabaja, para
- * que no pierda lo cargado si se le corta la conexion en la cancha. Pasa a
- * FINALIZADA cuando la cierra explicitamente.
- */
 @Entity
 @Table(name = "evaluaciones_diarias", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class EvaluacionDiaria {
-
     public static final String BORRADOR = "BORRADOR";
     public static final String FINALIZADA = "FINALIZADA";
 

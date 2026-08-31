@@ -6,12 +6,6 @@ import { PersonasStateService } from './personas-state.service';
 import { mensajeDeError } from '../../core/mensaje-error';
 import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
 
-/**
- * Seccion "Ficha de estudiante" del panel de detalle: alta de la ficha y
- * gestion de sus vinculos con representantes. Uno de los componentes en
- * que se dividio personas-admin.component.ts (R-05, informe de evaluacion
- * de calidad).
- */
 @Component({
   selector: 'app-ficha-estudiante',
   standalone: true,
@@ -154,14 +148,6 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
   `],
 })
 export class FichaEstudianteComponent {
-
-  /**
-   * La lista de representantes crece con las familias de la escuela, asi que
-   * es la que antes deja de servir como desplegable. Categoria y posicion se
-   * quedan como select a proposito: son listas cortas y cerradas -tres
-   * categorias, diez posiciones de futbol- donde un buscador solo agrega
-   * pasos.
-   */
   readonly opcionesRepresentantes = computed<OpcionBuscable[]>(() =>
     this.state.representantesDisponibles().map((r) => ({
       id: r.idRepresentante,
@@ -179,12 +165,6 @@ export class FichaEstudianteComponent {
 
   readonly persona = computed(() => this.state.seleccionada());
 
-  /**
-   * El backend ya rechaza crear la ficha si la cuenta tiene otro rol
-   * (EstudianteAccesoService.validarCoherenciaConFichaEstudiante); esto
-   * solo evita mostrarle el formulario a alguien que de todas formas va a
-   * chocar con ese error al enviarlo.
-   */
   readonly rolIncoherente = computed(() => {
     const usuario = this.persona()?.usuario;
     if (!usuario || usuario.roles.includes('ESTUDIANTE')) return null;
@@ -196,9 +176,6 @@ export class FichaEstudianteComponent {
   readonly guardandoEstudiante = signal(false);
   readonly errorEstudiante = signal('');
   readonly editandoEstudiante = signal(false);
-  /** Peso/altura no se editan en esta pantalla (no forman parte del pedido), pero
-   *  igual hay que reenviarlos tal cual venian: EstudianteService.editar los
-   *  sobreescribe con lo que llegue en el request, así que mandar null los borraría. */
   private pesoAlturaEditando: { peso: number | null; altura: number | null } = { peso: null, altura: null };
 
   formVinculo: { idRepresentante: number | null; relacion: string; contactoPrincipal: boolean } =

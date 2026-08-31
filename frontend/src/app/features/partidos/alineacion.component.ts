@@ -27,7 +27,6 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
   SIN_POSICION: 'Sin posición registrada',
 };
 
-/** Un hueco del campo. Puede estar ocupado o vacío: eso es lo que permite el cambio. */
 interface Puesto {
   idPosicion: number;
   abreviatura: string;
@@ -38,31 +37,11 @@ interface Puesto {
   jugador: JugadorConvocado | null;
 }
 
-/**
- * Lo que el entrenador tiene tomado en la mano. Un cambio necesita SIEMPRE
- * dos extremos -quién sale y quién entra-, así que la pantalla obliga a
- * elegir los dos en vez de decidir uno por su cuenta.
- */
 type Seleccion =
   | { tipo: 'jugador'; idEstudiante: number; origen: 'cancha' | 'banco' }
   | { tipo: 'puesto'; idPosicion: number }
   | null;
 
-/**
- * El once de un partido, sobre la cancha.
- *
- * <p>La sugerencia la calcula el backend con una regla determinista sobre el
- * rendimiento de las últimas semanas; esta pantalla la dibuja y deja que el
- * entrenador la cambie.
- *
- * <p>El campo son <b>once huecos fijos</b>, uno por posición del catálogo, y
- * no una lista de jugadores. Eso es lo que arregla los dos defectos que tenía
- * el cambio: antes el sistema elegía por vos a quién sacaba -emparejaba por
- * posición nominal-, y si el suplente jugaba en un puesto que nadie ocupaba
- * no sustituía a nadie, lo agregaba, y terminabas con doce en la cancha.
- * Con huecos, sacar y meter son la misma operación sobre el mismo hueco, y
- * pasar de once es imposible porque no hay un doceavo lugar donde ponerlo.
- */
 @Component({
   selector: 'app-alineacion',
   standalone: true,
@@ -74,7 +53,6 @@ type Seleccion =
       } @else if (error() && !alineacion()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (alineacion(); as a) {
-
         <a class="btn btn--ghost volver" routerLink="/partidos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           Volver a partidos
@@ -333,25 +311,20 @@ type Seleccion =
   styles: [`
     .pantalla { max-width: 920px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
     .volver { margin-bottom: 1rem; }
-
     .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
                 gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem; }
     h1 { font-size: 1.15rem; }
     .subt { margin-top: .3rem; color: var(--color-text-muted); font-size: .85rem; }
     .ventana { margin-top: .35rem; font-size: .78rem; color: var(--color-text-faint);
                max-width: 56ch; line-height: 1.45; }
-
     .alert--info { background: var(--color-primary-50); color: var(--color-primary-700); }
-
     .vacio { text-align: center; padding: 2rem 1.5rem; margin-bottom: 1rem; }
     .vacio h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
     .vacio p { color: var(--color-text-muted); font-size: .88rem; max-width: 46ch; margin: 0 auto; }
-
     .cuerpo { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-top: 1rem; align-items: flex-start; }
     .campo-envoltura { flex: 1 1 320px; min-width: 280px; }
     .campo { width: 100%; height: auto; display: block; box-shadow: var(--shadow-md);
              border-radius: 12px; touch-action: manipulation; }
-
     .puesto { cursor: pointer; }
     .puesto circle { transition: stroke-width .15s, opacity .15s; }
     .puesto:hover circle { stroke-width: 5; }
@@ -359,19 +332,15 @@ type Seleccion =
     .puesto--elegido circle { stroke-width: 6; filter: drop-shadow(0 3px 5px rgb(0 0 0 / .4)); }
     .puesto:focus-visible { outline: none; }
     .puesto:focus-visible circle { stroke: #ffffff; stroke-width: 6; }
-
     .leyenda { display: flex; flex-wrap: wrap; gap: .8rem; margin-top: .75rem;
                font-size: .78rem; color: var(--color-text-muted); }
     .leyenda-item { display: inline-flex; align-items: center; gap: .35rem; }
     .punto { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-
     .instruccion { margin-top: .7rem; font-size: .8rem; color: var(--color-text-muted);
                    line-height: 1.5; display: flex; align-items: center; gap: .5rem;
                    flex-wrap: wrap; }
-
     .panel-lateral { flex: 1 1 250px; min-width: 230px; display: flex;
                      flex-direction: column; gap: 1.1rem; }
-
     .detalle-panel { padding: 1.15rem 1.2rem; }
     .detalle-panel h2 { font-size: 1.02rem; margin-bottom: .25rem; }
     .posicion-detalle { color: var(--color-text-muted); font-size: .82rem; margin-bottom: .9rem; }
@@ -382,21 +351,14 @@ type Seleccion =
     .numero .de { font-size: .9rem; color: var(--color-text-faint); font-weight: 500; }
     .numero .unidad { font-size: .72rem; color: var(--color-text-muted); }
     .sin-nota { font-size: .76rem; color: var(--color-text-faint); margin: 0 0 .7rem; }
-
     .banco { padding: 1.1rem 1.2rem; }
     .banco h2, .fuera h2, .decision h2 { font-size: 1rem; margin-bottom: .6rem; }
     .cuenta { font-size: .78rem; color: var(--color-text-faint); font-weight: 500; }
     .ayuda { font-size: .76rem; color: var(--color-text-muted); margin: 0 0 .6rem; line-height: 1.45; }
     .recorte { margin: .5rem 0 0; }
-
     .buscar-banco { width: 100%; padding: .4rem .6rem; font-size: .82rem; margin-bottom: .55rem;
                     border: 1px solid var(--color-border); border-radius: var(--radius-sm);
                     background: var(--color-surface); color: var(--color-text); }
-
-    /* Con el plantel entero en el banco -que es lo normal en una categoría
-       grande- la tarjeta medía 36.000 px y empujaba la cancha fuera de la
-       vista: para meter un suplente había que dejar de ver el campo. Ahora
-       la lista scrollea dentro de sí misma. */
     .banco-lista { max-height: 22rem; overflow-y: auto; overscroll-behavior: contain;
                    margin: 0 -.2rem; padding: 0 .2rem; }
     .suplente { display: flex; width: 100%; align-items: center; gap: .65rem; padding: .55rem .7rem;
@@ -412,12 +374,10 @@ type Seleccion =
                     font-family: ui-monospace, monospace; }
     .suplente-num { font-size: .72rem; color: var(--color-text-muted);
                     font-variant-numeric: tabular-nums; white-space: nowrap; }
-
     .fuera { padding: 1.1rem 1.2rem; }
     .fuera-fila { display: flex; align-items: center; justify-content: space-between;
                   gap: .6rem; padding: .35rem 0; font-size: .84rem; }
     .fuera-nombre { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
     .decision { padding: 1.1rem 1.2rem; }
     .estrellas { display: flex; align-items: center; gap: .15rem; margin-bottom: .7rem; }
     .estrella { background: none; border: none; cursor: pointer; padding: .1rem .15rem;
@@ -436,7 +396,6 @@ type Seleccion =
   `],
 })
 export class AlineacionComponent implements OnInit {
-
   private readonly ruta = inject(ActivatedRoute);
   private readonly servicio = inject(PartidosService);
 
@@ -447,15 +406,12 @@ export class AlineacionComponent implements OnInit {
 
   readonly alineacion = signal<Alineacion | null>(null);
   readonly catalogo = signal<Posicion[]>([]);
-  /** El once, por hueco. La clave es idPosicion; sin clave no hay hueco. */
   readonly enCanchaPorPuesto = signal<Map<number, JugadorConvocado>>(new Map());
   readonly banco = signal<JugadorConvocado[]>([]);
   readonly seleccion = signal<Seleccion>(null);
   readonly filtroBanco = signal('');
 
-  /** A partir de aquí buscar es más rápido que recorrer con el dedo. */
   readonly UMBRAL_BUSCADOR = 12;
-  /** Cuántos se dibujan de una. El resto sale por búsqueda. */
   private readonly TOPE_BANCO = 60;
 
   readonly valoracion = signal<number | null>(null);
@@ -471,7 +427,6 @@ export class AlineacionComponent implements OnInit {
 
   private idPartido = 0;
 
-  /** Los once huecos del campo, ocupados o no. */
   readonly puestos = computed<Puesto[]>(() => {
     const ocupados = this.enCanchaPorPuesto();
     return this.catalogo().map((p) => {
@@ -490,13 +445,6 @@ export class AlineacionComponent implements OnInit {
 
   readonly enCancha = computed(() => [...this.enCanchaPorPuesto().values()]);
 
-  /**
-   * El banco que se dibuja. Se filtra por nombre y se corta en TOPE_BANCO
-   * porque en una categoría grande el banco ES el plantel entero: pintar 574
-   * botones daba una tarjeta de 36.000 px que empujaba la cancha fuera de la
-   * pantalla. El corte no esconde a nadie —el buscador llega a todos— y la
-   * pantalla dice cuántos quedan sin mostrar.
-   */
   readonly bancoVisible = computed<JugadorConvocado[]>(() => {
     const texto = this.filtroBanco().trim().toLowerCase();
     const lista = texto
@@ -506,7 +454,6 @@ export class AlineacionComponent implements OnInit {
     return lista.slice(0, this.TOPE_BANCO);
   });
 
-  /** El jugador cuya ficha se muestra al costado. */
   readonly detalle = computed<JugadorConvocado | null>(() => {
     const s = this.seleccion();
     if (!s || s.tipo !== 'jugador') return null;
@@ -547,17 +494,12 @@ export class AlineacionComponent implements OnInit {
   private recibir(a: Alineacion): void {
     this.alineacion.set(a);
 
-    // El banco es todo el que está convocado y no arranca. `disponibles` llega
-    // vacío mientras nadie guardó nada -el cálculo reparte a todo el plantel-,
-    // pero deja de estarlo cuando el entrenador guardó una lista más corta.
     const sinPuesto: JugadorConvocado[] = [];
     const porPuesto = new Map<number, JugadorConvocado>();
     for (const t of a.titulares) {
       if (t.idPosicion != null && !porPuesto.has(t.idPosicion)) {
         porPuesto.set(t.idPosicion, t);
       } else {
-        // Un titular sin puesto no se puede dibujar en la cancha, así que va al
-        // banco en vez de desaparecer sin que nadie se entere.
         sinPuesto.push(t);
       }
     }
@@ -575,12 +517,6 @@ export class AlineacionComponent implements OnInit {
       : null);
   }
 
-  // ---------------------------------------------------------------- cambios
-
-  /**
-   * Toque sobre un hueco de la cancha. Es la mitad de un cambio: la otra
-   * mitad es el toque anterior o el siguiente.
-   */
   tocarPuesto(p: Puesto): void {
     const s = this.seleccion();
     this.mensaje.set(null);
@@ -589,7 +525,6 @@ export class AlineacionComponent implements OnInit {
       const jugador = this.buscar(s.idEstudiante);
       if (!jugador) { this.seleccion.set(null); return; }
 
-      // Tocarse a sí mismo cancela, en vez de dejar la selección pegada.
       if (p.jugador?.idEstudiante === s.idEstudiante) { this.seleccion.set(null); return; }
 
       if (s.origen === 'banco') {
@@ -603,7 +538,6 @@ export class AlineacionComponent implements OnInit {
     }
 
     if (s?.tipo === 'puesto') {
-      // Dos huecos vacíos seguidos: se queda con el último elegido.
       this.seleccion.set(p.jugador
         ? { tipo: 'jugador', idEstudiante: p.jugador.idEstudiante, origen: 'cancha' }
         : { tipo: 'puesto', idPosicion: p.idPosicion });
@@ -615,7 +549,6 @@ export class AlineacionComponent implements OnInit {
       : { tipo: 'puesto', idPosicion: p.idPosicion });
   }
 
-  /** Toque sobre alguien del banco. */
   tocarBanco(jugador: JugadorConvocado): void {
     const s = this.seleccion();
     this.mensaje.set(null);
@@ -640,14 +573,11 @@ export class AlineacionComponent implements OnInit {
       }
     }
 
-    // Sin nada elegido, tocar al suplente lo deja elegido a él: el próximo
-    // toque en la cancha decide dónde entra y a quién saca.
     this.seleccion.set(s?.tipo === 'jugador' && s.idEstudiante === jugador.idEstudiante
       ? null
       : { tipo: 'jugador', idEstudiante: jugador.idEstudiante, origen: 'banco' });
   }
 
-  /** Mete a alguien del banco en un hueco; si está ocupado, el que estaba sale. */
   private meterDesdeBanco(entra: JugadorConvocado, destino: Puesto): void {
     const puestos = new Map(this.enCanchaPorPuesto());
     const sale = puestos.get(destino.idPosicion) ?? null;
@@ -662,7 +592,6 @@ export class AlineacionComponent implements OnInit {
     this.banco.set(banco);
   }
 
-  /** Mueve a un titular a otro hueco; si está ocupado, los dos se intercambian. */
   private moverEnCancha(jugador: JugadorConvocado, destino: Puesto): void {
     const origen = this.puestoDe(jugador.idEstudiante);
     if (!origen) return;
@@ -698,8 +627,6 @@ export class AlineacionComponent implements OnInit {
   limpiarSeleccion(): void {
     this.seleccion.set(null);
   }
-
-  // --------------------------------------------------------------- guardado
 
   guardar(): void {
     if (this.guardando()) return;
@@ -764,8 +691,6 @@ export class AlineacionComponent implements OnInit {
       },
     });
   }
-
-  // ----------------------------------------------------------------- apoyos
 
   private buscar(idEstudiante: number): JugadorConvocado | null {
     return this.enCancha().find((t) => t.idEstudiante === idEstudiante)

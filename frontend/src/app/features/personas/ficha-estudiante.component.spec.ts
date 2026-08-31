@@ -5,7 +5,6 @@ import { PersonasService } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { PersonaConEstado } from './personas.models';
 
-/** R-08 (informe de evaluacion de calidad): flujo critico de alta de estudiante. */
 describe('FichaEstudianteComponent', () => {
   let fixture: ComponentFixture<FichaEstudianteComponent>;
   let component: FichaEstudianteComponent;

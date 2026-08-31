@@ -35,13 +35,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * R-07 (informe de evaluacion de calidad, D-09): MovimientoStockController
- * estaba en la lista de controladores con 0% de cobertura.
- */
 @ExtendWith(MockitoExtension.class)
 class MovimientoStockControllerTest {
-
     private MockMvc mockMvc;
 
     @Mock private MovimientoStockService movimientoStockService;

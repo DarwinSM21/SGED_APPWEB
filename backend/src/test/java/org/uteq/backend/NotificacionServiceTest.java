@@ -20,20 +20,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
-/**
- * RF-22: el efecto de notificacion no debe poder tumbar el flujo principal.
- *
- * <p>Estas pruebas existen por un defecto real: {@code notificarAsistencia} y
- * {@code notificarLesion} se invocan dentro de la transaccion que guarda la
- * asistencia o la lesion. Si la notificacion propagaba una excepcion, Spring
- * marcaba la transaccion como {@code rollback-only} y se perdia el registro
- * principal --- un estudiante marcaba asistencia, fallaba el aviso al
- * representante, y la asistencia desaparecia---. El javadoc del servicio ya
- * prometia que esto no debia ocurrir, pero nada lo verificaba.
- */
 @ExtendWith(MockitoExtension.class)
 class NotificacionServiceTest {
-
     @Mock private NotificacionRepository notificacionRepository;
     @Mock private RepresentanteEstudianteRepository vinculoRepository;
     @Mock private RepresentanteRepository representanteRepository;
@@ -69,8 +57,6 @@ class NotificacionServiceTest {
     @Test
     @DisplayName("notificarAsistencia no propaga si el estudiante no tiene persona asociada")
     void notificarAsistencia_no_propaga_dato_incompleto() {
-        // Estado invalido pero alcanzable: al construir el mensaje se lee
-        // persona.getNombre() y revienta con NullPointerException.
         Estudiante sinPersona = Estudiante.builder().idEstudiante(7L).build();
 
         assertThatCode(() -> notificacionService.notificarAsistencia(sinPersona, "TARDE"))

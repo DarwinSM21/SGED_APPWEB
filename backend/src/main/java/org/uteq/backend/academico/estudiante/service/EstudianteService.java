@@ -37,25 +37,20 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 public class EstudianteService {
-
     private final EstudianteRepository estudianteRepository;
     private final PersonaRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final PosicionRepository posicionRepository;
     private final RepresentanteEstudianteRepository representanteEstudianteRepository;
-    // MET-01 / R-06 (informe de evaluacion de calidad): antes EstudianteService
-    // inyectaba UsuarioRepository, RolRepository y PasswordEncoder directo
-    // (fan-out interno de 18, el mas alto del sistema) para la porcion de
-    // alta que cruza a seguridad -crear la cuenta y validar coherencia de
-    // rol-. Esa porcion vive ahora en EstudianteAccesoService.
+
     private final EstudianteAccesoService estudianteAccesoService;
 
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EstudiantePageResponse<EstudianteResponse> listar(Pageable pageable) {
         Page<Estudiante> page = estudianteRepository.findByActivoTrue(pageable);
-        // var content = page.getContent().stream().map(this::toResponse).toList();
+
         List<EstudianteResponse> content = page.getContent().stream()
         .map(this::toResponse)
         .collect(Collectors.toList());
@@ -82,18 +77,15 @@ public class EstudianteService {
     public EstudianteResponse crear(EstudianteRequest request) {
         estudianteAccesoService.validarCoherenciaConFichaEstudiante(request.idPersona());
 
-        // 1. Buscar si la persona YA tiene un registro como estudiante (activo o inactivo)
         Optional<Estudiante> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
 
         if (estudianteExistente.isPresent()) {
             Estudiante est = estudianteExistente.get();
-            
-            // Si ya está activo, lanzamos la excepción
+
             if (Boolean.TRUE.equals(est.getActivo())) {
                 throw new IllegalArgumentException("La persona seleccionada ya cuenta con una ficha de estudiante activa.");
             }
 
-            // Si estaba inactivo (activo = false), LO REACTIVAMOS Y ACTUALIZAMOS
             Categoria categoria = categoriaRepository.findById(request.idCategoria())
                     .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
 
@@ -107,13 +99,12 @@ public class EstudianteService {
             est.setPeso(request.peso());
             est.setAltura(request.altura());
             est.setPosicion(resolverPosicion(request.idPosicion()));
-            est.setActivo(true); // 👈 Re-activación del registro
+            est.setActivo(true);
 
             est = estudianteRepository.save(est);
             return toResponse(est);
         }
 
-        // 2. Si la persona NUNCA ha sido estudiante, procede a crear un nuevo registro desde cero
         if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {
             throw new IllegalArgumentException("El código de estudiante '" + request.codigoEstudiante() + "' ya se encuentra en uso.");
         }
@@ -154,7 +145,6 @@ public class EstudianteService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Estudiante no encontrado con id: " + id));
 
-        // VALIDACIÓN 3: Verificar que si cambia de código, este no le pertenezca a OTRO estudiante
         if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {
             throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
         }
@@ -164,7 +154,6 @@ public class EstudianteService {
         reasignarEstadoGeneralSiCambio(estudiante, request.idEstadoGeneral());
         reasignarPosicionSiCambio(estudiante, request.idPosicion());
 
-        // Actualizar datos propios del estudiante
         estudiante.setCodigoEstudiante(request.codigoEstudiante());
         if (request.fechaIngreso() != null) {
             estudiante.setFechaIngreso(request.fechaIngreso());
@@ -177,13 +166,6 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
-    /**
-     * Actualizacion estrecha de solo la posicion nominal, para que ENTRENADOR
-     * pueda asignarla/cambiarla/quitarla desde evaluacion diaria sin abrir la
-     * puerta a que edite categoria, codigo o fecha de ingreso -eso sigue
-     * siendo cosa de ADMINISTRADOR/RECEPCIONISTA via editar()-. Es la misma
-     * posicion que ve y edita el admin en Personas, no una copia aparte.
-     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -196,11 +178,6 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
-    // R-09 (informe de evaluacion de calidad): las tres reasignaciones de
-    // editar() seguian el mismo patron -si el id pedido difiere del actual,
-    // buscar la nueva fila y reasignarla- y sumaban su propia complejidad al
-    // metodo. Extraidas para que editar() quede lineal: valida, reasigna lo
-    // que cambio, guarda.
     private void reasignarPersonaSiCambio(Estudiante estudiante, Long idPersonaNueva) {
         if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {
             return;
@@ -213,28 +190,6 @@ public class EstudianteService {
         estudiante.setPersona(nuevaPersona);
     }
 
-    /**
-     * La edad del estudiante tiene que caer dentro del rango de su categoria.
-     *
-     * <p>Sin esta comprobacion se podia matricular a alguien de 18 anios en la
-     * SUB-12 y el sistema respondia 201 sin una sola advertencia. No es un
-     * detalle cosmetico: la categoria decide en que sesiones aparece para
-     * pasar lista, en que formacion entra y en que informe sale, de modo que
-     * un error de dedo mete a un chico a entrenar con un grupo que no es el
-     * suyo y no se descubre hasta verlo en la cancha.
-     *
-     * <p>Se comprueba solo al ASIGNAR o CAMBIAR la categoria, nunca en toda
-     * edicion: un estudiante que cumple anios a mitad de temporada se sale del
-     * rango sin que nadie haya hecho nada mal, y si la regla corriera siempre
-     * quedaria imposible corregirle el peso o el telefono hasta cambiarlo de
-     * grupo. Sacarlo del rango es una decision de la escuela, no un efecto
-     * secundario de editar su ficha.
-     *
-     * <p>Sin fecha de nacimiento no se valida nada: es obligatoria desde
-     * PersonaRequest, pero los datos anteriores a esa regla podrian no
-     * tenerla, y rechazar por un dato que falta seria bloquear a quien no
-     * tiene la culpa.
-     */
     private void validarEdadEnCategoria(Persona persona, Categoria categoria) {
         LocalDate nacimiento = persona.getFechaNacimiento();
         if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {
@@ -269,11 +224,6 @@ public class EstudianteService {
         estudiante.setEstadoGeneral(estadoGeneral);
     }
 
-    /**
-     * A diferencia de categoria/estadoGeneral, la posicion es opcional y
-     * puede pasar de asignada a sin asignar (idPosicionNueva null): no basta
-     * con "si cambio, buscar la nueva", tambien hay que poder desasignarla.
-     */
     private void reasignarPosicionSiCambio(Estudiante estudiante, Long idPosicionNueva) {
         Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
         if (java.util.Objects.equals(actual, idPosicionNueva)) {
@@ -316,13 +266,11 @@ public class EstudianteService {
         estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
     }
 
-    /** Sugerencia de siguiente codigo_estudiante para un anio; no reserva nada, solo propone. */
     @Transactional(readOnly = true)
     public String generarSiguienteCodigo(int anio) {
         return estudianteRepository.generarSiguienteCodigo(anio);
     }
 
-    /** "Nombre Apellido - telefono" del representante activo del estudiante, o null si no tiene. */
     @Transactional(readOnly = true)
     public String contactoDeEmergencia(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
@@ -331,13 +279,6 @@ public class EstudianteService {
         return representanteEstudianteRepository.contactoDe(idEstudiante);
     }
 
-    /**
-     * Habilita el acceso propio de un estudiante que ya existe en el
-     * sistema: crea un Usuario nuevo (rol ESTUDIANTE) sobre la Persona que
-     * el estudiante YA tiene, sin duplicarla. Es distinto del alta de
-     * Representante, que si crea una Persona nueva porque el tutor no
-     * estaba antes en el sistema.
-     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'habilitó acceso al Estudiante #' + #result.idEstudiante")
     @Transactional
@@ -356,7 +297,6 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
-    // Mapeador privado Entity -> DTO
     private EstudianteResponse toResponse(Estudiante e) {
         return new EstudianteResponse(
                 e.getIdEstudiante(),
@@ -375,7 +315,7 @@ public class EstudianteService {
                 e.getPosicion() != null ? e.getPosicion().getNombre() : null,
                 e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,
                 e.getActivo(),
-                e.getCreatedAt() // 👈 Pasa directo e.getCreatedAt()
+                e.getCreatedAt()
         );
     }
 }

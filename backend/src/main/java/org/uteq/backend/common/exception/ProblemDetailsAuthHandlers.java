@@ -15,15 +15,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 
-/**
- * Los errores que ocurren ANTES de llegar a un controller (filtros de
- * Spring Security) no pasan por @RestControllerAdvice. Estos beans
- * garantizan que 401 y 403 también respondan ProblemDetails RFC 7807,
- * cumpliendo el "100 % de errores" del criterio C1.
- */
 @Configuration
 public class ProblemDetailsAuthHandlers {
-
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Bean

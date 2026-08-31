@@ -23,7 +23,6 @@ interface PaginaRepresentantes {
 
 @Injectable({ providedIn: 'root' })
 export class ConsentimientosService {
-
   private readonly http = inject(HttpClient);
 
   estudiantes() {
@@ -36,13 +35,6 @@ export class ConsentimientosService {
     );
   }
 
-  /**
-   * Se traen todos los representantes con sus representados y el vínculo se
-   * cruza en el cliente. Es el mismo criterio que ya usa la ficha del
-   * estudiante: no existe un endpoint que devuelva "los representantes de
-   * este estudiante", y agregarlo por una pantalla más sería duplicar un
-   * dato que ya viaja completo.
-   */
   representantes() {
     return this.http.get<PaginaRepresentantes>('/api/representantes?size=500').pipe(
       map((p) => p.content),

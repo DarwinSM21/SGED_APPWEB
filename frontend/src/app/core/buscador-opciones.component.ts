@@ -7,30 +7,12 @@ export interface OpcionBuscable {
   subtitulo?: string;
 }
 
-/**
- * Quita tildes y pasa a minusculas. Sin esto, buscar "perez" no encuentra
- * "Pérez", que es exactamente lo que va a escribir quien esta en el mostrador
- * con el papel en la mano.
- */
 function normalizar(texto: string): string {
   return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 }
 
-/** Cuantas opciones se pintan a la vez; el resto se alcanza afinando la busqueda. */
 const MAXIMO_VISIBLE = 50;
 
-/**
- * Campo de busqueda con lista desplegable, para elegir de entre muchos.
- *
- * Reemplaza al `select` nativo cuando la lista es larga: con 25 estudiantes
- * -y mas cuando crezca la escuela- un desplegable obliga a recorrer todo el
- * listado con la rueda del raton buscando un apellido, mientras que aqui se
- * escriben tres letras y aparece.
- *
- * Sigue el patron combobox de ARIA: el input anuncia la lista que controla y
- * cual opcion esta activa, asi que tambien funciona con teclado y con lector
- * de pantalla, no solo con el raton.
- */
 @Component({
   selector: 'app-buscador-opciones',
   standalone: true,
@@ -102,7 +84,6 @@ const MAXIMO_VISIBLE = 50;
   styles: [`
     .buscador { position: relative; }
     .field { margin-bottom: 0; }
-
     .lista {
       position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 30;
       margin: 0; padding: .3rem; list-style: none;
@@ -112,7 +93,6 @@ const MAXIMO_VISIBLE = 50;
       border-radius: var(--radius-sm);
       box-shadow: var(--shadow-md);
     }
-
     .lista__opcion {
       display: flex; align-items: baseline; gap: .5rem;
       padding: .5rem .6rem; border-radius: 6px; cursor: pointer;
@@ -120,32 +100,22 @@ const MAXIMO_VISIBLE = 50;
     .lista__opcion--activa { background: var(--color-primary-50); }
     .lista__titulo { font-size: .9rem; color: var(--color-text); }
     .lista__subtitulo { font-size: .76rem; color: var(--color-text-muted); margin-left: auto; }
-
     .lista__vacio, .lista__pie {
       padding: .55rem .6rem; font-size: .8rem; color: var(--color-text-muted);
     }
     .lista__pie { border-top: 1px solid var(--color-border-light); margin-top: .2rem; }
 
-    /* En oscuro el paso 50 de la rampa es casi blanco y taparia el texto:
-       la fila activa se marca con un tono del propio tema. */
     :host-context([data-theme="oscuro"]) .lista__opcion--activa { background: #312e81; }
   `],
 })
 export class BuscadorOpcionesComponent {
-
   readonly opciones = input.required<OpcionBuscable[]>();
   readonly etiqueta = input('Buscar');
   readonly marcador = input('Escribe para buscar…');
   readonly cargando = input(false);
-  /**
-   * Lo ya elegido, para mostrarlo cuando el campo esta cerrado. Se recibe
-   * como texto y no como OpcionBuscable porque el padre suele guardar solo
-   * el id y resolver el nombre por su cuenta.
-   */
   readonly textoSeleccionado = input<string | null>(null);
 
   readonly seleccionada = output<OpcionBuscable>();
-  /** El boton de limpiar: el padre decide que significa volver a "nada". */
   readonly limpiada = output<void>();
 
   private readonly campo = viewChild<ElementRef<HTMLInputElement>>('campo');
@@ -154,7 +124,6 @@ export class BuscadorOpcionesComponent {
   readonly abierto = signal(false);
   readonly activa = signal(0);
 
-  /** Ids unicos por instancia: puede haber dos buscadores en la misma pantalla. */
   private readonly sufijo = Math.random().toString(36).slice(2, 8);
   readonly idInput = 'buscador-' + this.sufijo;
   readonly idLista = 'lista-' + this.sufijo;
@@ -182,8 +151,7 @@ export class BuscadorOpcionesComponent {
   alEscribir(evento: Event): void {
     this.texto.set((evento.target as HTMLInputElement).value);
     this.abierto.set(true);
-    // Vuelve al principio: dejar marcada la fila 5 de la busqueda anterior
-    // haria que Enter eligiera a alguien que ya no esta en pantalla.
+
     this.activa.set(0);
   }
 
@@ -205,7 +173,6 @@ export class BuscadorOpcionesComponent {
     if (evento.key === 'Enter') {
       const elegida = this.filtradas()[this.activa()];
       if (this.abierto() && elegida) {
-        // Sin esto, Enter dentro de un formulario lo envia.
         evento.preventDefault();
         this.elegir(elegida);
       }
@@ -225,7 +192,6 @@ export class BuscadorOpcionesComponent {
     this.campo()?.nativeElement.focus();
   }
 
-  /** Cierra solo si el foco salio del componente, no al pasar del input a la lista. */
   alSalir(evento: FocusEvent): void {
     const destino = evento.relatedTarget as Node | null;
     const raiz = (evento.currentTarget as HTMLElement);

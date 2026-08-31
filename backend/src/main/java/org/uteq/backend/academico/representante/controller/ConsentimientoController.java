@@ -12,18 +12,11 @@ import org.uteq.backend.academico.representante.service.ConsentimientoService;
 
 import java.util.List;
 
-/**
- * Administra el consentimiento del representante (hallazgo H-04 de
- * ETHICS.md). Solo ADMINISTRADOR: en esta iteracion el representante no
- * otorga su propio consentimiento desde la app, lo registra un
- * administrador.
- */
 @RestController
 @RequestMapping("/api/consentimientos")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMINISTRADOR')")
 public class ConsentimientoController {
-
     private final ConsentimientoService consentimientoService;
 
     @PostMapping

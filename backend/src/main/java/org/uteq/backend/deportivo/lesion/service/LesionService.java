@@ -17,18 +17,9 @@ import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * Registro de lesiones. Las carga el entrenador desde el mismo modulo de
- * evaluacion diaria, no la recepcionista.
- *
- * <p>Una lesion activa tiene tres efectos en el sistema: excluye al jugador de
- * las sugerencias de plantilla, distingue su ausencia de una falta sin motivo,
- * y dispara la notificacion al representante.
- */
 @Service
 @RequiredArgsConstructor
 public class LesionService {
-
     private final LesionRepository lesionRepository;
     private final EstudianteRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
@@ -39,7 +30,6 @@ public class LesionService {
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
                             LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
-
         var estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el estudiante " + idEstudiante));
@@ -47,9 +37,6 @@ public class LesionService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el entrenador " + idEntrenador));
 
-        // La base tiene un indice unico parcial que impide dos lesiones
-        // activas del mismo estudiante. Se comprueba antes para devolver un
-        // mensaje util en vez de un error de restriccion.
         lesionRepository.buscarActivaPorEstudiante(idEstudiante).ifPresent(l -> {
             throw new IllegalArgumentException(
                     "El estudiante ya tiene una lesion activa registrada el "
@@ -73,7 +60,6 @@ public class LesionService {
         return lesion;
     }
 
-    /** Cierra una lesion: el jugador vuelve a entrar en las plantillas. */
     @Auditado(accion = "EDITAR", entidad = "Lesion", idSpel = "#result.idLesion",
             descripcionSpel = "'dio de alta la lesión #' + #result.idLesion")
     @Transactional

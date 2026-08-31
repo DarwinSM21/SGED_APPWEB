@@ -15,23 +15,10 @@ import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.NominaResponse;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.PasarListaRequest;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
 
-/**
- * Lista de asistencia de una sesion, para el entrenador.
- *
- * <p>Complementa el QR, no lo reemplaza: el QR sigue siendo la via normal
- * -y la que deja el mejor dato, con hora real de llegada-, pero deja de ser
- * la unica, que era el problema.
- *
- * <p>El @Transactional va aqui y no solo en el servicio: con
- * open-in-view: false, cualquier relacion LAZY que se toque al serializar la
- * respuesta explota fuera de la transaccion. Ya paso en LesionController y en
- * SesionEntrenamientoController.
- */
 @RestController
 @RequestMapping("/api/asistencias")
 @RequiredArgsConstructor
 public class AsistenciaSesionController {
-
     private final AsistenciaService asistenciaService;
 
     @GetMapping("/sesion/{idSesion}")

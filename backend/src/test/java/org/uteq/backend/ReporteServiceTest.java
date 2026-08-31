@@ -35,7 +35,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReporteServiceTest {
-
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private PagoRepository pagoRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
@@ -46,9 +45,6 @@ class ReporteServiceTest {
 
     @BeforeEach
     void setUp() {
-        // ReportePdfService no tiene dependencias: se usa la instancia real
-        // en vez de mockearla, asi la prueba tambien valida que el PDF
-        // generado a partir de las filas armadas es un PDF valido.
         servicio = new ReporteService(new ReportePdfService(), estudianteRepository,
                 pagoRepository, asistenciaRepository, lesionRepository, evaluacionEstudianteRepository);
     }

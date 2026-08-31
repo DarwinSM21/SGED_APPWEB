@@ -1,4 +1,3 @@
-/** Espejan InformeDtos del backend (org.uteq.backend.academico.representante.dto). */
 
 export interface EstudianteResumen {
   idEstudiante: number;
@@ -26,11 +25,9 @@ export interface InformeEstudiante {
   categoria: string;
   promediosPorCriterio: PromedioCriterio[];
   historialLesiones: LesionResumen[];
-  /** Ultimos 30 dias; null si su categoria no tuvo sesiones programadas en ese rango. */
   porcentajeAsistencia: number | null;
 }
 
-/** Espeja NotificacionDtos.NotificacionResponse del backend (RF-22). */
 export interface Notificacion {
   idNotificacion: number;
   idEstudiante: number;
@@ -41,12 +38,6 @@ export interface Notificacion {
   creadaEn: string;
 }
 
-/**
- * El informe puesto en palabras, para quien no lee numeros.
- *
- * `disponible` en false no es un error: el informe se muestra igual con sus
- * numeros, solo falta el texto.
- */
 export interface ComentarioInforme {
   comentario: string | null;
   disponible: boolean;

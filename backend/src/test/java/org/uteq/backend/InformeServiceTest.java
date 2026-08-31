@@ -41,18 +41,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
-/**
- * El caso que importa mas aqui es informeDe_lanza404_cuandoEstudianteNoEsSuyo:
- * prueba directamente que un representante no puede leer el informe de un
- * estudiante que no es suyo (IDOR/BOLA, OWASP A01) simplemente cambiando el
- * id en la URL. La autorizacion vertical (@PreAuthorize("hasRole('REPRESENTANTE')"))
- * no prueba esto -standaloneSetup ni siquiera evalua esa anotacion-, asi que
- * la unica prueba real de la autorizacion horizontal vive aqui, contra el
- * servicio directamente.
- */
 @ExtendWith(MockitoExtension.class)
 class InformeServiceTest {
-
     @Mock private RepresentanteRepository representanteRepository;
     @Mock private RepresentanteEstudianteRepository vinculoRepository;
     @Mock private EstudianteRepository estudianteRepository;
@@ -121,8 +111,7 @@ class InformeServiceTest {
     void informeDe_lanza404_cuandoVinculoEstaDesactivado() {
         Representante r = representante();
         when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        // existsBy...AndActivoTrue ya filtra por activo=true a nivel de query,
-        // asi que un vinculo desactivado simplemente no cuenta como existente.
+
         when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
                 .thenReturn(false);
 
@@ -197,10 +186,6 @@ class InformeServiceTest {
         assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
     }
 
-    // ------------------------------------------------------------------
-    // Comentario de IA sobre el informe
-    // ------------------------------------------------------------------
-
     @Test
     @DisplayName("pedir el comentario de un estudiante ajeno da 404 y NO llega al modelo")
     void comentarioDe_lanza404_cuandoEstudianteNoEsSuyo() {
@@ -212,9 +197,6 @@ class InformeServiceTest {
         assertThatThrownBy(() -> informeService.comentarioDe("ana.vera@sged.test", 999L))
                 .isInstanceOf(RecursoNoEncontradoException.class);
 
-        // Lo que esta prueba realmente cuida: que un id ajeno no solo no
-        // devuelva datos, sino que ni siquiera salga del sistema hacia un
-        // proveedor externo.
         verifyNoInteractions(generadorFeedback);
     }
 
@@ -272,8 +254,6 @@ class InformeServiceTest {
         verify(generadorFeedback).generarComentarioJugador(captor.capture());
         PerfilJugadorAnonimo enviado = captor.getValue();
 
-        // El apellido del estudiante de prueba es "Hijo": no debe aparecer por
-        // ningun lado en lo que sale hacia el proveedor.
         assertThat(enviado.referencia()).doesNotContain("Juan").doesNotContain("Hijo");
         assertThat(enviado.puntajes()).containsEntry("Tecnica", 7.5);
         assertThat(enviado.asistenciasUltimoMes()).isEqualTo(12);

@@ -12,8 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public interface LesionRepository extends JpaRepository<Lesion, Long>, JpaSpecificationExecutor<Lesion> {
-
-    /** Lesion activa (sin alta) de un estudiante. La BD garantiza que hay a lo sumo una. */
     @Query("""
            SELECT l FROM Lesion l
            WHERE l.estudiante.idEstudiante = :idEstudiante
@@ -21,16 +19,9 @@ public interface LesionRepository extends JpaRepository<Lesion, Long>, JpaSpecif
            """)
     Optional<Lesion> buscarActivaPorEstudiante(@Param("idEstudiante") Long idEstudiante);
 
-    /** Identificadores de estudiantes con lesion activa: se excluyen de las plantillas. */
     @Query("SELECT l.estudiante.idEstudiante FROM Lesion l WHERE l.fechaAlta IS NULL")
     List<Long> idsEstudiantesLesionados();
 
-    /**
-     * Igual que idsEstudiantesLesionados pero trae tambien el id de la
-     * lesion: la pantalla de evaluacion diaria necesita ese id para poder
-     * dar de alta sin una consulta aparte por jugador. Cada fila es
-     * [idEstudiante, idLesion].
-     */
     @Query("SELECT l.estudiante.idEstudiante, l.idLesion FROM Lesion l WHERE l.fechaAlta IS NULL")
     List<Object[]> idsYLesionActivaPorEstudiante();
 

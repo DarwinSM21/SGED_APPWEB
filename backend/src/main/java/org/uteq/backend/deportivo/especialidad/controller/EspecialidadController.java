@@ -14,19 +14,10 @@ import org.uteq.backend.deportivo.especialidad.service.EspecialidadService;
 
 import java.util.List;
 
-/**
- * CRUD del catalogo de especialidades de Entrenador. La lectura de
- * activas la necesita el formulario de alta/edicion de entrenador
- * (ADMINISTRADOR, ENTRENADOR, RECEPCIONISTA -- mismos roles que
- * /api/categorias/activas); la escritura altera un catalogo del que
- * depende Entrenador por clave foranea, y queda restringida a
- * ADMINISTRADOR.
- */
 @RestController
 @RequestMapping("/api/especialidades")
 @RequiredArgsConstructor
 public class EspecialidadController {
-
     private final EspecialidadService especialidadService;
 
     @GetMapping

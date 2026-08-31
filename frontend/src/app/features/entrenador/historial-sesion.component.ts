@@ -24,13 +24,6 @@ const COLOR_ESTADO: Record<string, string> = {
   SIN_REGISTRO: 'info',
 };
 
-/**
- * Qué pasó en un entrenamiento: quién estuvo y quién no.
- *
- * <p>No muestra formación. Una alineación es la decisión de con quién se sale
- * a jugar un partido y vive en su propio módulo; lo que un entrenamiento deja
- * registrado es asistencia y evaluación.
- */
 @Component({
   selector: 'app-historial-sesion',
   standalone: true,
@@ -47,7 +40,6 @@ const COLOR_ESTADO: Record<string, string> = {
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (historial(); as h) {
-
         <header class="cabecera">
           <div>
             <h1>{{ h.categoria }} · {{ h.fecha }}</h1>
@@ -160,12 +152,10 @@ const COLOR_ESTADO: Record<string, string> = {
   styles: [`
     .pantalla { max-width: 780px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
     .volver { margin-bottom: 1rem; }
-
     .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
                 gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
     h1 { font-size: 1.15rem; }
     .subt { margin-top: .3rem; color: var(--color-text-muted); font-size: .85rem; }
-
     .resumen { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .dato { flex: 1 1 82px; padding: .65rem .5rem; text-align: center;
             background: var(--color-surface); border: 1px solid var(--color-border-light);
@@ -176,21 +166,16 @@ const COLOR_ESTADO: Record<string, string> = {
              font-variant-numeric: tabular-nums; line-height: 1.15; }
     .rotulo { display: block; font-size: .7rem; color: var(--color-text-muted);
               text-transform: uppercase; letter-spacing: .04em; }
-
     .filtros { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .8rem; }
     .chip { padding: .3rem .7rem; font-size: .78rem; border-radius: 999px; cursor: pointer;
             border: 1px solid var(--color-border); background: var(--color-surface);
             color: var(--color-text-muted); }
     .chip--activo { border-color: var(--color-primary-600); color: var(--color-primary-700);
                     background: var(--color-primary-50); }
-
     .buscar { width: 100%; padding: .45rem .65rem; font-size: .85rem; margin-bottom: .7rem;
               border: 1px solid var(--color-border); border-radius: var(--radius-sm);
               background: var(--color-surface); color: var(--color-text); }
-
     .lista { padding: .8rem 1rem; }
-    /* Una categoría con cientos de inscritos daba una página de 32.000 px:
-       el resumen de arriba quedaba fuera de vista al primer scroll. */
     .lista-scroll { max-height: 28rem; overflow-y: auto; overscroll-behavior: contain; }
     .recorte { margin: .6rem 0 0; }
     .fila { display: flex; align-items: center; gap: .7rem; padding: .55rem 0;
@@ -209,7 +194,6 @@ const COLOR_ESTADO: Record<string, string> = {
   `],
 })
 export class HistorialSesionComponent implements OnInit {
-
   private readonly ruta = inject(ActivatedRoute);
   private readonly servicio = inject(SesionesService);
 
@@ -220,9 +204,7 @@ export class HistorialSesionComponent implements OnInit {
   readonly filtro = signal<'TODOS' | 'ENTRENARON' | 'FALTARON' | 'SIN_REGISTRO'>('TODOS');
   readonly busqueda = signal('');
 
-  /** A partir de aquí buscar es más rápido que recorrer con el dedo. */
   readonly UMBRAL_BUSCADOR = 25;
-  /** Cuántas filas se dibujan de una. El resto sale por búsqueda o filtro. */
   private readonly TOPE_FILAS = 80;
 
   readonly filtros = [
@@ -232,7 +214,6 @@ export class HistorialSesionComponent implements OnInit {
     { valor: 'SIN_REGISTRO' as const, etiqueta: 'Sin registro' },
   ];
 
-  /** Lo que dibuja la pantalla: recortado, para no pintar cientos de filas. */
   readonly visibles = computed<FilaAsistenciaHistorial[]>(
     () => this.filas().slice(0, this.TOPE_FILAS));
 

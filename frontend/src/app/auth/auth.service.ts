@@ -8,11 +8,6 @@ export interface LoginRequest {
   password: string;
 }
 
-/**
- * cedula, correo y fechaNacimiento son obligatorios: son columnas NOT NULL de
- * seguridad.personas desde la reestructuracion. Mientras el formulario no los
- * enviaba, el alta fallaba siempre.
- */
 export interface RegisterRequest {
   nombre: string;
   apellido: string;
@@ -21,7 +16,6 @@ export interface RegisterRequest {
   fechaNacimiento: string;
   username: string;
   password: string;
-  /** Opcional: en blanco crea un USER, como siempre. Solo ADMINISTRADOR puede pedir otro. */
   rol?: string;
 }
 
@@ -29,18 +23,10 @@ export interface AuthResponse {
   username: string;
   nombre: string;
   rol: string;
-  /** Solo vienen poblados en la respuesta de register(); login()/getProfile() no los mandan. */
   idPersona?: number;
   idUsuario?: number;
 }
 
-/**
- * Servicio de autenticacion.
- * El access token y el refresh token viajan en cookies HttpOnly + Secure +
- * SameSite=Strict que establece el backend (Bloque A.1): este servicio
- * nunca los lee ni los guarda, solo mantiene en memoria los datos de
- * presentacion del usuario autenticado.
- */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly apiUrl = '/api/auth';

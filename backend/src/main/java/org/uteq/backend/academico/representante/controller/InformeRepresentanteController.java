@@ -13,26 +13,11 @@ import org.uteq.backend.academico.representante.service.NotificacionService;
 
 import java.util.List;
 
-/**
- * Lo que ve un representante autenticado de sus propios representados.
- * La identidad sale siempre de la sesion autenticada
- * (SecurityContextHolder, mismo patron que SesionEntrenamientoController.hoy()
- * y AuthController.me()), nunca de un parametro que el cliente pudiera
- * manipular para ver a un estudiante ajeno.
- *
- * <p>{@code @Transactional(readOnly = true)} va tambien aqui, no solo en
- * el servicio: open-in-view esta deshabilitado (application.yml) y la
- * respuesta navega relaciones LAZY (Persona, Categoria) al construir el
- * DTO. Sin una transaccion activa en ese momento, esa navegacion lanza
- * LazyInitializationException -mismo problema ya resuelto en
- * LesionController y SesionEntrenamientoController-.
- */
 @RestController
 @RequestMapping("/api/representante")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('REPRESENTANTE')")
 public class InformeRepresentanteController {
-
     private final InformeService informeService;
     private final NotificacionService notificacionService;
 
@@ -48,18 +33,12 @@ public class InformeRepresentanteController {
         return ResponseEntity.ok(informeService.informeDe(usernameAutenticado(), idEstudiante));
     }
 
-    /**
-     * El informe puesto en palabras. Va en POST y no en GET porque no es una
-     * lectura barata: cada llamada consume cuota de un servicio externo. Se
-     * pide cuando el representante toca el boton, no al abrir la pantalla.
-     */
     @PostMapping("/estudiantes/{idEstudiante}/informe/comentario")
     @Transactional(readOnly = true)
     public ResponseEntity<ComentarioInformeResponse> comentario(@PathVariable Long idEstudiante) {
         return ResponseEntity.ok(informeService.comentarioDe(usernameAutenticado(), idEstudiante));
     }
 
-    /** RF-22: notificaciones en-app, mas recientes primero. */
     @GetMapping("/notificaciones")
     @Transactional(readOnly = true)
     public ResponseEntity<List<NotificacionResponse>> misNotificaciones() {

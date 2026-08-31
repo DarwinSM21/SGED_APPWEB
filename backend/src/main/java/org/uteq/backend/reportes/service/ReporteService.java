@@ -24,30 +24,9 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Arma las filas de cada reporte reutilizando los repositorios de negocio
- * ya existentes (sin duplicar logica de consulta); ReportePdfService solo
- * se encarga del formato del PDF.
- */
 @Service
 @RequiredArgsConstructor
 public class ReporteService {
-
-    /**
-     * Tope de filas por reporte.
-     *
-     * <p>Los cuatro reportes hacian {@code findAll(spec, sort)} sin limite. Con
-     * los filtros vacios eso significa traerse la tabla entera: en una prueba
-     * de carga con un millon de asistencias, el backend cayo con
-     * OutOfMemoryError tras 15 segundos, y no solo fallaba esa peticion —el
-     * proceso entero se quedaba sin heap, afectando a todos los usuarios
-     * conectados.
-     *
-     * <p>El tope no es una limitacion tecnica disfrazada: un PDF de un millon
-     * de filas no es un documento que nadie pueda leer. Si el reporte se corta,
-     * lo que hace falta es afinar los filtros, y eso se le dice al usuario en
-     * el propio documento en vez de dejarle creer que lo tiene todo.
-     */
     private static final int TOPE_FILAS = 5000;
 
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -125,13 +104,6 @@ public class ReporteService {
                 List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), recortar(filas));
     }
 
-    /**
-     * Predicados de filtro opcional para los reportes, construidos con Criteria API en vez
-     * de "(:x IS NULL OR campo = :x)" en JPQL: ese patron dispara "could not determine data
-     * type of parameter" en Postgres cuando el parametro solo aparece en un IS NULL sin otro
-     * contexto tipado (Hibernate 6 + pgjdbc). Con Specification, un filtro ausente simplemente
-     * no agrega predicado -- nunca se envia un parametro ambiguo.
-     */
     private <T> Specification<T> igualA(String ruta, Object valor) {
         if (valor == null) return Specification.<T>where(null);
         return (root, query, cb) -> cb.equal(this.<T, Object>ruta(root, ruta), valor);
@@ -211,12 +183,6 @@ public class ReporteService {
         BigDecimal suma = detalles.stream().map(DetalleEvaluacion::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);
         return suma.divide(BigDecimal.valueOf(detalles.size()), 2, RoundingMode.HALF_UP).toPlainString();
     }
-    /**
-     * Se pide una fila de mas que el tope: si vuelve, es que habia mas datos de
-     * los que caben y el reporte esta incompleto. Contarlas todas con un
-     * {@code count} aparte seria una segunda consulta sobre la misma tabla
-     * grande para averiguar algo que esta lectura ya sabe.
-     */
     private boolean seQuedoCorto(List<List<String>> filas) {
         return filas.size() > TOPE_FILAS;
     }
@@ -225,7 +191,6 @@ public class ReporteService {
         return seQuedoCorto(filas) ? filas.subList(0, TOPE_FILAS) : filas;
     }
 
-    /** El aviso va en el titulo para que viaje impreso dentro del PDF. */
     private String titulo(String base, List<List<String>> filas) {
         return seQuedoCorto(filas)
                 ? base + " (primeras " + TOPE_FILAS + " filas — afine los filtros para ver el resto)"

@@ -1,4 +1,3 @@
-/** Espejan los DTOs del backend (seguridad.persona / seguridad.usuario / academico.estudiante / deportivo.entrenador / academico.representante). */
 
 export interface PersonaRequest {
   nombre: string;
@@ -30,7 +29,6 @@ export interface UsuarioRequest {
   idPersona: number;
   idEstadoGeneral: number;
   username: string;
-  /** En blanco/null al editar significa "no cambiar la contraseña actual". Obligatoria al crear. */
   password: string | null;
   rol: string | null;
 }
@@ -140,12 +138,10 @@ export interface EstudianteVinculado {
   idEstudiante: number;
   nombreCompleto: string;
   categoria: string;
-  /** Parentesco de este vínculo puntual, no del representante: puede ser madre de uno y tía de otro. */
   relacion: string | null;
   contactoPrincipal: boolean;
 }
 
-/** Cuerpo de POST /api/representantes/{id}/estudiantes/{idEstudiante}. */
 export interface VinculoRequest {
   relacion: string | null;
   contactoPrincipal: boolean;
@@ -167,7 +163,6 @@ export interface RepresentanteResponse {
   representados: EstudianteVinculado[];
 }
 
-/** Estado derivado de una Persona, cruzando las listas en el cliente (ver personas.service.ts). */
 export interface PersonaConEstado {
   persona: PersonaResponse;
   usuario: UsuarioResponse | null;

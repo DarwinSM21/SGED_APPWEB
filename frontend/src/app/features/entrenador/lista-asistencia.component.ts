@@ -8,7 +8,6 @@ import { AsistenciaSesionService } from './asistencia.service';
 import { EstadoAsistencia, Nomina } from './asistencia.models';
 import { horaCorta } from '../../core/formato-texto';
 
-/** Un estado por columna, en el orden en que se usan de verdad. */
 const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; corta: string }[] = [
   { valor: 'PRESENTE', etiqueta: 'Presente', plural: 'presentes', corta: 'P' },
   { valor: 'TARDE', etiqueta: 'Tarde', plural: 'tarde', corta: 'T' },
@@ -28,7 +27,6 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (nomina(); as n) {
-
         <a class="btn btn--ghost volver" [routerLink]="['/entrenador/sesion', n.idSesion]">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           Volver a la evaluación
@@ -133,16 +131,13 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
     .conteo { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
     .conteo .de { font-size: 1rem; font-weight: 500; color: var(--color-text-faint); }
     .conteo-etiqueta { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-top: .2rem; }
-
     .atajos { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-bottom: 1rem; }
     .atajos-titulo { font-size: .78rem; color: var(--color-text-muted); margin-right: .2rem; }
     .btn--sm { padding: .3rem .6rem; font-size: .76rem; }
-
     .nomina { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .5rem; }
     .fila { display: grid; grid-template-columns: 1fr auto; gap: .6rem; align-items: center;
             padding: .7rem .85rem; border: 1px solid var(--color-border); border-radius: 10px;
             background: var(--color-surface); }
-    /* Una barra al canto senala de un vistazo a quien falta, sin depender del color. */
     .fila--sin-marcar { border-left: 3px solid var(--color-warning); }
     .quien { display: flex; align-items: center; gap: .6rem; min-width: 0; }
     .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
@@ -151,7 +146,6 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
     .nombre { display: block; font-weight: 500; font-size: .92rem; }
     .origen { font-size: .72rem; color: var(--color-text-faint); }
     .origen--pendiente { color: var(--color-warning-text); }
-
     .opciones { display: flex; gap: 2px; }
     .opcion { border: 1px solid var(--color-border); background: var(--color-surface);
               color: var(--color-text-muted); padding: .35rem .6rem; font-size: .78rem;
@@ -166,18 +160,14 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
     .opcion--activa.opcion--ausente { background: var(--color-danger-bg); color: var(--color-danger-text); border-color: var(--color-danger); }
     .opcion--activa.opcion--justificado { background: var(--color-info-bg); color: var(--color-info-text); border-color: var(--color-info); }
     .opcion-corta { display: none; }
-
     .nota { grid-column: 1 / -1; width: 100%; padding: .4rem .6rem; font-size: .82rem;
             border: 1px solid var(--color-border); border-radius: 7px;
             background: var(--color-surface); color: var(--color-text); }
-
     .pie { position: sticky; bottom: 0; display: flex; justify-content: flex-end; align-items: center;
            gap: .75rem; padding: .9rem 0 .2rem; margin-top: 1rem;
            background: linear-gradient(to top, var(--color-bg) 65%, transparent); }
     .ok { font-size: .82rem; color: var(--color-success-text); }
 
-    /* En el celular, que es donde se pasa lista de verdad, las cuatro etiquetas
-       no caben junto al nombre: se reducen a su inicial y la fila respira. */
     @media (max-width: 560px) {
       .fila { grid-template-columns: 1fr; }
       .opciones { justify-content: stretch; }
@@ -188,7 +178,6 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
   `],
 })
 export class ListaAsistenciaComponent {
-
   private readonly ruta = inject(ActivatedRoute);
   private readonly servicio = inject(AsistenciaSesionService);
 
@@ -200,7 +189,6 @@ export class ListaAsistenciaComponent {
   readonly mensaje = signal<string | null>(null);
   readonly nomina = signal<Nomina | null>(null);
 
-  /** Lo que el entrenador tiene puesto ahora, contra lo que vino del servidor. */
   readonly marcas = signal<Record<number, EstadoAsistencia | undefined>>({});
   readonly notas = signal<Record<number, string>>({});
   private original: Record<number, EstadoAsistencia | undefined> = {};
@@ -260,10 +248,6 @@ export class ListaAsistenciaComponent {
     this.marcas.update((m) => ({ ...m, [idEstudiante]: estado }));
   }
 
-  /**
-   * El caso normal es que casi todos vinieron: se marca todo de una y se
-   * corrigen las dos o tres excepciones, en vez de tocar veinte veces.
-   */
   marcarTodos(estado: EstadoAsistencia): void {
     const n = this.nomina();
     if (!n) return;
@@ -277,7 +261,6 @@ export class ListaAsistenciaComponent {
     this.notas.update((n) => ({ ...n, [idEstudiante]: texto }));
   }
 
-  /** La nota solo estorba mientras no haya algo que explicar. */
   necesitaNota(idEstudiante: number): boolean {
     const e = this.marcas()[idEstudiante];
     return e === 'AUSENTE' || e === 'JUSTIFICADO' || e === 'TARDE';

@@ -1,7 +1,3 @@
-/**
- * Modelos del modulo Entrenador. Espejan los DTO del backend
- * (org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos).
- */
 
 export interface CriterioResponse {
   idCriterio: number;
@@ -16,21 +12,11 @@ export interface JugadorEvaluable {
   categoria: string;
   idPosicion: number | null;
   posicion: string | null;
-  /** PRESENTE, TARDE, AUSENTE o JUSTIFICADO. */
-  /** null si el jugador no marco asistencia en esta sesion (ver puedeEvaluarse). */
   estadoAsistencia: string | null;
-  /** Clave = nombre del criterio. */
   puntajes: Record<string, number>;
-  /**
-   * true cuando los puntajes vienen del entrenamiento anterior y el
-   * entrenador todavia no los confirmo hoy. La interfaz los distingue para
-   * que sepa que esta viendo un valor heredado, no uno que el puso.
-   */
   precargado: boolean;
   lesionado: boolean;
-  /** id de la lesion activa, para poder dar de alta; null si no esta lesionado. */
   idLesion: number | null;
-  /** false si no marco asistencia: la ficha va bloqueada. */
   puedeEvaluarse: boolean;
   motivoBloqueo: string | null;
 }
@@ -57,15 +43,11 @@ export interface GuardarJugadorRequest {
   puntajes: PuntajeCriterio[];
 }
 
-/** Catalogo de /api/posiciones/activas. */
 export interface PosicionOpcion {
   idPosicion: number;
   nombre: string;
   abreviatura: string | null;
 }
-
-// La alineacion se movio a features/partidos: es la decision de un partido,
-// no un hecho del entrenamiento. Ver partidos.models.ts.
 
 export interface Lesion {
   idLesion: number;
@@ -78,5 +60,4 @@ export interface Lesion {
   activa: boolean;
 }
 
-/** Estado del autoguardado, para poder mostrarselo al entrenador. */
 export type EstadoGuardado = 'guardado' | 'guardando' | 'pendiente' | 'error';

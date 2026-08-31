@@ -12,12 +12,6 @@ const NOMBRES_MES = [
   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ];
 
-/**
- * Pagos: membresía mensual (cubre meses exactos, uno o varios a la vez)
- * o diario/eventual (un solo día, sin período). El backend rechaza todo
- * el lote si algún mes de la membresía ya está cubierto -no se cobra a
- * medias-, así que aquí se muestra ese error tal cual llega.
- */
 @Component({
   selector: 'app-pagos',
   standalone: true,
@@ -228,7 +222,6 @@ const NOMBRES_MES = [
     .titulo-pantalla { font-size: 1.5rem; }
     .subtitulo-pantalla { color: var(--color-text-muted); font-size: .92rem; max-width: 640px; }
     .titulo-card { font-size: 1.05rem; margin-bottom: 1.1rem; }
-
     .kpi-ingresos {
       display: flex; align-items: center; gap: 1rem;
       background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-md);
@@ -243,18 +236,14 @@ const NOMBRES_MES = [
     .kpi-ingresos__etiqueta { font-size: .78rem; color: var(--color-text-muted); }
     .kpi-ingresos__monto { font-size: 1.4rem; color: var(--color-text); }
     .kpi-ingresos__caption { font-size: .75rem; color: var(--color-text-faint); }
-
     .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.25rem; align-items: start; }
     @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
-
     .formulario { padding: 1.5rem; display: flex; flex-direction: column; gap: .9rem; }
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
     @media (max-width: 480px) { .fila-2 { grid-template-columns: 1fr; } }
-
     .field__control select { flex: 1; border: none; outline: none; padding: .75rem 0; font-size: .95rem; background: transparent; color: var(--color-text); width: 100%; }
     .field__prefijo { color: var(--color-text-faint); font-weight: 600; }
     .aviso { color: var(--color-text-muted); font-size: .85rem; }
-
     .chip-estudiante {
       display: flex; align-items: center; gap: .75rem;
       background: var(--color-primary-50); border: 1px solid var(--color-primary-100);
@@ -264,7 +253,6 @@ const NOMBRES_MES = [
     .chip-estudiante__etiqueta { font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--color-primary-600); }
     .chip-estudiante__nombre { font-weight: 700; color: var(--color-text); }
     .btn--cambiar { padding: .4rem .75rem; font-size: .8rem; flex-shrink: 0; }
-
     .segmentado { display: flex; gap: .3rem; background: var(--color-bg); border-radius: var(--radius-sm); padding: .3rem; }
     .segmento {
       flex: 1; border: none; background: transparent; border-radius: calc(var(--radius-sm) - 4px);
@@ -272,15 +260,10 @@ const NOMBRES_MES = [
       transition: background var(--transition), color var(--transition), box-shadow var(--transition);
     }
     .segmento--activo { background: var(--gradient-primary); color: #fff; box-shadow: var(--shadow-sm); }
-
     .meses-encabezado { display: flex; align-items: baseline; justify-content: space-between; }
     .enlace { border: none; background: none; color: var(--color-primary-600); font-size: .8rem; font-weight: 700; cursor: pointer; padding: 0; }
     .enlace:hover { text-decoration: underline; }
-
     .meses { display: flex; flex-wrap: wrap; gap: .5rem; }
-    /* El mes bloqueado se ve apagado pero sigue legible: se apaga el
-       contraste, no se esconde, para que se entienda que existe y por que
-       no se puede elegir. */
     .pill-mes--bloqueado {
       opacity: .45; cursor: not-allowed; text-decoration: line-through;
     }
@@ -294,7 +277,6 @@ const NOMBRES_MES = [
     }
     .pill-mes svg { width: 13px; height: 13px; flex-shrink: 0; }
     .pill-mes--activo { border-color: var(--color-primary-500); background: var(--color-primary-50); color: var(--color-primary-700); }
-
     .resumen-total {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
       background: var(--color-bg); border-radius: var(--radius-sm); padding: .9rem 1.1rem;
@@ -304,12 +286,8 @@ const NOMBRES_MES = [
     .resumen-total__monto { font-size: 1.3rem; color: var(--color-text); }
     .resumen-total__caption { font-size: .75rem; color: var(--color-text-faint); }
     .resumen-total .btn { flex-shrink: 0; }
-
     .columna-historial { display: flex; flex-direction: column; gap: 1rem; }
     .historial { padding: 1.25rem 1.5rem; }
-    /* El anulado se atenua y se tacha el monto, pero la fila sigue ahi: el
-       registro no desaparece, que es justo el punto de anular en vez de
-       borrar. */
     .fila-pago--anulada { opacity: .6; }
     .fila-pago--anulada .monto-pago { text-decoration: line-through; }
     .motivo-anulacion {
@@ -320,7 +298,6 @@ const NOMBRES_MES = [
     .fila-pago:last-child { border-bottom: none; }
     .monto-pago { font-weight: 600; flex: 1; }
     .fecha-pago { color: var(--color-text-faint); font-size: .8rem; }
-
     .vacio { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .3rem; padding: 1.5rem .5rem; }
     .vacio__icono {
       width: 52px; height: 52px; border-radius: 50%; background: var(--color-bg); color: var(--color-text-faint);
@@ -329,18 +306,15 @@ const NOMBRES_MES = [
     .vacio__icono svg { width: 24px; height: 24px; }
     .vacio__titulo { font-weight: 700; font-size: .92rem; }
     .vacio__texto { color: var(--color-text-muted); font-size: .82rem; max-width: 220px; }
-
     .consejo { margin: 0; }
   `]
 })
 export class PagosComponent implements OnInit {
-
   private readonly servicio = inject(PagosService);
 
   readonly estudiantes = signal<EstudianteOpcionPago[]>([]);
   readonly cargandoEstudiantes = signal(true);
   readonly idEstudiante = signal<number | null>(null);
-  /** El buscador habla en {id, titulo, subtitulo}, no en el DTO de pagos. */
   readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
     this.estudiantes().map((e) => ({
       id: e.idEstudiante,
@@ -418,17 +392,6 @@ export class PagosComponent implements OnInit {
     });
   }
 
-  /**
-   * Por que un mes no se puede cobrar, o null si si se puede.
-   *
-   * Son dos reglas distintas y conviene no mezclarlas. "Ya pagado" evita el
-   * viaje al servidor para recibir el error que el backend ya sabe dar. "Antes
-   * de su ingreso" es la que se pedia: a un estudiante matriculado en agosto
-   * no tiene sentido ofrecerle enero, no estaba en la escuela.
-   *
-   * Un mes pasado POSTERIOR al ingreso si se puede cobrar: es justo el caso de
-   * quien viene a ponerse al dia con una cuota atrasada.
-   */
   motivoMesNoDisponible(mes: number): string | null {
     if (this.mesesPagados().has(mes)) return 'Ya pagado';
 
@@ -446,7 +409,6 @@ export class PagosComponent implements OnInit {
     return this.motivoMesNoDisponible(mes) === null;
   }
 
-  /** Meses del anio elegido que ya tienen membresia registrada. */
   readonly mesesPagados = computed(() => {
     const pagados = new Set<number>();
     for (const p of this.historial()) {
@@ -455,12 +417,6 @@ export class PagosComponent implements OnInit {
     return pagados;
   });
 
-  /**
-   * Si su membresia cubre el mes corriente, cobrarle el dia otra vez seria
-   * cobrar dos veces lo mismo. No se bloquea -puede ser un extra real, un
-   * torneo o una clase suelta- pero se avisa, que es lo que quien cobra
-   * necesita para decidir.
-   */
   readonly tieneMembresiaVigente = computed(() => {
     const hoy = new Date();
     return this.historial().some((p) =>
@@ -522,11 +478,6 @@ export class PagosComponent implements OnInit {
 
   readonly anulando = signal<number | null>(null);
 
-  /**
-   * Pide el motivo y anula. Es obligatorio a proposito -el backend tambien lo
-   * exige-: un pago anulado sin explicacion deja el historial con un hueco que
-   * nadie sabra justificar dentro de tres meses.
-   */
   pedirAnulacion(pago: PagoResponse): void {
     const motivo = window.prompt(
       'Motivo de la anulación (queda registrado en el historial):', '');

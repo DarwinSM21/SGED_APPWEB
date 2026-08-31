@@ -8,13 +8,6 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
 import { fechaHoraCorta } from '../../core/formato-fecha';
 import { mensajeDeError } from '../../core/mensaje-error';
 
-/**
- * Alcances conocidos. Se ofrecen como sugerencia y no como lista cerrada
- * porque en la base `alcance` es texto libre a propósito: así se puede
- * agregar uno nuevo sin migración. El campo acepta cualquier valor, pero
- * sugerir los conocidos evita que un "NOTIFICACIONES " con espacio quede
- * como un alcance distinto y burle sin querer la unicidad del vigente.
- */
 const ALCANCES_SUGERIDOS = ['NOTIFICACIONES'];
 
 interface RepresentanteDelEstudiante {
@@ -25,25 +18,6 @@ interface RepresentanteDelEstudiante {
   vigente: Consentimiento | null;
 }
 
-/**
- * Registro del consentimiento del representante legal (hallazgo H-04 de
- * ETHICS.md). El backend tenía la tabla y el CRUD desde la V9, pero no había
- * pantalla: el consentimiento solo se podía registrar por SQL, que es tanto
- * como no tenerlo.
- *
- * Qué autoriza y qué no, porque la distinción es el hallazgo entero: el
- * consentimiento queda reservado para habilitar el **envío proactivo de
- * notificaciones** (RF-22). NO gobierna la lectura de informes — esa se
- * autoriza por el vínculo activo representante-estudiante, porque un tutor
- * consultando a su propio representado es uso ordinario esperado, distinto
- * del envío que el sistema inicia por su cuenta.
- *
- * La pantalla gira alrededor del estudiante porque así lo hace la API
- * (GET /api/consentimientos/estudiante/{id}); no existe un listado global.
- * Solo se ofrecen los representantes ya vinculados a ese estudiante: el
- * backend acepta cualquier par, pero registrar el consentimiento de alguien
- * que no es su tutor no significa nada.
- */
 @Component({
   selector: 'app-consentimientos',
   standalone: true,
@@ -165,7 +139,6 @@ interface RepresentanteDelEstudiante {
   styles: [`
     .contenido { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem; }
     .subtitulo-pantalla { margin: .2rem 0 1rem; font-size: .86rem; color: var(--color-text-muted); }
-
     .nota {
       display: flex; gap: .6rem; align-items: flex-start;
       background: var(--color-info-bg); color: var(--color-info-text);
@@ -173,14 +146,11 @@ interface RepresentanteDelEstudiante {
     }
     .nota svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: .1rem; }
     .nota p { margin: 0; font-size: .82rem; line-height: 1.45; }
-
     .card { padding: 1.15rem 1.35rem; margin-bottom: 1.1rem; }
     .titulo-card { font-size: 1rem; margin-bottom: .8rem; }
     .aviso { font-size: .86rem; color: var(--color-text-muted); margin: 0; }
-
     .vacio p { margin: 0 0 .3rem; font-size: .88rem; }
     .vacio__pie { color: var(--color-text-muted); font-size: .82rem !important; }
-
     .fila-rep {
       display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
       padding: .75rem 0; border-bottom: 1px solid var(--color-border-light);
@@ -191,7 +161,6 @@ interface RepresentanteDelEstudiante {
     .rep-estado { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; }
     .desde { font-size: .74rem; color: var(--color-text-faint); }
     .rep-acciones { flex-shrink: 0; }
-
     .historial { margin: 0 0 .4rem; padding-left: .2rem; }
     .historial summary { font-size: .76rem; color: var(--color-text-muted); cursor: pointer; }
     .historial__fila {
@@ -199,14 +168,12 @@ interface RepresentanteDelEstudiante {
       font-size: .78rem; padding: .3rem 0 .3rem .8rem;
     }
     .historial__fechas { color: var(--color-text-faint); }
-
     .alcance { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--color-border-light); }
     .alcance .field { margin-bottom: .4rem; max-width: 340px; }
     .alcance__pie { margin: 0; font-size: .76rem; color: var(--color-text-faint); }
   `],
 })
 export class ConsentimientosComponent implements OnInit {
-
   private readonly servicio = inject(ConsentimientosService);
 
   readonly alcancesSugeridos = ALCANCES_SUGERIDOS;
@@ -238,11 +205,6 @@ export class ConsentimientosComponent implements OnInit {
     return this.estudiantes().find((e) => e.idEstudiante === id)?.nombreCompleto ?? null;
   });
 
-  /**
-   * Solo los representantes vinculados a este estudiante, con sus
-   * consentimientos ya adjuntos. El cruce se hace aquí porque el vínculo
-   * viaja dentro de cada representante (`representados`), no al revés.
-   */
   readonly representantes = computed<RepresentanteDelEstudiante[]>(() => {
     const id = this.idEstudiante();
     if (id === null) return [];
@@ -334,8 +296,7 @@ export class ConsentimientosComponent implements OnInit {
     this.servicio.revocar(c.idConsentimiento).subscribe({
       next: () => {
         this.guardando.set(false);
-        // La fila no se borra: queda en el historial con su fecha de
-        // revocación, que es justo lo que hay que poder demostrar.
+
         this.exito.set(`Se revocó "${c.alcance}" de ${nombreRepresentante}; queda en el historial`);
         this.cargarConsentimientos(id);
       },

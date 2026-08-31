@@ -9,13 +9,6 @@ import org.uteq.backend.deportivo.partido.entity.Partido;
 import java.util.Optional;
 
 public interface PartidoRepository extends JpaRepository<Partido, Long> {
-
-    /**
-     * El EntityGraph trae la categoria en la misma consulta: la lista la
-     * muestra en cada fila y sin el seria un N+1 con {@code open-in-view:
-     * false}, que ademas revienta con LazyInitializationException fuera de la
-     * transaccion.
-     */
     @EntityGraph(attributePaths = "categoria")
     Page<Partido> findAllByOrderByFechaDescHoraDesc(Pageable pageable);
 

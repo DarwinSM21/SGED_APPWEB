@@ -31,39 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/**
- * Sugerencia de once para un partido.
- *
- * <p><b>La IA no elige a los jugadores.</b> La seleccion sale de una regla
- * explicita y reproducible a mano con los mismos datos:
- *
- * <ol>
- *   <li>El universo es el plantel activo de la categoria que juega.</li>
- *   <li>Queda fuera quien arrastra una lesion activa y quien no piso un solo
- *       entrenamiento en la ventana. Los dos se muestran con el motivo: que
- *       alguien desaparezca de la lista sin explicacion es peor que no
- *       listarlo.</li>
- *   <li>Se ordena por el promedio de las ultimas semanas -no el historico
- *       completo-, desempatando por presencias y despues por id, para que dos
- *       llamadas con los mismos datos devuelvan lo mismo.</li>
- *   <li>Se titulariza al mejor de cada posicion nominal, no a los once mejores
- *       promedios: eso ultimo podia sugerir dos porteros y ningun defensa.</li>
- * </ol>
- *
- * <p>La ventana es lo que hace que la sugerencia se alimente semana a semana.
- * El promedio historico completo premia al que jugo bien hace un anio por
- * encima del que viene mejor ahora, que es lo contrario de lo que hace falta
- * para decidir con quien se sale el sabado.
- *
- * <p>El modelo de lenguaje solo redacta un comentario sobre un once ya
- * decidido, y solo cuando se le pide. Dejarle decidir quien juega haria la
- * decision inauditable e imposible de explicarle a un padre que pregunta por
- * que su hijo quedo fuera.
- */
 @Service
 @RequiredArgsConstructor
 public class ConvocatoriaService {
-
     private final PartidoRepository partidoRepository;
     private final EstudianteRepository estudianteRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
@@ -75,7 +45,6 @@ public class ConvocatoriaService {
     @Value("${plantilla.titulares:11}")
     private int cantidadTitulares;
 
-    /** Cuantas semanas hacia atras se miran. Cuatro es un mes de entrenamientos. */
     @Value("${plantilla.semanas-rendimiento:4}")
     private int semanasRendimiento;
 
@@ -83,13 +52,6 @@ public class ConvocatoriaService {
         return cantidadTitulares;
     }
 
-    /**
-     * Convocatoria calculada para un partido. Es la SUGERENCIA: no se guarda
-     * sola. Guardar automaticamente lo que el sistema propone convertiria una
-     * recomendacion en un hecho historico sin que nadie lo decidiera, y
-     * despues no habria forma de distinguir "el entrenador jugo con este once"
-     * de "el sistema lo propuso y nadie miro".
-     */
     @Transactional(readOnly = true)
     public Convocatoria calcular(Long idPartido) {
         Partido partido = partidoRepository.findWithCategoriaByIdPartido(idPartido)
@@ -127,9 +89,6 @@ public class ConvocatoriaService {
             if (lesionados.contains(id)) {
                 fuera.add(new NoConvocable(id, nombreDe(e), "Lesión activa"));
             } else if (entrenamientos > 0 && presencias.getOrDefault(id, 0L) == 0L) {
-                // Si la categoria no tuvo entrenamientos en la ventana nadie
-                // pudo asistir, y castigar por eso a todo el plantel dejaria al
-                // entrenador sin nadie a quien alinear.
                 fuera.add(new NoConvocable(id, nombreDe(e),
                         "No entrenó en las últimas " + semanasRendimiento + " semanas"));
             } else {
@@ -139,11 +98,6 @@ public class ConvocatoriaService {
 
         convocables.sort(porRendimiento(promedios, presencias));
 
-        // Un titular por posicion nominal. convocables ya viene ordenado
-        // mejor-a-peor, asi que el primero de cada puesto es por construccion
-        // el mejor disponible para ese puesto; el resto de esa misma posicion
-        // -y quien no tiene posicion registrada, que no puede llenar ningun
-        // puesto- cae a suplente.
         Map<Long, JugadorConvocado> titularPorPuesto = new LinkedHashMap<>();
         List<JugadorConvocado> suplentes = new ArrayList<>();
         for (Estudiante e : convocables) {
@@ -164,17 +118,8 @@ public class ConvocatoriaService {
                 promedios, presencias, entrenamientos);
     }
 
-    /**
-     * Comentario del modelo sobre un once ya decidido. Se pide a demanda y no
-     * en cada apertura de pantalla: gastar cuota de un servicio externo sin
-     * que nadie lo haya pedido no le sirve a nadie.
-     *
-     * <p>Solo se envian datos seudonimizados: "Jugador 1", su categoria, su
-     * puesto y sus numeros. Ningun nombre sale del sistema.
-     */
     public GeneradorFeedbackIA.ResultadoFeedback comentar(
             List<JugadorConvocado> titulares, String categoria) {
-
         List<PerfilJugadorAnonimo> perfiles = new ArrayList<>();
         for (int i = 0; i < titulares.size(); i++) {
             JugadorConvocado t = titulares.get(i);
@@ -188,13 +133,6 @@ public class ConvocatoriaService {
         return generadorFeedback.generarComentarioPlantilla(perfiles);
     }
 
-    // ------------------------------------------------------------------
-
-    /**
-     * Promedio primero, presencias despues, id al final. El desempate por id
-     * no es cosmetico: sin el, dos llamadas con los mismos datos podrian
-     * devolver onces distintos.
-     */
     private Comparator<Estudiante> porRendimiento(Map<Long, BigDecimal> promedios,
                                                   Map<Long, Long> presencias) {
         return Comparator
@@ -225,11 +163,6 @@ public class ConvocatoriaService {
         return presencias;
     }
 
-    /**
-     * @param idPosicion puesto de ESE partido, que no tiene por que ser la
-     *                   posicion nominal del estudiante: de eso se trata poder
-     *                   mover gente.
-     */
     public JugadorConvocado aConvocado(Estudiante e, Long idPosicion, boolean titular,
                                        Map<Long, BigDecimal> promedios, Map<Long, Long> presencias,
                                        long entrenamientos) {
@@ -241,8 +174,6 @@ public class ConvocatoriaService {
         }
         return new JugadorConvocado(
                 e.getIdEstudiante(), nombreDe(e), abreviatura, idPosicion, titular,
-                // null y no 0.0: "no lo evaluaron" y "sacó cero" son cosas
-                // distintas y en pantalla se leen distinto.
                 promedios.get(e.getIdEstudiante()),
                 presencias.getOrDefault(e.getIdEstudiante(), 0L),
                 entrenamientos);
@@ -252,12 +183,6 @@ public class ConvocatoriaService {
         return e.getPersona().getNombre() + " " + e.getPersona().getApellido();
     }
 
-    /**
-     * Resultado del calculo. Lleva ademas los promedios y presencias ya
-     * consultados para que quien tenga que rearmar filas -la alineacion
-     * guardada, los disponibles- no vuelva a golpear la base con las mismas
-     * dos consultas.
-     */
     public record Convocatoria(
             Partido partido,
             VentanaRendimiento ventana,

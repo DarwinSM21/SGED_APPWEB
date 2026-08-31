@@ -3,19 +3,6 @@ import { of, throwError } from 'rxjs';
 import { MarcarAsistenciaComponent } from './marcar-asistencia.component';
 import { MarcarAsistenciaService } from './marcar-asistencia.service';
 
-/**
- * R-08 (informe de evaluacion de calidad): flujo critico de registro de
- * asistencia por QR.
- *
- * enviarToken() y mensajeDeError() son privados: la ruta publica hacia
- * ellos pasa por iniciarCamara() -> escanearCuadro(), que depende de
- * getUserMedia y de decodificar pixeles reales de un <canvas> con jsQR.
- * Simular esa cadena completa probaria mas los mocks de camara que el
- * componente. Se accede a los metodos privados directamente (tecnica
- * pragmatica y comun en TypeScript) para cubrir las reglas que si
- * importan: como reacciona el estado de la pantalla a cada respuesta del
- * backend.
- */
 describe('MarcarAsistenciaComponent', () => {
   let fixture: ComponentFixture<MarcarAsistenciaComponent>;
   let component: MarcarAsistenciaComponent;

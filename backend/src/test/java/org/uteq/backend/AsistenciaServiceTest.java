@@ -34,24 +34,8 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * El umbral PRESENTE/TARDE se prueba con horaInicio a +-1h de
- * LocalTime.now(Zonas.ECUADOR) en vez de valores fijos: el servicio llama
- * LocalTime.now(Zonas.ECUADOR) el mismo, y este proyecto no usa un Clock
- * inyectable en ningun lado (introducir uno solo para esto seria una
- * desviacion de convencion para un beneficio menor). Un margen de una hora
- * hace el resultado determinista frente a los pocos milisegundos que tarda
- * en ejecutarse la prueba.
- *
- * <p>Usar Zonas.ECUADOR aqui y no LocalTime.now() a secas no es cosmetico:
- * el CI (ubuntu-latest) corre en UTC, 5 horas adelantado a America/Guayaquil.
- * Con LocalTime.now() sin zona, esta prueba pasaba siempre en un entorno
- * configurado en hora de Ecuador y fallaba siempre en CI -- el desfase de
- * 5 horas hacia que la ventana de tolerancia calzara mal en cada corrida.
- */
 @ExtendWith(MockitoExtension.class)
 class AsistenciaServiceTest {
-
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
@@ -68,14 +52,6 @@ class AsistenciaServiceTest {
         return SesionEntrenamiento.builder().idSesion(1L).horaInicio(horaInicio).build();
     }
 
-    /**
-     * Hora "dentro de una hora" que nunca cruza medianoche: LocalTime no tiene
-     * fecha, asi que sumar cerca de las 23:xx envolveria hacia las 00:xx e
-     * invertiria la comparacion de calcularEstado. Mismo cuidado que ya
-     * aplican marcarPorQr_marca_tarde_fuera_de_tolerancia y
-     * tolerancia_es_configurable, para el caso simetrico de sumar en vez de
-     * restar.
-     */
     private LocalTime enUnaHora() {
         LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
         return ahora.isAfter(LocalTime.of(23, 0)) ? LocalTime.of(23, 59) : ahora.plusHours(1);
@@ -126,10 +102,7 @@ class AsistenciaServiceTest {
     @DisplayName("marcarPorQr marca TARDE fuera de la tolerancia")
     void marcarPorQr_marca_tarde_fuera_de_tolerancia() {
         Estudiante e = estudiante();
-        // LocalTime no tiene fecha: si "ahora" cae en la primera hora del dia,
-        // restar 1h cruzaria medianoche hacia "ayer" e invertiria la
-        // comparacion de calcularEstado (daria PRESENTE en vez de TARDE). Se
-        // ancla a medianoche en ese caso puntual en vez de envolver.
+
         LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
         LocalTime horaInicio = ahora.isBefore(LocalTime.of(1, 0)) ? LocalTime.MIDNIGHT : ahora.minusHours(1);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicio);
@@ -169,8 +142,7 @@ class AsistenciaServiceTest {
     void tolerancia_es_configurable() {
         ReflectionTestUtils.setField(asistenciaService, "toleranciaTardeMinutos", 1);
         Estudiante e = estudiante();
-        // 5 minutos despues del inicio, con solo 1 minuto de tolerancia -> TARDE.
-        // Mismo cuidado de medianoche que en marcarPorQr_marca_tarde_fuera_de_tolerancia.
+
         LocalTime ahoraTolerancia = LocalTime.now(Zonas.ECUADOR);
         LocalTime horaInicioTolerancia = ahoraTolerancia.isBefore(LocalTime.of(0, 5))
                 ? LocalTime.MIDNIGHT : ahoraTolerancia.minusMinutes(5);
@@ -219,8 +191,6 @@ class AsistenciaServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
-    // --- misAsistencias ---
-
     @Test
     @DisplayName("misAsistencias lanza RecursoNoEncontradoException si la cuenta no tiene estudiante asociado")
     void misAsistencias_sin_estudiante_asociado_lanza_excepcion() {
@@ -257,9 +227,6 @@ class AsistenciaServiceTest {
         assertThat(respuesta.porcentajeUltimos30Dias()).isEqualByComparingTo("80.00");
     }
 
-    // --- mapa de asistencia (tablero) ---
-
-    /** Fila cruda como la devuelve la consulta: fecha, presentes, esperados. */
     private Object[] fila(LocalDate fecha, long presentes, long esperados) {
         return new Object[]{fecha, presentes, esperados};
     }
@@ -297,13 +264,12 @@ class AsistenciaServiceTest {
     void mapaPromediaSoloSobreLosDiasQueTuvieronEntrenamiento() {
         LocalDate base = LocalDate.now(Zonas.ECUADOR).minusDays(5);
         when(sesionRepository.resumenAsistenciaPorDia(any(), any())).thenReturn(List.of(
-                fila(base, 10, 10),          // 100%
-                fila(base.plusDays(1), 6, 10) // 60%
+                fila(base, 10, 10),
+                fila(base.plusDays(1), 6, 10)
         ));
 
         var mapa = asistenciaService.mapaDeAsistencia(30);
 
-        // 80 y no 80/30: los dias sin entrenamiento no diluyen el promedio.
         assertThat(mapa.promedio()).isEqualByComparingTo("80.00");
         assertThat(mapa.mejorDia().porcentaje()).isEqualByComparingTo("100.00");
         assertThat(mapa.peorDia().porcentaje()).isEqualByComparingTo("60.00");

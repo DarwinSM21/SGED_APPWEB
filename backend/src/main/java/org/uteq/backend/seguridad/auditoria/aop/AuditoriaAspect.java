@@ -13,18 +13,10 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
 
-/**
- * Envuelve cada metodo anotado con @Auditado: lo ejecuta primero, y solo
- * si termina sin excepcion registra la fila de auditoria (una operacion
- * que fallo no se audita como si hubiera ocurrido). Cualquier error al
- * armar o guardar el registro se loguea sin afectar el valor de retorno
- * del metodo envuelto -- ver AuditoriaService.registrar.
- */
 @Aspect
 @Component
 @RequiredArgsConstructor
 public class AuditoriaAspect {
-
     private static final Logger log = LoggerFactory.getLogger(AuditoriaAspect.class);
     private static final ExpressionParser PARSER = new SpelExpressionParser();
 

@@ -17,23 +17,9 @@ import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 
 import java.util.List;
 
-/**
- * RF-22: notifica a los representantes de un estudiante cuando marca
- * asistencia o se le registra una lesion. Notificacion EN-APP unicamente
- * (fila en {@code academico.notificaciones}, sin correo/SMS): este
- * proyecto no tiene infraestructura de envio externo, y agregarla
- * necesitaria credenciales que nadie tiene todavia.
- *
- * <p>Si el estudiante no tiene ningun representante vinculado, no pasa
- * nada -no es un error, simplemente no hay a quien avisar-. Este efecto
- * nunca debe poder tumbar el flujo principal (marcar asistencia / registrar
- * lesion): si algun dia se le agrega logica que pueda fallar, debe fallar
- * en silencio para esa parte, no propagar la excepcion hacia arriba.
- */
 @Service
 @RequiredArgsConstructor
 public class NotificacionService {
-
     private static final Logger log = LoggerFactory.getLogger(NotificacionService.class);
 
     private final NotificacionRepository notificacionRepository;
@@ -56,29 +42,6 @@ public class NotificacionService {
                         "Se registró una lesión para " + nombreCompleto(estudiante) + ": " + descripcionLesion));
     }
 
-    /**
-     * Ejecuta el efecto de notificacion sin dejar que su fallo se propague.
-     *
-     * <p>La captura tiene que estar <b>aqui dentro</b> y no en quien llama.
-     * Estos metodos son {@code @Transactional} y se invocan desde
-     * {@code AsistenciaService}/{@code LesionService}, que ya estan dentro de
-     * una transaccion: con propagacion REQUIRED se unen a la misma. Si la
-     * excepcion saliera del metodo, el proxy de Spring marcaria la
-     * transaccion como {@code rollback-only} y el {@code try/catch} del
-     * llamador no serviria de nada -al confirmar saltaria
-     * {@code UnexpectedRollbackException} y se perderia la asistencia que el
-     * estudiante ya habia marcado-.
-     *
-     * <p>Limite conocido: esto cubre los fallos de nivel de aplicacion, que
-     * son los realistas aqui (un estudiante sin persona asociada, un vinculo
-     * inconsistente). Un fallo de nivel de base -por ejemplo, violacion de
-     * clave foranea al insertar- aborta la transaccion en el propio
-     * PostgreSQL y ya no hay captura en Java que la rescate. Aislarlo por
-     * completo exigiria mover esto a REQUIRES_NEW o a un
-     * {@code @TransactionalEventListener(AFTER_COMMIT)}; se deja anotado
-     * como trabajo futuro y no se hace ahora para no reestructurar un flujo
-     * ya probado.
-     */
     private void sinTumbarElFlujoPrincipal(String contexto, Runnable efecto) {
         try {
             efecto.run();
@@ -103,7 +66,6 @@ public class NotificacionService {
         return notificacionRepository.countByRepresentante_IdRepresentanteAndLeidaFalse(representante.getIdRepresentante());
     }
 
-    /** 404 uniforme si la notificacion no existe o no es suya: mismo criterio IDOR del resto del modulo. */
     @Transactional
     public void marcarLeida(String username, Long idNotificacion) {
         Representante representante = representanteDe(username);

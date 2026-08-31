@@ -32,14 +32,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/**
- * La regla que decide quien juega. Se prueba entera porque es lo que hay que
- * poder defender delante de un padre que pregunta por que su hijo quedo fuera:
- * si la sugerencia no es reproducible, no es explicable.
- */
 @ExtendWith(MockitoExtension.class)
 class ConvocatoriaServiceTest {
-
     @Mock private PartidoRepository partidoRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
@@ -91,8 +85,6 @@ class ConvocatoriaServiceTest {
     @Test
     @DisplayName("titulariza al mejor de cada puesto, no a los mejores promedios sin mirar posicion")
     void unTitularPorPuesto() {
-        // Dos porteros: aunque los dos promedien mas que el defensa, solo uno
-        // puede arrancar. El otro cae al banco.
         plantel(List.of(
                 jugador(1L, "Alfa", 1L, "POR"),
                 jugador(2L, "Bravo", 1L, "POR"),
@@ -137,7 +129,7 @@ class ConvocatoriaServiceTest {
         plantel(List.of(jugador(1L, "Alfa", 1L, "POR"), jugador(2L, "Bravo", 3L, "DCI")));
         when(evaluacionEstudianteRepository.promedioEnVentana(any(), any(), any()))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 9.5}));
-        // El 2 no aparece: cero presencias en las ultimas cuatro semanas.
+
         when(asistenciaRepository.presenciasEnVentana(any(), any(), any()))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 6L}));
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
@@ -181,8 +173,6 @@ class ConvocatoriaServiceTest {
 
         var convocatoria = servicio.calcular(ID_PARTIDO);
 
-        // "No lo evaluaron" y "saco cero" se leen distinto en pantalla, asi que
-        // tienen que ser valores distintos en el contrato.
         assertNull(convocatoria.titulares().get(0).promedio());
         assertEquals(5L, convocatoria.titulares().get(0).presencias());
     }
@@ -202,8 +192,6 @@ class ConvocatoriaServiceTest {
 
         var convocatoria = servicio.calcular(ID_PARTIDO);
 
-        // 2 y 3 empatan en promedio y asistencia: gana el id menor. 1 entrena
-        // menos y queda ultimo pese a promediar igual.
         assertEquals(2L, convocatoria.titulares().get(0).idEstudiante());
         assertEquals(List.of(3L, 1L),
                 convocatoria.suplentes().stream().map(j -> j.idEstudiante()).toList());

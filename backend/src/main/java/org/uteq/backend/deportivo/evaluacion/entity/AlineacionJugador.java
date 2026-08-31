@@ -7,19 +7,10 @@ import org.uteq.backend.deportivo.posicion.entity.Posicion;
 
 import java.time.Instant;
 
-/**
- * Un jugador dentro de la alineacion puesta en cancha.
- *
- * <p>{@code posicion} es el puesto en el que el entrenador lo puso ESE dia y
- * puede no coincidir con su posicion nominal en la ficha: precisamente de eso
- * se trata poder hacer cambios. La ficha dice donde juega habitualmente; esto
- * dice donde jugo esa vez.
- */
 @Entity
 @Table(name = "alineacion_jugador", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class AlineacionJugador {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_alineacion_jugador")
@@ -37,7 +28,6 @@ public class AlineacionJugador {
     @JoinColumn(name = "id_posicion")
     private Posicion posicion;
 
-    /** Falso para el banco: se guarda tambien quien quedo de suplente. */
     @Column(name = "titular", nullable = false)
     @Builder.Default
     private Boolean titular = true;

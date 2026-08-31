@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface PersonaRepository extends JpaRepository<Persona, Long> {
-
     Page<Persona> findByActivoTrue(Pageable pageable);
 
     Optional<Persona> findByCedulaAndActivoTrue(String cedula);
@@ -19,12 +18,10 @@ public interface PersonaRepository extends JpaRepository<Persona, Long> {
 
     Optional<Persona> findByCorreo(String correo);
 
-    // Verificaciones para CREAR (revisan únicamente registros activos)
     boolean existsByCedulaAndActivoTrue(String cedula);
-    
+
     boolean existsByCorreo(String correo);
 
-    // Verificaciones para EDITAR (excluyen el idPersona actual)
     @Query("SELECT COUNT(p) > 0 FROM Persona p WHERE p.cedula = :cedula AND p.activo = true AND p.idPersona != :idPersona")
     boolean existeOtraPersonaConCedula(@Param("cedula") String cedula, @Param("idPersona") Long idPersona);
 

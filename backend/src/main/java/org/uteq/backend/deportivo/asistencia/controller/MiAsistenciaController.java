@@ -11,17 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MiHistorialResponse;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
 
-/**
- * Historial de asistencia del propio ESTUDIANTE autenticado. Antes de esto
- * solo podia marcar asistencia (AsistenciaQrController.marcar); no tenia
- * forma de consultar lo que ya habia marcado.
- */
 @RestController
 @RequestMapping("/api/estudiante")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ESTUDIANTE')")
 public class MiAsistenciaController {
-
     private final AsistenciaService asistenciaService;
 
     @GetMapping("/mi-asistencia")

@@ -13,22 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.seguridad.auth.dto.*;
 import org.uteq.backend.seguridad.auth.service.AuthService;
 
-/**
- * Controlador de autenticacion JWT.
- * Endpoints: registro, login, logout, refresh, /me.
- * El access token y el refresh token viajan exclusivamente en cookies
- * HttpOnly + Secure + SameSite=Strict (Bloque A.1 de la guia de la
- * Tercera Entrega); nunca en el body ni en un header de respuesta.
- *
- * La logica de negocio vive en AuthService (D-03 / R-03 del informe de
- * evaluacion de calidad): este controlador solo traduce HTTP a llamadas
- * de dominio y arma las cookies de sesion.
- */
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-
     private static final String ACCESS_COOKIE = "sged_access";
     private static final String REFRESH_COOKIE = "sged_refresh";
 
@@ -51,13 +39,8 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-
         AuthService.LoginResult resultado = authService.login(request, httpRequest.getRemoteAddr());
 
-        // El token ya viajo en la cookie HttpOnly (setAuthCookies, abajo).
-        // No se repite aqui: un campo de token en el cuerpo seria legible por
-        // cualquier fetch/axios del frontend, anulando la proteccion HttpOnly
-        // que ADR-002 y ADR-008 declaran como el mecanismo de defensa.
         setAuthCookies(httpResponse, resultado.accessToken(), resultado.refreshToken());
         return ResponseEntity.ok(resultado.sesion());
     }
@@ -66,7 +49,6 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             @CookieValue(name = ACCESS_COOKIE, required = false) String accessToken,
             HttpServletResponse httpResponse) {
-
         authService.logout(accessToken);
         clearAuthCookies(httpResponse);
         return ResponseEntity.noContent().build();
@@ -76,7 +58,6 @@ public class AuthController {
     public ResponseEntity<Void> refresh(
             @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
-
         return authService.refrescar(refreshToken)
                 .map(nuevoAccessToken -> {
                     setAccessCookie(httpResponse, nuevoAccessToken);

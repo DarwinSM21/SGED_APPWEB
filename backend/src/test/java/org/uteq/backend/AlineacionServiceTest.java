@@ -35,14 +35,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/**
- * Las reglas al guardar un once. Son las que impiden que la pantalla mande a
- * la cancha algo imposible: doce jugadores, dos en el mismo puesto, alguien de
- * otra categoria o un lesionado.
- */
 @ExtendWith(MockitoExtension.class)
 class AlineacionServiceTest {
-
     @Mock private AlineacionRepository alineacionRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private PosicionRepository posicionRepository;

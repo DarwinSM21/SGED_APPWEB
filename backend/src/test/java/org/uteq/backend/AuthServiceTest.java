@@ -49,16 +49,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Prueba unitaria de AuthService, sin contexto HTTP (D-03 / R-03 del
- * informe de evaluacion de calidad: antes esta logica vivia en
- * AuthController y solo podia probarse levantando MockMvc). Los
- * escenarios que solo tienen sentido a nivel HTTP (cookies, codigos de
- * estado sin autenticacion) viven en AuthControllerTest.
- */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
-
     @Mock private AuthenticationManager authenticationManager;
     @Mock private JwtService jwtService;
     @Mock private RedisBlacklistService blacklistService;
@@ -84,8 +76,6 @@ class AuthServiceTest {
                 .authorities(List.of(new SimpleGrantedAuthority(rol)))
                 .build();
     }
-
-    // --- login ---
 
     @Test
     void loginConCredencialesCorrectasDevuelveTokensYSesion() {
@@ -115,7 +105,6 @@ class AuthServiceTest {
         assertThat(resultado.sesion().getRol()).isEqualTo("ADMINISTRADOR");
     }
 
-    /** Cuenta autenticada cuya Persona no se pudo resolver: el nombre cae al username, no rompe el login. */
     @Test
     void loginSinFichaDePersonaUsaUsernameComoNombre() {
         UserDetails userDetails = mockUser("sinficha@test.com", "ROLE_ENTRENADOR");
@@ -160,8 +149,6 @@ class AuthServiceTest {
 
         verify(authenticationManager, never()).authenticate(any());
     }
-
-    // --- registrar ---
 
     @Test
     void registrarConUsernameDuplicadoDevuelveVacio() {
@@ -233,7 +220,6 @@ class AuthServiceTest {
         assertThat(resultado.get().getRol()).isEqualTo("ENTRENADOR");
     }
 
-    /** Un rol que no existe en seguridad.roles no crea nada a medias. */
     @Test
     void registrarConRolInexistenteLanzaIllegalArgumentException() {
         when(usuarioRepository.existsByUsernameIgnoreCase("otro@test.com")).thenReturn(false);
@@ -249,7 +235,6 @@ class AuthServiceTest {
         verify(personaRepository, never()).save(any());
     }
 
-    /** id_estado_general=1 falta en el catalogo (seed no aplicado): la excepcion sale sin capturar, no un guardado a medias. */
     @Test
     void registrarSinCatalogoEstadoGeneralLanzaIllegalStateException() {
         when(usuarioRepository.existsByUsernameIgnoreCase("sinestado@test.com")).thenReturn(false);
@@ -272,8 +257,6 @@ class AuthServiceTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    // --- logout ---
-
     @Test
     void logoutConTokenValidoRevocaYAudita() {
         when(jwtService.extractJti("token-valido")).thenReturn("jti-123");
@@ -293,7 +276,6 @@ class AuthServiceTest {
         verify(blacklistService, never()).revocar(any(), anyLong());
     }
 
-    /** Token presente pero corrupto: extractJti lanza, logout igual audita y no propaga la excepcion. */
     @Test
     void logoutConTokenCorruptoIgnoraLaExcepcion() {
         when(jwtService.extractJti("token-corrupto")).thenThrow(new RuntimeException("token malformado"));
@@ -303,8 +285,6 @@ class AuthServiceTest {
         verify(blacklistService, never()).revocar(any(), anyLong());
         verify(auditoriaService).registrar(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
     }
-
-    // --- refrescar ---
 
     @Test
     void refrescarConTokenInvalidoDevuelveVacio() {
@@ -322,8 +302,6 @@ class AuthServiceTest {
 
         assertThat(authService.refrescar("good-token")).contains("nuevo-access-token");
     }
-
-    // --- obtenerSesionActual ---
 
     @Test
     void obtenerSesionActualDevuelveLaSesion() {
@@ -344,7 +322,6 @@ class AuthServiceTest {
         assertThat(resultado.get().getRol()).isEqualTo("ADMINISTRADOR");
     }
 
-    /** Sesion autenticada pero cuya Persona ya no existe: el nombre cae al username, no rompe. */
     @Test
     void obtenerSesionActualSinFichaUsaUsernameComoNombre() {
         UserDetails userDetails = mockUser("huerfano@test.com", "ROLE_ENTRENADOR");

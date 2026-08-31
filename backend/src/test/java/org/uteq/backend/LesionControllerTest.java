@@ -41,7 +41,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class LesionControllerTest {
-
     @Mock private LesionService lesionService;
     @Mock private EntrenadorRepository entrenadorRepository;
 
@@ -68,13 +67,6 @@ class LesionControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    /**
-     * PageImpl con Pageable.unpaged() (el constructor de un solo argumento)
-     * hace que Jackson falle al serializar fuera del contexto completo de
-     * Spring Boot: Unpaged.getOffset() lanza UnsupportedOperationException.
-     * Con un Pageable paginado de verdad, Jackson lo serializa por
-     * introspeccion normal sin depender de ese modulo.
-     */
     private PageImpl<Lesion> paginaDe(Lesion... lesiones) {
         var lista = List.of(lesiones);
         return new PageImpl<>(lista, PageRequest.of(0, 20), lista.size());
@@ -93,8 +85,6 @@ class LesionControllerTest {
                 .build();
     }
 
-    // --- GET /api/lesiones ---
-
     @Test
     @DisplayName("listarActivas devuelve la pagina de lesiones sin alta")
     void listarActivas_devuelve_200() throws Exception {
@@ -106,8 +96,6 @@ class LesionControllerTest {
                 .andExpect(jsonPath("$.content[0].estudiante").value("Juan Perez"));
     }
 
-    // --- GET /api/lesiones/estudiante/{id} ---
-
     @Test
     @DisplayName("historial devuelve la pagina de lesiones del estudiante, activas e inactivas")
     void historial_devuelve_200() throws Exception {
@@ -118,8 +106,6 @@ class LesionControllerTest {
                 .andExpect(jsonPath("$.content[0].activa").value(false))
                 .andExpect(jsonPath("$.content[0].estudiante").value("Juan Perez"));
     }
-
-    // --- POST /api/lesiones ---
 
     @Test
     @DisplayName("registrar devuelve 201 con la lesion activa recien creada (ADMINISTRADOR, con idEntrenador en el body)")
@@ -196,8 +182,6 @@ class LesionControllerTest {
                         .content("{\"idEstudiante\":1,\"descripcion\":\"Esguince de tobillo\"}"))
                 .andExpect(status().isBadRequest());
     }
-
-    // --- POST /api/lesiones/{id}/alta ---
 
     @Test
     @DisplayName("darDeAlta con fecha en el cuerpo cierra la lesion en esa fecha")

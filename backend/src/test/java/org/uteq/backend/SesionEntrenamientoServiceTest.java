@@ -36,18 +36,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * La propiedad que importa: un ENTRENADOR nunca ve la agenda de otro
- * entrenador, aunque ambos tengan sesiones el mismo dia. El filtro se hace
- * contra el username pasado por el controller (resuelto ahi desde
- * SecurityContextHolder), no contra un parametro que el cliente controle.
- *
- * Prueba unitaria de SesionEntrenamientoService, sin contexto HTTP ni de
- * seguridad (D-03 / R-03 del informe de evaluacion de calidad).
- */
 @ExtendWith(MockitoExtension.class)
 class SesionEntrenamientoServiceTest {
-
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private EntrenadorRepository entrenadorRepository;
     @Mock private EvaluacionDiariaRepository evaluacionRepository;
@@ -115,8 +105,7 @@ class SesionEntrenamientoServiceTest {
         List<SesionHoyResponse> resultado = sesionService.sesionesDeHoy("huerfano@sged.test", false);
 
         assertThat(resultado).isEmpty();
-        // Ni siquiera se consulta que sesiones hay: sin entrenador asociado
-        // no hay con que compararlas.
+
         verify(sesionRepository, never()).findByFechaOrderByHoraInicioAsc(any());
     }
 

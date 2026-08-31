@@ -4,13 +4,6 @@ import { PersonasAdminComponent } from './personas-admin.component';
 import { PersonasService } from './personas.service';
 import { EntrenadorResponse, EstudianteResponse, PersonaResponse, RepresentanteResponse, UsuarioResponse } from './personas.models';
 
-/**
- * Verifica que la division de personas-admin.component.ts en
- * PersonasStateService + PersonasListaComponent + PersonaDetalleComponent
- * (con sus 4 fichas hijas) + PersonasGestionComponent (R-05, informe de
- * evaluacion de calidad) sigue funcionando como una sola pantalla: antes
- * de la division, el componente de 840 lineas no tenia ninguna prueba.
- */
 describe('PersonasAdminComponent', () => {
   let fixture: ComponentFixture<PersonasAdminComponent>;
   let servicioMock: Partial<PersonasService>;

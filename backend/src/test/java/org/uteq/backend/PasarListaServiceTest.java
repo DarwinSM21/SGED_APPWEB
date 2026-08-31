@@ -33,17 +33,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Lista manual del entrenador.
- *
- * <p>Cubre la via que hasta ahora no existia: antes la unica forma de que un
- * estudiante quedara registrado como presente era que el mismo escaneara el
- * QR, de modo que un entrenamiento entero sin telefonos quedaba como
- * inasistencia general.
- */
 @ExtendWith(MockitoExtension.class)
 class PasarListaServiceTest {
-
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
@@ -114,8 +105,7 @@ class PasarListaServiceTest {
 
         ArgumentCaptor<Asistencia> capturada = ArgumentCaptor.forClass(Asistencia.class);
         verify(asistenciaRepository).save(capturada.capture());
-        // El entrenador afirma que estuvo, no a que hora entro. Escribir
-        // LocalTime.now() aqui guardaria la hora en que se tecleo la lista.
+
         assertThat(capturada.getValue().getHoraEntrada()).isNull();
     }
 
@@ -221,7 +211,7 @@ class PasarListaServiceTest {
 
         assertThat(nomina.filas()).hasSize(2);
         assertThat(nomina.editable()).isTrue();
-        // El que no escaneo aparece con estado nulo: es a quien hay que marcar.
+
         assertThat(nomina.filas())
                 .anySatisfy(f -> assertThat(f.estado()).isEqualTo(Asistencia.ESTADO_PRESENTE))
                 .anySatisfy(f -> assertThat(f.estado()).isNull());

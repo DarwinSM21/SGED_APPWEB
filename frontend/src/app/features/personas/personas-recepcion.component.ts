@@ -6,14 +6,6 @@ import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { CategoriaOpcion, EstudianteResponse } from './personas.models';
 import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 
-/**
- * Vista de RECEPCIONISTA: alta rapida de Persona+Estudiante (igual que
- * antes RegistrarEstudianteComponent), mas dos acciones opcionales por
- * fila -- vincular representante y habilitar acceso -- que antes vivian
- * en una pantalla de administrador aparte y antes RECEPCIONISTA no podia
- * hacer. Sin la tabla completa de personas: ese alcance es de
- * ADMINISTRADOR (ver PersonasAdminComponent).
- */
 @Component({
   selector: 'app-personas-recepcion',
   standalone: true,
@@ -159,18 +151,13 @@ import { mensajeDeError as traducirError } from '../../core/mensaje-error';
     .pantalla { max-width: 760px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
     .titulo-pantalla { font-size: 1.2rem; }
     .subtitulo { font-size: .95rem; margin-bottom: .75rem; }
-
     .formulario { padding: 1.5rem; display: flex; flex-direction: column; gap: .9rem; }
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
     @media (max-width: 480px) { .fila-2 { grid-template-columns: 1fr; } }
-
     .field__control select { flex: 1; border: none; outline: none; padding: .75rem 0; font-size: .95rem; background: transparent; color: var(--color-text); width: 100%; }
-
     .aviso-edicion { font-size: .88rem; color: var(--color-text-muted); background: var(--color-neutral-bg); padding: .7rem .85rem; border-radius: var(--radius-sm); }
     .aviso { color: var(--color-text-muted); font-size: .85rem; }
-
     .acciones { display: flex; justify-content: flex-end; gap: .6rem; }
-
     .lista { padding: 1.25rem 1.5rem; }
     .fila-estudiante { padding: .6rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem; }
     .fila-estudiante:last-child { border-bottom: none; }
@@ -178,12 +165,10 @@ import { mensajeDeError as traducirError } from '../../core/mensaje-error';
     .nombre-estudiante { font-weight: 600; flex: 1; min-width: 120px; }
     .categoria-estudiante { color: var(--color-text-muted); }
     .btn--sm { padding: .35rem .6rem; font-size: .78rem; }
-
     .subformulario { margin-top: .75rem; padding: .9rem; border: 1px dashed var(--color-border); border-radius: var(--radius-sm); display: flex; flex-direction: column; gap: .7rem; }
   `],
 })
 export class PersonasRecepcionComponent implements OnInit {
-
   private readonly servicio = inject(PersonasService);
 
   nombre = ''; apellido = ''; cedula = ''; correo = ''; telefono = ''; fechaNacimiento = '';
@@ -344,10 +329,6 @@ export class PersonasRecepcionComponent implements OnInit {
     this.error.set(this.mensajeDeError(err));
   }
 
-  /**
-   * Los mensajes por codigo de estado son el ultimo recurso: solo aplican
-   * si el backend no mando ni el detalle por campo ni un detail propio.
-   */
   private mensajeDeError(err: any): string {
     const porDefecto = err?.status === 422 ? 'Revisa los datos: hay campos con formato inválido'
       : err?.status === 409 ? 'Ya existe un registro con esos datos'

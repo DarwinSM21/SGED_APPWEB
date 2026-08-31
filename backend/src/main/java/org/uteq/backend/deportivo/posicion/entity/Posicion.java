@@ -3,12 +3,10 @@ package org.uteq.backend.deportivo.posicion.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-/** Catalogo de posiciones de juego. Solo lectura desde la aplicacion. */
 @Entity
 @Table(name = "posiciones", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Posicion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_posicion")

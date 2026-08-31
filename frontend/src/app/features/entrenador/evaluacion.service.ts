@@ -6,31 +6,12 @@ import {
   EvaluacionSesion, GuardarJugadorRequest, EstadoGuardado, Lesion, PosicionOpcion,
 } from './evaluacion.models';
 
-/**
- * Servicio de evaluacion diaria.
- *
- * <p>Resuelve el requisito que condiciona todo el modulo: el entrenador
- * califica desde el celular, en la cancha, donde la conexion se cae. Dos
- * mecanismos lo sostienen.
- *
- * <p><b>Autoguardado.</b> Cada cambio se envia solo, con un retardo corto que
- * agrupa los movimientos seguidos de un mismo slider en una sola peticion. El
- * entrenador nunca pulsa "guardar".
- *
- * <p><b>Cola offline.</b> Si la peticion falla por falta de red, el cambio se
- * guarda en localStorage y se reintenta cuando el navegador vuelve a estar en
- * linea. Se guarda por jugador, de modo que un reintento posterior pisa al
- * anterior en vez de acumular peticiones contradictorias: lo que importa es el
- * ultimo valor, no la secuencia.
- */
 @Injectable({ providedIn: 'root' })
 export class EvaluacionService {
-
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/evaluaciones';
   private readonly claveCola = 'sged.evaluacion.pendientes';
 
-  /** Retardo del autoguardado. Suficiente para agrupar el arrastre de un slider. */
   private static readonly RETARDO_MS = 800;
 
   private temporizadores = new Map<number, ReturnType<typeof setTimeout>>();
@@ -40,7 +21,6 @@ export class EvaluacionService {
   readonly hayPendientes = computed(() => this.pendientes() > 0);
 
   constructor() {
-    // Al recuperar la conexion se vacia la cola sin que el usuario haga nada.
     window.addEventListener('online', () => this.sincronizarPendientes());
     this.pendientes.set(this.leerCola().size);
   }
@@ -53,28 +33,15 @@ export class EvaluacionService {
     return this.http.get<PosicionOpcion[]>('/api/posiciones/activas');
   }
 
-  /**
-   * Posicion nominal del estudiante (la misma que edita ADMINISTRADOR desde
-   * Personas) -- endpoint estrecho que ENTRENADOR tambien puede usar, a
-   * diferencia de PUT /api/estudiantes/{id} que reescribe toda la ficha.
-   */
   actualizarPosicionEstudiante(idEstudiante: number, idPosicion: number | null): Observable<void> {
     return this.http.put<void>(`/api/estudiantes/${idEstudiante}/posicion`, { idPosicion });
   }
-
-  // La alineacion no vive aqui ni en ninguna pantalla de sesion: es la
-  // decision de un partido, y esta en features/partidos (PartidosService).
 
   finalizar(idSesion: number, observacionGeneral: string): Observable<void> {
     return this.http.post<void>(
       `${this.apiUrl}/sesion/${idSesion}/finalizar`, observacionGeneral);
   }
 
-  /**
-   * idEntrenador no va en el body: el backend lo resuelve del token para
-   * una cuenta ENTRENADOR (ver LesionController.idEntrenadorEfectivo), asi
-   * que nadie puede registrar una lesion "a nombre de" otro entrenador.
-   */
   registrarLesion(idEstudiante: number, descripcion: string, fechaEstimadaRetorno?: string): Observable<Lesion> {
     return this.http.post<Lesion>('/api/lesiones', { idEstudiante, descripcion, fechaEstimadaRetorno });
   }
@@ -83,10 +50,6 @@ export class EvaluacionService {
     return this.http.post<Lesion>(`/api/lesiones/${idLesion}/alta`, {});
   }
 
-  /**
-   * Programa el guardado de un jugador. Llamarlo repetidamente para el mismo
-   * jugador reinicia el temporizador: solo se envia el ultimo valor.
-   */
   guardarConRetardo(idSesion: number, request: GuardarJugadorRequest): void {
     const anterior = this.temporizadores.get(request.idEstudiante);
     if (anterior) {
@@ -107,9 +70,6 @@ export class EvaluacionService {
           this.estado.set(this.hayPendientes() ? 'pendiente' : 'guardado');
         }),
         catchError((err) => {
-          // Un 4xx es un rechazo del servidor (por ejemplo, calificar a quien
-          // no asistio) y reintentarlo no lo va a arreglar: se muestra el
-          // error. Un fallo de red si se encola.
           if (err.status >= 400 && err.status < 500) {
             this.estado.set('error');
           } else {
@@ -122,7 +82,6 @@ export class EvaluacionService {
       .subscribe();
   }
 
-  /** Reintenta todo lo encolado. Se dispara al volver la conexion. */
   sincronizarPendientes(): void {
     const cola = this.leerCola();
     if (cola.size === 0) {
@@ -134,10 +93,6 @@ export class EvaluacionService {
     }
   }
 
-  // ------------------------------------------------------------------
-  // Cola en localStorage, indexada por estudiante
-  // ------------------------------------------------------------------
-
   private leerCola(): Map<number, EntradaCola> {
     try {
       const crudo = localStorage.getItem(this.claveCola);
@@ -147,8 +102,6 @@ export class EvaluacionService {
       return new Map(Object.entries(JSON.parse(crudo) as Record<string, EntradaCola>)
         .map(([k, v]) => [Number(k), v]));
     } catch {
-      // Si el contenido esta corrupto es preferible perder la cola que dejar
-      // la pantalla inutilizable.
       return new Map();
     }
   }

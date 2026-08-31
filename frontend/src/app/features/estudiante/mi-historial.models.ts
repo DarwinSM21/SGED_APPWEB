@@ -1,4 +1,3 @@
-/** Espeja AsistenciaDtos del backend (org.uteq.backend.deportivo.asistencia.dto). */
 
 export interface Asistencia {
   idAsistencia: number;

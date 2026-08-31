@@ -33,7 +33,6 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
-
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
@@ -64,9 +63,6 @@ public class UsuarioService {
         return toResponse(u);
  }
 
-    // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
-    // no tiene cache propia todavia): sin evictar esas listas quedarian con
-    // el dato viejo -sin cuenta vinculada- hasta que expire el TTL.
     @Caching(evict = {
             @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
@@ -160,19 +156,12 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    // R-09 (informe de evaluacion de calidad): antes esta comprobacion vivia
-    // inline en editar() -- "password en blanco significa no cambiarla", ver
-    // comentario en UsuarioRequest -- y sumaba a su complejidad ciclomatica.
     private void actualizarPasswordSiCorresponde(Usuario usuario, String nuevaPassword) {
         if (nuevaPassword != null && !nuevaPassword.isBlank()) {
             usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
         }
     }
 
-    // R-09: idem, extraido de editar() para bajar su CC de 9. Solo revalida y
-    // reasigna el rol si de verdad cambio -- si el rol pedido es null (el
-    // formulario de edicion no toca roles) o es el mismo que ya tiene, no
-    // hace nada.
     private void actualizarRolSiCambio(Usuario usuario, Persona persona, String rolPedido) {
         if (rolPedido == null) {
             return;
@@ -181,9 +170,7 @@ public class UsuarioService {
                 : usuario.getRoles().stream().findFirst().map(Rol::getNombre).orElse(null);
         if (!rolPedido.equals(rolActual)) {
             validarRolCoherente(persona.getIdPersona(), rolPedido);
-            // HashSet mutable: Hibernate necesita poder mutar la coleccion
-            // ya administrada de este Usuario persistido -- Set.of() es
-            // inmutable y hace fallar el flush con UnsupportedOperationException.
+
             usuario.setRoles(new java.util.HashSet<>(Set.of(buscarRol(rolPedido))));
         }
     }
@@ -193,21 +180,6 @@ public class UsuarioService {
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + nombre));
     }
 
-    /**
-     * El rol de la cuenta debe coincidir con la ficha de dominio que ya
-     * tiene la persona: un estudiante no puede tener una cuenta de
-     * entrenador. Solo pesan las fichas ACTIVAS -- si a alguien le dieron
-     * de baja su ficha de entrenador queda libre para tomar otro rol, que
-     * es para lo que sirve la baja logica.
-     *
-     * Una persona sin ninguna ficha acepta cualquier rol: no es una
-     * excepcion comoda, es necesaria. El alta de un entrenador crea
-     * primero la cuenta con rol ENTRENADOR y despues la ficha (el
-     * formulario de Entrenador solo aparece si ya hay Usuario); sin esta
-     * puerta no se podria crear ningun entrenador. De paso, ADMINISTRADOR
-     * y RECEPCIONISTA solo quedan asignables a personas sin ficha, que es
-     * lo correcto: no tienen ficha de dominio propia.
-     */
     private void validarRolCoherente(Long idPersona, String rol) {
         if (estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)
                 && !"ESTUDIANTE".equals(rol)) {
@@ -226,18 +198,6 @@ public class UsuarioService {
         }
     }
 
-    /**
-     * Si la persona ya tenia una ficha de dominio activa creada ANTES que
-     * esta cuenta -caso tipico: alumno inscrito primero, acceso habilitado
-     * despues desde la pantalla de Personas del administrador-, la ficha
-     * queda sin vincular porque se creo con id_usuario nulo. Sin este
-     * respaldo la cuenta inicia sesion con normalidad pero cada endpoint
-     * "propio" (mi historial, marcar asistencia, mis sesiones, mis
-     * representados) resuelve la ficha por username y no la encuentra.
-     * validarRolCoherente ya garantizo que, si existe una ficha, es de este
-     * mismo rol -- por eso alcanza con mirar el rol nuevo, sin repetir esa
-     * validacion aqui.
-     */
     private void vincularFichaExistente(Long idPersona, String rol, Usuario usuario) {
         switch (rol) {
             case "ESTUDIANTE" -> estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)

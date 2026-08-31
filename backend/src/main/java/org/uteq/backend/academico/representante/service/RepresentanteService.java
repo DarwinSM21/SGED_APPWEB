@@ -24,16 +24,9 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.List;
 
-/**
- * CRUD administrativo de Representante. El alta y la vinculacion con
- * estudiantes son operaciones de ADMINISTRADOR (mismo criterio que
- * Entrenador): un representante no se autoregistra, lo da de alta un
- * administrador ya vinculandolo a sus representados.
- */
 @Service
 @RequiredArgsConstructor
 public class RepresentanteService {
-
     private final RepresentanteRepository representanteRepository;
     private final RepresentanteEstudianteRepository vinculoRepository;
     private final PersonaRepository personaRepository;
@@ -123,7 +116,6 @@ public class RepresentanteService {
         return toResponse(representante);
     }
 
-    /** Baja logica del vinculo puntual: no toca la cuenta ni los demas representados. */
     @Transactional
     public void desvincularEstudiante(Long idRepresentante, Long idEstudiante) {
         RepresentanteEstudiante vinculo = vinculoRepository
@@ -142,8 +134,6 @@ public class RepresentanteService {
         Estudiante estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante));
 
-        // Un estudiante tiene un solo contacto principal: designar uno nuevo
-        // desplaza al anterior en vez de dejar dos marcados.
         if (contactoPrincipal) {
             vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(idEstudiante).stream()
                     .filter(v -> !v.getRepresentante().getIdRepresentante().equals(representante.getIdRepresentante()))

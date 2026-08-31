@@ -8,7 +8,6 @@ import {
 
 @Injectable({ providedIn: 'root' })
 export class PartidosService {
-
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api/partidos';
 
@@ -30,11 +29,6 @@ export class PartidosService {
     return this.http.delete<void>(`${this.apiUrl}/${idPartido}`);
   }
 
-  /**
-   * La alineación guardada si existe; si no, la sugerencia calculada con el
-   * rendimiento de las últimas semanas. El servidor decide cuál devolver y la
-   * bandera `guardada` dice cuál llegó.
-   */
   alineacion(idPartido: number): Observable<Alineacion> {
     return this.http.get<Alineacion>(`${this.apiUrl}/${idPartido}/alineacion`);
   }
@@ -45,16 +39,10 @@ export class PartidosService {
       { jugadores, valoracion, observacion });
   }
 
-  /** Descarta los cambios y vuelve a la sugerencia del sistema. */
   restablecerAlineacion(idPartido: number): Observable<Alineacion> {
     return this.http.delete<Alineacion>(`${this.apiUrl}/${idPartido}/alineacion`);
   }
 
-  /**
-   * Comentario de IA sobre el once. Es una llamada aparte y explícita: no se
-   * dispara sola al abrir la pantalla, para no gastar cuota de un servicio
-   * externo sin que el entrenador lo haya pedido.
-   */
   feedback(idPartido: number): Observable<FeedbackAlineacion> {
     return this.http.post<FeedbackAlineacion>(`${this.apiUrl}/${idPartido}/alineacion/feedback`, null);
   }

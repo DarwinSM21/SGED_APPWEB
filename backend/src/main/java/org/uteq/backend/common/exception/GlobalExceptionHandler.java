@@ -18,13 +18,8 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
-/**
- * Manejador global de excepciones. Todas las respuestas de error
- * siguen el formato Problem Detail (RFC 7807).
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ApiException.class)
@@ -70,12 +65,6 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    /**
-     * Cuerpo de peticion ausente o mal formado. Sin este manejador cae en el
-     * handler generico y responde 500 "Error interno del servidor": un error
-     * del cliente reportado como fallo del servidor, que ademas ensucia el log
-     * con trazas que no corresponden a un defecto del sistema.
-     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleCuerpoIlegible(HttpMessageNotReadableException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -87,13 +76,6 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    /**
-     * Falta un parametro de consulta obligatorio. Mismo criterio que el
-     * cuerpo ilegible: sin este manejador cae en el generico y responde 500,
-     * o sea el sistema se acusa a si mismo de un error que cometio el
-     * cliente. Se nombra el parametro que falta porque sin eso el mensaje no
-     * le sirve a nadie para corregir la llamada.
-     */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ProblemDetail handleParametroFaltante(MissingServletRequestParameterException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -106,12 +88,6 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    /**
-     * El parametro llego pero no se puede convertir al tipo esperado, por
-     * ejemplo /api/estudiantes/abc donde el id es numerico. Se informa cual
-     * parametro es, pero NO el tipo interno de Java: al cliente le sirve
-     * saber que campo corrigir, no como esta implementado el servidor.
-     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -124,16 +100,6 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
-    /**
-     * Ruta que el servidor no conoce. Sin este manejador caia en el catch-all
-     * de Exception y salia como 500, que es una mentira con consecuencias: el
-     * frontend clasifica el 500 como "no es problema tuyo, avisa al
-     * administrador" y el 404 como "puede que la aplicacion y el servidor
-     * esten en versiones distintas, recarga la pagina" -- justo lo que pasa
-     * cuando una pestana vieja sigue llamando a un endpoint que ya no existe.
-     * Es exactamente el caso de /api/evaluaciones/sesion/{id}/plantilla, que
-     * V22 movio a /api/partidos.
-     */
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleRutaDesconocida(NoResourceFoundException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -158,7 +124,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
-                HttpStatus.BAD_REQUEST, ex.getMessage()); // 👈 ex.getMessage() pasa como el "detail"
+                HttpStatus.BAD_REQUEST, ex.getMessage());
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/ReglaDeNegocio"));
         pd.setTitle("Bad Request");
         pd.setProperty("timestamp", Instant.now().toString());

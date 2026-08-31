@@ -6,7 +6,6 @@ import java.time.LocalTime;
 import java.util.List;
 
 public final class AsistenciaDtos {
-
     private AsistenciaDtos() {}
 
     public record AsistenciaResponse(
@@ -22,12 +21,6 @@ public final class AsistenciaDtos {
             BigDecimal porcentajeUltimos30Dias
     ) {}
 
-    /**
-     * Un dia del mapa de calor. {@code esperados} es la cantidad de
-     * estudiantes activos de las categorias que entrenaron ese dia; sin ese
-     * denominador, 12 presentes no dice nada -puede ser excelente o
-     * pesimo segun cuantos debian venir-.
-     */
     public record DiaAsistenciaResponse(
             LocalDate fecha,
             long presentes,
@@ -39,7 +32,6 @@ public final class AsistenciaDtos {
             LocalDate desde,
             LocalDate hasta,
             List<DiaAsistenciaResponse> dias,
-            /** Promedio sobre los dias que tuvieron entrenamiento, no sobre el calendario. */
             BigDecimal promedio,
             DiaAsistenciaResponse mejorDia,
             DiaAsistenciaResponse peorDia

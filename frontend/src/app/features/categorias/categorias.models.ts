@@ -1,4 +1,3 @@
-/** Espejan CategoriaRequest/CategoriaResponse del backend. */
 
 export interface Categoria {
   idCategoria: number;
@@ -17,7 +16,6 @@ export interface CategoriaRequest {
   descripcion: string | null;
 }
 
-/** Forma de una página de Spring Data, en lo que interesa aquí. */
 export interface PaginaCategorias {
   content: Categoria[];
   totalElements: number;

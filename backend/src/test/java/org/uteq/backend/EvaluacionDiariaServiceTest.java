@@ -32,13 +32,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/**
- * Se prueban las reglas de negocio del modulo, no el mapeo HTTP: son las que
- * pueden corromper datos si fallan.
- */
 @ExtendWith(MockitoExtension.class)
 class EvaluacionDiariaServiceTest {
-
     @Mock private EvaluacionDiariaRepository evaluacionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private CriterioEvaluacionRepository criterioRepository;

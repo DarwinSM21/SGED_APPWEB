@@ -7,11 +7,6 @@ import {
 import { Router } from '@angular/router';
 import { authInterceptor } from './auth.interceptor';
 
-/**
- * El vencimiento del token no se puede esperar en una prueba -dura una hora-,
- * asi que se simula respondiendo 401 a la primera llamada. Es justo el caso
- * que antes tumbaba la sesion en medio del uso.
- */
 describe('authInterceptor', () => {
   let http: HttpClient;
   let httpMock: HttpTestingController;
@@ -47,7 +42,6 @@ describe('authInterceptor', () => {
 
     httpMock.expectOne('/api/auth/refresh').flush(null, { status: 204, statusText: 'No Content' });
 
-    // El reintento es la misma peticion, no una nueva inventada.
     const reintento = httpMock.expectOne('/api/alertas');
     expect(reintento.request.method).toBe('GET');
     reintento.flush({ ok: true });
@@ -76,7 +70,6 @@ describe('authInterceptor', () => {
     httpMock.expectOne('/api/sesiones/hoy').flush('', { status: 401, statusText: 'Unauthorized' });
     httpMock.expectOne('/api/estudiantes').flush('', { status: 401, statusText: 'Unauthorized' });
 
-    // Uno solo: si fueran tres, dos trabajarian sobre una cookie ya rotada.
     const refrescos = httpMock.match('/api/auth/refresh');
     expect(refrescos).toHaveLength(1);
     refrescos[0].flush(null, { status: 204, statusText: 'No Content' });
@@ -92,8 +85,6 @@ describe('authInterceptor', () => {
 
     httpMock.expectOne('/api/auth/login').flush('', { status: 401, statusText: 'Unauthorized' });
 
-    // Credenciales equivocadas no son una sesion vencida: renovar aqui seria
-    // un bucle y ademas taparia el mensaje real al usuario.
     httpMock.expectNone('/api/auth/refresh');
     expect(fallo).toBeTruthy();
     expect(navegaciones).toEqual([]);

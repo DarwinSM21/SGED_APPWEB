@@ -19,14 +19,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Utilidad compartida para armar los PDFs de Reportes y de "mis datos" en
- * Configuracion: mismo encabezado/tabla/pie para todos, cada llamador solo
- * arma sus filas reutilizando los repositorios/servicios que ya existen.
- */
 @Service
 public class ReportePdfService {
-
     private static final Font FUENTE_TITULO = new Font(Font.HELVETICA, 16, Font.BOLD);
     private static final Font FUENTE_ENCABEZADO = new Font(Font.HELVETICA, 9, Font.BOLD, Color.WHITE);
     private static final Font FUENTE_CELDA = new Font(Font.HELVETICA, 9);

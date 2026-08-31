@@ -7,12 +7,6 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 
 import java.time.Instant;
 
-/**
- * Notificacion en-app al representante (RF-22): se crea una fila por cada
- * representante con vinculo activo al estudiante cuando este marca
- * asistencia o se le registra una lesion. No hay envio de correo/SMS: no
- * existe infraestructura externa para eso en este proyecto.
- */
 @Entity
 @Table(name = "notificaciones", schema = "academico")
 @Getter
@@ -21,7 +15,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class Notificacion {
-
     public enum Tipo { ASISTENCIA, LESION }
 
     @Id

@@ -13,20 +13,10 @@ import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
 import org.uteq.backend.seguridad.persona.service.PersonaService;
 
-/**
- * CRUD de Persona. Concentra los datos identificativos (cedula, correo)
- * de estudiantes menores de edad, por lo que la mayoria de endpoints queda
- * restringida a ADMINISTRADOR. La excepcion es {@code crear}: la
- * recepcionista tambien la necesita para poder registrar un estudiante
- * nuevo (Estudiante siempre cuelga de una Persona ya existente, asi que
- * ese es el primer paso del alta). Leer/editar/eliminar el catalogo
- * completo de personas sigue siendo solo de ADMINISTRADOR.
- */
 @RestController
 @RequestMapping("/api/personas")
 @RequiredArgsConstructor
 public class PersonaController {
-
     private final PersonaService personaService;
 
     @GetMapping

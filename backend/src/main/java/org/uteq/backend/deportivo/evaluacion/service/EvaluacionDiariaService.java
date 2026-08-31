@@ -20,29 +20,9 @@ import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepositor
 import java.math.BigDecimal;
 import java.util.*;
 
-/**
- * Evaluacion diaria del entrenador.
- *
- * <p>Concentra las tres reglas que el documento del modulo describe y que no
- * son evidentes desde el esquema:
- *
- * <ol>
- *   <li><b>Sin asistencia no hay calificacion.</b> Solo se puede evaluar a
- *       quien marco PRESENTE o TARDE. No es una comodidad de interfaz: evita
- *       que queden registros de desempeno de alguien que no fue.</li>
- *   <li><b>Cada dia arranca con los valores del anterior.</b> El entrenador
- *       ajusta lo que cambio en vez de recalificar treinta jugadores desde
- *       cero. Los valores heredados se marcan como precargados para que sepa
- *       cuales todavia no confirmo.</li>
- *   <li><b>Se guarda la categoria del dia.</b> Si un jugador cambia de
- *       categoria en marzo, sus evaluaciones de febrero siguen diciendo
- *       SUB-12, que es donde realmente estaba.</li>
- * </ol>
- */
 @Service
 @RequiredArgsConstructor
 public class EvaluacionDiariaService {
-
     private final EvaluacionDiariaRepository evaluacionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     private final CriterioEvaluacionRepository criterioRepository;
@@ -52,10 +32,6 @@ public class EvaluacionDiariaService {
     private final PosicionRepository posicionRepository;
     private final EstudianteRepository estudianteRepository;
 
-    /**
-     * Abre la pantalla de evaluacion de una sesion. Si todavia no existe la
-     * cabecera, la crea en BORRADOR.
-     */
     @Transactional
     public EvaluacionSesionResponse abrir(Long idSesion) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
@@ -75,14 +51,8 @@ public class EvaluacionDiariaService {
             lesionActivaPorEstudiante.put((Long) fila[0], (Long) fila[1]);
         }
 
-        // Evaluacion previa de la misma categoria: fuente de la precarga.
         Long idEvaluacionPrevia = buscarEvaluacionPrevia(sesion);
 
-        // Se listan TODOS los estudiantes activos de la categoria de la sesion,
-        // no solo quien marco asistencia: el entrenador necesita ver a los que
-        // faltaron para saber quienes son, aunque no pueda calificarlos (esto
-        // ya lo decia el javadoc de puedeEvaluarse, pero el codigo solo
-        // recorria asistencias existentes y dejaba invisible a quien no marco).
         Map<Long, Asistencia> asistenciaPorEstudiante = new HashMap<>();
         for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {
             asistenciaPorEstudiante.put(asistencia.getEstudiante().getIdEstudiante(), asistencia);
@@ -125,16 +95,13 @@ public class EvaluacionDiariaService {
                         ? "No marcó asistencia en esta sesión"
                         : "No se puede calificar: la asistencia figura como " + asistencia.getEstado();
 
-        // Lo ya guardado hoy tiene prioridad sobre cualquier precarga.
         var yaEvaluado = evaluacionEstudianteRepository
                 .findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(
                         evaluacion.getIdEvaluacion(), idEstudiante);
 
         Map<String, BigDecimal> puntajes = new LinkedHashMap<>();
         boolean precargado = false;
-        // Posicion nominal del estudiante (la misma que edita ADMINISTRADOR
-        // desde Personas, no la de un registro de evaluacion puntual): se
-        // muestra siempre, evaluado o no, presente o no.
+
         Long idPosicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
         String posicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getNombre() : null;
 
@@ -175,17 +142,6 @@ public class EvaluacionDiariaService {
                 .orElse(null);
     }
 
-    /**
-     * Guarda los puntajes de un jugador. Es la operacion del autoguardado, asi
-     * que se invoca muchas veces por sesion y debe ser idempotente: vuelve a
-     * escribir sobre lo que ya habia en vez de acumular filas.
-     *
-     * <p>La auditoria queda deliberadamente generica ("editó estadísticas de
-     * estudiante #X"), sin el detalle de que criterio cambio ni a que valor:
-     * el autoguardado dispara esto en cada pausa del entrenador mientras
-     * ajusta sliders, y una fila por criterio inundaria el registro sin
-     * agregar informacion util.
-     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#p1.idEstudiante",
             descripcionSpel = "'editó estadísticas de estudiante #' + #p1.idEstudiante")
     @Transactional
@@ -199,7 +155,6 @@ public class EvaluacionDiariaService {
                     "La evaluacion ya fue finalizada y no admite cambios");
         }
 
-        // Regla 1: sin asistencia habilitante no se guarda nada.
         Asistencia asistencia = asistenciaRepository
                 .findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, request.idEstudiante())
                 .orElseThrow(() -> new IllegalArgumentException(
@@ -219,15 +174,9 @@ public class EvaluacionDiariaService {
                 .orElseGet(() -> EvaluacionEstudiante.builder()
                         .evaluacion(evaluacion)
                         .estudiante(estudiante)
-                        // Regla 3: la categoria del dia se congela al crear la
-                        // fila, tomandola del estudiante en este momento.
                         .categoriaDia(estudiante.getCategoria())
                         .build());
 
-        // El frontend siempre manda este campo (nunca lo omite), asi que null
-        // es una instruccion explicita de "quitar la posicion", no "no tocar
-        // nada" -- antes este if solo cubria el alta/cambio y no habia forma
-        // de borrar una posicion ya asignada.
         if (request.idPosicionJugada() != null) {
             ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())
                     .orElseThrow(() -> new RecursoNoEncontradoException(
@@ -277,7 +226,6 @@ public class EvaluacionDiariaService {
         }
     }
 
-    /** Cierra la evaluacion. A partir de aqui no admite cambios. */
     @Auditado(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
             descripcionSpel = "'finalizó la evaluación de la sesión #' + #p0")
     @Transactional

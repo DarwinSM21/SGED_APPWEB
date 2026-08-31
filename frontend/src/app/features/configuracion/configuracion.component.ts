@@ -7,7 +7,6 @@ import { Fuente, TamanoFuente, ThemeService } from '../../core/theme.service';
 
 type Seccion = 'apariencia' | 'acerca-de' | 'privacidad' | 'mis-datos';
 
-/** Configuración: apariencia (tema/fuente), acerca de, política de privacidad y exportar "mis datos". Visible para los 5 roles. */
 @Component({
   selector: 'app-configuracion',
   standalone: true,
@@ -129,10 +128,8 @@ type Seccion = 'apariencia' | 'acerca-de' | 'privacidad' | 'mis-datos';
     .encabezado { display: flex; flex-direction: column; gap: .3rem; }
     .titulo-pantalla { font-size: 1.5rem; }
     .subtitulo-pantalla { color: var(--color-text-muted); font-size: .92rem; }
-
     .layout { display: grid; grid-template-columns: 200px 1fr; gap: 1.25rem; align-items: start; }
     @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } }
-
     .tabs { display: flex; flex-direction: column; gap: .25rem; }
     .tab {
       text-align: left; border: none; background: none; padding: .65rem .8rem; border-radius: var(--radius-sm);
@@ -142,10 +139,8 @@ type Seccion = 'apariencia' | 'acerca-de' | 'privacidad' | 'mis-datos';
     .tab:hover { background: var(--color-border-light); color: var(--color-text); }
     .tab--activa { background: var(--color-primary-50); color: var(--color-primary-700); }
     @media (max-width: 720px) { .tabs { flex-direction: row; flex-wrap: wrap; } }
-
     .contenido { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
     .titulo-card { font-size: 1.1rem; }
-
     .grupo { display: flex; flex-direction: column; gap: .5rem; }
     .grupo__etiqueta { font-size: .82rem; font-weight: 600; color: var(--color-text); }
     .segmentado { display: flex; gap: .3rem; background: var(--color-bg); border-radius: var(--radius-sm); padding: .3rem; flex-wrap: wrap; }
@@ -156,12 +151,10 @@ type Seccion = 'apariencia' | 'acerca-de' | 'privacidad' | 'mis-datos';
       white-space: nowrap;
     }
     .segmento--activo { background: var(--gradient-primary); color: #fff; box-shadow: var(--shadow-sm); }
-
     .parrafo { color: var(--color-text-muted); font-size: .9rem; line-height: 1.6; }
     .politica p { margin-bottom: .9rem; }
     .politica p:last-child { margin-bottom: 0; }
     .politica strong { color: var(--color-text); }
-
     .lista-datos { display: flex; flex-direction: column; gap: .5rem; }
     .lista-datos > div { display: flex; justify-content: space-between; gap: 1rem; padding: .5rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem; }
     .lista-datos dt { color: var(--color-text-muted); margin: 0; }

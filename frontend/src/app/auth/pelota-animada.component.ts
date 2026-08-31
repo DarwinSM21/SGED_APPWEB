@@ -10,26 +10,10 @@ interface Brillo {
   x: number; y: number; r: number; fase: number; velocidad: number;
 }
 
-/** Anillo que se expande desde el punto de impacto y se desvanece. */
 interface Onda {
   x: number; y: number; r: number; vida: number; maxVida: number;
 }
 
-/**
- * Fondo animado del panel de marca: un balon con fisica real que rebota
- * dentro del panel, deja una estela luminosa y revienta en chispas en cada
- * impacto.
- *
- * Va sobre un <canvas> y no sobre elementos del DOM por tres razones:
- * dibujar ~200 particulas como divs obligaria al navegador a recalcular
- * estilos en cada cuadro; el canvas queda fuera del arbol de componentes,
- * asi que el bucle de animacion no despierta la deteccion de cambios de
- * Angular (el proyecto corre sin zone.js); y permite efectos -estela por
- * superposicion, degradados radiales- que en CSS costarian mucho mas.
- *
- * Es decorativo: va marcado aria-hidden y detras del contenido, de modo que
- * no agrega nada que un lector de pantalla tenga que anunciar.
- */
 @Component({
   selector: 'app-pelota-animada',
   standalone: true,
@@ -45,7 +29,6 @@ interface Onda {
   `],
 })
 export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
-
   @ViewChild('lienzo') private lienzoRef!: ElementRef<HTMLCanvasElement>;
   private readonly host = inject(ElementRef<HTMLElement>);
 
@@ -53,7 +36,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
   private animacion = 0;
   private observador?: ResizeObserver;
 
-  /** Medidas en pixeles CSS; el canvas se escala aparte por devicePixelRatio. */
   private ancho = 0;
   private alto = 0;
 
@@ -68,11 +50,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
   private readonly MAX_ESTELA = 22;
   private readonly MAX_CHISPAS = 190;
 
-  /**
-   * Con "reducir movimiento" activado se pinta un unico cuadro estatico en
-   * vez de animar: la pantalla no queda vacia, pero nadie recibe una
-   * animacion continua que no pidio.
-   */
   private readonly prefiereQuieto =
     typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -105,7 +82,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
     document.removeEventListener('visibilitychange', this.alCambiarVisibilidad);
   }
 
-  /** Con la pestaña oculta no tiene sentido gastar bateria dibujando. */
   private readonly alCambiarVisibilidad = (): void => {
     cancelAnimationFrame(this.animacion);
     if (!document.hidden) this.animar();
@@ -116,8 +92,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
     const rect = this.host.nativeElement.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
 
-    // Escalar por devicePixelRatio evita que el balon se vea borroso en
-    // pantallas retina; el ctx trabaja siempre en pixeles CSS.
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(rect.width * dpr);
     canvas.height = Math.round(rect.height * dpr);
@@ -168,8 +142,7 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
       b.y = this.alto - b.r;
       b.vy = -Math.abs(b.vy) * this.REBOTE;
       this.reventar(b.x, b.y);
-      // Sin este empujon el balon pierde energia y termina quieto contra el
-      // piso: la animacion se "muere" a los pocos segundos de cargar.
+
       if (Math.abs(b.vy) < 7.5) b.vy = -(7.5 + Math.random() * 3.4);
       b.vx += (Math.random() - 0.5) * 1.5;
       b.vx = Math.max(-6.5, Math.min(6.5, b.vx));
@@ -210,7 +183,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
         vx: Math.cos(angulo) * fuerza,
         vy: Math.sin(angulo) * fuerza - 1.1,
         vida, maxVida: vida,
-        // Del cian al violeta: los mismos tonos que los halos del panel.
         tono: 185 + Math.random() * 95,
       });
     }
@@ -240,8 +212,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
       ctx.stroke();
     }
 
-    // La estela va del cian (cabeza, junto al balon) al violeta del panel
-    // en la cola: da sensacion de velocidad sin ensuciar el fondo.
     this.estela.forEach((p, i) => {
       const t = 1 - i / this.MAX_ESTELA;
       const radio = this.balon.r * (0.3 + t * 0.78);
@@ -267,7 +237,6 @@ export class PelotaAnimadaComponent implements AfterViewInit, OnDestroy {
     this.dibujarBalon();
   }
 
-  /** Balon clasico: casquetes oscuros sobre blanco, girando con el avance. */
   private dibujarBalon(): void {
     const ctx = this.ctx;
     const { x, y, r, giro } = this.balon;

@@ -32,14 +32,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * doFilterInternal es protected: se invoca a traves del doFilter publico
- * heredado de OncePerRequestFilter (la misma via que usa el contenedor de
- * servlets), en vez de reflexion o mover el test al mismo paquete.
- */
 @ExtendWith(MockitoExtension.class)
 class JwtAuthenticationFilterTest {
-
     @Mock private JwtService jwtService;
     @Mock private UserDetailsServiceImpl userDetailsService;
     @Mock private RedisBlacklistService blacklistService;

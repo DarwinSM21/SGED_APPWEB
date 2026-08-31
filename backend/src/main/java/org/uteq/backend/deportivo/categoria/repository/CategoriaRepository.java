@@ -8,13 +8,11 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import java.util.List;
 
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
-
     Page<Categoria> findByActivoTrue(Pageable pageable);
 
     List<Categoria> findByActivoTrue();
 
     boolean existsByNombreIgnoreCase(String nombre);
 
-    /** Para editar: el propio registro no cuenta como duplicado de si mismo. */
     boolean existsByNombreIgnoreCaseAndIdCategoriaNot(String nombre, Long idCategoria);
 }

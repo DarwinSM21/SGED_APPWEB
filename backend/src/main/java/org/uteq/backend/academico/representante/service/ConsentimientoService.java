@@ -17,17 +17,9 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 
-/**
- * Otorga/revoca el consentimiento del representante para el tratamiento
- * de datos de un representado (hallazgo H-04 de ETHICS.md). Lo registra
- * un administrador -en esta iteracion el representante no tiene una
- * pantalla propia para autorizarlo el mismo, mismo criterio "el admin lo
- * crea" ya usado para las cuentas- dejando constancia de quien lo hizo.
- */
 @Service
 @RequiredArgsConstructor
 public class ConsentimientoService {
-
     private final ConsentimientoRepository consentimientoRepository;
     private final RepresentanteRepository representanteRepository;
     private final EstudianteRepository estudianteRepository;

@@ -8,17 +8,6 @@ import { RecepcionService } from './recepcion.service';
 import { SesionHoy } from '../dashboard/dashboard.models';
 import { horaCorta } from '../../core/formato-texto';
 
-/**
- * Pantalla de recepcion: elegir una sesion de hoy y mostrar su QR de
- * asistencia. El QR se genera 100% en el cliente (librer­ia `qrcode`,
- * sin llamada a ningun servicio externo de imagenes): el token que
- * codifica es una credencial vigente que marca asistencia, mandarlo a
- * un tercero para "dibujarlo" seria filtrar esa credencial.
- *
- * El token rota: se vuelve a pedir uno nuevo un poco antes de que el
- * anterior expire (80% de expiraEnSegundos), asi el codigo en pantalla
- * nunca queda invalido mientras alguien intenta escanearlo.
- */
 @Component({
   selector: 'app-recepcion',
   standalone: true,
@@ -64,27 +53,22 @@ import { horaCorta } from '../../core/formato-texto';
   styles: [`
     .pantalla { max-width: 480px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: flex; flex-direction: column; gap: 1rem; }
     .titulo-pantalla { font-size: 1.2rem; }
-
     .aviso { color: var(--color-text-muted); font-size: .9rem; }
-
     .vacio { display: flex; flex-direction: column; align-items: center; gap: .65rem; text-align: center; color: var(--color-text-faint); padding: 2.5rem 1rem; }
     .vacio svg { width: 34px; height: 34px; opacity: .6; }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); }
-
     .selector { padding: 1rem 1.1rem; display: flex; flex-direction: column; gap: .4rem; }
     .selector__etiqueta { font-size: .8rem; font-weight: 600; color: var(--color-text-muted); }
     .selector select {
       border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
       padding: .65rem .7rem; font-size: .92rem; background: var(--color-surface); color: var(--color-text);
     }
-
     .qr-tarjeta { padding: 1.75rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
     .qr-imagen { width: 100%; max-width: 280px; height: auto; border-radius: var(--radius-sm); }
     .qr-vigencia { font-size: .8rem; color: var(--color-text-muted); }
   `]
 })
 export class RecepcionComponent implements OnInit, OnDestroy {
-
   private readonly servicio = inject(RecepcionService);
 
   readonly horaCorta = horaCorta;

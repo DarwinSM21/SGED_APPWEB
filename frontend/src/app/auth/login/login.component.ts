@@ -7,13 +7,6 @@ import { homeRouteForRole } from '../home-route';
 import { PelotaAnimadaComponent } from '../pelota-animada.component';
 import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
 
-/**
- * `loading`/`error` viven en signals, no en propiedades sueltas: este
- * proyecto no incluye zone.js, asi que una propiedad plana mutada dentro de
- * un subscribe de HttpClient no garantiza un repintado. `username`/`password`
- * si pueden quedarse como propiedades normales porque `[(ngModel)]` las
- * actualiza a traves de su propio manejador de evento instrumentado.
- */
 @Component({
   selector: 'app-login',
   standalone: true,
@@ -132,30 +125,15 @@ export class LoginComponent {
   username = '';
   password = '';
   readonly loading = signal(false);
-  /**
-   * El fallo completo, no solo su texto: la pantalla necesita saber de donde
-   * viene para pintarlo distinto. Un servidor caido no es culpa de quien
-   * escribe la contrasena, y no deberia verse igual de rojo que un dato mal
-   * puesto.
-   */
   readonly fallo = signal<Diagnostico | null>(null);
   readonly mostrarPassword = signal(false);
 
   onSubmit() {
     if (this.loading()) {
-      // El backend cuenta intentos fallidos por IP (LoginAttemptService,
-      // OWASP A07); un doble clic no debe consumir dos de los seis
-      // intentos disponibles antes del bloqueo.
       return;
     }
     const username = this.username.trim();
 
-    // Se comprueba aqui antes de llamar al servidor por dos motivos. El
-    // mensaje: enviar el formulario vacio devolvia 422, que no estaba
-    // contemplado abajo y acababa mostrando "Error del servidor" -acusando
-    // al sistema de un fallo que no existe-. Y el coste: el backend bloquea
-    // por IP tras seis intentos fallidos (LoginAttemptService, OWASP A07),
-    // asi que un Enter dado sin querer no debe gastar uno de esos seis.
     if (!username || !this.password) {
       this.fallo.set({ origen: 'peticion', mensaje: !username
         ? 'Escribe tu usuario'

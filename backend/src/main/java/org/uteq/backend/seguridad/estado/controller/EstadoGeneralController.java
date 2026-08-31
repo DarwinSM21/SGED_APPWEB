@@ -11,16 +11,10 @@ import org.uteq.backend.seguridad.estado.service.EstadoGeneralService;
 
 import java.util.List;
 
-/**
- * Catalogo de solo lectura de estados administrativos. No expone datos
- * personales, pero se restringe a usuarios autenticados con rol conocido
- * en vez de dejarse abierto a cualquier sesion valida.
- */
 @RestController
 @RequestMapping("/api/estados_generales")
 @RequiredArgsConstructor
 public class EstadoGeneralController {
-
     private final EstadoGeneralService estadoGeneralService;
 
     @GetMapping

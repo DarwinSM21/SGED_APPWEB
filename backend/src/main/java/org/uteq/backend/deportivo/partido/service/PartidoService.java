@@ -23,11 +23,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Alta, agenda e historial de partidos. */
 @Service
 @RequiredArgsConstructor
 public class PartidoService {
-
     private final PartidoRepository partidoRepository;
     private final CategoriaRepository categoriaRepository;
     private final AlineacionRepository alineacionRepository;
@@ -72,10 +70,6 @@ public class PartidoService {
         return aResponse(guardado, false, 0);
     }
 
-    /**
-     * El marcador llega despues de jugar, por eso va en su propia operacion y
-     * no en la creacion del partido.
-     */
     @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'cargó el resultado del partido ' + #p0")
     @Transactional
@@ -97,17 +91,10 @@ public class PartidoService {
     public void eliminar(Long idPartido) {
         Partido p = partidoRepository.findById(idPartido)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
-        // La alineacion cae con el partido (ON DELETE CASCADE): sin partido no
-        // significa nada, y dejarla huerfana solo ensuciaria la tabla.
+
         partidoRepository.delete(p);
     }
 
-    // ------------------------------------------------------------------
-
-    /**
-     * Anota cada partido con si tiene alineacion y cuantos titulares, en dos
-     * consultas para toda la pagina en vez de dos por fila.
-     */
     private List<PartidoResponse> conAlineacion(List<Partido> partidos) {
         if (partidos.isEmpty()) {
             return List.of();
@@ -136,10 +123,6 @@ public class PartidoService {
                 resultadoDe(p), tieneAlineacion, titulares);
     }
 
-    /**
-     * Se calcula, no se guarda: almacenar "GANADO" junto al marcador abre la
-     * puerta a que un dia digan cosas distintas.
-     */
     private String resultadoDe(Partido p) {
         if (!p.tieneResultado()) {
             return "PENDIENTE";

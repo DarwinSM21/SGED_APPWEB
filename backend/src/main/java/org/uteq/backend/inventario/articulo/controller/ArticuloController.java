@@ -13,17 +13,10 @@ import org.uteq.backend.inventario.articulo.service.ArticuloService;
 
 import java.util.List;
 
-/**
- * CRUD del catalogo de articulos de inventario. La lectura la necesitan
- * los 3 roles operativos; la escritura queda restringida a ADMINISTRADOR
- * y RECEPCIONISTA (quienes gestionan el deposito fisico). ENTRENADOR solo
- * consulta el catalogo para asignar articulos, nunca lo modifica.
- */
 @RestController
 @RequestMapping("/api/inventario/articulos")
 @RequiredArgsConstructor
 public class ArticuloController {
-
     private final ArticuloService articuloService;
 
     @GetMapping

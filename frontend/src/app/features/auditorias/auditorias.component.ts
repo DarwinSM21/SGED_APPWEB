@@ -8,11 +8,6 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
 const ACCIONES = ['CREAR', 'EDITAR', 'ELIMINAR', 'LOGIN', 'LOGIN_FALLIDO', 'LOGOUT'];
 const TAMANO_PAGINA = 20;
 
-/**
- * Panel de auditoría: todo lo que se registra vía @Auditado y los eventos
- * de autenticación queda visible aquí, solo para ADMINISTRADOR. Primera
- * pantalla con paginación y filtros server-side reales del frontend.
- */
 @Component({
   selector: 'app-auditorias',
   standalone: true,
@@ -103,24 +98,19 @@ const TAMANO_PAGINA = 20;
     .encabezado { display: flex; flex-direction: column; gap: .3rem; }
     .titulo-pantalla { font-size: 1.5rem; }
     .subtitulo-pantalla { color: var(--color-text-muted); font-size: .92rem; }
-
     .filtros { padding: 1.1rem 1.25rem; display: flex; flex-wrap: wrap; gap: .85rem; align-items: end; }
     .filtros .field { margin-bottom: 0; min-width: 150px; flex: 1; }
-
     .tabla-card { padding: 1.1rem 1.25rem; }
     .aviso { color: var(--color-text-muted); font-size: .9rem; padding: 1rem 0; }
-
     .tabla { display: flex; flex-direction: column; font-size: .85rem; }
     .fila { display: grid; grid-template-columns: 140px 130px 110px 100px 120px 1fr; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid var(--color-border-light); align-items: center; }
     .fila:last-child { border-bottom: none; }
     .fila--encabezado { font-weight: 700; color: var(--color-text-faint); font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; }
     .fecha { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
     .descripcion { color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
     .vacio { text-align: center; padding: 2rem .5rem; }
     .vacio__titulo { font-weight: 700; font-size: .95rem; }
     .vacio__texto { color: var(--color-text-muted); font-size: .85rem; margin-top: .25rem; }
-
     .paginacion { display: flex; align-items: center; justify-content: center; gap: 1rem; padding-top: 1rem; }
     .paginacion__info { font-size: .82rem; color: var(--color-text-muted); }
 
@@ -131,8 +121,6 @@ const TAMANO_PAGINA = 20;
   `],
 })
 export class AuditoriasComponent implements OnInit {
-
-  /** 12 horas con AM/PM, igual que el resto de la app. */
   readonly fechaHora = fechaHoraCorta;
 
   private readonly servicio = inject(AuditoriaService);

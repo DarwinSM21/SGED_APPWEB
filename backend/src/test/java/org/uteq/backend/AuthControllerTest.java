@@ -32,16 +32,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Prueba de AuthController a nivel HTTP: validacion de @Valid, codigos de
- * estado, cookies y delegacion en AuthService (ya mockeado, no la logica
- * de negocio real: eso lo cubre AuthServiceTest).
- */
 @ExtendWith(MockitoExtension.class)
 class AuthControllerTest {
-
     private MockMvc mockMvc;
-    // JavaTimeModule: RegisterRequest incluye una LocalDate (fechaNacimiento).
+
     private final ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
@@ -76,10 +70,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.username").value("admin@test.com"))
                 .andExpect(jsonPath("$.nombre").value("Admin SGED"))
                 .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
-                // El JWT viaja solo en la cookie HttpOnly (ADR-002/ADR-008).
-                // Si algun dia vuelve a aparecer aqui, esta prueba debe
-                // fallar: un token en el cuerpo es legible por cualquier
-                // fetch/axios del frontend y anula esa proteccion.
                 .andExpect(jsonPath("$.accessToken").doesNotExist())
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(cookie().exists("sged_access"))
@@ -101,14 +91,6 @@ class AuthControllerTest {
                 .andExpect(status().isConflict());
     }
 
-    /**
-     * Regresion: la reestructuracion volvio cedula, correo y fecha_nacimiento
-     * columnas NOT NULL de seguridad.personas, pero RegisterRequest no las
-     * pedia, asi que /api/auth/registro fallaba siempre con 500 contra la base
-     * real. Esta prueba cubre el hueco por el lado que si es verificable sin
-     * base de datos: que la peticion sin esos campos ni siquiera pase la
-     * validacion (por lo tanto ni siquiera llega a AuthService).
-     */
     @Test
     void registroSinCedulaNiFechaNacimientoNoLlegaAlServicio() throws Exception {
         String cuerpoIncompleto = """
@@ -124,7 +106,6 @@ class AuthControllerTest {
         verify(authService, never()).registrar(any());
     }
 
-    /** rol es obligatorio en RegisterRequest: en blanco o ausente responde 422, nunca llega al servicio. */
     @Test
     void registroSinRolDa422() throws Exception {
         String cuerpoSinRol = """
@@ -148,8 +129,6 @@ class AuthControllerTest {
                 .andExpect(content().string("pong"));
     }
 
-    // --- logout ---
-
     @Test
     void logoutConCookieDelegaElValorYLimpiaLasCookies() throws Exception {
         mockMvc.perform(post("/api/auth/logout")
@@ -168,8 +147,6 @@ class AuthControllerTest {
 
         verify(authService).logout(isNull());
     }
-
-    // --- refresh ---
 
     @Test
     void refreshSinCookieDa401() throws Exception {
@@ -198,8 +175,6 @@ class AuthControllerTest {
                 .andExpect(status().isNoContent())
                 .andExpect(cookie().value("sged_access", "nuevo-access"));
     }
-
-    // --- me ---
 
     @Test
     void meSinAutenticarDa401() throws Exception {

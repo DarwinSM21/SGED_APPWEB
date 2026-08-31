@@ -16,15 +16,9 @@ import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
-/**
- * Entradas/salidas/ajustes de stock. ENTRADA y AJUSTE suman a
- * stock_actual, SALIDA resta; una SALIDA que dejaria el stock negativo
- * se rechaza antes de tocar la base de datos.
- */
 @Service
 @RequiredArgsConstructor
 public class MovimientoStockService {
-
     private final MovimientoStockRepository movimientoStockRepository;
     private final ArticuloRepository articuloRepository;
     private final UsuarioRepository usuarioRepository;

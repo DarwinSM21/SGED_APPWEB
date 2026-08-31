@@ -15,15 +15,9 @@ import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepositor
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * "Mi equipo" del ESTUDIANTE autenticado: categoria, posicion nominal,
- * entrenador de su proxima sesion programada, y companeros de la misma
- * categoria.
- */
 @Service
 @RequiredArgsConstructor
 public class MiEquipoService {
-
     private final EstudianteRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
 

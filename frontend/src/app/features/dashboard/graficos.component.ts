@@ -4,7 +4,6 @@ import { HistoricoIngresos } from './dashboard.models';
 
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 
-/** Geometria del area de dibujo, en unidades del viewBox. */
 const W = 480;
 const H = 216;
 const M = { arriba: 10, derecha: 10, abajo: 26, izquierda: 46 };
@@ -15,23 +14,6 @@ interface Barra {
   x: number; y: number; alto: number; centro: number; destacada: boolean;
 }
 
-/**
- * Dos lecturas del dinero, cada una con la forma que le corresponde:
- *
- * - Recaudacion mes a mes = comparar magnitudes en el tiempo -> barras, una
- *   sola serie y por lo tanto un solo tono (no hace falta leyenda: el titulo
- *   ya dice que se esta midiendo).
- * - Cobranza del mes = una razon contra un limite -> medidor. Se dibuja en
- *   arco porque se lee de un vistazo, pero no es un grafico de torta de dos
- *   porciones: esa forma obliga a comparar dos angulos para entender un solo
- *   numero.
- *
- * Reglas de marca que se respetan a proposito: barras finas con el extremo
- * superior redondeado y la base cuadrada sobre una unica linea de base;
- * rejilla de un solo pixel y recesiva; y valor impreso solo en el mes
- * destacado -un numero sobre cada barra se vuelve ruido y nadie lo lee-, con
- * el resto disponible al pasar el puntero y en la tabla.
- */
 @Component({
   selector: 'app-graficos-ingresos',
   standalone: true,
@@ -153,11 +135,6 @@ interface Barra {
     </div>
   `,
   styles: [`
-    /* Pasos elegidos de la misma rampa indigo para cada tema. En claro las
-       barras van de claro a oscuro; en oscuro ese orden se invierte a
-       proposito, porque sobre fondo oscuro el paso mas claro es el que
-       destaca. Copiar los mismos hex a los dos temas dejaria la barra
-       destacada mas apagada que el resto justo donde tiene que resaltar. */
     .graficos {
       --barra: var(--color-primary-200);
       --barra-fuerte: var(--color-primary-600);
@@ -172,13 +149,8 @@ interface Barra {
       --pista: #312e81;
       --relleno: #818cf8;
     }
-
     .graficos { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
-    /* Se apilan bastante antes de que la pantalla sea "chica": en dos
-       columnas por debajo de ~900px la tarjeta de barras baja de 300px y las
-       barras quedan en 12px, la mitad del grosor previsto. */
     @media (max-width: 900px) { .graficos { grid-template-columns: 1fr; } }
-
     .grafico { padding: 1.15rem 1.3rem 1rem; }
     .grafico__cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: .5rem; }
     .grafico__cabecera h2 { font-size: 1rem; }
@@ -186,24 +158,17 @@ interface Barra {
     .grafico__resumen { text-align: right; display: flex; flex-direction: column; }
     .resumen__valor { font-size: 1.15rem; font-weight: 700; }
     .resumen__etiqueta { font-size: .72rem; color: var(--color-text-faint); }
-
     .lienzo { position: relative; }
     .lienzo svg { display: block; width: 100%; height: auto; overflow: visible; }
-
-    /* Rejilla y ejes recesivos: un pixel, continuos, nunca punteados. */
     .rejilla { stroke: var(--color-border-light); stroke-width: 1; }
     .eje { stroke: var(--color-border); stroke-width: 1; }
-
-    /* El texto usa tokens de texto, nunca el color de la serie. */
     .tick, .mes { fill: var(--color-text-faint); font-size: 9px; font-variant-numeric: tabular-nums; }
     .valor { fill: var(--color-text); font-size: 10px; font-weight: 700; }
-
     .zona { fill: transparent; }
     .barra { cursor: default; }
     .pilar { fill: var(--barra); transition: fill var(--transition); }
     .barra--destacada .pilar { fill: var(--barra-fuerte); }
     .barra--activa .pilar { fill: var(--barra-activa); }
-
     .globo {
       position: absolute; top: 0; transform: translateX(-50%);
       background: var(--color-text); color: var(--color-surface);
@@ -214,14 +179,12 @@ interface Barra {
     }
     .globo strong { font-size: .78rem; }
     .globo__pagos { opacity: .75; }
-
     .tabla-alterna { margin-top: .7rem; }
     .tabla-alterna summary { font-size: .76rem; color: var(--color-text-muted); cursor: pointer; }
     .tabla-alterna table { width: 100%; border-collapse: collapse; margin-top: .5rem; font-size: .8rem; }
     .tabla-alterna th, .tabla-alterna td { text-align: left; padding: .35rem .5rem; border-bottom: 1px solid var(--color-border-light); }
     .tabla-alterna td { font-variant-numeric: tabular-nums; }
     .oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
     .grafico--medidor { display: flex; flex-direction: column; }
     .medidor { position: relative; align-self: center; width: 160px; margin: .2rem 0 .6rem; }
     .medidor svg { display: block; width: 100%; height: auto; }
@@ -231,16 +194,10 @@ interface Barra {
     }
     .medidor__cifra { font-size: 1.9rem; font-weight: 700; line-height: 1; }
     .medidor__pie { font-size: .72rem; color: var(--color-text-muted); }
-
-    /* El relleno lleva la severidad y la pista es un paso claro de ese mismo
-       tono, de modo que el estado se reconoce sin leer la cifra. */
     .medidor .pista { stroke: var(--pista); }
     .medidor .relleno { stroke: var(--relleno); transition: stroke-dashoffset .6s ease; }
-    /* Los -bg de estado ya tienen su propio paso en tema oscuro, asi que
-       sirven tal cual como pista clara del mismo tono del relleno. */
     .grafico--medidor[data-estado="atencion"] { --relleno: var(--color-warning); --pista: var(--color-warning-bg); }
     .grafico--medidor[data-estado="critico"] { --relleno: var(--color-danger); --pista: var(--color-danger-bg); }
-
     .medidor__detalle { display: flex; flex-direction: column; gap: .4rem; margin-top: auto; }
     .detalle-fila { display: flex; align-items: center; gap: .5rem; font-size: .82rem; }
     .detalle-texto { flex: 1; color: var(--color-text-muted); }
@@ -255,7 +212,6 @@ interface Barra {
   `],
 })
 export class GraficosIngresosComponent {
-
   readonly datos = input.required<HistoricoIngresos>();
   readonly estudiantesActivos = input.required<number>();
   readonly pendientes = input.required<number>();
@@ -281,12 +237,6 @@ export class GraficosIngresosComponent {
     return p >= 70 ? 'atencion' : 'critico';
   });
 
-  /**
-   * Techo del eje, elegido para que las cuatro marcas caigan en cifras que
-   * alguien diria en voz alta. Se busca el paso "redondo" mas chico cuyo
-   * cuadruple cubra el maximo: repartir el maximo tal cual da marcas como
-   * 175 / 350 / 525, que son exactas pero nadie las lee de un vistazo.
-   */
   private readonly techo = computed(() => {
     const max = Math.max(...this.datos().meses.map((m) => m.total), 0);
     if (max <= 0) return 100;

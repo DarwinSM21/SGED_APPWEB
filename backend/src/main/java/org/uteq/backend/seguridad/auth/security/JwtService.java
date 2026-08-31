@@ -10,13 +10,8 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
-/**
- * Servicio JWT: genera, valida y extrae claims de tokens JWT (RFC 7519).
- * Usa jjwt 0.12 con HMAC-SHA256 (HS256).
- */
 @Service
 public class JwtService {
-
     @Value("${security.jwt.secret}")
     private String secret;
 

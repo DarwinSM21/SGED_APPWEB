@@ -5,11 +5,6 @@ import { PersonasService } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { mensajeDeError } from '../../core/mensaje-error';
 
-/**
- * Seccion "Entrenador" del panel de detalle. Uno de los componentes en
- * que se dividio personas-admin.component.ts (R-05, informe de evaluacion
- * de calidad).
- */
 @Component({
   selector: 'app-ficha-entrenador',
   standalone: true,

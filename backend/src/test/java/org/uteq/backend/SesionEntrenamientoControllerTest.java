@@ -33,16 +33,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Prueba de SesionEntrenamientoController a nivel HTTP: que resuelve la
- * identidad correcta desde SecurityContextHolder (username y si el rol ve
- * todas las sesiones) y delega en SesionEntrenamientoService, ya mockeado.
- * Las reglas de negocio (filtrado por entrenador, validaciones de
- * creacion) se prueban en SesionEntrenamientoServiceTest.
- */
 @ExtendWith(MockitoExtension.class)
 class SesionEntrenamientoControllerTest {
-
     @Mock private SesionEntrenamientoService sesionService;
 
     @InjectMocks private SesionEntrenamientoController controller;
@@ -58,8 +50,6 @@ class SesionEntrenamientoControllerTest {
 
     @AfterEach
     void limpiarContextoDeSeguridad() {
-        // SecurityContextHolder usa un ThreadLocal: sin esto, una prueba
-        // podria heredar la autenticacion que dejo la anterior.
         SecurityContextHolder.clearContext();
     }
 

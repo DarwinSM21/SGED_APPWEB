@@ -10,13 +10,6 @@ import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import java.time.Instant;
 import java.time.LocalTime;
 
-/**
- * Horario fijo semanal de un entrenador: "SUB-12 entrena Lunes y Miercoles,
- * 16:00-18:00". De aqui se generan automaticamente las filas concretas de
- * sesiones_entrenamiento el dia que corresponde (ver
- * HorarioService.generarSesionesProgramadas()); esa sesion generada queda
- * enlazada de vuelta via SesionEntrenamiento.horario.
- */
 @Entity
 @Table(name = "horarios_entrenamiento", schema = "deportivo")
 @Getter
@@ -25,7 +18,6 @@ import java.time.LocalTime;
 @AllArgsConstructor
 @Builder
 public class Horario {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_horario")
@@ -39,11 +31,6 @@ public class Horario {
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
 
-    /**
-     * 1=Lunes ... 7=Domingo, igual que LocalDate.getDayOfWeek().getValue().
-     * Short y no Integer: la columna es SMALLINT, y ddl-auto: validate exige
-     * el tipo exacto (no basta con que quepa).
-     */
     @Column(name = "dia_semana", nullable = false)
     private Short diaSemana;
 

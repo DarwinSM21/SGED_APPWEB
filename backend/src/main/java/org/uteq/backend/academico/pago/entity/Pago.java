@@ -11,11 +11,6 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/**
- * Pago de un estudiante. MEMBRESIA cubre un mes calendario exacto
- * (anio+mes obligatorios, sin poder repetirse: ver el indice unico
- * parcial de db/schema.sql); DIARIO es puntual y no lleva periodo.
- */
 @Entity
 @Table(name = "pagos", schema = "academico")
 @Getter
@@ -24,7 +19,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Pago {
-
     public enum TipoPago { MEMBRESIA, DIARIO }
 
     @Id
@@ -54,9 +48,6 @@ public class Pago {
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
     private Usuario registradoPor;
 
-    // Anulacion. Las tres viajan juntas o ninguna: la base lo exige con
-    // chk_pago_anulacion_completa, porque un pago anulado sin motivo no le
-    // explica nada a quien revise las cuentas despues.
     @Column(name = "anulado_en")
     private java.time.OffsetDateTime anuladoEn;
 
@@ -67,7 +58,6 @@ public class Pago {
     @Column(name = "motivo_anulacion", length = 255)
     private String motivoAnulacion;
 
-    /** Un pago cuenta para los totales solo mientras no este anulado. */
     public boolean estaVigente() {
         return anuladoEn == null;
     }

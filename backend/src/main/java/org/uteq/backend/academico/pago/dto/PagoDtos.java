@@ -14,7 +14,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 public final class PagoDtos {
-
     private PagoDtos() {}
 
     public record RegistrarMembresiaRequest(
@@ -41,7 +40,6 @@ public final class PagoDtos {
             BigDecimal monto,
             LocalDate fechaPago,
             String registradoPor,
-            /** Null mientras el pago siga vigente. */
             java.time.OffsetDateTime anuladoEn,
             String anuladoPor,
             String motivoAnulacion
@@ -51,10 +49,6 @@ public final class PagoDtos {
         }
     }
 
-    /**
-     * El motivo es obligatorio a proposito: anular sin decir por que deja el
-     * historial con un hueco que nadie sabra explicar dentro de tres meses.
-     */
     public record AnularPagoRequest(
             @NotBlank(message = "Indica por qué se anula el pago")
             @Size(max = 255, message = "El motivo no puede superar los 255 caracteres")
@@ -68,17 +62,10 @@ public final class PagoDtos {
             Long cantidadPagos
     ) {}
 
-    /**
-     * Serie para el grafico de barras del tablero: un punto por mes, en
-     * orden cronologico y sin huecos -un mes sin cobros viaja en cero, no se
-     * omite: si faltara, el grafico dibujaria dos meses contiguos que en
-     * realidad estan separados y la lectura de la tendencia seria falsa-.
-     */
     public record HistoricoIngresosResponse(
             List<IngresosMesResponse> meses,
             BigDecimal total,
             BigDecimal promedioMensual,
-            /** Mes con mayor recaudacion del rango; null si no hubo ningun cobro. */
             IngresosMesResponse mejorMes
     ) {}
 }

@@ -15,7 +15,6 @@ import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 @Service
 @RequiredArgsConstructor
 public class PersonaService {
-
     private final PersonaRepository personaRepository;
 
     @Transactional(readOnly = true)
@@ -42,7 +41,6 @@ public class PersonaService {
             descripcionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonaResponse crear(PersonaRequest request) {
-        // Validar unicidad de Cédula y Correo
         validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), null);
 
         Persona persona = Persona.builder()
@@ -67,7 +65,6 @@ public class PersonaService {
         Persona persona = personaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + id));
 
-        // Validar unicidad excluyendo la persona actual que se edita
         validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), id);
 
         persona.setNombre(request.nombre());
@@ -88,17 +85,13 @@ public class PersonaService {
     public void eliminar(Long id) {
         Persona persona = personaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + id));
-        
-        // Baja lógica
+
         persona.setActivo(false);
         personaRepository.save(persona);
     }
 
-    // --- Métodos Privados de Apoyo ---
-
     private void validarUnicidadCedulaYCorreo(String cedula, String correo, Long idActual) {
         if (idActual == null) {
-            // Al CREAR
             if (personaRepository.existsByCedulaAndActivoTrue(cedula)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }
@@ -106,7 +99,6 @@ public class PersonaService {
                 throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
             }
         } else {
-            // Al EDITAR (Usa las consultas JPQL con != :idPersona)
             if (personaRepository.existeOtraPersonaConCedula(cedula, idActual)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }

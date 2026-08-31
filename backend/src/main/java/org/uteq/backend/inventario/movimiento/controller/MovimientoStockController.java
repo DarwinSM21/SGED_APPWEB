@@ -13,16 +13,10 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.inventario.movimiento.dto.MovimientoDtos.*;
 import org.uteq.backend.inventario.movimiento.service.MovimientoStockService;
 
-/**
- * Entradas/salidas/ajustes de stock. El registro queda restringido a
- * ADMINISTRADOR y RECEPCIONISTA, quienes manejan el deposito fisico;
- * ENTRENADOR solo consulta el historial.
- */
 @RestController
 @RequestMapping("/api/inventario/movimientos")
 @RequiredArgsConstructor
 public class MovimientoStockController {
-
     private final MovimientoStockService movimientoStockService;
 
     @GetMapping

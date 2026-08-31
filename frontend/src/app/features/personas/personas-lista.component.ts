@@ -4,11 +4,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasStateService } from './personas-state.service';
 
-/**
- * Panel izquierdo del maestro-detalle: busqueda + lista de personas +
- * boton de alta. Uno de los tres componentes hijos en que se dividio
- * personas-admin.component.ts (R-05, informe de evaluacion de calidad).
- */
 @Component({
   selector: 'app-personas-lista',
   standalone: true,
@@ -42,10 +37,6 @@ import { PersonasStateService } from './personas-state.service';
   `,
   styles: [`
     .panel-lista { padding: 1rem; display: flex; flex-direction: column; gap: .75rem; position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto; }
-    /* Debajo de 800px el maestro-detalle pasa a una sola columna (ver personas-admin.component.ts):
-       ahi "sticky" no aporta nada y calc(100vh - 2rem) deja la lista ocupando casi toda la pantalla
-       antes de llegar al detalle. Un limite mas corto la vuelve claramente desplazable y deja ver
-       el detalle sin bajar tanto. */
     @media (max-width: 800px) {
       .panel-lista { position: static; max-height: 45vh; }
     }

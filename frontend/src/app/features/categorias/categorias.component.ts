@@ -7,24 +7,12 @@ import { AuthService } from '../../auth/auth.service';
 import { Categoria, CategoriaRequest } from './categorias.models';
 import { mensajeDeError } from '../../core/mensaje-error';
 
-/** SUB seguido de la edad, con guion o sin el; el componente lo normaliza. */
 const FORMATO_NOMBRE = /^\s*sub[\s-]?\d{1,2}\s*$/i;
 
 const FORMULARIO_VACIO: CategoriaRequest = {
   nombre: '', edadMin: null, edadMax: null, descripcion: null,
 };
 
-/**
- * Catálogo de categorías (SUB-8, SUB-10, …). Hasta ahora el backend tenía el
- * CRUD completo y ninguna pantalla lo usaba: las categorías solo se podían
- * crear escribiendo SQL a mano, aunque de ellas dependen los estudiantes,
- * los horarios y las sesiones.
- *
- * La baja es lógica, no borrado: el backend pone `activo = false` y la fila
- * se queda. Por eso el botón dice "Desactivar" y la lista sigue mostrando las
- * inactivas -en gris y con opción de reactivar-; llamarlo "Eliminar" haría
- * creer que se pierde el histórico de quienes estuvieron en esa categoría.
- */
 @Component({
   selector: 'app-categorias',
   standalone: true,
@@ -141,27 +129,21 @@ const FORMULARIO_VACIO: CategoriaRequest = {
   styles: [`
     .contenido { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem; }
     .subtitulo-pantalla { margin: .2rem 0 1.2rem; font-size: .86rem; color: var(--color-text-muted); }
-
     .formulario { padding: 1.2rem 1.4rem; margin-bottom: 1.25rem; }
     .titulo-card { font-size: 1rem; margin-bottom: .9rem; }
     .fila { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: .8rem; }
     @media (max-width: 640px) { .fila { grid-template-columns: 1fr; } }
     .acciones { display: flex; gap: .6rem; margin-top: .3rem; }
-
     .lista { padding: 1.2rem 1.4rem; }
     .lista__cabecera { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .6rem; }
     .conteo { font-size: .78rem; color: var(--color-text-faint); font-variant-numeric: tabular-nums; }
     .aviso { font-size: .86rem; color: var(--color-text-muted); }
-
     .fila-categoria {
       display: flex; align-items: center; gap: 1rem;
       padding: .7rem 0; border-bottom: 1px solid var(--color-border-light);
     }
     .fila-categoria:last-child { border-bottom: none; }
-    /* La inactiva se atenúa pero sigue visible y legible: se apaga el
-       contraste, no se esconde la fila. */
     .fila-categoria--inactiva .nombre, .fila-categoria--inactiva .detalle { color: var(--color-text-faint); }
-
     .info { display: flex; flex-direction: column; gap: .15rem; flex: 1; min-width: 0; }
     .nombre { font-weight: 600; display: flex; align-items: center; gap: .5rem; }
     .detalle { font-size: .8rem; color: var(--color-text-muted); }
@@ -169,17 +151,9 @@ const FORMULARIO_VACIO: CategoriaRequest = {
   `],
 })
 export class CategoriasComponent implements OnInit {
-
   private readonly servicio = inject(CategoriasService);
   private readonly authService = inject(AuthService);
 
-  /**
-   * El entrenador consulta el catalogo pero no lo edita: el backend le
-   * responde 403 a crear, editar, reactivar y dar de baja
-   * (CategoriaController), asi que mostrarle esos botones seria ofrecerle
-   * algo que va a fallar. Misma regla que ya aplica la pantalla de sesiones
-   * con el boton "Nueva sesion" cuando quien mira es un administrador.
-   */
   readonly puedeGestionar = computed(() =>
     this.authService.currentUser()?.rol === 'ADMINISTRADOR');
 
@@ -195,15 +169,6 @@ export class CategoriasComponent implements OnInit {
   readonly activas = computed(() => this.categorias().filter((c) => c.activo).length);
   readonly inactivas = computed(() => this.categorias().length - this.activas());
 
-  /**
-   * El backend valida lo mismo y con más autoridad; esto solo evita el viaje
-   * y el mensaje de error cuando el formulario está a medio llenar.
-   */
-  /**
-   * Deja lo escrito en la forma SUB-<edad>. Se corrige en vez de rechazar:
-   * quien teclea "sub12" quiso decir SUB-12, y devolverle un error por eso
-   * es hacerle perder el tiempo con algo que la aplicación sabe resolver.
-   */
   normalizarNombre(): void {
     const digitos = this.formulario.nombre.replace(/\D+/g, '');
     if (digitos) this.formulario.nombre = 'SUB-' + digitos;

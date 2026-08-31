@@ -6,12 +6,6 @@ import { PersonasStateService } from './personas-state.service';
 import { RolUsuario, ROLES_USUARIO, UsuarioResponse } from './personas.models';
 import { mensajeDeError } from '../../core/mensaje-error';
 
-/**
- * Seccion "Cuenta de usuario" del panel de detalle: crear, editar y
- * desactivar la cuenta de la persona seleccionada. Uno de los componentes
- * en que se dividio personas-admin.component.ts (R-05, informe de
- * evaluacion de calidad).
- */
 @Component({
   selector: 'app-cuenta-usuario',
   standalone: true,
@@ -87,9 +81,6 @@ export class CuentaUsuarioComponent {
   readonly editando = signal(false);
 
   constructor() {
-    // Al cambiar de persona seleccionada, el formulario de edicion vuelve
-    // a su estado inicial: sin esto arrastraria los datos de la cuenta
-    // anterior si el administrador entra directo a "Editar cuenta".
     effect(() => {
       this.state.seleccionada();
       this.formUsuario = { username: '', password: '', rol: 'ENTRENADOR' };

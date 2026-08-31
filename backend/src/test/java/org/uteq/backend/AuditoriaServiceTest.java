@@ -46,7 +46,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuditoriaServiceTest {
-
     @Mock private AuditoriaRepository auditoriaRepository;
     @Mock private UsuarioRepository usuarioRepository;
 
@@ -103,7 +102,7 @@ class AuditoriaServiceTest {
         when(auditoriaRepository.save(any())).thenThrow(new RuntimeException("DB caida"));
 
         servicio.registrar("EDITAR", "Lesion", 45L, "editó Lesion #45");
-        // No debe lanzar: si llega aqui, la operacion de negocio no se vio afectada.
+
     }
 
     @Test
@@ -208,13 +207,6 @@ class AuditoriaServiceTest {
         ejecutarPredicado(captor.getValue());
     }
 
-    /**
-     * construirFiltro es una Specification: con el repositorio mockeado nunca
-     * se invoca sola. Se captura el objeto real que arma buscar() y se le
-     * llama toPredicate a mano, con la API de Criteria mockeada, para
-     * ejercitar sus 5 condiciones opcionales (las que de otro modo quedan
-     * sin cubrir pese a que buscar() si se prueba).
-     */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private void ejecutarPredicado(Specification filtro) {
         Root root = mock(Root.class);

@@ -15,22 +15,11 @@ import org.uteq.backend.academico.representante.dto.InformeDtos.ComentarioInform
 import org.uteq.backend.academico.representante.dto.InformeDtos.InformeEstudianteResponse;
 import org.uteq.backend.academico.representante.service.InformeService;
 
-/**
- * Lo que un ESTUDIANTE ve sobre si mismo mas alla de su asistencia (que
- * ya cubre MiAsistenciaController): sus estadisticas de evaluacion y su
- * equipo (categoria, posicion, entrenador, companeros).
- *
- * <p>mi-informe reutiliza InformeService tal cual lo usa el representante
- * para el informe de un representado -mismas piezas, misma forma de
- * respuesta-, solo que resuelto por la propia cuenta autenticada en vez
- * de por un vinculo representante-estudiante.
- */
 @RestController
 @RequestMapping("/api/estudiante")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ESTUDIANTE')")
 public class MiEquipoController {
-
     private final InformeService informeService;
     private final MiEquipoService miEquipoService;
 
@@ -40,11 +29,6 @@ public class MiEquipoController {
         return ResponseEntity.ok(informeService.miInforme(usernameAutenticado()));
     }
 
-    /**
-     * Su informe puesto en palabras. Mismo criterio que el del
-     * representante: va en POST porque cada llamada gasta cuota de un
-     * servicio externo, asi que se pide a demanda y no al abrir la pantalla.
-     */
     @PostMapping("/mi-informe/comentario")
     @Transactional(readOnly = true)
     public ResponseEntity<ComentarioInformeResponse> miComentario() {

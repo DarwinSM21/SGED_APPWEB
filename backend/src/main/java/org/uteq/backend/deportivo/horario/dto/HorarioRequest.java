@@ -6,10 +6,6 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalTime;
 
-/**
- * El idEntrenador nunca viene del cliente: se resuelve en el controller
- * desde el usuario autenticado, mismo criterio que SesionCrearRequest.
- */
 public record HorarioRequest(
         @NotNull Long idCategoria,
         @NotNull @Min(1) @Max(7) Integer diaSemana,

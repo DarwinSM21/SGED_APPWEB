@@ -27,15 +27,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * MET-01 / R-06 (informe de evaluacion de calidad): logica extraida de
- * EstudianteService para bajar su fan-out. Antes se probaba indirectamente
- * a traves de EstudianteServiceTest; ahora vive y se prueba aqui, donde
- * esta el conocimiento real de como se arma una cuenta ESTUDIANTE.
- */
 @ExtendWith(MockitoExtension.class)
 class EstudianteAccesoServiceTest {
-
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private RolRepository rolRepository;
     @Mock private EstadoGeneralRepository estadoGeneralRepository;

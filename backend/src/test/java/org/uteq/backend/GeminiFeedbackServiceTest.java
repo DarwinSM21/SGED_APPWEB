@@ -10,21 +10,13 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * La propiedad que se verifica aqui no es que el modelo redacte bien: eso
- * depende de un servicio externo y no es comprobable de forma determinista.
- * Lo que se verifica es que el sistema siga funcionando cuando el modelo NO
- * esta, que es la situacion por defecto y la mas probable en la cancha.
- */
 class GeminiFeedbackServiceTest {
-
     private static final PerfilJugadorAnonimo PERFIL = new PerfilJugadorAnonimo(
             "Jugador 1", "SUB-12", "Mediocentro",
             Map.of("Tecnica", 7.5, "Actitud", 9.0),
             Map.of("Tecnica", 6.8),
             12, false);
 
-    /** Sin reintentos: estas pruebas comprueban la degradacion, no la insistencia. */
     private GeminiFeedbackService servicio(String apiKey, boolean habilitado) {
         return new GeminiFeedbackService(apiKey, "gemini-2.0-flash", habilitado, 8, 0);
     }
@@ -68,10 +60,6 @@ class GeminiFeedbackServiceTest {
     @Test
     @DisplayName("Un proveedor inalcanzable degrada a resultado no disponible, no rompe la evaluacion")
     void proveedorInalcanzableDegrada() {
-        // Clave sintactica pero invalida: la llamada real falla. El contrato
-        // dice que eso se traduce en un resultado sin texto, no en excepcion:
-        // el entrenador no puede perder lo que califico a mano porque un
-        // servicio externo este caido.
         var s = servicio("clave-invalida-de-prueba", true);
         assertTrue(s.estaDisponible());
 
@@ -84,10 +72,6 @@ class GeminiFeedbackServiceTest {
     @Test
     @DisplayName("Con reintentos configurados sigue degradando limpio, sin lanzar ni colgarse")
     void conReintentosTambienDegrada() {
-        // El nivel gratuito de Gemini devuelve 503 de forma intermitente, por
-        // eso hay reintentos. Lo que no puede pasar es que la insistencia
-        // cambie el contrato: si al final no hay texto, se responde "no
-        // disponible" igual que sin reintentos.
         var s = new GeminiFeedbackService("clave-invalida-de-prueba", "gemini-2.0-flash", true, 2, 2);
 
         var r = assertDoesNotThrow(() -> s.generarComentarioJugador(PERFIL));

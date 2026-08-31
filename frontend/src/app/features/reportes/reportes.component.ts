@@ -33,7 +33,6 @@ const TARJETAS: TarjetaReporte[] = [
     archivo: 'lesiones.pdf', conCategoria: true, conActivo: false, roles: ['ADMINISTRADOR', 'ENTRENADOR'] },
 ];
 
-/** Reportes PDF: tarjetas visibles según el rol, cada una con sus propios filtros. */
 @Component({
   selector: 'app-reportes',
   standalone: true,
@@ -118,7 +117,6 @@ const TARJETAS: TarjetaReporte[] = [
     .encabezado { display: flex; flex-direction: column; gap: .3rem; }
     .titulo-pantalla { font-size: 1.5rem; }
     .subtitulo-pantalla { color: var(--color-text-muted); font-size: .92rem; }
-
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.1rem; }
     .tarjeta { padding: 1.25rem; display: flex; flex-direction: column; gap: .6rem; }
     .tarjeta__titulo { font-size: 1.05rem; }
@@ -144,7 +142,6 @@ export class ReportesComponent implements OnInit {
   readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
     this.estudiantes().map((e) => ({ id: e.idEstudiante, titulo: e.nombreCompleto })));
 
-  /** null = sin filtro, que en este reporte significa "todos". */
   nombreDe(id: number | null | undefined): string | null {
     if (id === null || id === undefined) return null;
     return this.estudiantes().find((e) => e.idEstudiante === id)?.nombreCompleto ?? null;
@@ -192,12 +189,6 @@ export class ReportesComponent implements OnInit {
     });
   }
 
-  /**
-   * Estos endpoints responden un PDF, asi que el cuerpo de error tambien
-   * llega como Blob y hay que leerlo antes de poder interpretarlo. Una vez
-   * parseado se reenvuelve en la forma { error } que espera el traductor
-   * comun, para no repetir aca la logica de detail/errores.
-   */
   private async mensajeDeError(err: any): Promise<string> {
     const porDefecto = 'No se pudo generar el reporte';
 

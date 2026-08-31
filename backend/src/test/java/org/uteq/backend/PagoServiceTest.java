@@ -34,7 +34,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PagoServiceTest {
-
     @Mock private PagoRepository pagoRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private UsuarioRepository usuarioRepository;
@@ -60,8 +59,6 @@ class PagoServiceTest {
         when(estudianteRepository.findById(ID_EST)).thenReturn(Optional.of(estudiante()));
         when(usuarioRepository.findByUsername(USERNAME)).thenReturn(Optional.of(registrador()));
     }
-
-    // --- ingresosDelMes (ya existentes) ---
 
     @Test
     @DisplayName("ingresosDelMes suma por fecha real de pago del mes calendario vigente en Ecuador")
@@ -93,8 +90,6 @@ class PagoServiceTest {
         assertThat(response.cantidadPagos()).isZero();
     }
 
-    // --- registrarMembresia ---
-
     @Test
     @DisplayName("registrarMembresia guarda un pago por cada mes, sin duplicados y en orden")
     void registrarMembresia_guarda_un_pago_por_mes_distinto_y_ordenado() {
@@ -103,7 +98,7 @@ class PagoServiceTest {
                 any(), any(), any(), any())).thenReturn(false);
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
-        var meses = List.of(3, 1, 2, 1); // con repetido y desordenado a proposito
+        var meses = List.of(3, 1, 2, 1);
         var pagos = service.registrarMembresia(ID_EST, 2026, meses, new BigDecimal("30.00"), null, USERNAME);
 
         assertThat(pagos).extracting(p -> p.getMes().intValue()).containsExactly(1, 2, 3);
@@ -167,8 +162,6 @@ class PagoServiceTest {
         verify(pagoRepository, never()).saveAll(anyList());
     }
 
-    // --- registrarDiario ---
-
     @Test
     @DisplayName("registrarDiario guarda un pago DIARIO con la fecha dada")
     void registrarDiario_usa_la_fecha_dada() {
@@ -195,8 +188,6 @@ class PagoServiceTest {
         assertThat(pago.getFechaPago()).isEqualTo(LocalDate.now(Zonas.ECUADOR));
     }
 
-    // --- historialDe ---
-
     @Test
     @DisplayName("historialDe responde 404 si el estudiante no existe")
     void historialDe_estudiante_inexistente() {
@@ -219,8 +210,6 @@ class PagoServiceTest {
         assertThat(pagos).isEqualTo(esperado);
     }
 
-    // --- anulacion ---
-
     @Test
     @DisplayName("anular deja constancia de quien, cuando y por que")
     void anular_registra_la_trazabilidad() {
@@ -237,8 +226,7 @@ class PagoServiceTest {
         assertThat(resultado.getAnuladoEn()).isNotNull();
         assertThat(resultado.getAnuladoPor()).isNotNull();
         assertThat(resultado.getMotivoAnulacion()).isEqualTo("Monto mal digitado");
-        // El monto NO se toca: anular no es corregir, es dejar constancia de
-        // que ese cobro no vale. El correcto se registra aparte.
+
         assertThat(resultado.getMonto()).isEqualByComparingTo("250.00");
     }
 
@@ -256,8 +244,6 @@ class PagoServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> service.anular(9L, "otra vez", USERNAME));
 
-        // Si alguien lo intenta es que cree estar anulando algo vigente:
-        // conviene decirle que no lo esta, no guardar por segunda vez.
         verify(pagoRepository, never()).save(any());
     }
 

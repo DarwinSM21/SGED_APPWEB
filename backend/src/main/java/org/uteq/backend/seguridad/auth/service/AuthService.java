@@ -32,18 +32,9 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import java.util.Optional;
 import java.util.Set;
 
-/**
- * Logica de negocio de autenticacion, antes embebida en AuthController
- * (hallazgo D-03 del informe de evaluacion de calidad: 278 lineas de
- * controlador con 4 repositorios inyectados y reglas de negocio que no
- * podian probarse sin levantar el contexto HTTP). El controlador conserva
- * solo la traduccion HTTP: cookies, codigos de estado y el cuerpo de la
- * respuesta.
- */
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-
     private static final Logger AUTH_AUDIT_LOG = LoggerFactory.getLogger("AUTH_AUDIT");
 
     private final AuthenticationManager authenticationManager;
@@ -59,22 +50,6 @@ public class AuthService {
 
     public record LoginResult(String accessToken, String refreshToken, SesionResponse sesion) {}
 
-    /**
-     * rol es obligatorio (@NotBlank en RegisterRequest): no existe un rol
-     * generico al que caer por defecto. Quien llama ya es ADMINISTRADOR, asi
-     * que puede pedir cualquier rol existente en seguridad.roles (p.ej.
-     * ENTRENADOR, RECEPCIONISTA, REPRESENTANTE) - un nombre que no exista
-     * responde 400 via RolRepository.findByNombre.
-     *
-     * @Transactional: antes guardaba Persona y Usuario en dos pasos sueltos,
-     * sin transaccion propia. Con un tercer guardado (la fila de dominio de
-     * Entrenador/Representante) encadenado desde el frontend justo despues,
-     * una falla a mitad de camino dejaria una Persona sin Usuario o un
-     * Usuario sin rol asignado.
-     *
-     * @return vacio si el username, la cedula o el correo ya existen
-     *         (el controlador lo traduce a 409 Conflict).
-     */
     @Transactional
     public Optional<SesionResponse> registrar(RegisterRequest request) {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
@@ -96,8 +71,6 @@ public class AuthService {
                 .build();
         persona = personaRepository.save(persona);
 
-        // id_estado_general es NOT NULL: sin esto el alta tambien falla en base
-        // de datos aunque la persona ya se haya podido insertar.
         EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
                 .orElseThrow(() -> new IllegalStateException(
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
@@ -122,10 +95,6 @@ public class AuthService {
                 .build());
     }
 
-    /**
-     * @throws TooManyRequestsException si la IP esta bloqueada por intentos fallidos.
-     * @throws BadCredentialsException si las credenciales son incorrectas.
-     */
     @Transactional(readOnly = true)
     public LoginResult login(LoginRequest request, String ip) {
         if (loginAttemptService.estaBloqueada(ip)) {
@@ -177,7 +146,6 @@ public class AuthService {
                     blacklistService.revocar(jti, jwtService.getExpirationMs());
                 }
             } catch (Exception e) {
-                // Token ya invalido, ignorar
             }
         }
 
@@ -185,7 +153,6 @@ public class AuthService {
         SecurityContextHolder.clearContext();
     }
 
-    /** @return vacio si el refresh token falta o no es valido. */
     public Optional<String> refrescar(String refreshToken) {
         if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             return Optional.empty();
@@ -196,7 +163,6 @@ public class AuthService {
         return Optional.of(jwtService.generateToken(username, rol));
     }
 
-    /** @return vacio si no hay una sesion autenticada en el contexto actual. */
     @Transactional(readOnly = true)
     public Optional<SesionResponse> obtenerSesionActual() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

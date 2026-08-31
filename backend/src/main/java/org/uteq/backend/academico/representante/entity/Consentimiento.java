@@ -7,17 +7,6 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.time.OffsetDateTime;
 
-/**
- * Registro de que un representante autorizo el tratamiento de los datos
- * de un representado: fecha, alcance y quien lo registro (hallazgo H-04
- * de docs/etica/ETHICS.md).
- *
- * <p>Deliberadamente NO gatea la lectura de informes -eso lo autoriza
- * unicamente el vinculo activo {@link RepresentanteEstudiante}, que crea
- * un administrador-. Queda reservada para cuando exista el envio real de
- * notificaciones (RF-22), que todavia no esta construido. Ver la nota de
- * resolucion bajo H-04 en ETHICS.md.
- */
 @Entity
 @Table(name = "consentimientos", schema = "academico")
 @Getter
@@ -26,7 +15,6 @@ import java.time.OffsetDateTime;
 @AllArgsConstructor
 @Builder
 public class Consentimiento {
-
     public static final String ALCANCE_INFORMES = "INFORMES";
     public static final String ALCANCE_NOTIFICACIONES_ASISTENCIA = "NOTIFICACIONES_ASISTENCIA";
     public static final String ALCANCE_NOTIFICACIONES_LESION = "NOTIFICACIONES_LESION";
@@ -61,7 +49,6 @@ public class Consentimiento {
     @JoinColumn(name = "revocado_por_id_usuario")
     private Usuario revocadoPor;
 
-    /** true si nadie lo ha revocado todavia. Mismo criterio que Lesion.estaActiva(). */
     @Transient
     public boolean estaVigente() {
         return revocadoEn == null;

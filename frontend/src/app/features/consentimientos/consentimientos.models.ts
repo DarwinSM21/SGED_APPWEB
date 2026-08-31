@@ -1,4 +1,3 @@
-/** Espejan ConsentimientoDtos del backend. */
 
 export interface Consentimiento {
   idConsentimiento: number;
@@ -17,7 +16,6 @@ export interface OtorgarConsentimientoRequest {
   alcance: string;
 }
 
-/** Lo mínimo que hace falta de cada representante para cruzar vínculos. */
 export interface RepresentanteConVinculos {
   idRepresentante: number;
   nombre: string;

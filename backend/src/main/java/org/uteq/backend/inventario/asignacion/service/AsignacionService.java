@@ -24,15 +24,9 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.time.LocalDate;
 
-/**
- * Entrega/devolucion de articulos a estudiantes o entrenadores. Crear
- * resta stock (mismo chequeo de no-negativo que un movimiento SALIDA);
- * devolver con estado DEVUELTO lo repone, PERDIDO no.
- */
 @Service
 @RequiredArgsConstructor
 public class AsignacionService {
-
     private final AsignacionRepository asignacionRepository;
     private final ArticuloRepository articuloRepository;
     private final EstudianteRepository estudianteRepository;

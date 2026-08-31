@@ -10,14 +10,6 @@ import { CategoriaOpcion } from '../entrenador/sesiones.models';
 import { PartidosService } from './partidos.service';
 import { Partido } from './partidos.models';
 
-/**
- * Agenda e historial de partidos.
- *
- * <p>Un partido y un entrenamiento son dos cosas distintas y por eso son dos
- * pantallas distintas: el entrenamiento registra asistencia y evaluación -lo
- * que se mide-, y el partido registra con quién se salió a jugar y cómo
- * terminó -lo que se hace con lo medido-.
- */
 @Component({
   selector: 'app-partidos',
   standalone: true,
@@ -168,55 +160,45 @@ import { Partido } from './partidos.models';
   `,
   styles: [`
     .pantalla { max-width: 860px; margin: 0 auto; padding: 1.25rem 1rem 3rem; }
-
     .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
                 gap: 1rem; flex-wrap: wrap; margin-bottom: 1.1rem; }
     h1 { font-size: 1.2rem; }
     .subt { margin-top: .3rem; color: var(--color-text-muted); font-size: .85rem; max-width: 52ch; }
-
     .formulario { padding: 1.1rem 1.2rem; margin-bottom: 1.1rem; }
     .formulario h2 { font-size: 1rem; margin-bottom: .8rem; }
     .fila-form { display: flex; gap: .8rem; flex-wrap: wrap; }
     .fila-form .field { flex: 1 1 170px; }
     .opcional { color: var(--color-text-faint); font-weight: 400; }
-
     .filtro { margin-bottom: .9rem; }
     .field--inline { display: flex; align-items: center; gap: .5rem; max-width: 320px; }
     .field--inline .field__label { margin: 0; white-space: nowrap; }
-
     .vacio { text-align: center; padding: 2.2rem 1.5rem; }
     .vacio h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
     .vacio p { color: var(--color-text-muted); font-size: .88rem; max-width: 46ch; margin: 0 auto; }
-
     .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
     .partido { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem;
                background: var(--color-surface); border: 1px solid var(--color-border-light);
                border-radius: var(--radius-md); flex-wrap: wrap; }
     .partido--jugado { border-left: 3px solid var(--color-border); }
-
     .partido__fecha { display: flex; flex-direction: column; align-items: center;
                       min-width: 44px; line-height: 1.1; }
     .dia { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
     .mes { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
            color: var(--color-text-muted); }
-
     .partido__cuerpo { flex: 1 1 200px; min-width: 0; }
     .partido__titulo { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
     .partido__meta { margin-top: .25rem; font-size: .8rem; color: var(--color-text-muted); }
-
     .partido__acciones { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
     .marcador { display: flex; align-items: center; gap: .3rem; }
     .gol { width: 3rem; padding: .3rem .35rem; text-align: center; font-variant-numeric: tabular-nums;
            border: 1px solid var(--color-border); border-radius: var(--radius-sm);
            background: var(--color-surface); color: var(--color-text); }
     .guion { color: var(--color-text-faint); }
-
     .paginacion { display: flex; align-items: center; justify-content: center; gap: .8rem;
                   margin-top: 1.1rem; font-size: .82rem; color: var(--color-text-muted); }
   `],
 })
 export class PartidosComponent implements OnInit {
-
   private readonly servicio = inject(PartidosService);
   private readonly sesiones = inject(SesionesService);
 
@@ -249,8 +231,6 @@ export class PartidosComponent implements OnInit {
   ngOnInit(): void {
     this.sesiones.listarCategoriasActivas().subscribe({
       next: (c) => this.categorias.set(c),
-      // Sin categorías el formulario de alta no sirve, pero la lista sí: no
-      // se corta la pantalla entera por esto.
       error: () => this.categorias.set([]),
     });
     this.cargar();
@@ -317,8 +297,7 @@ export class PartidosComponent implements OnInit {
 
   guardarResultado(p: Partido): void {
     if (this.guardando()) return;
-    // Los dos goles juntos o ninguno: "metimos 3" sin saber cuántos recibimos
-    // no dice si se ganó, que es justamente para lo que se guarda.
+
     if (this.golesFavor == null || this.golesContra == null) {
       this.error.set('Cargá los dos marcadores, el propio y el del rival.');
       return;

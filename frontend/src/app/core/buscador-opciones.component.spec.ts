@@ -30,7 +30,6 @@ describe('BuscadorOpcionesComponent', () => {
   });
 
   it('encuentra un nombre con tilde aunque se escriba sin ella', () => {
-    // El caso real: quien cobra escribe "angel", no "Ángel".
     escribir('angel');
     expect(componente.filtradas().map((o) => o.id)).toEqual([1]);
 
@@ -52,7 +51,7 @@ describe('BuscadorOpcionesComponent', () => {
     componente.abrir();
     componente.activa.set(3);
     escribir('sub-12');
-    // Si se quedara en 3, Enter elegiria a alguien fuera de la lista visible.
+
     expect(componente.activa()).toBe(0);
   });
 
@@ -87,7 +86,7 @@ describe('BuscadorOpcionesComponent', () => {
 
     expect(emitida).toEqual(ALUMNOS[2]);
     expect(componente.abierto()).toBe(false);
-    // El texto se limpia para que la proxima busqueda arranque en blanco.
+
     expect(componente.texto()).toBe('');
   });
 
@@ -111,8 +110,6 @@ describe('BuscadorOpcionesComponent', () => {
 
     expect(input().value).toBe('Carlos Mora');
 
-    // Al abrir se limpia la consulta para poder escribir de cero, pero lo
-    // elegido no se pierde: sigue ahi si se cierra sin elegir otra cosa.
     componente.abrir();
     fixture.detectChanges();
     expect(input().value).toBe('');

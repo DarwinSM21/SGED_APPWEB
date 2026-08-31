@@ -8,12 +8,6 @@ const CLAVE_TEMA = 'sged.apariencia.tema';
 const CLAVE_FUENTE = 'sged.apariencia.fuente';
 const CLAVE_TAMANO_FUENTE = 'sged.apariencia.tamanoFuente';
 
-/**
- * Preferencias de apariencia (tema, fuente, tamaño de fuente), aplicadas
- * como atributo/clases en <html> y persistidas en localStorage -- mismo
- * patrón que el colapso del sidebar en AppShellComponent, pero para
- * preferencias válidas en toda la app, no solo el shell.
- */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   readonly tema = signal<Tema>((localStorage.getItem(CLAVE_TEMA) as Tema) ?? 'claro');

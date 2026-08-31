@@ -40,14 +40,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * El principal autenticado (no un campo del body) es quien queda como
- * registradoPor de cada pago: por eso los tests de alta fijan el usuario
- * autenticado y verifican que ese mismo username llega al servicio.
- */
 @ExtendWith(MockitoExtension.class)
 class PagoControllerTest {
-
     @Mock private PagoService pagoService;
 
     @InjectMocks private PagoController controller;
@@ -91,8 +85,6 @@ class PagoControllerTest {
                 .build();
     }
 
-    // --- POST /api/pagos/membresia ---
-
     @Test
     @DisplayName("registrarMembresia devuelve 201 usando el usuario autenticado, no uno del body")
     void registrarMembresia_devuelve_201() throws Exception {
@@ -133,8 +125,6 @@ class PagoControllerTest {
                 .andExpect(status().isUnprocessableEntity());
     }
 
-    // --- POST /api/pagos/diario ---
-
     @Test
     @DisplayName("registrarDiario devuelve 201 con anio y mes nulos (no cubre un periodo)")
     void registrarDiario_devuelve_201() throws Exception {
@@ -150,8 +140,6 @@ class PagoControllerTest {
                 .andExpect(jsonPath("$.anio").isEmpty())
                 .andExpect(jsonPath("$.mes").isEmpty());
     }
-
-    // --- GET /api/pagos/estudiante/{id} ---
 
     @Test
     @DisplayName("historial devuelve la lista de pagos del estudiante")
@@ -172,8 +160,6 @@ class PagoControllerTest {
         mockMvc.perform(get("/api/pagos/estudiante/99"))
                 .andExpect(status().isNotFound());
     }
-
-    // --- GET /api/pagos/ingresos-mes ---
 
     @Test
     @DisplayName("ingresosDelMes devuelve el total y la cantidad de pagos del mes vigente")

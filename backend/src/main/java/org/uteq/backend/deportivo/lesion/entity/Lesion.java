@@ -10,14 +10,6 @@ import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/**
- * Lesion de un estudiante, registrada por el entrenador como parte del
- * modulo de evaluacion diaria.
- *
- * Una lesion esta activa mientras {@code fechaAlta} sea null. Ese estado es
- * el que excluye al jugador de las sugerencias de plantilla y el que
- * distingue una ausencia por lesion de una falta sin motivo.
- */
 @Entity
 @Table(name = "lesiones", schema = "deportivo")
 @Getter
@@ -26,7 +18,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Lesion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_lesion")
@@ -36,16 +27,10 @@ public class Lesion {
     @JoinColumn(name = "id_estudiante", nullable = false)
     private Estudiante estudiante;
 
-    /** Entrenador que registro la lesion. */
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_entrenador", nullable = false)
     private Entrenador entrenador;
 
-    /**
-     * Texto libre sobre la condicion fisica de un menor de edad. Le aplican
-     * los hallazgos H-02 (texto libre sin control de contenido) y H-06 (dato
-     * de salud sin base legal documentada) de docs/etica/ETHICS.md.
-     */
     @Column(nullable = false, columnDefinition = "text")
     private String descripcion;
 
@@ -55,7 +40,6 @@ public class Lesion {
     @Column(name = "fecha_estimada_retorno")
     private LocalDate fechaEstimadaRetorno;
 
-    /** Null mientras la lesion sigue activa. */
     @Column(name = "fecha_alta")
     private LocalDate fechaAlta;
 

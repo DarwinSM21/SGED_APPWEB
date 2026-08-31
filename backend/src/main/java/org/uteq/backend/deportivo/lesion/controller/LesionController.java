@@ -17,25 +17,10 @@ import org.uteq.backend.deportivo.lesion.dto.LesionDtos.*;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.service.LesionService;
 
-/**
- * Lesiones. Las registra el entrenador; la recepcionista no interviene.
- *
- * <p>La descripcion es un dato de salud de un menor, asi que la lectura queda
- * restringida a entrenador y administrador. Un rol USER no tiene por que ver
- * el historial medico de nadie.
- *
- * <p>Los cuatro metodos llevan {@code @Transactional} propio: aResponse()
- * navega Lesion -&gt; Estudiante -&gt; Persona (ambas relaciones LAZY), y
- * open-in-view esta deshabilitado en este proyecto (application.yml), asi
- * que sin una transaccion activa en el momento de mapear, esa navegacion
- * lanza LazyInitializationException. El propio LesionService ya es
- * transaccional, pero esa transaccion se cierra al volver aqui.
- */
 @RestController
 @RequestMapping("/api/lesiones")
 @RequiredArgsConstructor
 public class LesionController {
-
     private final LesionService lesionService;
     private final EntrenadorRepository entrenadorRepository;
 
@@ -75,14 +60,6 @@ public class LesionController {
         return ResponseEntity.ok(aResponse(lesionService.darDeAlta(idLesion, fecha)));
     }
 
-    /**
-     * El idEntrenador de una lesion no puede salir del body sin mas: una
-     * cuenta ENTRENADOR podria mandar el id de un colega. Si quien llama
-     * tiene ese rol, se ignora lo que venga en el body y se resuelve del
-     * token (mismo criterio que SesionEntrenamientoController). Solo
-     * ADMINISTRADOR -que no tiene un id de entrenador propio- puede
-     * especificar cualquiera, y para eso si es obligatorio.
-     */
     private Long idEntrenadorEfectivo(Long idEntrenadorDelBody) {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         boolean esEntrenador = auth.getAuthorities().stream()

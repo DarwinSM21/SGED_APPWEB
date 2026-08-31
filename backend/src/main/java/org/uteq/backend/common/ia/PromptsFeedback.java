@@ -4,33 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Texto que se le manda al modelo, independiente del proveedor.
- *
- * <p>Vive aparte porque lo que se pide y lo que se prohibe pedir es una
- * decision del proyecto, no de Google ni de OpenAI. Al cambiar de proveedor
- * cambia la forma de la peticion HTTP, nunca el contenido: si los prompts
- * estuvieran copiados en cada implementacion, un ajuste al tono acabaria
- * aplicado en una y olvidado en la otra.
- *
- * <p>Solo se serializan campos de {@link PerfilJugadorAnonimo}. Ese record no
- * tiene nombre, cedula, correo ni fecha de nacimiento, de modo que aqui no hay
- * forma de filtrar identidad aunque se quisiera.
- */
 final class PromptsFeedback {
-
     private PromptsFeedback() {
     }
 
-    /**
-     * Instruccion de sistema. Acota el registro y, sobre todo, prohibe al
-     * modelo inventar datos: el entrenador tiene que poder confiar en que el
-     * texto describe lo que realmente se midio.
-     */
     static final String INSTRUCCION_SISTEMA = """
             Eres un asistente que redacta retroalimentacion deportiva para una escuela
             de futbol formativo con jugadores en edad escolar.
-
             Reglas que debes cumplir siempre:
             - Escribe en espanol neutro, en segunda persona del plural o impersonal.
             - Maximo 3 frases. Sin listas, sin titulos, sin emojis.
@@ -42,15 +22,6 @@ final class PromptsFeedback {
             - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
             """;
 
-    /**
-     * Resumen del rendimiento acumulado de un jugador, escrito para su
-     * familia.
-     *
-     * <p>El destinatario cambia el texto. Un representante ve "Tactica 5.5"
-     * y no sabe si eso es bueno, malo o normal para la edad, asi que se le
-     * pide al modelo que TRADUZCA los numeros en vez de repetirlos, y que no
-     * los presente como un veredicto sobre el chico.
-     */
     static String deJugador(PerfilJugadorAnonimo p) {
         var sb = new StringBuilder();
         sb.append("Resume como viene rindiendo este jugador, para que lo lea su padre, ")

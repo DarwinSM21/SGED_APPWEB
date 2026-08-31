@@ -14,20 +14,10 @@ import org.uteq.backend.academico.pago.service.PagoService;
 
 import java.util.List;
 
-/**
- * Pagos. Los registra recepcion (o un administrador); el principal
- * autenticado se resuelve aqui, nunca se confia en un id de cliente,
- * mismo criterio ya usado para el resto de altas de este modulo.
- *
- * <p>Los metodos llevan @Transactional propio porque aResponse() navega
- * Pago -&gt; Estudiante -&gt; Persona y Pago -&gt; Usuario -&gt; Persona (relaciones
- * LAZY) con open-in-view deshabilitado.
- */
 @RestController
 @RequestMapping("/api/pagos")
 @RequiredArgsConstructor
 public class PagoController {
-
     private final PagoService pagoService;
 
     @PostMapping("/membresia")

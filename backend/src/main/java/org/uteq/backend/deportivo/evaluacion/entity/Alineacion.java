@@ -8,24 +8,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * La alineacion con la que se jugo un partido.
- *
- * <p>No sustituye a la sugerencia: la sugerencia se sigue calculando en
- * ConvocatoriaService a partir del rendimiento de las ultimas semanas, y es lo
- * que se ofrece mientras nadie haya guardado nada aqui. Esta tabla registra la
- * decision del entrenador cuando existe, que es otra cosa: el entrenador mira
- * la sugerencia, mete al suplente que viene entrenando mejor, y juega con esa.
- *
- * <p>Un partido tiene una sola alineacion. Guardar de nuevo la reemplaza en
- * vez de acumular versiones: lo que importa historicamente es con que once se
- * jugo, no cuantas veces se retoco antes de empezar.
- */
 @Entity
 @Table(name = "alineaciones", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Alineacion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_alineacion")
@@ -35,12 +21,6 @@ public class Alineacion {
     @JoinColumn(name = "id_partido", nullable = false, unique = true)
     private Partido partido;
 
-    /**
-     * Como le fue al equipo con este once, de 1 a 5. Nullable a proposito: la
-     * alineacion se guarda antes de jugar y se califica despues, si es que se
-     * califica. Obligarla al guardar forzaria al entrenador a puntuar un
-     * partido que todavia no ocurrio.
-     */
     @Column(name = "valoracion")
     private Short valoracion;
 

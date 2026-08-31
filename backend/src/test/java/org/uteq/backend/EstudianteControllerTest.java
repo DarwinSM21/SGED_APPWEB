@@ -34,7 +34,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class EstudianteControllerTest {
-
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
@@ -47,15 +46,13 @@ class EstudianteControllerTest {
     @BeforeEach
     void setUp() {
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule()); // Soporte para LocalDate e Instant
+        objectMapper.registerModule(new JavaTimeModule());
 
         mockMvc = MockMvcBuilders
                 .standaloneSetup(estudianteController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
     }
-
-    // --- Métodos de Ayuda para Instanciar DTOs ---
 
     private EstudianteResponse crearEstudianteResponse() {
         return new EstudianteResponse(
@@ -81,25 +78,23 @@ class EstudianteControllerTest {
 
     private EstudianteRequest crearEstudianteRequestValido() {
         return new EstudianteRequest(
-                1L,                       // idPersona
-                2L,                       // idCategoria
-                1L,                       // idEstadoGeneral
-                "EST-001",                // codigoEstudiante
-                LocalDate.now(),          // fechaIngreso
-                new BigDecimal("60.50"),  // peso
-                new BigDecimal("1.70"),   // altura
-                null                      // idPosicion
+                1L,
+                2L,
+                1L,
+                "EST-001",
+                LocalDate.now(),
+                new BigDecimal("60.50"),
+                new BigDecimal("1.70"),
+                null
         );
     }
-
-    // --- Pruebas Unitarias ---
 
     @Test
     @DisplayName("GET /api/estudiantes - Listar devuelve página con éxito")
     void listar_devuelve_pagina() throws Exception {
         EstudiantePageResponse<EstudianteResponse> pagina =
                 new EstudiantePageResponse<>(List.of(crearEstudianteResponse()), 0, 10, 1, 1);
-        
+
         when(estudianteService.listar(any())).thenReturn(pagina);
 
         mockMvc.perform(get("/api/estudiantes"))
@@ -148,7 +143,6 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("POST /api/estudiantes - Falla validación con Request incompleto (Devuelve 400)")
     void crear_con_datos_invalidos_da_422() throws Exception {
-        // Objeto request inválido (campos @NotNull nulos)
         EstudianteRequest requestInvalido = new EstudianteRequest(
                 null, null, null, "", LocalDate.now().plusDays(1), new BigDecimal("0.00"), new BigDecimal("0.00"), null
         );

@@ -24,27 +24,13 @@ import org.uteq.backend.seguridad.auth.security.JwtAuthenticationFilter;
 
 import java.util.List;
 
-/**
- * Configuracion de Spring Security 6.
- * - CORS para frontend Angular (localhost:4200)
- * - BCrypt costo 12
- * - Stateless (sin sesiones HTTP)
- * - @PreAuthorize habilitado para control por rol
- * - Filtro JWT en la cadena de filtros
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     private final JwtAuthenticationFilter jwtAuthFilter;
 
-    /**
-     * Patrones (no origenes exactos: admiten "*", p.ej. para probar desde un
-     * celular en la misma red LAN sin fijar una IP en el codigo fuente).
-     * Cada quien agrega la suya en su propio .env, nunca en este archivo.
-     */
     @Value("#{'${cors.allowed-origin-patterns:http://localhost:4200,http://localhost:80,http://127.0.0.1:4200,http://localhost:5173}'.split(',')}")
     private List<String> corsAllowedOriginPatterns;
     private final ProblemDetailsAuthHandlers problemHandlers;
@@ -79,10 +65,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        // setAllowedOriginPatterns (no setAllowedOrigins): admite "*" en un
-        // segmento, necesario para permitir la LAN entera sin fijar una IP.
-        // Sigue siendo compatible con allowCredentials=true porque Spring
-        // igual refleja el origen puntual que hizo match, nunca "*" literal.
+
         config.setAllowedOriginPatterns(corsAllowedOriginPatterns);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));

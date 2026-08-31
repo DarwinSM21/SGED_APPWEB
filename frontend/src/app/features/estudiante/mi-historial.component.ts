@@ -6,10 +6,6 @@ import { MiHistorialService } from './mi-historial.service';
 import { MiHistorial } from './mi-historial.models';
 import { horaCorta } from '../../core/formato-texto';
 
-/**
- * Historial propio del ESTUDIANTE autenticado: antes solo podia marcar
- * asistencia (jsQR), no consultar lo que ya habia marcado.
- */
 @Component({
   selector: 'app-mi-historial',
   standalone: true,
@@ -64,16 +60,13 @@ import { horaCorta } from '../../core/formato-texto';
     .pantalla { max-width: 560px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; display: flex; flex-direction: column; gap: 1.25rem; }
     .titulo-pantalla { font-size: 1.2rem; }
     .aviso { color: var(--color-text-muted); font-size: .9rem; }
-
     .resumen { padding: 1.1rem 1.3rem; display: flex; flex-direction: column; gap: .2rem; }
     .resumen__etiqueta { font-size: .78rem; color: var(--color-text-muted); }
     .resumen__porcentaje { font-size: 1.6rem; color: var(--color-text); }
-
     .lista { padding: .5rem 1.25rem; }
     .vacio { display: flex; flex-direction: column; align-items: center; gap: .75rem; text-align: center; padding: 2rem 1rem; }
     .vacio svg { width: 34px; height: 34px; color: var(--color-text-faint); }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); max-width: 32ch; }
-
     .fila { display: flex; align-items: center; gap: .75rem; padding: .85rem 0; border-bottom: 1px solid var(--color-border-light); }
     .fila:last-child { border-bottom: none; }
     .fila__icono {

@@ -7,12 +7,6 @@ import { ComentarioInforme, EstudianteResumen, InformeEstudiante, Notificacion }
 import { inicialesDe } from '../../core/formato-texto';
 import { fechaHoraCorta } from '../../core/formato-fecha';
 
-/**
- * Portal del representante: lista de sus representados y, al elegir uno,
- * su informe de solo lectura (promedio historico por criterio + historial
- * de lesiones). El backend ya verifica que cada representado mostrado es
- * realmente suyo -esta pantalla no decide nada de eso, solo lo pinta-.
- */
 @Component({
   selector: 'app-representante',
   standalone: true,
@@ -150,9 +144,7 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
   styles: [`
     .pantalla { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     .titulo-pantalla { font-size: 1.2rem; margin-bottom: 1.1rem; }
-
     .aviso { color: var(--color-text-muted); font-size: .9rem; }
-
     .panel-notificaciones { padding: 1.1rem 1.25rem; margin-bottom: 1.1rem; max-height: 280px; overflow-y: auto; }
     .panel-notificaciones__cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: .6rem; }
     .panel-notificaciones__cabecera h2 { font-size: .95rem; }
@@ -175,13 +167,10 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
     .notificacion-mensaje { font-size: .87rem; }
     .notificacion-fecha { font-size: .75rem; color: var(--color-text-faint); }
     .punto-no-leida { width: 8px; height: 8px; border-radius: 50%; background: var(--color-primary-500); flex-shrink: 0; }
-
     .vacio { display: flex; flex-direction: column; align-items: center; gap: .65rem; text-align: center; color: var(--color-text-faint); padding: 2.5rem 1rem; }
     .vacio svg { width: 34px; height: 34px; opacity: .6; }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); }
-
     .cuerpo { display: flex; gap: 1.1rem; flex-wrap: wrap; }
-
     .lista-representados { display: flex; flex-direction: column; gap: .5rem; flex: 1 1 220px; min-width: 220px; }
     .tarjeta-representado {
       display: flex; align-items: center; gap: .65rem; padding: .75rem .85rem;
@@ -194,7 +183,6 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
     .tarjeta-representado__info { display: flex; flex-direction: column; min-width: 0; }
     .tarjeta-representado__info .nombre { font-weight: 600; font-size: .9rem; }
     .tarjeta-representado__info .categoria { font-size: .78rem; color: var(--color-text-muted); }
-
     .detalle { flex: 2 1 380px; min-width: 300px; padding: 1.5rem; }
     .detalle h2 { font-size: 1.1rem; margin-bottom: .2rem; }
     .categoria-detalle { color: var(--color-text-muted); font-size: .85rem; margin-bottom: 1.25rem; }
@@ -206,23 +194,18 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
     .asistencia-etiqueta { font-size: .85rem; color: var(--color-text-muted); }
     .detalle h3 { font-size: .88rem; color: var(--color-text-muted); margin: 1.1rem 0 .6rem; text-transform: uppercase; letter-spacing: .03em; }
     .detalle h3:first-of-type { margin-top: 0; }
-
     .bloque-comentario { margin: 1rem 0 1.25rem; padding-bottom: 1rem;
                          border-bottom: 1px solid var(--color-border-light); }
     .comentario { margin: .7rem 0 0; font-size: .92rem; line-height: 1.6;
                   color: var(--color-text); }
     .comentario--sin { font-size: .85rem; color: var(--color-text-muted); }
-    /* Quien lee esto es el padre, no el entrenador: tiene que quedar claro
-       que el texto lo redacto una maquina y a quien preguntarle de verdad. */
     .comentario-nota { margin: .45rem 0 0; font-size: .74rem;
                        color: var(--color-text-faint); line-height: 1.5; }
-
     .criterios { display: flex; flex-direction: column; gap: .4rem; }
     .criterio-fila {
       display: flex; justify-content: space-between; align-items: center;
       padding: .55rem .7rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); font-size: .9rem;
     }
-
     .lesion-fila {
       display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem;
       border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); margin-bottom: .4rem; font-size: .85rem;
@@ -232,10 +215,7 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
   `]
 })
 export class RepresentanteComponent implements OnInit {
-
-  /** 12 horas con AM/PM, igual que el resto de la app. */
   readonly fechaHora = fechaHoraCorta;
-
 
   private readonly servicio = inject(RepresentanteService);
 
@@ -273,7 +253,6 @@ export class RepresentanteComponent implements OnInit {
     });
   }
 
-  /** Marcar como leida es "al tocarla": no hace falta un boton aparte para algo tan liviano. */
   marcarLeida(n: Notificacion): void {
     if (n.leida) return;
     this.notificaciones.update((actuales) =>
@@ -285,8 +264,7 @@ export class RepresentanteComponent implements OnInit {
     this.idSeleccionado.set(idEstudiante);
     this.cargandoInforme.set(true);
     this.informe.set(null);
-    // Sin esto, al cambiar de hijo quedaria en pantalla el texto del anterior
-    // junto a los numeros del nuevo.
+
     this.comentario.set(null);
 
     this.servicio.informeDe(idEstudiante).subscribe({
@@ -304,11 +282,6 @@ export class RepresentanteComponent implements OnInit {
     return inicialesDe(nombre);
   }
 
-  /**
-   * Pide el texto solo cuando el representante lo toca. Si el modelo no
-   * responde se muestra el motivo y los numeros siguen ahi: el informe no
-   * depende de un servicio externo.
-   */
   pedirComentario(idEstudiante: number): void {
     if (this.cargandoComentario()) return;
     this.cargandoComentario.set(true);

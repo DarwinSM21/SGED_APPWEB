@@ -14,8 +14,6 @@ interface Pagina<T> {
 export class InventarioService {
   private readonly http = inject(HttpClient);
 
-  // -- Artículos --
-
   listarArticulosActivos() {
     return this.http.get<ArticuloResponse[]>('/api/inventario/articulos/activos');
   }
@@ -36,8 +34,6 @@ export class InventarioService {
     return this.http.delete<void>(`/api/inventario/articulos/${id}`);
   }
 
-  // -- Movimientos de stock --
-
   listarMovimientos() {
     return this.http.get<Pagina<MovimientoResponse>>('/api/inventario/movimientos?size=100&sort=fechaMovimiento,desc')
       .pipe(map((pagina) => pagina.content));
@@ -46,8 +42,6 @@ export class InventarioService {
   registrarMovimiento(request: MovimientoRequest) {
     return this.http.post<MovimientoResponse>('/api/inventario/movimientos', request);
   }
-
-  // -- Asignaciones --
 
   listarAsignaciones() {
     return this.http.get<Pagina<AsignacionResponse>>('/api/inventario/asignaciones?size=100&sort=fechaAsignacion,desc')
@@ -61,8 +55,6 @@ export class InventarioService {
   devolverAsignacion(id: number, request: DevolucionRequest) {
     return this.http.patch<AsignacionResponse>(`/api/inventario/asignaciones/${id}/devolver`, request);
   }
-
-  // -- Destinatarios (estudiantes/entrenadores) --
 
   listarEstudiantesOpcion() {
     return this.http.get<Pagina<{ idEstudiante: number; nombrePersona: string; apellidoPersona: string }>>('/api/estudiantes?size=200').pipe(

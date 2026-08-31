@@ -21,17 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-/**
- * Endpoint propio del usuario autenticado (cualquier rol), separado de
- * UsuarioController porque ese controlador es @PreAuthorize hasRole
- * ADMINISTRADOR a nivel de clase: "mis datos" tiene que quedar accesible
- * a los 5 roles.
- */
 @RestController
 @RequestMapping("/api/usuarios/me")
 @RequiredArgsConstructor
 public class PerfilController {
-
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final UsuarioRepository usuarioRepository;

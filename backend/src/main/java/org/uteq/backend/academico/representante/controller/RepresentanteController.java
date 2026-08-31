@@ -14,22 +14,10 @@ import org.uteq.backend.academico.representante.dto.RepresentanteResponse;
 import org.uteq.backend.academico.representante.dto.VinculoRequest;
 import org.uteq.backend.academico.representante.service.RepresentanteService;
 
-/**
- * CRUD de Representante. A diferencia de {@code EntrenadorController}, no
- * se comparte lectura con ENTRENADOR: un coach no tiene motivo operativo
- * para ver datos de contacto de tutores. El alta la hace un
- * administrador o un recepcionista (pantalla unificada de Personas)
- * sobre un idPersona/idUsuario ya creados via {@code POST /api/usuarios}
- * (mismo patron de dos pasos que Entrenador), opcionalmente vinculando de
- * una vez a sus representados. RECEPCIONISTA solo puede leer/crear/
- * vincular -- editar datos de un representante existente o eliminarlo
- * sigue siendo exclusivo de ADMINISTRADOR.
- */
 @RestController
 @RequestMapping("/api/representantes")
 @RequiredArgsConstructor
 public class RepresentanteController {
-
     private final RepresentanteService representanteService;
 
     @GetMapping
@@ -65,10 +53,6 @@ public class RepresentanteController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * El cuerpo es opcional: sin el, el vinculo queda sin relacion y sin
-     * contacto principal (mismo resultado que antes de exponer esos campos).
-     */
     @PostMapping("/{id}/estudiantes/{idEstudiante}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<RepresentanteResponse> vincularEstudiante(

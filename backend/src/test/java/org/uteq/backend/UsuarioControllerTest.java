@@ -31,7 +31,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class UsuarioControllerTest {
-
     private MockMvc mockMvc;
 
     @Mock
@@ -42,9 +41,6 @@ class UsuarioControllerTest {
 
     @BeforeEach
     void setUp() {
-        // standaloneSetup no aplica @PreAuthorize (no hay contexto de Spring Security):
-        // esta prueba cubre el mapeo HTTP del controller, no la autorizacion,
-        // que ya se verifica contra el servidor real en docs/mediciones/sec/.
         mockMvc = MockMvcBuilders.standaloneSetup(usuarioController)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())

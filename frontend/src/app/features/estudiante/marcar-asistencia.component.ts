@@ -4,13 +4,6 @@ import jsQR from 'jsqr';
 import { MarcarAsistenciaService } from './marcar-asistencia.service';
 import { MarcarAsistenciaResponse } from './marcar-asistencia.models';
 
-/**
- * Pantalla del estudiante: activa la camara, decodifica el QR de recepcion
- * cuadro a cuadro con jsQR (100% en el cliente, ninguna imagen ni el token
- * salen del dispositivo hasta el POST final) y envia el token en cuanto lo
- * reconoce. La identidad de quien marca sale de la sesion autenticada en el
- * backend, nunca de este componente.
- */
 @Component({
   selector: 'app-marcar-asistencia',
   standalone: true,
@@ -71,9 +64,7 @@ import { MarcarAsistenciaResponse } from './marcar-asistencia.models';
   styles: [`
     .pantalla { max-width: 480px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     .titulo-pantalla { font-size: 1.2rem; margin-bottom: 1.1rem; }
-
     .camara-tarjeta { padding: 1.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
-
     .camara-envoltura {
       position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: var(--radius-md);
       overflow: hidden; background: #0f172a;
@@ -85,13 +76,10 @@ import { MarcarAsistenciaResponse } from './marcar-asistencia.models';
       box-shadow: 0 0 0 999px rgba(15,23,42,.35);
       pointer-events: none;
     }
-
     .vacio { display: flex; flex-direction: column; align-items: center; gap: .85rem; text-align: center; padding: 1rem 0; width: 100%; }
     .vacio svg { width: 34px; height: 34px; color: var(--color-text-faint); }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); }
-
     .aviso { display: flex; align-items: center; gap: .5rem; color: var(--color-text-muted); font-size: .88rem; }
-
     .resultado { padding: 2.5rem 1.75rem; display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; }
     .resultado__icono {
       width: 56px; height: 56px; border-radius: 50%; background: var(--color-success-bg); color: var(--color-success);
@@ -170,10 +158,7 @@ export class MarcarAsistenciaComponent implements OnDestroy {
       },
       error: (err) => {
         this.enviando.set(false);
-        // No se reactiva la camara aqui: si el QR sigue a la vista, jsQR lo
-        // volveria a leer en el siguiente cuadro y dispararia el mismo error
-        // en loop antes de que el estudiante alcance a leerlo. Se queda en
-        // esta pantalla de fallo hasta que el toca "Reintentar" a proposito.
+
         this.fallo.set(this.mensajeDeError(err.status));
       },
     });

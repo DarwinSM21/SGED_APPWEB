@@ -19,11 +19,6 @@ function serie(meses: IngresoMes[]): HistoricoIngresos {
   };
 }
 
-/**
- * Se prueba la geometria y no el pintado: es la parte que puede equivocarse
- * en silencio -un grafico con las barras mal escaladas se ve perfectamente
- * bien y miente-, mientras que un color mal puesto salta a la vista.
- */
 describe('GraficosIngresosComponent', () => {
   let ref: ComponentRef<GraficosIngresosComponent>;
   let componente: GraficosIngresosComponent;
@@ -45,7 +40,6 @@ describe('GraficosIngresosComponent', () => {
   it('lleva las marcas del eje a cifras redondas en vez de repartir el maximo', () => {
     montar(serie([mes(2026, 3, 325), mes(2026, 8, 680)]));
 
-    // Repartir 680 en cuartos daria 170/340/510: exacto pero ilegible.
     expect(componente.ticks().map((t) => t.etiqueta)).toEqual(['0', '200', '400', '600', '800']);
   });
 
@@ -63,8 +57,7 @@ describe('GraficosIngresosComponent', () => {
     const barras = componente.barras();
     expect(barras.map((b) => b.etiqueta)).toEqual(['may', 'jun', 'jul']);
     expect(barras[0].alto).toBe(0);
-    // El mes vacio conserva su lugar: si se omitiera, mayo y julio quedarian
-    // contiguos y la pendiente que se lee seria falsa.
+
     expect(barras[1].centro).toBeGreaterThan(barras[0].centro);
     expect(barras[2].centro).toBeGreaterThan(barras[1].centro);
   });

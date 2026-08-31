@@ -20,7 +20,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class QrAsistenciaServiceTest {
-
     @Mock private StringRedisTemplate redis;
     @Mock private ValueOperations<String, String> ops;
 
@@ -62,7 +61,6 @@ class QrAsistenciaServiceTest {
 
         var resultado = servicio.emitir(12345L);
 
-        // Es aleatorio y opaco: quien fotografie el QR no aprende nada de el.
         assertFalse(resultado.token().contains("12345"));
     }
 
@@ -74,8 +72,6 @@ class QrAsistenciaServiceTest {
 
         assertEquals(Optional.of(7L), servicio.canjear("abc"));
 
-        // getAndDelete y no get + delete: dos peticiones simultaneas con el
-        // mismo token no pueden pasar ambas la validacion.
         verify(ops).getAndDelete("qr:asistencia:abc");
         verify(ops, never()).get(anyString());
     }

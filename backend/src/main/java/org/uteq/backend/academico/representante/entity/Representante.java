@@ -9,11 +9,6 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.time.Instant;
 
-/**
- * Padre, madre o tutor legal con cuenta propia de acceso. Espeja el
- * mismo patron que Entrenador: Persona (datos de la persona) y Usuario
- * (credenciales) son relaciones 1-a-1 separadas, no un solo registro.
- */
 @Entity
 @Table(name = "representantes", schema = "academico")
 @Getter
@@ -22,7 +17,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class Representante {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_representante")

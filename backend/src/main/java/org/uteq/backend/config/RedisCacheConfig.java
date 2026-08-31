@@ -16,7 +16,6 @@ import java.time.Duration;
 
 @Configuration
 public class RedisCacheConfig {
-
     public static final String CACHE_ESTUDIANTES = "estudiantes";
     public static final String CACHE_ENTRENADORES = "entrenadores";
     public static final String CACHE_USUARIOS = "usuarios";
@@ -32,15 +31,12 @@ public class RedisCacheConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
-        // 1. Configuramos un ObjectMapper limpio con módulo de fechas
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        // 2. Creamos el serializador pasando directamente este ObjectMapper (sin activateDefaultTyping)
         GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);
 
-        // 3. Configuraciones de caché
         RedisCacheConfiguration configEstudiantes = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofSeconds(ttlEstudiantesSeconds))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));

@@ -1,4 +1,3 @@
-/** Espejan MiEquipoDtos del backend (org.uteq.backend.academico.estudiante.dto). */
 
 export interface CategoriaDetalle {
   nombre: string;
@@ -25,12 +24,7 @@ export interface Companero {
 
 export interface MiEquipo {
   categoria: CategoriaDetalle;
-  /** null si el estudiante no tiene posicion nominal asignada todavia. */
   posicion: PosicionResumen | null;
-  /** null si su categoria no tiene ninguna sesion programada a futuro. */
   entrenador: EntrenadorAsignado | null;
   companeros: Companero[];
 }
-
-// InformeEstudiante (estadisticas) se reutiliza de features/representante/representante.models:
-// mismo DTO que ya usa el representante, el backend tambien lo comparte tal cual (InformeService).

@@ -7,16 +7,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
-/**
- * Criterio configurable sobre el que se califica (Tecnica, Condicion fisica,
- * Tactica, Actitud). Son datos sembrados, no fijos en codigo: la escuela puede
- * agregar o desactivar criterios sin recompilar.
- */
 @Entity
 @Table(name = "criterios_evaluacion", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class CriterioEvaluacion {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_criterio")

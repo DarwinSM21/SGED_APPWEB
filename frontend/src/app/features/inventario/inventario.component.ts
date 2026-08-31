@@ -17,16 +17,6 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
   UNIFORME: 'Uniforme', BALON: 'Balón', IMPLEMENTO: 'Implemento', OTRO: 'Otro',
 };
 
-/**
- * Módulo Inventario (RF-27 a RF-30): catálogo de artículos, movimientos
- * de stock y asignaciones a estudiantes/entrenadores. Un solo componente
- * con pestañas -mismo patrón de PagosComponent- porque los 3 conceptos
- * comparten el mismo catálogo de artículos y no justifican rutas propias.
- *
- * ENTRENADOR solo gestiona catálogo ni stock (ver AsignacionController):
- * la pestaña de Asignaciones es la única visible para ese rol, aunque el
- * formulario igual necesita leer el catálogo activo para elegir artículo.
- */
 @Component({
   selector: 'app-inventario',
   standalone: true,
@@ -257,13 +247,10 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
     .titulo-pantalla { font-size: 1.2rem; }
     .subtitulo { font-size: .95rem; margin: 1rem 0 .75rem; }
     .card { padding: 1.5rem; display: flex; flex-direction: column; gap: .9rem; }
-
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
     @media (max-width: 480px) { .fila-2 { grid-template-columns: 1fr; } }
-
     .field__control select, .field__control input { flex: 1; border: none; outline: none; padding: .75rem 0; font-size: .95rem; background: transparent; color: var(--color-text); width: 100%; }
     .aviso { color: var(--color-text-muted); font-size: .85rem; }
-
     .tabs { display: flex; gap: .4rem; border-bottom: 1px solid var(--color-border-light); padding-bottom: .1rem; }
     .tabs--secundario { border-bottom: none; padding-bottom: 0; }
     .tab {
@@ -271,10 +258,8 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
       color: var(--color-text-muted); cursor: pointer; border-bottom: 2px solid transparent;
     }
     .tab--activo { color: var(--color-primary-700); border-bottom-color: var(--color-primary-500); }
-
     .acciones { display: flex; justify-content: flex-end; gap: .6rem; }
     .btn--pequeno { padding: .35rem .6rem; font-size: .78rem; }
-
     .fila-articulo, .fila-movimiento, .fila-asignacion {
       display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem;
     }
@@ -283,16 +268,12 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
     .nombre-articulo, .destinatario-asignacion { flex: 1; }
     .stock-articulo, .cantidad-movimiento { font-weight: 600; }
     .meta-movimiento { color: var(--color-text-faint); font-size: .8rem; }
-
     .alert--warning { background: #fff8e1; color: #8a6100; border: 1px solid #f0d98c; padding: .6rem .9rem; border-radius: var(--radius-sm); font-size: .85rem; }
     .badge--danger { background: #fdecea; color: #c0392b; }
   `],
 })
 export class InventarioComponent implements OnInit {
-
-  /** 12 horas con AM/PM, igual que el resto de la app. */
   readonly fechaHora = fechaHoraCorta;
-
 
   private readonly auth = inject(AuthService);
   private readonly servicio = inject(InventarioService);

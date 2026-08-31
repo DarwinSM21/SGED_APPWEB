@@ -1,4 +1,3 @@
-/** Espejan los DTOs del backend (org.uteq.backend.inventario.*.dto). */
 
 export type TipoArticulo = 'UNIFORME' | 'BALON' | 'IMPLEMENTO' | 'OTRO';
 

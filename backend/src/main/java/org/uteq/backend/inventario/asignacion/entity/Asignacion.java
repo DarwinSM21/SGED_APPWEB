@@ -13,11 +13,6 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/**
- * Entrega/devolucion de un articulo a un estudiante o entrenador.
- * Exactamente uno de estudiante/entrenador va lleno, segun
- * tipoDestinatario (reflejado en el CHECK de la migracion V15).
- */
 @Entity
 @Table(name = "asignaciones", schema = "inventario")
 @Getter
@@ -26,7 +21,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Asignacion {
-
     public enum TipoDestinatario { ESTUDIANTE, ENTRENADOR }
     public enum EstadoAsignacion { ASIGNADO, DEVUELTO, PERDIDO }
 

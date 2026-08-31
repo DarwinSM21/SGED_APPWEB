@@ -9,14 +9,13 @@ import org.uteq.backend.seguridad.auth.security.JwtService;
 import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceTest {
-
     private JwtService jwtService;
 
     private final String SECRET_TEST = "CLAVE_DE_PRUEBA_SGED_MINIMO_32_CARACTERES_2026";
     private final String ISSUER_TEST = "sged-backend";
     private final String AUDIENCE_TEST = "sged-frontend";
-    private final long EXPIRATION_MS = 3600000L; // 1 hora
-    private final long REFRESH_EXPIRATION_MS = 604800000L; // 7 días
+    private final long EXPIRATION_MS = 3600000L;
+    private final long REFRESH_EXPIRATION_MS = 604800000L;
 
     @BeforeEach
     void setUp() {
@@ -42,14 +41,11 @@ class JwtServiceTest {
     @Test
     @DisplayName("isTokenValid - Retorna false si la audiencia esperada no coincide con la del token")
     void token_con_audiencia_distinta_es_invalido() {
-        // Generamos un token con audiencia "otro-publico"
         ReflectionTestUtils.setField(jwtService, "audience", "otro-publico");
         String token = jwtService.generateToken("admin", "USER");
 
-        // Restauramos la audiencia esperada ("sged-frontend")
         ReflectionTestUtils.setField(jwtService, "audience", AUDIENCE_TEST);
 
-        // El token emitido para "otro-publico" debe ser rechazado
         assertFalse(jwtService.isTokenValid(token));
     }
 
@@ -73,7 +69,6 @@ class JwtServiceTest {
     @Test
     @DisplayName("isTokenValid - Retorna false si el token está expirado")
     void token_expirado_es_invalido() {
-        // Configuramos expiración negativa (expiró en el pasado)
         ReflectionTestUtils.setField(jwtService, "expirationMs", -1000L);
         String tokenExpirado = jwtService.generateToken("admin", "USER");
 

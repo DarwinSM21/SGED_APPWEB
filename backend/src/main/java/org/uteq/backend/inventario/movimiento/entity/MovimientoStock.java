@@ -8,11 +8,6 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.time.Instant;
 
-/**
- * Ledger de entradas/salidas/ajustes de stock. Independiente de a quien
- * se le entrega algo (eso lo cubre inventario.asignaciones): este es el
- * historial de "cuanto entro/salio del deposito".
- */
 @Entity
 @Table(name = "movimientos_stock", schema = "inventario")
 @Getter
@@ -21,7 +16,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class MovimientoStock {
-
     public enum TipoMovimiento { ENTRADA, SALIDA, AJUSTE }
 
     @Id

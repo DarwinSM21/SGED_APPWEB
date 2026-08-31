@@ -27,15 +27,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/**
- * standaloneSetup no aplica @PreAuthorize (no hay contexto de Spring
- * Security): esta prueba cubre el mapeo HTTP y los filtros, no la
- * autorizacion por rol -- mismo alcance que UsuarioControllerTest y
- * LesionControllerTest.
- */
 @ExtendWith(MockitoExtension.class)
 class AuditoriaControllerTest {
-
     @Mock private AuditoriaService auditoriaService;
     @InjectMocks private AuditoriaController controller;
 

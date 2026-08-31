@@ -17,20 +17,11 @@ import org.uteq.backend.deportivo.partido.dto.PartidoDtos.ResultadoRequest;
 import org.uteq.backend.deportivo.partido.service.AlineacionService;
 import org.uteq.backend.deportivo.partido.service.PartidoService;
 
-/**
- * Partidos y su alineacion.
- *
- * <p>Todos los endpoints exigen ENTRENADOR o ADMINISTRADOR, anotado desde el
- * primer commit y no despues: los cinco recursos que la reestructuracion
- * agrego sin {@code @PreAuthorize} dejaron accesibles datos de menores a
- * cualquier cuenta autenticada (hallazgo H-08). No se repite.
- */
 @RestController
 @RequestMapping("/api/partidos")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
 public class PartidoController {
-
     private final PartidoService partidoService;
     private final AlineacionService alineacionService;
 
@@ -52,7 +43,6 @@ public class PartidoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(partidoService.crear(request));
     }
 
-    /** El marcador, que llega despues de jugar. */
     @PutMapping("/{idPartido}/resultado")
     public ResponseEntity<PartidoResponse> registrarResultado(
             @PathVariable Long idPartido, @Valid @RequestBody ResultadoRequest request) {
@@ -64,15 +54,6 @@ public class PartidoController {
         partidoService.eliminar(idPartido);
         return ResponseEntity.noContent().build();
     }
-
-    // ------------------------------------------------------------------
-    // Alineacion
-    //
-    // Un solo recurso para las dos cosas: si el entrenador guardo un once se
-    // devuelve ese, y si no, la sugerencia calculada con el rendimiento de las
-    // ultimas semanas. La pantalla no tiene que preguntar dos veces; la
-    // bandera "guardada" le dice cual esta viendo.
-    // ------------------------------------------------------------------
 
     @GetMapping("/{idPartido}/alineacion")
     @Transactional(readOnly = true)
@@ -87,18 +68,12 @@ public class PartidoController {
         return ResponseEntity.ok(alineacionService.guardar(idPartido, request));
     }
 
-    /** Descarta los cambios y vuelve a la sugerencia del sistema. */
     @DeleteMapping("/{idPartido}/alineacion")
     @Transactional
     public ResponseEntity<AlineacionResponse> restablecerAlineacion(@PathVariable Long idPartido) {
         return ResponseEntity.ok(alineacionService.restablecer(idPartido));
     }
 
-    /**
-     * Comentario de IA sobre el once, a demanda. Se separa de la consulta para
-     * no llamar al modelo en cada apertura de la pantalla: el entrenador lo
-     * pide cuando quiere leerlo.
-     */
     @PostMapping("/{idPartido}/alineacion/feedback")
     @Transactional(readOnly = true)
     public ResponseEntity<FeedbackAlineacionResponse> feedback(@PathVariable Long idPartido) {

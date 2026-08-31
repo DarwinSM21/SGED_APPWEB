@@ -28,13 +28,8 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * R-07 (informe de evaluacion de calidad, D-09): EvaluacionDiariaController
- * estaba en la lista de controladores con 0% de cobertura.
- */
 @ExtendWith(MockitoExtension.class)
 class EvaluacionDiariaControllerTest {
-
     private MockMvc mockMvc;
 
     @Mock private EvaluacionDiariaService evaluacionService;

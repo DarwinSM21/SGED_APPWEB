@@ -4,7 +4,6 @@ import { of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
 import { AuthService } from '../auth.service';
 
-/** R-08 (informe de evaluacion de calidad): flujo critico de inicio de sesión. */
 describe('LoginComponent', () => {
   let fixture: ComponentFixture<LoginComponent>;
   let component: LoginComponent;

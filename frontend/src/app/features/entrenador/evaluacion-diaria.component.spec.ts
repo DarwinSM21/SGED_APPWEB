@@ -6,7 +6,6 @@ import { EvaluacionDiariaComponent } from './evaluacion-diaria.component';
 import { EvaluacionService } from './evaluacion.service';
 import { EvaluacionSesion, JugadorEvaluable } from './evaluacion.models';
 
-/** R-08 (informe de evaluacion de calidad): flujo critico de evaluación diaria. */
 describe('EvaluacionDiariaComponent', () => {
   let fixture: ComponentFixture<EvaluacionDiariaComponent>;
   let component: EvaluacionDiariaComponent;
@@ -67,10 +66,7 @@ describe('EvaluacionDiariaComponent', () => {
 
     expect(component.cargando()).toBe(false);
     expect(component.sesion()?.idSesion).toBe(5);
-    // Antes se expandia solo al primer jugador habilitado. Se quito al pasar
-    // la pantalla a listar a TODOS los estudiantes de la categoria y no solo
-    // a los presentes: con la lista completa, abrir una ficha por decision
-    // propia deja de ser un atajo util y pasa a ser una fila desalineada.
+
     expect(component.estaExpandido(1)).toBe(false);
     expect(component.estaExpandido(2)).toBe(false);
   });

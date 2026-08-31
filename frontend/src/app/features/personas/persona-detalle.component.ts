@@ -16,12 +16,6 @@ type FormularioPersona = {
 
 const PERSONA_VACIA: FormularioPersona = { nombre: '', apellido: '', cedula: '', correo: '', telefono: '', fechaNacimiento: '' };
 
-/**
- * Panel derecho del maestro-detalle: datos propios de Persona, y -una vez
- * que existe- las cuatro fichas dependientes como componentes hijos. Uno
- * de los tres componentes en que se dividio personas-admin.component.ts
- * (R-05, informe de evaluacion de calidad).
- */
 @Component({
   selector: 'app-persona-detalle',
   standalone: true,
@@ -83,10 +77,6 @@ export class PersonaDetalleComponent {
   readonly errorPersona = signal('');
 
   constructor() {
-    // El formulario de Persona refleja la seleccion actual (o queda en
-    // blanco para "nueva persona"). Distinto de las fichas hijas: aqui
-    // tambien reacciona a esNueva(), porque nuevaPersona() no pasa por
-    // seleccionar().
     effect(() => {
       const seleccionada = this.state.seleccionada();
       const esNueva = this.state.esNueva();

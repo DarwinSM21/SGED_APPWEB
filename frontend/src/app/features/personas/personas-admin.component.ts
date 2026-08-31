@@ -11,22 +11,6 @@ const ETIQUETA_TAB: Record<Tab, string> = {
   entrenadores: 'Entrenadores', representantes: 'Representantes',
 };
 
-/**
- * Vista de ADMINISTRADOR: maestro-detalle sobre Persona, la raiz real del
- * dato (Usuario/Estudiante/Entrenador/Representante cuelgan de ella por
- * FK). Sin endpoint agregador nuevo: PersonasService cruza en el cliente
- * las 5 listas que ya existen -- ver personas.service.ts.
- *
- * Contenedor delgado (R-05, informe de evaluacion de calidad): antes este
- * archivo concentraba 840 lineas y 32 miembros -listado, formulario de
- * Persona, las cuatro fichas dependientes, y las cuatro tablas de
- * gestion- en una sola clase. Ahora solo posee las pestañas y el estado
- * compartido (PersonasStateService); cada pieza vive en su propio
- * componente: PersonasListaComponent, PersonaDetalleComponent (que a su
- * vez hospeda CuentaUsuarioComponent/FichaEstudianteComponent/
- * FichaEntrenadorComponent/FichaRepresentanteComponent) y
- * PersonasGestionComponent.
- */
 @Component({
   selector: 'app-personas-admin',
   standalone: true,
@@ -57,7 +41,6 @@ const ETIQUETA_TAB: Record<Tab, string> = {
       color: var(--color-text-muted); cursor: pointer; border-bottom: 2px solid transparent;
     }
     .tab--activo { color: var(--color-primary-700); border-bottom-color: var(--color-primary-500); }
-
     .maestro-detalle { display: grid; grid-template-columns: 320px 1fr; gap: 1.25rem; max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; align-items: start; }
     @media (max-width: 800px) { .maestro-detalle { grid-template-columns: 1fr; } }
   `],
@@ -77,7 +60,6 @@ export class PersonasAdminComponent implements OnInit {
     this.state.cargarDatosIniciales();
   }
 
-  /** Navega a la pestaña "Personas" con la persona ya seleccionada, disparado desde una fila de PersonasGestionComponent. */
   irAPersona(idPersona: number): void {
     const p = this.state.buscarPorIdPersona(idPersona);
     if (p) { this.tabActiva.set('personas'); this.state.seleccionar(p); }

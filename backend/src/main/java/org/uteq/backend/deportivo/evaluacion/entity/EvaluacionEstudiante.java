@@ -13,19 +13,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Un jugador dentro de una evaluacion.
- *
- * <p>{@code categoriaDia} es la razon de ser de esta tabla: guarda la
- * categoria en la que estaba el estudiante EN ESA FECHA, no la que tiene hoy.
- * Sin eso, un cambio de categoria a mitad de temporada reescribiria
- * retroactivamente el significado de todo su historial.
- */
 @Entity
 @Table(name = "evaluacion_estudiante", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class EvaluacionEstudiante {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_evaluacion_estudiante")
@@ -47,7 +38,6 @@ public class EvaluacionEstudiante {
     @JoinColumn(name = "id_posicion_jugada")
     private Posicion posicionJugada;
 
-    /** Lesion vigente ese dia, si la habia. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_lesion")
     private Lesion lesion;

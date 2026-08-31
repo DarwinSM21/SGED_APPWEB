@@ -10,7 +10,6 @@ import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models
 import { horaCorta, inicialesDe } from '../../core/formato-texto';
 import { mensajeDeError } from '../../core/mensaje-error';
 
-/** Fecha local de hoy en formato "yyyy-MM-dd", la que espera un <input type="date">. */
 function fechaHoyIso(): string {
   const hoy = new Date();
   const mes = String(hoy.getMonth() + 1).padStart(2, '0');
@@ -18,14 +17,6 @@ function fechaHoyIso(): string {
   return `${hoy.getFullYear()}-${mes}-${dia}`;
 }
 
-/**
- * Historial completo de sesiones del entrenador autenticado (pasadas y
- * futuras), con alta de una nueva. Antes de esto no existia ningun punto de
- * entrada para crear una sesion -el controlador original era deliberadamente
- * de solo lectura- ni para ver ninguna que no fuera la de hoy: un dia sin
- * sesion programada dejaba al entrenador sin forma de llegar a Evaluacion
- * Diaria o Plantilla desde la interfaz.
- */
 @Component({
   selector: 'app-sesiones',
   standalone: true,
@@ -228,11 +219,9 @@ function fechaHoyIso(): string {
     .pantalla { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     .cabecera-pantalla { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
     .titulo-pantalla { font-size: 1.3rem; }
-
     .formulario { padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; margin-bottom: 1.5rem; }
     .fila-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 560px) { .fila-2 { grid-template-columns: 1fr; } }
-
     .horario-semanal { padding: 1.25rem; margin-bottom: 1.5rem; }
     .cabecera-seccion { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
     .subtitulo { font-size: .95rem; }
@@ -246,14 +235,10 @@ function fechaHoyIso(): string {
     .fila-horario { display: flex; align-items: center; gap: .6rem; padding: .5rem .1rem; border-bottom: 1px solid var(--color-border-light); }
     .fila-horario:last-child { border-bottom: none; }
     .horario-info { flex: 1; font-size: .85rem; }
-    /* Un choque no impide usar el sistema, pero mientras exista genera una
-       sesión por semana a la que nadie puede ir. Se señala donde el
-       entrenador ya mira, no en una pantalla aparte. */
     .fila-horario--choca { background: var(--color-warning-bg); border-radius: var(--radius-sm);
                            padding-left: .5rem; padding-right: .5rem; }
     .choque { display: block; margin-top: .2rem; font-size: .76rem;
               color: var(--color-warning-text); line-height: 1.4; }
-
     .lista { padding: 1.25rem; }
     .sesion-fila { display: flex; align-items: center; gap: .5rem; }
     .sesion-fila .sesion { flex: 1; min-width: 0; }
@@ -269,7 +254,6 @@ function fechaHoyIso(): string {
     }
     .vacio svg { width: 36px; height: 36px; opacity: .6; }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); max-width: 32ch; }
-
     .sesion {
       display: flex; align-items: center; gap: .8rem;
       padding: .8rem .9rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm);
@@ -294,23 +278,8 @@ export class SesionesComponent implements OnInit {
   readonly categorias = signal<CategoriaOpcion[]>([]);
   readonly errorCategorias = signal<string>('');
 
-  /**
-   * Solo un ENTRENADOR puede crear sesiones y horarios: el backend resuelve
-   * de quien es la sesion a partir del usuario autenticado
-   * (SesionEntrenamientoService.crear), y una cuenta de administrador no
-   * tiene fila en `entrenadores`. Antes el administrador veia el formulario
-   * completo, lo llenaba y recibia un 404 al final; ahora no se le ofrece lo
-   * que no puede hacer.
-   */
   readonly esEntrenador = computed(() => this.authService.currentUser()?.rol === 'ENTRENADOR');
 
-  /**
-   * El desplegable nativo de Windows recorta la lista cuando no cabe -y no
-   * avisa: se ve una lista completa que en realidad esta cortada, y una
-   * categoria recien creada parece no existir-. El buscador propio la pinta
-   * entera, se filtra escribiendo y respeta el tema oscuro, que es el mismo
-   * motivo por el que ya sustituyo a los <select> de Pagos y Reportes.
-   */
   readonly opcionesCategorias = computed<OpcionBuscable[]>(() =>
     this.categorias().map((c) => ({
       id: c.idCategoria,
@@ -327,9 +296,7 @@ export class SesionesComponent implements OnInit {
   readonly error = signal('');
   readonly mostrarFormulario = signal(false);
 
-  /** Propiedades planas, no signals: [(ngModel)] las actualiza via su propio manejador de evento. */
   idCategoria: number | null = null;
-  /** Por defecto hoy (fecha local del navegador): la jornada extra casi siempre es la de hoy mismo; se puede cambiar a mano. */
   fecha = fechaHoyIso();
   horaInicio = '';
   horaFin = '';
@@ -338,7 +305,6 @@ export class SesionesComponent implements OnInit {
   readonly horarios = signal<Horario[]>([]);
   readonly mostrarFormularioHorario = signal(false);
   readonly guardandoHorario = signal(false);
-  /** id del horario que se esta editando, o null si se esta creando uno nuevo. */
   readonly editandoHorario = signal<number | null>(null);
   readonly errorHorario = signal('');
   readonly diasSemana = DIAS_SEMANA;
@@ -355,24 +321,12 @@ export class SesionesComponent implements OnInit {
     this.cargarCategorias();
   }
 
-  /**
-   * Se vuelve a pedir cada vez que se abre un formulario, no solo al entrar a
-   * la pantalla.
-   *
-   * <p>Una categoria recien creada -en otra pestaña, o en esta misma antes de
-   * volver aqui sin recargar- no aparecia en el desplegable, y no habia forma
-   * de notarlo: el reloj de la cabecera sigue corriendo, asi que una pagina
-   * vieja se ve igual de fresca que una recien cargada.
-   */
   private cargarCategorias(): void {
     this.sesionesService.listarCategoriasActivas().subscribe({
       next: (categorias) => {
         this.categorias.set(categorias);
         this.errorCategorias.set('');
       },
-      // Antes esto era un bloque vacio. Si la peticion fallaba -el backend
-      // reiniciandose, la red del celular- el desplegable se quedaba corto en
-      // silencio y parecia que la categoria no existia.
       error: () => this.errorCategorias.set(
         'No se pudo cargar la lista de categorías. Revisa la conexión y vuelve a abrir el formulario.'),
     });
@@ -453,7 +407,6 @@ export class SesionesComponent implements OnInit {
     this.errorHorario.set('');
   }
 
-  /** Carga un horario existente en el mismo formulario, en modo edicion. */
   editarHorario(h: Horario): void {
     this.editandoHorario.set(h.idHorario);
     this.idCategoriaHorario = h.idCategoria;
@@ -506,8 +459,7 @@ export class SesionesComponent implements OnInit {
         this.mostrarFormularioHorario.set(false);
         this.limpiarFormularioHorario();
         this.cargarHorarios();
-        // El cambio de horario rehace las sesiones futuras: la lista de abajo
-        // se queda con las horas viejas si no se vuelve a pedir.
+
         this.cargarSesiones();
       },
       error: (err) => {

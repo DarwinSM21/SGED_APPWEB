@@ -27,7 +27,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AuditoriaAspectTest {
-
     @Mock private AuditoriaService auditoriaService;
     @Mock private ProceedingJoinPoint pjp;
 
@@ -38,7 +37,6 @@ class AuditoriaAspectTest {
         aspecto = new AuditoriaAspect(auditoriaService);
     }
 
-    /** Metodos de ejemplo anotados, usados solo para leer su @Auditado por reflexion. */
     static class MetodosDeEjemplo {
         @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion")
         void conResultado() {

@@ -30,19 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Logica de negocio de sesiones de entrenamiento, antes embebida en
- * SesionEntrenamientoController (hallazgo D-03 del informe de evaluacion de
- * calidad: 167 lineas de controlador con 5 repositorios inyectados). El
- * controlador conserva la resolucion de identidad desde SecurityContextHolder
- * (mismo patron que InformeService: el principal se resuelve en el
- * controller y este servicio se prueba con un String cualquiera, sin
- * simular contexto de seguridad) y delega aqui el resto.
- */
 @Service
 @RequiredArgsConstructor
 public class SesionEntrenamientoService {
-
     private final SesionEntrenamientoRepository sesionRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final EvaluacionDiariaRepository evaluacionRepository;
@@ -51,12 +41,6 @@ public class SesionEntrenamientoService {
     private final AsistenciaRepository asistenciaRepository;
     private final EstudianteRepository estudianteRepository;
 
-    /**
-     * Sesiones de hoy. veTodasLasSesiones=true (ADMINISTRADOR/RECEPCIONISTA)
-     * devuelve todas; en caso contrario se filtra por el entrenador
-     * asociado al username, resuelto aqui y no en el controller porque
-     * requiere consultar EntrenadorRepository.
-     */
     @Transactional
     public List<SesionHoyResponse> sesionesDeHoy(String username, boolean veTodasLasSesiones) {
         horarioService.generarSesionesProgramadas();
@@ -77,14 +61,6 @@ public class SesionEntrenamientoService {
         return sesiones.stream().map(this::aResponse).toList();
     }
 
-    /**
-     * Historial completo (pasadas y futuras), no solo las de hoy: sin esto,
-     * cualquier dia sin sesion programada dejaba al entrenador sin forma de
-     * llegar a una evaluacion o plantilla pasada. Mismo criterio
-     * veTodasLasSesiones que sesionesDeHoy(): un ADMINISTRADOR audita el
-     * historial completo de todos los entrenadores, no solo el propio (que
-     * ademas no tiene, al no ser un Entrenador).
-     */
     @Transactional
     public List<SesionHoyResponse> misSesiones(String username, boolean veTodasLasSesiones, int page, int size) {
         horarioService.generarSesionesProgramadas();
@@ -105,11 +81,6 @@ public class SesionEntrenamientoService {
         return pagina.map(this::aResponse).getContent();
     }
 
-    /**
-     * Alta de una sesion propia. El idEntrenador nunca viene del cliente: se
-     * resuelve del username autenticado, para que un entrenador no pueda
-     * crear una sesion "a nombre" de otro con solo cambiar un id en el body.
-     */
     @Transactional
     public SesionHoyResponse crear(String username, SesionCrearRequest request) {
         Entrenador entrenador = entrenadorPorUsername(username);
@@ -125,10 +96,6 @@ public class SesionEntrenamientoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
 
-        // La generacion automatica ya evita repetir la sesion de un horario,
-        // pero el alta manual no comprobaba nada: se podian crear tres
-        // sesiones identicas del mismo grupo a la misma hora, que en Recepcion
-        // aparecen tres veces y reparten la asistencia sin criterio.
         if (sesionRepository.existeSolape(request.idCategoria(), request.fecha(),
                                           request.horaInicio(), request.horaFin())) {
             throw new IllegalArgumentException(
@@ -149,14 +116,6 @@ public class SesionEntrenamientoService {
         return aResponse(sesion);
     }
 
-    /**
-     * Que paso en una sesion: quien estuvo, quien falto y quien no tiene
-     * registro. Se parte del PLANTEL de la categoria y no de las filas de
-     * asistencia: si nadie paso lista, la tabla de asistencias esta vacia y
-     * una consulta que solo lea de ahi diria "no habia nadie convocado", que
-     * es distinto de "no se registro la asistencia de nadie". Esa diferencia
-     * es justamente lo que el entrenador necesita ver en el historial.
-     */
     @Transactional(readOnly = true)
     public SesionHistorialResponse historial(Long idSesion) {
         SesionEntrenamiento s = sesionRepository.findById(idSesion)
@@ -193,10 +152,6 @@ public class SesionEntrenamientoService {
                     a == null ? null : a.getObservacion()));
         }
 
-        // Lo que quede en el mapa son marcas de chicos que ya no estan en la
-        // categoria -cambiaron de grupo o se dieron de baja despues-. Estuvieron
-        // en ese entrenamiento y borrarlos del historial seria mentir sobre lo
-        // que paso ese dia.
         for (Asistencia a : porEstudiante.values()) {
             Estudiante e = a.getEstudiante();
             switch (a.getEstado()) {

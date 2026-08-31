@@ -10,7 +10,6 @@ import { horaCorta, inicialesDe } from '../../core/formato-texto';
 import { GraficosIngresosComponent } from './graficos.component';
 import { MapaAsistenciaComponent } from './mapa-asistencia.component';
 
-/** Forma minima de una pagina de Spring Data que interesa aqui. */
 interface PaginaLigera {
   totalElements: number;
 }
@@ -20,38 +19,6 @@ const NOMBRES_MES = [
   'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
 ];
 
-/**
- * Punto de entrada tras iniciar sesion para ADMINISTRADOR/ENTRENADOR/USER.
- * RECEPCIONISTA y REPRESENTANTE nunca deberian quedarse aqui -Login ya los
- * manda directo a su propia pantalla-, pero un refresh, el boton atras o
- * un marcador guardado en /dashboard si puede traerlos: el primer paso de
- * ngOnInit los redirige a su lugar real en cuanto se confirma el rol.
- *
- * La marca/usuario/logout/saludo/reloj ahora viven en AppShellComponent (la
- * sidebar y el topbar), no aqui: esta pantalla solo dibuja su propio
- * contenido, distinto por rol -ADMINISTRADOR ve conteos globales y accesos
- * rapidos a Crear usuario/Estudiantes/Pagos/Recepcion; ENTRENADOR ve solo
- * sus propias sesiones de hoy (el backend ya filtra en /api/sesiones/hoy)-.
- *
- * La mayoria de la tira de KPIs no agrega llamadas nuevas al backend: son
- * conteos derivados de `sesiones()` (ya cargado para la lista) y de
- * `lesionesActivas()` (ya cargado para el indicador). La excepcion es
- * `estudiantesActivos()`, solo para ADMINISTRADOR, via /api/estudiantes?size=1
- * (mismo truco de leer totalElements sin traer el contenido). Sigue sin
- * haber tarjetas de Calendario/Reportes/Partidos: esos dominios todavia no
- * existen en el backend.
- *
- * El indicador de lesiones es informativo, no un enlace: todavia no existe
- * una pantalla de lesiones en el frontend (el backend si la expone,
- * GET /api/lesiones), asi que un enlace ahi seria una promesa rota.
- *
- * Todo el estado que cambia tras la carga inicial vive en signals, no en
- * propiedades sueltas: este proyecto no incluye zone.js
- * (no esta en package.json ni en los polyfills de angular.json), asi que una
- * propiedad plana mutada dentro de un subscribe de HttpClient no dispara un
- * repintado. Sin esto, la seccion de sesiones se quedaba mostrando "cargando"
- * para siempre aunque la peticion ya hubiera respondido.
- */
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -248,9 +215,7 @@ const NOMBRES_MES = [
   `,
   styles: [`
     .contenido { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
-
     .titulo-panel { font-size: 1.2rem; margin-bottom: 1.1rem; }
-
     .accesos { display: flex; flex-wrap: wrap; gap: .7rem; margin-bottom: 1.5rem; }
     .acceso {
       display: flex; align-items: center; gap: .55rem; padding: .7rem 1rem;
@@ -260,8 +225,6 @@ const NOMBRES_MES = [
     }
     .acceso:hover { border-color: var(--color-primary-500); background: var(--color-primary-50); }
     .acceso svg { width: 17px; height: 17px; color: var(--color-primary-600); flex-shrink: 0; }
-
-    /* ---- Panel "Requieren atención" ---- */
     .panel-alertas { padding: 1.25rem 1.4rem; margin-bottom: 1.5rem; }
     .panel-alertas__cabecera {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -270,18 +233,11 @@ const NOMBRES_MES = [
     .panel-alertas__cabecera h2 { font-size: 1rem; }
     .panel-alertas__sub { margin: .2rem 0 0; font-size: .78rem; color: var(--color-text-muted); }
     .resumen-alertas { display: flex; flex-wrap: wrap; gap: .4rem; }
-
-    /* El panel es una lista de a quién llamar hoy, no un censo: con 3.000
-       alumnos activos pintaba 2.995 filas -180.000 px, 265 pantallas- y
-       dejaba de ser legible justamente por tener demasiado. */
     .panel-alertas__resto {
       margin: .9rem 0 0; padding-top: .75rem; font-size: .78rem;
       color: var(--color-text-muted); line-height: 1.5;
       border-top: 1px solid var(--color-border-light);
     }
-
-    /* El color codifica el tipo de problema, no solo decora: el mismo tono
-       se repite en el resumen de arriba y en la fila de cada estudiante. */
     .chip {
       display: inline-flex; align-items: center; gap: .3rem;
       padding: .22rem .6rem; border-radius: var(--radius-full);
@@ -290,24 +246,18 @@ const NOMBRES_MES = [
     .chip--dinero { background: var(--color-warning-bg); color: var(--color-warning-text); }
     .chip--falta { background: var(--color-info-bg); color: var(--color-info-text); }
     .chip--lesion { background: var(--color-danger-bg); color: var(--color-danger-text); }
-
     .fila-alerta {
       display: flex; align-items: center; gap: .7rem;
       padding: .6rem .2rem .6rem 0; border-bottom: 1px solid var(--color-border-light);
     }
     .fila-alerta:last-child { border-bottom: none; }
-
-    /* Franja de severidad: cuantas señales acumula el estudiante. Va antes
-       que el texto para que el ojo ordene la lista sin leerla. */
     .franja { width: 4px; align-self: stretch; border-radius: 2px; background: var(--color-warning); flex-shrink: 0; }
     .fila-alerta[data-severidad="2"] .franja { background: #e0872c; }
     .fila-alerta[data-severidad="3"] .franja { background: var(--color-danger); }
-
     .alerta-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
     .alerta-nombre { font-weight: 600; font-size: .9rem; }
     .alerta-categoria { font-size: .76rem; color: var(--color-text-faint); }
     .alerta-motivos { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: flex-end; }
-
     .todo-en-orden {
       display: flex; flex-direction: column; align-items: center; gap: .55rem;
       text-align: center; padding: 1.75rem 1rem; color: var(--color-success-text);
@@ -319,7 +269,6 @@ const NOMBRES_MES = [
       .fila-alerta { flex-wrap: wrap; }
       .alerta-motivos { justify-content: flex-start; width: 100%; padding-left: 2.9rem; }
     }
-
     .kpis {
       display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
       gap: .9rem; margin-bottom: 1.5rem;
@@ -341,13 +290,10 @@ const NOMBRES_MES = [
     .kpi__icono--neutral { background: var(--color-neutral-bg); color: var(--color-text-faint); }
     .kpi__valor { font-size: 1.4rem; font-weight: 700; line-height: 1.1; }
     .kpi__etiqueta { font-size: .78rem; color: var(--color-text-muted); margin-top: .15rem; }
-
     .lista { padding: 1.25rem; }
     .lista__cabecera { margin-bottom: .9rem; }
     .lista__cabecera h2 { font-size: 1rem; }
-
     .aviso { color: var(--color-text-muted); font-size: .9rem; padding: .5rem 0; }
-
     .vacio {
       display: flex; flex-direction: column; align-items: center; gap: .75rem;
       color: var(--color-text-faint); text-align: center; padding: 2rem 1rem;
@@ -355,7 +301,6 @@ const NOMBRES_MES = [
     .vacio svg { width: 36px; height: 36px; opacity: .6; }
     .vacio p { font-size: .88rem; color: var(--color-text-muted); max-width: 32ch; }
     .vacio--pagina { margin-top: .5rem; padding: 3rem 1.5rem; }
-
     .sesion {
       display: flex; align-items: center; gap: .8rem;
       padding: .8rem .9rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm);
@@ -371,24 +316,20 @@ const NOMBRES_MES = [
   `]
 })
 export class DashboardComponent implements OnInit {
-
   private readonly authService = inject(AuthService);
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
 
-  /** Referencia directa al signal del servicio: siempre en sincronia, sin copia local que se pueda desactualizar. */
   readonly usuario = this.authService.currentUser;
 
   readonly sesiones = signal<SesionHoy[]>([]);
   readonly cargandoSesiones = signal(false);
   readonly lesionesActivas = signal<number | null>(null);
   readonly estudiantesActivos = signal<number | null>(null);
-  /** Null mientras carga o si la peticion fallo: la seccion no se dibuja. */
   readonly alertas = signal<PanelAlertas | null>(null);
   readonly historico = signal<HistoricoIngresos | null>(null);
   readonly mapa = signal<MapaAsistencia | null>(null);
 
-  /** ADMINISTRADOR y ENTRENADOR tienen acceso operativo; USER solo consulta. */
   readonly esOperativo = computed(() => {
     const rol = this.usuario()?.rol;
     return rol === 'ADMINISTRADOR' || rol === 'ENTRENADOR';
@@ -396,7 +337,6 @@ export class DashboardComponent implements OnInit {
   readonly esAdministrador = computed(() => this.usuario()?.rol === 'ADMINISTRADOR');
   readonly esEntrenador = computed(() => this.usuario()?.rol === 'ENTRENADOR');
 
-  /** Expuesta tal cual al template: "HH:mm:ss" del backend recortado a "HH:mm". */
   readonly horaCorta = horaCorta;
 
   readonly totalSesiones = computed(() => this.sesiones().length);
@@ -407,11 +347,7 @@ export class DashboardComponent implements OnInit {
     this.authService.getProfile().subscribe({
       next: () => {
         const rolActual = this.usuario()?.rol;
-        // Deriva de homeRouteForRole en vez de listar roles a mano: la ultima
-        // vez que hubo una lista aparte aqui, agregar ESTUDIANTE a
-        // home-route.ts no alcanzo para que este guardian tambien lo supiera,
-        // y una cuenta de estudiante se quedaba varada en el mensaje
-        // generico de "cuenta basica" en vez de ir a su pantalla real.
+
         const destinoPropio = homeRouteForRole(rolActual);
         if (destinoPropio !== '/dashboard') {
           this.router.navigate([destinoPropio], { replaceUrl: true });
@@ -459,10 +395,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  /**
-   * Si falla, el panel simplemente no se dibuja: es informacion de apoyo,
-   * no puede tumbar el resto del tablero.
-   */
   private cargarAlertas(): void {
     this.http.get<PanelAlertas>('/api/alertas').subscribe({
       next: (panel) => this.alertas.set(panel),
@@ -470,7 +402,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  /** Seis meses: entra un semestre completo sin que las barras queden hilos. */
   private cargarHistoricoIngresos(): void {
     this.http.get<HistoricoIngresos>('/api/pagos/ingresos-historico?meses=6').subscribe({
       next: (serie) => this.historico.set(serie),
@@ -478,8 +409,6 @@ export class DashboardComponent implements OnInit {
     });
   }
 
-  /** Catorce semanas: un trimestre completo, que es donde se empiezan a
-   *  distinguir rachas y no solo dias sueltos. */
   private cargarMapaDeAsistencia(): void {
     this.http.get<MapaAsistencia>('/api/asistencias/mapa?dias=98').subscribe({
       next: (m) => this.mapa.set(m),

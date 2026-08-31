@@ -8,12 +8,6 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 
 import java.time.Instant;
 
-/**
- * Vinculo representante-estudiante como entidad de primera clase, no una
- * tabla puente plana: necesita su propio {@code activo} para que un
- * administrador pueda cortar el acceso de un tutor puntual (p.ej. disputa
- * de custodia) sin tocar su cuenta ni sus otros representados.
- */
 @Entity
 @Table(name = "representante_estudiante", schema = "academico")
 @Getter
@@ -22,7 +16,6 @@ import java.time.Instant;
 @AllArgsConstructor
 @Builder
 public class RepresentanteEstudiante {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_representante_estudiante")
@@ -40,14 +33,9 @@ public class RepresentanteEstudiante {
     @Builder.Default
     private Boolean activo = true;
 
-    /** Texto libre: "Padre", "Madre", "Tutor legal", etc. Opcional. */
     @Column(name = "relacion", length = 50)
     private String relacion;
 
-    /**
-     * Cuando un estudiante tiene mas de un representante activo, distingue
-     * a quien contactar primero (p.ej. para notificaciones de lesion).
-     */
     @Column(name = "contacto_principal", nullable = false)
     @Builder.Default
     private Boolean contactoPrincipal = false;

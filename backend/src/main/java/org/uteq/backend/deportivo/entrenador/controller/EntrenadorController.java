@@ -13,18 +13,10 @@ import org.uteq.backend.deportivo.entrenador.dto.EntrenadorRequest;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorResponse;
 import org.uteq.backend.deportivo.entrenador.service.EntrenadorService;
 
-/**
- * CRUD de Entrenador. El alta y la baja crean o retiran el vinculo con una
- * cuenta de usuario, por lo que son operaciones administrativas; la consulta
- * la comparten ADMINISTRADOR, ENTRENADOR y RECEPCIONISTA (esta ultima
- * necesita listar entrenadores para asignarles articulos de inventario,
- * ver org.uteq.backend.inventario.asignacion).
- */
 @RestController
 @RequestMapping("/api/entrenadores")
 @RequiredArgsConstructor
 public class EntrenadorController {
-
     private final EntrenadorService entrenadorService;
 
     @GetMapping

@@ -5,12 +5,7 @@ import org.springframework.http.ProblemDetail;
 
 import java.net.URI;
 
-/**
- * Excepcion base que encapsula un ProblemDetail (RFC 7807).
- * Todas las excepciones de dominio extienden esta clase.
- */
 public class ApiException extends RuntimeException {
-
     private final HttpStatus status;
 
     public ApiException(HttpStatus status, String mensaje) {

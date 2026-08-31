@@ -7,7 +7,6 @@ interface EstudiantePagina {
   content: { idEstudiante: number; nombrePersona: string; apellidoPersona: string; nombreCategoria: string }[];
 }
 
-/** Cada metodo pide un PDF (responseType 'blob'); el componente lo descarga con descargarBlob(). */
 @Injectable({ providedIn: 'root' })
 export class ReportesService {
   private readonly http = inject(HttpClient);

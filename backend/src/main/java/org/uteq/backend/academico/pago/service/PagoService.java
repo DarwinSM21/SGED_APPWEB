@@ -26,15 +26,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Registro de pagos. MEMBRESIA valida, antes de guardar nada, que ningun
- * mes solicitado este ya cubierto (todo o nada: si uno falla no se cobra
- * a medias). DIARIO no tiene esa validacion porque no cubre periodo.
- */
 @Service
 @RequiredArgsConstructor
 public class PagoService {
-
     private final PagoRepository pagoRepository;
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
@@ -95,7 +89,6 @@ public class PagoService {
         return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);
     }
 
-    /** Cuanto entro en caja este mes calendario (Ecuador), sin importar que mes cubre cada pago. */
     @Transactional(readOnly = true)
     public IngresosMesResponse ingresosDelMes() {
         YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);
@@ -107,13 +100,6 @@ public class PagoService {
         return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
     }
 
-    /**
-     * Serie de recaudacion de los ultimos {@code meses} meses, contando el
-     * actual. Se arma sobre la lista completa de meses del rango y no sobre
-     * lo que devuelve la base: un mes sin cobros tiene que viajar en cero,
-     * porque si se omite el grafico dibuja contiguos dos meses que no lo son
-     * y la tendencia que se lee es falsa.
-     */
     @Transactional(readOnly = true)
     public HistoricoIngresosResponse historicoIngresos(int meses) {
         int cantidad = Math.max(1, Math.min(meses, 24));
@@ -139,9 +125,6 @@ public class PagoService {
                 .map(IngresosMesResponse::total)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // El promedio se divide entre todos los meses del rango, incluidos
-        // los que no tuvieron cobros: dividir solo entre los meses con
-        // movimiento inflaria el numero justo cuando peor va la cobranza.
         BigDecimal promedio = total.divide(BigDecimal.valueOf(cantidad), 2, RoundingMode.HALF_UP);
 
         IngresosMesResponse mejor = serie.stream()
@@ -152,17 +135,6 @@ public class PagoService {
         return new HistoricoIngresosResponse(serie, total, promedio, mejor);
     }
 
-    /**
-     * Anula un pago mal registrado. No lo edita ni lo borra: el registro se
-     * queda con quien lo anulo, cuando y por que, y el correcto se registra
-     * aparte. Asi el historial cuenta lo que de verdad paso -hubo un error y
-     * se corrigio- en vez de esconderlo, que es lo que hace falta cuando
-     * alguien revisa las cuentas meses despues.
-     *
-     * Anular dos veces se rechaza en vez de ignorarse en silencio: si alguien
-     * lo intenta es que cree estar anulando algo vigente, y conviene decirle
-     * que no lo esta.
-     */
     @Auditado(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
     @Transactional
     public Pago anular(Long idPago, String motivo, String usernameAnulador) {

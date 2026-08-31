@@ -16,7 +16,6 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CategoriaService {
-
     private final CategoriaRepository categoriaRepository;
 
     @Transactional(readOnly = true)
@@ -79,12 +78,6 @@ public class CategoriaService {
         return toResponse(categoriaRepository.save(categoria));
     }
 
-    /**
-     * Vuelve a poner una categoria en circulacion. Es un metodo aparte y no
-     * un efecto de editar(): reactivar es una decision explicita, y si
-     * editar el nombre reviviera de paso una categoria dada de baja, seria
-     * un cambio de estado que nadie pidio.
-     */
     @Transactional
     public CategoriaResponse reactivar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
@@ -101,13 +94,6 @@ public class CategoriaService {
         categoriaRepository.save(categoria);
     }
 
-    /**
-     * Deja el nombre en la forma canonica SUB-<edad>. La validacion del DTO
-     * acepta variantes ("sub12", "Sub 12") para no pelear con quien escribe;
-     * aqui se unifican, porque el problema real no es como se teclea sino que
-     * el catalogo termine con tres filas distintas que son la misma categoria
-     * y ningun desplegable permita distinguirlas.
-     */
     private String normalizarNombre(String nombre) {
         String digitos = nombre.replaceAll("\\D+", "");
         return "SUB-" + digitos;

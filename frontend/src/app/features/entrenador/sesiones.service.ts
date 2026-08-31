@@ -6,12 +6,10 @@ import { CategoriaOpcion, HistorialSesion, Horario, HorarioCrearRequest, Sesion,
 export class SesionesService {
   private readonly http = inject(HttpClient);
 
-  /** Historial completo del entrenador autenticado, no solo las de hoy. */
   listarMias(page = 0, size = 20) {
     return this.http.get<Sesion[]>(`/api/sesiones/mias?page=${page}&size=${size}`);
   }
 
-  /** Quien estuvo y quien no en una sesion que ya ocurrio. */
   historial(idSesion: number) {
     return this.http.get<HistorialSesion>(`/api/sesiones/${idSesion}/historial`);
   }
@@ -32,11 +30,6 @@ export class SesionesService {
     return this.http.post<Horario>('/api/horarios', request);
   }
 
-  /**
-   * Cambia un horario existente. El backend rehace las sesiones futuras de
-   * ese horario que todavia no tienen nada registrado; las que ya se
-   * dictaron se quedan como estan.
-   */
   editarHorario(idHorario: number, request: HorarioCrearRequest) {
     return this.http.put<Horario>(`/api/horarios/${idHorario}`, request);
   }

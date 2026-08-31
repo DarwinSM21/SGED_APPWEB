@@ -31,8 +31,6 @@ export const routes: Routes = [
         loadComponent: () => import('./features/entrenador/historial-sesion.component')
           .then(m => m.HistorialSesionComponent),
       },
-      // La formacion salio de las sesiones: es la decision de un partido, no
-      // un hecho del entrenamiento.
       {
         path: 'partidos',
         canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
@@ -57,9 +55,6 @@ export const routes: Routes = [
       },
       {
         path: 'categorias',
-        // El entrenador entra en modo consulta: el propio componente le oculta
-        // el formulario y los botones, y el backend ya le niega POST/PUT/DELETE
-        // con 403 aunque llegara por otra via.
         canActivate: [roleGuard(['ADMINISTRADOR', 'ENTRENADOR'])],
         loadComponent: () => import('./features/categorias/categorias.component').then(m => m.CategoriasComponent),
       },

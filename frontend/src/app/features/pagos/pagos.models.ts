@@ -1,10 +1,8 @@
-/** Espejan PagoDtos del backend (org.uteq.backend.academico.pago.dto). */
 
 export interface EstudianteOpcionPago {
   idEstudiante: number;
   nombreCompleto: string;
   categoria: string;
-  /** ISO "YYYY-MM-DD". Marca desde que mes tiene sentido cobrarle. */
   fechaIngreso: string;
 }
 
@@ -34,7 +32,6 @@ export interface PagoResponse {
   monto: number;
   fechaPago: string;
   registradoPor: string;
-  /** Null mientras el pago siga vigente. */
   anuladoEn: string | null;
   anuladoPor: string | null;
   motivoAnulacion: string | null;

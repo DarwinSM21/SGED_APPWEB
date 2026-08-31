@@ -23,16 +23,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
-/**
- * El login no distingue mayusculas en el username. Es un caso real, no
- * teorico: la auditoria del sistema registro varios LOGIN_FALLIDO de
- * "Juan.perez@sged.test" y "Jeremy.delgado@sged.test" -la misma cuenta que
- * si entraba en minusculas- porque el teclado del celular capitaliza la
- * primera letra por su cuenta.
- */
 @ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
-
     @Mock
     private UsuarioRepository usuarioRepository;
 
@@ -70,9 +62,6 @@ class UserDetailsServiceImplTest {
 
         UserDetails detalles = userDetailsService.loadUserByUsername("JUAN.PEREZ@SGED.TEST");
 
-        // Importante: el resto del sistema resuelve la ficha del usuario por
-        // auth.getName() (mis sesiones, mis representados, marcar asistencia).
-        // Si el principal conservara lo tecleado, esas busquedas fallarian.
         assertThat(detalles.getUsername()).isEqualTo("juan.perez@sged.test");
     }
 

@@ -5,24 +5,10 @@ import {
   PosicionOpcion, RepresentanteResponse, UsuarioResponse,
 } from './personas.models';
 
-/**
- * Estado compartido del maestro-detalle de ADMINISTRADOR (R-05, informe de
- * evaluacion de calidad): antes vivia como campos de instancia de
- * PersonasAdminComponent (840 lineas, 32 miembros); ahora lo consume por
- * inyeccion cualquier componente de la pantalla -lista, detalle, fichas de
- * usuario/estudiante/entrenador/representante- sin pasarlo por @Input.
- *
- * Se provee a nivel de PersonasAdminComponent (no 'root'): el estado debe
- * nacer limpio cada vez que se entra a la pantalla, no sobrevivir a la
- * navegacion como lo haria un servicio singleton de la app.
- */
 @Injectable()
 export class PersonasStateService {
   private readonly servicio = inject(PersonasService);
 
-  // Cada lista se carga y falla de forma independiente (ver
-  // personas.service.ts): una que tarde o falle no bloquea a las demas,
-  // solo deja esa columna de estado vacia hasta el proximo refresco.
   readonly personasBase = signal<PersonaResponse[]>([]);
   readonly usuarios = signal<UsuarioResponse[]>([]);
   readonly estudiantes = signal<EstudianteResponse[]>([]);
@@ -49,13 +35,6 @@ export class PersonasStateService {
   readonly esNueva = signal(false);
   readonly mostrandoDetalle = computed(() => this.seleccionada() !== null || this.esNueva());
 
-  /**
-   * Los representantes del estudiante seleccionado, cruzados en el cliente
-   * desde representados[] -- mismo criterio que el resto de la pantalla, sin
-   * endpoint agregador nuevo. `relacion`/`contactoPrincipal` viven en el
-   * vinculo, asi que se leen de la fila de representados que apunta a este
-   * estudiante, no del representante.
-   */
   readonly representantesDelEstudiante = computed(() => {
     const idEstudiante = this.seleccionada()?.estudiante?.idEstudiante;
     if (idEstudiante === undefined) return [];
@@ -106,7 +85,6 @@ export class PersonasStateService {
     });
   }
 
-  /** La seleccion actual debe reflejar los datos mas frescos a medida que cada lista llega, no solo al final. */
   private reaplicarSeleccion(mantenerSeleccion: boolean, idSeleccionado: number | null): void {
     if (!mantenerSeleccion || idSeleccionado === null) return;
     const actualizada = this.personas().find((p) => p.persona.idPersona === idSeleccionado);

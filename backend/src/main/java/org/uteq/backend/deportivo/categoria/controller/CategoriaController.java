@@ -14,17 +14,10 @@ import org.uteq.backend.deportivo.categoria.service.CategoriaService;
 
 import java.util.List;
 
-/**
- * CRUD del catalogo de categorias. La lectura la necesitan todos los roles
- * (el formulario de estudiante ofrece las categorias activas); la escritura
- * altera un catalogo del que dependen los estudiantes por clave foranea, y
- * queda restringida a ADMINISTRADOR.
- */
 @RestController
 @RequestMapping("/api/categorias")
 @RequiredArgsConstructor
 public class CategoriaController {
-
     private final CategoriaService categoriaService;
 
     @GetMapping
@@ -57,11 +50,6 @@ public class CategoriaController {
         return ResponseEntity.ok(categoriaService.editar(id, request));
     }
 
-    /**
-     * Deshacer una baja. Sin esto, una categoria desactivada por error solo
-     * se recuperaba tocando la base a mano: la baja es logica, pero no habia
-     * camino de vuelta por la API.
-     */
     @PostMapping("/{id}/reactivar")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<CategoriaResponse> reactivar(@PathVariable Long id) {

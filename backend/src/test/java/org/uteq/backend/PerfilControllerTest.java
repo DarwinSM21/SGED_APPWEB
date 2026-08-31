@@ -33,7 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class PerfilControllerTest {
-
     @Mock private UsuarioRepository usuarioRepository;
 
     private PerfilController controller;
@@ -41,8 +40,6 @@ class PerfilControllerTest {
 
     @BeforeEach
     void setUp() {
-        // ReportePdfService no tiene dependencias: se usa la instancia real
-        // para que la prueba tambien confirme que el PDF generado es valido.
         controller = new PerfilController(usuarioRepository, new ReportePdfService());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())

@@ -6,11 +6,6 @@ const DIAS_ISO = ['lun', 'mar', 'mié', 'jue', 'vie', 'sáb', 'dom'];
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const MS_DIA = 86400000;
 
-/**
- * `new Date('2026-07-21')` se interpreta como medianoche UTC, que en Ecuador
- * (-05) cae el 20 a las 19:00: el mapa entero se correria un dia. Por eso se
- * parte el texto a mano y se construye la fecha en hora local.
- */
 function aFecha(iso: string): Date {
   const [anio, mes, dia] = iso.split('-').map(Number);
   return new Date(anio, mes - 1, dia);
@@ -22,12 +17,10 @@ function aIso(f: Date): string {
   return f.getFullYear() + '-' + mes + '-' + dia;
 }
 
-/** 1 = lunes ... 7 = domingo, en vez del 0 = domingo de getDay(). */
 function diaIso(f: Date): number {
   return ((f.getDay() + 6) % 7) + 1;
 }
 
-/** Cinco escalones: menos serian indistinguibles y mas no se leen. */
 function nivelDe(porcentaje: number): number {
   if (porcentaje >= 90) return 5;
   if (porcentaje >= 80) return 4;
@@ -40,23 +33,6 @@ interface Celda { iso: string; dia: DiaAsistencia | null; nivel: number; }
 interface Fila { etiqueta: string; celdas: Celda[]; }
 interface Globo { texto: string; detalle: string; x: number; y: number; debajo: boolean; }
 
-/**
- * Mapa de calor de asistencia: una celda por dia, semanas en columnas y dias
- * de la semana en filas.
- *
- * Es una matriz y no una linea de tiempo porque la pregunta que responde no
- * es "cuanto subio" sino "que dias falla la gente": puesto asi, un patron
- * semanal -los martes flojos, por ejemplo- salta a la vista, mientras que en
- * una linea quedaria escondido entre los altibajos.
- *
- * Tres reglas que se respetan a proposito:
- * - El color codifica magnitud, asi que es una rampa de UN tono de claro a
- *   oscuro, nunca varios colores distintos.
- * - Un dia sin entrenamiento NO se pinta como 0%. No es asistencia nula, es
- *   ausencia de dato, y pintarlo igual seria mentir con el color.
- * - Como el color es la unica codificacion, la leyenda es obligatoria: sin
- *   ella nadie sabe si oscuro significa mucho o poco.
- */
 @Component({
   selector: 'app-mapa-asistencia',
   standalone: true,
@@ -174,34 +150,27 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
     .mapa__cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .mapa__cabecera h2 { font-size: 1rem; }
     .mapa__sub { margin: .15rem 0 0; font-size: .76rem; color: var(--color-text-muted); }
-
     .mapa__extremos { display: flex; gap: 1.2rem; }
     .extremo { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.3; }
     .extremo__etiqueta { font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-faint); }
     .extremo strong { font-size: .82rem; }
     .extremo__cifra { font-size: .78rem; color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
-
-    /* La rejilla puede desbordar en pantallas chicas: se desplaza dentro de
-       su propio marco, nunca empujando el ancho de la página. */
     .rejilla-marco { margin-top: .9rem; overflow-x: auto; padding: 4px 0 6px; }
     .cuerpo {
       position: relative; width: max-content;
       display: grid; grid-template-columns: 26px auto; gap: 4px 6px;
       grid-template-areas: ". meses" "dias rejilla";
     }
-
     .meses {
       grid-area: meses; display: grid; grid-auto-flow: column;
       grid-auto-columns: 17px; gap: 4px; height: 12px;
     }
     .mes-etiqueta { font-size: .66rem; color: var(--color-text-faint); white-space: nowrap; }
-
     .dias-semana { grid-area: dias; display: grid; grid-auto-rows: 17px; gap: 4px; }
     .dias-semana span {
       font-size: .62rem; color: var(--color-text-faint);
       display: flex; align-items: center; justify-content: flex-end;
     }
-
     .rejilla { grid-area: rejilla; display: grid; grid-auto-rows: 17px; gap: 4px; }
     .celda {
       border-radius: 3px; background: var(--n1); cursor: default;
@@ -214,7 +183,6 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
     .celda--vacia { background: var(--color-border-light); }
     .celda:not(.celda--vacia):hover, .celda:focus-visible { transform: scale(1.35); }
     .celda:focus-visible { outline: 2px solid var(--color-primary-500); outline-offset: 1px; }
-
     .globo {
       position: absolute; transform: translate(-50%, -100%);
       background: var(--color-text); color: var(--color-surface);
@@ -222,11 +190,8 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
       display: flex; flex-direction: column; font-size: .74rem; line-height: 1.35;
       pointer-events: none; white-space: nowrap; box-shadow: var(--shadow-md); z-index: 2;
     }
-    /* En la fila superior no hay lugar arriba: el globo tapaba las
-       etiquetas de mes, asi que ahi se dibuja debajo de la celda. */
     .globo--debajo { transform: translate(-50%, 0); margin-top: 7px; }
     .globo span { opacity: .78; }
-
     .mapa__pie { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: .8rem; flex-wrap: wrap; }
     .leyenda { display: flex; align-items: center; gap: 5px; }
     .leyenda__texto { font-size: .7rem; color: var(--color-text-faint); }
@@ -236,7 +201,6 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
     .muestra[data-nivel="4"] { background: var(--n4); }
     .muestra[data-nivel="5"] { background: var(--n5); }
     .muestra--vacia { background: var(--color-border-light); }
-
     .tabla-alterna { margin-top: .5rem; }
     .tabla-alterna summary { font-size: .76rem; color: var(--color-text-muted); cursor: pointer; }
     .tabla-desplazable { overflow-x: auto; }
@@ -244,9 +208,6 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
     .tabla-alterna th, .tabla-alterna td { text-align: left; padding: .3rem .5rem; border-bottom: 1px solid var(--color-border-light); }
     .tabla-alterna td { font-variant-numeric: tabular-nums; }
     .oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
-
-    /* Rampa de un solo tono: el color codifica cantidad, y una escala de
-       magnitud va de claro a oscuro, nunca de un color a otro. */
     .mapa {
       --n1: var(--color-primary-100);
       --n2: var(--color-primary-200);
@@ -254,8 +215,6 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
       --n4: var(--color-primary-600);
       --n5: var(--color-primary-700);
     }
-    /* En oscuro la rampa se recorre al revés: sobre fondo oscuro el paso más
-       claro es el que se lee como "más", no el más oscuro. */
     :host-context([data-theme="oscuro"]) .mapa {
       --n1: #312e81;
       --n2: #3730a3;
@@ -271,7 +230,6 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
   `],
 })
 export class MapaAsistenciaComponent {
-
   readonly datos = input.required<MapaAsistencia>();
 
   readonly niveles = [1, 2, 3, 4, 5];
@@ -283,7 +241,6 @@ export class MapaAsistenciaComponent {
     return mapa;
   });
 
-  /** Lunes de la semana en que arranca el rango: es la primera columna. */
   private readonly primerLunes = computed(() => {
     const inicio = aFecha(this.datos().desde);
     inicio.setDate(inicio.getDate() - (diaIso(inicio) - 1));
@@ -296,12 +253,6 @@ export class MapaAsistenciaComponent {
     return Math.max(1, Math.floor(dias / 7) + 1);
   });
 
-  /**
-   * Solo se dibujan las filas de los dias de semana que aparecen en el rango.
-   * La escuela entrena de lunes a viernes; dejar sabado y domingo siempre
-   * vacios agrega dos filas de ruido, y si algun dia se entrena un sabado la
-   * fila aparece sola.
-   */
   private readonly diasConSesion = computed(() => {
     const presentes = new Set<number>();
     for (const d of this.datos().dias) presentes.add(diaIso(aFecha(d.fecha)));
@@ -349,7 +300,6 @@ export class MapaAsistenciaComponent {
       texto: this.fechaCorta(celda.dia.fecha),
       detalle: celda.dia.presentes + ' de ' + celda.dia.esperados
         + ' · ' + Math.round(celda.dia.porcentaje) + '%',
-      // offsetParent es .cuerpo, que esta en position: relative.
       x: elemento.offsetLeft + elemento.offsetWidth / 2,
       y: primeraFila ? elemento.offsetTop + elemento.offsetHeight : elemento.offsetTop,
       debajo: primeraFila,
@@ -361,7 +311,6 @@ export class MapaAsistenciaComponent {
     return DIAS_ISO[diaIso(f) - 1] + ' ' + f.getDate() + ' ' + MESES[f.getMonth()];
   }
 
-  /** Texto del escalon, para el title de cada muestra de la leyenda. */
   rangoDe(nivel: number): string {
     return ['menos de 60%', '60% a 69%', '70% a 79%', '80% a 89%', '90% o más'][nivel - 1];
   }

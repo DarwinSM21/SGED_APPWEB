@@ -7,13 +7,6 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
 
 export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'representantes';
 
-/**
- * Las cuatro pestañas de solo lectura (usuarios/estudiantes/entrenadores/
- * representantes): busqueda + filtros + tabla, cada fila navega de vuelta
- * a la pestaña "Personas" con esa persona seleccionada. Uno de los
- * componentes en que se dividio personas-admin.component.ts (R-05,
- * informe de evaluacion de calidad).
- */
 @Component({
   selector: 'app-personas-gestion',
   standalone: true,
@@ -144,7 +137,6 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
     .barra-filtros .buscador { flex: 1; min-width: 220px; }
     .filtro-rol { padding: .6rem .75rem; border: 1px solid var(--color-border); border-radius: var(--radius-sm); font-size: .85rem; background: transparent; color: var(--color-text); }
     .toggle-inactivos { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--color-text-muted); white-space: nowrap; }
-
     .lista-gestion { display: flex; flex-direction: column; gap: .1rem; }
     .fila-gestion {
       display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr 1fr auto; align-items: center; gap: .75rem;
@@ -157,8 +149,6 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
   `],
 })
 export class PersonasGestionComponent {
-
-  /** 12 horas con AM/PM, igual que el resto de la app. */
   readonly fechaHora = fechaHoraCorta;
 
   readonly state = inject(PersonasStateService);
