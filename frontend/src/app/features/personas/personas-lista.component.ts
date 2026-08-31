@@ -3,6 +3,7 @@ import { CargandoComponent } from '../../core/cargando.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasStateService } from './personas-state.service';
+import { PersonaConEstado } from './personas.models';
 
 @Component({
   selector: 'app-personas-lista',
@@ -24,7 +25,7 @@ import { PersonasStateService } from './personas-state.service';
               <span class="nombre-persona">{{ p.persona.nombre }} {{ p.persona.apellido }}</span>
               <span class="cedula-persona">{{ p.persona.cedula }}</span>
               <span class="badges-persona">
-                @if (p.usuario) { <span class="badge badge--info">{{ p.usuario.roles.length ? p.usuario.roles[0] : 'sin rol' }}</span> }
+                @if (rolAparte(p); as rol) { <span class="badge badge--info">{{ rol }}</span> }
                 @if (p.estudiante) { <span class="badge badge--success">Estudiante</span> }
                 @if (p.entrenador) { <span class="badge badge--success">Entrenador</span> }
                 @if (p.representante) { <span class="badge badge--success">Representante</span> }
@@ -55,6 +56,17 @@ export class PersonasListaComponent {
   readonly state = inject(PersonasStateService);
 
   readonly busqueda = signal('');
+
+  rolAparte(p: PersonaConEstado): string | null {
+    const rol = p.usuario?.roles[0] ?? null;
+    if (!p.usuario) return null;
+    if (!rol) return 'sin rol';
+    const ficha = p.estudiante ? 'ESTUDIANTE'
+      : p.entrenador ? 'ENTRENADOR'
+      : p.representante ? 'REPRESENTANTE'
+      : null;
+    return rol === ficha ? null : rol;
+  }
 
   readonly personasFiltradas = computed(() => {
     const q = this.busqueda().trim().toLowerCase();

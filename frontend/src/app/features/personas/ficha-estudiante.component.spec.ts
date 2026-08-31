@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { FichaEstudianteComponent } from './ficha-estudiante.component';
 import { PersonasService } from './personas.service';
@@ -9,7 +10,10 @@ describe('FichaEstudianteComponent', () => {
   let fixture: ComponentFixture<FichaEstudianteComponent>;
   let component: FichaEstudianteComponent;
   let state: PersonasStateService;
-  let servicioMock: { crearEstudiante: ReturnType<typeof vi.fn> };
+  let servicioMock: {
+    crearEstudiante: ReturnType<typeof vi.fn>;
+    siguienteCodigoEstudiante: ReturnType<typeof vi.fn>;
+  };
 
   const personaSinFicha: PersonaConEstado = {
     persona: {
@@ -20,7 +24,10 @@ describe('FichaEstudianteComponent', () => {
   };
 
   beforeEach(async () => {
-    servicioMock = { crearEstudiante: vi.fn() };
+    servicioMock = {
+      crearEstudiante: vi.fn(),
+      siguienteCodigoEstudiante: vi.fn(() => of('EST-2026-0007')),
+    };
 
     await TestBed.configureTestingModule({
       imports: [FichaEstudianteComponent],
@@ -59,7 +66,9 @@ describe('FichaEstudianteComponent', () => {
   });
 
   it('un codigo duplicado muestra el error del backend sin romper el formulario', () => {
-    servicioMock.crearEstudiante.mockReturnValue(throwError(() => ({ error: { detail: 'El código ya existe.' } })));
+    servicioMock.crearEstudiante.mockReturnValue(throwError(() => new HttpErrorResponse({
+      status: 409, error: { detail: 'El código ya existe.' },
+    })));
     component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10', idPosicion: null };
 
     component.crearEstudiante();
@@ -68,12 +77,13 @@ describe('FichaEstudianteComponent', () => {
     expect(component.guardandoEstudiante()).toBe(false);
   });
 
-  it('cambiar de persona seleccionada reinicia el formulario de alta', () => {
+  it('cambiar de persona seleccionada pide un codigo nuevo al servidor', () => {
     component.formEstudiante.codigoEstudiante = 'algo-a-medio-escribir';
 
     state.seleccionar({ ...personaSinFicha, persona: { ...personaSinFicha.persona, idPersona: 2 } });
     fixture.detectChanges();
 
-    expect(component.formEstudiante.codigoEstudiante).toBe('');
+    expect(servicioMock.siguienteCodigoEstudiante).toHaveBeenCalled();
+    expect(component.formEstudiante.codigoEstudiante).toBe('EST-2026-0007');
   });
 });

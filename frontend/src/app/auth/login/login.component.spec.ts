@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { LoginComponent } from './login.component';
@@ -47,19 +48,19 @@ describe('LoginComponent', () => {
   });
 
   it('credenciales incorrectas (401) muestra el mensaje y limpia la contraseña', () => {
-    authServiceMock.login.mockReturnValue(throwError(() => ({ status: 401 })));
+    authServiceMock.login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 401 })));
     component.username = 'admin@sged.test';
     component.password = 'incorrecta';
 
     component.onSubmit();
 
-    expect(component.error()).toBe('Usuario o contraseña incorrectos');
+    expect(component.fallo()?.mensaje).toBe('Usuario o contraseña incorrectos');
     expect(component.password).toBe('');
     expect(component.loading()).toBe(false);
   });
 
   it('demasiados intentos (429) muestra el detalle que manda el backend', () => {
-    authServiceMock.login.mockReturnValue(throwError(() => ({
+    authServiceMock.login.mockReturnValue(throwError(() => new HttpErrorResponse({
       status: 429, error: { detail: 'Intenta de nuevo en 15 minutos.' },
     })));
     component.username = 'admin@sged.test';
@@ -67,17 +68,17 @@ describe('LoginComponent', () => {
 
     component.onSubmit();
 
-    expect(component.error()).toBe('Intenta de nuevo en 15 minutos.');
+    expect(component.fallo()?.mensaje).toBe('Intenta de nuevo en 15 minutos.');
   });
 
   it('sin conexion (status 0) muestra el mensaje de servidor inalcanzable', () => {
-    authServiceMock.login.mockReturnValue(throwError(() => ({ status: 0 })));
+    authServiceMock.login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 0 })));
     component.username = 'admin@sged.test';
     component.password = 'x';
 
     component.onSubmit();
 
-    expect(component.error()).toBe('No hay conexión con el servidor');
+    expect(component.fallo()?.mensaje).toBe('No se pudo contactar al servidor');
   });
 
   it('un doble envio mientras carga no dispara una segunda llamada al backend', () => {

@@ -60,7 +60,10 @@ export function diagnosticar(err: unknown): Diagnostico {
 
     case 400:
     case 422:
-      return { origen: 'peticion', mensaje: 'Revisa el usuario y la contraseña' };
+      return {
+        origen: 'peticion',
+        mensaje: leerDetalle(err) ?? 'Revisa los datos del formulario',
+      };
 
     case 429:
       return {

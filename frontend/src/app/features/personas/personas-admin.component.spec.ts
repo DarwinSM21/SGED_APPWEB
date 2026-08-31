@@ -32,6 +32,7 @@ describe('PersonasAdminComponent', () => {
       categoriasActivas: () => of([]),
       especialidadesActivas: () => of([]),
       posicionesActivas: () => of([]),
+      siguienteCodigoEstudiante: () => of('EST-2026-0007'),
     };
 
     await TestBed.configureTestingModule({

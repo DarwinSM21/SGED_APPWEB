@@ -113,7 +113,11 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
               </select>
             </span></label>
           <label class="field" for="e-codigo"><span class="field__label">Código</span>
-            <span class="field__control"><input id="e-codigo" [(ngModel)]="formEstudiante.codigoEstudiante" name="e-codigo" /></span></label>
+            <span class="field__control">
+              <input id="e-codigo" [(ngModel)]="formEstudiante.codigoEstudiante" name="e-codigo" readonly
+                     [placeholder]="pidiendoCodigo() ? 'Generando…' : 'Se genera al guardar'" />
+            </span>
+            <span class="field__hint">Lo genera el sistema, no hace falta escribirlo.</span></label>
         </div>
         <div class="fila-2">
           <label class="field" for="e-ingreso"><span class="field__label">Fecha de ingreso</span>
@@ -176,6 +180,7 @@ export class FichaEstudianteComponent {
   readonly guardandoEstudiante = signal(false);
   readonly errorEstudiante = signal('');
   readonly editandoEstudiante = signal(false);
+  readonly pidiendoCodigo = signal(false);
   private pesoAlturaEditando: { peso: number | null; altura: number | null } = { peso: null, altura: null };
 
   formVinculo: { idRepresentante: number | null; relacion: string; contactoPrincipal: boolean } =
@@ -185,12 +190,24 @@ export class FichaEstudianteComponent {
 
   constructor() {
     effect(() => {
-      this.state.seleccionada();
+      const seleccionada = this.state.seleccionada();
       this.formEstudiante = { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10), idPosicion: null };
       this.formVinculo = { idRepresentante: null, relacion: '', contactoPrincipal: false };
       this.errorEstudiante.set('');
       this.errorVinculo.set('');
       this.editandoEstudiante.set(false);
+
+      if (seleccionada && !seleccionada.estudiante && !this.rolIncoherente()) {
+        this.pedirCodigoSugerido();
+      }
+    });
+  }
+
+  private pedirCodigoSugerido(): void {
+    this.pidiendoCodigo.set(true);
+    this.servicio.siguienteCodigoEstudiante(new Date().getFullYear()).subscribe({
+      next: (codigo) => { this.pidiendoCodigo.set(false); this.formEstudiante.codigoEstudiante = codigo.trim(); },
+      error: () => { this.pidiendoCodigo.set(false); },
     });
   }
 
