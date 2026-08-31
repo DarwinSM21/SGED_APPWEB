@@ -45,7 +45,7 @@ public class UsuarioService {
     @Cacheable(value = RedisCacheConfig.CACHE_USUARIOS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public UsuarioPageResponse<UsuarioResponse> listar(Pageable pageable) {
-        Page<Usuario> page = usuarioRepository.findByActivoTrue(pageable);
+        Page<Usuario> page = usuarioRepository.findAll(pageable);
         var content = page.getContent().stream().map(this::toResponse).toList();
         return new UsuarioPageResponse<>(
                 content,
@@ -154,6 +154,22 @@ public class UsuarioService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
+    }
+
+    @Auditado(accion = "ACTIVAR", entidad = "Usuario", idSpel = "#p0",
+            descripcionSpel = "'reactivo la cuenta de usuario #' + #p0")
+    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @Transactional
+    public UsuarioResponse activar(Long id) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
+
+        if (Boolean.TRUE.equals(usuario.getActivo())) {
+            throw new IllegalArgumentException("La cuenta ya se encuentra activa");
+        }
+
+        usuario.setActivo(true);
+        return toResponse(usuarioRepository.save(usuario));
     }
 
     private void actualizarPasswordSiCorresponde(Usuario usuario, String nuevaPassword) {

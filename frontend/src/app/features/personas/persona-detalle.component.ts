@@ -1,4 +1,4 @@
-import { Component, effect, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonasService } from './personas.service';
@@ -54,11 +54,30 @@ const PERSONA_VACIA: FormularioPersona = { nombre: '', apellido: '', cedula: '',
           </div>
         </form>
 
-        @if (!state.esNueva()) {
+        @if (state.esNueva()) {
+          <p class="aviso">
+            Guardá primero los datos de la persona. La cuenta de usuario y la ficha se habilitan después,
+            y cuál de las tres fichas aparece lo decide el rol que le des a la cuenta.
+          </p>
+        } @else {
           <app-cuenta-usuario />
-          <app-ficha-estudiante />
-          <app-ficha-entrenador />
-          <app-ficha-representante />
+
+          @switch (fichaQueCorresponde()) {
+            @case ('ESTUDIANTE') { <app-ficha-estudiante /> }
+            @case ('ENTRENADOR') { <app-ficha-entrenador /> }
+            @case ('REPRESENTANTE') { <app-ficha-representante /> }
+            @default {
+              <div class="bloque bloque--separado">
+                <h3 class="subtitulo-seccion">Ficha</h3>
+                <p class="aviso">
+                  Una cuenta con rol <strong>{{ rolCuenta() }}</strong> no lleva ficha deportiva.
+                  Solo llevan ficha el estudiante, el entrenador y el representante.
+                </p>
+              </div>
+            }
+          }
+
+          @if (notaDeFicha(); as nota) { <p class="nota-ficha">{{ nota }}</p> }
         }
       }
     </div>
@@ -66,6 +85,7 @@ const PERSONA_VACIA: FormularioPersona = { nombre: '', apellido: '', cedula: '',
   styles: [`
     .panel-detalle { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
     .subtitulo { font-size: 1rem; }
+    .nota-ficha { font-size: 0.85rem; color: var(--texto-suave, #64748b); margin: 0; }
   `],
 })
 export class PersonaDetalleComponent {
@@ -75,6 +95,37 @@ export class PersonaDetalleComponent {
   formPersona: FormularioPersona = { ...PERSONA_VACIA };
   readonly guardandoPersona = signal(false);
   readonly errorPersona = signal('');
+
+  readonly rolCuenta = computed(() => this.state.seleccionada()?.usuario?.roles[0] ?? null);
+
+  readonly fichaExistente = computed(() => {
+    const p = this.state.seleccionada();
+    if (!p) return null;
+    if (p.estudiante) return 'ESTUDIANTE';
+    if (p.entrenador) return 'ENTRENADOR';
+    if (p.representante) return 'REPRESENTANTE';
+    return null;
+  });
+
+  readonly fichaQueCorresponde = computed(() => {
+    const ya = this.fichaExistente();
+    if (ya) return ya;
+    const rol = this.rolCuenta();
+    if (rol === 'ESTUDIANTE' || rol === 'ENTRENADOR' || rol === 'REPRESENTANTE') return rol;
+    if (rol === null) return 'ESTUDIANTE';
+    return null;
+  });
+
+  readonly notaDeFicha = computed(() => {
+    const p = this.state.seleccionada();
+    if (!p || this.fichaExistente()) return null;
+    if (this.rolCuenta() === null) {
+      return 'Todavía no tiene cuenta. Sin cuenta solo se puede llevar ficha de estudiante, porque un menor '
+        + 'puede estar matriculado sin iniciar sesión nunca. Para entrenador o representante, creale antes '
+        + 'la cuenta con ese rol.';
+    }
+    return null;
+  });
 
   constructor() {
     effect(() => {

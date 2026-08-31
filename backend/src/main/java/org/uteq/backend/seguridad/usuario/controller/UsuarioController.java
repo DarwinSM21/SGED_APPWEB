@@ -50,4 +50,9 @@ public class UsuarioController {
         usuarioService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/activacion")
+    public ResponseEntity<UsuarioResponse> activar(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.activar(id));
+    }
 }

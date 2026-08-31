@@ -15,11 +15,40 @@ import { mensajeDeError } from '../../core/mensaje-error';
       <h3 class="subtitulo-seccion">Cuenta de usuario</h3>
       @if (persona()?.usuario; as u) {
         @if (!editando()) {
-          <p class="resumen-seccion">{{ u.username }} · {{ u.roles.join(', ') || 'sin rol' }} · {{ u.activo ? 'activo' : 'inactivo' }}</p>
+          <p class="resumen-seccion">
+            {{ u.username }} · {{ u.roles.join(', ') || 'sin rol' }} ·
+            <span class="badge" [class.badge--success]="u.activo" [class.badge--danger]="!u.activo">
+              {{ u.activo ? 'activa' : 'inactiva' }}
+            </span>
+          </p>
+
+          @if (!u.activo) {
+            <p class="aviso">
+              Esta cuenta no puede iniciar sesión. Sus sesiones abiertas dejaron de funcionar en el momento
+              en que se la desactivó: la consulta que resuelve al usuario filtra por cuenta activa, así que
+              el token que ya tenía tampoco sirve.
+            </p>
+          }
+
+          @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
+
           <div class="acciones">
-            <button class="btn btn--ghost btn--sm" type="button" (click)="iniciarEdicion(u)">Editar cuenta</button>
+            <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()" (click)="iniciarEdicion(u)">Editar cuenta</button>
+
             @if (u.activo) {
-              <button class="btn btn--ghost btn--sm" type="button" (click)="desactivar(u.idUsuario)">Desactivar cuenta</button>
+              @if (confirmandoBaja()) {
+                <span class="confirma">Va a perder el acceso ahora mismo.</span>
+                <button class="btn btn--danger btn--sm" type="button" [disabled]="guardando()" (click)="desactivar(u.idUsuario)">
+                  @if (guardando()) { <span class="spinner"></span> Desactivando… } @else { Sí, desactivar }
+                </button>
+                <button class="btn btn--ghost btn--sm" type="button" (click)="confirmandoBaja.set(false)">No</button>
+              } @else {
+                <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()" (click)="confirmandoBaja.set(true)">Desactivar cuenta</button>
+              }
+            } @else {
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="activar(u.idUsuario)">
+                @if (guardando()) { <span class="spinner"></span> Activando… } @else { Activar cuenta }
+              </button>
             }
           </div>
         } @else {
@@ -58,6 +87,7 @@ import { mensajeDeError } from '../../core/mensaje-error';
             </select>
           </span>
         </label>
+        <p class="aviso">El rol decide qué ficha se le puede crear después. Una cuenta con rol ENTRENADOR solo admite ficha de entrenador.</p>
         @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
         <div class="acciones">
           <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="crear()">
@@ -67,6 +97,9 @@ import { mensajeDeError } from '../../core/mensaje-error';
       }
     </div>
   `,
+  styles: [`
+    .confirma { font-size: 0.85rem; color: var(--texto-suave, #64748b); }
+  `],
 })
 export class CuentaUsuarioComponent {
   readonly state = inject(PersonasStateService);
@@ -79,6 +112,7 @@ export class CuentaUsuarioComponent {
   readonly guardando = signal(false);
   readonly error = signal('');
   readonly editando = signal(false);
+  readonly confirmandoBaja = signal(false);
 
   constructor() {
     effect(() => {
@@ -86,6 +120,7 @@ export class CuentaUsuarioComponent {
       this.formUsuario = { username: '', password: '', rol: 'ENTRENADOR' };
       this.error.set('');
       this.editando.set(false);
+      this.confirmandoBaja.set(false);
     });
   }
 
@@ -103,12 +138,27 @@ export class CuentaUsuarioComponent {
   }
 
   desactivar(idUsuario: number): void {
-    this.servicio.desactivarUsuario(idUsuario).subscribe({ next: () => this.state.cargarPersonas(true) });
+    this.guardando.set(true);
+    this.error.set('');
+    this.servicio.desactivarUsuario(idUsuario).subscribe({
+      next: () => { this.guardando.set(false); this.confirmandoBaja.set(false); this.state.cargarPersonas(true); },
+      error: (err) => { this.confirmandoBaja.set(false); this.manejarError(err); },
+    });
+  }
+
+  activar(idUsuario: number): void {
+    this.guardando.set(true);
+    this.error.set('');
+    this.servicio.activarUsuario(idUsuario).subscribe({
+      next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
+      error: (err) => this.manejarError(err),
+    });
   }
 
   iniciarEdicion(u: UsuarioResponse): void {
     this.formUsuario = { username: u.username, password: '', rol: (u.roles[0] as RolUsuario) ?? 'ENTRENADOR' };
     this.error.set('');
+    this.confirmandoBaja.set(false);
     this.editando.set(true);
   }
 
@@ -131,7 +181,7 @@ export class CuentaUsuarioComponent {
     });
   }
 
-  private manejarError(err: any): void {
+  private manejarError(err: unknown): void {
     this.guardando.set(false);
     this.error.set(mensajeDeError(err));
   }

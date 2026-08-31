@@ -52,6 +52,10 @@ export class PersonasService {
     return this.http.delete<void>(`/api/usuarios/${id}`);
   }
 
+  activarUsuario(id: number) {
+    return this.http.post<UsuarioResponse>(`/api/usuarios/${id}/activacion`, null);
+  }
+
   categoriasActivas() {
     return this.http.get<CategoriaOpcion[]>('/api/categorias/activas');
   }

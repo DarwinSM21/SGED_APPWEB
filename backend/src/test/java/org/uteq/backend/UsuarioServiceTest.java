@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
@@ -83,13 +84,62 @@ class UsuarioServiceTest {
     @DisplayName("listar delega en el repositorio y mapea persona/estado")
     void listar_devuelve_pagina_mapeada() {
         Page<Usuario> pagina = new PageImpl<>(List.of(usuario()), PageRequest.of(0, 10), 1);
-        when(usuarioRepository.findByActivoTrue(any())).thenReturn(pagina);
+        when(usuarioRepository.findAll(any(Pageable.class))).thenReturn(pagina);
 
         UsuarioPageResponse<UsuarioResponse> resultado = usuarioService.listar(PageRequest.of(0, 10));
 
         assertThat(resultado.totalElements()).isEqualTo(1);
         assertThat(resultado.content().get(0).username()).isEqualTo("ana.torres");
         assertThat(resultado.content().get(0).estadoGeneralNombre()).isEqualTo("ACTIVO");
+    }
+
+    @Test
+    @DisplayName("listar incluye las cuentas desactivadas para que el administrador pueda reactivarlas")
+    void listar_incluye_inactivos() {
+        Usuario apagado = usuario();
+        apagado.setActivo(false);
+        Page<Usuario> pagina = new PageImpl<>(List.of(apagado), PageRequest.of(0, 10), 1);
+        when(usuarioRepository.findAll(any(Pageable.class))).thenReturn(pagina);
+
+        UsuarioPageResponse<UsuarioResponse> resultado = usuarioService.listar(PageRequest.of(0, 10));
+
+        assertThat(resultado.content()).hasSize(1);
+        assertThat(resultado.content().get(0).activo()).isFalse();
+    }
+
+    @Test
+    @DisplayName("activar vuelve a encender una cuenta apagada")
+    void activar_enciende_la_cuenta() {
+        Usuario apagado = usuario();
+        apagado.setActivo(false);
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(apagado));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
+
+        UsuarioResponse resultado = usuarioService.activar(1L);
+
+        assertThat(resultado.activo()).isTrue();
+        assertThat(apagado.getActivo()).isTrue();
+    }
+
+    @Test
+    @DisplayName("activar rechaza una cuenta que ya estaba activa")
+    void activar_rechaza_cuenta_ya_activa() {
+        when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
+
+        assertThatThrownBy(() -> usuarioService.activar(1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ya se encuentra activa");
+
+        verify(usuarioRepository, never()).save(any(Usuario.class));
+    }
+
+    @Test
+    @DisplayName("activar lanza RecursoNoEncontradoException si el usuario no existe")
+    void activar_usuario_inexistente() {
+        when(usuarioRepository.findById(404L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> usuarioService.activar(404L))
+                .isInstanceOf(RecursoNoEncontradoException.class);
     }
 
     @Test
