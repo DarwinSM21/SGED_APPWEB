@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.dto.RepresentantePageResponse;
@@ -82,7 +83,7 @@ class RepresentanteServiceTest {
     @DisplayName("listar delega en el repositorio y mapea persona/usuario")
     void listar_devuelve_pagina_mapeada() {
         Page<Representante> pagina = new PageImpl<>(List.of(representante()), PageRequest.of(0, 10), 1);
-        when(representanteRepository.findByActivoTrue(any())).thenReturn(pagina);
+        when(representanteRepository.findAll(any(Pageable.class))).thenReturn(pagina);
         when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
 
         RepresentantePageResponse<RepresentanteResponse> resultado = representanteService.listar(PageRequest.of(0, 10));

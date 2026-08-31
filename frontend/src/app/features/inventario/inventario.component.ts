@@ -10,6 +10,7 @@ import {
 } from './inventario.models';
 import { mensajeDeError as traducirError } from '../../core/mensaje-error';
 import { fechaHoraCorta } from '../../core/formato-fecha';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 type Tab = 'articulos' | 'movimientos' | 'asignaciones';
 
@@ -20,7 +21,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
 @Component({
   selector: 'app-inventario',
   standalone: true,
-  imports: [CommonModule, FormsModule, CargandoComponent],
+  imports: [CommonModule, FormsModule, CargandoComponent, ConfirmarAccionComponent],
   template: `
     <div class="pantalla">
       <h1 class="titulo-pantalla">Inventario</h1>
@@ -83,7 +84,16 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             }
           }
 
-          <h2 class="subtitulo">Catálogo</h2>
+          <div class="cabecera-catalogo">
+            <h2 class="subtitulo">Catálogo</h2>
+            @if (puedeGestionarCatalogo()) {
+              <label class="toggle-bajas">
+                <input type="checkbox" [ngModel]="mostrarBajas()" (ngModelChange)="alternarBajas($event)" name="mostrarBajas" />
+                Mostrar los dados de baja
+              </label>
+            }
+          </div>
+          @if (errorArticulo()) { <div class="alert alert--danger" role="alert">{{ errorArticulo() }}</div> }
           @if (cargandoArticulos()) {
             <app-cargando />
           } @else if (articulos().length === 0) {
@@ -95,9 +105,20 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
                   <span class="badge">{{ etiquetaTipo(a.tipo) }}</span>
                   <span class="nombre-articulo">{{ a.nombre }}@if (a.talla) { · {{ a.talla }} }</span>
                   <span class="stock-articulo">{{ a.stockActual }} {{ a.unidadMedida }}</span>
+                  @if (!a.activo) { <span class="badge badge--danger">De baja</span> }
                   @if (puedeGestionarCatalogo()) {
-                    <button class="btn btn--ghost btn--pequeno" type="button" (click)="editarArticulo(a)">Editar</button>
-                    <button class="btn btn--ghost btn--pequeno" type="button" (click)="eliminarArticulo(a)">Baja</button>
+                    @if (a.activo) {
+                      <button class="btn btn--ghost btn--pequeno" type="button" (click)="editarArticulo(a)">Editar</button>
+                      <app-confirmar-accion etiqueta="Baja"
+                                            [pregunta]="'¿Dar de baja ' + a.nombre + '?'"
+                                            textoConfirmar="Sí, dar de baja" enCurso="Dando de baja…"
+                                            [ocupado]="guardandoArticulo()" (confirmado)="eliminarArticulo(a)" />
+                    } @else {
+                      <app-confirmar-accion etiqueta="Reactivar" [peligrosa]="false"
+                                            [pregunta]="'¿Volver a poner ' + a.nombre + ' en el catálogo?'"
+                                            textoConfirmar="Sí, reactivar" enCurso="Reactivando…"
+                                            [ocupado]="guardandoArticulo()" (confirmado)="reactivarArticulo(a)" />
+                    }
                   }
                 </div>
               }
@@ -264,6 +285,8 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
       display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem;
     }
     .fila-articulo:last-child, .fila-movimiento:last-child, .fila-asignacion:last-child { border-bottom: none; }
+    .cabecera-catalogo { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .toggle-bajas { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--color-text-muted); }
     .fila-articulo--bajo .stock-articulo { color: var(--color-danger-600, #c0392b); font-weight: 700; }
     .nombre-articulo, .destinatario-asignacion { flex: 1; }
     .stock-articulo, .cantidad-movimiento { font-weight: 600; }
@@ -286,6 +309,7 @@ export class InventarioComponent implements OnInit {
   readonly tabActiva = signal<Tab>('articulos');
 
   readonly articulos = signal<ArticuloResponse[]>([]);
+  readonly mostrarBajas = signal(false);
   readonly cargandoArticulos = signal(true);
   readonly stockBajoTotal = signal(0);
 
@@ -315,10 +339,7 @@ export class InventarioComponent implements OnInit {
   ngOnInit(): void {
     this.tabActiva.set(this.tabsVisibles()[0]);
 
-    this.servicio.listarArticulosActivos().subscribe({
-      next: (a) => { this.articulos.set(a); this.cargandoArticulos.set(false); },
-      error: () => this.cargandoArticulos.set(false),
-    });
+    this.cargarArticulos();
 
     this.servicio.listarMovimientos().subscribe({
       next: (m) => { this.movimientos.set(m); this.cargandoMovimientos.set(false); },
@@ -336,6 +357,38 @@ export class InventarioComponent implements OnInit {
     if (this.puedeGestionarCatalogo()) {
       this.servicio.stockBajo().subscribe({ next: (r) => this.stockBajoTotal.set(r.total) });
     }
+  }
+
+  cargarArticulos(): void {
+    this.cargandoArticulos.set(true);
+    this.errorArticulo.set('');
+
+    if (this.mostrarBajas()) {
+      this.servicio.listarArticulosConBajas().subscribe({
+        next: (pagina) => { this.articulos.set(pagina.content); this.cargandoArticulos.set(false); },
+        error: (e) => { this.errorArticulo.set(this.mensajeDeError(e)); this.cargandoArticulos.set(false); },
+      });
+      return;
+    }
+
+    this.servicio.listarArticulosActivos().subscribe({
+      next: (a) => { this.articulos.set(a); this.cargandoArticulos.set(false); },
+      error: (e) => { this.errorArticulo.set(this.mensajeDeError(e)); this.cargandoArticulos.set(false); },
+    });
+  }
+
+  alternarBajas(mostrar: boolean): void {
+    this.mostrarBajas.set(mostrar);
+    this.cargarArticulos();
+  }
+
+  reactivarArticulo(a: ArticuloResponse): void {
+    this.guardandoArticulo.set(true);
+    this.errorArticulo.set('');
+    this.servicio.reactivarArticulo(a.idArticulo).subscribe({
+      next: () => { this.guardandoArticulo.set(false); this.cargarArticulos(); },
+      error: (e) => { this.guardandoArticulo.set(false); this.errorArticulo.set(this.mensajeDeError(e)); },
+    });
   }
 
   etiquetaTab(t: Tab): string {
@@ -391,8 +444,11 @@ export class InventarioComponent implements OnInit {
   }
 
   eliminarArticulo(a: ArticuloResponse): void {
+    this.guardandoArticulo.set(true);
+    this.errorArticulo.set('');
     this.servicio.eliminarArticulo(a.idArticulo).subscribe({
-      next: () => this.articulos.set(this.articulos().filter((x) => x.idArticulo !== a.idArticulo)),
+      next: () => { this.guardandoArticulo.set(false); this.cargarArticulos(); },
+      error: (e) => { this.guardandoArticulo.set(false); this.errorArticulo.set(this.mensajeDeError(e)); },
     });
   }
 

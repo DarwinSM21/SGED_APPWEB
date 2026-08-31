@@ -12,6 +12,7 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 
 import java.util.List;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
 @Service
 @RequiredArgsConstructor
@@ -86,6 +87,8 @@ public class CategoriaService {
         return toResponse(categoriaRepository.save(categoria));
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Categoria", idSpel = "#p0",
+            descripcionSpel = "'desactivo la categoria #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)

@@ -52,8 +52,20 @@ export class PersonasService {
     return this.http.delete<void>(`/api/usuarios/${id}`);
   }
 
-  activarUsuario(id: number) {
-    return this.http.post<UsuarioResponse>(`/api/usuarios/${id}/activacion`, null);
+  reactivarUsuario(id: number) {
+    return this.http.post<UsuarioResponse>(`/api/usuarios/${id}/reactivar`, null);
+  }
+
+  reactivarEstudiante(id: number) {
+    return this.http.post<EstudianteResponse>(`/api/estudiantes/${id}/reactivar`, null);
+  }
+
+  reactivarEntrenador(id: number) {
+    return this.http.post<EntrenadorResponse>(`/api/entrenadores/${id}/reactivar`, null);
+  }
+
+  reactivarRepresentante(id: number) {
+    return this.http.post<RepresentanteResponse>(`/api/representantes/${id}/reactivar`, null);
   }
 
   categoriasActivas() {

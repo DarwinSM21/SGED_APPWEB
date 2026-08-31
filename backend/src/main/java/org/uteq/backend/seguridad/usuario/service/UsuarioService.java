@@ -156,11 +156,11 @@ public class UsuarioService {
         usuarioRepository.save(usuario);
     }
 
-    @Auditado(accion = "ACTIVAR", entidad = "Usuario", idSpel = "#p0",
+    @Auditado(accion = "REACTIVAR", entidad = "Usuario", idSpel = "#p0",
             descripcionSpel = "'reactivo la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
     @Transactional
-    public UsuarioResponse activar(Long id) {
+    public UsuarioResponse reactivar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
 

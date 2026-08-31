@@ -61,4 +61,10 @@ public class ArticuloController {
         articuloService.eliminar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/reactivar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    public ResponseEntity<ArticuloResponse> reactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(articuloService.reactivar(id));
+    }
 }

@@ -46,6 +46,12 @@ public class EntrenadorController {
         return ResponseEntity.ok(entrenadorService.editar(id, request));
     }
 
+    @PostMapping("/{id}/reactivar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<EntrenadorResponse> reactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(entrenadorService.reactivar(id));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {

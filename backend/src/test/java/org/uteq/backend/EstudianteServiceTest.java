@@ -105,7 +105,7 @@ class EstudianteServiceTest {
     @Test
     @DisplayName("listar - Devuelve página envuelta de estudiantes activos")
     void listar_devuelve_pagina_envuelta() {
-        when(estudianteRepository.findByActivoTrue(any(Pageable.class)))
+        when(estudianteRepository.findAll(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(estudianteDummy)));
 
         EstudiantePageResponse<EstudianteResponse> page = service.listar(PageRequest.of(0, 10));

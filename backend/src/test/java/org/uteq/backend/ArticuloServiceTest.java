@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.ArticuloRequest;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.ArticuloResponse;
@@ -104,7 +105,7 @@ class ArticuloServiceTest {
     @DisplayName("listarPaginado delega en el repositorio y mapea a ArticuloResponse")
     void listarPaginado_devuelve_pagina_mapeada() {
         Page<Articulo> pagina = new PageImpl<>(List.of(balonExistente()), PageRequest.of(0, 10), 1);
-        when(articuloRepository.findByActivoTrue(any())).thenReturn(pagina);
+        when(articuloRepository.findAll(any(Pageable.class))).thenReturn(pagina);
 
         Page<ArticuloResponse> resultado = articuloService.listarPaginado(PageRequest.of(0, 10));
 

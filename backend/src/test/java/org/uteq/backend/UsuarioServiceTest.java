@@ -108,25 +108,25 @@ class UsuarioServiceTest {
     }
 
     @Test
-    @DisplayName("activar vuelve a encender una cuenta apagada")
-    void activar_enciende_la_cuenta() {
+    @DisplayName("reactivar vuelve a encender una cuenta apagada")
+    void reactivar_enciende_la_cuenta() {
         Usuario apagado = usuario();
         apagado.setActivo(false);
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(apagado));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> i.getArgument(0));
 
-        UsuarioResponse resultado = usuarioService.activar(1L);
+        UsuarioResponse resultado = usuarioService.reactivar(1L);
 
         assertThat(resultado.activo()).isTrue();
         assertThat(apagado.getActivo()).isTrue();
     }
 
     @Test
-    @DisplayName("activar rechaza una cuenta que ya estaba activa")
-    void activar_rechaza_cuenta_ya_activa() {
+    @DisplayName("reactivar rechaza una cuenta que ya estaba activa")
+    void reactivar_rechaza_cuenta_ya_activa() {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
 
-        assertThatThrownBy(() -> usuarioService.activar(1L))
+        assertThatThrownBy(() -> usuarioService.reactivar(1L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("ya se encuentra activa");
 
@@ -134,11 +134,11 @@ class UsuarioServiceTest {
     }
 
     @Test
-    @DisplayName("activar lanza RecursoNoEncontradoException si el usuario no existe")
-    void activar_usuario_inexistente() {
+    @DisplayName("reactivar lanza RecursoNoEncontradoException si el usuario no existe")
+    void reactivar_usuario_inexistente() {
         when(usuarioRepository.findById(404L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> usuarioService.activar(404L))
+        assertThatThrownBy(() -> usuarioService.reactivar(404L))
                 .isInstanceOf(RecursoNoEncontradoException.class);
     }
 

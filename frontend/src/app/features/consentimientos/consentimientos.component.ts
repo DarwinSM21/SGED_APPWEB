@@ -7,6 +7,7 @@ import { Consentimiento, EstudianteOpcion, RepresentanteConVinculos } from './co
 import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
 import { fechaHoraCorta } from '../../core/formato-fecha';
 import { mensajeDeError } from '../../core/mensaje-error';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 const ALCANCES_SUGERIDOS = ['NOTIFICACIONES'];
 
@@ -21,7 +22,7 @@ interface RepresentanteDelEstudiante {
 @Component({
   selector: 'app-consentimientos',
   standalone: true,
-  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent, CargandoComponent],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent, CargandoComponent, ConfirmarAccionComponent],
   template: `
     <div class="contenido">
       <h1 class="titulo-panel">Consentimientos</h1>
@@ -90,8 +91,10 @@ interface RepresentanteDelEstudiante {
 
                 <div class="rep-acciones">
                   @if (r.vigente; as c) {
-                    <button class="btn btn--ghost btn--sm" type="button"
-                            [disabled]="guardando()" (click)="revocar(c, r.nombre)">Revocar</button>
+                    <app-confirmar-accion etiqueta="Revocar"
+                                          [pregunta]="'¿Revocar el consentimiento de ' + r.nombre + '? No se deshace: habria que otorgar uno nuevo.'"
+                                          textoConfirmar="Sí, revocar" enCurso="Revocando…"
+                                          [ocupado]="guardando()" (confirmado)="revocar(c, r.nombre)" />
                   } @else {
                     <button class="btn btn--primary btn--sm" type="button"
                             [disabled]="guardando() || !alcance.trim()"

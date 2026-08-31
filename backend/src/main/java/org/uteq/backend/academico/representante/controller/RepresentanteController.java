@@ -46,6 +46,12 @@ public class RepresentanteController {
         return ResponseEntity.ok(representanteService.editar(id, request));
     }
 
+    @PostMapping("/{id}/reactivar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<RepresentanteResponse> reactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(representanteService.reactivar(id));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {

@@ -20,6 +20,7 @@ import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class EntrenadorService {
     @Cacheable(value = RedisCacheConfig.CACHE_ENTRENADORES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EntrenadorPageResponse<EntrenadorResponse> listar(Pageable pageable) {
-        Page<Entrenador> page = entrenadorRepository.findByActivoTrue(pageable);
+        Page<Entrenador> page = entrenadorRepository.findAll(pageable);
         var content = page.getContent().stream().map(this::toResponse).toList();
         return new EntrenadorPageResponse<>(
                 content,
@@ -101,6 +102,8 @@ public class EntrenadorService {
         return toResponse(entrenador);
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Entrenador", idSpel = "#p0",
+            descripcionSpel = "'desactivo la ficha de entrenador #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
@@ -108,6 +111,22 @@ public class EntrenadorService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
         entrenador.setActivo(false);
         entrenadorRepository.save(entrenador);
+    }
+
+    @Auditado(accion = "REACTIVAR", entidad = "Entrenador", idSpel = "#p0",
+            descripcionSpel = "'reactivo la ficha de entrenador #' + #p0")
+    @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
+    @Transactional
+    public EntrenadorResponse reactivar(Long id) {
+        Entrenador entrenador = entrenadorRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
+
+        if (Boolean.TRUE.equals(entrenador.getActivo())) {
+            throw new IllegalArgumentException("La ficha de entrenador ya se encuentra activa");
+        }
+
+        entrenador.setActivo(true);
+        return toResponse(entrenadorRepository.save(entrenador));
     }
 
     private Especialidad resolverEspecialidad(Long idEspecialidad) {

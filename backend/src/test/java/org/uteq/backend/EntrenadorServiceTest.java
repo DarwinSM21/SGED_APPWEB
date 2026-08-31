@@ -9,6 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorPageResponse;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorRequest;
@@ -77,7 +78,7 @@ class EntrenadorServiceTest {
     @DisplayName("listar delega en el repositorio y mapea persona/usuario")
     void listar_devuelve_pagina_mapeada() {
         Page<Entrenador> pagina = new PageImpl<>(List.of(entrenador()), PageRequest.of(0, 10), 1);
-        when(entrenadorRepository.findByActivoTrue(any())).thenReturn(pagina);
+        when(entrenadorRepository.findAll(any(Pageable.class))).thenReturn(pagina);
 
         EntrenadorPageResponse<EntrenadorResponse> resultado = entrenadorService.listar(PageRequest.of(0, 10));
 

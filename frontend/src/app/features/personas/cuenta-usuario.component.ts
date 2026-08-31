@@ -5,11 +5,12 @@ import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { RolUsuario, ROLES_USUARIO, UsuarioResponse } from './personas.models';
 import { mensajeDeError } from '../../core/mensaje-error';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 @Component({
   selector: 'app-cuenta-usuario',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmarAccionComponent],
   template: `
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Cuenta de usuario</h3>
@@ -36,17 +37,12 @@ import { mensajeDeError } from '../../core/mensaje-error';
             <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()" (click)="iniciarEdicion(u)">Editar cuenta</button>
 
             @if (u.activo) {
-              @if (confirmandoBaja()) {
-                <span class="confirma">Va a perder el acceso ahora mismo.</span>
-                <button class="btn btn--danger btn--sm" type="button" [disabled]="guardando()" (click)="desactivar(u.idUsuario)">
-                  @if (guardando()) { <span class="spinner"></span> Desactivando… } @else { Sí, desactivar }
-                </button>
-                <button class="btn btn--ghost btn--sm" type="button" (click)="confirmandoBaja.set(false)">No</button>
-              } @else {
-                <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()" (click)="confirmandoBaja.set(true)">Desactivar cuenta</button>
-              }
+              <app-confirmar-accion etiqueta="Desactivar cuenta"
+                                    pregunta="Va a perder el acceso ahora mismo, incluso con la sesión abierta."
+                                    textoConfirmar="Sí, desactivar" enCurso="Desactivando…"
+                                    [ocupado]="guardando()" (confirmado)="desactivar(u.idUsuario)" />
             } @else {
-              <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="activar(u.idUsuario)">
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="reactivar(u.idUsuario)">
                 @if (guardando()) { <span class="spinner"></span> Activando… } @else { Activar cuenta }
               </button>
             }
@@ -97,9 +93,6 @@ import { mensajeDeError } from '../../core/mensaje-error';
       }
     </div>
   `,
-  styles: [`
-    .confirma { font-size: 0.85rem; color: var(--texto-suave, #64748b); }
-  `],
 })
 export class CuentaUsuarioComponent {
   readonly state = inject(PersonasStateService);
@@ -112,7 +105,6 @@ export class CuentaUsuarioComponent {
   readonly guardando = signal(false);
   readonly error = signal('');
   readonly editando = signal(false);
-  readonly confirmandoBaja = signal(false);
 
   constructor() {
     effect(() => {
@@ -120,7 +112,6 @@ export class CuentaUsuarioComponent {
       this.formUsuario = { username: '', password: '', rol: 'ENTRENADOR' };
       this.error.set('');
       this.editando.set(false);
-      this.confirmandoBaja.set(false);
     });
   }
 
@@ -141,15 +132,15 @@ export class CuentaUsuarioComponent {
     this.guardando.set(true);
     this.error.set('');
     this.servicio.desactivarUsuario(idUsuario).subscribe({
-      next: () => { this.guardando.set(false); this.confirmandoBaja.set(false); this.state.cargarPersonas(true); },
-      error: (err) => { this.confirmandoBaja.set(false); this.manejarError(err); },
+      next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
+      error: (err) => this.manejarError(err),
     });
   }
 
-  activar(idUsuario: number): void {
+  reactivar(idUsuario: number): void {
     this.guardando.set(true);
     this.error.set('');
-    this.servicio.activarUsuario(idUsuario).subscribe({
+    this.servicio.reactivarUsuario(idUsuario).subscribe({
       next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
       error: (err) => this.manejarError(err),
     });
@@ -158,7 +149,6 @@ export class CuentaUsuarioComponent {
   iniciarEdicion(u: UsuarioResponse): void {
     this.formUsuario = { username: u.username, password: '', rol: (u.roles[0] as RolUsuario) ?? 'ENTRENADOR' };
     this.error.set('');
-    this.confirmandoBaja.set(false);
     this.editando.set(true);
   }
 

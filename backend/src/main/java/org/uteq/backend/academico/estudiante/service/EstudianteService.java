@@ -49,7 +49,7 @@ public class EstudianteService {
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EstudiantePageResponse<EstudianteResponse> listar(Pageable pageable) {
-        Page<Estudiante> page = estudianteRepository.findByActivoTrue(pageable);
+        Page<Estudiante> page = estudianteRepository.findAll(pageable);
 
         List<EstudianteResponse> content = page.getContent().stream()
         .map(this::toResponse)
@@ -250,6 +250,23 @@ public class EstudianteService {
                         "Estudiante no encontrado con id: " + id));
         estudiante.setActivo(false);
         estudianteRepository.save(estudiante);
+    }
+
+    @Auditado(accion = "REACTIVAR", entidad = "Estudiante", idSpel = "#p0",
+            descripcionSpel = "'reactivo la ficha de estudiante #' + #p0")
+    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @Transactional
+    public EstudianteResponse reactivar(Long id) {
+        Estudiante estudiante = estudianteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Estudiante no encontrado con id: " + id));
+
+        if (Boolean.TRUE.equals(estudiante.getActivo())) {
+            throw new IllegalArgumentException("La ficha de estudiante ya se encuentra activa");
+        }
+
+        estudiante.setActivo(true);
+        return toResponse(estudianteRepository.save(estudiante));
     }
 
     @Transactional(readOnly = true)

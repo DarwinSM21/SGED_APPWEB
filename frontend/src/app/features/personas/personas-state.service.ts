@@ -25,7 +25,7 @@ export class PersonasStateService {
     return this.personasBase().map((persona) => ({
       persona,
       usuario: usuarios.find((u) => u.idPersona === persona.idPersona) ?? null,
-      estudiante: estudiantes.find((e) => e.idPersona === persona.idPersona) ?? null,
+      estudiante: estudiantes.find((e) => e.idPersona === persona.idPersona && e.activo) ?? null,
       entrenador: entrenadores.find((e) => e.idPersona === persona.idPersona) ?? null,
       representante: representantes.find((r) => r.idPersona === persona.idPersona) ?? null,
     }));
@@ -38,7 +38,7 @@ export class PersonasStateService {
   readonly representantesDelEstudiante = computed(() => {
     const idEstudiante = this.seleccionada()?.estudiante?.idEstudiante;
     if (idEstudiante === undefined) return [];
-    return this.representantes().flatMap((r) => {
+    return this.representantes().filter((r) => r.activo).flatMap((r) => {
       const vinculo = r.representados.find((e) => e.idEstudiante === idEstudiante);
       return vinculo
         ? [{ idRepresentante: r.idRepresentante, nombre: r.nombre, apellido: r.apellido,

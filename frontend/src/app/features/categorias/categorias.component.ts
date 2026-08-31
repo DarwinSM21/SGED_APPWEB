@@ -6,6 +6,7 @@ import { CategoriasService } from './categorias.service';
 import { AuthService } from '../../auth/auth.service';
 import { Categoria, CategoriaRequest } from './categorias.models';
 import { mensajeDeError } from '../../core/mensaje-error';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 const FORMATO_NOMBRE = /^\s*sub[\s-]?\d{1,2}\s*$/i;
 
@@ -16,7 +17,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
 @Component({
   selector: 'app-categorias',
   standalone: true,
-  imports: [CommonModule, FormsModule, CargandoComponent],
+  imports: [CommonModule, FormsModule, CargandoComponent, ConfirmarAccionComponent],
   template: `
     <div class="contenido">
       <h1 class="titulo-panel">Categorías</h1>
@@ -112,8 +113,10 @@ const FORMULARIO_VACIO: CategoriaRequest = {
               <div class="botones">
                 <button class="btn btn--ghost btn--sm" type="button" (click)="editar(c)">Editar</button>
                 @if (c.activo) {
-                  <button class="btn btn--ghost btn--sm" type="button"
-                          [disabled]="guardando()" (click)="desactivar(c)">Desactivar</button>
+                  <app-confirmar-accion etiqueta="Desactivar"
+                                        [pregunta]="'¿Desactivar ' + c.nombre + '? Deja de aparecer para asignar estudiantes.'"
+                                        textoConfirmar="Sí, desactivar" enCurso="Desactivando…"
+                                        [ocupado]="guardando()" (confirmado)="desactivar(c)" />
                 } @else {
                   <button class="btn btn--ghost btn--sm" type="button"
                           [disabled]="guardando()" (click)="reactivar(c)">Reactivar</button>

@@ -5,11 +5,12 @@ import { PersonasService, ESTADO_GENERAL_ACTIVO } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { mensajeDeError } from '../../core/mensaje-error';
 import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-opciones.component';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 @Component({
   selector: 'app-ficha-estudiante',
   standalone: true,
-  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent],
+  imports: [CommonModule, FormsModule, BuscadorOpcionesComponent, ConfirmarAccionComponent],
   template: `
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Ficha de estudiante</h3>
@@ -65,8 +66,11 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
                 <span class="col-principal">{{ v.nombre }} {{ v.apellido }}</span>
                 <span class="col-secundaria">{{ v.relacion || 'sin relación' }}</span>
                 @if (v.contactoPrincipal) { <span class="badge badge--info">Contacto principal</span> }
-                <button class="btn btn--ghost btn--sm" type="button"
-                        (click)="desvincularRepresentante(v.idRepresentante, e.idEstudiante)">Desvincular</button>
+                <app-confirmar-accion etiqueta="Desvincular"
+                                      [pregunta]="'¿Quitarle el acceso a ' + v.nombre + ' ' + v.apellido + '?'"
+                                      textoConfirmar="Sí, quitar" enCurso="Quitando…"
+                                      [ocupado]="guardandoVinculo()"
+                                      (confirmado)="desvincularRepresentante(v.idRepresentante, e.idEstudiante)" />
               </div>
             }
           </div>
@@ -95,7 +99,7 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
               @if (guardandoVinculo()) { <span class="spinner"></span> Vinculando… } @else { Vincular }
             </button>
           </div>
-        } @else if (state.representantes().length === 0) {
+        } @else if (representantesActivos() === 0) {
           <p class="aviso">No hay representantes registrados todavía.</p>
         }
       } @else if (rolIncoherente(); as rol) {
@@ -168,6 +172,9 @@ export class FichaEstudianteComponent {
   private readonly servicio = inject(PersonasService);
 
   readonly persona = computed(() => this.state.seleccionada());
+
+  readonly representantesActivos = computed(() =>
+    this.state.representantes().filter((r) => r.activo).length);
 
   readonly rolIncoherente = computed(() => {
     const usuario = this.persona()?.usuario;

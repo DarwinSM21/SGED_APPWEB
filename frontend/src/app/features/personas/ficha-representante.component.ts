@@ -4,11 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { PersonasService } from './personas.service';
 import { PersonasStateService } from './personas-state.service';
 import { mensajeDeError } from '../../core/mensaje-error';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 @Component({
   selector: 'app-ficha-representante',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmarAccionComponent],
   template: `
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Representante</h3>
@@ -27,17 +28,11 @@ import { mensajeDeError } from '../../core/mensaje-error';
                     @if (r.contactoPrincipal) { <span class="badge badge--info">contacto principal</span> }
                   </span>
                 </div>
-                @if (porQuitar() === r.idEstudiante) {
-                  <div class="vinculo__confirma">
-                    <span>¿Quitar el acceso?</span>
-                    <button class="btn btn--danger btn--sm" type="button" [disabled]="guardando()"
-                            (click)="desvincular(rep.idRepresentante, r.idEstudiante)">Sí, quitar</button>
-                    <button class="btn btn--ghost btn--sm" type="button" (click)="porQuitar.set(null)">No</button>
-                  </div>
-                } @else {
-                  <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()"
-                          (click)="porQuitar.set(r.idEstudiante)">Quitar</button>
-                }
+                <app-confirmar-accion etiqueta="Quitar"
+                                      [pregunta]="'¿Quitarle el acceso a ' + r.nombreCompleto + '?'"
+                                      textoConfirmar="Sí, quitar" enCurso="Quitando…"
+                                      [ocupado]="guardando()"
+                                      (confirmado)="desvincular(rep.idRepresentante, r.idEstudiante)" />
               </li>
             }
           </ul>
@@ -101,7 +96,6 @@ import { mensajeDeError } from '../../core/mensaje-error';
     .vinculo__quien { display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; }
     .vinculo__nombre { font-weight: 600; }
     .vinculo__meta { font-size: 0.85rem; color: var(--texto-suave, #64748b); display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
-    .vinculo__confirma { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
     .check { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0 0.75rem; font-size: 0.9rem; }
   `],
 })
@@ -127,7 +121,6 @@ export class FichaRepresentanteComponent {
 
   readonly guardando = signal(false);
   readonly error = signal('');
-  readonly porQuitar = signal<number | null>(null);
 
   constructor() {
     effect(() => {
@@ -135,7 +128,6 @@ export class FichaRepresentanteComponent {
       this.formRepresentante = { parentesco: '', telefonoContacto: '' };
       this.formVinculo = { idEstudiante: null, relacion: '', contactoPrincipal: false };
       this.error.set('');
-      this.porQuitar.set(null);
     });
   }
 
@@ -176,8 +168,8 @@ export class FichaRepresentanteComponent {
     this.guardando.set(true);
     this.error.set('');
     this.servicio.desvincularEstudianteDeRepresentante(idRepresentante, idEstudiante).subscribe({
-      next: () => { this.guardando.set(false); this.porQuitar.set(null); this.state.cargarPersonas(true); },
-      error: (err) => { this.guardando.set(false); this.porQuitar.set(null); this.error.set(mensajeDeError(err)); },
+      next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
+      error: (err) => { this.guardando.set(false); this.error.set(mensajeDeError(err)); },
     });
   }
 }

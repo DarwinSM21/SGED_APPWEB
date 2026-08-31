@@ -9,6 +9,7 @@ import { SesionesService } from './sesiones.service';
 import { CategoriaOpcion, DIAS_SEMANA, Horario, Sesion } from './sesiones.models';
 import { horaCorta, inicialesDe } from '../../core/formato-texto';
 import { mensajeDeError } from '../../core/mensaje-error';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 function fechaHoyIso(): string {
   const hoy = new Date();
@@ -20,7 +21,7 @@ function fechaHoyIso(): string {
 @Component({
   selector: 'app-sesiones',
   standalone: true,
-  imports: [BuscadorOpcionesComponent, CommonModule, FormsModule, RouterLink, CargandoComponent],
+  imports: [BuscadorOpcionesComponent, CommonModule, FormsModule, RouterLink, CargandoComponent, ConfirmarAccionComponent],
   template: `
     <div class="pantalla">
       <div class="cabecera-pantalla">
@@ -119,7 +120,10 @@ function fechaHoyIso(): string {
                   }
                 </span>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="editarHorario(h)">Editar</button>
-                <button type="button" class="btn btn--ghost btn--sm" (click)="onDesactivarHorario(h.idHorario)">Quitar</button>
+                <app-confirmar-accion etiqueta="Quitar"
+                                      pregunta="¿Quitar este horario? Las sesiones ya generadas no se borran."
+                                      textoConfirmar="Sí, quitar" enCurso="Quitando…"
+                                      [ocupado]="guardandoHorario()" (confirmado)="onDesactivarHorario(h.idHorario)" />
               </div>
             }
           </div>

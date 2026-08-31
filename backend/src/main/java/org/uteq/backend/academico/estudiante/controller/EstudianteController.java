@@ -84,6 +84,12 @@ public class EstudianteController {
         return ResponseEntity.ok().build();
     }
 
+    @PostMapping("/{id}/reactivar")
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
+    public ResponseEntity<EstudianteResponse> reactivar(@PathVariable Long id) {
+        return ResponseEntity.ok(estudianteService.reactivar(id));
+    }
+
     @GetMapping("/operaciones/siguiente-codigo")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<String> siguienteCodigo(@RequestParam int anio) {

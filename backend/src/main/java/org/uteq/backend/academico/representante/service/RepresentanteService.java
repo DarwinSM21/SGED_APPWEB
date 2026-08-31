@@ -23,6 +23,7 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.List;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,7 @@ public class RepresentanteService {
 
     @Transactional(readOnly = true)
     public RepresentantePageResponse<RepresentanteResponse> listar(Pageable pageable) {
-        Page<Representante> page = representanteRepository.findByActivoTrue(pageable);
+        Page<Representante> page = representanteRepository.findAll(pageable);
         var content = page.getContent().stream().map(this::toResponse).toList();
         return new RepresentantePageResponse<>(
                 content, page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
@@ -98,12 +99,29 @@ public class RepresentanteService {
         return toResponse(representante);
     }
 
+    @Auditado(accion = "ELIMINAR", entidad = "Representante", idSpel = "#p0",
+            descripcionSpel = "'desactivo la ficha de representante #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Representante representante = representanteRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + id));
         representante.setActivo(false);
         representanteRepository.save(representante);
+    }
+
+    @Auditado(accion = "REACTIVAR", entidad = "Representante", idSpel = "#p0",
+            descripcionSpel = "'reactivo la ficha de representante #' + #p0")
+    @Transactional
+    public RepresentanteResponse reactivar(Long id) {
+        Representante representante = representanteRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + id));
+
+        if (Boolean.TRUE.equals(representante.getActivo())) {
+            throw new IllegalArgumentException("La ficha de representante ya se encuentra activa");
+        }
+
+        representante.setActivo(true);
+        return toResponse(representanteRepository.save(representante));
     }
 
     @Transactional

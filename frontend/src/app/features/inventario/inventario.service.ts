@@ -18,6 +18,14 @@ export class InventarioService {
     return this.http.get<ArticuloResponse[]>('/api/inventario/articulos/activos');
   }
 
+  listarArticulosConBajas() {
+    return this.http.get<{ content: ArticuloResponse[] }>('/api/inventario/articulos?size=500');
+  }
+
+  reactivarArticulo(id: number) {
+    return this.http.post<ArticuloResponse>(`/api/inventario/articulos/${id}/reactivar`, null);
+  }
+
   stockBajo() {
     return this.http.get<StockBajoResponse>('/api/inventario/articulos/stock-bajo');
   }

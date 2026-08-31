@@ -21,7 +21,7 @@ public class ArticuloService {
 
     @Transactional(readOnly = true)
     public Page<ArticuloResponse> listarPaginado(Pageable pageable) {
-        return articuloRepository.findByActivoTrue(pageable).map(this::toResponse);
+        return articuloRepository.findAll(pageable).map(this::toResponse);
     }
 
     @Transactional(readOnly = true)
@@ -78,6 +78,20 @@ public class ArticuloService {
         Articulo articulo = buscarEntidad(id);
         articulo.setActivo(false);
         articuloRepository.save(articulo);
+    }
+
+    @Auditado(accion = "REACTIVAR", entidad = "Articulo", idSpel = "#p0",
+            descripcionSpel = "'reactivo el articulo #' + #p0")
+    @Transactional
+    public ArticuloResponse reactivar(Long id) {
+        Articulo articulo = buscarEntidad(id);
+
+        if (Boolean.TRUE.equals(articulo.getActivo())) {
+            throw new IllegalArgumentException("El articulo ya se encuentra activo");
+        }
+
+        articulo.setActivo(true);
+        return toResponse(articuloRepository.save(articulo));
     }
 
     @Transactional(readOnly = true)

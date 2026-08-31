@@ -4,13 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { PersonasStateService } from './personas-state.service';
 import { RolUsuario, ROLES_USUARIO } from './personas.models';
 import { fechaHoraCorta } from '../../core/formato-fecha';
+import { Observable } from 'rxjs';
+import { PersonasService } from './personas.service';
+import { mensajeDeError } from '../../core/mensaje-error';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
 export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'representantes';
 
 @Component({
   selector: 'app-personas-gestion',
   standalone: true,
-  imports: [CommonModule, FormsModule, DatePipe],
+  imports: [CommonModule, FormsModule, DatePipe, ConfirmarAccionComponent],
   template: `
     @if (tabActiva() === 'usuarios') {
       <div class="card panel-gestion">
@@ -26,21 +30,31 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
             Mostrar inactivos
           </label>
         </div>
+        @if (errorReactivar()) { <div class="alert alert--danger" role="alert">{{ errorReactivar() }}</div> }
         @if (usuariosFiltrados().length === 0) {
           <p class="aviso">No hay usuarios que coincidan.</p>
         } @else {
           <div class="lista-gestion">
             @for (u of usuariosFiltrados(); track u.idUsuario) {
-              <button type="button" class="fila-gestion" (click)="irAPersona.emit(u.idPersona)">
-                <span class="col-principal">{{ u.nombrePersona }} {{ u.apellidoPersona }}</span>
-                <span class="col-secundaria">{{ u.username }}</span>
-                <span class="badges-persona">
-                  @for (r of u.roles; track r) { <span class="badge badge--info">{{ r }}</span> }
-                </span>
-                <span class="col-secundaria">{{ u.estadoGeneralNombre }}</span>
-                <span class="col-secundaria">{{ u.ultimoAcceso ? fechaHora(u.ultimoAcceso) : 'sin acceso aún' }}</span>
-                <span class="badge" [class.badge--success]="u.activo" [class.badge--danger]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
-              </button>
+              <div class="fila-envoltura">
+                <button type="button" class="fila-gestion" (click)="irAPersona.emit(u.idPersona)">
+                  <span class="col-principal">{{ u.nombrePersona }} {{ u.apellidoPersona }}</span>
+                  <span class="col-secundaria">{{ u.username }}</span>
+                  <span class="badges-persona">
+                    @for (r of u.roles; track r) { <span class="badge badge--info">{{ r }}</span> }
+                  </span>
+                  <span class="col-secundaria">{{ u.estadoGeneralNombre }}</span>
+                  <span class="col-secundaria">{{ u.ultimoAcceso ? fechaHora(u.ultimoAcceso) : 'sin acceso aún' }}</span>
+                  <span class="badge" [class.badge--success]="u.activo" [class.badge--danger]="!u.activo">{{ u.activo ? 'Activo' : 'Inactivo' }}</span>
+                </button>
+                @if (!u.activo) {
+                  <app-confirmar-accion etiqueta="Reactivar" [peligrosa]="false"
+                                        pregunta="Va a poder volver a iniciar sesión."
+                                        textoConfirmar="Sí, reactivar" enCurso="Reactivando…"
+                                        [ocupado]="reactivando()"
+                                        (confirmado)="reactivarUsuario(u.idUsuario)" />
+                }
+              </div>
             }
           </div>
         }
@@ -57,18 +71,28 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
             Mostrar inactivos
           </label>
         </div>
+        @if (errorReactivar()) { <div class="alert alert--danger" role="alert">{{ errorReactivar() }}</div> }
         @if (estudiantesFiltrados().length === 0) {
           <p class="aviso">No hay estudiantes que coincidan.</p>
         } @else {
           <div class="lista-gestion">
             @for (e of estudiantesFiltrados(); track e.idEstudiante) {
-              <button type="button" class="fila-gestion" (click)="irAPersona.emit(e.idPersona)">
-                <span class="col-principal">{{ e.nombrePersona }} {{ e.apellidoPersona }}</span>
-                <span class="col-secundaria">{{ e.codigoEstudiante }}</span>
-                <span class="col-secundaria">{{ e.nombreCategoria }}</span>
-                <span class="col-secundaria">{{ e.fechaIngreso | date:'shortDate' }}</span>
-                <span class="badge" [class.badge--success]="e.activo" [class.badge--danger]="!e.activo">{{ e.activo ? 'Activo' : 'Inactivo' }}</span>
-              </button>
+              <div class="fila-envoltura">
+                <button type="button" class="fila-gestion" (click)="irAPersona.emit(e.idPersona)">
+                  <span class="col-principal">{{ e.nombrePersona }} {{ e.apellidoPersona }}</span>
+                  <span class="col-secundaria">{{ e.codigoEstudiante }}</span>
+                  <span class="col-secundaria">{{ e.nombreCategoria }}</span>
+                  <span class="col-secundaria">{{ e.fechaIngreso | date:'shortDate' }}</span>
+                  <span class="badge" [class.badge--success]="e.activo" [class.badge--danger]="!e.activo">{{ e.activo ? 'Activo' : 'Inactivo' }}</span>
+                </button>
+                @if (!e.activo) {
+                  <app-confirmar-accion etiqueta="Reactivar" [peligrosa]="false"
+                                        pregunta="Vuelve a contar para convocatorias y asistencia."
+                                        textoConfirmar="Sí, reactivar" enCurso="Reactivando…"
+                                        [ocupado]="reactivando()"
+                                        (confirmado)="reactivarEstudiante(e.idEstudiante)" />
+                }
+              </div>
             }
           </div>
         }
@@ -85,18 +109,28 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
             Mostrar inactivos
           </label>
         </div>
+        @if (errorReactivar()) { <div class="alert alert--danger" role="alert">{{ errorReactivar() }}</div> }
         @if (entrenadoresFiltrados().length === 0) {
           <p class="aviso">No hay entrenadores que coincidan.</p>
         } @else {
           <div class="lista-gestion">
             @for (ent of entrenadoresFiltrados(); track ent.idEntrenador) {
-              <button type="button" class="fila-gestion" (click)="irAPersona.emit(ent.idPersona)">
-                <span class="col-principal">{{ ent.nombre }} {{ ent.apellido }}</span>
-                <span class="col-secundaria">{{ ent.nombreEspecialidad || 'sin especialidad' }}</span>
-                <span class="col-secundaria">{{ ent.experienciaAnios ?? 0 }} años</span>
-                <span class="col-secundaria">{{ ent.username }}</span>
-                <span class="badge" [class.badge--success]="ent.activo" [class.badge--danger]="!ent.activo">{{ ent.activo ? 'Activo' : 'Inactivo' }}</span>
-              </button>
+              <div class="fila-envoltura">
+                <button type="button" class="fila-gestion" (click)="irAPersona.emit(ent.idPersona)">
+                  <span class="col-principal">{{ ent.nombre }} {{ ent.apellido }}</span>
+                  <span class="col-secundaria">{{ ent.nombreEspecialidad || 'sin especialidad' }}</span>
+                  <span class="col-secundaria">{{ ent.experienciaAnios ?? 0 }} años</span>
+                  <span class="col-secundaria">{{ ent.username }}</span>
+                  <span class="badge" [class.badge--success]="ent.activo" [class.badge--danger]="!ent.activo">{{ ent.activo ? 'Activo' : 'Inactivo' }}</span>
+                </button>
+                @if (!ent.activo) {
+                  <app-confirmar-accion etiqueta="Reactivar" [peligrosa]="false"
+                                        pregunta="Vuelve a poder tener horarios y sesiones."
+                                        textoConfirmar="Sí, reactivar" enCurso="Reactivando…"
+                                        [ocupado]="reactivando()"
+                                        (confirmado)="reactivarEntrenador(ent.idEntrenador)" />
+                }
+              </div>
             }
           </div>
         }
@@ -113,18 +147,28 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
             Mostrar inactivos
           </label>
         </div>
+        @if (errorReactivar()) { <div class="alert alert--danger" role="alert">{{ errorReactivar() }}</div> }
         @if (representantesFiltrados().length === 0) {
           <p class="aviso">No hay representantes que coincidan.</p>
         } @else {
           <div class="lista-gestion">
             @for (r of representantesFiltrados(); track r.idRepresentante) {
-              <button type="button" class="fila-gestion" (click)="irAPersona.emit(r.idPersona)">
-                <span class="col-principal">{{ r.nombre }} {{ r.apellido }}</span>
-                <span class="col-secundaria">{{ r.parentesco || 'sin parentesco' }}</span>
-                <span class="col-secundaria">{{ r.telefonoContacto || 'sin teléfono' }}</span>
-                <span class="col-secundaria">{{ r.representados.length }} representado{{ r.representados.length === 1 ? '' : 's' }}</span>
-                <span class="badge" [class.badge--success]="r.activo" [class.badge--danger]="!r.activo">{{ r.activo ? 'Activo' : 'Inactivo' }}</span>
-              </button>
+              <div class="fila-envoltura">
+                <button type="button" class="fila-gestion" (click)="irAPersona.emit(r.idPersona)">
+                  <span class="col-principal">{{ r.nombre }} {{ r.apellido }}</span>
+                  <span class="col-secundaria">{{ r.parentesco || 'sin parentesco' }}</span>
+                  <span class="col-secundaria">{{ r.telefonoContacto || 'sin teléfono' }}</span>
+                  <span class="col-secundaria">{{ r.representados.length }} representado{{ r.representados.length === 1 ? '' : 's' }}</span>
+                  <span class="badge" [class.badge--success]="r.activo" [class.badge--danger]="!r.activo">{{ r.activo ? 'Activo' : 'Inactivo' }}</span>
+                </button>
+                @if (!r.activo) {
+                  <app-confirmar-accion etiqueta="Reactivar" [peligrosa]="false"
+                                        pregunta="Vuelve a ver los informes de sus representados."
+                                        textoConfirmar="Sí, reactivar" enCurso="Reactivando…"
+                                        [ocupado]="reactivando()"
+                                        (confirmado)="reactivarRepresentante(r.idRepresentante)" />
+                }
+              </div>
             }
           </div>
         }
@@ -143,6 +187,9 @@ export type TabGestion = 'usuarios' | 'estudiantes' | 'entrenadores' | 'represen
       padding: .6rem .5rem; border: none; border-bottom: 1px solid var(--color-border-light); background: none;
       cursor: pointer; text-align: left; width: 100%; font-size: .85rem;
     }
+    .fila-envoltura { display: flex; align-items: center; gap: .5rem; border-bottom: 1px solid var(--color-border-light); }
+    .fila-envoltura:last-child { border-bottom: none; }
+    .fila-envoltura .fila-gestion { border-bottom: none; }
     .fila-gestion:last-child { border-bottom: none; }
     .fila-gestion:hover { background: var(--color-border-light); }
     @media (max-width: 800px) { .fila-gestion { grid-template-columns: 1fr 1fr; } }
@@ -152,11 +199,32 @@ export class PersonasGestionComponent {
   readonly fechaHora = fechaHoraCorta;
 
   readonly state = inject(PersonasStateService);
+  private readonly servicio = inject(PersonasService);
+
+  readonly reactivando = signal(false);
+  readonly errorReactivar = signal('');
 
   readonly tabActiva = input.required<TabGestion>();
   readonly irAPersona = output<number>();
 
   readonly roles = ROLES_USUARIO;
+
+  reactivarUsuario(id: number): void { this.correr(this.servicio.reactivarUsuario(id)); }
+
+  reactivarEstudiante(id: number): void { this.correr(this.servicio.reactivarEstudiante(id)); }
+
+  reactivarEntrenador(id: number): void { this.correr(this.servicio.reactivarEntrenador(id)); }
+
+  reactivarRepresentante(id: number): void { this.correr(this.servicio.reactivarRepresentante(id)); }
+
+  private correr(peticion: Observable<unknown>): void {
+    this.reactivando.set(true);
+    this.errorReactivar.set('');
+    peticion.subscribe({
+      next: () => { this.reactivando.set(false); this.state.cargarPersonas(true); },
+      error: (err) => { this.reactivando.set(false); this.errorReactivar.set(mensajeDeError(err)); },
+    });
+  }
 
   readonly busquedaUsuarios = signal('');
   readonly filtroRolUsuarios = signal<RolUsuario | 'TODOS'>('TODOS');
