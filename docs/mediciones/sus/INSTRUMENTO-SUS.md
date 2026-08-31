@@ -9,11 +9,14 @@
 
 ## Estado de esta medición
 
-**Recolectada el 2026-07-30, en papel, y transcrita a
-[`respuestas.csv`](respuestas.csv).** 10 participantes: 3 entrenadores, 3
-recepcionistas, 2 estudiantes, 2 padres de familia. Resultado:
-[`REPORT.md`](REPORT.md) — media SUS 68,25 (grado C, Aceptable), con un
-patrón bimodal marcado por perfil que vale más que el promedio agregado.
+Recolectada por primera vez el 2026-07-30 con 10 participantes (media SUS
+68,25). La muestra se amplió después en dos tandas hasta **15
+participantes**, y esa es la medición vigente de esta entrega —
+**media SUS 69,33**, detallada en
+[`INTERPRETACION.md`](INTERPRETACION.md) y
+[`respuestas.csv`](respuestas.csv)—, no la corrida de 10 de más arriba.
+La corrida de 10 queda como el primer punto de la serie, no como el
+resultado final.
 
 Los formularios en papel originales son la fuente de verdad; este CSV es su
 transcripción. No se registran nombres, solo un código de participante

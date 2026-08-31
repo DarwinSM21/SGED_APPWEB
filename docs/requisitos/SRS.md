@@ -1,9 +1,9 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.1 (Tercera Entrega — revisado tras la
-reestructuración de paquetes `academico`/`deportivo`/`seguridad` del
-2026-07-29)
+**Versión del documento:** 1.2 (Entrega Final, etiqueta `v1.0.0` —
+revisado por última vez tras la reestructuración de paquetes
+`academico`/`deportivo`/`seguridad` del 2026-07-29)
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
 

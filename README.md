@@ -98,15 +98,15 @@ tabla de dominio propia en este esquema.
 
 ## Estructura del repositorio
 
-Sigue la estructura obligatoria de la guía de la Tercera Entrega:
+Sigue la estructura obligatoria de la guía de la entrega:
 `db/` (schema, seed, procs), `docs/` (requisitos, observaciones, adr,
 mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 
 ## Evidencia y reproducibilidad
 
-* **Informe de la Tercera Entrega (PDF):**
-  [`docs/informe-entrega-3.pdf`](docs/informe-entrega-3.pdf) — 26 páginas,
-  es la ruta que exige la guía.
+* **Informe de la Entrega Final (PDF):**
+  [`docs/informe/main.pdf`](docs/informe/main.pdf) — 54 páginas,
+  cerrado en la etiqueta `v1.0.0`.
 * Fuente del informe: [`docs/informe/main.tex`](docs/informe/main.tex),
   compilable con `pdflatex→bibtex→pdflatex→pdflatex`. El PDF de arriba se
   genera de aquí: existe fuente versionada y es reproducible, a diferencia
@@ -115,8 +115,9 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Mediciones crudas: `docs/mediciones/` (perf, sec, sus, lighthouse, jacoco)
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
-* Video de demostración: PENDIENTE (enlace)
-* DOI Zenodo: PENDIENTE
+* Video de demostración: PENDIENTE (enlace) — falta grabarlo y enlazarlo
+* DOI Zenodo del software: [`10.5281/zenodo.21713240`](https://doi.org/10.5281/zenodo.21713240) — ya emitido
+* DOI Zenodo del *dataset*: PENDIENTE — depósito separado, distinto del DOI del software
 * Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
 
 ## Integrantes
