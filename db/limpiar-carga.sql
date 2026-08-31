@@ -14,6 +14,21 @@
 
 BEGIN;
 
+-- Una alineacion guardada puede tener jugadores sinteticos: si se agendo un
+-- partido mientras la carga estaba puesta, el once salio de ese plantel. Hay
+-- que soltarlos ANTES de borrar a los estudiantes, o la llave foranea lo
+-- impide.
+--
+-- Se borra la alineacion ENTERA, no solo las filas sinteticas: un once al que
+-- le faltan ocho jugadores no es una alineacion, es basura que despues nadie
+-- entiende. El partido se conserva; volver a generar la plantilla es un clic.
+DELETE FROM deportivo.alineaciones al
+ WHERE EXISTS (
+        SELECT 1 FROM deportivo.alineacion_jugador aj
+          JOIN academico.estudiantes e ON e.id_estudiante = aj.id_estudiante
+         WHERE aj.id_alineacion = al.id_alineacion
+           AND e.codigo_estudiante LIKE 'CARGA-%');
+
 DELETE FROM deportivo.asistencias a
  USING academico.estudiantes e
  WHERE e.id_estudiante = a.id_estudiante
