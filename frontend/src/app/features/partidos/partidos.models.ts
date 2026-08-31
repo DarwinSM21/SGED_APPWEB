@@ -10,6 +10,8 @@ export interface Partido {
   resultado: 'GANADO' | 'EMPATADO' | 'PERDIDO' | 'PENDIENTE';
   tieneAlineacion: boolean;
   titulares: number;
+  cerrado: boolean;
+  cerradoEn: string | null;
 }
 
 export interface PartidoPage {
@@ -71,6 +73,7 @@ export interface Alineacion {
   disponibles: JugadorConvocado[];
   noConvocables: NoConvocable[];
   cupoTitulares: number;
+  cerrado: boolean;
 }
 
 export interface JugadorEnCancha {

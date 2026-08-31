@@ -63,12 +63,20 @@ type Seleccion =
             <h1>Plantilla del partido</h1>
             <p class="subt">
               {{ a.categoria }} · {{ a.fecha }} ·
-              @if (a.guardada) {
+              @if (a.cerrado) {
+                <strong>el once que jugó</strong>
+              } @else if (a.guardada) {
                 <strong>la formación que armaste</strong>
               } @else {
                 sugerencia del sistema
               }
             </p>
+            @if (a.cerrado) {
+              <p class="cerrado-aviso">
+                Este partido está cerrado: se consulta, no se edita.
+                Para corregirlo, reabrilo desde la lista de partidos.
+              </p>
+            }
             <p class="ventana">
               Calculada con {{ a.ventana.entrenamientos }}
               entrenamiento{{ a.ventana.entrenamientos === 1 ? '' : 's' }} de las últimas
@@ -131,6 +139,7 @@ type Seleccion =
                    [class.puesto--elegido]="estaElegido(p)"
                    [attr.aria-label]="rotuloPuesto(p)"
                    role="button" tabindex="0"
+                   [class.puesto--fijo]="soloLectura()"
                    (click)="tocarPuesto(p)"
                    (keydown.enter)="tocarPuesto(p)"
                    (keydown.space)="tocarPuesto(p)">
@@ -205,6 +214,7 @@ type Seleccion =
                 }
                 @if (estaEnCancha(d.idEstudiante)) {
                   <button type="button" class="btn btn--ghost btn--sm btn--block"
+                          [disabled]="soloLectura()"
                           (click)="sacarAlBanco(d.idEstudiante)">
                     Sacar al banco
                   </button>
@@ -234,7 +244,7 @@ type Seleccion =
 
                 <div class="banco-lista">
                 @for (s of bancoVisible(); track s.idEstudiante) {
-                  <button type="button" class="suplente"
+                  <button type="button" class="suplente" [disabled]="soloLectura()"
                           [class.suplente--elegido]="esElegido(s.idEstudiante)"
                           (click)="tocarBanco(s)">
                     <span class="avatar avatar--muted">{{ iniciales(s.nombreCompleto) }}</span>
@@ -274,7 +284,7 @@ type Seleccion =
               <h2>Cómo funcionó</h2>
               <div class="estrellas" role="group" aria-label="Valoración de la formación">
                 @for (v of estrellas; track v) {
-                  <button type="button" class="estrella"
+                  <button type="button" class="estrella" [disabled]="soloLectura()"
                           [class.estrella--activa]="(valoracion() ?? 0) >= v"
                           [attr.aria-pressed]="valoracion() === v"
                           [attr.aria-label]="v + ' de 5'"
@@ -290,18 +300,20 @@ type Seleccion =
 
               @if (mensaje(); as m) { <p class="ok">{{ m }}</p> }
 
-              <div class="acciones">
-                <button type="button" class="btn btn--primary btn--block"
-                        [disabled]="guardando()" (click)="guardar()">
-                  {{ guardando() ? 'Guardando…' : (sinGuardar() ? 'Guardar plantilla' : 'Guardar de nuevo') }}
-                </button>
-                @if (a.guardada) {
-                  <button type="button" class="btn btn--ghost btn--block"
-                          [disabled]="guardando()" (click)="restablecer()">
-                    Volver a la sugerencia del sistema
+              @if (!a.cerrado) {
+                <div class="acciones">
+                  <button type="button" class="btn btn--primary btn--block"
+                          [disabled]="guardando()" (click)="guardar()">
+                    {{ guardando() ? 'Guardando…' : (sinGuardar() ? 'Guardar plantilla' : 'Guardar de nuevo') }}
                   </button>
-                }
-              </div>
+                  @if (a.guardada) {
+                    <button type="button" class="btn btn--ghost btn--block"
+                            [disabled]="guardando()" (click)="restablecer()">
+                      Volver a la sugerencia del sistema
+                    </button>
+                  }
+                </div>
+              }
             </section>
           </div>
         </div>
@@ -314,6 +326,10 @@ type Seleccion =
     .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
                 gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem; }
     h1 { font-size: 1.15rem; }
+    .cerrado-aviso { font-size: .82rem; color: var(--color-text-muted); margin: .35rem 0 0;
+                     padding: .4rem .6rem; border-left: 3px solid var(--color-border);
+                     background: var(--color-border-light); border-radius: 0 4px 4px 0; }
+    .puesto--fijo { cursor: default; }
     .subt { margin-top: .3rem; color: var(--color-text-muted); font-size: .85rem; }
     .ventana { margin-top: .35rem; font-size: .78rem; color: var(--color-text-faint);
                max-width: 56ch; line-height: 1.45; }
@@ -518,6 +534,11 @@ export class AlineacionComponent implements OnInit {
   }
 
   tocarPuesto(p: Puesto): void {
+    if (this.soloLectura()) return;
+    this.tocarPuestoInterno(p);
+  }
+
+  private tocarPuestoInterno(p: Puesto): void {
     const s = this.seleccion();
     this.mensaje.set(null);
 
@@ -549,7 +570,12 @@ export class AlineacionComponent implements OnInit {
       : { tipo: 'puesto', idPosicion: p.idPosicion });
   }
 
-  tocarBanco(jugador: JugadorConvocado): void {
+  tocarBanco(s: JugadorConvocado): void {
+    if (this.soloLectura()) return;
+    this.tocarBancoInterno(s);
+  }
+
+  private tocarBancoInterno(jugador: JugadorConvocado): void {
     const s = this.seleccion();
     this.mensaje.set(null);
 
@@ -612,6 +638,11 @@ export class AlineacionComponent implements OnInit {
   }
 
   sacarAlBanco(idEstudiante: number): void {
+    if (this.soloLectura()) return;
+    this.sacarAlBancoInterno(idEstudiante);
+  }
+
+  private sacarAlBancoInterno(idEstudiante: number): void {
     const puesto = this.puestoDe(idEstudiante);
     if (!puesto || !puesto.jugador) return;
 
@@ -628,7 +659,10 @@ export class AlineacionComponent implements OnInit {
     this.seleccion.set(null);
   }
 
+  readonly soloLectura = computed(() => this.alineacion()?.cerrado === true);
+
   guardar(): void {
+    if (this.soloLectura()) return;
     if (this.guardando()) return;
 
     const jugadores: JugadorEnCancha[] = [
@@ -660,6 +694,7 @@ export class AlineacionComponent implements OnInit {
   }
 
   restablecer(): void {
+    if (this.soloLectura()) return;
     if (this.guardando()) return;
     this.guardando.set(true);
     this.servicio.restablecerAlineacion(this.idPartido).subscribe({
@@ -675,7 +710,12 @@ export class AlineacionComponent implements OnInit {
     });
   }
 
-  calificar(valor: number): void {
+  calificar(v: number): void {
+    if (this.soloLectura()) return;
+    this.calificarInterno(v);
+  }
+
+  private calificarInterno(valor: number): void {
     this.valoracion.set(this.valoracion() === valor ? null : valor);
     this.sinGuardar.set(true);
   }

@@ -22,6 +22,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.time.Instant;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class PartidoService {
     private final PartidoRepository partidoRepository;
     private final CategoriaRepository categoriaRepository;
     private final AlineacionRepository alineacionRepository;
+    private final UsuarioRepository usuarioRepository;
 
     @Transactional(readOnly = true)
     public PartidoPageResponse listar(Long idCategoria, int pagina, int tamano) {
@@ -66,23 +70,65 @@ public class PartidoService {
                 .fecha(request.fecha())
                 .hora(request.hora())
                 .observacion(request.observacion())
+                .cerrado(false)
                 .build());
         return aResponse(guardado, false, 0);
     }
 
     @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
-            descripcionSpel = "'cargó el resultado del partido ' + #p0")
+            descripcionSpel = "'cargó el resultado del partido ' + #p0 + ' y lo cerró'")
     @Transactional
     public PartidoResponse registrarResultado(Long idPartido, ResultadoRequest request) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+
+        exigirAbierto(p);
+
         p.setGolesFavor(request.golesFavor());
         p.setGolesContra(request.golesContra());
         if (request.observacion() != null) {
             p.setObservacion(request.observacion());
         }
+        p.setCerrado(true);
+        p.setCerradoEn(Instant.now());
+        p.setCerradoPorIdUsuario(idUsuarioActual());
         partidoRepository.save(p);
         return buscarPorId(idPartido);
+    }
+
+    @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
+            descripcionSpel = "'reabrio el partido ' + #p0 + ' para corregirlo'")
+    @Transactional
+    public PartidoResponse reabrir(Long idPartido) {
+        Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
+                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+
+        if (!p.estaCerrado()) {
+            throw new IllegalArgumentException("Este partido no está cerrado");
+        }
+
+        p.setCerrado(false);
+        p.setCerradoEn(null);
+        p.setCerradoPorIdUsuario(null);
+        partidoRepository.save(p);
+        return buscarPorId(idPartido);
+    }
+
+    public void exigirAbierto(Partido p) {
+        if (p.estaCerrado()) {
+            throw new IllegalArgumentException(
+                    "El partido está cerrado. Para corregirlo, reabrilo primero.");
+        }
+    }
+
+    private Long idUsuarioActual() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || auth.getName() == null) {
+            return null;
+        }
+        return usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(auth.getName())
+                .map(u -> u.getIdUsuario())
+                .orElse(null);
     }
 
     @Auditado(accion = "ELIMINAR", entidad = "Partido", idSpel = "#p0",
@@ -91,6 +137,8 @@ public class PartidoService {
     public void eliminar(Long idPartido) {
         Partido p = partidoRepository.findById(idPartido)
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+
+        exigirAbierto(p);
 
         partidoRepository.delete(p);
     }
@@ -120,7 +168,8 @@ public class PartidoService {
                 p.getCategoria().getNombre(),
                 p.getFecha(), p.getHora(),
                 p.getGolesFavor(), p.getGolesContra(), p.getObservacion(),
-                resultadoDe(p), tieneAlineacion, titulares);
+                resultadoDe(p), tieneAlineacion, titulares,
+                p.estaCerrado(), p.getCerradoEn());
     }
 
     private String resultadoDe(Partido p) {

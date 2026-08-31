@@ -49,6 +49,11 @@ public class PartidoController {
         return ResponseEntity.ok(partidoService.registrarResultado(idPartido, request));
     }
 
+    @PostMapping("/{idPartido}/reapertura")
+    public ResponseEntity<PartidoResponse> reabrir(@PathVariable Long idPartido) {
+        return ResponseEntity.ok(partidoService.reabrir(idPartido));
+    }
+
     @DeleteMapping("/{idPartido}")
     public ResponseEntity<Void> eliminar(@PathVariable Long idPartido) {
         partidoService.eliminar(idPartido);

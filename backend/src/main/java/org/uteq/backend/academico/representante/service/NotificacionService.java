@@ -16,6 +16,8 @@ import org.uteq.backend.academico.representante.repository.RepresentanteReposito
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 
 import java.util.List;
+import org.uteq.backend.academico.representante.entity.Consentimiento;
+import org.uteq.backend.academico.representante.repository.ConsentimientoRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -25,12 +27,14 @@ public class NotificacionService {
     private final NotificacionRepository notificacionRepository;
     private final RepresentanteEstudianteRepository vinculoRepository;
     private final RepresentanteRepository representanteRepository;
+    private final ConsentimientoRepository consentimientoRepository;
 
     @Transactional
     public void notificarAsistencia(Estudiante estudiante, String estadoAsistencia) {
         sinTumbarElFlujoPrincipal("asistencia", () -> {
             String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
             crearParaCadaRepresentante(estudiante, Tipo.ASISTENCIA,
+                    Consentimiento.ALCANCE_NOTIFICACIONES_ASISTENCIA,
                     nombreCompleto(estudiante) + " marcó asistencia hoy (" + estado + ").");
         });
     }
@@ -39,6 +43,7 @@ public class NotificacionService {
     public void notificarLesion(Estudiante estudiante, String descripcionLesion) {
         sinTumbarElFlujoPrincipal("lesion", () ->
                 crearParaCadaRepresentante(estudiante, Tipo.LESION,
+                        Consentimiento.ALCANCE_NOTIFICACIONES_LESION,
                         "Se registró una lesión para " + nombreCompleto(estudiante) + ": " + descripcionLesion));
     }
 
@@ -76,12 +81,19 @@ public class NotificacionService {
         notificacionRepository.save(notificacion);
     }
 
-    private void crearParaCadaRepresentante(Estudiante estudiante, Tipo tipo, String mensaje) {
+    private void crearParaCadaRepresentante(Estudiante estudiante, Tipo tipo,
+                                            String alcanceRequerido, String mensaje) {
         List<Representante> representantes = vinculoRepository
                 .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())
                 .stream().map(v -> v.getRepresentante()).toList();
 
         for (Representante representante : representantes) {
+            if (!autorizo(representante, estudiante, alcanceRequerido)) {
+                log.info("No se notifica al representante {} sobre el estudiante {}: "
+                                + "no hay consentimiento vigente para {}",
+                        representante.getIdRepresentante(), estudiante.getIdEstudiante(), alcanceRequerido);
+                continue;
+            }
             notificacionRepository.save(Notificacion.builder()
                     .representante(representante)
                     .estudiante(estudiante)
@@ -90,6 +102,20 @@ public class NotificacionService {
                     .leida(false)
                     .build());
         }
+    }
+
+    private boolean autorizo(Representante representante, Estudiante estudiante, String alcance) {
+        Long idR = representante.getIdRepresentante();
+        Long idE = estudiante.getIdEstudiante();
+        return vigente(idR, idE, alcance)
+                || vigente(idR, idE, Consentimiento.ALCANCE_NOTIFICACIONES);
+    }
+
+    private boolean vigente(Long idRepresentante, Long idEstudiante, String alcance) {
+        return consentimientoRepository
+                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                        idRepresentante, idEstudiante, alcance)
+                .isPresent();
     }
 
     private Representante representanteDe(String username) {

@@ -20,6 +20,7 @@ import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.VentanaRendimient
 import org.uteq.backend.deportivo.partido.entity.Partido;
 import org.uteq.backend.deportivo.partido.service.AlineacionService;
 import org.uteq.backend.deportivo.partido.service.ConvocatoriaService;
+import org.uteq.backend.deportivo.partido.service.PartidoService;
 import org.uteq.backend.deportivo.partido.service.ConvocatoriaService.Convocatoria;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
@@ -42,6 +43,7 @@ class AlineacionServiceTest {
     @Mock private PosicionRepository posicionRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private ConvocatoriaService convocatoriaService;
+    @Mock private PartidoService partidoService;
 
     @InjectMocks private AlineacionService servicio;
 

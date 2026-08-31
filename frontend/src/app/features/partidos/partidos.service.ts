@@ -25,6 +25,10 @@ export class PartidosService {
     return this.http.put<Partido>(`${this.apiUrl}/${idPartido}/resultado`, resultado);
   }
 
+  reabrir(idPartido: number): Observable<Partido> {
+    return this.http.post<Partido>(`${this.apiUrl}/${idPartido}/reapertura`, null);
+  }
+
   eliminar(idPartido: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${idPartido}`);
   }

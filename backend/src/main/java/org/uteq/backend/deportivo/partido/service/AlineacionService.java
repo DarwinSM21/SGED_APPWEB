@@ -38,6 +38,7 @@ public class AlineacionService {
     private final PosicionRepository posicionRepository;
     private final LesionRepository lesionRepository;
     private final ConvocatoriaService convocatoriaService;
+    private final PartidoService partidoService;
 
     @Value("${plantilla.titulares:11}")
     private int cupoTitulares;
@@ -54,6 +55,7 @@ public class AlineacionService {
     public AlineacionResponse guardar(Long idPartido, GuardarAlineacionRequest request) {
         Convocatoria convocatoria = convocatoriaService.calcular(idPartido);
         Partido partido = convocatoria.partido();
+        partidoService.exigirAbierto(partido);
         Long idCategoria = partido.getCategoria().getIdCategoria();
 
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
@@ -126,6 +128,7 @@ public class AlineacionService {
 
     @Transactional
     public AlineacionResponse restablecer(Long idPartido) {
+        partidoService.exigirAbierto(convocatoriaService.calcular(idPartido).partido());
         alineacionRepository.findByPartido_IdPartido(idPartido).ifPresent(alineacionRepository::delete);
         return ver(idPartido);
     }
@@ -195,7 +198,8 @@ public class AlineacionService {
         return new AlineacionResponse(
                 p.getIdPartido(), p.getCategoria().getIdCategoria(), p.getCategoria().getNombre(),
                 p.getFecha(), guardada, valoracion, observacion, c.ventana(),
-                titulares, suplentes, disponibles, c.noConvocables(), cupoTitulares);
+                titulares, suplentes, disponibles, c.noConvocables(), cupoTitulares,
+                p.estaCerrado());
     }
 
     private JugadorConvocado sinTitularidad(JugadorConvocado j) {

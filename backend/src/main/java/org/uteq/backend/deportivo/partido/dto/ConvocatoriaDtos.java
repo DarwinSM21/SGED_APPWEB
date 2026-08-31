@@ -42,7 +42,8 @@ public class ConvocatoriaDtos {
             List<JugadorConvocado> suplentes,
             List<JugadorConvocado> disponibles,
             List<NoConvocable> noConvocables,
-            int cupoTitulares
+            int cupoTitulares,
+            boolean cerrado
     ) {}
 
     public record FeedbackAlineacionResponse(

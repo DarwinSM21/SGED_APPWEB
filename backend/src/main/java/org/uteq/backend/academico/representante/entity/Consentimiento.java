@@ -16,6 +16,7 @@ import java.time.OffsetDateTime;
 @Builder
 public class Consentimiento {
     public static final String ALCANCE_INFORMES = "INFORMES";
+    public static final String ALCANCE_NOTIFICACIONES = "NOTIFICACIONES";
     public static final String ALCANCE_NOTIFICACIONES_ASISTENCIA = "NOTIFICACIONES_ASISTENCIA";
     public static final String ALCANCE_NOTIFICACIONES_LESION = "NOTIFICACIONES_LESION";
 

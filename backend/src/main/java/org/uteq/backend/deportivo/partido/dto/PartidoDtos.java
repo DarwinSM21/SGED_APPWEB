@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -44,7 +45,9 @@ public class PartidoDtos {
             String observacion,
             String resultado,
             boolean tieneAlineacion,
-            int titulares
+            int titulares,
+            boolean cerrado,
+            Instant cerradoEn
     ) {}
 
     public record PartidoPageResponse(

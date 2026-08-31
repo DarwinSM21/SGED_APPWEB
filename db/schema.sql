@@ -1111,6 +1111,12 @@ CREATE TABLE IF NOT EXISTS deportivo.partidos (
     goles_contra    SMALLINT,
     observacion     VARCHAR(500),
 
+    -- Un partido cerrado es historia: se consulta, no se edita. Se cierra solo
+    -- al cargar el marcador, y reabrirlo es un acto explicito que queda auditado.
+    cerrado         BOOLEAN NOT NULL DEFAULT FALSE,
+    cerrado_en      TIMESTAMPTZ,
+    cerrado_por_id_usuario BIGINT REFERENCES seguridad.usuarios(id_usuario),
+
     creado_en       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     actualizado_en  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
@@ -1119,7 +1125,12 @@ CREATE TABLE IF NOT EXISTS deportivo.partidos (
     -- O estan los dos goles o no esta ninguno: un marcador a medias -"metimos
     -- 3" sin saber cuantos recibimos- no dice si se gano o se perdio.
     CONSTRAINT chk_partido_marcador_completo
-        CHECK ((goles_favor IS NULL) = (goles_contra IS NULL))
+        CHECK ((goles_favor IS NULL) = (goles_contra IS NULL)),
+    -- No se puede cerrar un partido que todavia no tiene marcador.
+    CONSTRAINT chk_partido_cerrado_con_marcador
+        CHECK (NOT cerrado OR (goles_favor IS NOT NULL AND goles_contra IS NOT NULL)),
+    CONSTRAINT chk_partido_cerrado_con_fecha
+        CHECK (cerrado = (cerrado_en IS NOT NULL))
 );
 
 CREATE INDEX IF NOT EXISTS idx_partido_categoria_fecha

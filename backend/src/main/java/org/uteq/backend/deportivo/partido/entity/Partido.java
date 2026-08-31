@@ -38,6 +38,15 @@ public class Partido {
     @Column(length = 500)
     private String observacion;
 
+    @Column(nullable = false)
+    private Boolean cerrado;
+
+    @Column(name = "cerrado_en")
+    private Instant cerradoEn;
+
+    @Column(name = "cerrado_por_id_usuario")
+    private Long cerradoPorIdUsuario;
+
     @CreationTimestamp
     @Column(name = "creado_en", updatable = false)
     private Instant creadoEn;
@@ -49,5 +58,10 @@ public class Partido {
     @Transient
     public boolean tieneResultado() {
         return golesFavor != null && golesContra != null;
+    }
+
+    @Transient
+    public boolean estaCerrado() {
+        return Boolean.TRUE.equals(cerrado);
     }
 }

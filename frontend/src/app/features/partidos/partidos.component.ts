@@ -9,11 +9,13 @@ import { SesionesService } from '../entrenador/sesiones.service';
 import { CategoriaOpcion } from '../entrenador/sesiones.models';
 import { PartidosService } from './partidos.service';
 import { Partido } from './partidos.models';
+import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
+import { fechaHoraCorta } from '../../core/formato-fecha';
 
 @Component({
   selector: 'app-partidos',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CargandoComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CargandoComponent, ConfirmarAccionComponent],
   template: `
     <div class="pantalla">
       <header class="cabecera">
@@ -108,6 +110,9 @@ import { Partido } from './partidos.models';
                   <span class="badge" [class]="'badge badge--' + colorDe(p.resultado)">
                     {{ etiquetaDe(p) }}
                   </span>
+                  @if (p.cerrado) {
+                    <span class="candado" [title]="'Cerrado el ' + fechaHora(p.cerradoEn!)">Cerrado</span>
+                  }
                 </div>
                 <p class="partido__meta">
                   @if (p.hora) { {{ horaCorta(p.hora) }} · }
@@ -122,9 +127,15 @@ import { Partido } from './partidos.models';
 
               <div class="partido__acciones">
                 <a class="btn btn--ghost btn--sm" [routerLink]="['/partidos', p.idPartido, 'alineacion']">
-                  {{ p.tieneAlineacion ? 'Ver plantilla' : 'Generar plantilla' }}
+                  {{ p.cerrado ? 'Ver lo que pasó' : (p.tieneAlineacion ? 'Ver plantilla' : 'Generar plantilla') }}
                 </a>
-                @if (editandoResultado() === p.idPartido) {
+
+                @if (p.cerrado) {
+                  <app-confirmar-accion etiqueta="Reabrir" [peligrosa]="false"
+                                        pregunta="Vas a poder cambiar el marcador y la plantilla. Queda registrado quién lo reabrió."
+                                        textoConfirmar="Sí, reabrir" enCurso="Reabriendo…"
+                                        [ocupado]="guardando()" (confirmado)="reabrir(p)" />
+                } @else if (editandoResultado() === p.idPartido) {
                   <div class="marcador">
                     <input class="gol" type="number" min="0" max="99" [(ngModel)]="golesFavor"
                            name="gf" aria-label="Goles a favor" />
@@ -132,14 +143,12 @@ import { Partido } from './partidos.models';
                     <input class="gol" type="number" min="0" max="99" [(ngModel)]="golesContra"
                            name="gc" aria-label="Goles en contra" />
                     <button type="button" class="btn btn--primary btn--sm"
-                            [disabled]="guardando()" (click)="guardarResultado(p)">Guardar</button>
+                            [disabled]="guardando()" (click)="guardarResultado(p)">Guardar y cerrar</button>
                     <button type="button" class="btn btn--ghost btn--sm"
                             (click)="editandoResultado.set(null)">✕</button>
                   </div>
                 } @else {
-                  <button type="button" class="btn btn--ghost btn--sm" (click)="editarResultado(p)">
-                    {{ p.resultado === 'PENDIENTE' ? 'Cargar resultado' : 'Corregir resultado' }}
-                  </button>
+                  <button type="button" class="btn btn--ghost btn--sm" (click)="editarResultado(p)">Cargar resultado</button>
                 }
               </div>
             </li>
@@ -189,6 +198,9 @@ import { Partido } from './partidos.models';
     .partido__titulo { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
     .partido__meta { margin-top: .25rem; font-size: .8rem; color: var(--color-text-muted); }
     .partido__acciones { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .candado { font-size: .72rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
+               color: var(--color-text-faint); border: 1px solid var(--color-border); border-radius: 999px;
+               padding: .1rem .5rem; }
     .marcador { display: flex; align-items: center; gap: .3rem; }
     .gol { width: 3rem; padding: .3rem .35rem; text-align: center; font-variant-numeric: tabular-nums;
            border: 1px solid var(--color-border); border-radius: var(--radius-sm);
@@ -208,6 +220,7 @@ export class PartidosComponent implements OnInit {
   readonly categorias = signal<CategoriaOpcion[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
+  readonly fechaHora = fechaHoraCorta;
   readonly guardando = signal(false);
 
   readonly pagina = signal(0);
@@ -293,6 +306,22 @@ export class PartidosComponent implements OnInit {
     this.editandoResultado.set(p.idPartido);
     this.golesFavor = p.golesFavor;
     this.golesContra = p.golesContra;
+  }
+
+  reabrir(p: Partido): void {
+    this.guardando.set(true);
+    this.error.set(null);
+    this.servicio.reabrir(p.idPartido).subscribe({
+      next: (actualizado) => {
+        this.partidos.set(this.partidos().map(
+          (x) => (x.idPartido === actualizado.idPartido ? actualizado : x)));
+        this.guardando.set(false);
+      },
+      error: (e) => {
+        this.guardando.set(false);
+        this.error.set(mensajeDeError(e, 'No se pudo reabrir el partido.'));
+      },
+    });
   }
 
   guardarResultado(p: Partido): void {

@@ -9,7 +9,11 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
 import { mensajeDeError } from '../../core/mensaje-error';
 import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component';
 
-const ALCANCES_SUGERIDOS = ['NOTIFICACIONES'];
+const ALCANCES_SUGERIDOS = [
+  'NOTIFICACIONES',
+  'NOTIFICACIONES_ASISTENCIA',
+  'NOTIFICACIONES_LESION',
+];
 
 interface RepresentanteDelEstudiante {
   idRepresentante: number;
