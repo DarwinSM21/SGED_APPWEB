@@ -937,3 +937,26 @@ automatizada y su evidencia empírica se mantiene en
 
 El seguimiento de las observaciones emitidas por el docente en las entregas
 previas se mantiene en `docs/observaciones/`.
+
+---
+
+## 6. Control de cambios del documento
+
+| Versión | Fecha | Entrega | Cambios principales |
+|---|---|---|---|
+| 1.0 | 2026-05-xx | Entrega 1A | Versión inicial. |
+| 1.1 | 2026-07-15 | Entrega 1B / Tercera | Resuelve OBS-01 y OBS-12; se añaden módulos de catálogos, inventario y dominio deportivo. |
+| 1.2 | 2026-08-24 | Entrega Final (`v1.0.0`) | Reestructuración de paquetes `academico`/`deportivo`/`seguridad`; RF-35 e historial de asistencia; cierre de trazabilidad (matriz de 47 filas). |
+
+## 7. Aprobación
+
+Este documento constituye la especificación de requisitos acordada para la
+Entrega Final del proyecto SGED, cerrada en la etiqueta `v1.0.0` del
+repositorio.
+
+| Rol | Nombre | Firma | Fecha |
+|---|---|---|---|
+| Autor (equipo) | Arcalle Grefa Darwin Orlando | ______________________ | ____________ |
+| Autor (equipo) | Pallo Pinto Alejandro Daniel | ______________________ | ____________ |
+| Autor (equipo) | Velez Lopez Ricardo Elias | ______________________ | ____________ |
+| Docente evaluador | Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. | ______________________ | ____________ |
