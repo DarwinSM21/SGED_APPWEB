@@ -178,36 +178,31 @@ ZAP & \emph{Zed Attack Proxy} (OWASP) \\
 \label{sec:resumen-es}
 
 \textbf{Contexto y problema.} La escuela de fútbol formativo ProFútbol
-gestionaba de forma manual y dispersa la matrícula de sus estudiantes
-menores de edad, el control de asistencia, los pagos y el inventario
-deportivo, sin trazabilidad verificable ni control de acceso a datos
-sensibles. \textbf{Objetivo.} Este trabajo desarrolla y evalúa
-empíricamente SGED, un sistema web que cubre esos cuatro dominios bajo
-una estrategia híbrida de acceso a datos (CRUD sobre ORM más
-procedimientos almacenados parametrizados) y un proceso disciplinado de
-ingeniería de requisitos conforme a ISO/IEC/IEEE~29148:2018.
-\textbf{Métodos.} Se siguió \emph{Design Science Research}
-(Peffers~\emph{et al.}) sobre una arquitectura documentada en C4 (Spring
-Boot~3.2/Java~21, Angular, PostgreSQL~16, Redis~7, Docker Compose), con
-autenticación JWT en cookie \texttt{HttpOnly}. La evaluación empírica
-combina pruebas de carga (k6), auditoría de los seis controles
-OWASP~Top~10 más análisis estático, cobertura de pruebas (JaCoCo),
-calidad web (Lighthouse) y usabilidad percibida (\emph{System Usability
-Scale}, $N=15$), todas archivadas como datos crudos reproducibles.
-\textbf{Resultados principales.} A la fecha de este corte el sistema
-cumple los umbrales de rendimiento (p95 muy por debajo de 200\,ms), los
-seis controles OWASP evidenciados y la cobertura mínima exigida; el
-proceso de medición detectó y corrigió tres instrumentos que producían
-lecturas engañosas, entre ellos una exposición real de datos de
-estudiantes menores de edad (hallazgo H-08, corregido). La usabilidad
-agregada cruza apenas el umbral aceptable, pero esconde un patrón
-bimodal marcado por rol de usuario. \textbf{Conclusiones.} La estrategia
-híbrida de acceso a datos es empíricamente sostenible sin sacrificar
-seguridad, y la disciplina de reportar instrumentos de medición
-defectuosos —en vez de solo sus resultados— es en sí misma un aporte
-metodológico del trabajo. Quedan abiertas líneas de trabajo futuro sobre
-el patrón bimodal de usabilidad y la exposición pública del dominio
-deportivo restante.
+gestionaba manualmente la matrícula de estudiantes menores de edad,
+la asistencia, los pagos y el inventario deportivo, sin trazabilidad
+verificable ni control de acceso a datos sensibles. \textbf{Objetivo.}
+Este trabajo desarrolla y evalúa SGED, un sistema web que cubre esos
+cuatro dominios bajo una estrategia híbrida de acceso a datos (ORM y
+procedimientos almacenados parametrizados) y un proceso de ingeniería
+de requisitos conforme a ISO/IEC/IEEE~29148:2018. \textbf{Métodos.} Se
+siguió \emph{Design Science Research} (Peffers~\emph{et al.}) sobre una
+arquitectura C4 (Spring~Boot, Angular, PostgreSQL, Redis, Docker
+Compose), con autenticación JWT en cookie \texttt{HttpOnly}. La
+evaluación combina pruebas de carga (k6), auditoría de los seis
+controles OWASP~Top~10, cobertura de pruebas (JaCoCo), calidad web
+(Lighthouse) y usabilidad (\emph{System Usability Scale}, $N=15$), con
+datos crudos reproducibles. \textbf{Resultados principales.} El sistema
+cumple los umbrales de rendimiento (p95 bajo 200\,ms), los seis
+controles OWASP y la cobertura exigida; el proceso de medición
+detectó y corrigió tres instrumentos con lecturas engañosas, incluida
+una exposición real de datos de menores de edad (hallazgo H-08,
+corregido). La usabilidad agregada cruza apenas el umbral aceptable,
+pero esconde un patrón bimodal por rol de usuario.
+\textbf{Conclusiones.} La estrategia híbrida de acceso a datos es
+sostenible sin sacrificar seguridad, y reportar instrumentos
+defectuosos —no solo sus resultados— es un aporte metodológico. Queda
+abierto el patrón bimodal de usabilidad y la exposición pública del
+dominio deportivo restante.
 
 \textbf{Palabras clave:} sistemas de gestión escolar deportiva;
 ingeniería de requisitos; validación empírica de software; seguridad de
@@ -222,32 +217,29 @@ reproducibilidad de resultados.
 
 \textbf{Context and problem.} The ProFútbol youth football academy
 managed enrollment of underage students, attendance, payments, and
-sports inventory manually and across disconnected spreadsheets, with no
-verifiable traceability and no access control over sensitive personal
-data. \textbf{Objective.} This work develops and empirically evaluates
-SGED, a web system covering those four domains under a hybrid
-data-access strategy (parametrized ORM CRUD plus stored procedures) and
-a disciplined requirements-engineering process aligned with
+sports inventory manually, with no verifiable traceability and no
+access control over sensitive personal data. \textbf{Objective.} This
+work develops and evaluates SGED, a web system covering those four
+domains under a hybrid data-access strategy (ORM plus parametrized
+stored procedures) and a requirements-engineering process aligned with
 ISO/IEC/IEEE~29148:2018. \textbf{Methods.} The project follows Design
 Science Research (Peffers~\emph{et al.}) over a C4-documented
-architecture (Spring~Boot~3.2/Java~21, Angular, PostgreSQL~16, Redis~7,
-Docker Compose), with JWT authentication carried in an
-\texttt{HttpOnly} cookie. Empirical evaluation combines load testing
-(k6), an audit of the six mandatory OWASP~Top~10 controls plus static
-analysis, automated-test coverage (JaCoCo), web-quality auditing
-(Lighthouse), and perceived usability (System Usability Scale,
-$N=15$), all archived as reproducible raw data. \textbf{Main results.}
-As of this cut, the system meets the performance thresholds (p95 well
-under 200\,ms), evidences all six OWASP controls, and meets the minimum
-required coverage; the measurement process itself uncovered and fixed
-three instruments that were producing misleading readings, including a
-real exposure of underage students' personal data (finding H-08, now
-fixed). Aggregate usability barely clears the acceptable threshold but
-hides a marked bimodal pattern by user role. \textbf{Conclusions.} The
-hybrid data-access strategy is empirically sustainable without
-sacrificing security, and reporting faulty measurement instruments —
-not just their results — is itself a methodological contribution of
-this work. Open future work concerns the bimodal usability pattern and
+architecture (Spring~Boot, Angular, PostgreSQL, Redis, Docker
+Compose), with JWT authentication in an \texttt{HttpOnly} cookie.
+Empirical evaluation combines load testing (k6), an audit of the six
+mandatory OWASP~Top~10 controls, automated-test coverage (JaCoCo),
+web-quality auditing (Lighthouse), and usability (System Usability
+Scale, $N=15$), with reproducible raw data. \textbf{Main results.} The
+system meets the performance thresholds (p95 under 200\,ms), all six
+OWASP controls, and the required coverage; the measurement process
+itself uncovered and fixed three instruments producing misleading
+readings, including a real exposure of underage students' personal
+data (finding H-08, now fixed). Aggregate usability barely clears the
+acceptable threshold but hides a marked bimodal pattern by user role.
+\textbf{Conclusions.} The hybrid data-access strategy is sustainable
+without sacrificing security, and reporting faulty measurement
+instruments — not just their results — is itself a methodological
+contribution. Open work remains on the bimodal usability pattern and
 the public exposure of the remaining sports domain.
 
 \textbf{Keywords:} sports school management systems; requirements
