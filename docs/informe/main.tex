@@ -455,9 +455,11 @@ disperso de casos límite sin cubrir. \texttt{deportivo.lesion.controller}
 también está en 0\,\% (0 de 2). \textbf{Pendiente crítico, cerrado
 después:} se agregaron pruebas para \texttt{PagoController},
 \texttt{PagoService} y \texttt{LesionController}; los tres están hoy en
-100\,\% de \emph{branches}. El estado agregado actual —86,12\,\% de
-líneas, 71,21\,\% de \emph{branches}, con las capas que todavía quedan
-por debajo del umbral— se reporta en la sección~\ref{sec:cobertura}.
+100\,\% de \emph{branches}. El estado agregado de esa corrida
+—86,2\,\% de líneas, 71,2\,\% de \emph{branches}— fue superado después
+por el crecimiento del sistema, como documenta la actualización del
+2026-09-02 más abajo; el estado agregado \emph{actual} se reporta en la
+sección~\ref{sec:cobertura}.
 
 \textbf{Segunda actualización, misma sesión:} se regeneraron también
 rendimiento y seguridad contra el sistema local completo
@@ -516,6 +518,34 @@ código abierto, clasificando sus categorías conceptuales, operaciones
 involucradas y causas raíz~\cite{tiwari2025datetime}. Sus
 dos pruebas hermanas ya protegían el caso simétrico de restar, a esta le
 faltaba el de sumar.
+
+\textbf{Tercera actualización (2026-09-02):} pasar de \texttt{mvn test} a
+\texttt{mvn verify} —el comando real que ejecuta \ruta{ci.yml}, no una
+aproximación local— destapó que la regla de JaCoCo volvía a fallar:
+\textbf{61,16\,\% de \emph{branches}}, por debajo del 70\,\% exigido, y
+\texttt{main} llevaba cuatro \emph{commits} en rojo en GitHub Actions,
+ninguno de ellos de este informe. La causa no fue una regresión de
+prueba sino crecimiento sin cobertura propia: el sistema pasó de 156 a
+\textbf{200 clases} entre el 14 de agosto y hoy —los dominios
+\texttt{partido}/\texttt{alineación}, \texttt{evaluación}, sesión y
+asistencia maduraron, se agregó el módulo \texttt{alerta} completo y un
+segundo proveedor de generación de texto (\texttt{OpenAiFeedbackService})—
+y ese código nuevo llegó sin pruebas propias: 31 clases en cero por
+ciento de líneas, frente a las cinco de la medición anterior. Se
+agregaron 35 pruebas nuevas dirigidas por el ranking real de
+\emph{branches} sin cubrir del propio \texttt{jacoco.csv} —no una
+corrida a ciegas por todo el proyecto—: el dominio \texttt{alerta}
+completo (sin ninguna prueba previa), el segundo proveedor de IA con el
+mismo patrón de degradación limpia que ya cubría al primero,
+\texttt{historial()} de \texttt{SesionEntrenamientoService} (el método
+con más \emph{branches} del servicio y sin ninguna prueba), y las ramas
+de reactivación y unidad de medida en blanco de \texttt{Articulo} y
+\texttt{Representante}. Resultado verificado con \texttt{mvn verify}
+completo, en limpio: \textbf{514 pruebas, 0 fallos}; agregada,
+\textbf{82,87\,\% de líneas} y \textbf{70,06\,\% de \emph{branches}}
+— la regla vuelve a cumplirse, pero con un margen de apenas 0,06 puntos
+sobre el umbral: sigue siendo frágil frente al próximo módulo que se
+agregue sin pruebas propias, no un problema cerrado de forma permanente.
 \end{quote}
 
 La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
@@ -668,6 +698,7 @@ para actuar de forma atómica y eficiente.
 \label{sec:trabajos-relacionados}
 
 \subsection{Estrategia de búsqueda}
+\label{sec:estrategia-busqueda}
 
 Se sigue la orientación metodológica de Kitchenham y
 Charters~\cite{kitchenham2007}, con la reducción de escala que la propia
@@ -2260,17 +2291,24 @@ verifican no solo que el bloqueo ocurra, sino que un fallo posterior
 atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
 —según cómo se implemente— reiniciar el contador y evadir el límite.
 
-\textbf{Estado actual.} El sistema creció después de la primera corrida
-—nuevos módulos de partidos, representantes, consentimientos, entre
-otros— y la suite de pruebas creció con él. Medido con
-\texttt{./mvnw clean test} sobre \texttt{jacoco.csv}
-(\ruta{docs/mediciones/jacoco/}): \textbf{86,12\,\% de cobertura de
-líneas} (1924 de 2234) y \textbf{71,21\,\% de \emph{branches}} (413 de
-580), sobre 156 clases analizadas, con \textbf{479 pruebas} en 64 clases
-de prueba. Cumple el \textbf{70\,\%} que exige \texttt{pom.xml} en
-líneas y en \emph{branches} —el umbral real del proyecto; una
-redacción anterior de este párrafo citaba 60\,\%, que nunca fue el
-valor configurado—.
+\textbf{Estado actual (2026-09-02).} El sistema siguió creciendo después
+de la corrida anterior —el módulo \texttt{alerta} completo, un segundo
+proveedor de generación de texto, y la maduración de partidos,
+alineación, evaluación, sesión y asistencia— y esta vez ese crecimiento
+sí hizo caer la regla de cobertura por debajo del umbral (documentado
+como hallazgo, no ocultado, en la actualización del 2026-09-02 del
+Bloque de Ingeniería de requisitos). Medido con \texttt{./mvnw verify}
+—el comando que exige y hace cumplir el umbral, no solo \texttt{test}—
+sobre \texttt{jacoco.csv} (\ruta{docs/mediciones/jacoco/}):
+\textbf{82,87\,\% de cobertura de líneas} (2583 de 3117) y
+\textbf{70,06\,\% de \emph{branches}} (653 de 932), sobre 200 clases
+analizadas, con \textbf{514 pruebas} en 67 clases de prueba. Cumple el
+\textbf{70\,\%} que exige \texttt{pom.xml} en líneas y en
+\emph{branches} —el umbral real del proyecto; una redacción anterior de
+este párrafo citaba 60\,\%, que nunca fue el valor configurado— pero
+con un margen de apenas 0,06 puntos porcentuales sobre el mínimo de
+\emph{branches}: el próximo módulo que se agregue sin pruebas propias
+puede volver a romperlo.
 
 \begin{table}[htbp]
 \centering
@@ -2280,10 +2318,10 @@ valor configurado—.
 \toprule
 \textbf{Capa} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
 \midrule
-Servicios & 88,91\,\% (1251/1407) & 72,66\,\% (279/384) \\
-Controladores & 85,37\,\% (321/376) & 82,81\,\% (53/64) \\
-Otros (config., seguridad, DTO) & 81,82\,\% (342/418) & 64,04\,\% (73/114) \\
-Entidades & \textbf{30,30\,\% (10/33)} & \textbf{44,44\,\% (8/18)} \\
+Servicios & 85,61\,\% (1886/2203) & 71,67\,\% (506/706) \\
+Controladores & 81,63\,\% (240/294) & 79,41\,\% (27/34) \\
+Otros (config., seguridad, DTO) & 77,62\,\% (444/572) & 64,46\,\% (107/166) \\
+Entidades & \textbf{27,08\,\% (13/48)} & \textbf{50,00\,\% (13/26)} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -2540,7 +2578,7 @@ empírica~\cite{iso25010}.
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
-    pruebas.} Un 86,12\,\% indica qué proporción del código se ejecuta
+    pruebas.} Un 82,87\,\% indica qué proporción del código se ejecuta
     durante la suite, no que las aserciones sean pertinentes —el mismo
     desacople que documentan Imran~\emph{et al.} sobre pruebas de
     rendimiento en sistemas Java de código abierto: alcanzan una
@@ -2982,12 +3020,15 @@ trabajo se resumen así:
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
     p95 de 9,91\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{86,12\,\%} de cobertura de líneas y
-    \textbf{71,21\,\%} de \emph{branches} frente al mínimo de 70\,\%
-    (sección~\ref{sec:cobertura}) — cifra alcanzada después de
-    detectar y corregir una regresión real a 39,8\,\% causada por los
-    recursos nuevos de la reestructuración, no reportando directamente un
-    número cómodo.
+    100/100, y \textbf{82,87\,\%} de cobertura de líneas y
+    \textbf{70,06\,\%} de \emph{branches} frente al mínimo de 70\,\%
+    (sección~\ref{sec:cobertura}) — cifra que cayó dos veces por debajo
+    del umbral a medida que el sistema creció (39,8\,\% tras la
+    reestructuración de paquetes, 61,16\,\% tras agregar el módulo de
+    alertas y un segundo proveedor de IA) y se recuperó las dos veces con
+    pruebas dirigidas al déficit real, no reportando directamente un
+    número cómodo ni ocultando que el margen actual sobre el umbral es de
+    apenas 0,06 puntos.
 
   \item \textbf{Una medición que no se ejecuta contra el sistema real no es
     evidencia.} Es la lección transversal de esta entrega, y aparece tres
