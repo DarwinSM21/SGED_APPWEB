@@ -574,7 +574,39 @@ empíricamente cuatro de forma directa: seguridad (Bloque de controles
 OWASP), eficiencia de desempeño (k6), usabilidad (SUS) y mantenibilidad
 (cobertura de pruebas como indicador indirecto). Las cuatro restantes se
 declaran por diseño, no por medición, y quedan fuera del alcance empírico
-de este documento.
+de este documento. La Tabla~\ref{tab:iso25010} detalla catorce
+escenarios de calidad priorizados, con su estrategia arquitectónica y su
+evidencia verificable; cada fila puede vincularse a la matriz de
+trazabilidad (\ruta{docs/trazabilidad/matriz.csv}) por el número de la
+primera columna.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\caption{Escenarios de calidad ISO/IEC 25010, priorizados y vinculados a la estrategia arquitectónica y a la evidencia reproducible.}
+\label{tab:iso25010}
+\begin{tabular}{@{}p{0.35cm}p{1.9cm}p{2.3cm}p{0.35cm}p{3.6cm}p{3.4cm}p{2.35cm}@{}}
+\toprule
+\textbf{\#} & \textbf{Caract.} & \textbf{Subcaract.} & \textbf{Pr.} & \textbf{Escenario} & \textbf{Estrategia arquitectónica} & \textbf{Evidencia} \\
+\midrule
+1 & Seguridad & Control de acceso & A & Un \texttt{ENTRENADOR} invoca un \emph{endpoint} de administrador → \texttt{403}. & \texttt{@PreAuthorize} por rol, \texttt{fail-closed} por defecto. & \ruta{scripts/\allowbreak audit-owasp.sh} (A01) \\
+2 & Seguridad & Integridad de sesión & A & Un token reutilizado tras \emph{logout} → \texttt{401}. & Cookie \texttt{HttpOnly+\allowbreak Secure+\allowbreak SameSite=\allowbreak Strict} + lista negra en Redis. & \texttt{Redis\allowbreak Blacklist\allowbreak ServiceTest}, \texttt{Jwt\allowbreak ServiceTest} \\
+3 & Seguridad & Confidencialidad de credenciales & A & Volcado de \texttt{seguridad.\allowbreak usuarios} → ninguna contraseña recuperable. & \texttt{BCryptPasswordEncoder} coste 12. & \texttt{Auth\allowbreak ServiceTest} \\
+4 & Seguridad & Resistencia a fuerza bruta & M & Intentos fallidos repetidos sobre una cuenta → bloqueo temporal. & \texttt{LoginAttemptService} + \texttt{429}. & \texttt{Login\allowbreak Attempt\allowbreak ServiceTest} \\
+5 & Eficiencia & Comportamiento temporal & A & 50 usuarios concurrentes sobre un \emph{endpoint} autenticado, 30\,s → p95 $<$ 200\,ms, 0 errores 5xx. & Paginación \emph{server-side} + índices + caché Redis. & \texttt{k6/}, \texttt{scripts/\allowbreak perf-analysis.py} \\
+6 & Eficiencia & Utilización de recursos & M & Un conteo agregado por categoría procesa N registros. & Delegado a procedimiento almacenado, sin bucle N+1 desde la aplicación. & \texttt{db/\allowbreak procs/}, \texttt{scripts/\allowbreak audit-\allowbreak sql-\allowbreak dynamic.sh} \\
+7 & Fiabilidad & Disponibilidad & A & Se reinicia \texttt{postgres} o \texttt{redis} → \texttt{backend} espera a que reporten \texttt{healthy}. & \texttt{healthcheck} + \texttt{depends\_on} en \texttt{docker-compose.yml}. & \texttt{docker-\allowbreak compose.yml} \\
+8 & Fiabilidad & Tolerancia a fallos & M & Un recurso inexistente o datos inválidos → cuerpo \emph{Problem Detail} (RFC~9457), nunca una traza cruda. & \texttt{Global\allowbreak Exception\allowbreak Handler} centralizado. & \texttt{common/\allowbreak exception/} \\
+9 & Mantenibilidad & Modularidad & A & Se agrega el dominio \texttt{deportivo.\allowbreak partido} (convocatoria, alineación) sin modificar \texttt{academico.\allowbreak estudiante}. & Organización por dominio, capas Controlador→\allowbreak Servicio→\allowbreak Repositorio desacopladas. & \ruta{backend/\allowbreak src/\allowbreak main/\allowbreak java/\allowbreak org/\allowbreak uteq/\allowbreak backend/} \\
+10 & Mantenibilidad & Capacidad de prueba & A & \texttt{mvn clean test} sobre el commit de cierre → la cobertura no baja del umbral. & \emph{Quality gate} JaCoCo (\texttt{COVEREDRATIO} $\geq$ 0,70) en \texttt{pom.xml}. & sección~\ref{sec:cobertura} \\
+11 & Compatibilidad & Interopera\-bilidad & M & Un tercero con acceso al repositorio integra la API sin leer el código fuente. & Especificación OpenAPI generada por Springdoc y colección Postman versionada; la interfaz interactiva se mantiene apagada en el ambiente público por la vulnerabilidad de terceros descrita en la sección de seguridad. & \ruta{docs/\allowbreak postman/\allowbreak coleccion.json} \\
+12 & Portabilidad & Instalabilidad & A & Clonación limpia con Docker y \texttt{make} → sistema operativo en pocos minutos. & Imágenes Docker pinadas por \emph{digest} SHA-256 + \texttt{Makefile} + \ruta{db/\allowbreak schema.sql} en \texttt{initdb.d}. & \texttt{README.md}, \texttt{scripts/\allowbreak pin-digests.sh} \\
+13 & Usabilidad & Satisfacción & A & Usuarios reales completan tareas guiadas y responden SUS ($N=15$). & Flujos guiados por rol, mensajes de error accionables (RFC~9457). & sección~\ref{sec:sus} \\
+14 & Funcionalidad & Corrección funcional & A & Se intenta alinear un duodécimo titular en un partido → la operación se rechaza. & Regla de negocio validada en el servicio antes de persistir, no solo en el formulario. & \texttt{Alineacion\allowbreak ServiceTest.\allowbreak tope\allowbreak De\allowbreak Once\allowbreak Titulares} \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Arquitecturas orientadas a recursos (REST)}
 
