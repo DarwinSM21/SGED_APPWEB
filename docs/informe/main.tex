@@ -41,6 +41,7 @@
   captionpos=b
 }
 \lstset{style=codigo}
+\renewcommand{\lstlistingname}{Listado}
 
 \hypersetup{
   colorlinks=true,
@@ -381,7 +382,9 @@ reproducible de sus atributos de calidad.
 
 \subsection{Organización del documento}
 
-El Capítulo~\ref{sec:marco-teorico} presenta los fundamentos conceptuales
+Tras enumerar las contribuciones (sección~\ref{sec:contribuciones}), el
+resto del documento se organiza así. El
+Capítulo~\ref{sec:marco-teorico} presenta los fundamentos conceptuales
 del trabajo. El Capítulo~\ref{sec:trabajos-relacionados} sitúa a SGED
 frente a sistemas comparables y declara la brecha que este trabajo cubre.
 El Capítulo~\ref{sec:ingenieria-requisitos} documenta el proceso completo
@@ -391,14 +394,20 @@ observaciones acumuladas y una decisión estructural relevante del
 código. El Capítulo~\ref{sec:arquitectura} describe el diseño del sistema
 y la sección~\ref{sec:acceso-datos} profundiza en la estrategia híbrida
 de acceso a datos con listados de código representativos. El
+Capítulo~\ref{sec:implementacion} documenta las decisiones de código que
+no se derivan directamente del diagrama de arquitectura. El
 Capítulo~\ref{sec:protocolo} declara el protocolo experimental antes de
 que el Capítulo~\ref{sec:evaluacion} presente los resultados. Los
-capítulos finales —Reproducibilidad, Amenazas a la validez, ética,
-CRediT, Discusión, Trabajo futuro y Conclusiones— cierran el documento
+capítulos finales —Reproducibilidad, Amenazas a la validez
+(sección~\ref{sec:amenazas}), ética, CRediT, Discusión, Trabajo futuro
+(sección~\ref{sec:trabajo-futuro}) y Conclusiones— cierran el documento
 con la interpretación crítica y las declaraciones obligatorias exigidas
-por la Entrega Final.
+por la Entrega Final (sección~\ref{sec:declaraciones}).
 
 \subsection{Pila tecnológica}
+
+La Tabla~\ref{tab:pila-tecnologica} resume la pila tecnológica de SGED
+por capa; el Capítulo~\ref{sec:arquitectura} justifica cada elección.
 
 \begin{table}[htbp]
 \centering
@@ -734,10 +743,10 @@ pares o un informe de coursework redistribuido.
 \label{fig:prisma}
 \end{figure}
 
-Los conteos son una reconstrucción honesta del registro de búsqueda del
-equipo, no el resultado de una herramienta de gestión bibliográfica
-formal (Rayyan, Covidence) — coherente con la reducción de escala que
-esta sección declaró al principio.
+Los conteos de la Figura~\ref{fig:prisma} son una reconstrucción honesta
+del registro de búsqueda del equipo, no el resultado de una herramienta
+de gestión bibliográfica formal (Rayyan, Covidence) — coherente con la
+reducción de escala que esta sección declaró al principio.
 
 \subsection{Síntesis comparativa}
 
@@ -802,7 +811,8 @@ Siguiendo la técnica de \emph{stakeholder onion} de
 Robertson~\cite{iso29148}\footnote{Referencia de marco general; el SRS del
 proyecto no documenta todavía una sesión de identificación de
 \emph{stakeholders} formal y separada — ver el señalamiento honesto en la
-subsección siguiente.}, los interesados se organizan en tres anillos:
+subsección siguiente.}, los interesados se organizan en tres anillos
+(Tabla~\ref{tab:stakeholders}):
 
 \begin{table}[htbp]
 \centering
@@ -892,7 +902,7 @@ Won't (esta entrega, declarado) & 2 & RF-11b, módulo equipo/partido \\
 \end{tabular}
 \end{table}
 
-\textbf{Hallazgo:} seis requisitos del módulo deportivo (RF-17 a RF-22,
+\textbf{Hallazgo} (Tabla~\ref{tab:moscow})\textbf{:} seis requisitos del módulo deportivo (RF-17 a RF-22,
 los más recientes — implementados entre el 2026-08-09 y el 2026-08-13) no
 tienen todavía un campo \texttt{Prioridad:} explícito en el SRS, a
 diferencia de los 25 restantes. Es un defecto de forma menor y de
@@ -997,6 +1007,9 @@ Cifra que debe leerse con la salvedad anterior: mide solo el 71\,\%
 que el changelog registra hoy.
 
 \subsection{Métricas de calidad de requisitos}
+
+La Tabla~\ref{tab:metricas-requisitos} cuantifica el estado del corpus
+de requisitos descrito en las subsecciones anteriores.
 
 \begin{table}[htbp]
 \centering
@@ -1217,12 +1230,13 @@ el código no es evidencia, es motivo de observación.
 \subsection{Vista de contexto (C4 nivel 1)}
 \label{sec:c4n1}
 
-El nivel 1 sitúa el sistema frente a sus actores humanos y sus dos
-dependencias externas (proveedor de correo para notificaciones y, en
-producción, el proveedor de TLS). Es el nivel con menor tasa de cambio de
-los tres: no se ha modificado desde la Entrega 1A porque los actores y
-las fronteras del sistema no cambiaron con la reestructuración en
-dominios de la sección~\ref{sec:reestructuracion}, solo su interior.
+El nivel 1 (Figura~\ref{fig:c4-l1}) sitúa el sistema frente a sus actores
+humanos y sus dos dependencias externas (proveedor de correo para
+notificaciones y, en producción, el proveedor de TLS). Es el nivel con
+menor tasa de cambio de los tres: no se ha modificado desde la Entrega 1A
+porque los actores y las fronteras del sistema no cambiaron con la
+reestructuración en dominios de la sección~\ref{sec:reestructuracion},
+solo su interior.
 
 \begin{figure}[htbp]
 \centering
@@ -1257,7 +1271,7 @@ dominios de la sección~\ref{sec:reestructuracion}, solo su interior.
 El diagrama anterior es una simplificación didáctica de los cinco
 contenedores reales; el diagrama C4 nivel 2 generado directamente desde
 \ruta{workspace.dsl} —la fuente de verdad, no esta figura— es el
-siguiente:
+siguiente (Figura~\ref{fig:c4-l2}):
 
 \begin{figure}[htbp]
 \centering
@@ -1286,8 +1300,10 @@ garantizan que al menos una esté equivocada.
 \subsection{Vista de componentes (C4 nivel 3)}
 \label{sec:c4n3}
 
-El nivel 3 es el que hace visible la reestructuración descrita en la
-sección~\ref{sec:reestructuracion}: los veinte componentes del contenedor
+A diferencia de los niveles 1 (sección~\ref{sec:c4n1}) y 2
+(sección~\ref{sec:c4n2}) anteriores, el nivel 3 es el que hace visible la
+reestructuración descrita en la sección~\ref{sec:reestructuracion}: los
+veinte componentes del contenedor
 \emph{API Spring Boot} agrupados por dominio. Cada controlador delega en un
 servicio, cada servicio accede a datos por un repositorio JPA, y ningún
 controlador toca un repositorio directamente — la disciplina de capas es
@@ -1300,7 +1316,8 @@ verificable en el diagrama, no solo declarada en el texto.
 \label{fig:c4-l3}
 \end{figure}
 
-Dos detalles del diagrama merecen lectura explícita. Primero,
+Dos detalles del diagrama de la Figura~\ref{fig:c4-l3} merecen lectura
+explícita. Primero,
 \texttt{EstudianteRepository} es el único repositorio que invoca
 procedimientos almacenados (sección~\ref{sec:acceso-datos}): el resto usa
 Spring Data JPA puro, que es exactamente el reparto que exige la estrategia
@@ -1314,11 +1331,12 @@ que conviene tener dibujado antes de que crezca.
 \label{sec:jwt-cookie}
 
 El sistema emite el JWT~\cite{rfc7519} exclusivamente en una cookie
-\texttt{HttpOnly}, \texttt{Secure} y \texttt{SameSite=Strict}. El token nunca
+\texttt{HttpOnly}, \texttt{Secure} y \texttt{SameSite=Strict}
+(Listado~\ref{lst:cookie-sesion}). El token nunca
 viaja en el cuerpo de la respuesta ni se almacena en \texttt{localStorage},
 de modo que un ataque de \emph{scripting} entre sitios no puede leerlo.
 
-\begin{lstlisting}[caption={Emisión de la cookie de sesión (\ruta{AuthController.java})}]
+\begin{lstlisting}[caption={Emisión de la cookie de sesión (\ruta{AuthController.java})},label={lst:cookie-sesion}]
 ResponseCookie.from("sged_access", token)
         .httpOnly(true)
         .secure(cookieSecure)
@@ -1340,7 +1358,7 @@ inmediatamente, aunque su firma siga siendo válida.
 
 El Bloque~A.2 de la guía exige una separación explícita entre lo que resuelve
 el ORM y lo que debe resolver el motor de base de datos. La regla adoptada
-es:
+es (Tabla~\ref{tab:reparto-orm-sp}):
 
 \begin{table}[htbp]
 \centering
@@ -1363,7 +1381,7 @@ por cada categoría funcional que exige el Bloque~A.2.1 de la Entrega
 Final. Todos están versionados en \ruta{db/procs/}, creados por
 migración Flyway~\cite{flyway} (\texttt{V5}, \texttt{V6}, \texttt{V11},
 \texttt{V15}) y catalogados en \ruta{docs/basedatos/CATALOGO-SP.md}, que
-es la fuente de verdad que esta tabla resume:
+es la fuente de verdad que la Tabla~\ref{tab:procs} resume:
 
 \begin{table}[htbp]
 \centering
@@ -1397,9 +1415,10 @@ La migración \texttt{V6} los convierte en \texttt{PROCEDURE} con parámetro de
 salida. Se documenta porque ilustra la diferencia entre «el procedimiento
 existe» y «el procedimiento se invoca de verdad»: en la versión anterior el
 objeto SQL estaba creado pero quedaba huérfano, y la aplicación seguía
-contando en memoria.
+contando en memoria. La invocación correcta
+(Listado~\ref{lst:invocacion-sp}):
 
-\begin{lstlisting}[caption={Invocación real desde el repositorio (\ruta{academico/estudiante/repository/EstudianteRepository.java})}]
+\begin{lstlisting}[caption={Invocación real desde el repositorio (\ruta{academico/estudiante/repository/EstudianteRepository.java})},label={lst:invocacion-sp}]
 @Procedure(procedureName = "academico.sp_contar_estudiantes_activos")
 Long contarEstudiantesActivosPorCategoria(@Param("p_categoria") Long idCategoria);
 \end{lstlisting}
@@ -1444,9 +1463,9 @@ dominios se detecta en tiempo de compilación.
 
 Todas las respuestas de error del \emph{backend} siguen el formato
 \emph{Problem Detail} de la RFC~9457~\cite{rfc9457}, centralizado en un
-único punto de la capa web:
+único punto de la capa web (Listado~\ref{lst:exception-handler}):
 
-\begin{lstlisting}[language=Java,caption={Manejador global de excepciones (\ruta{backend/.../common/exception/GlobalExceptionHandler.java})}]
+\begin{lstlisting}[language=Java,caption={Manejador global de excepciones (\ruta{backend/.../common/exception/GlobalExceptionHandler.java})},label={lst:exception-handler}]
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -1471,9 +1490,10 @@ pagos, inventario) no requirió tocar este archivo.
 
 El interceptor HTTP de Angular no lee ni adjunta el JWT manualmente — es
 la cookie \texttt{HttpOnly} (sección~\ref{sec:jwt-cookie}) la que viaja
-automáticamente con cada petición del mismo origen:
+automáticamente con cada petición del mismo origen
+(Listado~\ref{lst:auth-interceptor}):
 
-\begin{lstlisting}[caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})}]
+\begin{lstlisting}[caption={Interceptor de autenticación (\ruta{frontend/src/app/auth/auth.interceptor.ts})},label={lst:auth-interceptor}]
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req.clone({ withCredentials: true }));
 };
@@ -1633,7 +1653,7 @@ ruta REST, y son el objetivo declarado de la Entrega Final.
 \subsection{Modelo de datos}
 
 El esquema se divide en dos espacios de nombres con responsabilidades
-separadas:
+separadas (Tabla~\ref{tab:esquemas}):
 
 \begin{table}[htbp]
 \centering
@@ -1684,7 +1704,8 @@ falla al arrancar si el esquema real y las entidades divergen.
 Todas las mediciones de este informe se generaron ejecutando el sistema real
 levantado con \texttt{make up}, no en simulación, y sus artefactos crudos
 están versionados sin edición manual. Este capítulo declara el enfoque
-metodológico, los instrumentos y el procedimiento antes de presentar los
+metodológico (sección~\ref{sec:dsr}), los instrumentos
+(sección~\ref{sec:instrumentos}) y el procedimiento antes de presentar los
 resultados (Capítulo~\ref{sec:evaluacion}), para que un tercero pueda
 repetirlos y obtener cifras comparables.
 
@@ -1730,6 +1751,9 @@ el propio modelo de Peffers admite entre sus actividades.
 \subsection{Instrumentos de medición}
 \label{sec:instrumentos}
 
+La Tabla~\ref{tab:instrumentos} enumera el instrumento y la
+configuración exacta usados en cada bloque de evaluación.
+
 \begin{table}[htbp]
 \centering
 \caption{Instrumentos de medición usados en la evaluación empírica.}
@@ -1751,8 +1775,8 @@ Usabilidad & SUS (Brooke) & Cuestionario de 10 ítems sin modificación~\cite{br
 \label{sec:gqm}
 
 Las métricas del sistema se alinean con el marco \emph{Goal-Question-Metric}
-de Basili~\emph{et al.}~\cite{basili1994gqm}. Se presenta un GQM completo,
-correspondiente a RQ1 (sección~\ref{sec:rqs}):
+de Basili~\emph{et al.}~\cite{basili1994gqm}. Se presenta un GQM completo
+(Tabla~\ref{tab:gqm}), correspondiente a RQ1 (sección~\ref{sec:rqs}):
 
 \begin{table}[htbp]
 \centering
@@ -1820,6 +1844,9 @@ regeneren las cinco corridas independientes que exige el Bloque~A.1.
 
 \subsection{Entorno de ejecución}
 
+La Tabla~\ref{tab:entorno} fija el entorno exacto en el que se
+generaron todas las mediciones de este capítulo.
+
 \begin{table}[htbp]
 \centering
 \caption{Entorno de ejecución de las mediciones.}
@@ -1844,6 +1871,10 @@ una versión previa y el \emph{backend} no arranca. Toda medición reportada
 aquí parte de volumen limpio.
 
 \subsection{Procedimiento por bloque}
+
+La Tabla~\ref{tab:procedimiento-bloque} detalla, para cada bloque del
+enfoque GQM (sección~\ref{sec:gqm}), la herramienta y el procedimiento
+de control de variabilidad aplicados.
 
 \begin{table}[htbp]
 \centering
@@ -1900,7 +1931,8 @@ metodológico de Georges~\emph{et al.}: una única ejecución de un sistema
 sobre JVM no caracteriza su rendimiento, porque la variación entre
 corridas puede ser del mismo orden que la diferencia que se pretende
 reportar, y sin estadística de intervalos no hay forma de distinguir una
-de otra~\cite{georges2007benchmarking}. Los resultados:
+de otra~\cite{georges2007benchmarking}. Los resultados
+(Tabla~\ref{tab:k6-resultados}):
 
 \begin{table}[htbp]
 \centering
@@ -1921,7 +1953,8 @@ de otra~\cite{georges2007benchmarking}. Los resultados:
 \end{tabular}
 \end{table}
 
-Con intervalo de confianza al 95\,\%: media $7{,}02 \pm 0{,}10$\,ms
+Con intervalo de confianza al 95\,\% —siguiendo el análisis declarado a
+priori (sección~\ref{sec:analisis-estadistico})—: media $7{,}02 \pm 0{,}10$\,ms
 (DT $0{,}08$), p95 $9{,}91 \pm 0{,}25$\,ms, throughput
 $381{,}12 \pm 64{,}71$\,RPS. La corrida~4 registró 2 peticiones fallidas
 de 15\,921 (0,01\,\%) — el umbral estricto \texttt{rate==0} del
@@ -1938,7 +1971,8 @@ resultado lo cumple con un margen de más de un orden de magnitud. \ok
 \subsection{Seguridad: OWASP Top 10 (Bloque C.4)}
 
 Seis controles verificados con peticiones reales contra el sistema en
-ejecución~\cite{owasp2021}:
+ejecución~\cite{owasp2021} (Tabla~\ref{tab:owasp}), complementados por
+análisis estático y escaneo automático (sección~\ref{sec:zap-spotbugs}):
 
 \begin{table}[htbp]
 \centering
@@ -1959,9 +1993,10 @@ A09 Registro y monitoreo & \ok & \texttt{AUTH\_LOGIN\_OK/FAIL} con IP, marca de 
 \end{table}
 
 Los errores se devuelven como \texttt{ProblemDetail}~\cite{rfc9457}, sin
-trazas de pila ni detalles internos. Ejemplo real capturado para A07:
+trazas de pila ni detalles internos. Ejemplo real capturado para A07
+(Listado~\ref{lst:respuesta-429}):
 
-\begin{lstlisting}[caption={Respuesta al sexto intento de autenticación}]
+\begin{lstlisting}[caption={Respuesta al sexto intento de autenticación},label={lst:respuesta-429}]
 HTTP/1.1 429
 Content-Type: application/problem+json
 {
@@ -2030,7 +2065,7 @@ sin que nada lo detectara, porque las pruebas de esos controladores usan
 filtros de Spring Security: verifican el mapeo HTTP, no la autorización.
 
 La corrección no aplica una regla uniforme, sino una por recurso según el
-dato que maneja:
+dato que maneja (Tabla~\ref{tab:acceso-por-recurso}):
 
 \begin{table}[htbp]
 \centering
@@ -2168,7 +2203,9 @@ décimas, y ese es justamente el punto: una evidencia de cobertura que
 incluye código inexistente no es evidencia válida \emph{aunque} el
 porcentaje salga parecido, porque nada garantiza que la próxima vez la
 distorsión sea igual de pequeña. Para que el defecto no pueda repetirse,
-el objetivo \texttt{make test} pasó a ejecutar \texttt{clean test}.
+el objetivo \texttt{make test} pasó a ejecutar \texttt{clean test}. La
+Tabla~\ref{tab:pruebas-junit} detalla esa primera corrida clase por
+clase.
 
 \begin{table}[htbp]
 \centering
@@ -2251,7 +2288,8 @@ Entidades & \textbf{30,30\,\% (10/33)} & \textbf{44,44\,\% (8/18)} \\
 \end{tabular}
 \end{table}
 
-La capa que queda por debajo del umbral es la de entidades: la mayoría
+Según la Tabla~\ref{tab:cobertura-por-capa}, la capa que queda por
+debajo del umbral es la de entidades: la mayoría
 de sus líneas son \emph{getters}/\emph{setters} generados por Lombok que
 JaCoCo cuenta igual que código de negocio, y las pruebas de servicio y
 controlador ejercitan esos métodos de forma indirecta sin que JaCoCo lo
@@ -2270,7 +2308,7 @@ Seis corridas independientes, tres por perfil (Lighthouse v13.4.1),
 regeneradas el 2026-08-14 contra \texttt{https://localhost:8443}
 —cumple el mínimo de tres corridas por perfil (móvil y escritorio) que
 exige el Bloque~A.1; la Tercera Entrega solo había cubierto el perfil
-móvil—:
+móvil— (Tabla~\ref{tab:lighthouse}):
 
 \begin{table}[htbp]
 \centering
@@ -2357,7 +2395,8 @@ de diez participantes, y su aritmética quedó verificada contra los cuatro
 casos de referencia de la literatura (0, 50, 75 y 100 puntos) antes de
 usarlo con datos reales.
 
-\textbf{Aplicado a 15 participantes} en dos tandas (2026-07-30 y
+\textbf{Aplicado a 15 participantes} de la muestra descrita en la
+sección~\ref{sec:muestreo}, en dos tandas (2026-07-30 y
 2026-08-18; formularios en papel, transcritos a
 \ruta{docs/mediciones/sus/respuestas.csv} sin registrar nombres, solo
 un código de participante y su perfil): 4 entrenadores, 4 estudiantes,
@@ -2387,14 +2426,16 @@ Grado & C --- Aceptable \\
 \end{tabular}
 \end{table}
 
-La media cruza el umbral de 68 por 1,33 puntos y el intervalo de confianza
+Según la Tabla~\ref{tab:sus-agregado}, la media cruza el umbral de 68
+por 1,33 puntos y el intervalo de confianza
 todavía incluye valores por debajo de ese umbral: con esta muestra la
 afirmación defendible es que la mejor estimación puntual está por encima de
 68, no que el sistema lo supere con confianza estadística. No se presenta
 como un resultado cómodo.
 
 \textbf{El hallazgo más informativo no es la media, es su distribución
-bimodal por perfil}, que la agregación esconde:
+bimodal por perfil} (Tabla~\ref{tab:sus-perfil}), que la agregación
+esconde:
 
 \begin{table}[htbp]
 \centering
@@ -2448,14 +2489,18 @@ comando, siguiendo la misma motivación que documentan Cito y Gall para
 usar contenedores como mecanismo de reproducibilidad en investigación
 de ingeniería de software: encapsular las suposiciones y dependencias
 que de otro modo quedan como conocimiento tácito del
-equipo~\cite{citogall2016docker}:
+equipo~\cite{citogall2016docker} (Listado~\ref{lst:arranque-reproducible}):
 
-\begin{lstlisting}[language=bash,caption={Arranque reproducible}]
+\begin{lstlisting}[language=bash,caption={Arranque reproducible},label={lst:arranque-reproducible}]
 git clone https://github.com/DarwinSM21/SGED_APPWEB.git
 cd SGED_APPWEB
 cp .env.example .env
 make up
 \end{lstlisting}
+
+El mismo \texttt{Makefile} expone, además del arranque, los objetivos
+que reproducen cada bloque de evidencia de este informe
+(Tabla~\ref{tab:makefile-objetivos}):
 
 \begin{table}[htbp]
 \centering
@@ -2687,7 +2732,8 @@ Los roles siguientes no son autodeclarados: se derivan del historial de
 --numstat} sobre la rama \texttt{main} y separan lo \emph{escrito} de lo
 \emph{generado} (reportes de JaCoCo y Lighthouse, salidas crudas de k6,
 \texttt{package-lock.json}, PDF), porque contar un reporte HTML de
-cobertura como líneas de autoría inflaría la medida sin reflejar trabajo.
+cobertura como líneas de autoría inflaría la medida sin reflejar trabajo
+(Tabla~\ref{tab:credit-cifras}).
 
 \begin{table}[htbp]
 \centering
@@ -2928,6 +2974,10 @@ y \ruta{VERSIONING.md} ya declaran abiertos.
 % ============================================================
 \section{Conclusiones}
 
+Retomando lo declarado en el resumen (sección~\ref{sec:resumen-es}) y en
+el \emph{abstract} (sección~\ref{sec:resumen-en}), los hallazgos de este
+trabajo se resumen así:
+
 \begin{enumerate}[leftmargin=*]
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
     p95 de 9,91\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
@@ -3013,7 +3063,8 @@ de mediciones en Zenodo con DOI propio y licencia Creative Commons
 Attribution~4.0, distinto del DOI del software, que exige el Bloque~D.3.
 
 \textbf{Disponibilidad de materiales.} Colección Postman
-(\ruta{docs/postman/coleccion.json}, 32 peticiones), \emph{scripts} de
+(\ruta{docs/postman/coleccion.json}, 32 peticiones, que cubre el catálogo
+de la API de la sección~\ref{sec:catalogo-api}), \emph{scripts} de
 carga k6 (\ruta{k6/}), configuración Lighthouse
 (\ruta{lighthouserc.js}), instrumento y protocolo SUS
 (\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}), plantilla de
@@ -3047,7 +3098,10 @@ Es un Proyecto Fin de Curso de la asignatura Aplicaciones Web,
 desarrollado como requisito académico de la Universidad Técnica Estatal
 de Quevedo, sin patrocinio de terceros.
 
-\textbf{Uso de asistentes de inteligencia artificial.} Siguiendo la
+\textbf{Uso de asistentes de inteligencia artificial.} Distinto del uso
+de un modelo de lenguaje como funcionalidad del propio sistema
+(sección~\ref{sec:ia-feedback}), este apartado declara el uso de IA
+generativa en el \emph{proceso} de construir el proyecto. Siguiendo la
 guía de transparencia del SWEBOK v4.0~\cite{swebok2024}, el equipo
 declara el uso de un asistente de IA generativa (Claude, de Anthropic)
 como herramienta de apoyo en revisión y corrección de código de
