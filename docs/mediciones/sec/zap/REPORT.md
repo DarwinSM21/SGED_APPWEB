@@ -1,7 +1,7 @@
 # Escaneo OWASP ZAP baseline (Bloque A.1)
 
 - Fecha: 2026-09-02
-- Commit: PENDIENTE-DE-COMMIT
+- Commit: 0fc8b69
 - Herramienta: OWASP ZAP (imagen `ghcr.io/zaproxy/zaproxy:stable`), plan de
   automatización versionado en `zap.yaml` (pasivo, sin ataques activos —
   apropiado para un escaneo automatizado de rutina, no un pentest completo)
