@@ -1,7 +1,7 @@
 # Reporte de calidad web — Lighthouse (Bloque C.5 / A.1)
 
 - **Fecha:** 2026-08-14
-- **Commit base:** `35188d4`
+- **Commit base:** `73d5114`
 - **Herramienta:** Lighthouse v13.4.1 (CLI), conectado a un Chrome
   124 sin cabeza corriendo en contenedor Docker (`zenika/alpine-chrome`),
   ya que este entorno de ejecución no tiene un navegador local instalable.

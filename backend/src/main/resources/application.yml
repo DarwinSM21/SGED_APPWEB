@@ -123,9 +123,11 @@ cache:
 springdoc:
   api-docs:
     path: /api/docs.json
+    enabled: ${SPRINGDOC_ENABLED:true}
   swagger-ui:
     path: /api/docs
     operationsSorter: method
+    enabled: ${SPRINGDOC_ENABLED:true}
 
 management:
   endpoints:

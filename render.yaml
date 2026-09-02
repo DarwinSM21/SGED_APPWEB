@@ -57,6 +57,26 @@ services:
       - key: SERVER_PORT
         value: "8080"
 
+      # Sin esto el backend cae al valor por defecto de SecurityConfig, que
+      # solo trae los localhost de desarrollo: el navegador nunca llega
+      # directo a sged-backend.onrender.com salvo prueba manual, porque la
+      # reescritura /api/* del sitio estatico lo hace del lado del servidor
+      # y ahi CORS no aplica -pero declarar el origen real es lo correcto
+      # para esa prueba manual y para no depender de ese detalle de Render.
+      # Sin comodin: *.onrender.com habilitaria credenciales cruzadas desde
+      # cualquier otro servicio de Render, no solo el propio.
+      - key: CORS_ALLOWED_ORIGIN_PATTERNS
+        value: "https://sged-frontend.onrender.com"
+
+      # springdoc 2.3.0 empaqueta una copia vieja de Swagger UI con DOMPurify
+      # 3.0.6, que ZAP marca como "Vulnerable JS Library" (severidad alta).
+      # La UI interactiva no la necesita nadie en el ambiente publico -no es
+      # un requisito de la guia-, asi que se apaga ahi en vez de esperar a
+      # que springdoc actualice su bundle. Sigue disponible en local
+      # (application.yml la deja encendida por defecto).
+      - key: SPRINGDOC_ENABLED
+        value: "false"
+
       # Redis por la red privada del workspace: no sale a internet, por eso
       # sin TLS.
       - key: REDIS_HOST

@@ -27,6 +27,29 @@ IMPARES = ["p1", "p3", "p5", "p7", "p9"]   # polaridad positiva
 PARES = ["p2", "p4", "p6", "p8", "p10"]    # polaridad negativa
 TAREAS = ["t1", "t2", "t3", "t4", "t5", "t6", "t7"]
 
+# t de Student, dos colas, alfa=0.05 (t_{0.975, gl}), por grados de libertad
+# n-1. Con una muestra de este tamano usar 1.96 -el valor de la normal, valido
+# solo cuando gl es grande- ensancha el intervalo menos de lo que corresponde.
+# No hay scipy en este entorno; esta es la tabla estandar de cualquier texto
+# de estadistica, verificable termino a termino contra ella. Mas alla de
+# gl=30 la diferencia con 1.96 es menor al 1 %, así que ahí se usa la normal.
+T_CRITICO_95 = {
+    1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571,
+    6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+    11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131,
+    16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086,
+    21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060,
+    26: 2.056, 27: 2.052, 28: 2.048, 29: 2.045, 30: 2.042,
+}
+
+
+def t_critico(grados_libertad):
+    if grados_libertad in T_CRITICO_95:
+        return T_CRITICO_95[grados_libertad]
+    if grados_libertad > 30:
+        return 1.960
+    return T_CRITICO_95[1]  # gl=0 no deberia ocurrir; MINIMO_PARTICIPANTES=10 lo evita
+
 
 def commit_corto():
     try:
@@ -97,7 +120,7 @@ def main():
     media = sum(puntuaciones) / n
     varianza = sum((x - media) ** 2 for x in puntuaciones) / (n - 1)
     dt = math.sqrt(varianza)
-    ic95 = 1.96 * dt / math.sqrt(n)
+    ic95 = t_critico(n - 1) * dt / math.sqrt(n)
 
     ordenadas = sorted(puntuaciones)
     if n % 2:

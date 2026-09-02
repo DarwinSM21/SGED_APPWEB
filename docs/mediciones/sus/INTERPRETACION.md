@@ -9,8 +9,12 @@ respuestas, hay que actualizarlos a mano.
 ## Resultado agregado
 
 Con 15 participantes externos, la media SUS es **69,33** (IC 95 %
-59,77 – 78,89; DT 18,89; mediana 70,00), grado **C (Aceptable)** en la escala
+58,87 – 79,79; DT 18,89; mediana 70,00), grado **C (Aceptable)** en la escala
 adjetival de Bangor, Kortum y Miller (2009).
+
+El intervalo se calcula con la t de Student (2,145 para 14 grados de
+libertad), no con 1,96: con una muestra de 15 la aproximación normal
+subestima la incertidumbre real.
 
 La media cruza el umbral de 68 por 1,33 puntos. No se reporta como un
 aprobado cómodo: el intervalo de confianza todavía incluye valores por debajo

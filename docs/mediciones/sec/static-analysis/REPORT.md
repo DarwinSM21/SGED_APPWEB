@@ -1,7 +1,7 @@
 # Análisis estático de inyección SQL — SpotBugs + find-sec-bugs (Bloque A.2.3)
 
 - Fecha: 2026-08-14
-- Commit: 35188d4
+- Commit: 73d5114
 - Herramienta: `spotbugs-maven-plugin` 4.8.6.4 + `findsecbugs-plugin` 1.13.0
 - Entorno de ejecución: contenedor `maven:3.9-eclipse-temurin-21` (el SpotBugs
   4.8.6.4 usado no reconoce todavía el bytecode de Java 25 — ver nota más

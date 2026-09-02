@@ -451,11 +451,12 @@ uniformemente: el módulo \texttt{academico.pago} tiene \textbf{0\,\% de
 cobertura de \emph{branches}} (0 de 4 en el controlador, 0 de 10 en el
 servicio) — es un dominio completo sin pruebas propias, no un residuo
 disperso de casos límite sin cubrir. \texttt{deportivo.lesion.controller}
-también está en 0\,\% (0 de 2). \textbf{Pendiente crítico antes de
-colocar la etiqueta \texttt{v1.0.0}:} escribir pruebas para
-\texttt{PagoController}/\texttt{PagoService} y \texttt{LesionController}
-— es la vía más directa para cerrar la brecha de \emph{branches}, más
-que perseguir cobertura dispersa en el resto del código.
+también está en 0\,\% (0 de 2). \textbf{Pendiente crítico, cerrado
+después:} se agregaron pruebas para \texttt{PagoController},
+\texttt{PagoService} y \texttt{LesionController}; los tres están hoy en
+100\,\% de \emph{branches}. El estado agregado actual —86,12\,\% de
+líneas, 71,21\,\% de \emph{branches}, con las capas que todavía quedan
+por debajo del umbral— se reporta en la sección~\ref{sec:cobertura}.
 
 \textbf{Segunda actualización, misma sesión:} se regeneraron también
 rendimiento y seguridad contra el sistema local completo
@@ -2093,15 +2094,19 @@ adoptan, combinan y migran entre herramientas de CI/CD en la
 práctica~\cite{rostamimazrae2023cicd}.
 
 \textbf{Escaneo OWASP ZAP baseline.} Modo pasivo contra
-\texttt{/api/docs} (15 URL rastreadas desde la especificación OpenAPI):
-\textbf{0 hallazgos de severidad alta}, 7 advertencias de severidad
-baja/media, todas concentradas en la interfaz de Swagger UI (una
-dependencia de terceros expuesta a propósito para la revisión del
-tribunal) —biblioteca JS de terceros potencialmente desactualizada,
-cabeceras \texttt{Permissions-Policy}/\texttt{Cross-Origin-Embedder-Policy}
-ausentes en esas páginas puntuales, una marca de tiempo Unix dentro de
-un archivo \texttt{.js} de terceros— y ninguna sobre los
-\emph{endpoints} de negocio de la API. Reporte completo en
+\texttt{/api/docs} y \texttt{/}: \textbf{0 hallazgos, de cualquier
+severidad}. No siempre fue así, y vale contarlo: una corrida anterior
+(2026-08-14) sí encontró una alerta de severidad \textbf{alta}
+—\emph{Vulnerable JS Library}, sobre \texttt{DOMPurify 3.0.6} dentro de
+\texttt{swagger-ui-bundle.js}, una dependencia de terceros empaquetada
+por Springdoc/Swagger UI, no código propio—, alcanzable porque la
+interfaz interactiva de Swagger quedaba expuesta sin autenticación. En
+vez de esperar una actualización de ese paquete de terceros, se apagó
+su exposición pública: \texttt{springdoc.swagger-ui.enabled} ahora se
+controla con la variable \texttt{SPRINGDOC\_ENABLED} —activa en
+desarrollo local, apagada en el ambiente público declarado en
+\texttt{render.yaml}—, y el escaneo se repitió contra esa configuración.
+Reporte completo, de las dos corridas, en
 \ruta{docs/mediciones/sec/zap/}. \textbf{Alcance declarado:} este
 escaneo cubrió el \emph{backend}; una corrida equivalente contra el
 \emph{frontend} Angular queda pendiente, junto con la puesta en
@@ -2110,10 +2115,11 @@ producción (Bloque~A.4).
 \subsection{Cobertura de pruebas}
 \label{sec:cobertura}
 
-\textbf{Medido el 2026-07-30 con construcción limpia
-(\texttt{./mvnw clean test}): 72,5\,\% de cobertura de instrucciones
-(2507 cubiertas de 3457), con 102 pruebas y ningún fallo. Cumple el umbral
-del 60\,\%.} El camino hasta este número quedó documentado en vez de solo
+\textbf{Primera corrida completa, medida el 2026-07-30 con construcción
+limpia (\texttt{./mvnw clean test}): 72,5\,\% de cobertura de
+instrucciones (2507 cubiertas de 3457), con 102 pruebas y ningún fallo.}
+El estado actual, con más módulos y más pruebas, se reporta al final de
+esta sección; el camino hasta aquí quedó documentado en vez de solo
 reportar el resultado final: al medir por primera vez después de la
 reestructuración de paquetes (sección~\ref{sec:reestructuracion}) el
 resultado real era \textbf{39,8\,\%} — los recursos nuevos
@@ -2142,7 +2148,7 @@ el objetivo \texttt{make test} pasó a ejecutar \texttt{clean test}.
 
 \begin{table}[htbp]
 \centering
-\caption{Clases de prueba JUnit y qué verifica cada una.}
+\caption{Clases de prueba JUnit y qué verifica cada una (primera corrida completa, 2026-07-30; el estado actual se reporta más abajo).}
 \label{tab:pruebas-junit}
 \begin{tabular}{@{}lrp{7.4cm}@{}}
 \toprule
@@ -2192,6 +2198,47 @@ verifican no solo que el bloqueo ocurra, sino que un fallo posterior
 \emph{no} reinicie la ventana de tiempo. Sin esa segunda propiedad, un
 atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
 —según cómo se implemente— reiniciar el contador y evadir el límite.
+
+\textbf{Estado actual.} El sistema creció después de la primera corrida
+—nuevos módulos de partidos, representantes, consentimientos, entre
+otros— y la suite de pruebas creció con él. Medido con
+\texttt{./mvnw clean test} sobre \texttt{jacoco.csv}
+(\ruta{docs/mediciones/jacoco/}): \textbf{86,12\,\% de cobertura de
+líneas} (1924 de 2234) y \textbf{71,21\,\% de \emph{branches}} (413 de
+580), sobre 156 clases analizadas, con \textbf{479 pruebas} en 64 clases
+de prueba. Cumple el \textbf{70\,\%} que exige \texttt{pom.xml} en
+líneas y en \emph{branches} —el umbral real del proyecto; una
+redacción anterior de este párrafo citaba 60\,\%, que nunca fue el
+valor configurado—.
+
+\begin{table}[htbp]
+\centering
+\caption{Cobertura actual por capa arquitectónica.}
+\label{tab:cobertura-por-capa}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+\textbf{Capa} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
+\midrule
+Servicios & 88,91\,\% (1251/1407) & 72,66\,\% (279/384) \\
+Controladores & 85,37\,\% (321/376) & 82,81\,\% (53/64) \\
+Otros (config., seguridad, DTO) & 81,82\,\% (342/418) & 64,04\,\% (73/114) \\
+Entidades & \textbf{30,30\,\% (10/33)} & \textbf{44,44\,\% (8/18)} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+La capa que queda por debajo del umbral es la de entidades: la mayoría
+de sus líneas son \emph{getters}/\emph{setters} generados por Lombok que
+JaCoCo cuenta igual que código de negocio, y las pruebas de servicio y
+controlador ejercitan esos métodos de forma indirecta sin que JaCoCo lo
+atribuya a la clase de la entidad. No se declara resuelto: es una
+limitación real de la medición agregada, no un defecto oculto. Cinco
+controladores quedan además en cero por ciento de líneas
+—\texttt{ArticuloController}, \texttt{EvaluacionDiariaController},
+\texttt{AsignacionController}, \texttt{EspecialidadController},
+\texttt{MovimientoStockController}—, todos de módulos añadidos después
+de la corrida original y sin prueba propia todavía; queda como trabajo
+pendiente antes del cierre.
 
 \subsection{Calidad web: Lighthouse (Bloque C.5 / A.1)}
 
@@ -2309,7 +2356,7 @@ precisión.
 \midrule
 Media SUS & 69,33 \\
 Desviación típica & 18,89 \\
-IC 95\,\% & 69,33 $\pm$ 9,56 \quad (59,77 -- 78,89) \\
+IC 95\,\% & 69,33 $\pm$ 10,46 \quad (58,87 -- 79,79) \\
 Mediana & 70,00 \\
 Grado & C --- Aceptable \\
 \bottomrule
@@ -2424,7 +2471,7 @@ empírica~\cite{iso25010}.
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
-    pruebas.} Un 72,5\,\% indica qué proporción del código se ejecuta
+    pruebas.} Un 86,12\,\% indica qué proporción del código se ejecuta
     durante la suite, no que las aserciones sean pertinentes —el mismo
     desacople que documentan Imran~\emph{et al.} sobre pruebas de
     rendimiento en sistemas Java de código abierto: alcanzan una
@@ -2473,7 +2520,7 @@ empírica~\cite{iso25010}.
 \begin{itemize}[leftmargin=*]
   \item \textbf{La muestra del SUS es de 15 participantes},
     recolectada por conveniencia. Cumple el mínimo exigido, pero el
-    intervalo de confianza (59,77--78,89) todavía incluye valores por
+    intervalo de confianza (58,87--79,79) todavía incluye valores por
     debajo del umbral de 68: 69,33 es la mejor estimación puntual
     disponible, no un aprobado consolidado.
   \item \textbf{Los subgrupos por perfil tienen 3 o 4 personas cada uno.}
@@ -2649,8 +2696,9 @@ acceso ausente en los cinco recursos nuevos (H-08,
 sección~\ref{sec:a01-falso-correcto}). En datos: conversión de las
 funciones PL/pgSQL a procedimientos reales invocables con
 \texttt{@Procedure} (sección~\ref{sec:acceso-datos}) y fijación de
-imágenes por digest. En validación: las 102 pruebas actuales —incluidas
-las 57 que cerraron la regresión de cobertura—, la corrección del defecto
+imágenes por digest. En validación: las 57 pruebas que cerraron la
+primera regresión de cobertura (la suite siguió creciendo después, hasta
+las 479 actuales —sección~\ref{sec:cobertura}—), la corrección del defecto
 por el que JaCoCo nunca había medido cobertura real, y las tres campañas
 de medición empírica (k6, OWASP, Lighthouse) junto con sus \emph{scripts}
 de análisis. En usabilidad: instrumento SUS, \emph{script} de cálculo
@@ -2764,9 +2812,10 @@ construido. A esa revisión manual se suma la evidencia automática que exige la
 Entrega Final, reproducible por un tercero sin depender de ella: el
 escaneo con OWASP~ZAP en modo \emph{baseline}
 (\ruta{docs/mediciones/sec/zap/}, informe en HTML, JSON y XML junto a la
-configuración que lo genera) cierra con \textbf{cero hallazgos de
-severidad alta}; los siete de nivel advertencia se concentran en
-cabeceras de la interfaz y están inventariados uno por uno. El análisis
+configuración que lo genera) cierra con \textbf{cero hallazgos, de
+cualquier severidad}, tras apagar en el ambiente público la interfaz de
+Swagger UI que originalmente exponía una dependencia de terceros
+desactualizada. El análisis
 estático (\ruta{docs/mediciones/sec/static-analysis/}) no reporta
 ocurrencias de la regla
 \texttt{SQL\_NONCONSTANT\_STRING\_PASSED\_TO\_EXECUTE}, que es la
@@ -2857,10 +2906,11 @@ y \ruta{VERSIONING.md} ya declaran abiertos.
 
 \begin{enumerate}[leftmargin=*]
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
-    p95 de 14,18\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
+    p95 de 9,91\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{72,5\,\%} de cobertura de pruebas frente a un mínimo
-    de 60\,\% (sección~\ref{sec:cobertura}) — cifra alcanzada después de
+    100/100, y \textbf{86,12\,\%} de cobertura de líneas y
+    \textbf{71,21\,\%} de \emph{branches} frente al mínimo de 70\,\%
+    (sección~\ref{sec:cobertura}) — cifra alcanzada después de
     detectar y corregir una regresión real a 39,8\,\% causada por los
     recursos nuevos de la reestructuración, no reportando directamente un
     número cómodo.
