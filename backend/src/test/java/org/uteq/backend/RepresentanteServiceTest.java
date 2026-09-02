@@ -268,4 +268,54 @@ class RepresentanteServiceTest {
 
         assertThat(anterior.getContactoPrincipal()).isFalse();
     }
+
+    @Test
+    @DisplayName("editar actualiza parentesco y telefono sin tocar la persona ni el usuario vinculados")
+    void editar_actualiza_parentesco_y_telefono() {
+        Representante existente = representante();
+        when(representanteRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(representanteRepository.save(any(Representante.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+
+        RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Padre", "0999999999", null);
+        RepresentanteResponse resultado = representanteService.editar(1L, request);
+
+        assertThat(resultado.parentesco()).isEqualTo("Padre");
+        assertThat(resultado.telefonoContacto()).isEqualTo("0999999999");
+    }
+
+    @Test
+    @DisplayName("editar lanza 404 cuando el representante no existe")
+    void editar_inexistente_lanza_excepcion() {
+        when(representanteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Padre", "0999999999", null);
+
+        assertThatThrownBy(() -> representanteService.editar(99L, request))
+                .isInstanceOf(RecursoNoEncontradoException.class);
+    }
+
+    @Test
+    @DisplayName("reactivar vuelve a activar una ficha de representante dada de baja")
+    void reactivar_reactiva_una_ficha_inactiva() {
+        Representante existente = representante();
+        existente.setActivo(false);
+        when(representanteRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(representanteRepository.save(any(Representante.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+
+        RepresentanteResponse resultado = representanteService.reactivar(1L);
+
+        assertThat(resultado.activo()).isTrue();
+    }
+
+    @Test
+    @DisplayName("reactivar rechaza una ficha de representante que ya esta activa")
+    void reactivar_rechaza_una_ficha_ya_activa() {
+        when(representanteRepository.findById(1L)).thenReturn(Optional.of(representante())); // activo = true
+
+        assertThatThrownBy(() -> representanteService.reactivar(1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ya se encuentra activa");
+    }
 }

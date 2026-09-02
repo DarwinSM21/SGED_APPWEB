@@ -127,4 +127,64 @@ class ArticuloServiceTest {
         assertThat(resultado.articulos()).hasSize(1);
         assertThat(resultado.articulos().get(0).stockActual()).isEqualTo(2);
     }
+
+    @Test
+    @DisplayName("stockBajo reporta cero cuando el procedimiento almacenado devuelve null")
+    void stockBajo_total_null_se_reporta_como_cero() {
+        when(articuloRepository.findConStockBajo()).thenReturn(List.of());
+        when(articuloRepository.contarStockBajo()).thenReturn(null);
+
+        StockBajoResponse resultado = articuloService.stockBajo();
+
+        assertThat(resultado.total()).isZero();
+        assertThat(resultado.articulos()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("crear respeta la unidad de medida cuando el request si la especifica")
+    void crear_respeta_unidad_de_medida_explicita() {
+        ArticuloRequest request = new ArticuloRequest("Balón N°5", TipoArticulo.BALON, null, null, 3, "caja");
+        when(articuloRepository.save(any(Articulo.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ArticuloResponse resultado = articuloService.crear(request);
+
+        assertThat(resultado.unidadMedida()).isEqualTo("caja");
+    }
+
+    @Test
+    @DisplayName("editar con unidad de medida en blanco conserva la unidad que ya tenia el articulo")
+    void editar_unidad_en_blanco_no_sobrescribe() {
+        Articulo existente = balonExistente(); // unidadMedida = "unidad"
+        when(articuloRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(articuloRepository.save(any(Articulo.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ArticuloRequest request = new ArticuloRequest("Balón N°5", TipoArticulo.BALON, null, null, 4, "   ");
+        ArticuloResponse resultado = articuloService.editar(1L, request);
+
+        assertThat(resultado.unidadMedida()).isEqualTo("unidad");
+    }
+
+    @Test
+    @DisplayName("reactivar vuelve a activar un articulo dado de baja")
+    void reactivar_reactiva_un_articulo_inactivo() {
+        Articulo existente = balonExistente();
+        existente.setActivo(false);
+        when(articuloRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(articuloRepository.save(any(Articulo.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        ArticuloResponse resultado = articuloService.reactivar(1L);
+
+        assertThat(resultado.activo()).isTrue();
+    }
+
+    @Test
+    @DisplayName("reactivar rechaza un articulo que ya esta activo")
+    void reactivar_rechaza_un_articulo_ya_activo() {
+        Articulo existente = balonExistente(); // activo = true
+        when(articuloRepository.findById(1L)).thenReturn(Optional.of(existente));
+
+        assertThatThrownBy(() -> articuloService.reactivar(1L))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("ya se encuentra activo");
+    }
 }
