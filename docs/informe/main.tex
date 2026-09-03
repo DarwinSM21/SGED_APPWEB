@@ -63,6 +63,8 @@
 \newcommand{\ruta}[1]{\texttt{\footnotesize #1}}
 \newcommand{\ok}{\textcolor{okverde}{\textbf{OK}}}
 \newcommand{\pendiente}{\textcolor{alerta}{\textbf{pendiente}}}
+\newcommand{\cumple}{\textcolor{okverde}{\textbf{Cumple}}}
+\newcommand{\parcial}{\textcolor{alerta}{\textbf{Parcial}}}
 
 \begin{document}
 
@@ -522,9 +524,18 @@ faltaba el de sumar.
 \textbf{Tercera actualización (2026-09-02):} pasar de \texttt{mvn test} a
 \texttt{mvn verify} —el comando real que ejecuta \ruta{ci.yml}, no una
 aproximación local— destapó que la regla de JaCoCo volvía a fallar:
-\textbf{61,16\,\% de \emph{branches}}, por debajo del 70\,\% exigido, y
-\texttt{main} llevaba cuatro \emph{commits} en rojo en GitHub Actions,
-ninguno de ellos de este informe. La causa no fue una regresión de
+\textbf{61,16\,\% de \emph{branches}}, por debajo del 70\,\% exigido.
+Consultada la API de GitHub Actions (Anexo~D), \texttt{main} llevaba
+\textbf{63 corridas consecutivas en rojo} —no cuatro, como una primera
+revisión superficial de la lista visible había sugerido—: desde el
+\emph{commit}~\texttt{cc891b1} (2026-08-18, \#112) hasta
+\texttt{dfa5802} (2026-09-02, \#174), dos semanas completas. La
+mayoría de esas 63 corridas rojas corresponden a \emph{commits} de
+código de funcionalidad del equipo, pero varias son también
+\emph{commits} de este mismo informe hechos sin advertir que no podían
+arreglar un gate de cobertura de Java —un recordatorio de que revisar
+solo la primera página de una lista no es lo mismo que consultar la
+fuente completa. La causa raíz no fue una regresión de
 prueba sino crecimiento sin cobertura propia: el sistema pasó de 156 a
 \textbf{200 clases} entre el 14 de agosto y hoy —los dominios
 \texttt{partido}/\texttt{alineación}, \texttt{evaluación}, sesión y
@@ -1874,6 +1885,7 @@ con \emph{Cliff's delta}); ambos quedan planificados para cuando se
 regeneren las cinco corridas independientes que exige el Bloque~A.1.
 
 \subsection{Entorno de ejecución}
+\label{sec:entorno}
 
 La Tabla~\ref{tab:entorno} fija el entorno exacto en el que se
 generaron todas las mediciones de este capítulo.
@@ -3161,5 +3173,376 @@ la infraestructura académica del curso.
 \newpage
 \bibliographystyle{plain}
 \bibliography{referencias}
+
+\newpage
+\section*{Anexos}
+\addcontentsline{toc}{section}{Anexos}
+\label{sec:anexos}
+
+Esta sección reúne el material de referencia que el Bloque~B.17 de la
+guía exige archivar aparte del cuerpo del informe. Donde ese material
+ya existe como fuente única de verdad en otro documento del
+repositorio —la tabla de observaciones y la matriz de trazabilidad
+completa, ambas mantenidas y versionadas por separado— el anexo remite
+a esa fuente en vez de copiarla, por la misma razón que
+la sección~\ref{sec:c4n2} da para no mantener dos diagramas C4
+paralelos: dos versiones de la misma verdad garantizan que al menos
+una esté desactualizada. Donde el material es breve y estable
+—cadenas de búsqueda, cuestionario SUS, checklists— se reproduce
+íntegro para consulta autónoma, sin necesidad de abrir el repositorio.
+
+\subsection*{Anexo A --- Observaciones acumuladas}
+\addcontentsline{toc}{subsection}{Anexo A --- Observaciones acumuladas}
+
+La tabla completa de observaciones docente-equipo, con el porcentaje
+resuelto por entrega y la razón declarada de las que siguen abiertas,
+se presenta en la sección~\ref{sec:observaciones} de este mismo
+documento —no se duplica aquí para no arriesgar que las dos copias
+diverjan— y su fuente editable, actualizada con cada entrega, es
+\ruta{docs/observaciones/OBSERVACIONES.md}.
+
+\subsection*{Anexo B --- Cadena de búsqueda completa (Capítulo 3)}
+\addcontentsline{toc}{subsection}{Anexo B --- Cadena de búsqueda completa (Capítulo 3)}
+
+Las nueve búsquedas de la revisión de trabajos relacionados
+(sección~\ref{sec:estrategia-busqueda}), reproducidas aquí íntegras
+para consulta sin necesidad de volver al Capítulo~\ref{sec:trabajos-relacionados}:
+
+\begin{enumerate}[leftmargin=*, itemsep=2pt]
+  \item Sistemas de gestión escolar o deportiva basados en \emph{web}:
+    (\emph{school} OR \emph{sport*} OR \emph{club}) AND (\emph{management}
+    OR \emph{information}) AND (\emph{system} OR \emph{platform}).
+  \item Autenticación JWT y su seguridad: (JWT OR ``JSON Web Token'') AND
+    (\emph{security} OR \emph{vulnerabilit*} OR \emph{cookie} OR
+    \emph{storage}).
+  \item Acceso a datos híbrido ORM/procedimientos almacenados: (ORM OR
+    ``object-relational mapping'') AND (``stored procedure*'') AND
+    (\emph{performance} OR \emph{maintenance} OR \emph{security}).
+  \item Evaluación empírica de seguridad con OWASP: (OWASP) AND
+    (\emph{empirical} OR \emph{evaluation} OR ``case study'').
+  \item Usabilidad (SUS) en sistemas administrativos o educativos: (SUS OR
+    ``system usability scale'') AND (\emph{school} OR \emph{educational}
+    OR \emph{administrative}).
+  \item Ingeniería de requisitos en cursos capstone: (\emph{capstone} OR
+    ``final year project'') AND (``requirements engineering'' OR
+    ``software engineering education'').
+\end{enumerate}
+
+Ventana temporal: 2016--2026. Motor: búsqueda web general dirigida a
+resultados alojados o indexados en IEEE Xplore, ACM Digital Library,
+Scopus, ScienceDirect y Springer Link —sin acceso de suscripción
+directo, limitación declarada explícitamente en
+la sección~\ref{sec:estrategia-busqueda}—, con cada registro incluido
+verificado de forma independiente contra una fuente primaria antes de
+citarlo.
+
+\subsection*{Anexo C --- Protocolo detallado de la encuesta SUS}
+\addcontentsline{toc}{subsection}{Anexo C --- Protocolo detallado de la encuesta SUS}
+
+Instrumento: \emph{System Usability Scale}~\cite{brooke1996}, diez
+ítems, escala Likert de 5 puntos (1~=~totalmente en desacuerdo,
+5~=~totalmente de acuerdo), administrado en español. Protocolo
+completo, con las tareas previas y las condiciones de aplicación, en
+\ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}; lo esencial se
+reproduce a continuación.
+
+\begin{table}[htbp]
+\centering
+\caption{Cuestionario SUS de diez ítems aplicado (español).}
+\label{tab:sus-cuestionario}
+\begin{tabular}{@{}cp{10.5cm}l@{}}
+\toprule
+\textbf{\#} & \textbf{Afirmación} & \textbf{Polaridad} \\
+\midrule
+1 & Creo que me gustaría usar este sistema con frecuencia. & Positiva \\
+2 & Encontré el sistema innecesariamente complejo. & Negativa \\
+3 & Pensé que el sistema era fácil de usar. & Positiva \\
+4 & Creo que necesitaría el apoyo de una persona con conocimientos técnicos para poder usar este sistema. & Negativa \\
+5 & Encontré que las diversas funciones del sistema estaban bien integradas. & Positiva \\
+6 & Pensé que había demasiada inconsistencia en este sistema. & Negativa \\
+7 & Imagino que la mayoría de las personas aprenderían a usar este sistema muy rápidamente. & Positiva \\
+8 & Encontré el sistema muy engorroso de usar. & Negativa \\
+9 & Me sentí muy seguro/a usando el sistema. & Positiva \\
+10 & Necesité aprender muchas cosas antes de poder empezar a usar este sistema. & Negativa \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Cálculo.} Por participante: ítems impares (1,3,5,7,9)
+contribuyen (respuesta$-1$); ítems pares (2,4,6,8,10) contribuyen
+($5-$respuesta); puntuación SUS = suma de las diez contribuciones
+$\times\ 2{,}5$, rango 0--100. No es un porcentaje: es una puntuación
+compuesta sobre una distribución de referencia.
+
+\begin{table}[htbp]
+\centering
+\caption{Interpretación de la puntuación SUS (Bangor, Kortum y Miller, 2009; Sauro, 2011).}
+\label{tab:sus-interpretacion}
+\begin{tabular}{@{}lllr@{}}
+\toprule
+\textbf{Rango SUS} & \textbf{Grado} & \textbf{Adjetivo} & \textbf{Percentil aprox.} \\
+\midrule
+85 -- 100 & A & Excelente & $>$ 96 \\
+72 -- 84,9 & B & Bueno & 70 -- 96 \\
+68 -- 71,9 & C & Aceptable (media de la industria) & $\approx$ 50 \\
+51 -- 67,9 & D & Pobre & 15 -- 50 \\
+0 -- 50,9 & F & Inaceptable & $<$ 15 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Tareas previas.} Antes de responder el cuestionario, cada
+participante intenta completar sin ayuda: (T1) iniciar sesión con las
+credenciales entregadas (RF-02); (T2) encontrar cuántos estudiantes
+hay registrados en total (RF-08); (T3) registrar un estudiante nuevo
+en la categoría SUB-15 (RF-10); (T4) intentar registrar un estudiante
+con categoría ``JUVENIL'' y explicar qué pasó (RF-11); (T5) modificar
+la categoría de un estudiante existente (RF-12); (T6) dar de baja a un
+estudiante (RF-13); (T7) cerrar sesión (RF-03). Se registra, por
+participante, si completó cada tarea y el tiempo aproximado, antes de
+aplicar el cuestionario.
+
+\textbf{Umbral objetivo.} SUS~$\geq$~68 (media de la industria). El
+resultado agregado y su desglose por perfil de usuario se reportan en
+la sección~\ref{sec:sus}.
+
+\subsection*{Anexo D --- Ejecución del pipeline de integración continua}
+\addcontentsline{toc}{subsection}{Anexo D --- Ejecución del pipeline de integración continua}
+
+\ruta{.github/workflows/ci.yml} ejecuta, en cada \emph{push} a
+\texttt{main}, las pruebas JUnit con verificación de cobertura JaCoCo
+(\texttt{mvn verify}, con la regla \texttt{haltOnFailure=true}: el
+umbral se hace cumplir, no solo se declara), la auditoría de SQL
+dinámico y el análisis estático SpotBugs/find-sec-bugs, en ese orden.
+
+Al preparar este anexo se consultó la API pública de GitHub Actions
+—no solo la lista visible de la interfaz, que solo muestra las
+corridas más recientes— y se encontró que el hallazgo era más grave de
+lo que una primera revisión sugería: \texttt{main} no llevaba cuatro
+\emph{commits} en rojo, sino \textbf{63 corridas consecutivas}, desde
+el \emph{commit}~\texttt{cc891b1} (\#112, 2026-08-18T04:37Z) hasta
+\texttt{dfa5802} (\#174, 2026-09-02T15:56Z) —dos semanas completas—,
+por el mismo motivo que documenta la actualización del 2026-09-02 en
+la sección~\ref{sec:ingenieria-requisitos} (cobertura de
+\emph{branches} bajo el umbral). No hay tres corridas verdes
+\emph{previas} a esa fecha que capturar honestamente: las tres que se
+archivan aquí (Tabla~\ref{tab:ci-corridas}) son las tres primeras que
+existen después de la corrección. La consulta completa a la API,
+incluidos el último verde antes de la regresión (\#111) y el primer
+rojo (\#112), está archivada en
+\ruta{docs/mediciones/ci/runs-verdes.json} —datos verificables por
+comando, no una captura de pantalla que solo puede mirarse—.
+
+\begin{table}[htbp]
+\centering
+\caption{Tres corridas de CI consecutivas y verdes tras cerrar el gate de cobertura, verificadas contra la API de GitHub Actions.}
+\label{tab:ci-corridas}
+\begin{tabular}{@{}cp{2.1cm}p{6.8cm}p{3.3cm}@{}}
+\toprule
+\textbf{\#} & \textbf{\emph{Commit}} & \textbf{Mensaje} & \textbf{Inicio (UTC)} \\
+\midrule
+175 & \texttt{a7ccb86} & \emph{test: cierra el gate de cobertura de branches (61\,\% $\to$ 70,06\,\%)} & 2026-09-02 16:32 \\
+176 & \texttt{43aa9e9} & \emph{docs(informe): actualizar cifras de cobertura tras cerrar el gate} & 2026-09-02 16:35 \\
+177 & \texttt{3ef00eb} & \emph{docs(trazabilidad): RNF-09 citaba el umbral de cobertura equivocado} & 2026-09-02 16:37 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las tres corridas son consecutivas en el historial de \texttt{main} y
+verificables en vivo en
+\url{https://github.com/DarwinSM21/SGED_APPWEB/actions}.
+
+\subsection*{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}
+\addcontentsline{toc}{subsection}{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}
+
+SGED se autoclasifica como \emph{Engineering Research} dentro de los
+estándares empíricos de Ralph~\emph{et al.}~\cite{ralph2021} —el
+trabajo diseña, implementa y evalúa empíricamente un artefacto de
+software nuevo, no un experimento controlado con sujetos asignados a
+condiciones ni un estudio observacional puro sobre un sistema
+preexistente—, la misma clasificación que sustenta el enfoque DSR de
+la sección~\ref{sec:dsr}. Checklist completo, con evidencia concreta
+del repositorio en cada fila, en
+\ruta{docs/checklists/ralph2021-engineering-research.md}.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Checklist del estándar empírico Engineering Research (Ralph et al., 2021).}
+\label{tab:ralph-checklist}
+\begin{tabular}{@{}p{6.2cm}cp{6.8cm}@{}}
+\toprule
+\textbf{Dimensión} & \textbf{Estado} & \textbf{Evidencia} \\
+\midrule
+El problema y su motivación están claramente descritos & \cumple & Sección~\ref{sec:contexto-motivacion}, con tres referencias que sustentan la carencia de digitalización en clubes deportivos de formación \\
+Preguntas de investigación explícitas y verificables & \cumple & RQ1--RQ4 (sección~\ref{sec:rqs}), cada una cerrada y trazada a evidencia empírica concreta \\
+El artefacto está descrito con detalle suficiente para juzgar su novedad y su contribución & \cumple & Capítulos~\ref{sec:arquitectura} e \ref{sec:implementacion}; estrategia híbrida de acceso a datos como aporte técnico explícito, con ADR-006 \\
+El proceso de diseño/construcción del artefacto está documentado & \cumple & Siete ADR, C4 niveles 1--3 generados desde \ruta{workspace.dsl}, \ruta{docs/observaciones/OBSERVACIONES.md} como bitácora del proceso iterativo \\
+La evaluación usa métodos apropiados a las preguntas planteadas & \cumple & k6 para RQ1, OWASP+ZAP+análisis estático para RQ2, SUS para RQ3, JaCoCo+matriz de trazabilidad para RQ4 \\
+El procedimiento de evaluación es reproducible por un tercero & \parcial & \texttt{make bench}/\texttt{make audit}/\texttt{make test} reproducen el procedimiento; parte de la evidencia archivada quedó desactualizada frente al crecimiento del sistema hasta la corrección del 2026-09-02 (sección~\ref{sec:cobertura}) \\
+Se declara el contexto/entorno de la evaluación & \cumple & Sección~\ref{sec:entorno} (o equivalente): SO, versión de Docker, JDK, estado inicial de la base de datos \\
+Se declaran las limitaciones de la muestra cuando aplica & \cumple & Sección~\ref{sec:muestreo}: $N=15$ para SUS, muestreo por conveniencia declarado según Baltes y Ralph (2022) \\
+Amenazas a la validez tratadas por categoría & \cumple & Capítulo~\ref{sec:amenazas}, cuatro categorías con mitigación declarada por cada una \\
+El artefacto y los datos de evaluación están disponibles para un tercero & \parcial & Repositorio público con DOI de \emph{software}; falta el DOI separado del \emph{dataset} de mediciones (Bloque~D.3, sección~\ref{sec:declaraciones}) \\
+Conflictos de interés y financiamiento declarados & \cumple & Sección~\ref{sec:declaraciones} \\
+Los resultados se interpretan sin sobregeneralizar & \cumple & Sección~\ref{sec:discusion} responde cada RQ contra evidencia concreta; las Conclusiones distinguen lo cumplido de lo pendiente \\
+Defectos del propio proceso de medición se reportan si se encuentran & \cumple & Rasgo distintivo del proyecto: cinco instrumentos de medición defectuosos detectados y corregidos a lo largo de las cuatro entregas, documentados como hallazgo \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Resumen:} 11 de 13 dimensiones en \cumple, 2 en \parcial, 0 en
+\emph{No cumple}. Ambas parciales comparten la misma causa raíz —la
+evidencia empírica archivada se desactualiza frente al crecimiento del
+sistema— y se resuelven regenerando y publicando datos, no
+rediseñando el estudio.
+
+\subsection*{Anexo F --- Checklist INCOSE v4 de calidad de requisitos}
+\addcontentsline{toc}{subsection}{Anexo F --- Checklist INCOSE v4 de calidad de requisitos}
+
+Evaluación de los 31 requisitos funcionales, 13 no funcionales y 3
+restricciones de diseño de SGED contra la \emph{INCOSE Guide to
+Writing Requirements} v4 (INCOSE-TP-2010-006-04)~\cite{incose2023},
+prometida como anexo desde la sección~\ref{sec:ingenieria-requisitos}.
+Checklist completo en \ruta{docs/checklists/incose2023-req.md}.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Características de requisitos individuales, INCOSE v4 (C1--C9).}
+\label{tab:incose-individual}
+\begin{tabular}{@{}p{3.6cm}cp{8.5cm}@{}}
+\toprule
+\textbf{Característica} & \textbf{Estado} & \textbf{Evidencia} \\
+\midrule
+C1 \emph{Necessary} & \cumple & Cada RF traza a al menos una historia de usuario o caso de uso en \ruta{docs/trazabilidad/matriz.csv} \\
+C2 \emph{Appropriate} & \cumple & Los RF describen comportamiento observable, no detalles de implementación; las decisiones de implementación viven en los ADR \\
+C3 \emph{Unambiguous} & \cumple & Patrón sintáctico ISO/IEC/IEEE~29148:2018 aplicado de forma uniforme desde la resolución de OBS-01 \\
+C4 \emph{Complete} & \parcial & Seis RF del módulo deportivo sin campo \texttt{Prioridad:} explícito (sección~\ref{sec:ingenieria-requisitos}) \\
+C5 \emph{Singular} & \cumple & Ningún RF combina dos comportamientos verificables por separado; revisión manual línea por línea \\
+C6 \emph{Feasible} & \cumple & 28 de 31 RF en estado Implementado son la prueba directa de factibilidad \\
+C7 \emph{Verifiable} & \cumple & 31 de 31 RF referencian una prueba automatizada nombrada explícitamente en su entrada del SRS \\
+C8 \emph{Correct} & \parcial & RF-11b (peso/altura) es correcto técnicamente pero su base legal no está resuelta (hallazgo H-06) \\
+C9 \emph{Conforming} & \cumple & Los 31 RF siguen el mismo patrón \emph{``[condición] [sujeto] deberá [acción] [objeto] [restricción]''} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Características del conjunto de requisitos, INCOSE v4 (C10--C15).}
+\label{tab:incose-conjunto}
+\begin{tabular}{@{}p{3.6cm}cp{8.5cm}@{}}
+\toprule
+\textbf{Característica} & \textbf{Estado} & \textbf{Evidencia} \\
+\midrule
+C10 \emph{Complete} & \parcial & El módulo \texttt{Equipo}/\texttt{Partido} no tiene RF formal en el SRS pese a estar migrado \\
+C11 \emph{Consistent} & \parcial & RF-17, RF-18 y RF-22 figuran Implementado en el SRS pero desactualizados en \ruta{historias-usuario.md}/\ruta{casos-uso.md} \\
+C12 \emph{Feasible} & \cumple & 90,3\,\% de los RF implementados por un equipo de tres integrantes en tres entregas previas \\
+C13 \emph{Comprehensible} & \cumple & El SRS incluye glosario, prioridad y estado por requisito \\
+C14 \emph{Able to be validated} & \cumple & Validación continua contra pruebas nombradas (C7) más el ciclo de observaciones docente-equipo \\
+C15 \emph{Correct} & \parcial & Mientras C11 no se cierre, ``el conjunto'' no tiene una única fuente de verdad consistente \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Resumen:} 10 de 15 características en \cumple, 5 en \parcial,
+0 en \emph{No cumple}. Las cinco parciales comparten una causa común:
+el crecimiento del sistema superó la velocidad a la que se
+actualizaron \ruta{historias-usuario.md}, \ruta{casos-uso.md} y los
+campos de prioridad del SRS —pendiente concreto declarado en la
+sección~\ref{sec:ingenieria-requisitos}, no una omisión encontrada
+aquí por primera vez.
+
+\subsection*{Anexo G --- Matriz de trazabilidad completa}
+\addcontentsline{toc}{subsection}{Anexo G --- Matriz de trazabilidad completa}
+
+Los 50 requisitos individuales de SGED (31 RF, 13 RNF, 3 RD, más tres
+recursos de dominio sin RF formal propio) con su historia de usuario,
+caso de uso y estado. La versión completa —con endpoint/componente,
+archivo de implementación, prueba automatizada y evidencia empírica
+por fila, columnas que no caben en el ancho de esta página— es
+\ruta{docs/trazabilidad/matriz.csv}, validada automáticamente por
+\ruta{scripts/validate-traceability.sh} en cada corrida de CI
+(Anexo~D): ningún requisito carece de historia, caso de uso o prueba.
+
+\scriptsize
+\begin{longtable}{@{}p{1.5cm}p{6.3cm}p{1.4cm}p{1.4cm}p{2.1cm}@{}}
+\caption{Matriz de trazabilidad completa (requisito, historia, caso de uso, estado).\label{tab:matriz-completa}}\\
+\toprule
+\textbf{Req.} & \textbf{Descripción} & \textbf{HU} & \textbf{CU} & \textbf{Estado} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Req.} & \textbf{Descripción} & \textbf{HU} & \textbf{CU} & \textbf{Estado} \\
+\midrule
+\endhead
+RF-01 & Registro de usuarios por administrador & HU-06 & CU-03 & Implementado \\
+RF-02 & Autenticación con JWT en cookie \texttt{HttpOnly} & HU-01 & CU-01 & Implementado \\
+RF-03 & Cierre de sesión con revocación por JTI & HU-03 & CU-02 & Implementado \\
+RF-04 & Renovación de sesión por \emph{refresh token} & HU-04 & CU-01 & Implementado \\
+RF-05 & Consulta de la sesión activa & HU-04 & CU-01 & Implementado \\
+RF-06 & Limitación de intentos de autenticación 5/15\,min & HU-02 & CU-01 & Implementado \\
+RF-07 & Verificación de disponibilidad del servicio & N/A & N/A & Implementado \\
+RF-08 & Listado paginado de estudiantes & HU-05 & CU-04 & Implementado \\
+RF-09 & Consulta de estudiante por identificador & HU-05 & CU-04 & Implementado \\
+RF-10 & Registro de estudiante (persona+categoría+estado por FK) & HU-06 & CU-05 & Implementado \\
+RF-11 & Validación de categoría por clave foránea (ya no patrón SUB-NN) & HU-06 & CU-05 & Implementado \\
+RF-11b & Registro opcional de peso y altura del estudiante & N/A & N/A & Implementado$^\dagger$ \\
+RF-12 & Actualización de estudiante & HU-07 & CU-06 & Implementado \\
+RF-13 & Baja lógica de estudiante & HU-08 & CU-07 & Implementado \\
+RF-14 & Conteo de activos por categoría vía procedimiento almacenado & HU-09 & CU-08 & Implementado \\
+RF-15 & Desactivación masiva por categoría vía procedimiento almacenado & HU-10 & CU-09 & Implementado \\
+RF-16 & Gestión de entrenadores (vinculados a persona y usuario) & HU-10b & CU-10 & Implementado \\
+RF-17 & Horarios recurrentes de entrenamiento & HU-11 & CU-11 & Implementado \\
+RF-18 & Sesiones de entrenamiento & HU-11 & CU-12 & Implementado \\
+RF-19 & Registro de asistencia por QR o lista manual del entrenador & HU-12 & CU-13 & Implementado$^\dagger$ \\
+RF-20 & Evaluación diaria por criterios & HU-13 & CU-14 & Modelado \\
+RF-21 & Consulta de promedios de evaluación & HU-13 & CU-14 & Modelado \\
+RF-22 & Notificación a representantes & HU-14 & CU-15 & Implementado$^\dagger$ \\
+RF-23 & Gestión del catálogo de categorías & N/A & N/A & Implementado \\
+RF-24 & Gestión de cuentas de usuario como recurso propio & N/A & N/A & Implementado \\
+RF-25 & Gestión de personas & N/A & N/A & Implementado \\
+RF-26 & Consulta de estados generales & N/A & N/A & Implementado \\
+RF-27 & Gestión del catálogo de artículos de inventario & N/A & N/A & Implementado \\
+RF-28 & Registro de movimientos de \emph{stock} & N/A & N/A & Implementado \\
+RF-29 & Asignación y devolución de artículos a estudiantes o entrenadores & N/A & N/A & Implementado \\
+RF-30 & Reporte de artículos con \emph{stock} bajo & N/A & N/A & Implementado \\
+Equipo & Módulo de equipos & N/A & N/A & Planificado$^\dagger$ \\
+RNF-01 & Tiempo de respuesta p95 menor a 200\,ms & HU-05 & CU-04 & Cumplido \\
+RNF-02 & Caché de listados con TTL 60\,s & HU-05 & CU-04 & Cumplido \\
+RNF-03 & Contraseñas con BCrypt coste 12 & HU-01 & CU-01 & Cumplido \\
+RNF-04 & Transporte cifrado TLS 1.2 o superior & HU-01 & CU-01 & Cumplido \\
+RNF-05 & Cabeceras de seguridad CSP, HSTS, \texttt{nosniff}, \texttt{DENY} & N/A & N/A & Cumplido \\
+RNF-06 & Control de acceso por rol en servidor & HU-06 & CU-05 & Cumplido \\
+RNF-07 & Ausencia de SQL dinámico por concatenación & N/A & CU-08 & Cumplido \\
+RNF-08 & Registro de auditoría de autenticación & HU-01 & CU-01 & Cumplido \\
+RNF-09 & Cobertura de pruebas $\geq$ 70\,\% en líneas y en \emph{branches} & N/A & N/A & Cumplido \\
+RNF-10 & Errores tipificados según RFC~9457 \emph{Problem Detail} & HU-06 & CU-05 & Cumplido \\
+RNF-11 & Versionado del esquema con Flyway sin \texttt{ddl-auto} & N/A & N/A & Cumplido \\
+RNF-12 & Reproducibilidad en un solo comando & N/A & N/A & Cumplido \\
+RNF-13 & Imágenes fijadas por \emph{digest} SHA-256 & N/A & N/A & Cumplido \\
+RF-31 & Registro y alta de lesiones desde evaluación diaria & N/A & N/A & Implementado$^\dagger$ \\
+RF-32 & Autoconsulta del estudiante sobre su equipo y desempeño & N/A & N/A & Implementado 2026-08-14 \\
+RF-33 & Agenda de partidos con resultado posterior al juego & N/A & N/A & Implementado \\
+RF-34 & Convocatoria y once del partido según rendimiento reciente & N/A & N/A & Implementado \\
+RF-35 & Historial de asistencia de una sesión de entrenamiento & N/A & N/A & Implementado \\
+\bottomrule
+\end{longtable}
+\normalsize
+
+$^\dagger$Estado con una salvedad temporal o de alcance que no cabe en
+esta columna; el texto completo está en la columna \texttt{estado} de
+\ruta{docs/trazabilidad/matriz.csv}. Las más relevantes: RF-11b está
+implementado sin resolución ética (hallazgo H-06,
+sección~\ref{sec:ingenieria-requisitos}); RF-19 cubre QR y registro
+manual, con RFID pendiente por falta de lector físico; RF-22 notifica
+solo dentro de la aplicación, no por correo/SMS/\emph{push}
+(sección~\ref{sec:trabajo-futuro}); el módulo \texttt{Equipo} tiene
+esquema migrado pero ningún \emph{endpoint} expuesto por decisión, no
+por omisión (sección~\ref{sec:catalogo-api}); RF-31 mantenía el
+\emph{backend} desde antes de esta entrega y se completó con el
+\emph{frontend} y una corrección de autoría del entrenador.
 
 \end{document}

@@ -1,0 +1,53 @@
+{
+  "fuente": "GET https://api.github.com/repos/DarwinSM21/SGED_APPWEB/actions/runs (API publica, sin autenticacion)",
+  "capturado_utc": "2026-09-02T16:45:00Z",
+  "hallazgo": "main estuvo en rojo 63 corridas consecutivas (#112 a #174, del 2026-08-18T04:37Z al 2026-09-02T15:58Z) por el gate de cobertura de branches de JaCoCo (61,16% contra 70% minimo). La ultima corrida verde antes de la regresion fue #111 (commit 732ff63, 2026-08-18T04:19Z). Se cierra en el commit a7ccb86 (#175).",
+  "ultima_corrida_verde_antes_de_la_regresion": {
+    "run_number": 111,
+    "head_sha": "732ff63",
+    "conclusion": "success",
+    "created_at": "2026-08-18T04:19:21Z"
+  },
+  "primera_corrida_roja": {
+    "run_number": 112,
+    "head_sha": "cc891b1",
+    "conclusion": "failure",
+    "created_at": "2026-08-18T04:37:19Z"
+  },
+  "ultima_corrida_roja": {
+    "run_number": 174,
+    "head_sha": "dfa5802",
+    "conclusion": "failure",
+    "created_at": "2026-09-02T15:56:53Z"
+  },
+  "corridas_rojas_consecutivas": 63,
+  "tres_corridas_verdes_que_cierran_el_hallazgo": [
+    {
+      "run_number": 175,
+      "head_sha": "a7ccb86",
+      "title": "test: cierra el gate de cobertura de branches (61% -> 70,06%)",
+      "conclusion": "success",
+      "created_at": "2026-09-02T16:32:14Z",
+      "updated_at": "2026-09-02T16:34:05Z",
+      "html_url": "https://github.com/DarwinSM21/SGED_APPWEB/actions/runs/33655519868"
+    },
+    {
+      "run_number": 176,
+      "head_sha": "43aa9e9",
+      "title": "docs(informe): actualizar cifras de cobertura tras cerrar el gate de branches",
+      "conclusion": "success",
+      "created_at": "2026-09-02T16:35:08Z",
+      "updated_at": "2026-09-02T16:37:01Z",
+      "html_url": "https://github.com/DarwinSM21/SGED_APPWEB/actions/runs/33655815373"
+    },
+    {
+      "run_number": 177,
+      "head_sha": "3ef00eb",
+      "title": "docs(trazabilidad): RNF-09 citaba el umbral de cobertura equivocado",
+      "conclusion": "success",
+      "created_at": "2026-09-02T16:37:16Z",
+      "updated_at": "2026-09-02T16:39:13Z",
+      "html_url": "https://github.com/DarwinSM21/SGED_APPWEB/actions/runs/33656034400"
+    }
+  ]
+}
