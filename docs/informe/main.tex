@@ -2175,9 +2175,11 @@ Ahora responde \texttt{400}.
 \subsection{Análisis estático y escaneo automático (Bloque A.1/A.2.3)}
 \label{sec:zap-spotbugs}
 
-Dos piezas de evidencia adicionales, generadas el 2026-08-14 y
-archivadas en \ruta{docs/mediciones/sec/}, complementan la verificación
-manual de los seis controles anteriores.
+Dos piezas de evidencia adicionales, archivadas en
+\ruta{docs/mediciones/sec/}, complementan la verificación manual de los
+seis controles anteriores: el análisis estático se generó el 2026-08-14
+(commit \texttt{73d5114}) y el escaneo ZAP se regeneró el 2026-09-02
+(commit \texttt{0fc8b69}) tras apagar la interfaz de Swagger.
 
 \textbf{Análisis estático de inyección SQL.} SpotBugs~4.8.6.4 con el
 complemento find-sec-bugs~1.13.0, restringido por un filtro de
@@ -2197,8 +2199,9 @@ práctica~\cite{rostamimazrae2023cicd}.
 
 \textbf{Escaneo OWASP ZAP baseline.} Modo pasivo contra
 \texttt{/api/docs} y \texttt{/}: \textbf{0 hallazgos, de cualquier
-severidad}. No siempre fue así, y vale contarlo: una corrida anterior
-(2026-08-14) sí encontró una alerta de severidad \textbf{alta}
+severidad} (corrida del 2026-09-02, commit \texttt{0fc8b69}). No siempre
+fue así, y vale contarlo: una corrida anterior (2026-08-14, commit
+\texttt{73d5114}) sí encontró una alerta de severidad \textbf{alta}
 —\emph{Vulnerable JS Library}, sobre \texttt{DOMPurify 3.0.6} dentro de
 \texttt{swagger-ui-bundle.js}, una dependencia de terceros empaquetada
 por Springdoc/Swagger UI, no código propio—, alcanzable porque la
