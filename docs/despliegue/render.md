@@ -1,9 +1,9 @@
 # Despliegue en Render
 
-Despliegue público con HTTPS real, en **una sola cuenta** y sin tarjeta de
-crédito. La configuración está en `render.yaml` (raíz del repositorio), así
-que Render crea los cuatro recursos de una vez en lugar de depender de
-ajustes hechos a mano.
+Despliegue público con HTTPS real y sin tarjeta de crédito. La configuración
+está en `render.yaml` (raíz del repositorio), así que Render crea los recursos
+de una vez en lugar de depender de ajustes hechos a mano. La base de datos
+**no** vive en Render: es PostgreSQL gestionado en Supabase (ver más abajo).
 
 ## Qué resuelve
 
@@ -12,15 +12,18 @@ certificado real, así que el sistema deja de depender del autofirmado. A
 diferencia del túnel de Cloudflare (`cloudflare-tunnel.md`), la URL no depende
 de que tu computadora esté encendida.
 
-## ⚠️ La base de datos caduca en 30 días
+## Base de datos: Supabase, no Render
 
-El plan gratuito de Render Postgres **se elimina 30 días después de crearse**,
-y con él los datos. Está asumido a propósito para esta entrega.
+El plan gratuito de Render Postgres se elimina 30 días después de crearse, y
+con él los datos. Por eso la base va en **Supabase**, cuyo plan gratuito no
+expira así. La cadena por defecto del repo (`.env.example`) ya apunta a
+Supabase; `render.yaml` no crea ninguna base y deja `DB_URL` / `DB_USER` /
+`DB_PASSWORD` como variables a completar en el panel (paso 2).
 
-**Anota la fecha de creación.** Si el sistema debe seguir en pie después,
-las salidas son: pasar la base a un plan de pago (desde $6/mes) o moverla a un
-proveedor cuyo plan gratuito no expire, como Supabase — en ese caso solo
-cambian `DB_URL`, `DB_USER` y `DB_PASSWORD`, nada más.
+Supabase da dos puertos sobre el mismo host: **6543** (Transaction Pooler, el
+que usa la app en marcha) y **5432** (Session Pooler / conexión directa, el
+que hace falta para cargar el esquema con `psql`, porque el 6543 no sostiene
+los advisory locks).
 
 ## Arquitectura
 
@@ -29,11 +32,10 @@ navegador ──HTTPS──> sged-frontend (sitio estático, CDN)
                           │
                           │  regla de reescritura /api/*
                           ▼
-                     sged-backend (contenedor Docker)
+                     sged-backend (contenedor Docker) ──> Supabase (PostgreSQL)
                           │
-                ┌─────────┴─────────┐
-                ▼                   ▼
-          sged-postgres        sged-redis
+                          ▼
+                     sged-redis (Key Value de Render)
 ```
 
 **El frontend es un sitio estático, no un contenedor.** Render da 750 horas de
@@ -45,62 +47,60 @@ consume horas, y las reglas de reescritura hacen ese trabajo.
 sigue viendo el dominio del frontend, así que las cookies `SameSite=Strict`
 siguen siendo válidas. Con una redirección se rompería la sesión.
 
-## Paso 1 — Crear el Blueprint
+## Paso 1 — Crear el proyecto de Supabase
+
+En `supabase.com`: **New project**. Anota la contraseña de la base que te pide
+(es `DB_PASSWORD`). Cuando termine de aprovisionar, en **Project Settings →
+Database → Connection string** verás el host
+(`aws-1-<región>.pooler.supabase.com`) y el usuario
+(`postgres.<id-del-proyecto>`).
+
+## Paso 2 — Crear el Blueprint en Render
 
 En `render.com`: **New → Blueprint**, conecta el repositorio de GitHub. Render
-detecta `render.yaml` y muestra los cuatro recursos que va a crear.
+detecta `render.yaml` y muestra los recursos que va a crear (backend, Key
+Value y frontend). Pedirá los valores marcados `sync: false`:
 
-## Paso 2 — Completar las tres variables de la base
-
-Render pedirá los valores marcados como `sync: false`. Están en el panel de
-**sged-postgres**, pestaña *Info*:
-
-| Variable | De dónde sale |
+| Variable | Valor |
 |---|---|
-| `DB_URL` | `jdbc:postgresql://<Internal-Host>/sged_db` |
-| `DB_USER` | El campo *Username* |
-| `DB_PASSWORD` | El campo *Password* |
+| `DB_URL` | `jdbc:postgresql://<host>.pooler.supabase.com:6543/postgres?prepareThreshold=0&preparedStatementCacheQueries=0` |
+| `DB_USER` | `postgres.<id-del-proyecto>` |
+| `DB_PASSWORD` | La contraseña del proyecto de Supabase |
 
-Usa el host **interno** (`dpg-…-a`), no el externo: el backend corre dentro de
-Render y así la conexión no sale a internet.
-
-Render entrega su cadena en formato `postgres://…`, que Spring **no** acepta
-como `spring.datasource.url` porque le falta el prefijo `jdbc:`. Por eso
-`DB_URL` se arma a mano en lugar de tomarse tal cual.
-
-> Si más adelante activas *connection pooling* (pgbouncer) en la base, añade
-> `?prepareThreshold=0&preparedStatementCacheQueries=0` al final de `DB_URL`.
-> Sin eso, Hibernate 6 contra un pooler falla con *"could not determine data
-> type of parameter"*. Sin pooling no hace falta.
+El puerto **6543** es el Transaction Pooler. El `?prepareThreshold=0&preparedStatementCacheQueries=0`
+es obligatorio: sin eso Hibernate 6 contra el pooler falla con *"could not
+determine data type of parameter"*. El prefijo `jdbc:` también: Supabase da la
+cadena como `postgresql://…` y Spring no la acepta así.
 
 `JWT_SECRET` lo genera Render solo. `GEMINI_API_KEY` solo si vas a mostrar la
 retroalimentación por IA.
 
-## Paso 3 — Cargar el esquema
+## Paso 3 — Cargar el esquema en Supabase
 
 Las migraciones de Flyway **no** reconstruyen la base desde cero: ninguna crea
 `deportivo.categorias` aunque V7, V16 y V17 la referencian. La fuente de
-verdad es `db/schema.sql`, y se aplica una sola vez.
+verdad es `db/schema.sql`, y se aplica una sola vez — por el puerto **5432**
+(el 6543 no sostiene los advisory locks que necesita un script grande).
 
-Copia la **External Database URL** del panel y expórtala como variable, para
-que la contraseña no quede en el historial de la terminal:
+Exporta la cadena como variable para que la contraseña no quede en el
+historial de la terminal (fíjate en el `:5432`):
 
 ```bash
-export RENDER_DB='postgresql://USUARIO:PASSWORD@HOST-EXTERNO.oregon-postgres.render.com/sged_db'
+export SUPA_DB='postgresql://postgres.<id-del-proyecto>:PASSWORD@aws-1-<región>.pooler.supabase.com:5432/postgres'
 ```
 
 ```bash
-psql "$RENDER_DB" -f db/schema.sql
+psql "$SUPA_DB" -f db/schema.sql
 ```
 
 ```bash
-psql "$RENDER_DB" -f db/seed.sql
+psql "$SUPA_DB" -f db/seed.sql
 ```
 
 Comprueba que quedó:
 
 ```bash
-psql "$RENDER_DB" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('seguridad','academico','deportivo','inventario');"
+psql "$SUPA_DB" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('seguridad','academico','deportivo','inventario');"
 ```
 
 ## Paso 4 — Ajustar la URL del backend
@@ -145,7 +145,13 @@ SameSite=Strict`.
 - **750 horas de instancia al mes** para todo el workspace. El sitio estático
   no consume; solo el backend.
 - **512 MB de RAM y 0.1 CPU** para el backend.
-- **La base caduca a los 30 días** (ver arriba).
+- **El Key Value (Redis) gratuito no persiste a disco**: al reiniciarse pierde
+  la caché de lecturas y la lista de revocación de tokens. No afecta la
+  corrección, solo obliga a volver a iniciar sesión.
+
+La base en Supabase no entra en estos límites (su plan gratuito no expira a
+los 30 días como el de Render Postgres), pero pausa el proyecto tras una
+semana sin actividad — se reactiva desde el panel.
 
 Para una demo evaluada: entra a la URL unos minutos antes para que el backend
 ya esté despierto. Que responda lento en el momento de la revisión cuenta como
