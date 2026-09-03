@@ -21,6 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * Endpoint propio del usuario autenticado (cualquier rol), separado de
+ * {@code UsuarioController} porque ese controlador es
+ * {@code @PreAuthorize hasRole('ADMINISTRADOR')} a nivel de clase: "mis
+ * datos" tiene que quedar accesible a los cinco roles.
+ */
 @RestController
 @RequestMapping("/api/usuarios/me")
 @RequiredArgsConstructor
@@ -30,6 +36,15 @@ public class PerfilController {
     private final UsuarioRepository usuarioRepository;
     private final ReportePdfService pdfService;
 
+    /**
+     * Genera un PDF con los datos de la cuenta y la persona del usuario en
+     * sesión (portabilidad de datos personales, ETHICS.md).
+     *
+     * @return {@code 200 OK} con el PDF como {@code application/pdf} y
+     *         {@code Content-Disposition: attachment}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el usuario en sesión no se encuentra en base
+     */
     @GetMapping("/datos-pdf")
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> descargarMisDatos() {

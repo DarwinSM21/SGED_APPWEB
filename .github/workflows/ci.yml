@@ -51,6 +51,10 @@ jobs:
           name: jacoco
           path: backend/target/site/jacoco
 
+      - name: Javadoc del API (OBS-14 — se genera sin errores)
+        working-directory: backend
+        run: bash mvnw -B -DskipTests javadoc:javadoc
+
       - name: Auditoría de SQL dinámico
         run: bash scripts/audit-sql-dynamic.sh
 

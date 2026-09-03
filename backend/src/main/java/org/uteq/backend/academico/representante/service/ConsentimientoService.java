@@ -17,6 +17,11 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+/**
+ * Otorga y revoca el consentimiento del representante para el tratamiento
+ * de datos de un representado (hallazgo H-04 de {@code ETHICS.md}). Lo
+ * registra un administrador, dejando constancia de quién lo hizo.
+ */
 @Service
 @RequiredArgsConstructor
 public class ConsentimientoService {
@@ -25,6 +30,18 @@ public class ConsentimientoService {
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Registra un consentimiento otorgado por un representante sobre un
+     * estudiante, con un alcance dado.
+     *
+     * @param request       representante, estudiante y alcance
+     * @param usernameAdmin  administrador que registra el consentimiento
+     * @return el consentimiento registrado
+     * @throws RecursoNoEncontradoException si el representante o el estudiante
+     *                                      no existen
+     * @throws IllegalArgumentException     si ya existe un consentimiento
+     *                                      vigente con ese alcance
+     */
     @Transactional
     public ConsentimientoResponse otorgar(OtorgarConsentimientoRequest request, String usernameAdmin) {
         Representante representante = representanteRepository.findById(request.idRepresentante())
@@ -54,6 +71,15 @@ public class ConsentimientoService {
         return toResponse(consentimiento);
     }
 
+    /**
+     * Revoca un consentimiento vigente.
+     *
+     * @param idConsentimiento identificador del consentimiento
+     * @param usernameAdmin    administrador que revoca
+     * @return el consentimiento revocado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si ya estaba revocado
+     */
     @Transactional
     public ConsentimientoResponse revocar(Long idConsentimiento, String usernameAdmin) {
         Consentimiento consentimiento = consentimientoRepository.findById(idConsentimiento)
@@ -71,6 +97,13 @@ public class ConsentimientoService {
         return toResponse(consentimiento);
     }
 
+    /**
+     * Lista los consentimientos de un estudiante, del más reciente al más
+     * antiguo.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return la lista de consentimientos (vigentes y revocados)
+     */
     @Transactional(readOnly = true)
     public List<ConsentimientoResponse> listarPorEstudiante(Long idEstudiante) {
         return consentimientoRepository.findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(idEstudiante).stream()

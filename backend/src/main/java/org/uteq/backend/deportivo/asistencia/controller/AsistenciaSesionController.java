@@ -15,12 +15,29 @@ import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.NominaResponse;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.PasarListaRequest;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
 
+/**
+ * Lista de asistencia de una sesión, para el entrenador. Complementa el QR
+ * (la vía normal, que deja el mejor dato con hora real de llegada), no lo
+ * reemplaza.
+ *
+ * <p>{@code @Transactional} va aquí y no solo en el servicio: con
+ * open-in-view deshabilitado, cualquier relación LAZY que se toque al
+ * serializar la respuesta explota fuera de la transacción.
+ */
 @RestController
 @RequestMapping("/api/asistencias")
 @RequiredArgsConstructor
 public class AsistenciaSesionController {
     private final AsistenciaService asistenciaService;
 
+    /**
+     * Nómina de una sesión con el estado de asistencia de cada estudiante.
+     *
+     * @param idSesion identificador de la sesión
+     * @return {@code 200 OK} con la nómina
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la sesión no existe ({@code 404})
+     */
     @GetMapping("/sesion/{idSesion}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     @Transactional(readOnly = true)
@@ -28,6 +45,19 @@ public class AsistenciaSesionController {
         return ResponseEntity.ok(asistenciaService.nomina(idSesion));
     }
 
+    /**
+     * Pasa lista de una sesión: fija el estado de asistencia de cada
+     * estudiante de la nómina.
+     *
+     * @param idSesion identificador de la sesión
+     * @param request  estado por estudiante; validado con {@code @Valid}
+     * @return {@code 200 OK} con la nómina actualizada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la sesión no existe ({@code 404})
+     * @throws IllegalArgumentException si la sesión aún no ocurrió o el
+     *         cuerpo referencia estudiantes que no son de la categoría
+     *         ({@code 422})
+     */
     @PutMapping("/sesion/{idSesion}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     @Transactional

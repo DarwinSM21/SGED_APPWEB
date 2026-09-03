@@ -24,6 +24,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Panel operativo: qué estudiantes necesitan atención hoy y por qué.
+ *
+ * <p>Cruza tres señales que vivían separadas en tres pantallas —pagos,
+ * evaluación diaria y lesiones— para que quien abre el sistema por la mañana
+ * vea en un solo lugar a quién hay que llamar. Se devuelven por separado,
+ * no como un único indicador de riesgo: la acción no es la misma si el
+ * problema es la cuota, las faltas o una lesión.
+ *
+ * <p>Cada señal se resuelve con una consulta, nunca con una por estudiante.
+ * La regla de asistencia es la del procedimiento almacenado: el denominador
+ * son las sesiones programadas de la categoría y la ventana se corta en
+ * ayer, porque una sesión de hoy puede no haber ocurrido todavía.
+ */
 @Service
 @RequiredArgsConstructor
 public class AlertaService {
@@ -32,15 +46,27 @@ public class AlertaService {
     private final LesionRepository lesionRepository;
     private final AsistenciaRepository asistenciaRepository;
 
+    /** Por debajo de este porcentaje la asistencia se considera un problema. */
     @Value("${alertas.umbral-asistencia:75}")
     private int umbralAsistencia;
 
+    /** Ventana sobre la que se mide la asistencia, en días. */
     @Value("${alertas.dias-asistencia:30}")
     private int diasAsistencia;
 
+    // Cuántos estudiantes se detallan. El panel es una lista de a quién llamar
+    // hoy, no un censo: los contadores se siguen calculando sobre la lista
+    // completa, así que el recorte no miente sobre cuántos hay.
     @Value("${alertas.tope-detalle:25}")
     private int topeDetalle;
 
+    /**
+     * Construye el panel de alertas del día: número de estudiantes activos,
+     * contadores por tipo de alerta (mensualidad, asistencia, lesión) y el
+     * detalle recortado de los más urgentes.
+     *
+     * @return el panel de alertas
+     */
     @Transactional(readOnly = true)
     public PanelAlertasResponse panel() {
         LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
@@ -80,6 +106,11 @@ public class AlertaService {
                 detalle);
     }
 
+    // Porcentaje por estudiante a partir de una sola consulta. Un estudiante
+    // SIN entrada aquí —o con cero sesiones programadas— se deja fuera del
+    // mapa a propósito: el servicio lo lee como null ("sin dato", no "cero por
+    // ciento"). Marcar asistencia baja a quien no tuvo entrenamientos sería
+    // acusarlo de algo que no hizo.
     private Map<Long, BigDecimal> porcentajesPorEstudiante(LocalDate desde, LocalDate corte) {
         Map<Long, BigDecimal> porcentajes = new HashMap<>();
         for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {

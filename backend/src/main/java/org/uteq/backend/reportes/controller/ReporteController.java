@@ -14,6 +14,12 @@ import org.uteq.backend.reportes.service.ReporteService;
 
 import java.time.LocalDate;
 
+/**
+ * Descarga de reportes en PDF. Cada endpoint devuelve un
+ * {@code application/pdf} con {@code Content-Disposition: attachment} y
+ * acepta filtros opcionales; todos los filtros ausentes traen el conjunto
+ * completo (acotado internamente por {@link ReporteService}).
+ */
 @RestController
 @RequestMapping("/api/reportes")
 @RequiredArgsConstructor
@@ -21,6 +27,16 @@ public class ReporteController {
 
     private final ReporteService reporteService;
 
+    /**
+     * Fichas de estudiantes.
+     *
+     * @param categoria categoría por la que filtrar (opcional)
+     * @param activo    {@code true}/{@code false} para filtrar por estado
+     *                  (opcional)
+     * @return {@code 200 OK} con el PDF {@code fichas-estudiantes.pdf}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no hay datos para los filtros ({@code 404})
+     */
     @GetMapping("/estudiantes-fichas")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<byte[]> estudiantesFichas(
@@ -29,6 +45,16 @@ public class ReporteController {
         return pdf("fichas-estudiantes.pdf", reporteService.estudiantesFichas(categoria, activo));
     }
 
+    /**
+     * Pagos.
+     *
+     * @param estudianteId estudiante por el que filtrar (opcional)
+     * @param fechaDesde   límite inferior de fecha de pago (opcional)
+     * @param fechaHasta   límite superior de fecha de pago (opcional)
+     * @return {@code 200 OK} con el PDF {@code pagos.pdf}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no hay datos para los filtros ({@code 404})
+     */
     @GetMapping("/pagos")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     public ResponseEntity<byte[]> pagos(
@@ -38,6 +64,17 @@ public class ReporteController {
         return pdf("pagos.pdf", reporteService.pagos(estudianteId, fechaDesde, fechaHasta));
     }
 
+    /**
+     * Asistencias.
+     *
+     * @param estudianteId estudiante por el que filtrar (opcional)
+     * @param categoria    categoría por la que filtrar (opcional)
+     * @param fechaDesde    límite inferior de fecha de sesión (opcional)
+     * @param fechaHasta    límite superior de fecha de sesión (opcional)
+     * @return {@code 200 OK} con el PDF {@code asistencias.pdf}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no hay datos para los filtros ({@code 404})
+     */
     @GetMapping("/asistencias")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<byte[]> asistencias(
@@ -48,6 +85,17 @@ public class ReporteController {
         return pdf("asistencias.pdf", reporteService.asistencias(estudianteId, categoria, fechaDesde, fechaHasta));
     }
 
+    /**
+     * Evaluaciones.
+     *
+     * @param estudianteId estudiante por el que filtrar (opcional)
+     * @param categoria    categoría por la que filtrar (opcional)
+     * @param fechaDesde    límite inferior de fecha de evaluación (opcional)
+     * @param fechaHasta    límite superior de fecha de evaluación (opcional)
+     * @return {@code 200 OK} con el PDF {@code evaluaciones.pdf}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no hay datos para los filtros ({@code 404})
+     */
     @GetMapping("/evaluaciones")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<byte[]> evaluaciones(
@@ -58,6 +106,17 @@ public class ReporteController {
         return pdf("evaluaciones.pdf", reporteService.evaluaciones(estudianteId, categoria, fechaDesde, fechaHasta));
     }
 
+    /**
+     * Lesiones.
+     *
+     * @param estudianteId estudiante por el que filtrar (opcional)
+     * @param categoria    categoría por la que filtrar (opcional)
+     * @param fechaDesde    límite inferior de fecha de lesión (opcional)
+     * @param fechaHasta    límite superior de fecha de lesión (opcional)
+     * @return {@code 200 OK} con el PDF {@code lesiones.pdf}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no hay datos para los filtros ({@code 404})
+     */
     @GetMapping("/lesiones")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<byte[]> lesiones(

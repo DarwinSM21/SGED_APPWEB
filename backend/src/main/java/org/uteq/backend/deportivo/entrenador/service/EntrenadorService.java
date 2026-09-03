@@ -22,6 +22,11 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
+/**
+ * Lógica de negocio de {@code Entrenador}. Cada entrenador se apoya en una
+ * {@code Persona} y una cuenta de rol {@code ENTRENADOR} ya creadas; la
+ * especialidad es opcional. Las bajas son lógicas ({@code activo = false}).
+ */
 @Service
 @RequiredArgsConstructor
 public class EntrenadorService {
@@ -31,6 +36,12 @@ public class EntrenadorService {
     private final UsuarioRepository usuarioRepository;
     private final EspecialidadRepository especialidadRepository;
 
+    /**
+     * Lista paginada de entrenadores.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, envuelta en {@link EntrenadorPageResponse}
+     */
     @Cacheable(value = RedisCacheConfig.CACHE_ENTRENADORES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EntrenadorPageResponse<EntrenadorResponse> listar(Pageable pageable) {
@@ -45,6 +56,13 @@ public class EntrenadorService {
         );
     }
 
+    /**
+     * Busca un entrenador por su identificador.
+     *
+     * @param id identificador del entrenador
+     * @return el entrenador encontrado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public EntrenadorResponse buscarPorId(Long id) {
         Entrenador e = entrenadorRepository.findById(id)
@@ -52,6 +70,17 @@ public class EntrenadorService {
         return toResponse(e);
     }
 
+    /**
+     * Registra un entrenador sobre una persona y una cuenta ya existentes.
+     *
+     * @param request persona, usuario, especialidad y datos profesionales
+     * @return el entrenador registrado
+     * @throws RecursoNoEncontradoException si la persona, el usuario o la
+     *                                      especialidad no existen
+     * @throws IllegalArgumentException     si la persona o el usuario ya
+     *                                      están asignados, o si el usuario
+     *                                      no tiene rol {@code ENTRENADOR}
+     */
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
     @Transactional
     public EntrenadorResponse crear(EntrenadorRequest request) {
@@ -88,6 +117,15 @@ public class EntrenadorService {
         return toResponse(entrenador);
     }
 
+    /**
+     * Actualiza la especialidad y los datos profesionales de un entrenador.
+     *
+     * @param id      identificador del entrenador a editar
+     * @param request datos nuevos
+     * @return el entrenador actualizado
+     * @throws RecursoNoEncontradoException si el entrenador o la especialidad
+     *                                      no existen
+     */
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
     @Transactional
     public EntrenadorResponse editar(Long id, EntrenadorRequest request) {
@@ -102,6 +140,12 @@ public class EntrenadorService {
         return toResponse(entrenador);
     }
 
+    /**
+     * Baja lógica de un entrenador ({@code activo = false}).
+     *
+     * @param id identificador del entrenador
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Auditado(accion = "ELIMINAR", entidad = "Entrenador", idSpel = "#p0",
             descripcionSpel = "'desactivo la ficha de entrenador #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
@@ -113,6 +157,14 @@ public class EntrenadorService {
         entrenadorRepository.save(entrenador);
     }
 
+    /**
+     * Reactiva un entrenador dado de baja.
+     *
+     * @param id identificador del entrenador
+     * @return el entrenador reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si ya está activo
+     */
     @Auditado(accion = "REACTIVAR", entidad = "Entrenador", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de entrenador #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)

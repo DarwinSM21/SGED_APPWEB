@@ -14,6 +14,16 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.Set;
 
+/**
+ * Colaborador que concentra la relación {@code Estudiante}–{@code Usuario}:
+ * la única porción de {@code EstudianteService} que cruzaba de lleno al
+ * dominio de seguridad ({@code Usuario}, {@code Rol}, {@code PasswordEncoder}).
+ * Extraído para bajar el fan-out de {@code EstudianteService} (hallazgo
+ * MET-01 / R-06 del informe de evaluación de calidad). No orquesta el alta
+ * completa —eso lo sigue llamando {@code EstudianteService}—, sino que aloja
+ * el conocimiento de cómo se arma y valida una cuenta de rol
+ * {@code ESTUDIANTE}.
+ */
 @Service
 @RequiredArgsConstructor
 public class EstudianteAccesoService {
@@ -22,6 +32,16 @@ public class EstudianteAccesoService {
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * Guarda simétrica a {@code UsuarioService.validarRolCoherente}: si la
+     * persona ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin
+     * cuenta no hay nada que validar.
+     *
+     * @param idPersona persona sobre la que se quiere crear la ficha de
+     *                  estudiante
+     * @throws IllegalArgumentException si la persona tiene una cuenta activa
+     *                                  con un rol distinto de {@code ESTUDIANTE}
+     */
     public void validarCoherenciaConFichaEstudiante(Long idPersona) {
         usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -> {
             boolean esEstudiante = usuario.getRoles() != null && usuario.getRoles().stream()
@@ -33,6 +53,18 @@ public class EstudianteAccesoService {
         });
     }
 
+    /**
+     * Crea el {@code Usuario} (rol {@code ESTUDIANTE}) sobre una persona que
+     * ya existe; no lo asocia a la ficha de {@code Estudiante} —eso lo hace
+     * el llamador una vez que tiene el {@code Usuario} guardado—.
+     *
+     * @param persona persona dueña de la cuenta
+     * @param request credenciales de la cuenta a crear
+     * @return el {@code Usuario} recién guardado
+     * @throws IllegalArgumentException si el {@code username} ya está en uso
+     * @throws IllegalStateException    si falta el rol {@code ESTUDIANTE} o el
+     *                                  catálogo de estados en la base
+     */
     public Usuario crearCuentaDeEstudiante(Persona persona, HabilitarAccesoRequest request) {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");

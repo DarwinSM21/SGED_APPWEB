@@ -31,6 +31,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Sugerencia de once para un partido. <b>La IA no elige a los jugadores.</b>
+ * La selección sale de una regla explícita y reproducible a mano:
+ * <ol>
+ *   <li>El universo es el plantel activo de la categoría que juega.</li>
+ *   <li>Queda fuera quien arrastra una lesión activa y quien no pisó un solo
+ *       entrenamiento en la ventana; los dos se muestran con el motivo.</li>
+ *   <li>Se ordena por el promedio de las últimas semanas (no el histórico),
+ *       desempatando por presencias y después por id, para que dos llamadas
+ *       con los mismos datos devuelvan lo mismo.</li>
+ *   <li>Se titulariza al mejor de cada posición nominal, no a los once
+ *       mejores promedios (eso podía sugerir dos porteros).</li>
+ * </ol>
+ *
+ * <p>El modelo de lenguaje solo redacta un comentario sobre un once ya
+ * decidido, y solo cuando se le pide.
+ */
 @Service
 @RequiredArgsConstructor
 public class ConvocatoriaService {
@@ -42,16 +59,30 @@ public class ConvocatoriaService {
     private final LesionRepository lesionRepository;
     private final GeneradorFeedbackIA generadorFeedback;
 
+    /** Cupo de titulares del once. */
     @Value("${plantilla.titulares:11}")
     private int cantidadTitulares;
 
+    /** Cuántas semanas hacia atrás se miran. Cuatro es un mes de entrenamientos. */
     @Value("${plantilla.semanas-rendimiento:4}")
     private int semanasRendimiento;
 
+    /**
+     * Cupo de titulares configurado.
+     *
+     * @return el número de titulares del once
+     */
     public int cupoTitulares() {
         return cantidadTitulares;
     }
 
+    /**
+     * Calcula la convocatoria sugerida para un partido por su identificador.
+     *
+     * @param idPartido identificador del partido
+     * @return la convocatoria sugerida (no se guarda sola)
+     * @throws RecursoNoEncontradoException si el partido no existe
+     */
     @Transactional(readOnly = true)
     public Convocatoria calcular(Long idPartido) {
         Partido partido = partidoRepository.findWithCategoriaByIdPartido(idPartido)
@@ -59,6 +90,15 @@ public class ConvocatoriaService {
         return calcular(partido);
     }
 
+    /**
+     * Calcula la convocatoria sugerida para un partido ya cargado. Es la
+     * <em>sugerencia</em>: no se guarda sola, para no convertir una
+     * recomendación en hecho histórico sin que nadie lo decida.
+     *
+     * @param partido partido para el que se calcula
+     * @return titulares por puesto, suplentes, no convocables con su motivo,
+     *         y los promedios y presencias ya consultados
+     */
     @Transactional(readOnly = true)
     public Convocatoria calcular(Partido partido) {
         Long idCategoria = partido.getCategoria().getIdCategoria();
@@ -88,6 +128,9 @@ public class ConvocatoriaService {
             Long id = e.getIdEstudiante();
             if (lesionados.contains(id)) {
                 fuera.add(new NoConvocable(id, nombreDe(e), "Lesión activa"));
+            // Si la categoría no tuvo entrenamientos en la ventana, nadie pudo
+            // asistir; castigar por eso a todo el plantel dejaría al entrenador
+            // sin nadie a quien alinear.
             } else if (entrenamientos > 0 && presencias.getOrDefault(id, 0L) == 0L) {
                 fuera.add(new NoConvocable(id, nombreDe(e),
                         "No entrenó en las últimas " + semanasRendimiento + " semanas"));
@@ -118,6 +161,15 @@ public class ConvocatoriaService {
                 promedios, presencias, entrenamientos);
     }
 
+    /**
+     * Comentario del modelo sobre un once ya decidido. Se pide a demanda.
+     * Solo se envían datos seudonimizados ("Jugador 1", su categoría, su
+     * puesto y sus números): ningún nombre sale del sistema.
+     *
+     * @param titulares once sobre el que comentar
+     * @param categoria categoría del equipo
+     * @return el comentario generado, con su disponibilidad y motivo
+     */
     public GeneradorFeedbackIA.ResultadoFeedback comentar(
             List<JugadorConvocado> titulares, String categoria) {
         List<PerfilJugadorAnonimo> perfiles = new ArrayList<>();
@@ -133,6 +185,9 @@ public class ConvocatoriaService {
         return generadorFeedback.generarComentarioPlantilla(perfiles);
     }
 
+    // Promedio primero, presencias después, id al final. El desempate por id
+    // no es cosmético: sin él, dos llamadas con los mismos datos podrían
+    // devolver onces distintos.
     private Comparator<Estudiante> porRendimiento(Map<Long, BigDecimal> promedios,
                                                   Map<Long, Long> presencias) {
         return Comparator
@@ -163,6 +218,19 @@ public class ConvocatoriaService {
         return presencias;
     }
 
+    /**
+     * Construye la fila de un jugador convocado.
+     *
+     * @param e              estudiante
+     * @param idPosicion     puesto de <em>ese</em> partido, que no tiene por
+     *                       qué ser la posición nominal del estudiante
+     * @param titular        {@code true} si entra como titular
+     * @param promedios      promedios por estudiante ya consultados
+     * @param presencias     presencias por estudiante ya consultadas
+     * @param entrenamientos entrenamientos de la categoría en la ventana
+     * @return la fila del jugador ({@code promedio} es {@code null}, no
+     *         {@code 0.0}, si no lo evaluaron)
+     */
     public JugadorConvocado aConvocado(Estudiante e, Long idPosicion, boolean titular,
                                        Map<Long, BigDecimal> promedios, Map<Long, Long> presencias,
                                        long entrenamientos) {
@@ -179,10 +247,30 @@ public class ConvocatoriaService {
                 entrenamientos);
     }
 
+    /**
+     * Nombre completo de un estudiante ({@code "Nombre Apellido"}).
+     *
+     * @param e estudiante
+     * @return el nombre completo
+     */
     public static String nombreDe(Estudiante e) {
         return e.getPersona().getNombre() + " " + e.getPersona().getApellido();
     }
 
+    /**
+     * Resultado del cálculo de convocatoria. Lleva además los promedios y
+     * presencias ya consultados para que quien tenga que rearmar filas no
+     * vuelva a golpear la base con las mismas dos consultas.
+     *
+     * @param partido        partido para el que se calculó
+     * @param ventana        ventana de rendimiento evaluada
+     * @param titulares      once sugerido
+     * @param suplentes      convocables que no entraron al once
+     * @param noConvocables  jugadores fuera, con su motivo
+     * @param promedios      promedio en la ventana por estudiante
+     * @param presencias     presencias en la ventana por estudiante
+     * @param entrenamientos entrenamientos de la categoría en la ventana
+     */
     public record Convocatoria(
             Partido partido,
             VentanaRendimiento ventana,

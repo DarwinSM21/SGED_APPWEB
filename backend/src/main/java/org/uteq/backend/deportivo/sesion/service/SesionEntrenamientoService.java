@@ -30,6 +30,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Lógica de negocio de sesiones de entrenamiento, antes embebida en
+ * {@code SesionEntrenamientoController} (hallazgo D-03 del informe de
+ * evaluación de calidad). El controlador conserva la resolución de identidad
+ * desde el contexto de seguridad y delega aquí el resto; este servicio se
+ * prueba con un {@code String} cualquiera, sin simular contexto.
+ */
 @Service
 @RequiredArgsConstructor
 public class SesionEntrenamientoService {
@@ -41,6 +48,16 @@ public class SesionEntrenamientoService {
     private final AsistenciaRepository asistenciaRepository;
     private final EstudianteRepository estudianteRepository;
 
+    /**
+     * Sesiones de hoy. Antes de consultar, materializa las sesiones
+     * programadas de los horarios fijos.
+     *
+     * @param username           usuario autenticado
+     * @param veTodasLasSesiones  {@code true} para {@code ADMINISTRADOR} /
+     *                            {@code RECEPCIONISTA} (todas); {@code false}
+     *                            filtra por el entrenador del username
+     * @return las sesiones de hoy visibles
+     */
     @Transactional
     public List<SesionHoyResponse> sesionesDeHoy(String username, boolean veTodasLasSesiones) {
         horarioService.generarSesionesProgramadas();
@@ -61,6 +78,18 @@ public class SesionEntrenamientoService {
         return sesiones.stream().map(this::aResponse).toList();
     }
 
+    /**
+     * Historial de sesiones (pasadas y futuras), paginado y ordenado por
+     * fecha descendente.
+     *
+     * @param username           usuario autenticado
+     * @param veTodasLasSesiones  {@code true} para {@code ADMINISTRADOR}
+     *                            (todas); {@code false} filtra por el
+     *                            entrenador del username
+     * @param page               número de página (desde 0)
+     * @param size               tamaño de página
+     * @return la página de sesiones
+     */
     @Transactional
     public List<SesionHoyResponse> misSesiones(String username, boolean veTodasLasSesiones, int page, int size) {
         horarioService.generarSesionesProgramadas();
@@ -81,6 +110,20 @@ public class SesionEntrenamientoService {
         return pagina.map(this::aResponse).getContent();
     }
 
+    /**
+     * Alta de una sesión propia. El {@code idEntrenador} nunca viene del
+     * cliente: se resuelve del username, para que un entrenador no cree una
+     * sesión "a nombre" de otro.
+     *
+     * @param username usuario autenticado (entrenador)
+     * @param request  categoría, fecha, franja horaria y campo
+     * @return la sesión creada
+     * @throws RecursoNoEncontradoException si la cuenta no tiene entrenador
+     *                                      asociado o la categoría no existe
+     * @throws IllegalArgumentException     si la franja es inválida o se
+     *                                      solapa con otra sesión de la misma
+     *                                      categoría
+     */
     @Transactional
     public SesionHoyResponse crear(String username, SesionCrearRequest request) {
         Entrenador entrenador = entrenadorPorUsername(username);
@@ -116,6 +159,17 @@ public class SesionEntrenamientoService {
         return aResponse(sesion);
     }
 
+    /**
+     * Qué pasó en una sesión: quién estuvo, quién faltó y quién no tiene
+     * registro. Se parte del plantel de la categoría y no de las filas de
+     * asistencia: si nadie pasó lista, "no se registró la asistencia de
+     * nadie" es distinto de "no había nadie convocado". Las marcas de chicos
+     * que ya no están en la categoría se conservan: estuvieron ese día.
+     *
+     * @param idSesion identificador de la sesión
+     * @return el resumen por estado y la fila de cada estudiante del plantel
+     * @throws RecursoNoEncontradoException si la sesión no existe
+     */
     @Transactional(readOnly = true)
     public SesionHistorialResponse historial(Long idSesion) {
         SesionEntrenamiento s = sesionRepository.findById(idSesion)

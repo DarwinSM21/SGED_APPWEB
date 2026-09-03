@@ -24,6 +24,11 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.time.LocalDate;
 
+/**
+ * Entrega y devolución de artículos a estudiantes o entrenadores. Crear
+ * resta stock (mismo chequeo de no-negativo que un movimiento de salida);
+ * devolver con estado {@code DEVUELTO} lo repone, {@code PERDIDO} no.
+ */
 @Service
 @RequiredArgsConstructor
 public class AsignacionService {
@@ -33,23 +38,57 @@ public class AsignacionService {
     private final EntrenadorRepository entrenadorRepository;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Lista paginada de asignaciones, de la más reciente a la más antigua.
+     *
+     * @param pageable paginación
+     * @return la página, mapeada a {@link AsignacionResponse}
+     */
     @Transactional(readOnly = true)
     public Page<AsignacionResponse> listarPaginado(Pageable pageable) {
         return asignacionRepository.findAllByOrderByFechaAsignacionDesc(pageable).map(this::toResponse);
     }
 
+    /**
+     * Asignaciones de un estudiante.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param pageable     paginación
+     * @return la página de asignaciones del estudiante
+     */
     @Transactional(readOnly = true)
     public Page<AsignacionResponse> listarPorEstudiante(Long idEstudiante, Pageable pageable) {
         return asignacionRepository.findByEstudiante_IdEstudianteOrderByFechaAsignacionDesc(idEstudiante, pageable)
                 .map(this::toResponse);
     }
 
+    /**
+     * Asignaciones de un entrenador.
+     *
+     * @param idEntrenador identificador del entrenador
+     * @param pageable     paginación
+     * @return la página de asignaciones del entrenador
+     */
     @Transactional(readOnly = true)
     public Page<AsignacionResponse> listarPorEntrenador(Long idEntrenador, Pageable pageable) {
         return asignacionRepository.findByEntrenador_IdEntrenadorOrderByFechaAsignacionDesc(idEntrenador, pageable)
                 .map(this::toResponse);
     }
 
+    /**
+     * Registra una asignación y descuenta la cantidad del stock del artículo.
+     *
+     * @param request             artículo, cantidad, destinatario (exactamente
+     *                            estudiante <em>o</em> entrenador) y fecha
+     *                            esperada de devolución
+     * @param usernameRegistrador usuario que registra la asignación
+     * @return la asignación creada
+     * @throws RecursoNoEncontradoException si el artículo o el destinatario
+     *                                      no existen
+     * @throws IllegalArgumentException     si el destinatario está mal
+     *                                      especificado o no hay stock
+     *                                      suficiente
+     */
     @Auditado(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
             descripcionSpel = "'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)")
     @Transactional
@@ -87,6 +126,17 @@ public class AsignacionService {
         return toResponse(asignacionRepository.save(builder.build()));
     }
 
+    /**
+     * Resuelve una asignación como {@code DEVUELTO} (repone stock) o
+     * {@code PERDIDO} (no repone).
+     *
+     * @param id      identificador de la asignación
+     * @param request estado de la devolución y observaciones
+     * @return la asignación actualizada
+     * @throws RecursoNoEncontradoException si la asignación no existe
+     * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
+     *                                      la asignación ya estaba resuelta
+     */
     @Auditado(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
             descripcionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
     @Transactional

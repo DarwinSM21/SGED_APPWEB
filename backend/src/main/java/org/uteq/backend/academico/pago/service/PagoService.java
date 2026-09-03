@@ -26,6 +26,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Registro de pagos. {@code MEMBRESIA} valida, antes de guardar nada, que
+ * ningún mes solicitado esté ya cubierto (todo o nada: si uno falla no se
+ * cobra a medias). {@code DIARIO} no tiene esa validación porque no cubre
+ * período. Las anulaciones no borran ni editan: dejan el pago con quién,
+ * cuándo y por qué se anuló, y el correcto se registra aparte.
+ */
 @Service
 @RequiredArgsConstructor
 public class PagoService {
@@ -33,6 +40,21 @@ public class PagoService {
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Registra el pago de una o varias mensualidades. Es todo o nada: si
+     * cualquiera de los meses ya está cubierto, no se guarda ninguno.
+     *
+     * @param idEstudiante        estudiante que paga
+     * @param anio                año de las mensualidades
+     * @param meses               meses a cubrir (1–12); se ordenan y
+     *                            deduplican
+     * @param monto               monto por mes
+     * @param fechaPago           fecha del cobro; {@code null} usa la de hoy
+     * @param usernameRegistrador usuario que registra el pago
+     * @return los pagos creados, uno por mes
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws IllegalArgumentException     si algún mes ya está cubierto
+     */
     @Auditado(accion = "CREAR", entidad = "Pago",
             descripcionSpel = "'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'")
     @Transactional
@@ -65,6 +87,16 @@ public class PagoService {
         return pagoRepository.saveAll(pagos);
     }
 
+    /**
+     * Registra un pago diario (no cubre período, sin validación de duplicado).
+     *
+     * @param idEstudiante        estudiante que paga
+     * @param monto               monto pagado
+     * @param fechaPago           fecha del cobro; {@code null} usa la de hoy
+     * @param usernameRegistrador usuario que registra el pago
+     * @return el pago creado
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     */
     @Auditado(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago",
             descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
     @Transactional
@@ -81,6 +113,13 @@ public class PagoService {
                 .build());
     }
 
+    /**
+     * Historial de pagos de un estudiante, del más reciente al más antiguo.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return la lista de pagos (incluye los anulados)
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     */
     @Transactional(readOnly = true)
     public List<Pago> historialDe(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
@@ -89,6 +128,12 @@ public class PagoService {
         return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);
     }
 
+    /**
+     * Cuánto entró en caja este mes calendario (Ecuador), sin importar qué
+     * mes cubre cada pago.
+     *
+     * @return año, mes, total cobrado y número de pagos vigentes del mes
+     */
     @Transactional(readOnly = true)
     public IngresosMesResponse ingresosDelMes() {
         YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);
@@ -100,6 +145,17 @@ public class PagoService {
         return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
     }
 
+    /**
+     * Serie de recaudación de los últimos {@code meses} meses, contando el
+     * actual. Se arma sobre la lista completa de meses del rango: un mes sin
+     * cobros viaja en cero, porque si se omite el gráfico dibuja contiguos
+     * dos meses que no lo son. El promedio se divide entre todos los meses
+     * del rango, incluidos los de cero.
+     *
+     * @param meses número de meses solicitado; se acota a {@code [1, 24]}
+     * @return la serie mensual, el total, el promedio y el mejor mes
+     *         ({@code null} si no hubo cobros)
+     */
     @Transactional(readOnly = true)
     public HistoricoIngresosResponse historicoIngresos(int meses) {
         int cantidad = Math.max(1, Math.min(meses, 24));
@@ -135,6 +191,18 @@ public class PagoService {
         return new HistoricoIngresosResponse(serie, total, promedio, mejor);
     }
 
+    /**
+     * Anula un pago mal registrado. No lo edita ni lo borra: el registro se
+     * queda con quién lo anuló, cuándo y por qué. Anular dos veces se rechaza
+     * en vez de ignorarse en silencio.
+     *
+     * @param idPago          identificador del pago
+     * @param motivo          motivo de la anulación
+     * @param usernameAnulador usuario que anula
+     * @return el pago anulado
+     * @throws RecursoNoEncontradoException si el pago no existe
+     * @throws IllegalArgumentException     si el pago ya estaba anulado
+     */
     @Auditado(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
     @Transactional
     public Pago anular(Long idPago, String motivo, String usernameAnulador) {

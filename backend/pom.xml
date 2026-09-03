@@ -271,6 +271,30 @@
 			     de esta primera integracion es que `mvn validate` imprima esas
 			     violaciones sin romper el build; una vez corregidas (R-10),
 			     poner failOnViolation en true para que el umbral quede exigido. -->
+			<!-- OBS-14 (Entrega Final): la observacion pide que el codigo lleve
+			     comentarios de los que se pueda generar documentacion. Este
+			     plugin genera el Javadoc del API (servicios y controladores) y
+			     rompe el build si el Javadoc tiene errores de sintaxis, HTML o
+			     referencias rotas (-Xdoclint:all). -Xdoclint:-missing: no exige
+			     Javadoc en clases que no son parte del contrato publico
+			     (DTOs/records, entidades JPA con getters de Lombok). Se invoca
+			     con `mvn javadoc:javadoc`; el paso de CI esta en
+			     .github/workflows/ci.yml. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.6.3</version>
+				<configuration>
+					<source>21</source>
+					<doclint>all,-missing</doclint>
+					<failOnError>true</failOnError>
+					<failOnWarnings>true</failOnWarnings>
+					<quiet>true</quiet>
+					<notimestamp>true</notimestamp>
+					<doctitle>SGED — API del backend</doctitle>
+					<windowtitle>SGED — API del backend</windowtitle>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>

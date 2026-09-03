@@ -24,9 +24,23 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * Arma las filas de cada reporte reutilizando los repositorios de negocio
+ * ya existentes (sin duplicar lógica de consulta); {@link ReportePdfService}
+ * solo se encarga del formato del PDF. Los filtros opcionales se construyen
+ * con Criteria API en vez de {@code (:x IS NULL OR campo = :x)} en JPQL, que
+ * dispara "could not determine data type of parameter" en Postgres.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReporteService {
+    /**
+     * Tope de filas por reporte. Sin él, {@code findAll(spec, sort)} con los
+     * filtros vacíos se trae la tabla entera y el proceso se queda sin heap.
+     * Un PDF de un millón de filas tampoco es un documento legible: si el
+     * reporte se corta, lo que hace falta es afinar los filtros, y eso se le
+     * dice al usuario en el propio documento.
+     */
     private static final int TOPE_FILAS = 5000;
 
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -38,6 +52,15 @@ public class ReporteService {
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
 
+    /**
+     * PDF de fichas de estudiantes.
+     *
+     * @param idCategoria categoría por la que filtrar, o {@code null}
+     * @param activo      estado por el que filtrar, o {@code null}
+     * @return el PDF como arreglo de bytes
+     * @throws RecursoNoEncontradoException si no hay estudiantes para los
+     *                                      filtros
+     */
     @Transactional(readOnly = true)
     public byte[] estudiantesFichas(Long idCategoria, Boolean activo) {
         var encontrados = sinVacio(estudianteRepository.buscarParaReporte(idCategoria, activo));
@@ -53,6 +76,15 @@ public class ReporteService {
                 List.of("Código", "Estudiante", "Categoría", "Estado", "Fecha ingreso"), recortar(filas));
     }
 
+    /**
+     * PDF de pagos.
+     *
+     * @param idEstudiante estudiante por el que filtrar, o {@code null}
+     * @param desde        límite inferior de fecha de pago, o {@code null}
+     * @param hasta        límite superior de fecha de pago, o {@code null}
+     * @return el PDF como arreglo de bytes
+     * @throws RecursoNoEncontradoException si no hay pagos para los filtros
+     */
     @Transactional(readOnly = true)
     public byte[] pagos(Long idEstudiante, LocalDate desde, LocalDate hasta) {
         Specification<Pago> spec = Specification.<Pago>where(igualA("estudiante.idEstudiante", idEstudiante))
@@ -65,6 +97,17 @@ public class ReporteService {
                 List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), recortar(filas));
     }
 
+    /**
+     * PDF de asistencias.
+     *
+     * @param idEstudiante estudiante por el que filtrar, o {@code null}
+     * @param idCategoria  categoría por la que filtrar, o {@code null}
+     * @param desde        límite inferior de fecha de sesión, o {@code null}
+     * @param hasta        límite superior de fecha de sesión, o {@code null}
+     * @return el PDF como arreglo de bytes
+     * @throws RecursoNoEncontradoException si no hay asistencias para los
+     *                                      filtros
+     */
     @Transactional(readOnly = true)
     public byte[] asistencias(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<Asistencia> spec = Specification.<Asistencia>where(igualA("estudiante.idEstudiante", idEstudiante))
@@ -78,6 +121,17 @@ public class ReporteService {
                 List.of("Estudiante", "Categoría", "Fecha sesión", "Estado", "Método"), recortar(filas));
     }
 
+    /**
+     * PDF de evaluaciones.
+     *
+     * @param idEstudiante estudiante por el que filtrar, o {@code null}
+     * @param idCategoria  categoría del día por la que filtrar, o {@code null}
+     * @param desde        límite inferior de fecha de evaluación, o {@code null}
+     * @param hasta        límite superior de fecha de evaluación, o {@code null}
+     * @return el PDF como arreglo de bytes
+     * @throws RecursoNoEncontradoException si no hay evaluaciones para los
+     *                                      filtros
+     */
     @Transactional(readOnly = true)
     public byte[] evaluaciones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<EvaluacionEstudiante> spec = Specification.<EvaluacionEstudiante>where(igualA("estudiante.idEstudiante", idEstudiante))
@@ -91,6 +145,16 @@ public class ReporteService {
                 List.of("Estudiante", "Categoría", "Fecha", "Posición", "Promedio"), recortar(filas));
     }
 
+    /**
+     * PDF de lesiones.
+     *
+     * @param idEstudiante estudiante por el que filtrar, o {@code null}
+     * @param idCategoria  categoría por la que filtrar, o {@code null}
+     * @param desde        límite inferior de fecha de lesión, o {@code null}
+     * @param hasta        límite superior de fecha de lesión, o {@code null}
+     * @return el PDF como arreglo de bytes
+     * @throws RecursoNoEncontradoException si no hay lesiones para los filtros
+     */
     @Transactional(readOnly = true)
     public byte[] lesiones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<Lesion> spec = Specification.<Lesion>where(igualA("estudiante.idEstudiante", idEstudiante))

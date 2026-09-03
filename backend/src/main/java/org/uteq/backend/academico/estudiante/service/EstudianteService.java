@@ -34,6 +34,18 @@ import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Lógica de negocio de {@code Estudiante}: alta (con reactivación de una
+ * ficha inactiva de la misma persona), edición por reasignación selectiva,
+ * baja y reactivación lógicas, y las operaciones de conjunto por categoría
+ * que delegan en procedimientos almacenados. El alta valida además que la
+ * edad de la persona caiga en el rango de la categoría.
+ *
+ * <p>El cruce al dominio de seguridad (crear la cuenta del estudiante,
+ * validar coherencia de rol) vive en {@link EstudianteAccesoService};
+ * extraerlo bajó el fan-out interno de esta clase, el más alto del sistema
+ * (hallazgo MET-01 / R-06 del informe de evaluación de calidad).
+ */
 @Service
 @RequiredArgsConstructor
 public class EstudianteService {
@@ -46,6 +58,12 @@ public class EstudianteService {
 
     private final EstudianteAccesoService estudianteAccesoService;
 
+    /**
+     * Lista paginada de estudiantes.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, envuelta en {@link EstudiantePageResponse}
+     */
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EstudiantePageResponse<EstudianteResponse> listar(Pageable pageable) {
@@ -63,6 +81,13 @@ public class EstudianteService {
         );
     }
 
+    /**
+     * Busca un estudiante activo por su identificador.
+     *
+     * @param id identificador del estudiante
+     * @return el estudiante encontrado
+     * @throws RecursoNoEncontradoException si no existe o está inactivado
+     */
     @Transactional(readOnly = true)
     public EstudianteResponse buscarPorId(Long id) {
         Estudiante e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
@@ -70,6 +95,20 @@ public class EstudianteService {
         return toResponse(e);
     }
 
+    /**
+     * Registra un estudiante sobre una persona ya existente. Si la persona
+     * tuvo antes una ficha de estudiante y está inactiva, la reactiva y la
+     * actualiza en lugar de crear una fila nueva.
+     *
+     * @param request datos del estudiante
+     * @return el estudiante registrado o reactivado
+     * @throws RecursoNoEncontradoException si la persona, la categoría o el
+     *                                      estado referidos no existen
+     * @throws IllegalArgumentException     si la persona ya tiene ficha
+     *                                      activa, si el código de estudiante
+     *                                      está en uso o si la edad no cae en
+     *                                      el rango de la categoría
+     */
     @Auditado(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -77,6 +116,7 @@ public class EstudianteService {
     public EstudianteResponse crear(EstudianteRequest request) {
         estudianteAccesoService.validarCoherenciaConFichaEstudiante(request.idPersona());
 
+        // 1. ¿La persona YA tiene un registro como estudiante (activo o inactivo)?
         Optional<Estudiante> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
 
         if (estudianteExistente.isPresent()) {
@@ -86,6 +126,7 @@ public class EstudianteService {
                 throw new IllegalArgumentException("La persona seleccionada ya cuenta con una ficha de estudiante activa.");
             }
 
+            // Estaba inactivo: se reactiva y se actualiza con los datos nuevos.
             Categoria categoria = categoriaRepository.findById(request.idCategoria())
                     .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
 
@@ -105,6 +146,7 @@ public class EstudianteService {
             return toResponse(est);
         }
 
+        // 2. La persona nunca fue estudiante: se crea un registro desde cero.
         if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {
             throw new IllegalArgumentException("El código de estudiante '" + request.codigoEstudiante() + "' ya se encuentra en uso.");
         }
@@ -136,6 +178,20 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    /**
+     * Actualiza la ficha de un estudiante reasignando solo lo que cambió
+     * (persona, categoría, estado, posición) más los datos propios.
+     *
+     * @param id      identificador del estudiante a editar
+     * @param request datos nuevos
+     * @return el estudiante actualizado
+     * @throws RecursoNoEncontradoException si el estudiante o alguna
+     *                                      referencia nueva no existen
+     * @throws IllegalArgumentException     si el código pertenece a otro
+     *                                      estudiante, la persona nueva ya es
+     *                                      estudiante o la edad no cae en el
+     *                                      rango de la categoría nueva
+     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -145,6 +201,7 @@ public class EstudianteService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "Estudiante no encontrado con id: " + id));
 
+        // Si cambia de código, ese código no puede pertenecer a otro estudiante.
         if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {
             throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
         }
@@ -166,6 +223,20 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    /**
+     * Actualización estrecha de solo la posición nominal, para que
+     * {@code ENTRENADOR} pueda asignarla, cambiarla o quitarla desde
+     * evaluación diaria sin abrir la puerta a que edite categoría, código o
+     * fecha de ingreso —eso sigue siendo de {@code ADMINISTRADOR} /
+     * {@code RECEPCIONISTA} vía {@link #editar}—.
+     *
+     * @param id         identificador del estudiante
+     * @param idPosicion identificador de la posición, o {@code null} para
+     *                   dejar al estudiante sin posición
+     * @return el estudiante actualizado
+     * @throws RecursoNoEncontradoException si el estudiante o la posición no
+     *                                      existen
+     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -178,6 +249,10 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    // R-09 (informe de evaluación de calidad): las reasignaciones de editar()
+    // seguían el mismo patrón —si el id pedido difiere del actual, buscar la
+    // nueva fila y reasignarla— y sumaban complejidad al método. Extraídas
+    // para que editar() quede lineal: valida, reasigna lo que cambió, guarda.
     private void reasignarPersonaSiCambio(Estudiante estudiante, Long idPersonaNueva) {
         if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {
             return;
@@ -190,6 +265,25 @@ public class EstudianteService {
         estudiante.setPersona(nuevaPersona);
     }
 
+    /**
+     * La edad del estudiante tiene que caer dentro del rango de su categoría.
+     *
+     * <p>Sin esta comprobación se podía matricular a alguien de 18 años en la
+     * SUB-12 y el sistema respondía {@code 201} sin una advertencia. La
+     * categoría decide en qué sesiones aparece para pasar lista, en qué
+     * formación entra y en qué informe sale.
+     *
+     * <p>Se comprueba solo al asignar o cambiar la categoría, nunca en toda
+     * edición: un estudiante que cumple años a mitad de temporada se sale del
+     * rango sin que nadie haya hecho nada mal, y si la regla corriera siempre
+     * quedaría imposible corregirle el peso o el teléfono. Sin fecha de
+     * nacimiento no se valida nada.
+     *
+     * @param persona   persona cuya edad se evalúa
+     * @param categoria categoría destino
+     * @throws IllegalArgumentException si la edad queda fuera del rango
+     *                                  {@code [edadMin, edadMax]}
+     */
     private void validarEdadEnCategoria(Persona persona, Categoria categoria) {
         LocalDate nacimiento = persona.getFechaNacimiento();
         if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {
@@ -224,6 +318,9 @@ public class EstudianteService {
         estudiante.setEstadoGeneral(estadoGeneral);
     }
 
+    // A diferencia de categoría/estadoGeneral, la posición es opcional y puede
+    // pasar de asignada a sin asignar (idPosicionNueva null): hay que poder
+    // desasignarla, no solo cambiarla.
     private void reasignarPosicionSiCambio(Estudiante estudiante, Long idPosicionNueva) {
         Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
         if (java.util.Objects.equals(actual, idPosicionNueva)) {
@@ -240,6 +337,12 @@ public class EstudianteService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Posición no encontrada: " + idPosicion));
     }
 
+    /**
+     * Baja lógica de un estudiante ({@code activo = false}).
+     *
+     * @param id identificador del estudiante
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0",
             descripcionSpel = "'desactivó la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -252,6 +355,14 @@ public class EstudianteService {
         estudianteRepository.save(estudiante);
     }
 
+    /**
+     * Reactiva la ficha de un estudiante dada de baja.
+     *
+     * @param id identificador del estudiante
+     * @return el estudiante reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si la ficha ya está activa
+     */
     @Auditado(accion = "REACTIVAR", entidad = "Estudiante", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -269,12 +380,26 @@ public class EstudianteService {
         return toResponse(estudianteRepository.save(estudiante));
     }
 
+    /**
+     * Cuenta los estudiantes activos de una categoría (procedimiento
+     * almacenado).
+     *
+     * @param idCategoria identificador de la categoría
+     * @return el número de estudiantes activos; {@code 0} si el procedimiento
+     *         devuelve {@code null}
+     */
     @Transactional(readOnly = true)
     public long contarActivosPorCategoria(Long idCategoria) {
         Long resultado = estudianteRepository.contarEstudiantesActivosPorCategoria(idCategoria);
         return resultado != null ? resultado : 0L;
     }
 
+    /**
+     * Da de baja en bloque a todos los estudiantes activos de una categoría
+     * (procedimiento almacenado).
+     *
+     * @param idCategoria identificador de la categoría
+     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante",
             descripcionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
@@ -283,11 +408,26 @@ public class EstudianteService {
         estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
     }
 
+    /**
+     * Sugiere el siguiente {@code codigo_estudiante} para un año; no reserva
+     * nada, solo propone.
+     *
+     * @param anio año para el que se genera el código
+     * @return el código propuesto
+     */
     @Transactional(readOnly = true)
     public String generarSiguienteCodigo(int anio) {
         return estudianteRepository.generarSiguienteCodigo(anio);
     }
 
+    /**
+     * Devuelve {@code "Nombre Apellido - teléfono"} del representante activo
+     * del estudiante, o {@code null} si no tiene.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return el texto de contacto, o {@code null}
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     */
     @Transactional(readOnly = true)
     public String contactoDeEmergencia(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
@@ -296,6 +436,18 @@ public class EstudianteService {
         return representanteEstudianteRepository.contactoDe(idEstudiante);
     }
 
+    /**
+     * Habilita el acceso propio de un estudiante que ya existe: crea un
+     * {@code Usuario} (rol {@code ESTUDIANTE}) sobre la persona que el
+     * estudiante ya tiene, sin duplicarla.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param request      credenciales de la cuenta a crear
+     * @return el estudiante con su acceso habilitado
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws IllegalArgumentException     si el estudiante ya tiene cuenta o
+     *                                      el {@code username} está en uso
+     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'habilitó acceso al Estudiante #' + #result.idEstudiante")
     @Transactional
@@ -314,6 +466,7 @@ public class EstudianteService {
         return toResponse(estudiante);
     }
 
+    // Mapeador privado entidad -> DTO.
     private EstudianteResponse toResponse(Estudiante e) {
         return new EstudianteResponse(
                 e.getIdEstudiante(),
