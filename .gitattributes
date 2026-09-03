@@ -1,0 +1,41 @@
+# ============================================================
+# SGED - Normalizacion de saltos de linea (Windows/Linux)
+#
+# Sin este archivo, Git no normaliza los saltos de linea y un
+# script .sh editado en Windows (CRLF) se rompe en Linux/CI.
+#
+# Reglas:
+#   * text=auto          -> Git normaliza todo como texto (LF en repo)
+#   *.sh  text eol=lf    -> shell scripts SIEMPRE LF (obligatorio en Linux)
+#   *.bat eol=crlf       -> batch de Windows SIEMPRE CRLF
+#   *.cmd eol=crlf       -> comandos de Windows SIEMPRE CRLF
+#   archivos binarios    -> se marcan como -text (no tocar)
+# ============================================================
+
+* text=auto
+
+# Scripts de shell: NUNCA CRLF, o se rompen en Linux/Mac/CI
+*.sh  text eol=lf
+mvnw  text eol=lf   # Maven wrapper Unix (sin .sh, por eso regla explicita)
+
+# Batch de Windows
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Archivos binarios / no-texto
+*.jar   binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.pdf   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.eot   binary
+*.el    binary
+
+# Lockfiles y caches
+package-lock.json -text
+*.lock           -text
