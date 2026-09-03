@@ -1,11 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EstudianteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.estudiante.service</a> &gt; <span class="el_source">EstudianteService.java</span></div><h1>EstudianteService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.estudiante.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EstudianteService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.estudiante.service</a> &gt; <span class="el_source">EstudianteService.java</span></div><h1>EstudianteService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.estudiante.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
@@ -20,291 +19,473 @@ import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+import org.uteq.backend.deportivo.posicion.entity.Posicion;
+import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.time.Period;
 import java.util.stream.Collectors;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Lógica de negocio de {@code Estudiante}: alta (con reactivación de una
+ * ficha inactiva de la misma persona), edición por reasignación selectiva,
+ * baja y reactivación lógicas, y las operaciones de conjunto por categoría
+ * que delegan en procedimientos almacenados. El alta valida además que la
+ * edad de la persona caiga en el rango de la categoría.
+ *
+ * &lt;p&gt;El cruce al dominio de seguridad (crear la cuenta del estudiante,
+ * validar coherencia de rol) vive en {@link EstudianteAccesoService};
+ * extraerlo bajó el fan-out interno de esta clase, el más alto del sistema
+ * (hallazgo MET-01 / R-06 del informe de evaluación de calidad).
+ */
 @Service
 @RequiredArgsConstructor
 public class EstudianteService {
-
     private final EstudianteRepository estudianteRepository;
     private final PersonaRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
-    private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PosicionRepository posicionRepository;
     private final RepresentanteEstudianteRepository representanteEstudianteRepository;
 
+    private final EstudianteAccesoService estudianteAccesoService;
+
+    /**
+     * Lista paginada de estudiantes.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, envuelta en {@link EstudiantePageResponse}
+     */
     @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = &quot;#pageable.pageNumber + '-' + #pageable.pageSize&quot;)
     @Transactional(readOnly = true)
     public EstudiantePageResponse&lt;EstudianteResponse&gt; listar(Pageable pageable) {
-<span class="fc" id="L55">        Page&lt;Estudiante&gt; page = estudianteRepository.findByActivoTrue(pageable);</span>
-        // var content = page.getContent().stream().map(this::toResponse).toList();
-<span class="fc" id="L57">        List&lt;EstudianteResponse&gt; content = page.getContent().stream()</span>
-<span class="fc" id="L58">        .map(this::toResponse)</span>
-<span class="fc" id="L59">        .collect(Collectors.toList());</span>
-<span class="fc" id="L60">        return new EstudiantePageResponse&lt;&gt;(</span>
+<span class="fc" id="L70">        Page&lt;Estudiante&gt; page = estudianteRepository.findAll(pageable);</span>
+
+<span class="fc" id="L72">        List&lt;EstudianteResponse&gt; content = page.getContent().stream()</span>
+<span class="fc" id="L73">        .map(this::toResponse)</span>
+<span class="fc" id="L74">        .collect(Collectors.toList());</span>
+<span class="fc" id="L75">        return new EstudiantePageResponse&lt;&gt;(</span>
                 content,
-<span class="fc" id="L62">                page.getNumber(),</span>
-<span class="fc" id="L63">                page.getSize(),</span>
-<span class="fc" id="L64">                page.getTotalElements(),</span>
-<span class="fc" id="L65">                page.getTotalPages()</span>
+<span class="fc" id="L77">                page.getNumber(),</span>
+<span class="fc" id="L78">                page.getSize(),</span>
+<span class="fc" id="L79">                page.getTotalElements(),</span>
+<span class="fc" id="L80">                page.getTotalPages()</span>
         );
     }
 
+    /**
+     * Busca un estudiante activo por su identificador.
+     *
+     * @param id identificador del estudiante
+     * @return el estudiante encontrado
+     * @throws RecursoNoEncontradoException si no existe o está inactivado
+     */
     @Transactional(readOnly = true)
     public EstudianteResponse buscarPorId(Long id) {
-<span class="fc" id="L71">        Estudiante e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)</span>
-<span class="fc" id="L72">            .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
-<span class="fc" id="L73">        return toResponse(e);</span>
+<span class="fc" id="L93">        Estudiante e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)</span>
+<span class="fc" id="L94">            .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L95">        return toResponse(e);</span>
     }
 
-    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;)
+    /**
+     * Registra un estudiante sobre una persona ya existente. Si la persona
+     * tuvo antes una ficha de estudiante y está inactiva, la reactiva y la
+     * actualiza en lugar de crear una fila nueva.
+     *
+     * @param request datos del estudiante
+     * @return el estudiante registrado o reactivado
+     * @throws RecursoNoEncontradoException si la persona, la categoría o el
+     *                                      estado referidos no existen
+     * @throws IllegalArgumentException     si la persona ya tiene ficha
+     *                                      activa, si el código de estudiante
+     *                                      está en uso o si la edad no cae en
+     *                                      el rango de la categoría
+     */
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descripcionSpel = &quot;'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
-<span class="fc" id="L80">        validarCuentaCoherente(request.idPersona());</span>
+<span class="fc" id="L117">        estudianteAccesoService.validarCoherenciaConFichaEstudiante(request.idPersona());</span>
 
-        // 1. Buscar si la persona YA tiene un registro como estudiante (activo o inactivo)
-<span class="fc" id="L83">        Optional&lt;Estudiante&gt; estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());</span>
+        // 1. ¿La persona YA tiene un registro como estudiante (activo o inactivo)?
+<span class="fc" id="L120">        Optional&lt;Estudiante&gt; estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());</span>
 
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (estudianteExistente.isPresent()) {</span>
-<span class="fc" id="L86">            Estudiante est = estudianteExistente.get();</span>
-            
-            // Si ya está activo, lanzamos la excepción
-<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (Boolean.TRUE.equals(est.getActivo())) {</span>
-<span class="fc" id="L90">                throw new IllegalArgumentException(&quot;La persona seleccionada ya cuenta con una ficha de estudiante activa.&quot;);</span>
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        if (estudianteExistente.isPresent()) {</span>
+<span class="fc" id="L123">            Estudiante est = estudianteExistente.get();</span>
+
+<span class="fc bfc" id="L125" title="All 2 branches covered.">            if (Boolean.TRUE.equals(est.getActivo())) {</span>
+<span class="fc" id="L126">                throw new IllegalArgumentException(&quot;La persona seleccionada ya cuenta con una ficha de estudiante activa.&quot;);</span>
             }
 
-            // Si estaba inactivo (activo = false), LO REACTIVAMOS Y ACTUALIZAMOS
-<span class="fc" id="L94">            Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
-<span class="pc" id="L95">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
+            // Estaba inactivo: se reactiva y se actualiza con los datos nuevos.
+<span class="fc" id="L130">            Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="pc" id="L131">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
 
-<span class="fc" id="L97">            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
-<span class="pc" id="L98">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
+<span class="fc" id="L133">            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
+<span class="pc" id="L134">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
 
-<span class="fc" id="L100">            est.setCategoria(categoria);</span>
-<span class="fc" id="L101">            est.setEstadoGeneral(estadoGeneral);</span>
-<span class="fc" id="L102">            est.setCodigoEstudiante(request.codigoEstudiante());</span>
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR));</span>
-<span class="fc" id="L104">            est.setPeso(request.peso());</span>
-<span class="fc" id="L105">            est.setAltura(request.altura());</span>
-<span class="fc" id="L106">            est.setActivo(true); // 👈 Re-activación del registro</span>
+<span class="fc" id="L136">            est.setCategoria(categoria);</span>
+<span class="fc" id="L137">            est.setEstadoGeneral(estadoGeneral);</span>
+<span class="fc" id="L138">            est.setCodigoEstudiante(request.codigoEstudiante());</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR));</span>
+<span class="fc" id="L140">            est.setPeso(request.peso());</span>
+<span class="fc" id="L141">            est.setAltura(request.altura());</span>
+<span class="fc" id="L142">            est.setPosicion(resolverPosicion(request.idPosicion()));</span>
+<span class="fc" id="L143">            est.setActivo(true);</span>
 
-<span class="fc" id="L108">            est = estudianteRepository.save(est);</span>
-<span class="fc" id="L109">            return toResponse(est);</span>
+<span class="fc" id="L145">            est = estudianteRepository.save(est);</span>
+<span class="fc" id="L146">            return toResponse(est);</span>
         }
 
-        // 2. Si la persona NUNCA ha sido estudiante, procede a crear un nuevo registro desde cero
-<span class="pc bpc" id="L113" title="1 of 2 branches missed.">        if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {</span>
-<span class="nc" id="L114">            throw new IllegalArgumentException(&quot;El código de estudiante '&quot; + request.codigoEstudiante() + &quot;' ya se encuentra en uso.&quot;);</span>
+        // 2. La persona nunca fue estudiante: se crea un registro desde cero.
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {</span>
+<span class="nc" id="L151">            throw new IllegalArgumentException(&quot;El código de estudiante '&quot; + request.codigoEstudiante() + &quot;' ya se encuentra en uso.&quot;);</span>
         }
 
-<span class="fc" id="L117">        Persona persona = personaRepository.findById(request.idPersona())</span>
-<span class="pc" id="L118">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + request.idPersona()));</span>
+<span class="fc" id="L154">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="pc" id="L155">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + request.idPersona()));</span>
 
-<span class="fc" id="L120">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
-<span class="pc" id="L121">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
+<span class="fc" id="L157">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="pc" id="L158">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
 
-<span class="fc" id="L123">        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
-<span class="pc" id="L124">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
+<span class="fc" id="L160">        validarEdadEnCategoria(persona, categoria);</span>
 
-<span class="fc" id="L126">        Estudiante estudiante = Estudiante.builder()</span>
-<span class="fc" id="L127">                .persona(persona)</span>
-<span class="fc" id="L128">                .categoria(categoria)</span>
-<span class="fc" id="L129">                .estadoGeneral(estadoGeneral)</span>
-<span class="fc" id="L130">                .codigoEstudiante(request.codigoEstudiante())</span>
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR))</span>
-<span class="fc" id="L132">                .peso(request.peso())</span>
-<span class="fc" id="L133">                .altura(request.altura())</span>
-<span class="fc" id="L134">                .activo(true)</span>
-<span class="fc" id="L135">                .build();</span>
+<span class="fc" id="L162">        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
+<span class="pc" id="L163">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
 
-<span class="fc" id="L137">        estudiante = estudianteRepository.save(estudiante);</span>
-<span class="fc" id="L138">        return toResponse(estudiante);</span>
+<span class="fc" id="L165">        Estudiante estudiante = Estudiante.builder()</span>
+<span class="fc" id="L166">                .persona(persona)</span>
+<span class="fc" id="L167">                .categoria(categoria)</span>
+<span class="fc" id="L168">                .estadoGeneral(estadoGeneral)</span>
+<span class="fc" id="L169">                .codigoEstudiante(request.codigoEstudiante())</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR))</span>
+<span class="fc" id="L171">                .peso(request.peso())</span>
+<span class="fc" id="L172">                .altura(request.altura())</span>
+<span class="fc" id="L173">                .posicion(resolverPosicion(request.idPosicion()))</span>
+<span class="fc" id="L174">                .activo(true)</span>
+<span class="fc" id="L175">                .build();</span>
+
+<span class="fc" id="L177">        estudiante = estudianteRepository.save(estudiante);</span>
+<span class="fc" id="L178">        return toResponse(estudiante);</span>
     }
 
-    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;)
+    /**
+     * Actualiza la ficha de un estudiante reasignando solo lo que cambió
+     * (persona, categoría, estado, posición) más los datos propios.
+     *
+     * @param id      identificador del estudiante a editar
+     * @param request datos nuevos
+     * @return el estudiante actualizado
+     * @throws RecursoNoEncontradoException si el estudiante o alguna
+     *                                      referencia nueva no existen
+     * @throws IllegalArgumentException     si el código pertenece a otro
+     *                                      estudiante, la persona nueva ya es
+     *                                      estudiante o la edad no cae en el
+     *                                      rango de la categoría nueva
+     */
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descripcionSpel = &quot;'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public EstudianteResponse editar(Long id, EstudianteRequest request) {
-<span class="fc" id="L145">        Estudiante estudiante = estudianteRepository.findById(id)</span>
-<span class="pc" id="L146">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L200">        Estudiante estudiante = estudianteRepository.findById(id)</span>
+<span class="pc" id="L201">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;Estudiante no encontrado con id: &quot; + id));
 
-        // VALIDACIÓN 3: Verificar que si cambia de código, este no le pertenezca a OTRO estudiante
-<span class="fc bfc" id="L150" title="All 2 branches covered.">        if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {</span>
-<span class="fc" id="L151">            throw new IllegalArgumentException(&quot;El código '&quot; + request.codigoEstudiante() + &quot;' ya está asignado a otro estudiante.&quot;);</span>
+        // Si cambia de código, ese código no puede pertenecer a otro estudiante.
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {</span>
+<span class="fc" id="L206">            throw new IllegalArgumentException(&quot;El código '&quot; + request.codigoEstudiante() + &quot;' ya está asignado a otro estudiante.&quot;);</span>
         }
 
-        // Reasignar Persona si cambió (Y validar que la nueva persona tampoco tenga ya una ficha de estudiante)
-<span class="pc bpc" id="L155" title="1 of 2 branches missed.">        if (!estudiante.getPersona().getIdPersona().equals(request.idPersona())) {</span>
-<span class="nc bnc" id="L156" title="All 2 branches missed.">            if (estudianteRepository.existsByPersona_IdPersona(request.idPersona())) {</span>
-<span class="nc" id="L157">                throw new IllegalArgumentException(&quot;La nueva persona seleccionada ya es un estudiante registrado.&quot;);</span>
-            }
-<span class="nc" id="L159">            Persona nuevaPersona = personaRepository.findById(request.idPersona())</span>
-<span class="nc" id="L160">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + request.idPersona()));</span>
-<span class="nc" id="L161">            estudiante.setPersona(nuevaPersona);</span>
+<span class="fc" id="L209">        reasignarPersonaSiCambio(estudiante, request.idPersona());</span>
+<span class="fc" id="L210">        reasignarCategoriaSiCambio(estudiante, request.idCategoria());</span>
+<span class="fc" id="L211">        reasignarEstadoGeneralSiCambio(estudiante, request.idEstadoGeneral());</span>
+<span class="fc" id="L212">        reasignarPosicionSiCambio(estudiante, request.idPosicion());</span>
+
+<span class="fc" id="L214">        estudiante.setCodigoEstudiante(request.codigoEstudiante());</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (request.fechaIngreso() != null) {</span>
+<span class="fc" id="L216">            estudiante.setFechaIngreso(request.fechaIngreso());</span>
         }
+<span class="fc" id="L218">        estudiante.setPeso(request.peso());</span>
+<span class="fc" id="L219">        estudiante.setAltura(request.altura());</span>
 
-        // Reasignar Categoría si cambió
-<span class="pc bpc" id="L165" title="1 of 2 branches missed.">        if (!estudiante.getCategoria().getIdCategoria().equals(request.idCategoria())) {</span>
-<span class="nc" id="L166">            Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
-<span class="nc" id="L167">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
-<span class="nc" id="L168">            estudiante.setCategoria(categoria);</span>
-        }
+<span class="fc" id="L221">        estudiante = estudianteRepository.save(estudiante);</span>
 
-        // Reasignar Estado General si cambió
-<span class="pc bpc" id="L172" title="1 of 2 branches missed.">        if (!estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(request.idEstadoGeneral())) {</span>
-<span class="nc" id="L173">            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
-<span class="nc" id="L174">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
-<span class="nc" id="L175">            estudiante.setEstadoGeneral(estadoGeneral);</span>
-        }
-
-        // Actualizar datos propios del estudiante
-<span class="fc" id="L179">        estudiante.setCodigoEstudiante(request.codigoEstudiante());</span>
-<span class="pc bpc" id="L180" title="1 of 2 branches missed.">        if (request.fechaIngreso() != null) {</span>
-<span class="fc" id="L181">            estudiante.setFechaIngreso(request.fechaIngreso());</span>
-        }
-<span class="fc" id="L183">        estudiante.setPeso(request.peso());</span>
-<span class="fc" id="L184">        estudiante.setAltura(request.altura());</span>
-
-<span class="fc" id="L186">        estudiante = estudianteRepository.save(estudiante);</span>
-
-<span class="fc" id="L188">        return toResponse(estudiante);</span>
+<span class="fc" id="L223">        return toResponse(estudiante);</span>
     }
 
-    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;)
+    /**
+     * Actualización estrecha de solo la posición nominal, para que
+     * {@code ENTRENADOR} pueda asignarla, cambiarla o quitarla desde
+     * evaluación diaria sin abrir la puerta a que edite categoría, código o
+     * fecha de ingreso —eso sigue siendo de {@code ADMINISTRADOR} /
+     * {@code RECEPCIONISTA} vía {@link #editar}—.
+     *
+     * @param id         identificador del estudiante
+     * @param idPosicion identificador de la posición, o {@code null} para
+     *                   dejar al estudiante sin posición
+     * @return el estudiante actualizado
+     * @throws RecursoNoEncontradoException si el estudiante o la posición no
+     *                                      existen
+     */
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descripcionSpel = &quot;'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')&quot;)
+    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @Transactional
+    public EstudianteResponse actualizarPosicion(Long id, Long idPosicion) {
+<span class="nc" id="L245">        Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)</span>
+<span class="nc" id="L246">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L247">        estudiante.setPosicion(resolverPosicion(idPosicion));</span>
+<span class="nc" id="L248">        estudiante = estudianteRepository.save(estudiante);</span>
+<span class="nc" id="L249">        return toResponse(estudiante);</span>
+    }
+
+    // R-09 (informe de evaluación de calidad): las reasignaciones de editar()
+    // seguían el mismo patrón —si el id pedido difiere del actual, buscar la
+    // nueva fila y reasignarla— y sumaban complejidad al método. Extraídas
+    // para que editar() quede lineal: valida, reasigna lo que cambió, guarda.
+    private void reasignarPersonaSiCambio(Estudiante estudiante, Long idPersonaNueva) {
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">        if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {</span>
+<span class="fc" id="L258">            return;</span>
+        }
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        if (estudianteRepository.existsByPersona_IdPersona(idPersonaNueva)) {</span>
+<span class="nc" id="L261">            throw new IllegalArgumentException(&quot;La nueva persona seleccionada ya es un estudiante registrado.&quot;);</span>
+        }
+<span class="nc" id="L263">        Persona nuevaPersona = personaRepository.findById(idPersonaNueva)</span>
+<span class="nc" id="L264">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con ID: &quot; + idPersonaNueva));</span>
+<span class="nc" id="L265">        estudiante.setPersona(nuevaPersona);</span>
+<span class="nc" id="L266">    }</span>
+
+    /**
+     * La edad del estudiante tiene que caer dentro del rango de su categoría.
+     *
+     * &lt;p&gt;Sin esta comprobación se podía matricular a alguien de 18 años en la
+     * SUB-12 y el sistema respondía {@code 201} sin una advertencia. La
+     * categoría decide en qué sesiones aparece para pasar lista, en qué
+     * formación entra y en qué informe sale.
+     *
+     * &lt;p&gt;Se comprueba solo al asignar o cambiar la categoría, nunca en toda
+     * edición: un estudiante que cumple años a mitad de temporada se sale del
+     * rango sin que nadie haya hecho nada mal, y si la regla corriera siempre
+     * quedaría imposible corregirle el peso o el teléfono. Sin fecha de
+     * nacimiento no se valida nada.
+     *
+     * @param persona   persona cuya edad se evalúa
+     * @param categoria categoría destino
+     * @throws IllegalArgumentException si la edad queda fuera del rango
+     *                                  {@code [edadMin, edadMax]}
+     */
+    private void validarEdadEnCategoria(Persona persona, Categoria categoria) {
+<span class="fc" id="L288">        LocalDate nacimiento = persona.getFechaNacimiento();</span>
+<span class="pc bpc" id="L289" title="2 of 6 branches missed.">        if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {</span>
+<span class="fc" id="L290">            return;</span>
+        }
+
+<span class="fc" id="L293">        int edad = Period.between(nacimiento, LocalDate.now(Zonas.ECUADOR)).getYears();</span>
+<span class="pc bpc" id="L294" title="1 of 4 branches missed.">        if (edad &lt; categoria.getEdadMin() || edad &gt; categoria.getEdadMax()) {</span>
+<span class="fc" id="L295">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L296">                    persona.getNombre() + &quot; &quot; + persona.getApellido() + &quot; tiene &quot; + edad</span>
+<span class="fc" id="L297">                    + &quot; años y &quot; + categoria.getNombre() + &quot; es para edades de &quot;</span>
+<span class="fc" id="L298">                    + categoria.getEdadMin() + &quot; a &quot; + categoria.getEdadMax() + &quot; años&quot;);</span>
+        }
+<span class="fc" id="L300">    }</span>
+
+    private void reasignarCategoriaSiCambio(Estudiante estudiante, Long idCategoriaNueva) {
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if (estudiante.getCategoria().getIdCategoria().equals(idCategoriaNueva)) {</span>
+<span class="fc" id="L304">            return;</span>
+        }
+<span class="nc" id="L306">        Categoria categoria = categoriaRepository.findById(idCategoriaNueva)</span>
+<span class="nc" id="L307">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada: &quot; + idCategoriaNueva));</span>
+<span class="nc" id="L308">        validarEdadEnCategoria(estudiante.getPersona(), categoria);</span>
+<span class="nc" id="L309">        estudiante.setCategoria(categoria);</span>
+<span class="nc" id="L310">    }</span>
+
+    private void reasignarEstadoGeneralSiCambio(Estudiante estudiante, Long idEstadoGeneralNuevo) {
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        if (estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(idEstadoGeneralNuevo)) {</span>
+<span class="fc" id="L314">            return;</span>
+        }
+<span class="nc" id="L316">        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)</span>
+<span class="nc" id="L317">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado General no encontrado: &quot; + idEstadoGeneralNuevo));</span>
+<span class="nc" id="L318">        estudiante.setEstadoGeneral(estadoGeneral);</span>
+<span class="nc" id="L319">    }</span>
+
+    // A diferencia de categoría/estadoGeneral, la posición es opcional y puede
+    // pasar de asignada a sin asignar (idPosicionNueva null): hay que poder
+    // desasignarla, no solo cambiarla.
+    private void reasignarPosicionSiCambio(Estudiante estudiante, Long idPosicionNueva) {
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;</span>
+<span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (java.util.Objects.equals(actual, idPosicionNueva)) {</span>
+<span class="fc" id="L327">            return;</span>
+        }
+<span class="nc" id="L329">        estudiante.setPosicion(resolverPosicion(idPosicionNueva));</span>
+<span class="nc" id="L330">    }</span>
+
+    private Posicion resolverPosicion(Long idPosicion) {
+<span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if (idPosicion == null) {</span>
+<span class="fc" id="L334">            return null;</span>
+        }
+<span class="nc" id="L336">        return posicionRepository.findById(idPosicion)</span>
+<span class="nc" id="L337">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Posición no encontrada: &quot; + idPosicion));</span>
+    }
+
+    /**
+     * Baja lógica de un estudiante ({@code activo = false}).
+     *
+     * @param id identificador del estudiante
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'desactivó la ficha de estudiante #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L195">        Estudiante estudiante = estudianteRepository.findById(id)</span>
-<span class="pc" id="L196">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L351">        Estudiante estudiante = estudianteRepository.findById(id)</span>
+<span class="pc" id="L352">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;Estudiante no encontrado con id: &quot; + id));
-<span class="fc" id="L198">        estudiante.setActivo(false);</span>
-<span class="fc" id="L199">        estudianteRepository.save(estudiante);</span>
-<span class="fc" id="L200">    }</span>
+<span class="fc" id="L354">        estudiante.setActivo(false);</span>
+<span class="fc" id="L355">        estudianteRepository.save(estudiante);</span>
+<span class="fc" id="L356">    }</span>
 
-    @Transactional(readOnly = true)
-    public long contarActivosPorCategoria(Long idCategoria) {
-<span class="fc" id="L204">        Long resultado = estudianteRepository.contarEstudiantesActivosPorCategoria(idCategoria);</span>
-<span class="pc bpc" id="L205" title="1 of 2 branches missed.">        return resultado != null ? resultado : 0L;</span>
+    /**
+     * Reactiva la ficha de un estudiante dada de baja.
+     *
+     * @param id identificador del estudiante
+     * @return el estudiante reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si la ficha ya está activa
+     */
+    @Auditado(accion = &quot;REACTIVAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'reactivo la ficha de estudiante #' + #p0&quot;)
+    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @Transactional
+    public EstudianteResponse reactivar(Long id) {
+<span class="nc" id="L371">        Estudiante estudiante = estudianteRepository.findById(id)</span>
+<span class="nc" id="L372">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+                        &quot;Estudiante no encontrado con id: &quot; + id));
+
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (Boolean.TRUE.equals(estudiante.getActivo())) {</span>
+<span class="nc" id="L376">            throw new IllegalArgumentException(&quot;La ficha de estudiante ya se encuentra activa&quot;);</span>
+        }
+
+<span class="nc" id="L379">        estudiante.setActivo(true);</span>
+<span class="nc" id="L380">        return toResponse(estudianteRepository.save(estudiante));</span>
     }
 
+    /**
+     * Cuenta los estudiantes activos de una categoría (procedimiento
+     * almacenado).
+     *
+     * @param idCategoria identificador de la categoría
+     * @return el número de estudiantes activos; {@code 0} si el procedimiento
+     *         devuelve {@code null}
+     */
+    @Transactional(readOnly = true)
+    public long contarActivosPorCategoria(Long idCategoria) {
+<span class="fc" id="L393">        Long resultado = estudianteRepository.contarEstudiantesActivosPorCategoria(idCategoria);</span>
+<span class="pc bpc" id="L394" title="1 of 2 branches missed.">        return resultado != null ? resultado : 0L;</span>
+    }
+
+    /**
+     * Da de baja en bloque a todos los estudiantes activos de una categoría
+     * (procedimiento almacenado).
+     *
+     * @param idCategoria identificador de la categoría
+     */
     @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;,
             descripcionSpel = &quot;'desactivó los estudiantes de la Categoria #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
     @Transactional
     public void desactivarPorCategoria(Long idCategoria) {
-<span class="fc" id="L213">        estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);</span>
-<span class="fc" id="L214">    }</span>
+<span class="fc" id="L408">        estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);</span>
+<span class="fc" id="L409">    }</span>
 
-    /** Sugerencia de siguiente codigo_estudiante para un anio; no reserva nada, solo propone. */
+    /**
+     * Sugiere el siguiente {@code codigo_estudiante} para un año; no reserva
+     * nada, solo propone.
+     *
+     * @param anio año para el que se genera el código
+     * @return el código propuesto
+     */
     @Transactional(readOnly = true)
     public String generarSiguienteCodigo(int anio) {
-<span class="fc" id="L219">        return estudianteRepository.generarSiguienteCodigo(anio);</span>
-    }
-
-    /** &quot;Nombre Apellido - telefono&quot; del representante activo del estudiante, o null si no tiene. */
-    @Transactional(readOnly = true)
-    public String contactoDeEmergencia(Long idEstudiante) {
-<span class="fc bfc" id="L225" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
-<span class="fc" id="L226">            throw new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
-        }
-<span class="fc" id="L228">        return representanteEstudianteRepository.contactoDe(idEstudiante);</span>
+<span class="fc" id="L420">        return estudianteRepository.generarSiguienteCodigo(anio);</span>
     }
 
     /**
-     * Habilita el acceso propio de un estudiante que ya existe en el
-     * sistema: crea un Usuario nuevo (rol ESTUDIANTE) sobre la Persona que
-     * el estudiante YA tiene, sin duplicarla. Es distinto del alta de
-     * Representante, que si crea una Persona nueva porque el tutor no
-     * estaba antes en el sistema.
+     * Devuelve {@code &quot;Nombre Apellido - teléfono&quot;} del representante activo
+     * del estudiante, o {@code null} si no tiene.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return el texto de contacto, o {@code null}
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     */
+    @Transactional(readOnly = true)
+    public String contactoDeEmergencia(Long idEstudiante) {
+<span class="fc bfc" id="L433" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
+<span class="fc" id="L434">            throw new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
+        }
+<span class="fc" id="L436">        return representanteEstudianteRepository.contactoDe(idEstudiante);</span>
+    }
+
+    /**
+     * Habilita el acceso propio de un estudiante que ya existe: crea un
+     * {@code Usuario} (rol {@code ESTUDIANTE}) sobre la persona que el
+     * estudiante ya tiene, sin duplicarla.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param request      credenciales de la cuenta a crear
+     * @return el estudiante con su acceso habilitado
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws IllegalArgumentException     si el estudiante ya tiene cuenta o
+     *                                      el {@code username} está en uso
      */
     @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
             descripcionSpel = &quot;'habilitó acceso al Estudiante #' + #result.idEstudiante&quot;)
     @Transactional
     public EstudianteResponse habilitarAcceso(Long idEstudiante, HabilitarAccesoRequest request) {
-<span class="fc" id="L242">        Estudiante estudiante = estudianteRepository.findById(idEstudiante)</span>
-<span class="fc" id="L243">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>
+<span class="fc" id="L455">        Estudiante estudiante = estudianteRepository.findById(idEstudiante)</span>
+<span class="fc" id="L456">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>
 
-<span class="fc bfc" id="L245" title="All 2 branches covered.">        if (estudiante.getUsuario() != null) {</span>
-<span class="fc" id="L246">            throw new IllegalArgumentException(&quot;Este estudiante ya tiene una cuenta de acceso&quot;);</span>
-        }
-<span class="fc bfc" id="L248" title="All 2 branches covered.">        if (usuarioRepository.existsByUsername(request.username())) {</span>
-<span class="fc" id="L249">            throw new IllegalArgumentException(&quot;Ya existe una cuenta con ese usuario&quot;);</span>
+<span class="fc bfc" id="L458" title="All 2 branches covered.">        if (estudiante.getUsuario() != null) {</span>
+<span class="fc" id="L459">            throw new IllegalArgumentException(&quot;Este estudiante ya tiene una cuenta de acceso&quot;);</span>
         }
 
-<span class="fc" id="L252">        Rol rolEstudiante = rolRepository.findByNombre(&quot;ESTUDIANTE&quot;)</span>
-<span class="pc" id="L253">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Falta el rol ESTUDIANTE (ver db/seed.sql)&quot;));</span>
-<span class="fc" id="L254">        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)</span>
-<span class="pc" id="L255">                .orElseThrow(() -&gt; new IllegalStateException(</span>
-                        &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
+<span class="fc" id="L462">        Usuario usuario = estudianteAccesoService.crearCuentaDeEstudiante(estudiante.getPersona(), request);</span>
 
-<span class="fc" id="L258">        Usuario usuario = Usuario.builder()</span>
-<span class="fc" id="L259">                .persona(estudiante.getPersona())</span>
-<span class="fc" id="L260">                .estadoGeneral(estadoActivo)</span>
-<span class="fc" id="L261">                .username(request.username())</span>
-<span class="fc" id="L262">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L263">                .activo(true)</span>
-<span class="fc" id="L264">                .roles(Set.of(rolEstudiante))</span>
-<span class="fc" id="L265">                .build();</span>
-<span class="fc" id="L266">        usuario = usuarioRepository.save(usuario);</span>
-
-<span class="fc" id="L268">        estudiante.setUsuario(usuario);</span>
-<span class="fc" id="L269">        estudiante = estudianteRepository.save(estudiante);</span>
-<span class="fc" id="L270">        return toResponse(estudiante);</span>
+<span class="fc" id="L464">        estudiante.setUsuario(usuario);</span>
+<span class="fc" id="L465">        estudiante = estudianteRepository.save(estudiante);</span>
+<span class="fc" id="L466">        return toResponse(estudiante);</span>
     }
 
-    /**
-     * Guarda simetrica a UsuarioService.validarRolCoherente: si la persona
-     * ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin cuenta
-     * no hay nada que validar -- lo normal es que un estudiante no tenga
-     * acceso al sistema, y si despues se le habilita, habilitarAcceso() ya
-     * fija el rol ESTUDIANTE.
-     */
-    private void validarCuentaCoherente(Long idPersona) {
-<span class="fc" id="L281">        usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -&gt; {</span>
-<span class="pc bpc" id="L282" title="1 of 2 branches missed.">            boolean esEstudiante = usuario.getRoles() != null &amp;&amp; usuario.getRoles().stream()</span>
-<span class="fc bfc" id="L283" title="All 2 branches covered.">                    .anyMatch(r -&gt; &quot;ESTUDIANTE&quot;.equals(r.getNombre()));</span>
-<span class="fc bfc" id="L284" title="All 2 branches covered.">            if (!esEstudiante) {</span>
-<span class="fc" id="L285">                throw new IllegalArgumentException(</span>
-                        &quot;La persona tiene una cuenta con otro rol: no se le puede crear una ficha de estudiante&quot;);
-            }
-<span class="fc" id="L288">        });</span>
-<span class="fc" id="L289">    }</span>
-
-    // Mapeador privado Entity -&gt; DTO
+    // Mapeador privado entidad -&gt; DTO.
     private EstudianteResponse toResponse(Estudiante e) {
-<span class="fc" id="L293">        return new EstudianteResponse(</span>
-<span class="fc" id="L294">                e.getIdEstudiante(),</span>
-<span class="pc bpc" id="L295" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getIdPersona() : null,</span>
-<span class="pc bpc" id="L296" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,</span>
-<span class="pc bpc" id="L297" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,</span>
-<span class="pc bpc" id="L298" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getNombre() : null,</span>
-<span class="pc bpc" id="L299" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getApellido() : null,</span>
-<span class="pc bpc" id="L300" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getNombre() : null,</span>
-<span class="pc bpc" id="L301" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,</span>
-<span class="fc" id="L302">                e.getCodigoEstudiante(),</span>
-<span class="fc" id="L303">                e.getFechaIngreso(),</span>
-<span class="fc" id="L304">                e.getPeso(),</span>
-<span class="fc" id="L305">                e.getAltura(),</span>
-<span class="fc" id="L306">                e.getActivo(),</span>
-<span class="fc" id="L307">                e.getCreatedAt() // 👈 Pasa directo e.getCreatedAt()</span>
+<span class="fc" id="L471">        return new EstudianteResponse(</span>
+<span class="fc" id="L472">                e.getIdEstudiante(),</span>
+<span class="pc bpc" id="L473" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getIdPersona() : null,</span>
+<span class="pc bpc" id="L474" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,</span>
+<span class="pc bpc" id="L475" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,</span>
+<span class="pc bpc" id="L476" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getNombre() : null,</span>
+<span class="pc bpc" id="L477" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getApellido() : null,</span>
+<span class="pc bpc" id="L478" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getNombre() : null,</span>
+<span class="pc bpc" id="L479" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,</span>
+<span class="fc" id="L480">                e.getCodigoEstudiante(),</span>
+<span class="fc" id="L481">                e.getFechaIngreso(),</span>
+<span class="fc" id="L482">                e.getPeso(),</span>
+<span class="fc" id="L483">                e.getAltura(),</span>
+<span class="pc bpc" id="L484" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getIdPosicion() : null,</span>
+<span class="pc bpc" id="L485" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getNombre() : null,</span>
+<span class="pc bpc" id="L486" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,</span>
+<span class="fc" id="L487">                e.getActivo(),</span>
+<span class="fc" id="L488">                e.getCreatedAt()</span>
         );
     }
 }

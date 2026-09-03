@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArticuloController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.articulo.controller</a> &gt; <span class="el_source">ArticuloController.java</span></div><h1>ArticuloController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.articulo.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArticuloController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.articulo.controller</a> &gt; <span class="el_source">ArticuloController.java</span></div><h1>ArticuloController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.articulo.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,59 +14,121 @@ import org.uteq.backend.inventario.articulo.service.ArticuloService;
 import java.util.List;
 
 /**
- * CRUD del catalogo de articulos de inventario. La lectura la necesitan
- * los 3 roles operativos; la escritura queda restringida a ADMINISTRADOR
- * y RECEPCIONISTA (quienes gestionan el deposito fisico). ENTRENADOR solo
- * consulta el catalogo para asignar articulos, nunca lo modifica.
+ * CRUD del catálogo de artículos de inventario. La lectura la necesitan los
+ * tres roles operativos; la escritura queda restringida a
+ * {@code ADMINISTRADOR} y {@code RECEPCIONISTA} (quienes gestionan el
+ * depósito físico). {@code ENTRENADOR} solo consulta el catálogo.
  */
 @RestController
 @RequestMapping(&quot;/api/inventario/articulos&quot;)
 @RequiredArgsConstructor
 public class ArticuloController {
-
     private final ArticuloService articuloService;
 
+    /**
+     * Lista paginada de artículos.
+     *
+     * @param pageable paginación y orden
+     * @return {@code 200 OK} con la página
+     */
     @GetMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;Page&lt;ArticuloResponse&gt;&gt; listarPaginado(Pageable pageable) {
-<span class="nc" id="L32">        return ResponseEntity.ok(articuloService.listarPaginado(pageable));</span>
+<span class="fc" id="L37">        return ResponseEntity.ok(articuloService.listarPaginado(pageable));</span>
     }
 
+    /**
+     * Lista completa de artículos activos, sin paginar (para desplegables).
+     *
+     * @return {@code 200 OK} con todos los artículos activos
+     */
     @GetMapping(&quot;/activos&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;List&lt;ArticuloResponse&gt;&gt; listarActivos() {
-<span class="nc" id="L38">        return ResponseEntity.ok(articuloService.listarActivos());</span>
+<span class="fc" id="L48">        return ResponseEntity.ok(articuloService.listarActivos());</span>
     }
 
+    /**
+     * Artículos cuyo stock está en o por debajo del mínimo.
+     *
+     * @return {@code 200 OK} con el total y el listado de artículos en
+     *         stock bajo
+     */
     @GetMapping(&quot;/stock-bajo&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;StockBajoResponse&gt; stockBajo() {
-<span class="nc" id="L44">        return ResponseEntity.ok(articuloService.stockBajo());</span>
+<span class="fc" id="L60">        return ResponseEntity.ok(articuloService.stockBajo());</span>
     }
 
+    /**
+     * Busca un artículo por su identificador.
+     *
+     * @param id identificador del artículo
+     * @return {@code 200 OK} con el artículo
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @GetMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;ArticuloResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L50">        return ResponseEntity.ok(articuloService.buscarPorId(id));</span>
+<span class="nc" id="L74">        return ResponseEntity.ok(articuloService.buscarPorId(id));</span>
     }
 
+    /**
+     * Crea un artículo (con {@code stockActual} en 0).
+     *
+     * @param request datos del artículo; validado con {@code @Valid}
+     * @return {@code 201 Created} con el artículo creado
+     */
     @PostMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;ArticuloResponse&gt; crear(@Valid @RequestBody ArticuloRequest request) {
-<span class="nc" id="L56">        return ResponseEntity.status(HttpStatus.CREATED).body(articuloService.crear(request));</span>
+<span class="fc" id="L86">        return ResponseEntity.status(HttpStatus.CREATED).body(articuloService.crear(request));</span>
     }
 
+    /**
+     * Actualiza los datos de un artículo (el stock no se toca aquí).
+     *
+     * @param id      identificador del artículo a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con el artículo actualizado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @PutMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;ArticuloResponse&gt; editar(@PathVariable Long id, @Valid @RequestBody ArticuloRequest request) {
-<span class="nc" id="L62">        return ResponseEntity.ok(articuloService.editar(id, request));</span>
+<span class="fc" id="L101">        return ResponseEntity.ok(articuloService.editar(id, request));</span>
     }
 
+    /**
+     * Baja lógica de un artículo.
+     *
+     * @param id identificador del artículo
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="nc" id="L68">        articuloService.eliminar(id);</span>
-<span class="nc" id="L69">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L115">        articuloService.eliminar(id);</span>
+<span class="fc" id="L116">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Reactiva un artículo dado de baja.
+     *
+     * @param id identificador del artículo
+     * @return {@code 200 OK} con el artículo reactivado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si ya está activo ({@code 422})
+     */
+    @PostMapping(&quot;/{id}/reactivar&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;ArticuloResponse&gt; reactivar(@PathVariable Long id) {
+<span class="nc" id="L131">        return ResponseEntity.ok(articuloService.reactivar(id));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

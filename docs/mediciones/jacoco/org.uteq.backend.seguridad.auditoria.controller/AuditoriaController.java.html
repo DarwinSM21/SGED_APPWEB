@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuditoriaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auditoria.controller</a> &gt; <span class="el_source">AuditoriaController.java</span></div><h1>AuditoriaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auditoria.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuditoriaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auditoria.controller</a> &gt; <span class="el_source">AuditoriaController.java</span></div><h1>AuditoriaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auditoria.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,6 +18,11 @@ import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
+/**
+ * Consulta del registro de auditoría ({@code seguridad.auditoria}). Solo
+ * lectura y solo {@code ADMINISTRADOR}; las filas las escribe
+ * {@link AuditoriaService} desde el aspecto {@code @Auditado}.
+ */
 @RestController
 @RequestMapping(&quot;/api/admin/auditorias&quot;)
 @RequiredArgsConstructor
@@ -26,6 +31,20 @@ public class AuditoriaController {
 
     private final AuditoriaService auditoriaService;
 
+    /**
+     * Busca eventos de auditoría con filtros opcionales, ordenados por fecha
+     * descendente. Las fechas se interpretan en la zona horaria de Ecuador;
+     * {@code fechaHasta} es inclusiva (se le suma un día internamente).
+     *
+     * @param usuario    subcadena del nombre de usuario (opcional)
+     * @param accion     acción exacta, p. ej. {@code &quot;CREAR&quot;} (opcional)
+     * @param entidad    entidad exacta, p. ej. {@code &quot;Estudiante&quot;} (opcional)
+     * @param fechaDesde límite inferior de fecha, inclusivo (opcional)
+     * @param fechaHasta límite superior de fecha, inclusivo (opcional)
+     * @param page       número de página (desde 0)
+     * @param size       tamaño de página
+     * @return {@code 200 OK} con la página de eventos
+     */
     @GetMapping
     public ResponseEntity&lt;Page&lt;AuditoriaResponse&gt;&gt; listar(
             @RequestParam(required = false) String usuario,
@@ -36,13 +55,13 @@ public class AuditoriaController {
             @RequestParam(defaultValue = &quot;0&quot;) int page,
             @RequestParam(defaultValue = &quot;20&quot;) int size) {
 
-<span class="fc" id="L39">        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, &quot;fecha&quot;));</span>
-<span class="fc bfc" id="L40" title="All 2 branches covered.">        OffsetDateTime desde = fechaDesde != null</span>
-<span class="fc" id="L41">                ? fechaDesde.atStartOfDay(Zonas.ECUADOR).toOffsetDateTime() : null;</span>
-<span class="fc bfc" id="L42" title="All 2 branches covered.">        OffsetDateTime hasta = fechaHasta != null</span>
-<span class="fc" id="L43">                ? fechaHasta.plusDays(1).atStartOfDay(Zonas.ECUADOR).toOffsetDateTime() : null;</span>
+<span class="fc" id="L58">        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, &quot;fecha&quot;));</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        OffsetDateTime desde = fechaDesde != null</span>
+<span class="fc" id="L60">                ? fechaDesde.atStartOfDay(Zonas.ECUADOR).toOffsetDateTime() : null;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        OffsetDateTime hasta = fechaHasta != null</span>
+<span class="fc" id="L62">                ? fechaHasta.plusDays(1).atStartOfDay(Zonas.ECUADOR).toOffsetDateTime() : null;</span>
 
-<span class="fc" id="L45">        return ResponseEntity.ok(auditoriaService.buscar(usuario, accion, entidad, desde, hasta, pageable));</span>
+<span class="fc" id="L64">        return ResponseEntity.ok(auditoriaService.buscar(usuario, accion, entidad, desde, hasta, pageable));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

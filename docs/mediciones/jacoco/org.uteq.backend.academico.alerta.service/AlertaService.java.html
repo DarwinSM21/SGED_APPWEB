@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlertaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.alerta.service</a> &gt; <span class="el_source">AlertaService.java</span></div><h1>AlertaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.alerta.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.alerta.dto.AlertaDtos.EstudianteEnRiesgoResponse;
+import org.uteq.backend.academico.alerta.dto.AlertaDtos.PanelAlertasResponse;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
+import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.common.Zonas;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Panel operativo: qué estudiantes necesitan atención hoy y por qué.
+ *
+ * &lt;p&gt;Cruza tres señales que vivían separadas en tres pantallas —pagos,
+ * evaluación diaria y lesiones— para que quien abre el sistema por la mañana
+ * vea en un solo lugar a quién hay que llamar. Se devuelven por separado,
+ * no como un único indicador de riesgo: la acción no es la misma si el
+ * problema es la cuota, las faltas o una lesión.
+ *
+ * &lt;p&gt;Cada señal se resuelve con una consulta, nunca con una por estudiante.
+ * La regla de asistencia es la del procedimiento almacenado: el denominador
+ * son las sesiones programadas de la categoría y la ventana se corta en
+ * ayer, porque una sesión de hoy puede no haber ocurrido todavía.
+ */
+@Service
+@RequiredArgsConstructor
+public class AlertaService {
+    private final EstudianteRepository estudianteRepository;
+    private final PagoRepository pagoRepository;
+    private final LesionRepository lesionRepository;
+    private final AsistenciaRepository asistenciaRepository;
+
+    /** Por debajo de este porcentaje la asistencia se considera un problema. */
+    @Value(&quot;${alertas.umbral-asistencia:75}&quot;)
+    private int umbralAsistencia;
+
+    /** Ventana sobre la que se mide la asistencia, en días. */
+    @Value(&quot;${alertas.dias-asistencia:30}&quot;)
+    private int diasAsistencia;
+
+    // Cuántos estudiantes se detallan. El panel es una lista de a quién llamar
+    // hoy, no un censo: los contadores se siguen calculando sobre la lista
+    // completa, así que el recorte no miente sobre cuántos hay.
+    @Value(&quot;${alertas.tope-detalle:25}&quot;)
+    private int topeDetalle;
+
+    /**
+     * Construye el panel de alertas del día: número de estudiantes activos,
+     * contadores por tipo de alerta (mensualidad, asistencia, lesión) y el
+     * detalle recortado de los más urgentes.
+     *
+     * @return el panel de alertas
+     */
+    @Transactional(readOnly = true)
+    public PanelAlertasResponse panel() {
+<span class="fc" id="L72">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L73">        short anio = (short) hoy.getYear();</span>
+<span class="fc" id="L74">        short mes = (short) hoy.getMonthValue();</span>
+
+<span class="fc" id="L76">        List&lt;Estudiante&gt; activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();</span>
+
+<span class="fc" id="L78">        Set&lt;Long&gt; alDia = new HashSet&lt;&gt;(</span>
+<span class="fc" id="L79">                pagoRepository.idsConMembresiaCubierta(TipoPago.MEMBRESIA, anio, mes));</span>
+<span class="fc" id="L80">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
+
+<span class="fc" id="L82">        LocalDate corte = hoy.minusDays(1);</span>
+<span class="fc" id="L83">        LocalDate desde = hoy.minusDays(diasAsistencia);</span>
+<span class="fc" id="L84">        BigDecimal umbral = BigDecimal.valueOf(umbralAsistencia);</span>
+
+<span class="fc" id="L86">        Map&lt;Long, BigDecimal&gt; porcentajes = porcentajesPorEstudiante(desde, corte);</span>
+
+<span class="fc" id="L88">        List&lt;EstudianteEnRiesgoResponse&gt; enRiesgo = activos.stream()</span>
+<span class="fc" id="L89">                .map(e -&gt; evaluar(e, alDia, lesionados, porcentajes, umbral))</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">                .filter(r -&gt; r.totalAlertas() &gt; 0)</span>
+<span class="fc" id="L91">                .sorted(Comparator</span>
+<span class="fc" id="L92">                        .comparingInt(EstudianteEnRiesgoResponse::totalAlertas).reversed()</span>
+<span class="fc" id="L93">                        .thenComparing(EstudianteEnRiesgoResponse::nombreCompleto))</span>
+<span class="fc" id="L94">                .toList();</span>
+
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        List&lt;EstudianteEnRiesgoResponse&gt; detalle = enRiesgo.size() &gt; topeDetalle</span>
+<span class="fc" id="L97">                ? enRiesgo.subList(0, topeDetalle)</span>
+<span class="fc" id="L98">                : enRiesgo;</span>
+
+<span class="fc" id="L100">        return new PanelAlertasResponse(</span>
+<span class="fc" id="L101">                anio, mes, umbralAsistencia, activos.size(),</span>
+<span class="fc" id="L102">                enRiesgo.stream().filter(EstudianteEnRiesgoResponse::mensualidadPendiente).count(),</span>
+<span class="fc" id="L103">                enRiesgo.stream().filter(EstudianteEnRiesgoResponse::asistenciaBaja).count(),</span>
+<span class="fc" id="L104">                enRiesgo.stream().filter(EstudianteEnRiesgoResponse::lesionActiva).count(),</span>
+<span class="fc" id="L105">                enRiesgo.size(),</span>
+                detalle);
+    }
+
+    // Porcentaje por estudiante a partir de una sola consulta. Un estudiante
+    // SIN entrada aquí —o con cero sesiones programadas— se deja fuera del
+    // mapa a propósito: el servicio lo lee como null (&quot;sin dato&quot;, no &quot;cero por
+    // ciento&quot;). Marcar asistencia baja a quien no tuvo entrenamientos sería
+    // acusarlo de algo que no hizo.
+    private Map&lt;Long, BigDecimal&gt; porcentajesPorEstudiante(LocalDate desde, LocalDate corte) {
+<span class="fc" id="L115">        Map&lt;Long, BigDecimal&gt; porcentajes = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {</span>
+<span class="fc" id="L117">            long programadas = ((Number) fila[1]).longValue();</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            if (programadas == 0) continue;</span>
+<span class="fc" id="L119">            long presentes = ((Number) fila[2]).longValue();</span>
+<span class="fc" id="L120">            porcentajes.put(</span>
+<span class="fc" id="L121">                    ((Number) fila[0]).longValue(),</span>
+<span class="fc" id="L122">                    BigDecimal.valueOf(presentes)</span>
+<span class="fc" id="L123">                            .multiply(BigDecimal.valueOf(100))</span>
+<span class="fc" id="L124">                            .divide(BigDecimal.valueOf(programadas), 2, RoundingMode.HALF_UP));</span>
+<span class="fc" id="L125">        }</span>
+<span class="fc" id="L126">        return porcentajes;</span>
+    }
+
+    private EstudianteEnRiesgoResponse evaluar(
+            Estudiante e, Set&lt;Long&gt; alDia, Set&lt;Long&gt; lesionados,
+            Map&lt;Long, BigDecimal&gt; porcentajes, BigDecimal umbral) {
+<span class="fc" id="L132">        Long id = e.getIdEstudiante();</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        boolean debe = !alDia.contains(id);</span>
+<span class="fc" id="L134">        boolean lesionada = lesionados.contains(id);</span>
+
+<span class="fc" id="L136">        BigDecimal porcentaje = porcentajes.get(id);</span>
+
+<span class="fc bfc" id="L138" title="All 4 branches covered.">        boolean asistenciaBaja = porcentaje != null &amp;&amp; porcentaje.compareTo(umbral) &lt; 0;</span>
+
+<span class="fc bfc" id="L140" title="All 6 branches covered.">        int total = (debe ? 1 : 0) + (asistenciaBaja ? 1 : 0) + (lesionada ? 1 : 0);</span>
+<span class="fc" id="L141">        var persona = e.getPersona();</span>
+
+<span class="fc" id="L143">        return new EstudianteEnRiesgoResponse(</span>
+                id,
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                persona == null ? &quot;(sin persona)&quot; : persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                e.getCategoria() == null ? null : e.getCategoria().getNombre(),</span>
+                debe, asistenciaBaja, porcentaje, lesionada, total);
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

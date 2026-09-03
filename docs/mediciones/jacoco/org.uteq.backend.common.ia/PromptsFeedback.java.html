@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PromptsFeedback.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.ia</a> &gt; <span class="el_source">PromptsFeedback.java</span></div><h1>PromptsFeedback.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.ia;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+final class PromptsFeedback {
+    private PromptsFeedback() {
+    }
+
+    static final String INSTRUCCION_SISTEMA = &quot;&quot;&quot;
+            Eres un asistente que redacta retroalimentacion deportiva para una escuela
+            de futbol formativo con jugadores en edad escolar.
+            Reglas que debes cumplir siempre:
+            - Escribe en espanol neutro, en segunda persona del plural o impersonal.
+            - Maximo 3 frases. Sin listas, sin titulos, sin emojis.
+            - Basate unicamente en los datos numericos que recibes. No inventes
+              hechos, incidentes ni cualidades que no esten en los datos.
+            - Tono constructivo y apropiado para un menor de edad: senala un punto
+              fuerte y un aspecto a mejorar, nunca descalifiques a la persona.
+            - No hagas diagnosticos medicos ni recomendaciones de salud.
+            - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
+            &quot;&quot;&quot;;
+
+    static String deJugador(PerfilJugadorAnonimo p) {
+<span class="fc" id="L26">        var sb = new StringBuilder();</span>
+<span class="fc" id="L27">        sb.append(&quot;Resume como viene rindiendo este jugador, para que lo lea su padre, &quot;)</span>
+<span class="fc" id="L28">          .append(&quot;madre o representante. Traduce los numeros a lenguaje corriente en vez &quot;)</span>
+<span class="fc" id="L29">          .append(&quot;de repetirlos: quien lo lee no sabe si un 5.5 es bueno o malo. Di en que &quot;)</span>
+<span class="fc" id="L30">          .append(&quot;viene mejor y en que le cuesta mas, sin emitir un veredicto sobre el &quot;)</span>
+<span class="fc" id="L31">          .append(&quot;chico.\n\n&quot;);</span>
+<span class="fc" id="L32">        sb.append(&quot;Categoria: &quot;).append(p.categoria()).append('\n');</span>
+<span class="fc bfc" id="L33" title="All 2 branches covered.">        if (p.posicion() != null) {</span>
+<span class="fc" id="L34">            sb.append(&quot;Posicion en la que juega: &quot;).append(p.posicion()).append('\n');</span>
+        }
+<span class="fc" id="L36">        sb.append(&quot;Promedio por criterio (sobre 10): &quot;).append(formatear(p.puntajes())).append('\n');</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        if (!p.puntajesPrevios().isEmpty()) {</span>
+<span class="fc" id="L38">            sb.append(&quot;Promedio historico: &quot;).append(formatear(p.puntajesPrevios())).append('\n');</span>
+        }
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (p.asistenciasUltimoMes() != null) {</span>
+<span class="fc" id="L41">            sb.append(&quot;Entrenamientos a los que asistio en el ultimo mes: &quot;)</span>
+<span class="fc" id="L42">              .append(p.asistenciasUltimoMes()).append('\n');</span>
+        }
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        if (p.lesionado()) {</span>
+<span class="fc" id="L45">            sb.append(&quot;Arrastra una lesion activa: no sugieras aumentar la carga fisica.\n&quot;);</span>
+        }
+<span class="fc" id="L47">        return sb.toString();</span>
+    }
+
+    static String dePlantilla(List&lt;PerfilJugadorAnonimo&gt; alineacion) {
+<span class="fc" id="L51">        var sb = new StringBuilder();</span>
+<span class="fc" id="L52">        sb.append(&quot;Comenta brevemente esta alineacion, ya seleccionada por el sistema &quot;)</span>
+<span class="fc" id="L53">          .append(&quot;segun puntaje acumulado. No propongas cambios de jugadores ni de posiciones: &quot;)</span>
+<span class="fc" id="L54">          .append(&quot;eso ya lo decidio el algoritmo. Basandote solo en los puntajes dados, &quot;)</span>
+<span class="fc" id="L55">          .append(&quot;señala una fortaleza del once planteado y un aspecto a vigilar &quot;)</span>
+<span class="fc" id="L56">          .append(&quot;(por ejemplo un puntaje mas bajo en alguna posicion o criterio).\n\n&quot;);</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">        for (var p : alineacion) {</span>
+<span class="fc" id="L58">            sb.append(&quot;- &quot;).append(p.referencia())</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">              .append(&quot; (&quot;).append(p.posicion() == null ? &quot;sin posicion&quot; : p.posicion()).append(&quot;): &quot;)</span>
+<span class="fc" id="L60">              .append(formatear(p.puntajes())).append('\n');</span>
+<span class="fc" id="L61">        }</span>
+<span class="fc" id="L62">        return sb.toString();</span>
+    }
+
+    private static String formatear(Map&lt;String, Double&gt; puntajes) {
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (puntajes.isEmpty()) {</span>
+<span class="fc" id="L67">            return &quot;sin datos&quot;;</span>
+        }
+<span class="fc" id="L69">        return puntajes.entrySet().stream()</span>
+<span class="fc" id="L70">                .sorted(Map.Entry.comparingByKey())</span>
+<span class="fc" id="L71">                .map(e -&gt; e.getKey() + &quot; &quot; + e.getValue())</span>
+<span class="fc" id="L72">                .collect(Collectors.joining(&quot;, &quot;));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

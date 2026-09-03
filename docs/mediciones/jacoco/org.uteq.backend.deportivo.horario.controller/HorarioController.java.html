@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HorarioController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.horario.controller</a> &gt; <span class="el_source">HorarioController.java</span></div><h1>HorarioController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.horario.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HorarioController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.horario.controller</a> &gt; <span class="el_source">HorarioController.java</span></div><h1>HorarioController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.horario.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,39 +14,81 @@ import org.uteq.backend.deportivo.horario.service.HorarioService;
 import java.util.List;
 
 /**
- * Horario fijo semanal del entrenador. Distinto de /api/sesiones: aqui se
- * define el patron recurrente (&quot;SUB-12, Lunes y Miercoles, 16:00-18:00&quot;);
- * las filas concretas de sesiones_entrenamiento se generan solas cada dia
- * que corresponde (HorarioService.generarSesionesDeHoy(), llamado desde
- * SesionEntrenamientoController.hoy()/mias()). Una jornada que no esta en
- * el horario fijo se sigue creando a mano con POST /api/sesiones.
+ * Horario fijo semanal del entrenador. Distinto de {@code /api/sesiones}:
+ * aquí se define el patrón recurrente (&quot;SUB-12, lunes y miércoles,
+ * 16:00–18:00&quot;); las filas concretas de {@code sesiones_entrenamiento} se
+ * generan solas cada día que corresponde. El entrenador siempre opera sobre
+ * sus propios horarios: la identidad sale del contexto de seguridad.
  */
 @RestController
 @RequestMapping(&quot;/api/horarios&quot;)
 @RequiredArgsConstructor
-@PreAuthorize(&quot;hasRole('ENTRENADOR')&quot;)
+@PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
 public class HorarioController {
-
     private final HorarioService horarioService;
 
+    /**
+     * Crea un horario fijo del entrenador autenticado.
+     *
+     * @param request categoría, día, franja horaria y campo; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con el horario creado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la cuenta no tiene entrenador asociado o la categoría no
+     *         existe ({@code 404})
+     * @throws IllegalArgumentException si la franja es inválida o se cruza
+     *         con otro horario suyo el mismo día ({@code 422})
+     */
     @PostMapping
     public ResponseEntity&lt;HorarioResponse&gt; crear(@Valid @RequestBody HorarioRequest request) {
-<span class="fc" id="L34">        return ResponseEntity.status(HttpStatus.CREATED).body(horarioService.crear(usernameAutenticado(), request));</span>
+<span class="fc" id="L44">        return ResponseEntity.status(HttpStatus.CREATED).body(horarioService.crear(usernameAutenticado(), request));</span>
     }
 
+    /**
+     * Horarios activos del entrenador autenticado, con aviso de cruce si lo
+     * hay.
+     *
+     * @return {@code 200 OK} con la lista de horarios
+     */
     @GetMapping(&quot;/mios&quot;)
     public ResponseEntity&lt;List&lt;HorarioResponse&gt;&gt; mios() {
-<span class="fc" id="L39">        return ResponseEntity.ok(horarioService.misHorarios(usernameAutenticado()));</span>
+<span class="fc" id="L55">        return ResponseEntity.ok(horarioService.misHorarios(usernameAutenticado()));</span>
     }
 
+    /**
+     * Edita un horario fijo del entrenador autenticado y rehace las sesiones
+     * futuras sin asistencia ni evaluación.
+     *
+     * @param idHorario identificador del horario
+     * @param request   datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con el horario actualizado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el horario no existe o no es suyo ({@code 404})
+     * @throws IllegalArgumentException si la franja es inválida o se cruza
+     *         con otro horario suyo ({@code 422})
+     */
+    @PutMapping(&quot;/{idHorario}&quot;)
+    public ResponseEntity&lt;HorarioResponse&gt; editar(@PathVariable Long idHorario,
+                                                  @Valid @RequestBody HorarioRequest request) {
+<span class="nc" id="L73">        return ResponseEntity.ok(horarioService.editar(usernameAutenticado(), idHorario, request));</span>
+    }
+
+    /**
+     * Desactiva un horario fijo del entrenador autenticado.
+     *
+     * @param idHorario identificador del horario
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el horario no existe o no es suyo ({@code 404})
+     */
     @DeleteMapping(&quot;/{idHorario}&quot;)
     public ResponseEntity&lt;Void&gt; desactivar(@PathVariable Long idHorario) {
-<span class="fc" id="L44">        horarioService.desactivar(usernameAutenticado(), idHorario);</span>
-<span class="fc" id="L45">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L86">        horarioService.desactivar(usernameAutenticado(), idHorario);</span>
+<span class="fc" id="L87">        return ResponseEntity.noContent().build();</span>
     }
 
     private String usernameAutenticado() {
-<span class="fc" id="L49">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L91">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

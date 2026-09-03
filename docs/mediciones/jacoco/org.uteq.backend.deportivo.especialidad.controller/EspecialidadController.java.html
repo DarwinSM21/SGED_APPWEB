@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EspecialidadController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.especialidad.controller</a> &gt; <span class="el_source">EspecialidadController.java</span></div><h1>EspecialidadController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.especialidad.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EspecialidadController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.especialidad.controller</a> &gt; <span class="el_source">EspecialidadController.java</span></div><h1>EspecialidadController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.especialidad.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,55 +15,100 @@ import org.uteq.backend.deportivo.especialidad.service.EspecialidadService;
 import java.util.List;
 
 /**
- * CRUD del catalogo de especialidades de Entrenador. La lectura de
- * activas la necesita el formulario de alta/edicion de entrenador
- * (ADMINISTRADOR, ENTRENADOR, RECEPCIONISTA -- mismos roles que
- * /api/categorias/activas); la escritura altera un catalogo del que
- * depende Entrenador por clave foranea, y queda restringida a
- * ADMINISTRADOR.
+ * CRUD del catálogo de especialidades de entrenador. La lectura de activas
+ * la necesita el formulario de alta/edición de entrenador
+ * ({@code ADMINISTRADOR}, {@code ENTRENADOR}, {@code RECEPCIONISTA}); la
+ * escritura altera un catálogo del que depende {@code Entrenador} por clave
+ * foránea y queda restringida a {@code ADMINISTRADOR}.
  */
 @RestController
 @RequestMapping(&quot;/api/especialidades&quot;)
 @RequiredArgsConstructor
 public class EspecialidadController {
-
     private final EspecialidadService especialidadService;
 
+    /**
+     * Lista paginada de especialidades activas.
+     *
+     * @param pageable paginación y orden
+     * @return {@code 200 OK} con la página
+     */
     @GetMapping
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Page&lt;EspecialidadResponse&gt;&gt; listarPaginado(Pageable pageable) {
-<span class="nc" id="L35">        return ResponseEntity.ok(especialidadService.listarPaginado(pageable));</span>
+<span class="fc" id="L39">        return ResponseEntity.ok(especialidadService.listarPaginado(pageable));</span>
     }
 
+    /**
+     * Lista completa de especialidades activas, sin paginar (para
+     * desplegables).
+     *
+     * @return {@code 200 OK} con todas las especialidades activas
+     */
     @GetMapping(&quot;/activas&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;List&lt;EspecialidadResponse&gt;&gt; listarActivas() {
-<span class="nc" id="L41">        return ResponseEntity.ok(especialidadService.listarTodasActivas());</span>
+<span class="fc" id="L51">        return ResponseEntity.ok(especialidadService.listarTodasActivas());</span>
     }
 
+    /**
+     * Busca una especialidad por su identificador.
+     *
+     * @param id identificador de la especialidad
+     * @return {@code 200 OK} con la especialidad
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @GetMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;EspecialidadResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L47">        return ResponseEntity.ok(especialidadService.buscarPorId(id));</span>
+<span class="nc" id="L65">        return ResponseEntity.ok(especialidadService.buscarPorId(id));</span>
     }
 
+    /**
+     * Crea una especialidad.
+     *
+     * @param request nombre de la especialidad; validado con {@code @Valid}
+     * @return {@code 201 Created} con la especialidad creada
+     * @throws IllegalArgumentException si ya existe una especialidad con ese
+     *                                  nombre ({@code 422})
+     */
     @PostMapping
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;EspecialidadResponse&gt; crear(@Valid @RequestBody EspecialidadRequest request) {
-<span class="nc" id="L53">        return ResponseEntity.status(HttpStatus.CREATED).body(especialidadService.crear(request));</span>
+<span class="fc" id="L79">        return ResponseEntity.status(HttpStatus.CREATED).body(especialidadService.crear(request));</span>
     }
 
+    /**
+     * Actualiza el nombre de una especialidad.
+     *
+     * @param id      identificador de la especialidad a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con la especialidad actualizada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si el nombre pertenece a otra
+     *                                  especialidad ({@code 422})
+     */
     @PutMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;EspecialidadResponse&gt; editar(@PathVariable Long id, @Valid @RequestBody EspecialidadRequest request) {
-<span class="nc" id="L59">        return ResponseEntity.ok(especialidadService.editar(id, request));</span>
+<span class="fc" id="L96">        return ResponseEntity.ok(especialidadService.editar(id, request));</span>
     }
 
+    /**
+     * Baja lógica de una especialidad.
+     *
+     * @param id identificador de la especialidad
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="nc" id="L65">        especialidadService.eliminar(id);</span>
-<span class="nc" id="L66">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L110">        especialidadService.eliminar(id);</span>
+<span class="fc" id="L111">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.controller</a> &gt; <span class="el_source">PagoController.java</span></div><h1>PagoController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.controller</a> &gt; <span class="el_source">PagoController.java</span></div><h1>PagoController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,71 +15,145 @@ import org.uteq.backend.academico.pago.service.PagoService;
 import java.util.List;
 
 /**
- * Pagos. Los registra recepcion (o un administrador); el principal
- * autenticado se resuelve aqui, nunca se confia en un id de cliente,
- * mismo criterio ya usado para el resto de altas de este modulo.
+ * Pagos. Los registra recepción (o un administrador); el usuario que
+ * registra se resuelve del contexto de seguridad, nunca de un id del
+ * cliente.
  *
- * &lt;p&gt;Los metodos llevan @Transactional propio porque aResponse() navega
- * Pago -&amp;gt; Estudiante -&amp;gt; Persona y Pago -&amp;gt; Usuario -&amp;gt; Persona (relaciones
- * LAZY) con open-in-view deshabilitado.
+ * &lt;p&gt;Los métodos llevan {@code @Transactional} propio porque
+ * {@code aResponse()} navega relaciones LAZY ({@code Pago -&gt; Estudiante -&gt;
+ * Persona}, {@code Pago -&gt; Usuario -&gt; Persona}) con open-in-view
+ * deshabilitado.
  */
 @RestController
 @RequestMapping(&quot;/api/pagos&quot;)
 @RequiredArgsConstructor
 public class PagoController {
-
     private final PagoService pagoService;
 
+    /**
+     * Registra el pago de una o varias mensualidades de membresía (todo o
+     * nada: si un mes ya está cubierto, no se cobra ninguno).
+     *
+     * @param request estudiante, año, meses, monto y fecha; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con la lista de pagos creados
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no existe ({@code 404})
+     * @throws IllegalArgumentException si algún mes ya está cubierto
+     *         ({@code 422})
+     */
     @PostMapping(&quot;/membresia&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional
     public ResponseEntity&lt;List&lt;PagoResponse&gt;&gt; registrarMembresia(@Valid @RequestBody RegistrarMembresiaRequest request) {
-<span class="fc" id="L37">        var pagos = pagoService.registrarMembresia(</span>
-<span class="fc" id="L38">                request.idEstudiante(), request.anio(), request.meses(),</span>
-<span class="fc" id="L39">                request.monto(), request.fechaPago(), usernameAutenticado());</span>
-<span class="fc" id="L40">        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());</span>
+<span class="fc" id="L49">        var pagos = pagoService.registrarMembresia(</span>
+<span class="fc" id="L50">                request.idEstudiante(), request.anio(), request.meses(),</span>
+<span class="fc" id="L51">                request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="fc" id="L52">        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());</span>
     }
 
+    /**
+     * Registra un pago diario (no cubre período).
+     *
+     * @param request estudiante, monto y fecha; validado con {@code @Valid}
+     * @return {@code 201 Created} con el pago creado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no existe ({@code 404})
+     */
     @PostMapping(&quot;/diario&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional
     public ResponseEntity&lt;PagoResponse&gt; registrarDiario(@Valid @RequestBody RegistrarDiarioRequest request) {
-<span class="fc" id="L47">        var pago = pagoService.registrarDiario(</span>
-<span class="fc" id="L48">                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());</span>
-<span class="fc" id="L49">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));</span>
+<span class="fc" id="L67">        var pago = pagoService.registrarDiario(</span>
+<span class="fc" id="L68">                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="fc" id="L69">        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));</span>
     }
 
+    /**
+     * Anula un pago mal registrado (no lo borra: queda con quién, cuándo y
+     * por qué se anuló).
+     *
+     * @param idPago  identificador del pago
+     * @param request motivo de la anulación; validado con {@code @Valid}
+     * @return {@code 200 OK} con el pago anulado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el pago no existe ({@code 404})
+     * @throws IllegalArgumentException si el pago ya estaba anulado
+     *         ({@code 422})
+     */
+    @PostMapping(&quot;/{idPago}/anular&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional
+    public ResponseEntity&lt;PagoResponse&gt; anular(@PathVariable Long idPago,
+                                               @Valid @RequestBody AnularPagoRequest request) {
+<span class="nc" id="L89">        return ResponseEntity.ok(aResponse(</span>
+<span class="nc" id="L90">                pagoService.anular(idPago, request.motivo(), usernameAutenticado())));</span>
+    }
+
+    /**
+     * Historial de pagos de un estudiante, del más reciente al más antiguo.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return {@code 200 OK} con la lista de pagos
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no existe ({@code 404})
+     */
     @GetMapping(&quot;/estudiante/{idEstudiante}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;List&lt;PagoResponse&gt;&gt; historial(@PathVariable Long idEstudiante) {
-<span class="fc" id="L56">        return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());</span>
+<span class="fc" id="L105">        return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());</span>
     }
 
+    /**
+     * Total ingresado en el mes calendario en curso.
+     *
+     * @return {@code 200 OK} con el total y el número de pagos del mes
+     */
     @GetMapping(&quot;/ingresos-mes&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;IngresosMesResponse&gt; ingresosDelMes() {
-<span class="fc" id="L63">        return ResponseEntity.ok(pagoService.ingresosDelMes());</span>
+<span class="fc" id="L117">        return ResponseEntity.ok(pagoService.ingresosDelMes());</span>
+    }
+
+    /**
+     * Serie de recaudación de los últimos meses, contando el actual.
+     *
+     * @param meses número de meses a incluir (se acota internamente a
+     *              {@code [1, 24]}); por defecto 6
+     * @return {@code 200 OK} con la serie, total, promedio y mejor mes
+     */
+    @GetMapping(&quot;/ingresos-historico&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;HistoricoIngresosResponse&gt; historicoIngresos(
+            @RequestParam(defaultValue = &quot;6&quot;) int meses) {
+<span class="nc" id="L132">        return ResponseEntity.ok(pagoService.historicoIngresos(meses));</span>
     }
 
     private String usernameAutenticado() {
-<span class="fc" id="L67">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L136">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 
     private PagoResponse aResponse(Pago p) {
-<span class="fc" id="L71">        var persona = p.getEstudiante().getPersona();</span>
-<span class="fc" id="L72">        var registrador = p.getRegistradoPor().getPersona();</span>
-<span class="fc" id="L73">        return new PagoResponse(</span>
-<span class="fc" id="L74">                p.getIdPago(),</span>
-<span class="fc" id="L75">                p.getEstudiante().getIdEstudiante(),</span>
-<span class="fc" id="L76">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
-<span class="fc" id="L77">                p.getTipo(),</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">                p.getAnio() != null ? p.getAnio().intValue() : null,</span>
-<span class="fc bfc" id="L79" title="All 2 branches covered.">                p.getMes() != null ? p.getMes().intValue() : null,</span>
-<span class="fc" id="L80">                p.getMonto(),</span>
-<span class="fc" id="L81">                p.getFechaPago(),</span>
-<span class="fc" id="L82">                registrador.getNombre() + &quot; &quot; + registrador.getApellido());</span>
+<span class="fc" id="L140">        var persona = p.getEstudiante().getPersona();</span>
+<span class="fc" id="L141">        var registrador = p.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L142">        return new PagoResponse(</span>
+<span class="fc" id="L143">                p.getIdPago(),</span>
+<span class="fc" id="L144">                p.getEstudiante().getIdEstudiante(),</span>
+<span class="fc" id="L145">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L146">                p.getTipo(),</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                p.getAnio() != null ? p.getAnio().intValue() : null,</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                p.getMes() != null ? p.getMes().intValue() : null,</span>
+<span class="fc" id="L149">                p.getMonto(),</span>
+<span class="fc" id="L150">                p.getFechaPago(),</span>
+<span class="fc" id="L151">                registrador.getNombre() + &quot; &quot; + registrador.getApellido(),</span>
+<span class="fc" id="L152">                p.getAnuladoEn(),</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                p.getAnuladoPor() == null ? null</span>
+<span class="nc" id="L154">                        : p.getAnuladoPor().getPersona().getNombre() + &quot; &quot;</span>
+<span class="pc" id="L155">                          + p.getAnuladoPor().getPersona().getApellido(),</span>
+<span class="fc" id="L156">                p.getMotivoAnulacion());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

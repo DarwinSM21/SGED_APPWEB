@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">JwtAuthenticationFilter.java</span></div><h1>JwtAuthenticationFilter.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtAuthenticationFilter.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">JwtAuthenticationFilter.java</span></div><h1>JwtAuthenticationFilter.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,18 +16,9 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * Filtro JWT híbrido.
- * 1. Intenta extraer el token del encabezado 'Authorization: Bearer &lt;token&gt;' (React / Angular / Mobile).
- * 2. Si no existe, busca en la cookie HttpOnly 'sged_access'.
- * 3. Valida la firma y expiración con JwtService.
- * 4. Consulta Redis blacklist para verificar que el JTI no esté revocado.
- * 5. Establece el UsernamePasswordAuthenticationToken en SecurityContextHolder.
- */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private static final String ACCESS_COOKIE = &quot;sged_access&quot;;
     private static final String AUTHORIZATION_HEADER = &quot;Authorization&quot;;
     private static final String BEARER_PREFIX = &quot;Bearer &quot;;
@@ -42,71 +33,61 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
+<span class="fc" id="L36">        String token = extractAccessToken(request);</span>
 
-        // Extrae el token (Primero prueba por Header Bearer, luego por Cookie)
-<span class="fc" id="L47">        String token = extractAccessToken(request);</span>
-
-<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (token == null) {</span>
-<span class="fc" id="L50">            filterChain.doFilter(request, response);</span>
-<span class="fc" id="L51">            return;</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">        if (token == null) {</span>
+<span class="fc" id="L39">            filterChain.doFilter(request, response);</span>
+<span class="fc" id="L40">            return;</span>
         }
 
         try {
-<span class="fc" id="L55">            String username = jwtService.extractUsername(token);</span>
+<span class="fc" id="L44">            String username = jwtService.extractUsername(token);</span>
 
-<span class="fc bfc" id="L57" title="All 4 branches covered.">            if (username != null &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {</span>
-<span class="fc" id="L58">                String jti = jwtService.extractJti(token);</span>
+<span class="fc bfc" id="L46" title="All 4 branches covered.">            if (username != null &amp;&amp; SecurityContextHolder.getContext().getAuthentication() == null) {</span>
+<span class="fc" id="L47">                String jti = jwtService.extractJti(token);</span>
 
-<span class="pc bpc" id="L60" title="1 of 4 branches missed.">                if (jti != null &amp;&amp; blacklistService.estaRevocado(jti)) {</span>
-<span class="fc" id="L61">                    filterChain.doFilter(request, response);</span>
-<span class="fc" id="L62">                    return;</span>
+<span class="pc bpc" id="L49" title="1 of 4 branches missed.">                if (jti != null &amp;&amp; blacklistService.estaRevocado(jti)) {</span>
+<span class="fc" id="L50">                    filterChain.doFilter(request, response);</span>
+<span class="fc" id="L51">                    return;</span>
                 }
 
-<span class="fc" id="L65">                UserDetails userDetails = userDetailsService.loadUserByUsername(username);</span>
+<span class="fc" id="L54">                UserDetails userDetails = userDetailsService.loadUserByUsername(username);</span>
 
-<span class="fc bfc" id="L67" title="All 2 branches covered.">                if (jwtService.isTokenValid(token)) {</span>
-<span class="fc" id="L68">                    UsernamePasswordAuthenticationToken authToken =</span>
+<span class="fc bfc" id="L56" title="All 2 branches covered.">                if (jwtService.isTokenValid(token)) {</span>
+<span class="fc" id="L57">                    UsernamePasswordAuthenticationToken authToken =</span>
                             new UsernamePasswordAuthenticationToken(
-<span class="fc" id="L70">                                    userDetails, null, userDetails.getAuthorities());</span>
-<span class="fc" id="L71">                    authToken.setDetails(</span>
-<span class="fc" id="L72">                            new WebAuthenticationDetailsSource().buildDetails(request));</span>
-<span class="fc" id="L73">                    SecurityContextHolder.getContext().setAuthentication(authToken);</span>
+<span class="fc" id="L59">                                    userDetails, null, userDetails.getAuthorities());</span>
+<span class="fc" id="L60">                    authToken.setDetails(</span>
+<span class="fc" id="L61">                            new WebAuthenticationDetailsSource().buildDetails(request));</span>
+<span class="fc" id="L62">                    SecurityContextHolder.getContext().setAuthentication(authToken);</span>
                 }
             }
-<span class="fc" id="L76">        } catch (Exception e) {</span>
-            // Token inválido o expirado: deja que Spring Security maneje el 401
-<span class="fc" id="L78">            logger.debug(&quot;Error procesando autenticación JWT: &quot; + e.getMessage());</span>
-<span class="fc" id="L79">        }</span>
+<span class="fc" id="L65">        } catch (Exception e) {</span>
+<span class="fc" id="L66">            logger.debug(&quot;Error procesando autenticación JWT: &quot; + e.getMessage());</span>
+<span class="fc" id="L67">        }</span>
 
-<span class="fc" id="L81">        filterChain.doFilter(request, response);</span>
-<span class="fc" id="L82">    }</span>
+<span class="fc" id="L69">        filterChain.doFilter(request, response);</span>
+<span class="fc" id="L70">    }</span>
 
-    /**
-     * Busca el token JWT de dos formas:
-     * 1. Header 'Authorization: Bearer ...' (Prioridad Alta)
-     * 2. Cookie 'sged_access' (Prioridad Secundaria)
-     */
     private String extractAccessToken(HttpServletRequest request) {
-        // 1. Intentar obtener desde el Header Authorization (Bearer)
-<span class="fc" id="L91">        String authHeader = request.getHeader(AUTHORIZATION_HEADER);</span>
-<span class="fc bfc" id="L92" title="All 4 branches covered.">        if (authHeader != null &amp;&amp; authHeader.startsWith(BEARER_PREFIX)) {</span>
-<span class="fc" id="L93">            String bearerToken = authHeader.substring(BEARER_PREFIX.length()).trim();</span>
-<span class="fc bfc" id="L94" title="All 2 branches covered.">            if (!bearerToken.isEmpty()) {</span>
-<span class="fc" id="L95">                return bearerToken;</span>
+<span class="fc" id="L73">        String authHeader = request.getHeader(AUTHORIZATION_HEADER);</span>
+<span class="fc bfc" id="L74" title="All 4 branches covered.">        if (authHeader != null &amp;&amp; authHeader.startsWith(BEARER_PREFIX)) {</span>
+<span class="fc" id="L75">            String bearerToken = authHeader.substring(BEARER_PREFIX.length()).trim();</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            if (!bearerToken.isEmpty()) {</span>
+<span class="fc" id="L77">                return bearerToken;</span>
             }
         }
 
-        // 2. Si no hay Header, intentar obtener desde las Cookies
-<span class="fc" id="L100">        Cookie[] cookies = request.getCookies();</span>
-<span class="fc bfc" id="L101" title="All 2 branches covered.">        if (cookies != null) {</span>
-<span class="fc bfc" id="L102" title="All 2 branches covered.">            for (Cookie cookie : cookies) {</span>
-<span class="fc bfc" id="L103" title="All 2 branches covered.">                if (ACCESS_COOKIE.equals(cookie.getName())) {</span>
-<span class="fc" id="L104">                    return cookie.getValue();</span>
+<span class="fc" id="L81">        Cookie[] cookies = request.getCookies();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">        if (cookies != null) {</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            for (Cookie cookie : cookies) {</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                if (ACCESS_COOKIE.equals(cookie.getName())) {</span>
+<span class="fc" id="L85">                    return cookie.getValue();</span>
                 }
             }
         }
 
-<span class="fc" id="L109">        return null;</span>
+<span class="fc" id="L90">        return null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

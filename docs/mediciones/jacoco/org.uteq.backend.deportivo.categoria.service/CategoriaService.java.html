@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.service</a> &gt; <span class="el_source">CategoriaService.java</span></div><h1>CategoriaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.service</a> &gt; <span class="el_source">CategoriaService.java</span></div><h1>CategoriaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,90 +12,176 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 
 import java.util.List;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
+/**
+ * Lógica de negocio del catálogo de categorías (grupos etarios). El nombre
+ * se guarda siempre en la forma canónica {@code SUB-&lt;edad&gt;}; la validación
+ * del DTO acepta variantes al teclear y aquí se unifican, para que el
+ * catálogo no termine con tres filas que son la misma categoría.
+ */
 @Service
 @RequiredArgsConstructor
 public class CategoriaService {
-
     private final CategoriaRepository categoriaRepository;
 
+    /**
+     * Lista paginada de categorías activas.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, mapeada a {@link CategoriaResponse}
+     */
     @Transactional(readOnly = true)
     public Page&lt;CategoriaResponse&gt; listarPaginado(Pageable pageable) {
-<span class="fc" id="L24">        return categoriaRepository.findByActivoTrue(pageable)</span>
-<span class="fc" id="L25">                .map(this::toResponse);</span>
+<span class="fc" id="L36">        return categoriaRepository.findByActivoTrue(pageable)</span>
+<span class="fc" id="L37">                .map(this::toResponse);</span>
     }
 
+    /**
+     * Lista completa de categorías activas, sin paginar.
+     *
+     * @return todas las categorías activas
+     */
     @Transactional(readOnly = true)
     public List&lt;CategoriaResponse&gt; listarTodasActivas() {
-<span class="fc" id="L30">        return categoriaRepository.findByActivoTrue().stream()</span>
-<span class="fc" id="L31">                .map(this::toResponse)</span>
-<span class="fc" id="L32">                .toList();</span>
+<span class="fc" id="L47">        return categoriaRepository.findByActivoTrue().stream()</span>
+<span class="fc" id="L48">                .map(this::toResponse)</span>
+<span class="fc" id="L49">                .toList();</span>
     }
 
+    /**
+     * Busca una categoría por su identificador.
+     *
+     * @param id identificador de la categoría
+     * @return la categoría encontrada
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public CategoriaResponse buscarPorId(Long id) {
-<span class="fc" id="L37">        Categoria c = categoriaRepository.findById(id)</span>
-<span class="fc" id="L38">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
-<span class="fc" id="L39">        return toResponse(c);</span>
+<span class="fc" id="L61">        Categoria c = categoriaRepository.findById(id)</span>
+<span class="fc" id="L62">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L63">        return toResponse(c);</span>
     }
 
+    /**
+     * Crea una categoría con nombre normalizado.
+     *
+     * @param request nombre, rango de edad y descripción
+     * @return la categoría creada
+     * @throws IllegalArgumentException si ya existe una categoría con ese
+     *                                  nombre o el rango de edad es inválido
+     */
     @Transactional
     public CategoriaResponse crear(CategoriaRequest request) {
-<span class="fc" id="L44">        validarEdades(request.edadMin(), request.edadMax());</span>
+<span class="fc" id="L76">        String nombre = normalizarNombre(request.nombre());</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        if (categoriaRepository.existsByNombreIgnoreCase(nombre)) {</span>
+<span class="fc" id="L78">            throw new IllegalArgumentException(</span>
+                    &quot;Ya existe una categoría llamada \&quot;&quot; + nombre + &quot;\&quot;&quot;);
+        }
+<span class="fc" id="L81">        validarEdades(request.edadMin(), request.edadMax());</span>
 
-<span class="fc" id="L46">        Categoria categoria = Categoria.builder()</span>
-<span class="fc" id="L47">                .nombre(request.nombre())</span>
-<span class="fc" id="L48">                .edadMin(request.edadMin())</span>
-<span class="fc" id="L49">                .edadMax(request.edadMax())</span>
-<span class="fc" id="L50">                .descripcion(request.descripcion())</span>
-<span class="fc" id="L51">                .activo(true)</span>
-<span class="fc" id="L52">                .build();</span>
+<span class="fc" id="L83">        Categoria categoria = Categoria.builder()</span>
+<span class="fc" id="L84">                .nombre(nombre)</span>
+<span class="fc" id="L85">                .edadMin(request.edadMin())</span>
+<span class="fc" id="L86">                .edadMax(request.edadMax())</span>
+<span class="fc" id="L87">                .descripcion(request.descripcion())</span>
+<span class="fc" id="L88">                .activo(true)</span>
+<span class="fc" id="L89">                .build();</span>
 
-<span class="fc" id="L54">        return toResponse(categoriaRepository.save(categoria));</span>
+<span class="fc" id="L91">        return toResponse(categoriaRepository.save(categoria));</span>
     }
 
+    /**
+     * Actualiza una categoría.
+     *
+     * @param id      identificador de la categoría a editar
+     * @param request datos nuevos
+     * @return la categoría actualizada
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si el nombre pertenece a otra
+     *                                      categoría o el rango es inválido
+     */
     @Transactional
     public CategoriaResponse editar(Long id, CategoriaRequest request) {
-<span class="fc" id="L59">        validarEdades(request.edadMin(), request.edadMax());</span>
+<span class="fc" id="L106">        String nombre = normalizarNombre(request.nombre());</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (categoriaRepository.existsByNombreIgnoreCaseAndIdCategoriaNot(nombre, id)) {</span>
+<span class="fc" id="L108">            throw new IllegalArgumentException(</span>
+                    &quot;Ya existe otra categoría llamada \&quot;&quot; + nombre + &quot;\&quot;&quot;);
+        }
+<span class="fc" id="L111">        validarEdades(request.edadMin(), request.edadMax());</span>
 
-<span class="fc" id="L61">        Categoria categoria = categoriaRepository.findById(id)</span>
-<span class="pc" id="L62">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L113">        Categoria categoria = categoriaRepository.findById(id)</span>
+<span class="pc" id="L114">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
 
-<span class="fc" id="L64">        categoria.setNombre(request.nombre());</span>
-<span class="fc" id="L65">        categoria.setEdadMin(request.edadMin());</span>
-<span class="fc" id="L66">        categoria.setEdadMax(request.edadMax());</span>
-<span class="fc" id="L67">        categoria.setDescripcion(request.descripcion());</span>
+<span class="fc" id="L116">        categoria.setNombre(nombre);</span>
+<span class="fc" id="L117">        categoria.setEdadMin(request.edadMin());</span>
+<span class="fc" id="L118">        categoria.setEdadMax(request.edadMax());</span>
+<span class="fc" id="L119">        categoria.setDescripcion(request.descripcion());</span>
 
-<span class="fc" id="L69">        return toResponse(categoriaRepository.save(categoria));</span>
+<span class="fc" id="L121">        return toResponse(categoriaRepository.save(categoria));</span>
     }
 
+    /**
+     * Vuelve a poner una categoría en circulación. Es un método aparte y no
+     * un efecto de {@link #editar}: reactivar es una decisión explícita, y si
+     * editar el nombre reviviera de paso una categoría dada de baja sería un
+     * cambio de estado que nadie pidió.
+     *
+     * @param id identificador de la categoría
+     * @return la categoría reactivada
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Transactional
+    public CategoriaResponse reactivar(Long id) {
+<span class="fc" id="L136">        Categoria categoria = categoriaRepository.findById(id)</span>
+<span class="pc" id="L137">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L138">        categoria.setActivo(true);</span>
+<span class="fc" id="L139">        return toResponse(categoriaRepository.save(categoria));</span>
+    }
+
+    /**
+     * Baja lógica de una categoría ({@code activo = false}).
+     *
+     * @param id identificador de la categoría
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Categoria&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'desactivo la categoria #' + #p0&quot;)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L74">        Categoria categoria = categoriaRepository.findById(id)</span>
-<span class="pc" id="L75">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
-<span class="fc" id="L76">        categoria.setActivo(false);</span>
-<span class="fc" id="L77">        categoriaRepository.save(categoria);</span>
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L152">        Categoria categoria = categoriaRepository.findById(id)</span>
+<span class="pc" id="L153">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L154">        categoria.setActivo(false);</span>
+<span class="fc" id="L155">        categoriaRepository.save(categoria);</span>
+<span class="fc" id="L156">    }</span>
+
+    // Deja el nombre en la forma canónica SUB-&lt;edad&gt;: el problema real no es
+    // cómo se teclea sino que el catálogo termine con tres filas distintas
+    // que son la misma categoría.
+    private String normalizarNombre(String nombre) {
+<span class="fc" id="L162">        String digitos = nombre.replaceAll(&quot;\\D+&quot;, &quot;&quot;);</span>
+<span class="fc" id="L163">        return &quot;SUB-&quot; + digitos;</span>
+    }
 
     private void validarEdades(Short edadMin, Short edadMax) {
-<span class="pc bpc" id="L81" title="2 of 4 branches missed.">        if (edadMin == null || edadMax == null) {</span>
-<span class="nc" id="L82">            throw new IllegalArgumentException(&quot;Las edades mínima y máxima son obligatorias&quot;);</span>
+<span class="pc bpc" id="L167" title="2 of 4 branches missed.">        if (edadMin == null || edadMax == null) {</span>
+<span class="nc" id="L168">            throw new IllegalArgumentException(&quot;Las edades mínima y máxima son obligatorias&quot;);</span>
         }
 
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (edadMax &lt;= edadMin) {</span>
-<span class="fc" id="L86">            throw new IllegalArgumentException(&quot;La edad máxima debe ser mayor a la edad mínima&quot;);</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        if (edadMax &lt;= edadMin) {</span>
+<span class="fc" id="L172">            throw new IllegalArgumentException(&quot;La edad máxima debe ser mayor a la edad mínima&quot;);</span>
         }
-<span class="fc" id="L88">    }</span>
+<span class="fc" id="L174">    }</span>
 
     private CategoriaResponse toResponse(Categoria c) {
-<span class="fc" id="L91">        return new CategoriaResponse(</span>
-<span class="fc" id="L92">                c.getIdCategoria(),</span>
-<span class="fc" id="L93">                c.getNombre(),</span>
-<span class="fc" id="L94">                c.getEdadMin(),</span>
-<span class="fc" id="L95">                c.getEdadMax(),</span>
-<span class="fc" id="L96">                c.getDescripcion(),</span>
-<span class="fc" id="L97">                c.getActivo(),</span>
-<span class="fc" id="L98">                c.getCreatedAt()</span>
+<span class="fc" id="L177">        return new CategoriaResponse(</span>
+<span class="fc" id="L178">                c.getIdCategoria(),</span>
+<span class="fc" id="L179">                c.getNombre(),</span>
+<span class="fc" id="L180">                c.getEdadMin(),</span>
+<span class="fc" id="L181">                c.getEdadMax(),</span>
+<span class="fc" id="L182">                c.getDescripcion(),</span>
+<span class="fc" id="L183">                c.getActivo(),</span>
+<span class="fc" id="L184">                c.getCreatedAt()</span>
         );
     }
 }

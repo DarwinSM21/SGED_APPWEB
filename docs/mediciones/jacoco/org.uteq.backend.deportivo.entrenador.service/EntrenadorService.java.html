@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntrenadorService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.entrenador.service</a> &gt; <span class="el_source">EntrenadorService.java</span></div><h1>EntrenadorService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.entrenador.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntrenadorService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.entrenador.service</a> &gt; <span class="el_source">EntrenadorService.java</span></div><h1>EntrenadorService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.entrenador.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,7 +20,13 @@ import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
+/**
+ * Lógica de negocio de {@code Entrenador}. Cada entrenador se apoya en una
+ * {@code Persona} y una cuenta de rol {@code ENTRENADOR} ya creadas; la
+ * especialidad es opcional. Las bajas son lógicas ({@code activo = false}).
+ */
 @Service
 @RequiredArgsConstructor
 public class EntrenadorService {
@@ -30,109 +36,174 @@ public class EntrenadorService {
     private final UsuarioRepository usuarioRepository;
     private final EspecialidadRepository especialidadRepository;
 
+    /**
+     * Lista paginada de entrenadores.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, envuelta en {@link EntrenadorPageResponse}
+     */
     @Cacheable(value = RedisCacheConfig.CACHE_ENTRENADORES, key = &quot;#pageable.pageNumber + '-' + #pageable.pageSize&quot;)
     @Transactional(readOnly = true)
     public EntrenadorPageResponse&lt;EntrenadorResponse&gt; listar(Pageable pageable) {
-<span class="fc" id="L36">        Page&lt;Entrenador&gt; page = entrenadorRepository.findByActivoTrue(pageable);</span>
-<span class="fc" id="L37">        var content = page.getContent().stream().map(this::toResponse).toList();</span>
-<span class="fc" id="L38">        return new EntrenadorPageResponse&lt;&gt;(</span>
+<span class="fc" id="L48">        Page&lt;Entrenador&gt; page = entrenadorRepository.findAll(pageable);</span>
+<span class="fc" id="L49">        var content = page.getContent().stream().map(this::toResponse).toList();</span>
+<span class="fc" id="L50">        return new EntrenadorPageResponse&lt;&gt;(</span>
                 content,
-<span class="fc" id="L40">                page.getNumber(),</span>
-<span class="fc" id="L41">                page.getSize(),</span>
-<span class="fc" id="L42">                page.getTotalElements(),</span>
-<span class="fc" id="L43">                page.getTotalPages()</span>
+<span class="fc" id="L52">                page.getNumber(),</span>
+<span class="fc" id="L53">                page.getSize(),</span>
+<span class="fc" id="L54">                page.getTotalElements(),</span>
+<span class="fc" id="L55">                page.getTotalPages()</span>
         );
     }
 
+    /**
+     * Busca un entrenador por su identificador.
+     *
+     * @param id identificador del entrenador
+     * @return el entrenador encontrado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public EntrenadorResponse buscarPorId(Long id) {
-<span class="fc" id="L49">        Entrenador e = entrenadorRepository.findById(id)</span>
-<span class="pc" id="L50">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
-<span class="nc" id="L51">        return toResponse(e);</span>
+<span class="fc" id="L68">        Entrenador e = entrenadorRepository.findById(id)</span>
+<span class="pc" id="L69">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L70">        return toResponse(e);</span>
     }
 
+    /**
+     * Registra un entrenador sobre una persona y una cuenta ya existentes.
+     *
+     * @param request persona, usuario, especialidad y datos profesionales
+     * @return el entrenador registrado
+     * @throws RecursoNoEncontradoException si la persona, el usuario o la
+     *                                      especialidad no existen
+     * @throws IllegalArgumentException     si la persona o el usuario ya
+     *                                      están asignados, o si el usuario
+     *                                      no tiene rol {@code ENTRENADOR}
+     */
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
     @Transactional
     public EntrenadorResponse crear(EntrenadorRequest request) {
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (entrenadorRepository.existsByPersona_IdPersona(request.idPersona())) {</span>
-<span class="fc" id="L58">            throw new IllegalArgumentException(&quot;La persona ya está registrada como entrenador&quot;);</span>
+<span class="fc bfc" id="L87" title="All 2 branches covered.">        if (entrenadorRepository.existsByPersona_IdPersona(request.idPersona())) {</span>
+<span class="fc" id="L88">            throw new IllegalArgumentException(&quot;La persona ya está registrada como entrenador&quot;);</span>
         }
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (entrenadorRepository.existsByUsuario_IdUsuario(request.idUsuario())) {</span>
-<span class="fc" id="L61">            throw new IllegalArgumentException(&quot;El usuario ya está asignado a otro entrenador&quot;);</span>
+<span class="fc bfc" id="L90" title="All 2 branches covered.">        if (entrenadorRepository.existsByUsuario_IdUsuario(request.idUsuario())) {</span>
+<span class="fc" id="L91">            throw new IllegalArgumentException(&quot;El usuario ya está asignado a otro entrenador&quot;);</span>
         }
 
-<span class="fc" id="L64">        Persona persona = personaRepository.findById(request.idPersona())</span>
-<span class="pc" id="L65">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
+<span class="fc" id="L94">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="pc" id="L95">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
 
-<span class="fc" id="L67">        Usuario usuario = usuarioRepository.findById(request.idUsuario())</span>
-<span class="pc" id="L68">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + request.idUsuario()));</span>
+<span class="fc" id="L97">        Usuario usuario = usuarioRepository.findById(request.idUsuario())</span>
+<span class="pc" id="L98">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + request.idUsuario()));</span>
 
-<span class="fc" id="L70">        boolean tieneRolEntrenador = usuario.getRoles().stream()</span>
-<span class="fc" id="L71">                .anyMatch(r -&gt; &quot;ENTRENADOR&quot;.equals(r.getNombre()));</span>
-<span class="fc bfc" id="L72" title="All 2 branches covered.">        if (!tieneRolEntrenador) {</span>
-<span class="fc" id="L73">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L100">        boolean tieneRolEntrenador = usuario.getRoles().stream()</span>
+<span class="fc" id="L101">                .anyMatch(r -&gt; &quot;ENTRENADOR&quot;.equals(r.getNombre()));</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        if (!tieneRolEntrenador) {</span>
+<span class="fc" id="L103">            throw new IllegalArgumentException(</span>
                     &quot;El usuario debe tener el rol ENTRENADOR para registrarse como entrenador&quot;);
         }
 
-<span class="fc" id="L77">        Entrenador entrenador = Entrenador.builder()</span>
-<span class="fc" id="L78">                .persona(persona)</span>
-<span class="fc" id="L79">                .usuario(usuario)</span>
-<span class="fc" id="L80">                .especialidad(resolverEspecialidad(request.idEspecialidad()))</span>
-<span class="fc" id="L81">                .experienciaAnios(request.experienciaAnios())</span>
-<span class="fc" id="L82">                .certificacion(request.certificacion())</span>
-<span class="fc" id="L83">                .activo(true)</span>
-<span class="fc" id="L84">                .build();</span>
+<span class="fc" id="L107">        Entrenador entrenador = Entrenador.builder()</span>
+<span class="fc" id="L108">                .persona(persona)</span>
+<span class="fc" id="L109">                .usuario(usuario)</span>
+<span class="fc" id="L110">                .especialidad(resolverEspecialidad(request.idEspecialidad()))</span>
+<span class="fc" id="L111">                .experienciaAnios(request.experienciaAnios())</span>
+<span class="fc" id="L112">                .certificacion(request.certificacion())</span>
+<span class="fc" id="L113">                .activo(true)</span>
+<span class="fc" id="L114">                .build();</span>
 
-<span class="fc" id="L86">        entrenador = entrenadorRepository.save(entrenador);</span>
-<span class="fc" id="L87">        return toResponse(entrenador);</span>
+<span class="fc" id="L116">        entrenador = entrenadorRepository.save(entrenador);</span>
+<span class="fc" id="L117">        return toResponse(entrenador);</span>
     }
 
+    /**
+     * Actualiza la especialidad y los datos profesionales de un entrenador.
+     *
+     * @param id      identificador del entrenador a editar
+     * @param request datos nuevos
+     * @return el entrenador actualizado
+     * @throws RecursoNoEncontradoException si el entrenador o la especialidad
+     *                                      no existen
+     */
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
     @Transactional
     public EntrenadorResponse editar(Long id, EntrenadorRequest request) {
-<span class="nc" id="L93">        Entrenador entrenador = entrenadorRepository.findById(id)</span>
-<span class="nc" id="L94">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L132">        Entrenador entrenador = entrenadorRepository.findById(id)</span>
+<span class="nc" id="L133">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
 
-<span class="nc" id="L96">        entrenador.setEspecialidad(resolverEspecialidad(request.idEspecialidad()));</span>
-<span class="nc" id="L97">        entrenador.setExperienciaAnios(request.experienciaAnios());</span>
-<span class="nc" id="L98">        entrenador.setCertificacion(request.certificacion());</span>
+<span class="nc" id="L135">        entrenador.setEspecialidad(resolverEspecialidad(request.idEspecialidad()));</span>
+<span class="nc" id="L136">        entrenador.setExperienciaAnios(request.experienciaAnios());</span>
+<span class="nc" id="L137">        entrenador.setCertificacion(request.certificacion());</span>
 
-<span class="nc" id="L100">        entrenador = entrenadorRepository.save(entrenador);</span>
-<span class="nc" id="L101">        return toResponse(entrenador);</span>
+<span class="nc" id="L139">        entrenador = entrenadorRepository.save(entrenador);</span>
+<span class="nc" id="L140">        return toResponse(entrenador);</span>
     }
 
+    /**
+     * Baja lógica de un entrenador ({@code activo = false}).
+     *
+     * @param id identificador del entrenador
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Entrenador&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'desactivo la ficha de entrenador #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L107">        Entrenador entrenador = entrenadorRepository.findById(id)</span>
-<span class="pc" id="L108">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
-<span class="fc" id="L109">        entrenador.setActivo(false);</span>
-<span class="fc" id="L110">        entrenadorRepository.save(entrenador);</span>
-<span class="fc" id="L111">    }</span>
+<span class="fc" id="L154">        Entrenador entrenador = entrenadorRepository.findById(id)</span>
+<span class="pc" id="L155">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L156">        entrenador.setActivo(false);</span>
+<span class="fc" id="L157">        entrenadorRepository.save(entrenador);</span>
+<span class="fc" id="L158">    }</span>
+
+    /**
+     * Reactiva un entrenador dado de baja.
+     *
+     * @param id identificador del entrenador
+     * @return el entrenador reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si ya está activo
+     */
+    @Auditado(accion = &quot;REACTIVAR&quot;, entidad = &quot;Entrenador&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'reactivo la ficha de entrenador #' + #p0&quot;)
+    @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
+    @Transactional
+    public EntrenadorResponse reactivar(Long id) {
+<span class="nc" id="L173">        Entrenador entrenador = entrenadorRepository.findById(id)</span>
+<span class="nc" id="L174">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Entrenador no encontrado con id: &quot; + id));</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        if (Boolean.TRUE.equals(entrenador.getActivo())) {</span>
+<span class="nc" id="L177">            throw new IllegalArgumentException(&quot;La ficha de entrenador ya se encuentra activa&quot;);</span>
+        }
+
+<span class="nc" id="L180">        entrenador.setActivo(true);</span>
+<span class="nc" id="L181">        return toResponse(entrenadorRepository.save(entrenador));</span>
+    }
 
     private Especialidad resolverEspecialidad(Long idEspecialidad) {
-<span class="pc bpc" id="L114" title="1 of 2 branches missed.">        if (idEspecialidad == null) return null;</span>
-<span class="fc" id="L115">        return especialidadRepository.findById(idEspecialidad)</span>
-<span class="fc" id="L116">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con id: &quot; + idEspecialidad));</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">        if (idEspecialidad == null) return null;</span>
+<span class="fc" id="L186">        return especialidadRepository.findById(idEspecialidad)</span>
+<span class="fc" id="L187">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con id: &quot; + idEspecialidad));</span>
     }
 
     private EntrenadorResponse toResponse(Entrenador e) {
-<span class="fc" id="L120">        return new EntrenadorResponse(</span>
-<span class="fc" id="L121">                e.getIdEntrenador(),</span>
-<span class="fc" id="L122">                e.getPersona().getIdPersona(),</span>
-<span class="fc" id="L123">                e.getPersona().getNombre(),</span>
-<span class="fc" id="L124">                e.getPersona().getApellido(),</span>
-<span class="fc" id="L125">                e.getPersona().getCedula(),</span>
-<span class="fc" id="L126">                e.getPersona().getCorreo(),</span>
-<span class="fc" id="L127">                e.getPersona().getTelefono(),</span>
-<span class="fc" id="L128">                e.getUsuario().getIdUsuario(),</span>
-<span class="fc" id="L129">                e.getUsuario().getUsername(),</span>
-<span class="pc bpc" id="L130" title="1 of 2 branches missed.">                e.getEspecialidad() != null ? e.getEspecialidad().getIdEspecialidad() : null,</span>
-<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                e.getEspecialidad() != null ? e.getEspecialidad().getNombre() : null,</span>
-<span class="fc" id="L132">                e.getExperienciaAnios(),</span>
-<span class="fc" id="L133">                e.getCertificacion(),</span>
-<span class="fc" id="L134">                e.getActivo(),</span>
-<span class="fc" id="L135">                e.getCreatedAt()</span>
+<span class="fc" id="L191">        return new EntrenadorResponse(</span>
+<span class="fc" id="L192">                e.getIdEntrenador(),</span>
+<span class="fc" id="L193">                e.getPersona().getIdPersona(),</span>
+<span class="fc" id="L194">                e.getPersona().getNombre(),</span>
+<span class="fc" id="L195">                e.getPersona().getApellido(),</span>
+<span class="fc" id="L196">                e.getPersona().getCedula(),</span>
+<span class="fc" id="L197">                e.getPersona().getCorreo(),</span>
+<span class="fc" id="L198">                e.getPersona().getTelefono(),</span>
+<span class="fc" id="L199">                e.getUsuario().getIdUsuario(),</span>
+<span class="fc" id="L200">                e.getUsuario().getUsername(),</span>
+<span class="pc bpc" id="L201" title="1 of 2 branches missed.">                e.getEspecialidad() != null ? e.getEspecialidad().getIdEspecialidad() : null,</span>
+<span class="pc bpc" id="L202" title="1 of 2 branches missed.">                e.getEspecialidad() != null ? e.getEspecialidad().getNombre() : null,</span>
+<span class="fc" id="L203">                e.getExperienciaAnios(),</span>
+<span class="fc" id="L204">                e.getCertificacion(),</span>
+<span class="fc" id="L205">                e.getActivo(),</span>
+<span class="fc" id="L206">                e.getCreatedAt()</span>
         );
     }
 }

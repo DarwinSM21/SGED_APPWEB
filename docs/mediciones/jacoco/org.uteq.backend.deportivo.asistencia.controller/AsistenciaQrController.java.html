@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AsistenciaQrController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.controller</a> &gt; <span class="el_source">AsistenciaQrController.java</span></div><h1>AsistenciaQrController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AsistenciaQrController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.controller</a> &gt; <span class="el_source">AsistenciaQrController.java</span></div><h1>AsistenciaQrController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -13,58 +13,76 @@ import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
 import org.uteq.backend.deportivo.asistencia.service.QrAsistenciaService;
 
 /**
- * Asistencia por codigo QR.
- *
- * &lt;p&gt;Dos lados con permisos distintos, y esa asimetria es el punto del diseno:
- *
+ * Asistencia por código QR, con dos lados de permisos distintos:
  * &lt;ul&gt;
- *   &lt;li&gt;&lt;b&gt;Emitir&lt;/b&gt; el token lo hace la pantalla de recepcion. Restringido a
- *       ADMINISTRADOR y RECEPCIONISTA: si cualquiera pudiera emitir codigos,
- *       bastaria pedir uno desde casa para marcarse presente.&lt;/li&gt;
- *   &lt;li&gt;&lt;b&gt;Canjearlo&lt;/b&gt; lo hace el estudiante desde su celular, con su propia
- *       sesion. Su identidad sale del token de sesion, nunca del QR.&lt;/li&gt;
+ *   &lt;li&gt;&lt;b&gt;Emitir&lt;/b&gt; el token lo hace la pantalla de recepción
+ *       ({@code ADMINISTRADOR} / {@code RECEPCIONISTA}): si cualquiera
+ *       pudiera emitir códigos, bastaría pedir uno desde casa para marcarse
+ *       presente.&lt;/li&gt;
+ *   &lt;li&gt;&lt;b&gt;Canjearlo&lt;/b&gt; lo hace el estudiante desde su celular, con su
+ *       propia sesión. Su identidad sale del token de sesión, nunca del
+ *       QR.&lt;/li&gt;
  * &lt;/ul&gt;
  */
 @RestController
 @RequestMapping(&quot;/api/asistencias/qr&quot;)
 @RequiredArgsConstructor
 public class AsistenciaQrController {
-
     private final QrAsistenciaService qrService;
     private final AsistenciaService asistenciaService;
 
     /**
-     * Token vigente para pintar en la pantalla de recepcion. La pantalla debe
-     * volver a pedirlo antes de que expire.
+     * Emite un token QR vigente para una sesión, para pintarlo en la pantalla
+     * de recepción. La pantalla debe volver a pedirlo antes de que expire.
+     *
+     * @param idSesion identificador de la sesión
+     * @return {@code 200 OK} con el token y su vencimiento
      */
     @PostMapping(&quot;/sesion/{idSesion}/token&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;QrAsistenciaService.TokenQr&gt; emitir(@PathVariable Long idSesion) {
-<span class="nc" id="L43">        return ResponseEntity.ok(qrService.emitir(idSesion));</span>
+<span class="nc" id="L44">        return ResponseEntity.ok(qrService.emitir(idSesion));</span>
     }
 
     /**
-     * Marca la asistencia del estudiante autenticado (rol ESTUDIANTE). El
-     * canjeo del token se resuelve aqui mismo, no en el servicio: el 410
-     * uniforme para &quot;no existe&quot; y &quot;ya se uso&quot; es deliberado (distinguirlos
-     * confirmaria que el token existio). Si el token es valido, se delega a
-     * AsistenciaService para decidir PRESENTE/TARDE y persistir.
+     * Marca la asistencia del estudiante autenticado. El canjeo del token se
+     * resuelve aquí: el {@code 410} uniforme para &quot;no existe&quot; y &quot;ya se usó&quot;
+     * es deliberado (distinguirlos confirmaría que el token existió).
+     *
+     * @param request cuerpo con el {@code token} del QR; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con el estado marcado
+     *         ({@code PRESENTE} / {@code TARDE}), o {@code 410 Gone} si el
+     *         token no es válido o ya se usó
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la cuenta no tiene ficha de estudiante ({@code 404})
      */
     @PostMapping(&quot;/marcar&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'ESTUDIANTE')&quot;)
     public ResponseEntity&lt;MarcarQrResponse&gt; marcar(@Valid @RequestBody MarcarQrRequest request) {
-<span class="fc" id="L56">        var idSesion = qrService.canjear(request.token());</span>
-<span class="fc bfc" id="L57" title="All 2 branches covered.">        if (idSesion.isEmpty()) {</span>
-<span class="fc" id="L58">            return ResponseEntity.status(HttpStatus.GONE).build();</span>
+<span class="fc" id="L63">        var idSesion = qrService.canjear(request.token());</span>
+<span class="fc bfc" id="L64" title="All 2 branches covered.">        if (idSesion.isEmpty()) {</span>
+<span class="fc" id="L65">            return ResponseEntity.status(HttpStatus.GONE).build();</span>
         }
 
-<span class="fc" id="L61">        String username = SecurityContextHolder.getContext().getAuthentication().getName();</span>
-<span class="fc" id="L62">        Asistencia asistencia = asistenciaService.marcarPorQr(username, idSesion.get());</span>
-<span class="fc" id="L63">        return ResponseEntity.status(HttpStatus.CREATED).body(new MarcarQrResponse(asistencia.getEstado()));</span>
+<span class="fc" id="L68">        String username = SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L69">        Asistencia asistencia = asistenciaService.marcarPorQr(username, idSesion.get());</span>
+<span class="fc" id="L70">        return ResponseEntity.status(HttpStatus.CREATED).body(new MarcarQrResponse(asistencia.getEstado()));</span>
     }
 
-<span class="fc" id="L66">    public record MarcarQrRequest(@NotBlank String token) {}</span>
+    /**
+     * Cuerpo de {@link #marcar}.
+     *
+     * @param token token del código QR escaneado
+     */
+<span class="fc" id="L78">    public record MarcarQrRequest(@NotBlank String token) {}</span>
 
-<span class="fc" id="L68">    public record MarcarQrResponse(String estado) {}</span>
+    /**
+     * Respuesta de {@link #marcar}.
+     *
+     * @param estado estado de asistencia resuelto ({@code PRESENTE} /
+     *               {@code TARDE})
+     */
+<span class="fc" id="L86">    public record MarcarQrResponse(String estado) {}</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

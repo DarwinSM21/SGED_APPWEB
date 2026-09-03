@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Asignacion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.asignacion.entity</a> &gt; <span class="el_source">Asignacion.java</span></div><h1>Asignacion.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.asignacion.entity;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Asignacion.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.asignacion.entity</a> &gt; <span class="el_source">Asignacion.java</span></div><h1>Asignacion.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.asignacion.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,11 +13,6 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/**
- * Entrega/devolucion de un articulo a un estudiante o entrenador.
- * Exactamente uno de estudiante/entrenador va lleno, segun
- * tipoDestinatario (reflejado en el CHECK de la migracion V15).
- */
 @Entity
 @Table(name = &quot;asignaciones&quot;, schema = &quot;inventario&quot;)
 @Getter
@@ -26,9 +21,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Asignacion {
-
-<span class="fc" id="L30">    public enum TipoDestinatario { ESTUDIANTE, ENTRENADOR }</span>
-<span class="fc" id="L31">    public enum EstadoAsignacion { ASIGNADO, DEVUELTO, PERDIDO }</span>
+<span class="fc" id="L24">    public enum TipoDestinatario { ESTUDIANTE, ENTRENADOR }</span>
+<span class="fc" id="L25">    public enum EstadoAsignacion { ASIGNADO, DEVUELTO, PERDIDO }</span>
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

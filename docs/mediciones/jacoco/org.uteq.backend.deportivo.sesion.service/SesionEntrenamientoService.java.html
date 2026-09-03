@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SesionEntrenamientoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.sesion.service</a> &gt; <span class="el_source">SesionEntrenamientoService.java</span></div><h1>SesionEntrenamientoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.sesion.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.categoria.entity.Categoria;
+import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.horario.service.HorarioService;
+import org.uteq.backend.deportivo.sesion.dto.SesionCrearRequest;
+import org.uteq.backend.deportivo.sesion.dto.SesionHistorialResponse;
+import org.uteq.backend.deportivo.sesion.dto.SesionHoyResponse;
+import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Lógica de negocio de sesiones de entrenamiento, antes embebida en
+ * {@code SesionEntrenamientoController} (hallazgo D-03 del informe de
+ * evaluación de calidad). El controlador conserva la resolución de identidad
+ * desde el contexto de seguridad y delega aquí el resto; este servicio se
+ * prueba con un {@code String} cualquiera, sin simular contexto.
+ */
+@Service
+@RequiredArgsConstructor
+public class SesionEntrenamientoService {
+    private final SesionEntrenamientoRepository sesionRepository;
+    private final EntrenadorRepository entrenadorRepository;
+    private final EvaluacionDiariaRepository evaluacionRepository;
+    private final CategoriaRepository categoriaRepository;
+    private final HorarioService horarioService;
+    private final AsistenciaRepository asistenciaRepository;
+    private final EstudianteRepository estudianteRepository;
+
+    /**
+     * Sesiones de hoy. Antes de consultar, materializa las sesiones
+     * programadas de los horarios fijos.
+     *
+     * @param username           usuario autenticado
+     * @param veTodasLasSesiones  {@code true} para {@code ADMINISTRADOR} /
+     *                            {@code RECEPCIONISTA} (todas); {@code false}
+     *                            filtra por el entrenador del username
+     * @return las sesiones de hoy visibles
+     */
+    @Transactional
+    public List&lt;SesionHoyResponse&gt; sesionesDeHoy(String username, boolean veTodasLasSesiones) {
+<span class="fc" id="L63">        horarioService.generarSesionesProgramadas();</span>
+<span class="fc" id="L64">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+
+        List&lt;SesionEntrenamiento&gt; sesiones;
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        if (veTodasLasSesiones) {</span>
+<span class="fc" id="L68">            sesiones = sesionRepository.findByFechaOrderByHoraInicioAsc(hoy);</span>
+        } else {
+<span class="fc" id="L70">            Entrenador entrenador = entrenadorPorUsername(username);</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">            sesiones = entrenador == null</span>
+<span class="fc" id="L72">                    ? List.of()</span>
+<span class="fc" id="L73">                    : sesionRepository.findByFechaOrderByHoraInicioAsc(hoy).stream()</span>
+<span class="fc" id="L74">                        .filter(s -&gt; s.getEntrenador().getIdEntrenador().equals(entrenador.getIdEntrenador()))</span>
+<span class="fc" id="L75">                        .toList();</span>
+        }
+
+<span class="fc" id="L78">        return sesiones.stream().map(this::aResponse).toList();</span>
+    }
+
+    /**
+     * Historial de sesiones (pasadas y futuras), paginado y ordenado por
+     * fecha descendente.
+     *
+     * @param username           usuario autenticado
+     * @param veTodasLasSesiones  {@code true} para {@code ADMINISTRADOR}
+     *                            (todas); {@code false} filtra por el
+     *                            entrenador del username
+     * @param page               número de página (desde 0)
+     * @param size               tamaño de página
+     * @return la página de sesiones
+     */
+    @Transactional
+    public List&lt;SesionHoyResponse&gt; misSesiones(String username, boolean veTodasLasSesiones, int page, int size) {
+<span class="fc" id="L95">        horarioService.generarSesionesProgramadas();</span>
+
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (veTodasLasSesiones) {</span>
+<span class="fc" id="L98">            Page&lt;SesionEntrenamiento&gt; todas = sesionRepository.findAll(</span>
+<span class="fc" id="L99">                    PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, &quot;fecha&quot;)));</span>
+<span class="fc" id="L100">            return todas.map(this::aResponse).getContent();</span>
+        }
+
+<span class="fc" id="L103">        Entrenador entrenador = entrenadorPorUsername(username);</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">        if (entrenador == null) {</span>
+<span class="nc" id="L105">            return List.of();</span>
+        }
+
+<span class="fc" id="L108">        Page&lt;SesionEntrenamiento&gt; pagina = sesionRepository.sesionesDelEntrenador(</span>
+<span class="fc" id="L109">                entrenador.getIdEntrenador(), PageRequest.of(page, size));</span>
+<span class="fc" id="L110">        return pagina.map(this::aResponse).getContent();</span>
+    }
+
+    /**
+     * Alta de una sesión propia. El {@code idEntrenador} nunca viene del
+     * cliente: se resuelve del username, para que un entrenador no cree una
+     * sesión &quot;a nombre&quot; de otro.
+     *
+     * @param username usuario autenticado (entrenador)
+     * @param request  categoría, fecha, franja horaria y campo
+     * @return la sesión creada
+     * @throws RecursoNoEncontradoException si la cuenta no tiene entrenador
+     *                                      asociado o la categoría no existe
+     * @throws IllegalArgumentException     si la franja es inválida o se
+     *                                      solapa con otra sesión de la misma
+     *                                      categoría
+     */
+    @Transactional
+    public SesionHoyResponse crear(String username, SesionCrearRequest request) {
+<span class="fc" id="L129">        Entrenador entrenador = entrenadorPorUsername(username);</span>
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (entrenador == null) {</span>
+<span class="nc" id="L131">            throw new RecursoNoEncontradoException(&quot;No hay un entrenador asociado a esta cuenta&quot;);</span>
+        }
+
+<span class="fc bfc" id="L134" title="All 2 branches covered.">        if (!request.horaFin().isAfter(request.horaInicio())) {</span>
+<span class="fc" id="L135">            throw new IllegalArgumentException(&quot;La hora de fin debe ser posterior a la hora de inicio&quot;);</span>
+        }
+
+<span class="fc" id="L138">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="fc" id="L139">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L140">                        &quot;Categoria no encontrada con id: &quot; + request.idCategoria()));</span>
+
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (sesionRepository.existeSolape(request.idCategoria(), request.fecha(),</span>
+<span class="fc" id="L143">                                          request.horaInicio(), request.horaFin())) {</span>
+<span class="fc" id="L144">            throw new IllegalArgumentException(</span>
+                    &quot;Ya hay una sesión de esa categoría ese día en ese horario&quot;);
+        }
+
+<span class="fc" id="L148">        SesionEntrenamiento sesion = SesionEntrenamiento.builder()</span>
+<span class="fc" id="L149">                .entrenador(entrenador)</span>
+<span class="fc" id="L150">                .categoria(categoria)</span>
+<span class="fc" id="L151">                .fecha(request.fecha())</span>
+<span class="fc" id="L152">                .horaInicio(request.horaInicio())</span>
+<span class="fc" id="L153">                .horaFin(request.horaFin())</span>
+<span class="fc" id="L154">                .campo(request.campo())</span>
+<span class="fc" id="L155">                .estado(&quot;PROGRAMADA&quot;)</span>
+<span class="fc" id="L156">                .build();</span>
+
+<span class="fc" id="L158">        sesion = sesionRepository.save(sesion);</span>
+<span class="fc" id="L159">        return aResponse(sesion);</span>
+    }
+
+    /**
+     * Qué pasó en una sesión: quién estuvo, quién faltó y quién no tiene
+     * registro. Se parte del plantel de la categoría y no de las filas de
+     * asistencia: si nadie pasó lista, &quot;no se registró la asistencia de
+     * nadie&quot; es distinto de &quot;no había nadie convocado&quot;. Las marcas de chicos
+     * que ya no están en la categoría se conservan: estuvieron ese día.
+     *
+     * @param idSesion identificador de la sesión
+     * @return el resumen por estado y la fila de cada estudiante del plantel
+     * @throws RecursoNoEncontradoException si la sesión no existe
+     */
+    @Transactional(readOnly = true)
+    public SesionHistorialResponse historial(Long idSesion) {
+<span class="fc" id="L175">        SesionEntrenamiento s = sesionRepository.findById(idSesion)</span>
+<span class="fc" id="L176">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe la sesion &quot; + idSesion));</span>
+
+<span class="fc" id="L178">        Map&lt;Long, Asistencia&gt; porEstudiante = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        for (Asistencia a : asistenciaRepository.historialDeSesion(idSesion)) {</span>
+<span class="fc" id="L180">            porEstudiante.put(a.getEstudiante().getIdEstudiante(), a);</span>
+<span class="fc" id="L181">        }</span>
+
+<span class="fc" id="L183">        List&lt;Estudiante&gt; plantel = estudianteRepository</span>
+<span class="fc" id="L184">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(</span>
+<span class="fc" id="L185">                        s.getCategoria().getIdCategoria());</span>
+
+<span class="fc" id="L187">        List&lt;SesionHistorialResponse.FilaAsistencia&gt; filas = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L188">        int presentes = 0, tarde = 0, ausentes = 0, justificados = 0, sinRegistro = 0;</span>
+<span class="fc bfc" id="L189" title="All 2 branches covered.">        for (Estudiante e : plantel) {</span>
+<span class="fc" id="L190">            Asistencia a = porEstudiante.remove(e.getIdEstudiante());</span>
+<span class="fc bfc" id="L191" title="All 2 branches covered.">            String estado = a == null ? &quot;SIN_REGISTRO&quot; : a.getEstado();</span>
+<span class="fc bfc" id="L192" title="All 5 branches covered.">            switch (estado) {</span>
+<span class="fc" id="L193">                case Asistencia.ESTADO_PRESENTE -&gt; presentes++;</span>
+<span class="fc" id="L194">                case Asistencia.ESTADO_TARDE -&gt; tarde++;</span>
+<span class="fc" id="L195">                case Asistencia.ESTADO_AUSENTE -&gt; ausentes++;</span>
+<span class="fc" id="L196">                case Asistencia.ESTADO_JUSTIFICADO -&gt; justificados++;</span>
+<span class="fc" id="L197">                default -&gt; sinRegistro++;</span>
+            }
+<span class="fc" id="L199">            filas.add(new SesionHistorialResponse.FilaAsistencia(</span>
+<span class="fc" id="L200">                    e.getIdEstudiante(),</span>
+<span class="fc" id="L201">                    e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),</span>
+                    estado,
+<span class="fc bfc" id="L204" title="All 2 branches covered.">                    a == null ? null : a.getHoraEntrada(),</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">                    a == null ? null : a.getMetodo(),</span>
+<span class="fc bfc" id="L206" title="All 2 branches covered.">                    a == null ? null : a.getObservacion()));</span>
+<span class="fc" id="L207">        }</span>
+
+<span class="fc bfc" id="L209" title="All 2 branches covered.">        for (Asistencia a : porEstudiante.values()) {</span>
+<span class="fc" id="L210">            Estudiante e = a.getEstudiante();</span>
+<span class="pc bpc" id="L211" title="4 of 5 branches missed.">            switch (a.getEstado()) {</span>
+<span class="fc" id="L212">                case Asistencia.ESTADO_PRESENTE -&gt; presentes++;</span>
+<span class="nc" id="L213">                case Asistencia.ESTADO_TARDE -&gt; tarde++;</span>
+<span class="nc" id="L214">                case Asistencia.ESTADO_AUSENTE -&gt; ausentes++;</span>
+<span class="nc" id="L215">                case Asistencia.ESTADO_JUSTIFICADO -&gt; justificados++;</span>
+                default -&gt; { }
+            }
+<span class="fc" id="L218">            filas.add(new SesionHistorialResponse.FilaAsistencia(</span>
+<span class="fc" id="L219">                    e.getIdEstudiante(),</span>
+<span class="fc" id="L220">                    e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),</span>
+<span class="fc" id="L222">                    a.getEstado(), a.getHoraEntrada(), a.getMetodo(), a.getObservacion()));</span>
+<span class="fc" id="L223">        }</span>
+
+<span class="fc" id="L225">        var evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion);</span>
+<span class="fc" id="L226">        var persona = s.getEntrenador().getPersona();</span>
+<span class="fc" id="L227">        return new SesionHistorialResponse(</span>
+<span class="fc" id="L228">                s.getIdSesion(),</span>
+<span class="fc" id="L229">                s.getCategoria().getNombre(),</span>
+<span class="fc" id="L230">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L231">                s.getFecha(), s.getHoraInicio(), s.getHoraFin(), s.getCampo(), s.getEstado(),</span>
+<span class="fc" id="L232">                evaluacion.isPresent(),</span>
+<span class="fc" id="L233">                evaluacion.map(ev -&gt; ev.getEstado()).orElse(null),</span>
+<span class="fc" id="L234">                new SesionHistorialResponse.Resumen(filas.size(), presentes, tarde,</span>
+                        ausentes, justificados, sinRegistro),
+                filas);
+    }
+
+    private Entrenador entrenadorPorUsername(String username) {
+<span class="fc" id="L240">        return entrenadorRepository.findByUsuario_Username(username).orElse(null);</span>
+    }
+
+    private SesionHoyResponse aResponse(SesionEntrenamiento s) {
+<span class="fc" id="L244">        var persona = s.getEntrenador().getPersona();</span>
+<span class="fc" id="L245">        return new SesionHoyResponse(</span>
+<span class="fc" id="L246">                s.getIdSesion(),</span>
+<span class="fc" id="L247">                s.getCategoria().getNombre(),</span>
+<span class="fc" id="L248">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L249">                s.getFecha(),</span>
+<span class="fc" id="L250">                s.getHoraInicio(),</span>
+<span class="fc" id="L251">                s.getHoraFin(),</span>
+<span class="fc" id="L252">                s.getCampo(),</span>
+<span class="fc" id="L253">                s.getEstado(),</span>
+<span class="fc" id="L254">                evaluacionRepository.existsBySesionIdSesion(s.getIdSesion()));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

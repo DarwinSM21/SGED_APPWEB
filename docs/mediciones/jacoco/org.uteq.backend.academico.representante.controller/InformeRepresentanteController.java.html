@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InformeRepresentanteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.controller</a> &gt; <span class="el_source">InformeRepresentanteController.java</span></div><h1>InformeRepresentanteController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>InformeRepresentanteController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.representante.controller</a> &gt; <span class="el_source">InformeRepresentanteController.java</span></div><h1>InformeRepresentanteController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.representante.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,62 +14,105 @@ import org.uteq.backend.academico.representante.service.NotificacionService;
 import java.util.List;
 
 /**
- * Lo que ve un representante autenticado de sus propios representados.
- * La identidad sale siempre de la sesion autenticada
- * (SecurityContextHolder, mismo patron que SesionEntrenamientoController.hoy()
- * y AuthController.me()), nunca de un parametro que el cliente pudiera
- * manipular para ver a un estudiante ajeno.
+ * Lo que ve un representante autenticado de sus propios representados. La
+ * identidad sale siempre del contexto de seguridad, nunca de un parámetro
+ * que el cliente pudiera manipular para ver a un estudiante ajeno.
  *
- * &lt;p&gt;{@code @Transactional(readOnly = true)} va tambien aqui, no solo en
- * el servicio: open-in-view esta deshabilitado (application.yml) y la
- * respuesta navega relaciones LAZY (Persona, Categoria) al construir el
- * DTO. Sin una transaccion activa en ese momento, esa navegacion lanza
- * LazyInitializationException -mismo problema ya resuelto en
- * LesionController y SesionEntrenamientoController-.
+ * &lt;p&gt;{@code @Transactional(readOnly = true)} va también aquí, no solo en el
+ * servicio: open-in-view está deshabilitado y la respuesta navega relaciones
+ * LAZY ({@code Persona}, {@code Categoria}) al construir el DTO; sin
+ * transacción activa en ese momento la navegación lanza
+ * {@code LazyInitializationException}.
  */
 @RestController
 @RequestMapping(&quot;/api/representante&quot;)
 @RequiredArgsConstructor
 @PreAuthorize(&quot;hasRole('REPRESENTANTE')&quot;)
 public class InformeRepresentanteController {
-
     private final InformeService informeService;
     private final NotificacionService notificacionService;
 
+    /**
+     * Lista de estudiantes que el representante autenticado tiene a cargo.
+     *
+     * @return {@code 200 OK} con el resumen de cada representado
+     */
     @GetMapping(&quot;/estudiantes&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;List&lt;EstudianteResumenResponse&gt;&gt; misRepresentados() {
-<span class="fc" id="L42">        return ResponseEntity.ok(informeService.misRepresentados(usernameAutenticado()));</span>
+<span class="fc" id="L43">        return ResponseEntity.ok(informeService.misRepresentados(usernameAutenticado()));</span>
     }
 
+    /**
+     * Informe de evaluación de un representado.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return {@code 200 OK} con el informe
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no está vinculado al representante ({@code 404})
+     */
     @GetMapping(&quot;/estudiantes/{idEstudiante}/informe&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;InformeEstudianteResponse&gt; informe(@PathVariable Long idEstudiante) {
-<span class="fc" id="L48">        return ResponseEntity.ok(informeService.informeDe(usernameAutenticado(), idEstudiante));</span>
+<span class="fc" id="L57">        return ResponseEntity.ok(informeService.informeDe(usernameAutenticado(), idEstudiante));</span>
     }
 
-    /** RF-22: notificaciones en-app, mas recientes primero. */
+    /**
+     * Comentario en lenguaje natural sobre el informe de un representado. Va
+     * en {@code POST} porque cada llamada consume cuota de un servicio
+     * externo: se pide a demanda, no al abrir la pantalla.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return {@code 200 OK} con el comentario generado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no está vinculado al representante ({@code 404})
+     */
+    @PostMapping(&quot;/estudiantes/{idEstudiante}/informe/comentario&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;ComentarioInformeResponse&gt; comentario(@PathVariable Long idEstudiante) {
+<span class="nc" id="L73">        return ResponseEntity.ok(informeService.comentarioDe(usernameAutenticado(), idEstudiante));</span>
+    }
+
+    /**
+     * Notificaciones en-app del representante (RF-22), más recientes primero.
+     *
+     * @return {@code 200 OK} con la lista de notificaciones
+     */
     @GetMapping(&quot;/notificaciones&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;List&lt;NotificacionResponse&gt;&gt; misNotificaciones() {
-<span class="fc" id="L55">        return ResponseEntity.ok(notificacionService.misNotificaciones(usernameAutenticado()));</span>
+<span class="fc" id="L84">        return ResponseEntity.ok(notificacionService.misNotificaciones(usernameAutenticado()));</span>
     }
 
+    /**
+     * Número de notificaciones sin leer del representante.
+     *
+     * @return {@code 200 OK} con el conteo
+     */
     @GetMapping(&quot;/notificaciones/no-leidas&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;ConteoNoLeidasResponse&gt; conteoNoLeidas() {
-<span class="nc" id="L61">        return ResponseEntity.ok(new ConteoNoLeidasResponse(notificacionService.conteoNoLeidas(usernameAutenticado())));</span>
+<span class="nc" id="L95">        return ResponseEntity.ok(new ConteoNoLeidasResponse(notificacionService.conteoNoLeidas(usernameAutenticado())));</span>
     }
 
+    /**
+     * Marca una notificación como leída.
+     *
+     * @param idNotificacion identificador de la notificación
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la notificación no existe o no es del representante
+     *         ({@code 404})
+     */
     @PostMapping(&quot;/notificaciones/{idNotificacion}/leida&quot;)
     @Transactional
     public ResponseEntity&lt;Void&gt; marcarLeida(@PathVariable Long idNotificacion) {
-<span class="fc" id="L67">        notificacionService.marcarLeida(usernameAutenticado(), idNotificacion);</span>
-<span class="fc" id="L68">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L110">        notificacionService.marcarLeida(usernameAutenticado(), idNotificacion);</span>
+<span class="fc" id="L111">        return ResponseEntity.noContent().build();</span>
     }
 
     private String usernameAutenticado() {
-<span class="fc" id="L72">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L115">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
