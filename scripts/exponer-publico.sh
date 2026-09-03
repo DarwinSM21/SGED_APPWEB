@@ -32,9 +32,19 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "  Esperando a que el backend responda..."
-until [ "$(docker inspect -f '{{.State.Health.Status}}' sged_backend 2>/dev/null)" = "healthy" ]; do
-  sleep 3
-done
+timeout 120 bash -c '
+  until [ "$(docker inspect -f "{{.State.Health.Status}}" sged_backend 2>/dev/null)" = "healthy" ]; do
+    ESTADO=$(docker inspect -f "{{.State.Status}} {{.State.Health.Status}}" sged_backend 2>/dev/null || echo "creando")
+    echo "    estado backend: $ESTADO"
+    sleep 3
+  done
+' || {
+  echo ""
+  echo "  ERROR: el backend no se levanto a tiempo."
+  echo "  Revisa los logs con: docker logs sged_backend --tail 30"
+  echo "  Y corrige el archivo .env (DB_URL, REDIS_HOST, FLYWAY_ENABLED)."
+  exit 1
+}
 echo "  Backend listo"
 
 echo ""
