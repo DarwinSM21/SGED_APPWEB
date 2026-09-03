@@ -25,6 +25,13 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import java.util.List;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 
+/**
+ * CRUD administrativo de {@code Representante}. El alta y la vinculación con
+ * estudiantes son operaciones de {@code ADMINISTRADOR} / {@code RECEPCIONISTA}:
+ * un representante no se autoregistra, lo da de alta un administrador ya
+ * vinculándolo a sus representados. Un estudiante tiene un solo contacto
+ * principal: designar uno nuevo desplaza al anterior.
+ */
 @Service
 @RequiredArgsConstructor
 public class RepresentanteService {
@@ -34,6 +41,12 @@ public class RepresentanteService {
     private final UsuarioRepository usuarioRepository;
     private final EstudianteRepository estudianteRepository;
 
+    /**
+     * Lista paginada de representantes.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, envuelta en {@link RepresentantePageResponse}
+     */
     @Transactional(readOnly = true)
     public RepresentantePageResponse<RepresentanteResponse> listar(Pageable pageable) {
         Page<Representante> page = representanteRepository.findAll(pageable);
@@ -42,6 +55,13 @@ public class RepresentanteService {
                 content, page.getNumber(), page.getSize(), page.getTotalElements(), page.getTotalPages());
     }
 
+    /**
+     * Busca un representante por su identificador.
+     *
+     * @param id identificador del representante
+     * @return el representante encontrado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public RepresentanteResponse buscarPorId(Long id) {
         Representante r = representanteRepository.findById(id)
@@ -49,6 +69,19 @@ public class RepresentanteService {
         return toResponse(r);
     }
 
+    /**
+     * Registra un representante sobre una persona y una cuenta ya existentes,
+     * y opcionalmente lo vincula a una lista inicial de estudiantes.
+     *
+     * @param request persona, usuario, parentesco, contacto y representados
+     *                iniciales
+     * @return el representante registrado
+     * @throws RecursoNoEncontradoException si la persona, el usuario o algún
+     *                                      estudiante inicial no existen
+     * @throws IllegalArgumentException     si la persona o el usuario ya
+     *                                      están asignados, o si el usuario
+     *                                      no tiene rol {@code REPRESENTANTE}
+     */
     @Transactional
     public RepresentanteResponse crear(RepresentanteRequest request) {
         if (representanteRepository.existsByPersona_IdPersona(request.idPersona())) {
@@ -89,6 +122,14 @@ public class RepresentanteService {
         return toResponse(representante);
     }
 
+    /**
+     * Actualiza el parentesco y el teléfono de contacto de un representante.
+     *
+     * @param id      identificador del representante
+     * @param request datos nuevos
+     * @return el representante actualizado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional
     public RepresentanteResponse editar(Long id, RepresentanteRequest request) {
         Representante representante = representanteRepository.findById(id)
@@ -99,6 +140,12 @@ public class RepresentanteService {
         return toResponse(representante);
     }
 
+    /**
+     * Baja lógica de un representante ({@code activo = false}).
+     *
+     * @param id identificador del representante
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Auditado(accion = "ELIMINAR", entidad = "Representante", idSpel = "#p0",
             descripcionSpel = "'desactivo la ficha de representante #' + #p0")
     @Transactional
@@ -109,6 +156,14 @@ public class RepresentanteService {
         representanteRepository.save(representante);
     }
 
+    /**
+     * Reactiva un representante dado de baja.
+     *
+     * @param id identificador del representante
+     * @return el representante reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si ya está activo
+     */
     @Auditado(accion = "REACTIVAR", entidad = "Representante", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de representante #' + #p0")
     @Transactional
@@ -124,6 +179,18 @@ public class RepresentanteService {
         return toResponse(representanteRepository.save(representante));
     }
 
+    /**
+     * Vincula un estudiante a un representante (o reactiva y actualiza el
+     * vínculo si ya existía).
+     *
+     * @param idRepresentante identificador del representante
+     * @param idEstudiante    identificador del estudiante
+     * @param request         relación y marca de contacto principal; puede
+     *                        ser {@code null}
+     * @return el representante con su lista de representados actualizada
+     * @throws RecursoNoEncontradoException si el representante o el estudiante
+     *                                      no existen
+     */
     @Transactional
     public RepresentanteResponse vincularEstudiante(Long idRepresentante, Long idEstudiante, VinculoRequest request) {
         Representante representante = representanteRepository.findById(idRepresentante)
@@ -134,6 +201,14 @@ public class RepresentanteService {
         return toResponse(representante);
     }
 
+    /**
+     * Desvincula un estudiante de un representante: baja lógica del vínculo
+     * puntual, sin tocar la cuenta ni los demás representados.
+     *
+     * @param idRepresentante identificador del representante
+     * @param idEstudiante    identificador del estudiante
+     * @throws RecursoNoEncontradoException si no hay un vínculo entre ambos
+     */
     @Transactional
     public void desvincularEstudiante(Long idRepresentante, Long idEstudiante) {
         RepresentanteEstudiante vinculo = vinculoRepository
@@ -147,6 +222,8 @@ public class RepresentanteService {
         vincular(representante, idEstudiante, null, false);
     }
 
+    // Un estudiante tiene un solo contacto principal: designar uno nuevo
+    // desplaza al anterior en vez de dejar dos marcados.
     private void vincular(Representante representante, Long idEstudiante,
                           String relacion, boolean contactoPrincipal) {
         Estudiante estudiante = estudianteRepository.findById(idEstudiante)

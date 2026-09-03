@@ -14,12 +14,34 @@ import org.uteq.backend.academico.pago.service.PagoService;
 
 import java.util.List;
 
+/**
+ * Pagos. Los registra recepción (o un administrador); el usuario que
+ * registra se resuelve del contexto de seguridad, nunca de un id del
+ * cliente.
+ *
+ * <p>Los métodos llevan {@code @Transactional} propio porque
+ * {@code aResponse()} navega relaciones LAZY ({@code Pago -> Estudiante ->
+ * Persona}, {@code Pago -> Usuario -> Persona}) con open-in-view
+ * deshabilitado.
+ */
 @RestController
 @RequestMapping("/api/pagos")
 @RequiredArgsConstructor
 public class PagoController {
     private final PagoService pagoService;
 
+    /**
+     * Registra el pago de una o varias mensualidades de membresía (todo o
+     * nada: si un mes ya está cubierto, no se cobra ninguno).
+     *
+     * @param request estudiante, año, meses, monto y fecha; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con la lista de pagos creados
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no existe ({@code 404})
+     * @throws IllegalArgumentException si algún mes ya está cubierto
+     *         ({@code 422})
+     */
     @PostMapping("/membresia")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional
@@ -30,6 +52,14 @@ public class PagoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());
     }
 
+    /**
+     * Registra un pago diario (no cubre período).
+     *
+     * @param request estudiante, monto y fecha; validado con {@code @Valid}
+     * @return {@code 201 Created} con el pago creado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no existe ({@code 404})
+     */
     @PostMapping("/diario")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional
@@ -39,6 +69,18 @@ public class PagoController {
         return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));
     }
 
+    /**
+     * Anula un pago mal registrado (no lo borra: queda con quién, cuándo y
+     * por qué se anuló).
+     *
+     * @param idPago  identificador del pago
+     * @param request motivo de la anulación; validado con {@code @Valid}
+     * @return {@code 200 OK} con el pago anulado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el pago no existe ({@code 404})
+     * @throws IllegalArgumentException si el pago ya estaba anulado
+     *         ({@code 422})
+     */
     @PostMapping("/{idPago}/anular")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional
@@ -48,6 +90,14 @@ public class PagoController {
                 pagoService.anular(idPago, request.motivo(), usernameAutenticado())));
     }
 
+    /**
+     * Historial de pagos de un estudiante, del más reciente al más antiguo.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return {@code 200 OK} con la lista de pagos
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el estudiante no existe ({@code 404})
+     */
     @GetMapping("/estudiante/{idEstudiante}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)
@@ -55,6 +105,11 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());
     }
 
+    /**
+     * Total ingresado en el mes calendario en curso.
+     *
+     * @return {@code 200 OK} con el total y el número de pagos del mes
+     */
     @GetMapping("/ingresos-mes")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)
@@ -62,6 +117,13 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.ingresosDelMes());
     }
 
+    /**
+     * Serie de recaudación de los últimos meses, contando el actual.
+     *
+     * @param meses número de meses a incluir (se acota internamente a
+     *              {@code [1, 24]}); por defecto 6
+     * @return {@code 200 OK} con la serie, total, promedio y mejor mes
+     */
     @GetMapping("/ingresos-historico")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)

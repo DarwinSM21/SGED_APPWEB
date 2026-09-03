@@ -17,6 +17,12 @@ import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Registro de lesiones. Las carga el entrenador desde el módulo de
+ * evaluación diaria. Una lesión activa tiene tres efectos: excluye al
+ * jugador de las sugerencias de plantilla, distingue su ausencia de una
+ * falta sin motivo, y dispara la notificación al representante.
+ */
 @Service
 @RequiredArgsConstructor
 public class LesionService {
@@ -25,6 +31,23 @@ public class LesionService {
     private final EntrenadorRepository entrenadorRepository;
     private final NotificacionService notificacionService;
 
+    /**
+     * Registra una lesión y notifica a los representantes del estudiante.
+     *
+     * @param idEstudiante         estudiante lesionado
+     * @param idEntrenador         entrenador que registra
+     * @param descripcion          descripción de la lesión (dato de salud)
+     * @param fechaLesion          fecha de la lesión; {@code null} usa hoy
+     * @param fechaEstimadaRetorno fecha estimada de retorno; puede ser
+     *                             {@code null}
+     * @return la lesión registrada
+     * @throws RecursoNoEncontradoException si el estudiante o el entrenador
+     *                                      no existen
+     * @throws IllegalArgumentException     si el estudiante ya tiene una
+     *                                      lesión activa, o la fecha estimada
+     *                                      de retorno es anterior a la de la
+     *                                      lesión
+     */
     @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion",
             descripcionSpel = "'registró una lesión del estudiante #' + #p0")
     @Transactional
@@ -37,6 +60,9 @@ public class LesionService {
                 .orElseThrow(() -> new RecursoNoEncontradoException(
                         "No existe el entrenador " + idEntrenador));
 
+        // La base tiene un índice único parcial que impide dos lesiones activas
+        // del mismo estudiante. Se comprueba antes para devolver un mensaje
+        // útil en vez de un error de restricción.
         lesionRepository.buscarActivaPorEstudiante(idEstudiante).ifPresent(l -> {
             throw new IllegalArgumentException(
                     "El estudiante ya tiene una lesion activa registrada el "
@@ -60,6 +86,17 @@ public class LesionService {
         return lesion;
     }
 
+    /**
+     * Cierra una lesión: el jugador vuelve a entrar en las plantillas.
+     *
+     * @param idLesion  identificador de la lesión
+     * @param fechaAlta fecha de alta; {@code null} usa hoy
+     * @return la lesión dada de alta
+     * @throws RecursoNoEncontradoException si la lesión no existe
+     * @throws IllegalArgumentException     si ya tiene fecha de alta, o el
+     *                                      alta es anterior a la fecha de la
+     *                                      lesión
+     */
     @Auditado(accion = "EDITAR", entidad = "Lesion", idSpel = "#result.idLesion",
             descripcionSpel = "'dio de alta la lesión #' + #result.idLesion")
     @Transactional
@@ -82,16 +119,36 @@ public class LesionService {
         return lesionRepository.save(lesion);
     }
 
+    /**
+     * Lista paginada de lesiones activas.
+     *
+     * @param pageable paginación y orden
+     * @return la página de lesiones activas
+     */
     @Transactional(readOnly = true)
     public Page<Lesion> listarActivas(Pageable pageable) {
         return lesionRepository.listarActivas(pageable);
     }
 
+    /**
+     * Historial de lesiones de un estudiante, de la más reciente a la más
+     * antigua.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param pageable     paginación
+     * @return la página de lesiones del estudiante
+     */
     @Transactional(readOnly = true)
     public Page<Lesion> historialDe(Long idEstudiante, Pageable pageable) {
         return lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, pageable);
     }
 
+    /**
+     * Identificadores de los estudiantes con una lesión activa (para el
+     * panel de alertas y las sugerencias de plantilla).
+     *
+     * @return la lista de identificadores de estudiantes lesionados
+     */
     @Transactional(readOnly = true)
     public List<Long> idsLesionados() {
         return lesionRepository.idsEstudiantesLesionados();

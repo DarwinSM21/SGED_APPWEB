@@ -20,6 +20,21 @@ import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepositor
 import java.math.BigDecimal;
 import java.util.*;
 
+/**
+ * Evaluación diaria del entrenador. Concentra tres reglas que no son
+ * evidentes desde el esquema:
+ * <ol>
+ *   <li><b>Sin asistencia no hay calificación.</b> Solo se puede evaluar a
+ *       quien marcó {@code PRESENTE} o {@code TARDE}: evita registros de
+ *       desempeño de alguien que no fue.</li>
+ *   <li><b>Cada día arranca con los valores del anterior.</b> El entrenador
+ *       ajusta lo que cambió en vez de recalificar desde cero. Los valores
+ *       heredados se marcan como precargados.</li>
+ *   <li><b>Se guarda la categoría del día.</b> Si un jugador cambia de
+ *       categoría en marzo, sus evaluaciones de febrero siguen diciendo
+ *       SUB-12, que es donde estaba.</li>
+ * </ol>
+ */
 @Service
 @RequiredArgsConstructor
 public class EvaluacionDiariaService {
@@ -32,6 +47,18 @@ public class EvaluacionDiariaService {
     private final PosicionRepository posicionRepository;
     private final EstudianteRepository estudianteRepository;
 
+    /**
+     * Abre la pantalla de evaluación de una sesión. Si todavía no existe la
+     * cabecera, la crea en {@code BORRADOR}. Lista <em>todos</em> los
+     * estudiantes activos de la categoría (no solo quien marcó asistencia):
+     * el entrenador necesita ver a los que faltaron, aunque no pueda
+     * calificarlos.
+     *
+     * @param idSesion identificador de la sesión
+     * @return criterios activos, jugadores evaluables con su precarga y el
+     *         estado de la evaluación
+     * @throws RecursoNoEncontradoException si la sesión no existe
+     */
     @Transactional
     public EvaluacionSesionResponse abrir(Long idSesion) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
@@ -142,6 +169,22 @@ public class EvaluacionDiariaService {
                 .orElse(null);
     }
 
+    /**
+     * Guarda los puntajes de un jugador. Es la operación del autoguardado:
+     * se invoca muchas veces por sesión y es idempotente (reescribe en vez
+     * de acumular). La auditoría queda deliberadamente genérica, sin el
+     * detalle de qué criterio cambió.
+     *
+     * @param idSesion identificador de la sesión
+     * @param request  posición jugada ({@code null} = quitarla) y puntajes
+     *                 por criterio
+     * @throws RecursoNoEncontradoException si la sesión no tiene evaluación
+     *                                      abierta o la posición no existe
+     * @throws IllegalArgumentException     si la evaluación ya fue
+     *                                      finalizada, el estudiante no tiene
+     *                                      asistencia habilitante, o un
+     *                                      puntaje supera su máximo
+     */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#p1.idEstudiante",
             descripcionSpel = "'editó estadísticas de estudiante #' + #p1.idEstudiante")
     @Transactional
@@ -174,9 +217,13 @@ public class EvaluacionDiariaService {
                 .orElseGet(() -> EvaluacionEstudiante.builder()
                         .evaluacion(evaluacion)
                         .estudiante(estudiante)
+                        // Regla 3: la categoría del día se congela al crear la
+                        // fila, tomándola del estudiante en este momento.
                         .categoriaDia(estudiante.getCategoria())
                         .build());
 
+        // El frontend siempre manda este campo: null es una instrucción
+        // explícita de "quitar la posición", no "no tocar nada".
         if (request.idPosicionJugada() != null) {
             ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())
                     .orElseThrow(() -> new RecursoNoEncontradoException(
@@ -226,6 +273,16 @@ public class EvaluacionDiariaService {
         }
     }
 
+    /**
+     * Cierra la evaluación. A partir de aquí no admite cambios.
+     *
+     * @param idSesion           identificador de la sesión
+     * @param observacionGeneral observación general de la sesión; puede ser
+     *                           {@code null}
+     * @throws RecursoNoEncontradoException si la sesión no tiene evaluación
+     *                                      abierta
+     * @throws IllegalArgumentException     si ya estaba finalizada
+     */
     @Auditado(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
             descripcionSpel = "'finalizó la evaluación de la sesión #' + #p0")
     @Transactional

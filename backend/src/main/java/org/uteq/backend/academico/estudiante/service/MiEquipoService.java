@@ -15,12 +15,26 @@ import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepositor
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * "Mi equipo" del {@code ESTUDIANTE} autenticado: categoría, posición
+ * nominal, entrenador de su próxima sesión programada y compañeros de la
+ * misma categoría.
+ */
 @Service
 @RequiredArgsConstructor
 public class MiEquipoService {
     private final EstudianteRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
 
+    /**
+     * Arma la vista de equipo del estudiante dueño de la cuenta indicada.
+     *
+     * @param username nombre de usuario del estudiante autenticado
+     * @return categoría, posición, entrenador de la próxima sesión y
+     *         compañeros de categoría
+     * @throws RecursoNoEncontradoException si la cuenta no tiene un estudiante
+     *                                      asociado
+     */
     @Transactional(readOnly = true)
     public MiEquipoResponse miEquipo(String username) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)

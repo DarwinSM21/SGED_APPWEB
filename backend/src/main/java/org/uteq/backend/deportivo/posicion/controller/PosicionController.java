@@ -11,12 +11,22 @@ import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
 
 import java.util.List;
 
+/**
+ * Catálogo de posiciones de juego (POR, DFC, LD…), de solo lectura desde la
+ * aplicación (sin alta ni edición). Lo necesita el formulario de ficha de
+ * estudiante para asignar la posición nominal de cada jugador.
+ */
 @RestController
 @RequestMapping("/api/posiciones")
 @RequiredArgsConstructor
 public class PosicionController {
     private final PosicionRepository posicionRepository;
 
+    /**
+     * Lista las posiciones activas, ordenadas por identificador.
+     *
+     * @return {@code 200 OK} con las posiciones activas
+     */
     @GetMapping("/activas")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<List<PosicionResponse>> listarActivas() {

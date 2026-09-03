@@ -19,6 +19,11 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+/**
+ * Utilidad compartida para armar los PDFs de Reportes y de "mis datos" en
+ * Configuración: mismo encabezado, tabla y pie para todos; cada llamador
+ * solo arma sus filas.
+ */
 @Service
 public class ReportePdfService {
     private static final Font FUENTE_TITULO = new Font(Font.HELVETICA, 16, Font.BOLD);
@@ -27,6 +32,17 @@ public class ReportePdfService {
     private static final Font FUENTE_PIE = new Font(Font.HELVETICA, 8, Font.ITALIC);
     private static final Color COLOR_ENCABEZADO = new Color(79, 70, 229);
 
+    /**
+     * Genera un PDF A4 con título, tabla y pie de página (autor y fecha).
+     *
+     * @param titulo      título del reporte (se antepone {@code "SGED - "})
+     * @param encabezados nombres de columna
+     * @param filas       filas de datos; una lista vacía produce un PDF con el
+     *                    aviso "No hay datos"
+     * @return el PDF como arreglo de bytes
+     * @throws IllegalStateException si la librería de PDF falla al construir
+     *                               el documento
+     */
     public byte[] generar(String titulo, List<String> encabezados, List<List<String>> filas) {
         Document documento = new Document(PageSize.A4, 36, 36, 54, 54);
         try {

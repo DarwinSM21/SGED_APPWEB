@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MiHistorialResponse;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
 
+/**
+ * Historial de asistencia del propio {@code ESTUDIANTE} autenticado
+ * (complementa a {@code AsistenciaQrController.marcar}, que solo escribe).
+ */
 @RestController
 @RequestMapping("/api/estudiante")
 @RequiredArgsConstructor
@@ -18,6 +22,13 @@ import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
 public class MiAsistenciaController {
     private final AsistenciaService asistenciaService;
 
+    /**
+     * Historial de asistencia del estudiante autenticado.
+     *
+     * @return {@code 200 OK} con el historial
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la cuenta no tiene ficha de estudiante ({@code 404})
+     */
     @GetMapping("/mi-asistencia")
     @Transactional(readOnly = true)
     public ResponseEntity<MiHistorialResponse> miHistorial() {

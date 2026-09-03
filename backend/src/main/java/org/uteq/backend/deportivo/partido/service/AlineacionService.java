@@ -30,6 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * El once con el que se jugó un partido. Convive con
+ * {@link ConvocatoriaService}, que calcula la <b>sugerencia</b>: si el
+ * entrenador guardó una alineación se devuelve esa, si no, la sugerida. Así
+ * el historial sale gratis sin duplicar el cálculo ni congelar sugerencias
+ * que nadie usó. La sugerencia no se guarda nunca por su cuenta.
+ */
 @Service
 @RequiredArgsConstructor
 public class AlineacionService {
@@ -43,6 +50,15 @@ public class AlineacionService {
     @Value("${plantilla.titulares:11}")
     private int cupoTitulares;
 
+    /**
+     * Alineación de un partido: la guardada si existe, o la sugerencia del
+     * sistema.
+     *
+     * @param idPartido identificador del partido
+     * @return el once, con la bandera {@code guardada} y los jugadores
+     *         disponibles para cambios
+     * @throws RecursoNoEncontradoException si el partido no existe
+     */
     @Transactional(readOnly = true)
     public AlineacionResponse ver(Long idPartido) {
         Convocatoria convocatoria = convocatoriaService.calcular(idPartido);
@@ -51,6 +67,23 @@ public class AlineacionService {
                 .orElseGet(() -> desdeSugerencia(convocatoria));
     }
 
+    /**
+     * Guarda el once que el entrenador decidió. Reemplaza por completo el
+     * anterior en vez de mezclar. Se valida <em>todo</em> antes de tocar la
+     * base: si algo falla, la alineación anterior queda intacta.
+     *
+     * @param idPartido identificador del partido
+     * @param request   jugadores, su puesto, valoración y observación
+     * @return el once guardado
+     * @throws RecursoNoEncontradoException si el partido, un estudiante o una
+     *                                      posición no existen
+     * @throws IllegalArgumentException     si el partido está cerrado, un
+     *                                      jugador aparece dos veces, no es
+     *                                      de la categoría, arrastra una
+     *                                      lesión activa, dos titulares
+     *                                      comparten puesto, o se superan los
+     *                                      titulares permitidos
+     */
     @Transactional
     public AlineacionResponse guardar(Long idPartido, GuardarAlineacionRequest request) {
         Convocatoria convocatoria = convocatoriaService.calcular(idPartido);
@@ -114,6 +147,10 @@ public class AlineacionService {
         alineacion.setObservacion(request.observacion());
 
         if (!alineacion.getJugadores().isEmpty()) {
+            // Vaciar y volver a llenar en el mismo flush hace que Hibernate
+            // intente insertar antes de borrar y choque contra
+            // uq_alineacion_jugador. El saveAndFlush intermedio fuerza que los
+            // DELETE salgan primero.
             alineacion.getJugadores().clear();
             alineacionRepository.saveAndFlush(alineacion);
         }
@@ -126,6 +163,14 @@ public class AlineacionService {
         return ver(idPartido);
     }
 
+    /**
+     * Descarta los cambios manuales y vuelve a la sugerencia del sistema.
+     *
+     * @param idPartido identificador del partido
+     * @return la sugerencia recalculada
+     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws IllegalArgumentException     si el partido está cerrado
+     */
     @Transactional
     public AlineacionResponse restablecer(Long idPartido) {
         partidoService.exigirAbierto(convocatoriaService.calcular(idPartido).partido());
@@ -133,6 +178,14 @@ public class AlineacionService {
         return ver(idPartido);
     }
 
+    /**
+     * Comentario de IA sobre el once que hoy está en pantalla.
+     *
+     * @param idPartido identificador del partido
+     * @return el comentario generado, o un texto por defecto si no hay
+     *         alineación
+     * @throws RecursoNoEncontradoException si el partido no existe
+     */
     @Transactional(readOnly = true)
     public FeedbackAlineacionResponse feedback(Long idPartido) {
         AlineacionResponse actual = ver(idPartido);

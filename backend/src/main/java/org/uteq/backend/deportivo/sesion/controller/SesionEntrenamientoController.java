@@ -16,12 +16,28 @@ import org.uteq.backend.deportivo.sesion.service.SesionEntrenamientoService;
 
 import java.util.List;
 
+/**
+ * Punto de entrada del entrenador (y, desde {@code RECEPCIONISTA}, de la
+ * pantalla de QR) a sus sesiones: cuáles hay hoy, el historial y el alta.
+ *
+ * <p>La lógica de negocio vive en {@link SesionEntrenamientoService} (D-03 /
+ * R-03 del informe de evaluación de calidad): este controlador solo resuelve
+ * la identidad autenticada y traduce HTTP a llamadas de dominio.
+ */
 @RestController
 @RequestMapping("/api/sesiones")
 @RequiredArgsConstructor
 public class SesionEntrenamientoController {
     private final SesionEntrenamientoService sesionService;
 
+    /**
+     * Sesiones de hoy. {@code ADMINISTRADOR} y {@code RECEPCIONISTA} ven
+     * todas (el recepcionista necesita elegir cualquiera para mostrar su QR);
+     * un {@code ENTRENADOR} solo las suyas, resueltas desde su usuario
+     * autenticado.
+     *
+     * @return {@code 200 OK} con las sesiones de hoy visibles para el rol
+     */
     @GetMapping("/hoy")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<List<SesionHoyResponse>> hoy() {
@@ -33,6 +49,15 @@ public class SesionEntrenamientoController {
         return ResponseEntity.ok(sesionService.sesionesDeHoy(auth.getName(), veTodasLasSesiones));
     }
 
+    /**
+     * Historial de sesiones (pasadas y futuras), paginado.
+     * {@code ADMINISTRADOR} ve las de todos los entrenadores; un
+     * {@code ENTRENADOR}, solo las suyas.
+     *
+     * @param page número de página (desde 0)
+     * @param size tamaño de página
+     * @return {@code 200 OK} con la página de sesiones
+     */
     @GetMapping("/mias")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<List<SesionHoyResponse>> mias(
@@ -45,6 +70,16 @@ public class SesionEntrenamientoController {
         return ResponseEntity.ok(sesionService.misSesiones(auth.getName(), veTodasLasSesiones, page, size));
     }
 
+    /**
+     * Qué pasó en una sesión concreta: la lista de quién estuvo y quién no.
+     * {@code @Transactional} va aquí porque la respuesta navega relaciones
+     * LAZY con open-in-view deshabilitado.
+     *
+     * @param idSesion identificador de la sesión
+     * @return {@code 200 OK} con el resumen y la nómina de asistencia
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la sesión no existe ({@code 404})
+     */
     @GetMapping("/{idSesion}/historial")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     @Transactional(readOnly = true)
@@ -52,6 +87,20 @@ public class SesionEntrenamientoController {
         return ResponseEntity.ok(sesionService.historial(idSesion));
     }
 
+    /**
+     * Crea una sesión propia. El {@code idEntrenador} nunca viene del
+     * cliente: se resuelve del usuario autenticado. Un {@code ADMINISTRADOR}
+     * pasa el chequeo de rol pero recibe {@code 404} (no "es" un entrenador).
+     *
+     * @param request categoría, fecha, franja horaria y campo; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con la sesión creada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la cuenta no tiene entrenador asociado o la categoría no
+     *         existe ({@code 404})
+     * @throws IllegalArgumentException si la franja es inválida o se solapa
+     *         con otra sesión de la misma categoría ({@code 422})
+     */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<SesionHoyResponse> crear(@Valid @RequestBody SesionCrearRequest request) {

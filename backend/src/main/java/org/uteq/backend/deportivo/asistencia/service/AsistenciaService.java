@@ -34,6 +34,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Asistencia a sesiones de entrenamiento por dos vías: el QR que marca el
+ * propio estudiante (mejor dato, con hora real) y la lista manual del
+ * entrenador. La lista manual es la última palabra sobre quién estuvo en la
+ * cancha y no inventa hora de llegada: hora presente ⇒ la midió el QR, hora
+ * vacía ⇒ es palabra del entrenador.
+ */
 @Service
 @RequiredArgsConstructor
 public class AsistenciaService {
@@ -42,9 +49,25 @@ public class AsistenciaService {
     private final SesionEntrenamientoRepository sesionRepository;
     private final NotificacionService notificacionService;
 
+    /** Minutos de gracia tras la hora de inicio antes de contar TARDE. */
     @Value("${asistencia.tolerancia-tarde-minutos:10}")
     private int toleranciaTardeMinutos;
 
+    /**
+     * Registra la asistencia del estudiante autenticado tras un canjeo de QR
+     * ya validado en el controlador. Resuelve quién es el estudiante, decide
+     * {@code PRESENTE} vs {@code TARDE}, persiste y notifica a los
+     * representantes.
+     *
+     * @param username nombre de usuario del estudiante
+     * @param idSesion sesión a la que corresponde el token canjeado
+     * @return la asistencia registrada
+     * @throws RecursoNoEncontradoException si la cuenta no tiene estudiante
+     *                                      asociado o la sesión no existe
+     * @throws IllegalArgumentException     si ya marcó asistencia en esa
+     *                                      sesión o la sesión no es de su
+     *                                      categoría
+     */
     @Transactional
     public Asistencia marcarPorQr(String username, Long idSesion) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
@@ -78,6 +101,16 @@ public class AsistenciaService {
         return asistencia;
     }
 
+    /**
+     * Nómina de la sesión: <em>todos</em> los estudiantes activos de la
+     * categoría, con lo que ya esté registrado de cada uno. Se parte de la
+     * categoría y no de la tabla de asistencias porque el entrenador necesita
+     * ver a quién le falta marcar.
+     *
+     * @param idSesion identificador de la sesión
+     * @return la nómina, con el indicador de si aún es editable
+     * @throws RecursoNoEncontradoException si la sesión no existe
+     */
     @Transactional(readOnly = true)
     public NominaResponse nomina(Long idSesion) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
@@ -107,6 +140,20 @@ public class AsistenciaService {
                 sesion.getHoraInicio(), motivo == null, motivo, filas);
     }
 
+    /**
+     * Lista manual del entrenador. Es un <em>upsert</em> por
+     * {@code (sesión, estudiante)}: se puede volver a pasar lista para
+     * corregir, y sobrescribe incluso lo que vino por QR.
+     *
+     * @param idSesion identificador de la sesión
+     * @param request  estado y observación por estudiante
+     * @return la nómina resultante
+     * @throws RecursoNoEncontradoException si la sesión o algún estudiante no
+     *                                      existen
+     * @throws IllegalArgumentException     si la sesión aún no ocurrió o
+     *                                      algún estudiante no es de la
+     *                                      categoría de la sesión
+     */
     @Transactional
     public NominaResponse pasarLista(Long idSesion, PasarListaRequest request) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
@@ -128,6 +175,10 @@ public class AsistenciaService {
                     .orElseThrow(() -> new RecursoNoEncontradoException(
                             "Estudiante no encontrado o inactivo: " + marca.idEstudiante()));
 
+            // Un estudiante de otra categoría ensuciaría el porcentaje de
+            // asistencia de ambas. Se resuelve en Java (no con el procedimiento
+            // que usa el QR): pasar lista valida a los veinticinco de una
+            // categoría, y el procedimiento sería un N+1.
             if (!estudiante.getCategoria().getIdCategoria()
                     .equals(sesion.getCategoria().getIdCategoria())) {
                 throw new IllegalArgumentException(estudiante.getPersona().getNombre() + " "
@@ -145,6 +196,8 @@ public class AsistenciaService {
             a.setEstado(marca.estado());
             a.setObservacion(marca.observacion());
 
+            // La lista manual NO inventa una hora de llegada: el entrenador
+            // afirma que el chico estuvo, no a qué hora entró.
             if (!estuvo) {
                 a.setHoraEntrada(null);
                 a.setMetodo(Asistencia.METODO_MANUAL);
@@ -157,6 +210,7 @@ public class AsistenciaService {
         return nomina(idSesion);
     }
 
+    // Una sesión que todavía no ocurrió no admite lista: nadie pudo asistir.
     private String motivoNoEditable(SesionEntrenamiento sesion) {
         if (sesion.getFecha().isAfter(LocalDate.now(Zonas.ECUADOR))) {
             return "La sesión es del " + sesion.getFecha() + ": todavía no ocurre";
@@ -164,6 +218,7 @@ public class AsistenciaService {
         return null;
     }
 
+    // Sin hora_inicio programada no hay contra qué medir la tardanza: PRESENTE.
     private String calcularEstado(LocalTime horaInicio, LocalTime ahora) {
         if (horaInicio == null) {
             return Asistencia.ESTADO_PRESENTE;
@@ -172,6 +227,15 @@ public class AsistenciaService {
         return ahora.isAfter(limite) ? Asistencia.ESTADO_TARDE : Asistencia.ESTADO_PRESENTE;
     }
 
+    /**
+     * Historial de asistencia del estudiante autenticado, con su porcentaje
+     * de los últimos 30 días.
+     *
+     * @param username nombre de usuario del estudiante
+     * @return el historial y el porcentaje reciente
+     * @throws RecursoNoEncontradoException si la cuenta no tiene estudiante
+     *                                      asociado
+     */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
@@ -199,6 +263,14 @@ public class AsistenciaService {
                 a.getEstado());
     }
 
+    /**
+     * Mapa de asistencia de los últimos {@code dias} días. Solo devuelve los
+     * días que tuvieron entrenamiento; el corte es ayer, porque la sesión de
+     * hoy puede no haber ocurrido todavía.
+     *
+     * @param dias ventana solicitada; se acota a {@code [7, 120]}
+     * @return la serie diaria, el promedio y los días mejor y peor
+     */
     @Transactional(readOnly = true)
     public MapaAsistenciaResponse mapaDeAsistencia(int dias) {
         int ventana = Math.max(7, Math.min(dias, 120));

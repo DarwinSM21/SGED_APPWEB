@@ -26,6 +26,11 @@ import java.time.Instant;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
+/**
+ * Alta, agenda e historial de partidos. Un partido con resultado queda
+ * cerrado y solo se puede editar tras reabrirlo; el resultado ({@code
+ * GANADO} / {@code EMPATADO} / {@code PERDIDO}) se calcula, no se guarda.
+ */
 @Service
 @RequiredArgsConstructor
 public class PartidoService {
@@ -34,6 +39,16 @@ public class PartidoService {
     private final AlineacionRepository alineacionRepository;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Lista paginada de partidos, opcionalmente filtrada por categoría,
+     * anotando cada uno con si tiene alineación y cuántos titulares.
+     *
+     * @param idCategoria categoría por la que filtrar, o {@code null} para
+     *                    todas
+     * @param pagina      número de página (se acota a {@code >= 0})
+     * @param tamano      tamaño de página (se acota a {@code [1, 100]})
+     * @return la página de partidos
+     */
     @Transactional(readOnly = true)
     public PartidoPageResponse listar(Long idCategoria, int pagina, int tamano) {
         var pageable = PageRequest.of(Math.max(pagina, 0), Math.min(Math.max(tamano, 1), 100));
@@ -46,6 +61,13 @@ public class PartidoService {
                 page.getTotalElements(), page.getTotalPages());
     }
 
+    /**
+     * Detalle de un partido.
+     *
+     * @param idPartido identificador del partido
+     * @return el partido, con su estado de alineación y resultado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public PartidoResponse buscarPorId(Long idPartido) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
@@ -53,6 +75,14 @@ public class PartidoService {
         return conAlineacion(List.of(p)).get(0);
     }
 
+    /**
+     * Agenda un partido para una categoría activa.
+     *
+     * @param request categoría, fecha, hora y observación
+     * @return el partido creado
+     * @throws RecursoNoEncontradoException si la categoría no existe
+     * @throws IllegalArgumentException     si la categoría está inactiva
+     */
     @Auditado(accion = "CREAR", entidad = "Partido", idSpel = "#result.idPartido",
             descripcionSpel = "'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha")
     @Transactional
@@ -75,6 +105,16 @@ public class PartidoService {
         return aResponse(guardado, false, 0);
     }
 
+    /**
+     * Carga el marcador de un partido y lo cierra. El marcador llega después
+     * de jugar, por eso va en su propia operación y no en la creación.
+     *
+     * @param idPartido identificador del partido
+     * @param request   goles a favor, en contra y observación opcional
+     * @return el partido cerrado
+     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws IllegalArgumentException     si el partido ya estaba cerrado
+     */
     @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'cargó el resultado del partido ' + #p0 + ' y lo cerró'")
     @Transactional
@@ -96,6 +136,14 @@ public class PartidoService {
         return buscarPorId(idPartido);
     }
 
+    /**
+     * Reabre un partido cerrado para corregir el resultado o la alineación.
+     *
+     * @param idPartido identificador del partido
+     * @return el partido reabierto
+     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws IllegalArgumentException     si el partido no estaba cerrado
+     */
     @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'reabrio el partido ' + #p0 + ' para corregirlo'")
     @Transactional
@@ -114,6 +162,12 @@ public class PartidoService {
         return buscarPorId(idPartido);
     }
 
+    /**
+     * Verifica que un partido esté abierto (no cerrado por resultado).
+     *
+     * @param p partido a comprobar
+     * @throws IllegalArgumentException si el partido está cerrado
+     */
     public void exigirAbierto(Partido p) {
         if (p.estaCerrado()) {
             throw new IllegalArgumentException(
@@ -131,6 +185,14 @@ public class PartidoService {
                 .orElse(null);
     }
 
+    /**
+     * Elimina un partido. La alineación cae con él ({@code ON DELETE
+     * CASCADE}): sin partido no significa nada.
+     *
+     * @param idPartido identificador del partido
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si el partido está cerrado
+     */
     @Auditado(accion = "ELIMINAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'eliminó el partido ' + #p0")
     @Transactional
@@ -143,6 +205,8 @@ public class PartidoService {
         partidoRepository.delete(p);
     }
 
+    // Anota cada partido con si tiene alineación y cuántos titulares, en dos
+    // consultas para toda la página en vez de dos por fila.
     private List<PartidoResponse> conAlineacion(List<Partido> partidos) {
         if (partidos.isEmpty()) {
             return List.of();
@@ -172,6 +236,8 @@ public class PartidoService {
                 p.estaCerrado(), p.getCerradoEn());
     }
 
+    // Se calcula, no se guarda: almacenar "GANADO" junto al marcador abre la
+    // puerta a que un día digan cosas distintas.
     private String resultadoDe(Partido p) {
         if (!p.tieneResultado()) {
             return "PENDIENTE";

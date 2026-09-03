@@ -13,27 +13,56 @@ import org.uteq.backend.inventario.articulo.repository.ArticuloRepository;
 
 import java.util.List;
 
+/**
+ * Lógica de negocio del catálogo de artículos de inventario. El
+ * {@code stockActual} no se modifica aquí: solo por movimientos de stock o
+ * asignaciones. Las bajas son lógicas ({@code activo = false}).
+ */
 @Service
 @RequiredArgsConstructor
 public class ArticuloService {
 
     private final ArticuloRepository articuloRepository;
 
+    /**
+     * Lista paginada de artículos.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, mapeada a {@link ArticuloResponse}
+     */
     @Transactional(readOnly = true)
     public Page<ArticuloResponse> listarPaginado(Pageable pageable) {
         return articuloRepository.findAll(pageable).map(this::toResponse);
     }
 
+    /**
+     * Lista completa de artículos activos, sin paginar.
+     *
+     * @return todos los artículos activos
+     */
     @Transactional(readOnly = true)
     public List<ArticuloResponse> listarActivos() {
         return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();
     }
 
+    /**
+     * Busca un artículo por su identificador.
+     *
+     * @param id identificador del artículo
+     * @return el artículo encontrado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public ArticuloResponse buscarPorId(Long id) {
         return toResponse(buscarEntidad(id));
     }
 
+    /**
+     * Crea un artículo con {@code stockActual} en 0.
+     *
+     * @param request datos del artículo
+     * @return el artículo creado
+     */
     @Auditado(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo",
             descripcionSpel = "'creó el artículo ' + #result.nombre")
     @Transactional
@@ -53,6 +82,14 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
+    /**
+     * Actualiza los datos de un artículo (no el stock).
+     *
+     * @param id      identificador del artículo a editar
+     * @param request datos nuevos
+     * @return el artículo actualizado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Auditado(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo",
             descripcionSpel = "'editó el artículo ' + #result.nombre")
     @Transactional
@@ -71,6 +108,12 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
+    /**
+     * Baja lógica de un artículo ({@code activo = false}).
+     *
+     * @param id identificador del artículo
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Auditado(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0",
             descripcionSpel = "'desactivó el artículo #' + #p0")
     @Transactional
@@ -80,6 +123,14 @@ public class ArticuloService {
         articuloRepository.save(articulo);
     }
 
+    /**
+     * Reactiva un artículo dado de baja.
+     *
+     * @param id identificador del artículo
+     * @return el artículo reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si ya está activo
+     */
     @Auditado(accion = "REACTIVAR", entidad = "Articulo", idSpel = "#p0",
             descripcionSpel = "'reactivo el articulo #' + #p0")
     @Transactional
@@ -94,6 +145,11 @@ public class ArticuloService {
         return toResponse(articuloRepository.save(articulo));
     }
 
+    /**
+     * Artículos en o por debajo de su stock mínimo.
+     *
+     * @return el total y el listado de artículos en stock bajo
+     */
     @Transactional(readOnly = true)
     public StockBajoResponse stockBajo() {
         List<ArticuloResponse> articulos = articuloRepository.findConStockBajo().stream()
