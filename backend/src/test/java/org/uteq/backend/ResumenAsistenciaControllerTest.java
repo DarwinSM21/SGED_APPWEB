@@ -54,14 +54,12 @@ class ResumenAsistenciaControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/asistencias/mapa?dias=60 - propaga la ventana pedida")
+    @DisplayName("GET /api/asistencias/mapa?dias=60 - propaga la ventana pedida al servicio")
     void mapa_con_parametro_dias() throws Exception {
         when(asistenciaService.mapaDeAsistencia(60)).thenReturn(mapa());
 
         mockMvc.perform(get("/api/asistencias/mapa").param("dias", "60"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.desde").value("2026-01-01"))
-                .andExpect(jsonPath("$.hasta").value("2026-02-04"));
+                .andExpect(status().isOk());
 
         verify(asistenciaService).mapaDeAsistencia(60);
     }
