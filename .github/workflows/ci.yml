@@ -70,3 +70,6 @@ jobs:
 
       - name: Validación de trazabilidad
         run: bash scripts/validate-traceability.sh   # estricto cuando exista la matriz
+
+      - name: Autotest del validador de trazabilidad (falla-cerrado ante fila inválida)
+        run: bash scripts/test-validate-traceability.sh
