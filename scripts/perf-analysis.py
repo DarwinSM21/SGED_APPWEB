@@ -7,6 +7,7 @@ del tiempo de respuesta, y genera docs/mediciones/perf/REPORT.md.
 """
 import json
 import math
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -31,7 +32,12 @@ def commit_corto():
 def k6_version():
     for cmd in (["k6", "version"], ["docker", "run", "--rm", "grafana/k6", "version"]):
         try:
-            return subprocess.check_output(cmd, text=True, stderr=subprocess.STDOUT).splitlines()[0].strip()
+            linea = subprocess.check_output(cmd, text=True, stderr=subprocess.STDOUT).splitlines()[0].strip()
+            # `k6 version` imprime "k6 v2.2.0 (commit/<hash>, go..., os/arch)".
+            # Se quita "commit/<hash>, ": es el commit de build de k6 upstream,
+            # no un commit de este repo, y hacia fallar la comprobacion de que
+            # todo hash citado como evidencia exista aqui (`git cat-file -t`).
+            return re.sub(r"commit/[0-9a-f]+,\s*", "", linea)
         except Exception:
             continue
     return "k6 version no disponible en este entorno"
