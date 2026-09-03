@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AsistenciaSesionController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.controller</a> &gt; <span class="el_source">AsistenciaSesionController.java</span></div><h1>AsistenciaSesionController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.NominaResponse;
+import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.PasarListaRequest;
+import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
+
+/**
+ * Lista de asistencia de una sesión, para el entrenador. Complementa el QR
+ * (la vía normal, que deja el mejor dato con hora real de llegada), no lo
+ * reemplaza.
+ *
+ * &lt;p&gt;{@code @Transactional} va aquí y no solo en el servicio: con
+ * open-in-view deshabilitado, cualquier relación LAZY que se toque al
+ * serializar la respuesta explota fuera de la transacción.
+ */
+@RestController
+@RequestMapping(&quot;/api/asistencias&quot;)
+@RequiredArgsConstructor
+public class AsistenciaSesionController {
+    private final AsistenciaService asistenciaService;
+
+    /**
+     * Nómina de una sesión con el estado de asistencia de cada estudiante.
+     *
+     * @param idSesion identificador de la sesión
+     * @return {@code 200 OK} con la nómina
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la sesión no existe ({@code 404})
+     */
+    @GetMapping(&quot;/sesion/{idSesion}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;NominaResponse&gt; nomina(@PathVariable Long idSesion) {
+<span class="fc" id="L45">        return ResponseEntity.ok(asistenciaService.nomina(idSesion));</span>
+    }
+
+    /**
+     * Pasa lista de una sesión: fija el estado de asistencia de cada
+     * estudiante de la nómina.
+     *
+     * @param idSesion identificador de la sesión
+     * @param request  estado por estudiante; validado con {@code @Valid}
+     * @return {@code 200 OK} con la nómina actualizada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la sesión no existe ({@code 404})
+     * @throws IllegalArgumentException si la sesión aún no ocurrió o el
+     *         cuerpo referencia estudiantes que no son de la categoría
+     *         ({@code 422})
+     */
+    @PutMapping(&quot;/sesion/{idSesion}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    @Transactional
+    public ResponseEntity&lt;NominaResponse&gt; pasarLista(@PathVariable Long idSesion,
+                                                     @Valid @RequestBody PasarListaRequest request) {
+<span class="fc" id="L66">        return ResponseEntity.ok(asistenciaService.pasarLista(idSesion, request));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

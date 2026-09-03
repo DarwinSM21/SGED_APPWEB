@@ -1,6 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HorarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.horario.service</a> &gt; <span class="el_source">HorarioService.java</span></div><h1>HorarioService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.horario.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>HorarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.horario.service</a> &gt; <span class="el_source">HorarioService.java</span></div><h1>HorarioService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.horario.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.Zonas;
@@ -14,103 +15,276 @@ import org.uteq.backend.deportivo.horario.dto.HorarioResponse;
 import org.uteq.backend.deportivo.horario.entity.Horario;
 import org.uteq.backend.deportivo.horario.repository.HorarioRepository;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * Horarios fijos semanales del entrenador y la materialización de las
+ * sesiones concretas que se derivan de ellos. Un entrenador no puede tener
+ * dos horarios cruzados el mismo día; la cancha no se valida (dos grupos
+ * pueden compartirla, una persona no se parte en dos). Al cambiar un
+ * horario, la semana en curso se rehace salvo los entrenamientos que ya se
+ * dictaron (tienen asistencia o evaluación).
+ */
 @Service
 @RequiredArgsConstructor
 public class HorarioService {
-
     private final HorarioRepository horarioRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final CategoriaRepository categoriaRepository;
     private final SesionEntrenamientoRepository sesionRepository;
-
-    @Transactional
-    public HorarioResponse crear(String username, HorarioRequest request) {
-<span class="fc" id="L33">        Entrenador entrenador = entrenadorAutenticado(username);</span>
-
-<span class="fc bfc" id="L35" title="All 2 branches covered.">        if (!request.horaFin().isAfter(request.horaInicio())) {</span>
-<span class="fc" id="L36">            throw new IllegalArgumentException(&quot;La hora de fin debe ser posterior a la hora de inicio&quot;);</span>
-        }
-
-<span class="fc" id="L39">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
-<span class="fc" id="L40">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
-<span class="fc" id="L41">                        &quot;Categoria no encontrada con id: &quot; + request.idCategoria()));</span>
-
-<span class="fc" id="L43">        Horario horario = Horario.builder()</span>
-<span class="fc" id="L44">                .entrenador(entrenador)</span>
-<span class="fc" id="L45">                .categoria(categoria)</span>
-<span class="fc" id="L46">                .diaSemana(request.diaSemana().shortValue())</span>
-<span class="fc" id="L47">                .horaInicio(request.horaInicio())</span>
-<span class="fc" id="L48">                .horaFin(request.horaFin())</span>
-<span class="fc" id="L49">                .campo(request.campo())</span>
-<span class="fc" id="L50">                .descripcion(request.descripcion())</span>
-<span class="fc" id="L51">                .activo(true)</span>
-<span class="fc" id="L52">                .build();</span>
-
-<span class="fc" id="L54">        return aResponse(horarioRepository.save(horario));</span>
-    }
-
-    @Transactional(readOnly = true)
-    public List&lt;HorarioResponse&gt; misHorarios(String username) {
-<span class="fc" id="L59">        return entrenadorRepository.findByUsuario_Username(username)</span>
-<span class="pc" id="L60">                .map(entrenador -&gt; horarioRepository</span>
-<span class="nc" id="L61">                        .findByEntrenador_IdEntrenadorAndActivoTrueOrderByDiaSemanaAscHoraInicioAsc(entrenador.getIdEntrenador())</span>
-<span class="nc" id="L62">                        .stream().map(this::aResponse).toList())</span>
-<span class="fc" id="L63">                .orElseGet(List::of);</span>
-    }
-
-    /** 404 uniforme si el horario no existe o no es suyo: mismo criterio IDOR del resto de la app. */
-    @Transactional
-    public void desactivar(String username, Long idHorario) {
-<span class="fc" id="L69">        Entrenador entrenador = entrenadorAutenticado(username);</span>
-<span class="fc" id="L70">        Horario horario = horarioRepository</span>
-<span class="fc" id="L71">                .findByIdHorarioAndEntrenador_IdEntrenador(idHorario, entrenador.getIdEntrenador())</span>
-<span class="pc" id="L72">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Horario no encontrado con id: &quot; + idHorario));</span>
-<span class="nc" id="L73">        horario.setActivo(false);</span>
-<span class="nc" id="L74">        horarioRepository.save(horario);</span>
-<span class="nc" id="L75">    }</span>
+    private final AsistenciaRepository asistenciaRepository;
+    private final EvaluacionDiariaRepository evaluacionRepository;
 
     /**
-     * Genera hoy las sesiones que falten a partir de los horarios fijos
-     * activos que caen en el dia de hoy. Idempotente a proposito: se llama
-     * en cada GET /api/sesiones/hoy y /mias (ver SesionEntrenamientoController),
-     * y si la sesion de ese horario ya existe para hoy no crea una segunda.
+     * Cuántos días hacia adelante se programan de una vez. Con 7 basta una
+     * sola apertura de la pantalla para dejar cubierta la semana completa.
+     */
+    @Value(&quot;${sesiones.dias-programados:7}&quot;)
+    private int diasProgramados;
+
+    /** Id imposible, para el alta: no hay horario propio que excluir todavía. */
+<span class="fc" id="L51">    private static final Long SIN_ID_TODAVIA = -1L;</span>
+
+    /**
+     * Crea un horario fijo para el entrenador autenticado.
+     *
+     * @param username nombre de usuario del entrenador
+     * @param request  categoría, día de semana, franja horaria y campo
+     * @return el horario creado
+     * @throws RecursoNoEncontradoException si la cuenta no tiene entrenador
+     *                                      asociado o la categoría no existe
+     * @throws IllegalArgumentException     si la hora de fin no es posterior
+     *                                      a la de inicio, o el horario se
+     *                                      cruza con otro suyo el mismo día
      */
     @Transactional
-    public void generarSesionesDeHoy() {
-<span class="fc" id="L85">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
-<span class="fc" id="L86">        short diaSemana = (short) hoy.getDayOfWeek().getValue();</span>
+    public HorarioResponse crear(String username, HorarioRequest request) {
+<span class="fc" id="L67">        Entrenador entrenador = entrenadorAutenticado(username);</span>
 
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        for (Horario horario : horarioRepository.findByActivoTrueAndDiaSemana(diaSemana)) {</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">            if (sesionRepository.existsByHorario_IdHorarioAndFecha(horario.getIdHorario(), hoy)) {</span>
-<span class="fc" id="L90">                continue;</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (!request.horaFin().isAfter(request.horaInicio())) {</span>
+<span class="fc" id="L70">            throw new IllegalArgumentException(&quot;La hora de fin debe ser posterior a la hora de inicio&quot;);</span>
+        }
+
+<span class="fc" id="L73">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="fc" id="L74">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L75">                        &quot;Categoria no encontrada con id: &quot; + request.idCategoria()));</span>
+
+        // SIN_ID_TODAVIA porque el horario aún no existe: no hay nada que excluir.
+<span class="fc" id="L78">        validarQueNoSeCruce(entrenador.getIdEntrenador(), request, SIN_ID_TODAVIA);</span>
+
+<span class="fc" id="L80">        Horario horario = Horario.builder()</span>
+<span class="fc" id="L81">                .entrenador(entrenador)</span>
+<span class="fc" id="L82">                .categoria(categoria)</span>
+<span class="fc" id="L83">                .diaSemana(request.diaSemana().shortValue())</span>
+<span class="fc" id="L84">                .horaInicio(request.horaInicio())</span>
+<span class="fc" id="L85">                .horaFin(request.horaFin())</span>
+<span class="fc" id="L86">                .campo(request.campo())</span>
+<span class="fc" id="L87">                .descripcion(request.descripcion())</span>
+<span class="fc" id="L88">                .activo(true)</span>
+<span class="fc" id="L89">                .build();</span>
+
+<span class="fc" id="L91">        return aResponse(horarioRepository.save(horario));</span>
+    }
+
+    /**
+     * Un entrenador no puede tener dos horarios cruzados el mismo día. Un
+     * choque en el horario se materializa una vez por semana durante meses.
+     * La cancha no se valida (dos grupos pueden compartirla). El mensaje
+     * nombra el horario con el que choca.
+     *
+     * @param idEntrenador entrenador dueño de los horarios
+     * @param request      horario que se pretende crear o editar
+     * @param idExcluir    horario a excluir de la comprobación (el que se
+     *                     edita), o {@link #SIN_ID_TODAVIA} en un alta
+     * @throws IllegalArgumentException si hay un cruce
+     */
+    private void validarQueNoSeCruce(Long idEntrenador, HorarioRequest request, Long idExcluir) {
+<span class="fc" id="L107">        List&lt;Horario&gt; choques = horarioRepository.cruzadosCon(</span>
+<span class="fc" id="L108">                idEntrenador, request.diaSemana().shortValue(),</span>
+<span class="fc" id="L109">                request.horaInicio(), request.horaFin(), idExcluir);</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">        if (choques.isEmpty()) {</span>
+<span class="fc" id="L111">            return;</span>
+        }
+<span class="fc" id="L113">        Horario otro = choques.get(0);</span>
+<span class="fc" id="L114">        throw new IllegalArgumentException(</span>
+<span class="fc" id="L115">                &quot;Ese día ya tenés &quot; + otro.getCategoria().getNombre() + &quot; de &quot;</span>
+<span class="fc" id="L116">                        + otro.getHoraInicio() + &quot; a &quot; + otro.getHoraFin()</span>
+                        + &quot;. No podés estar en dos canchas a la vez: movelo de hora.&quot;);
+    }
+
+    /**
+     * Horarios activos del entrenador autenticado, cada uno con la
+     * descripción del primer horario suyo que se le cruza (o {@code null}).
+     *
+     * @param username nombre de usuario del entrenador
+     * @return la lista de horarios; vacía si la cuenta no tiene entrenador
+     */
+    @Transactional(readOnly = true)
+    public List&lt;HorarioResponse&gt; misHorarios(String username) {
+<span class="fc" id="L129">        return entrenadorRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L130">                .map(entrenador -&gt; {</span>
+<span class="fc" id="L131">                    List&lt;Horario&gt; horarios = horarioRepository</span>
+<span class="fc" id="L132">                            .findByEntrenador_IdEntrenadorAndActivoTrueOrderByDiaSemanaAscHoraInicioAsc(</span>
+<span class="fc" id="L133">                                    entrenador.getIdEntrenador());</span>
+
+                    // Se comparan en memoria y no con una consulta por fila: la
+                    // semana de un entrenador son unos pocos horarios.
+<span class="fc" id="L137">                    return horarios.stream().map(h -&gt; aResponse(h, choqueDe(h, horarios))).toList();</span>
+                })
+<span class="fc" id="L139">                .orElseGet(List::of);</span>
+    }
+
+    // El primer horario del mismo día que se cruza con este, descrito para
+    // mostrarlo. null si no hay choque.
+    private String choqueDe(Horario horario, List&lt;Horario&gt; todos) {
+<span class="fc" id="L145">        return todos.stream()</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                .filter(o -&gt; !o.getIdHorario().equals(horario.getIdHorario()))</span>
+<span class="fc" id="L147">                .filter(o -&gt; o.getDiaSemana().equals(horario.getDiaSemana()))</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">                .filter(o -&gt; o.getHoraInicio().isBefore(horario.getHoraFin())</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">                        &amp;&amp; o.getHoraFin().isAfter(horario.getHoraInicio()))</span>
+<span class="fc" id="L150">                .findFirst()</span>
+<span class="fc" id="L151">                .map(o -&gt; o.getCategoria().getNombre() + &quot; (&quot; + o.getHoraInicio()</span>
+<span class="fc" id="L152">                        + &quot;–&quot; + o.getHoraFin() + &quot;)&quot;)</span>
+<span class="fc" id="L153">                .orElse(null);</span>
+    }
+
+    /**
+     * Desactiva un horario fijo del entrenador autenticado. Responde
+     * {@code 404} uniforme si no existe o no es suyo (criterio IDOR).
+     *
+     * @param username  nombre de usuario del entrenador
+     * @param idHorario identificador del horario
+     * @throws RecursoNoEncontradoException si el horario no existe o no es
+     *                                      del entrenador
+     */
+    @Transactional
+    public void desactivar(String username, Long idHorario) {
+<span class="fc" id="L167">        Entrenador entrenador = entrenadorAutenticado(username);</span>
+<span class="fc" id="L168">        Horario horario = horarioRepository</span>
+<span class="fc" id="L169">                .findByIdHorarioAndEntrenador_IdEntrenador(idHorario, entrenador.getIdEntrenador())</span>
+<span class="pc" id="L170">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Horario no encontrado con id: &quot; + idHorario));</span>
+<span class="nc" id="L171">        horario.setActivo(false);</span>
+<span class="nc" id="L172">        horarioRepository.save(horario);</span>
+<span class="nc" id="L173">    }</span>
+
+    /**
+     * Cambia un horario fijo del entrenador y rehace su ventana de sesiones.
+     * Responde {@code 404} uniforme si no existe o no es suyo.
+     *
+     * @param username  nombre de usuario del entrenador
+     * @param idHorario identificador del horario
+     * @param request   datos nuevos
+     * @return el horario actualizado
+     * @throws RecursoNoEncontradoException si el horario no existe o no es
+     *                                      suyo, o la categoría no existe
+     * @throws IllegalArgumentException     si la franja es inválida o se
+     *                                      cruza con otro horario suyo
+     */
+    @Transactional
+    public HorarioResponse editar(String username, Long idHorario, HorarioRequest request) {
+<span class="fc" id="L190">        Entrenador entrenador = entrenadorAutenticado(username);</span>
+<span class="fc" id="L191">        Horario horario = horarioRepository</span>
+<span class="fc" id="L192">                .findByIdHorarioAndEntrenador_IdEntrenador(idHorario, entrenador.getIdEntrenador())</span>
+<span class="fc" id="L193">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Horario no encontrado con id: &quot; + idHorario));</span>
+
+<span class="fc bfc" id="L195" title="All 2 branches covered.">        if (!request.horaFin().isAfter(request.horaInicio())) {</span>
+<span class="fc" id="L196">            throw new IllegalArgumentException(&quot;La hora de fin debe ser posterior a la hora de inicio&quot;);</span>
+        }
+
+<span class="fc" id="L199">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="pc" id="L200">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L201">                        &quot;Categoria no encontrada con id: &quot; + request.idCategoria()));</span>
+
+        // Se excluye a sí mismo: mover un horario media hora no es chocar consigo.
+<span class="fc" id="L204">        validarQueNoSeCruce(entrenador.getIdEntrenador(), request, idHorario);</span>
+
+<span class="fc" id="L206">        horario.setCategoria(categoria);</span>
+<span class="fc" id="L207">        horario.setDiaSemana(request.diaSemana().shortValue());</span>
+<span class="fc" id="L208">        horario.setHoraInicio(request.horaInicio());</span>
+<span class="fc" id="L209">        horario.setHoraFin(request.horaFin());</span>
+<span class="fc" id="L210">        horario.setCampo(request.campo());</span>
+<span class="fc" id="L211">        horario.setDescripcion(request.descripcion());</span>
+<span class="fc" id="L212">        horarioRepository.save(horario);</span>
+
+<span class="fc" id="L214">        rehacerSesionesFuturas(horario);</span>
+<span class="fc" id="L215">        return aResponse(horario);</span>
+    }
+
+    // Vuelve a materializar la ventana de este horario tras un cambio. Solo
+    // se borran las sesiones que aún no ocurrieron Y en las que nadie
+    // registró nada: una sesión con asistencia o evaluación se queda como
+    // está, son hechos que ya pasaron.
+    private void rehacerSesionesFuturas(Horario horario) {
+<span class="fc" id="L223">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+
+<span class="fc bfc" id="L225" title="All 2 branches covered.">        for (SesionEntrenamiento sesion : sesionRepository</span>
+<span class="fc" id="L226">                .findByHorario_IdHorarioAndFechaGreaterThanEqual(horario.getIdHorario(), hoy)) {</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">            boolean tieneAsistencia = !asistenciaRepository.findBySesionIdSesion(sesion.getIdSesion()).isEmpty();</span>
+<span class="fc" id="L228">            boolean tieneEvaluacion = evaluacionRepository.existsBySesionIdSesion(sesion.getIdSesion());</span>
+<span class="pc bpc" id="L229" title="1 of 4 branches missed.">            if (tieneAsistencia || tieneEvaluacion) {</span>
+<span class="nc" id="L230">                continue;</span>
             }
-<span class="fc" id="L92">            sesionRepository.save(SesionEntrenamiento.builder()</span>
-<span class="fc" id="L93">                    .horario(horario)</span>
-<span class="fc" id="L94">                    .entrenador(horario.getEntrenador())</span>
-<span class="fc" id="L95">                    .categoria(horario.getCategoria())</span>
-<span class="fc" id="L96">                    .fecha(hoy)</span>
-<span class="fc" id="L97">                    .horaInicio(horario.getHoraInicio())</span>
-<span class="fc" id="L98">                    .horaFin(horario.getHoraFin())</span>
-<span class="fc" id="L99">                    .campo(horario.getCampo())</span>
-<span class="fc" id="L100">                    .estado(&quot;PROGRAMADA&quot;)</span>
-<span class="fc" id="L101">                    .build());</span>
-<span class="fc" id="L102">        }</span>
-<span class="fc" id="L103">    }</span>
+<span class="fc" id="L232">            sesionRepository.delete(sesion);</span>
+<span class="fc" id="L233">        }</span>
+
+<span class="fc" id="L235">        generarSesionesProgramadas();</span>
+<span class="fc" id="L236">    }</span>
+
+    /**
+     * Materializa las sesiones que faltan a partir de los horarios fijos
+     * activos, desde hoy y hasta {@code sesiones.dias-programados} días hacia
+     * adelante. Idempotente a propósito: se llama en cada
+     * {@code GET /api/sesiones/hoy} y {@code /mias}, y si la sesión de ese
+     * horario ya existe para esa fecha no crea otra. No se generan fechas
+     * pasadas: una sesión creada después de su día, sin asistencia ni
+     * evaluación, se leería como un entrenamiento al que no fue nadie.
+     */
+    @Transactional
+    public void generarSesionesProgramadas() {
+<span class="fc" id="L249">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        for (int desplazamiento = 0; desplazamiento &lt;= Math.max(0, diasProgramados); desplazamiento++) {</span>
+<span class="fc" id="L252">            LocalDate fecha = hoy.plusDays(desplazamiento);</span>
+<span class="fc" id="L253">            short diaSemana = (short) fecha.getDayOfWeek().getValue();</span>
+
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            for (Horario horario : horarioRepository.findByActivoTrueAndDiaSemana(diaSemana)) {</span>
+<span class="fc bfc" id="L256" title="All 2 branches covered.">                if (sesionRepository.existsByHorario_IdHorarioAndFecha(horario.getIdHorario(), fecha)) {</span>
+<span class="fc" id="L257">                    continue;</span>
+                }
+<span class="fc" id="L259">                sesionRepository.save(SesionEntrenamiento.builder()</span>
+<span class="fc" id="L260">                        .horario(horario)</span>
+<span class="fc" id="L261">                        .entrenador(horario.getEntrenador())</span>
+<span class="fc" id="L262">                        .categoria(horario.getCategoria())</span>
+<span class="fc" id="L263">                        .fecha(fecha)</span>
+<span class="fc" id="L264">                        .horaInicio(horario.getHoraInicio())</span>
+<span class="fc" id="L265">                        .horaFin(horario.getHoraFin())</span>
+<span class="fc" id="L266">                        .campo(horario.getCampo())</span>
+<span class="fc" id="L267">                        .estado(&quot;PROGRAMADA&quot;)</span>
+<span class="fc" id="L268">                        .build());</span>
+<span class="fc" id="L269">            }</span>
+        }
+<span class="fc" id="L271">    }</span>
 
     private Entrenador entrenadorAutenticado(String username) {
-<span class="fc" id="L106">        return entrenadorRepository.findByUsuario_Username(username)</span>
-<span class="pc" id="L107">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un entrenador asociado a esta cuenta&quot;));</span>
+<span class="fc" id="L274">        return entrenadorRepository.findByUsuario_Username(username)</span>
+<span class="pc" id="L275">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un entrenador asociado a esta cuenta&quot;));</span>
     }
 
     private HorarioResponse aResponse(Horario h) {
-<span class="fc" id="L111">        return new HorarioResponse(</span>
-<span class="fc" id="L112">                h.getIdHorario(), h.getCategoria().getNombre(), h.getDiaSemana().intValue(),</span>
-<span class="fc" id="L113">                h.getHoraInicio(), h.getHoraFin(), h.getCampo(), h.getDescripcion(), h.getActivo());</span>
+<span class="fc" id="L279">        return aResponse(h, null);</span>
+    }
+
+    private HorarioResponse aResponse(Horario h, String chocaCon) {
+<span class="fc" id="L283">        return new HorarioResponse(</span>
+<span class="fc" id="L284">                h.getIdHorario(), h.getCategoria().getIdCategoria(), h.getCategoria().getNombre(),</span>
+<span class="fc" id="L285">                h.getDiaSemana().intValue(),</span>
+<span class="fc" id="L286">                h.getHoraInicio(), h.getHoraFin(), h.getCampo(), h.getDescripcion(), h.getActivo(),</span>
+                chocaCon);
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

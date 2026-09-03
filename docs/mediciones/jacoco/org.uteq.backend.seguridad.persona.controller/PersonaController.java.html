@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersonaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.persona.controller</a> &gt; <span class="el_source">PersonaController.java</span></div><h1>PersonaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.persona.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PersonaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.persona.controller</a> &gt; <span class="el_source">PersonaController.java</span></div><h1>PersonaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.persona.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,60 +14,108 @@ import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
 import org.uteq.backend.seguridad.persona.service.PersonaService;
 
 /**
- * CRUD de Persona. Concentra los datos identificativos (cedula, correo)
- * de estudiantes menores de edad, por lo que la mayoria de endpoints queda
- * restringida a ADMINISTRADOR. La excepcion es {@code crear}: la
- * recepcionista tambien la necesita para poder registrar un estudiante
- * nuevo (Estudiante siempre cuelga de una Persona ya existente, asi que
- * ese es el primer paso del alta). Leer/editar/eliminar el catalogo
- * completo de personas sigue siendo solo de ADMINISTRADOR.
+ * CRUD de {@code Persona}. Concentra los datos identificativos (cédula,
+ * correo) de estudiantes menores de edad, por lo que casi todos los
+ * endpoints quedan restringidos a {@code ADMINISTRADOR}. La excepción es
+ * {@link #crear}: la recepcionista también la necesita, porque toda
+ * {@code Estudiante} cuelga de una {@code Persona} ya existente y ese es el
+ * primer paso del alta.
  */
 @RestController
 @RequestMapping(&quot;/api/personas&quot;)
 @RequiredArgsConstructor
 public class PersonaController {
-
     private final PersonaService personaService;
 
+    /**
+     * Lista paginada de personas activas.
+     *
+     * @param pageable paginación y orden; por defecto 10 por página, orden
+     *                 por {@code apellido}
+     * @return {@code 200 OK} con la página solicitada
+     */
     @GetMapping
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Page&lt;PersonaResponse&gt;&gt; listar(
             @PageableDefault(size = 10, sort = &quot;apellido&quot;) Pageable pageable) {
-<span class="fc" id="L36">        return ResponseEntity.ok(personaService.listar(pageable));</span>
+<span class="fc" id="L41">        return ResponseEntity.ok(personaService.listar(pageable));</span>
     }
 
+    /**
+     * Busca una persona activa por su identificador.
+     *
+     * @param id identificador de la persona
+     * @return {@code 200 OK} con la persona
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe o está inactivada ({@code 404})
+     */
     @GetMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L42">        return ResponseEntity.ok(personaService.buscarPorId(id));</span>
+<span class="nc" id="L55">        return ResponseEntity.ok(personaService.buscarPorId(id));</span>
     }
 
+    /**
+     * Busca una persona activa por su número de cédula.
+     *
+     * @param cedula número de cédula
+     * @return {@code 200 OK} con la persona
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe una persona activa con esa cédula ({@code 404})
+     */
     @GetMapping(&quot;/cedula/{cedula}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; buscarPorCedula(@PathVariable String cedula) {
-<span class="fc" id="L48">        return ResponseEntity.ok(personaService.buscarPorCedula(cedula));</span>
+<span class="fc" id="L69">        return ResponseEntity.ok(personaService.buscarPorCedula(cedula));</span>
     }
 
+    /**
+     * Registra una persona nueva.
+     *
+     * @param request datos de la persona; validado con {@code @Valid}
+     * @return {@code 201 Created} con la persona registrada
+     * @throws IllegalArgumentException si la cédula o el correo ya están en
+     *                                  uso ({@code 422})
+     */
     @PostMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; crear(@Valid @RequestBody PersonaRequest request) {
-<span class="fc" id="L54">        PersonaResponse personaCreada = personaService.crear(request);</span>
-<span class="fc" id="L55">        return ResponseEntity.status(HttpStatus.CREATED).body(personaCreada);</span>
+<span class="fc" id="L83">        PersonaResponse personaCreada = personaService.crear(request);</span>
+<span class="fc" id="L84">        return ResponseEntity.status(HttpStatus.CREATED).body(personaCreada);</span>
     }
 
+    /**
+     * Actualiza los datos de una persona.
+     *
+     * @param id      identificador de la persona a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con la persona actualizada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si la cédula o el correo pertenecen a
+     *                                  otra persona ({@code 422})
+     */
     @PutMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;PersonaResponse&gt; editar(
             @PathVariable Long id,
             @Valid @RequestBody PersonaRequest request) {
-<span class="nc" id="L63">        return ResponseEntity.ok(personaService.editar(id, request));</span>
+<span class="nc" id="L103">        return ResponseEntity.ok(personaService.editar(id, request));</span>
     }
 
+    /**
+     * Baja lógica de una persona ({@code activo = false}).
+     *
+     * @param id identificador de la persona
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L69">        personaService.eliminar(id);</span>
-<span class="fc" id="L70">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L117">        personaService.eliminar(id);</span>
+<span class="fc" id="L118">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.controller</a> &gt; <span class="el_source">UsuarioController.java</span></div><h1>UsuarioController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.controller</a> &gt; <span class="el_source">UsuarioController.java</span></div><h1>UsuarioController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,11 @@ import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
 import org.uteq.backend.seguridad.usuario.service.UsuarioService;
 
+/**
+ * CRUD de cuentas de usuario. Toda la clase está reservada a
+ * {@code ADMINISTRADOR} ({@code @PreAuthorize} a nivel de tipo); el endpoint
+ * &quot;mis datos&quot; del propio usuario vive aparte, en {@link PerfilController}.
+ */
 @RestController
 @RequestMapping(&quot;/api/usuarios&quot;)
 @RequiredArgsConstructor
@@ -21,34 +26,91 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
+    /**
+     * Lista paginada de cuentas.
+     *
+     * @param pageable paginación; por defecto página 0, 10 por página
+     * @return {@code 200 OK} con la página
+     */
     @GetMapping
     public ResponseEntity&lt;UsuarioPageResponse&lt;UsuarioResponse&gt;&gt; listar(
             @PageableDefault(page = 0, size = 10) Pageable pageable) {
-<span class="fc" id="L27">        return ResponseEntity.ok(usuarioService.listar(pageable));</span>
+<span class="fc" id="L38">        return ResponseEntity.ok(usuarioService.listar(pageable));</span>
     }
 
+    /**
+     * Busca una cuenta activa por su identificador.
+     *
+     * @param id identificador de la cuenta
+     * @return {@code 200 OK} con la cuenta
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe o está inactivada ({@code 404})
+     */
     @GetMapping(&quot;/{id}&quot;)
     public ResponseEntity&lt;UsuarioResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L32">        return ResponseEntity.ok(usuarioService.buscarPorId(id));</span>
+<span class="nc" id="L51">        return ResponseEntity.ok(usuarioService.buscarPorId(id));</span>
     }
 
+    /**
+     * Crea una cuenta para una persona ya registrada.
+     *
+     * @param request datos de la cuenta; validado con {@code @Valid}
+     * @return {@code 201 Created} con la cuenta creada
+     * @throws IllegalArgumentException si el {@code username} ya existe, falta
+     *                                  la contraseña o el rol no es coherente
+     *                                  con la ficha de la persona ({@code 422})
+     */
     @PostMapping
     public ResponseEntity&lt;UsuarioResponse&gt; crear(@Valid @RequestBody UsuarioRequest request) {
-<span class="fc" id="L37">        UsuarioResponse creado = usuarioService.crear(request);</span>
-<span class="fc" id="L38">        return ResponseEntity.status(HttpStatus.CREATED).body(creado);</span>
+<span class="fc" id="L65">        UsuarioResponse creado = usuarioService.crear(request);</span>
+<span class="fc" id="L66">        return ResponseEntity.status(HttpStatus.CREATED).body(creado);</span>
     }
 
+    /**
+     * Actualiza una cuenta.
+     *
+     * @param id      identificador de la cuenta a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con la cuenta actualizada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la cuenta o la persona no existen ({@code 404})
+     * @throws IllegalArgumentException si el {@code username} nuevo ya está
+     *                                  ocupado o el rol no es coherente
+     *                                  ({@code 422})
+     */
     @PutMapping(&quot;/{id}&quot;)
     public ResponseEntity&lt;UsuarioResponse&gt; editar(
             @PathVariable Long id,
             @Valid @RequestBody UsuarioRequest request) {
-<span class="nc" id="L45">        return ResponseEntity.ok(usuarioService.editar(id, request));</span>
+<span class="nc" id="L85">        return ResponseEntity.ok(usuarioService.editar(id, request));</span>
     }
 
+    /**
+     * Baja lógica de una cuenta.
+     *
+     * @param id identificador de la cuenta
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @DeleteMapping(&quot;/{id}&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L50">        usuarioService.eliminar(id);</span>
-<span class="fc" id="L51">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L98">        usuarioService.eliminar(id);</span>
+<span class="fc" id="L99">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Reactiva una cuenta dada de baja.
+     *
+     * @param id identificador de la cuenta
+     * @return {@code 200 OK} con la cuenta reactivada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si la cuenta ya está activa ({@code 422})
+     */
+    @PostMapping(&quot;/{id}/reactivar&quot;)
+    public ResponseEntity&lt;UsuarioResponse&gt; reactivar(@PathVariable Long id) {
+<span class="nc" id="L113">        return ResponseEntity.ok(usuarioService.reactivar(id));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

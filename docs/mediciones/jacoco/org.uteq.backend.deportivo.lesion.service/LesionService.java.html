@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LesionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.lesion.service</a> &gt; <span class="el_source">LesionService.java</span></div><h1>LesionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.lesion.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LesionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.lesion.service</a> &gt; <span class="el_source">LesionService.java</span></div><h1>LesionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.lesion.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -18,96 +18,140 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Registro de lesiones. Las carga el entrenador desde el mismo modulo de
- * evaluacion diaria, no la recepcionista.
- *
- * &lt;p&gt;Una lesion activa tiene tres efectos en el sistema: excluye al jugador de
- * las sugerencias de plantilla, distingue su ausencia de una falta sin motivo,
- * y dispara la notificacion al representante.
+ * Registro de lesiones. Las carga el entrenador desde el módulo de
+ * evaluación diaria. Una lesión activa tiene tres efectos: excluye al
+ * jugador de las sugerencias de plantilla, distingue su ausencia de una
+ * falta sin motivo, y dispara la notificación al representante.
  */
 @Service
 @RequiredArgsConstructor
 public class LesionService {
-
     private final LesionRepository lesionRepository;
     private final EstudianteRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final NotificacionService notificacionService;
 
-    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;)
+    /**
+     * Registra una lesión y notifica a los representantes del estudiante.
+     *
+     * @param idEstudiante         estudiante lesionado
+     * @param idEntrenador         entrenador que registra
+     * @param descripcion          descripción de la lesión (dato de salud)
+     * @param fechaLesion          fecha de la lesión; {@code null} usa hoy
+     * @param fechaEstimadaRetorno fecha estimada de retorno; puede ser
+     *                             {@code null}
+     * @return la lesión registrada
+     * @throws RecursoNoEncontradoException si el estudiante o el entrenador
+     *                                      no existen
+     * @throws IllegalArgumentException     si el estudiante ya tiene una
+     *                                      lesión activa, o la fecha estimada
+     *                                      de retorno es anterior a la de la
+     *                                      lesión
+     */
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;,
+            descripcionSpel = &quot;'registró una lesión del estudiante #' + #p0&quot;)
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
                             LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
-
-<span class="fc" id="L42">        var estudiante = estudianteRepository.findById(idEstudiante)</span>
-<span class="fc" id="L43">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L56">        var estudiante = estudianteRepository.findById(idEstudiante)</span>
+<span class="fc" id="L57">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;No existe el estudiante &quot; + idEstudiante));
-<span class="fc" id="L45">        var entrenador = entrenadorRepository.findById(idEntrenador)</span>
-<span class="fc" id="L46">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L59">        var entrenador = entrenadorRepository.findById(idEntrenador)</span>
+<span class="fc" id="L60">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;No existe el entrenador &quot; + idEntrenador));
 
-        // La base tiene un indice unico parcial que impide dos lesiones
-        // activas del mismo estudiante. Se comprueba antes para devolver un
-        // mensaje util en vez de un error de restriccion.
-<span class="fc" id="L52">        lesionRepository.buscarActivaPorEstudiante(idEstudiante).ifPresent(l -&gt; {</span>
-<span class="fc" id="L53">            throw new IllegalArgumentException(</span>
+        // La base tiene un índice único parcial que impide dos lesiones activas
+        // del mismo estudiante. Se comprueba antes para devolver un mensaje
+        // útil en vez de un error de restricción.
+<span class="fc" id="L66">        lesionRepository.buscarActivaPorEstudiante(idEstudiante).ifPresent(l -&gt; {</span>
+<span class="fc" id="L67">            throw new IllegalArgumentException(</span>
                     &quot;El estudiante ya tiene una lesion activa registrada el &quot;
-<span class="fc" id="L55">                            + l.getFechaLesion() + &quot;. Da de alta esa antes de registrar otra.&quot;);</span>
+<span class="fc" id="L69">                            + l.getFechaLesion() + &quot;. Da de alta esa antes de registrar otra.&quot;);</span>
         });
 
-<span class="pc bpc" id="L58" title="1 of 2 branches missed.">        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now(Zonas.ECUADOR);</span>
-<span class="pc bpc" id="L59" title="1 of 4 branches missed.">        if (fechaEstimadaRetorno != null &amp;&amp; fechaEstimadaRetorno.isBefore(fecha)) {</span>
-<span class="fc" id="L60">            throw new IllegalArgumentException(</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now(Zonas.ECUADOR);</span>
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">        if (fechaEstimadaRetorno != null &amp;&amp; fechaEstimadaRetorno.isBefore(fecha)) {</span>
+<span class="fc" id="L74">            throw new IllegalArgumentException(</span>
                     &quot;La fecha estimada de retorno no puede ser anterior a la de la lesion&quot;);
         }
 
-<span class="fc" id="L64">        Lesion lesion = lesionRepository.save(Lesion.builder()</span>
-<span class="fc" id="L65">                .estudiante(estudiante)</span>
-<span class="fc" id="L66">                .entrenador(entrenador)</span>
-<span class="fc" id="L67">                .descripcion(descripcion)</span>
-<span class="fc" id="L68">                .fechaLesion(fecha)</span>
-<span class="fc" id="L69">                .fechaEstimadaRetorno(fechaEstimadaRetorno)</span>
-<span class="fc" id="L70">                .build());</span>
-<span class="fc" id="L71">        notificacionService.notificarLesion(estudiante, descripcion);</span>
-<span class="fc" id="L72">        return lesion;</span>
+<span class="fc" id="L78">        Lesion lesion = lesionRepository.save(Lesion.builder()</span>
+<span class="fc" id="L79">                .estudiante(estudiante)</span>
+<span class="fc" id="L80">                .entrenador(entrenador)</span>
+<span class="fc" id="L81">                .descripcion(descripcion)</span>
+<span class="fc" id="L82">                .fechaLesion(fecha)</span>
+<span class="fc" id="L83">                .fechaEstimadaRetorno(fechaEstimadaRetorno)</span>
+<span class="fc" id="L84">                .build());</span>
+<span class="fc" id="L85">        notificacionService.notificarLesion(estudiante, descripcion);</span>
+<span class="fc" id="L86">        return lesion;</span>
     }
 
-    /** Cierra una lesion: el jugador vuelve a entrar en las plantillas. */
+    /**
+     * Cierra una lesión: el jugador vuelve a entrar en las plantillas.
+     *
+     * @param idLesion  identificador de la lesión
+     * @param fechaAlta fecha de alta; {@code null} usa hoy
+     * @return la lesión dada de alta
+     * @throws RecursoNoEncontradoException si la lesión no existe
+     * @throws IllegalArgumentException     si ya tiene fecha de alta, o el
+     *                                      alta es anterior a la fecha de la
+     *                                      lesión
+     */
     @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;,
-            descripcionSpel = &quot;'dio de alta la Lesion #' + #result.idLesion&quot;)
+            descripcionSpel = &quot;'dio de alta la lesión #' + #result.idLesion&quot;)
     @Transactional
     public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {
-<span class="fc" id="L80">        var lesion = lesionRepository.findById(idLesion)</span>
-<span class="fc" id="L81">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L104">        var lesion = lesionRepository.findById(idLesion)</span>
+<span class="fc" id="L105">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
                         &quot;No existe la lesion &quot; + idLesion));
 
-<span class="fc bfc" id="L84" title="All 2 branches covered.">        if (lesion.getFechaAlta() != null) {</span>
-<span class="fc" id="L85">            throw new IllegalArgumentException(&quot;Esa lesion ya tiene fecha de alta&quot;);</span>
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        if (lesion.getFechaAlta() != null) {</span>
+<span class="fc" id="L109">            throw new IllegalArgumentException(&quot;Esa lesion ya tiene fecha de alta&quot;);</span>
         }
 
-<span class="pc bpc" id="L88" title="1 of 2 branches missed.">        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now(Zonas.ECUADOR);</span>
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (fecha.isBefore(lesion.getFechaLesion())) {</span>
-<span class="fc" id="L90">            throw new IllegalArgumentException(</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">        if (fecha.isBefore(lesion.getFechaLesion())) {</span>
+<span class="fc" id="L114">            throw new IllegalArgumentException(</span>
                     &quot;El alta no puede ser anterior a la fecha de la lesion&quot;);
         }
 
-<span class="fc" id="L94">        lesion.setFechaAlta(fecha);</span>
-<span class="fc" id="L95">        return lesionRepository.save(lesion);</span>
+<span class="fc" id="L118">        lesion.setFechaAlta(fecha);</span>
+<span class="fc" id="L119">        return lesionRepository.save(lesion);</span>
     }
 
+    /**
+     * Lista paginada de lesiones activas.
+     *
+     * @param pageable paginación y orden
+     * @return la página de lesiones activas
+     */
     @Transactional(readOnly = true)
     public Page&lt;Lesion&gt; listarActivas(Pageable pageable) {
-<span class="fc" id="L100">        return lesionRepository.listarActivas(pageable);</span>
+<span class="fc" id="L130">        return lesionRepository.listarActivas(pageable);</span>
     }
 
+    /**
+     * Historial de lesiones de un estudiante, de la más reciente a la más
+     * antigua.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param pageable     paginación
+     * @return la página de lesiones del estudiante
+     */
     @Transactional(readOnly = true)
     public Page&lt;Lesion&gt; historialDe(Long idEstudiante, Pageable pageable) {
-<span class="fc" id="L105">        return lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, pageable);</span>
+<span class="fc" id="L143">        return lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, pageable);</span>
     }
 
+    /**
+     * Identificadores de los estudiantes con una lesión activa (para el
+     * panel de alertas y las sugerencias de plantilla).
+     *
+     * @return la lista de identificadores de estudiantes lesionados
+     */
     @Transactional(readOnly = true)
     public List&lt;Long&gt; idsLesionados() {
-<span class="fc" id="L110">        return lesionRepository.idsEstudiantesLesionados();</span>
+<span class="fc" id="L154">        return lesionRepository.idsEstudiantesLesionados();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

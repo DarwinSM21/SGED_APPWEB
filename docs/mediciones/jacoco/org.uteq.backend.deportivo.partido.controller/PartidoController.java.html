@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PartidoController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.partido.controller</a> &gt; <span class="el_source">PartidoController.java</span></div><h1>PartidoController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.partido.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.deportivo.partido.dto.AlineacionDtos.GuardarAlineacionRequest;
+import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.AlineacionResponse;
+import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.FeedbackAlineacionResponse;
+import org.uteq.backend.deportivo.partido.dto.PartidoDtos.CrearPartidoRequest;
+import org.uteq.backend.deportivo.partido.dto.PartidoDtos.PartidoPageResponse;
+import org.uteq.backend.deportivo.partido.dto.PartidoDtos.PartidoResponse;
+import org.uteq.backend.deportivo.partido.dto.PartidoDtos.ResultadoRequest;
+import org.uteq.backend.deportivo.partido.service.AlineacionService;
+import org.uteq.backend.deportivo.partido.service.PartidoService;
+
+/**
+ * Partidos y su alineación. Todos los endpoints exigen {@code ENTRENADOR} o
+ * {@code ADMINISTRADOR}.
+ *
+ * &lt;p&gt;La alineación es un solo recurso para dos cosas: si el entrenador
+ * guardó un once se devuelve ese, y si no, la sugerencia calculada con el
+ * rendimiento de las últimas semanas; la bandera &quot;guardada&quot; indica cuál se
+ * está viendo.
+ */
+@RestController
+@RequestMapping(&quot;/api/partidos&quot;)
+@RequiredArgsConstructor
+@PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+public class PartidoController {
+    private final PartidoService partidoService;
+    private final AlineacionService alineacionService;
+
+    /**
+     * Lista paginada de partidos, opcionalmente filtrada por categoría.
+     *
+     * @param idCategoria categoría por la que filtrar (opcional)
+     * @param page        número de página (desde 0)
+     * @param size        tamaño de página
+     * @return {@code 200 OK} con la página de partidos
+     */
+    @GetMapping
+    public ResponseEntity&lt;PartidoPageResponse&gt; listar(
+            @RequestParam(required = false) Long idCategoria,
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;20&quot;) int size) {
+<span class="fc" id="L50">        return ResponseEntity.ok(partidoService.listar(idCategoria, page, size));</span>
+    }
+
+    /**
+     * Detalle de un partido.
+     *
+     * @param idPartido identificador del partido
+     * @return {@code 200 OK} con el partido
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
+    @GetMapping(&quot;/{idPartido}&quot;)
+    public ResponseEntity&lt;PartidoResponse&gt; ver(@PathVariable Long idPartido) {
+<span class="fc" id="L63">        return ResponseEntity.ok(partidoService.buscarPorId(idPartido));</span>
+    }
+
+    /**
+     * Crea un partido.
+     *
+     * @param request categoría, rival, fecha y localía; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con el partido creado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si la categoría no existe ({@code 404})
+     */
+    @PostMapping
+    public ResponseEntity&lt;PartidoResponse&gt; crear(@Valid @RequestBody CrearPartidoRequest request) {
+<span class="fc" id="L77">        return ResponseEntity.status(HttpStatus.CREATED).body(partidoService.crear(request));</span>
+    }
+
+    /**
+     * Registra el marcador de un partido y lo cierra.
+     *
+     * @param idPartido identificador del partido
+     * @param request   goles a favor y en contra; validado con {@code @Valid}
+     * @return {@code 200 OK} con el partido cerrado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el partido no existe ({@code 404})
+     * @throws IllegalArgumentException si el partido ya estaba cerrado
+     *         ({@code 422})
+     */
+    @PutMapping(&quot;/{idPartido}/resultado&quot;)
+    public ResponseEntity&lt;PartidoResponse&gt; registrarResultado(
+            @PathVariable Long idPartido, @Valid @RequestBody ResultadoRequest request) {
+<span class="fc" id="L94">        return ResponseEntity.ok(partidoService.registrarResultado(idPartido, request));</span>
+    }
+
+    /**
+     * Reabre un partido cerrado para corregir el resultado o la alineación.
+     *
+     * @param idPartido identificador del partido
+     * @return {@code 200 OK} con el partido reabierto
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el partido no existe ({@code 404})
+     * @throws IllegalArgumentException si el partido no estaba cerrado
+     *         ({@code 422})
+     */
+    @PostMapping(&quot;/{idPartido}/reapertura&quot;)
+    public ResponseEntity&lt;PartidoResponse&gt; reabrir(@PathVariable Long idPartido) {
+<span class="fc" id="L109">        return ResponseEntity.ok(partidoService.reabrir(idPartido));</span>
+    }
+
+    /**
+     * Elimina un partido.
+     *
+     * @param idPartido identificador del partido
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
+    @DeleteMapping(&quot;/{idPartido}&quot;)
+    public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long idPartido) {
+<span class="fc" id="L122">        partidoService.eliminar(idPartido);</span>
+<span class="fc" id="L123">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Alineación de un partido: el once guardado, o la sugerencia del sistema
+     * si no hay ninguno guardado.
+     *
+     * @param idPartido identificador del partido
+     * @return {@code 200 OK} con la alineación y la bandera &quot;guardada&quot;
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el partido no existe ({@code 404})
+     */
+    @GetMapping(&quot;/{idPartido}/alineacion&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;AlineacionResponse&gt; verAlineacion(@PathVariable Long idPartido) {
+<span class="fc" id="L138">        return ResponseEntity.ok(alineacionService.ver(idPartido));</span>
+    }
+
+    /**
+     * Guarda el once del entrenador para un partido.
+     *
+     * @param idPartido identificador del partido
+     * @param request   jugadores y su puesto en cancha; validado con
+     *                  {@code @Valid}
+     * @return {@code 200 OK} con la alineación guardada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el partido o algún jugador no existen ({@code 404})
+     * @throws IllegalArgumentException si el partido está cerrado o la
+     *         alineación es inválida ({@code 422})
+     */
+    @PutMapping(&quot;/{idPartido}/alineacion&quot;)
+    @Transactional
+    public ResponseEntity&lt;AlineacionResponse&gt; guardarAlineacion(
+            @PathVariable Long idPartido, @Valid @RequestBody GuardarAlineacionRequest request) {
+<span class="fc" id="L157">        return ResponseEntity.ok(alineacionService.guardar(idPartido, request));</span>
+    }
+
+    /**
+     * Descarta el once guardado y vuelve a la sugerencia del sistema.
+     *
+     * @param idPartido identificador del partido
+     * @return {@code 200 OK} con la sugerencia recalculada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el partido no existe ({@code 404})
+     */
+    @DeleteMapping(&quot;/{idPartido}/alineacion&quot;)
+    @Transactional
+    public ResponseEntity&lt;AlineacionResponse&gt; restablecerAlineacion(@PathVariable Long idPartido) {
+<span class="fc" id="L171">        return ResponseEntity.ok(alineacionService.restablecer(idPartido));</span>
+    }
+
+    /**
+     * Comentario de IA sobre el once, a demanda (no se llama al modelo en
+     * cada apertura de la pantalla).
+     *
+     * @param idPartido identificador del partido
+     * @return {@code 200 OK} con el comentario generado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el partido no existe ({@code 404})
+     */
+    @PostMapping(&quot;/{idPartido}/alineacion/feedback&quot;)
+    @Transactional(readOnly = true)
+    public ResponseEntity&lt;FeedbackAlineacionResponse&gt; feedback(@PathVariable Long idPartido) {
+<span class="fc" id="L186">        return ResponseEntity.ok(alineacionService.feedback(idPartido));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

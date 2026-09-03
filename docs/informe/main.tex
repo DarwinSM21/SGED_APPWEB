@@ -444,11 +444,10 @@ inventario, especialidades, evaluación diaria, lesiones, horarios,
 sesiones y asistencia entre el 2026-08-03 y el 2026-08-13
 (sección~\ref{sec:ingenieria-requisitos}). \textbf{Actualización de esta
 misma redacción (2026-08-14):} se volvió a ejecutar \texttt{clean test}
-sobre el código actual —\textbf{270 pruebas, 0 fallos, 140 clases
-analizadas}— y el \texttt{jacoco.csv} archivado ya corresponde a esta
-corrida, no a la del 30 de julio. Cobertura agregada:
-\textbf{75,3\,\% de líneas} (cumple el 70\,\% exigido) pero
-\textbf{59,3\,\% de \emph{branches}} (no cumple, aunque mejoró frente al
+sobre el código de entonces —\textbf{270 pruebas, 0 fallos, 140 clases
+analizadas}—. Cobertura agregada de esa corrida:
+75,3\,\% de líneas (cumplía el 70\,\%) pero
+59,3\,\% de \emph{branches} (no cumplía, aunque mejoró frente al
 41,9\,\% de la medición anterior). El déficit no está distribuido
 uniformemente: el módulo \texttt{academico.pago} tiene \textbf{0\,\% de
 cobertura de \emph{branches}} (0 de 4 en el controlador, 0 de 10 en el
@@ -501,13 +500,14 @@ prueba propia), \texttt{AuthController} en sus rutas de \emph{logout},
 \emph{refresh} y \texttt{/me} (tampoco las tenían), y el filtro de
 búsqueda de \texttt{AuditoriaService} (invisible para JaCoCo mientras el
 repositorio estuviera mockeado, aunque \texttt{buscar()} sí tuviera
-prueba). Cobertura verificada con \texttt{mvn verify} en limpio:
-\textbf{369 pruebas, 0 fallos}; agregada, \textbf{86,2\,\% de líneas} y
-\textbf{71,2\,\% de \emph{branches}} — ambas superan por primera vez el
-70\,\% exigido sobre el \emph{bundle} completo. La regla de JaCoCo pasó
-de \texttt{haltOnFailure=false} (advertía en el log sin romper el
-\emph{build}) a \texttt{haltOnFailure=true}: el umbral ya se hace
-cumplir, no solo se declara. El reporte archivado en
+prueba). Cobertura verificada con \texttt{mvn verify} en limpio en esa corrida:
+\textbf{369 pruebas, 0 fallos}; agregada, 86,2\,\% de líneas y
+71,2\,\% de \emph{branches} — fue la primera vez que ambas superaron el
+70\,\% exigido sobre el \emph{bundle} completo, aunque el crecimiento
+posterior del sistema volvería a hacerlas caer (ver más abajo). La
+regla de JaCoCo pasó de \texttt{haltOnFailure=false} (advertía en el
+log sin romper el \emph{build}) a \texttt{haltOnFailure=true}: el
+umbral ya se hace cumplir, no solo se declara. El reporte archivado en
 \ruta{docs/mediciones/jacoco/} corresponde a esta corrida. De paso se
 corrigió un defecto de \emph{test} preexistente y no relacionado con la
 cobertura: una prueba de \texttt{AsistenciaServiceTest} construía su hora
@@ -553,10 +553,28 @@ con más \emph{branches} del servicio y sin ninguna prueba), y las ramas
 de reactivación y unidad de medida en blanco de \texttt{Articulo} y
 \texttt{Representante}. Resultado verificado con \texttt{mvn verify}
 completo, en limpio: \textbf{514 pruebas, 0 fallos}; agregada,
-\textbf{82,87\,\% de líneas} y \textbf{70,06\,\% de \emph{branches}}
-— la regla vuelve a cumplirse, pero con un margen de apenas 0,06 puntos
-sobre el umbral: sigue siendo frágil frente al próximo módulo que se
-agregue sin pruebas propias, no un problema cerrado de forma permanente.
+82,87\,\% de líneas y 70,06\,\% de \emph{branches} de esa corrida
+— la regla volvía a cumplirse, pero con un margen de apenas 0,06 puntos
+sobre el umbral: seguía siendo frágil frente al próximo módulo sin
+pruebas propias.
+
+\textbf{Cuarta actualización (2026-09-03).} La observación de la Entrega
+Final sobre cobertura pedía tres cosas comprobables: una sola cifra
+coincidente con el \texttt{jacoco.csv} de cierre, ningún controlador en
+cero, y la capa de dominio por encima del umbral. Se cubrieron los
+cuatro controladores que el crecimiento del módulo deportivo había
+dejado en cero por ciento (\texttt{PartidoController},
+\texttt{PosicionController}, \texttt{AsistenciaSesionController},
+\texttt{ResumenAsistenciaController}) y las devoluciones de ciclo de
+vida JPA (\texttt{@PrePersist}/\texttt{@PreUpdate}) de siete entidades,
+que ningún test de servicio con \emph{mocks} llegaba a disparar. Corrida
+de cierre con \texttt{mvn verify} en limpio: \textbf{84,66\,\% de
+líneas} (2\,639 de 3\,117) y \textbf{71,24\,\% de \emph{branches}} (664
+de 932), sobre 200 clases y \textbf{550 pruebas} en 74 clases; el margen
+sobre el umbral pasó de 0,06 a 1,24 puntos. \textbf{Esta es la cifra
+vigente en todo el documento} (sección~\ref{sec:cobertura}); las tres
+actualizaciones anteriores quedan como el registro cronológico de cómo
+se llegó a ella, no como cifras en disputa.
 \end{quote}
 
 La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
@@ -2308,24 +2326,23 @@ verifican no solo que el bloqueo ocurra, sino que un fallo posterior
 atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
 —según cómo se implemente— reiniciar el contador y evadir el límite.
 
-\textbf{Estado actual (2026-09-02).} El sistema siguió creciendo después
-de la corrida anterior —el módulo \texttt{alerta} completo, un segundo
-proveedor de generación de texto, y la maduración de partidos,
-alineación, evaluación, sesión y asistencia— y esta vez ese crecimiento
-sí hizo caer la regla de cobertura por debajo del umbral (documentado
-como hallazgo, no ocultado, en la actualización del 2026-09-02 del
-Bloque de Ingeniería de requisitos). Medido con \texttt{./mvnw verify}
-—el comando que exige y hace cumplir el umbral, no solo \texttt{test}—
-sobre \texttt{jacoco.csv} (\ruta{docs/mediciones/jacoco/}):
-\textbf{82,87\,\% de cobertura de líneas} (2583 de 3117) y
-\textbf{70,06\,\% de \emph{branches}} (653 de 932), sobre 200 clases
-analizadas, con \textbf{514 pruebas} en 67 clases de prueba. Cumple el
+\textbf{Cifra de cierre (2026-09-03).} Esta es la única cifra de
+cobertura vigente en el documento, recalculable línea por línea desde
+\ruta{docs/mediciones/jacoco/jacoco.csv} con
+\texttt{./mvnw verify} —el comando que exige y hace cumplir el umbral,
+no solo \texttt{test}—:
+\textbf{84,66\,\% de cobertura de líneas} (2\,639 de 3\,117) y
+\textbf{71,24\,\% de \emph{branches}} (664 de 932), sobre 200 clases
+analizadas, con \textbf{550 pruebas} en 74 clases de prueba. Cumple el
 \textbf{70\,\%} que exige \texttt{pom.xml} en líneas y en
 \emph{branches} —el umbral real del proyecto; una redacción anterior de
-este párrafo citaba 60\,\%, que nunca fue el valor configurado— pero
-con un margen de apenas 0,06 puntos porcentuales sobre el mínimo de
-\emph{branches}: el próximo módulo que se agregue sin pruebas propias
-puede volver a romperlo.
+este párrafo citaba 60\,\%, que nunca fue el valor configurado— con un
+margen de 1,24 puntos sobre el mínimo de \emph{branches}. El camino
+hasta esta cifra —41,9\,\% tras la reestructuración, 61,16\,\% con
+\texttt{main} dos semanas en rojo, 70,06\,\% de cierre provisional el
+2026-09-02— queda documentado como bitácora en la
+sección~\ref{sec:estado-entrega}; ninguna de esas cifras intermedias
+describe el estado actual.
 
 \begin{table}[htbp]
 \centering
@@ -2336,26 +2353,31 @@ puede volver a romperlo.
 \textbf{Capa} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
 \midrule
 Servicios & 85,61\,\% (1886/2203) & 71,67\,\% (506/706) \\
-Controladores & 81,63\,\% (240/294) & 79,41\,\% (27/34) \\
-Otros (config., seguridad, DTO) & 77,62\,\% (444/572) & 64,46\,\% (107/166) \\
-Entidades & \textbf{27,08\,\% (13/48)} & \textbf{50,00\,\% (13/26)} \\
+Controladores & 87,76\,\% (258/294) & 79,41\,\% (27/34) \\
+Otros (config., seguridad, DTO) & 78,15\,\% (447/572) & 64,46\,\% (107/166) \\
+Entidades & \textbf{100\,\% (48/48)} & \textbf{92,31\,\% (24/26)} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Según la Tabla~\ref{tab:cobertura-por-capa}, la capa que queda por
-debajo del umbral es la de entidades: la mayoría
-de sus líneas son \emph{getters}/\emph{setters} generados por Lombok que
-JaCoCo cuenta igual que código de negocio, y las pruebas de servicio y
-controlador ejercitan esos métodos de forma indirecta sin que JaCoCo lo
-atribuya a la clase de la entidad. No se declara resuelto: es una
-limitación real de la medición agregada, no un defecto oculto. Cinco
-controladores quedan además en cero por ciento de líneas
-—\texttt{ArticuloController}, \texttt{EvaluacionDiariaController},
-\texttt{AsignacionController}, \texttt{EspecialidadController},
-\texttt{MovimientoStockController}—, todos de módulos añadidos después
-de la corrida original y sin prueba propia todavía; queda como trabajo
-pendiente antes del cierre.
+Una redacción anterior de este párrafo atribuía el bajo porcentaje de la
+capa de entidades (entonces 27,08\,\%) a que JaCoCo contaba los
+\emph{getters}/\emph{setters} generados por Lombok. Eso era incorrecto:
+JaCoCo~0.8.12 ya filtra el código anotado como generado, y las entidades
+100\,\% Lombok (\texttt{Estudiante}, \texttt{Categoria},
+\texttt{Representante}\ldots) ni siquiera figuran en el reporte. Lo que
+faltaba cubrir eran las \emph{devoluciones de ciclo de vida} JPA escritas
+a mano —\texttt{@PrePersist}/\texttt{@PreUpdate}: sellado de marcas de
+tiempo, \texttt{activo} por defecto, normalización de \texttt{username}—,
+que los tests de servicio con \emph{mocks} nunca disparan. Se agregó
+\texttt{EntidadCicloVidaTest}, que las invoca por reflexión y verifica su
+efecto y ambas ramas; la capa de entidades pasó a 100\,\% de líneas.
+Los cuatro controladores que el crecimiento del módulo deportivo había
+dejado en cero por ciento —\texttt{PartidoController},
+\texttt{PosicionController}, \texttt{AsistenciaSesionController},
+\texttt{ResumenAsistenciaController}— tienen ahora suite propia
+(los cinco que citaba la Entrega~1B ya se habían cubierto en
+\texttt{09c6edf}). Ningún controlador queda en cero.
 
 \subsection{Calidad web: Lighthouse (Bloque C.5 / A.1)}
 
@@ -2595,7 +2617,7 @@ empírica~\cite{iso25010}.
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
-    pruebas.} Un 82,87\,\% indica qué proporción del código se ejecuta
+    pruebas.} Un 84,66\,\% indica qué proporción del código se ejecuta
     durante la suite, no que las aserciones sean pertinentes —el mismo
     desacople que documentan Imran~\emph{et al.} sobre pruebas de
     rendimiento en sistemas Java de código abierto: alcanzan una
@@ -3037,15 +3059,17 @@ trabajo se resumen así:
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
     p95 de 9,91\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{82,87\,\%} de cobertura de líneas y
-    \textbf{70,06\,\%} de \emph{branches} frente al mínimo de 70\,\%
+    100/100, y \textbf{84,66\,\%} de cobertura de líneas y
+    \textbf{71,24\,\%} de \emph{branches} frente al mínimo de 70\,\%
     (sección~\ref{sec:cobertura}) — cifra que cayó dos veces por debajo
     del umbral a medida que el sistema creció (39,8\,\% tras la
     reestructuración de paquetes, 61,16\,\% tras agregar el módulo de
     alertas y un segundo proveedor de IA) y se recuperó las dos veces con
     pruebas dirigidas al déficit real, no reportando directamente un
-    número cómodo ni ocultando que el margen actual sobre el umbral es de
-    apenas 0,06 puntos.
+    número cómodo. El margen sobre el umbral, de apenas 0,06 puntos en
+    el cierre provisional del 2026-09-02, se llevó a 1,24 puntos
+    cubriendo los cuatro controladores en cero y las devoluciones de
+    ciclo de vida de las entidades.
 
   \item \textbf{Una medición que no se ejecuta contra el sistema real no es
     evidencia.} Es la lección transversal de esta entrega, y aparece tres

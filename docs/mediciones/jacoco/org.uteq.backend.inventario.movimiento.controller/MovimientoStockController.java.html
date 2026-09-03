@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovimientoStockController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.movimiento.controller</a> &gt; <span class="el_source">MovimientoStockController.java</span></div><h1>MovimientoStockController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.movimiento.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MovimientoStockController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.movimiento.controller</a> &gt; <span class="el_source">MovimientoStockController.java</span></div><h1>MovimientoStockController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.movimiento.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,41 +14,65 @@ import org.uteq.backend.inventario.movimiento.dto.MovimientoDtos.*;
 import org.uteq.backend.inventario.movimiento.service.MovimientoStockService;
 
 /**
- * Entradas/salidas/ajustes de stock. El registro queda restringido a
- * ADMINISTRADOR y RECEPCIONISTA, quienes manejan el deposito fisico;
- * ENTRENADOR solo consulta el historial.
+ * Entradas, salidas y ajustes de stock. El registro queda restringido a
+ * {@code ADMINISTRADOR} y {@code RECEPCIONISTA}, quienes manejan el depósito
+ * físico; {@code ENTRENADOR} solo consulta el historial.
  */
 @RestController
 @RequestMapping(&quot;/api/inventario/movimientos&quot;)
 @RequiredArgsConstructor
 public class MovimientoStockController {
-
     private final MovimientoStockService movimientoStockService;
 
+    /**
+     * Lista paginada de movimientos, del más reciente al más antiguo.
+     *
+     * @param pageable paginación
+     * @return {@code 200 OK} con la página
+     */
     @GetMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;Page&lt;MovimientoResponse&gt;&gt; listar(Pageable pageable) {
-<span class="nc" id="L32">        return ResponseEntity.ok(movimientoStockService.listarPaginado(pageable));</span>
+<span class="fc" id="L37">        return ResponseEntity.ok(movimientoStockService.listarPaginado(pageable));</span>
     }
 
+    /**
+     * Movimientos de un artículo.
+     *
+     * @param idArticulo identificador del artículo
+     * @param pageable   paginación
+     * @return {@code 200 OK} con la página de movimientos del artículo
+     */
     @GetMapping(&quot;/articulo/{idArticulo}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR')&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;Page&lt;MovimientoResponse&gt;&gt; listarPorArticulo(@PathVariable Long idArticulo, Pageable pageable) {
-<span class="nc" id="L39">        return ResponseEntity.ok(movimientoStockService.listarPorArticulo(idArticulo, pageable));</span>
+<span class="fc" id="L51">        return ResponseEntity.ok(movimientoStockService.listarPorArticulo(idArticulo, pageable));</span>
     }
 
+    /**
+     * Registra un movimiento y ajusta el stock del artículo
+     * ({@code ENTRADA}/{@code AJUSTE} suman, {@code SALIDA} resta).
+     *
+     * @param request artículo, tipo, cantidad y motivo; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con el movimiento registrado
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si el artículo no existe ({@code 404})
+     * @throws IllegalArgumentException si una salida dejaría el stock
+     *         negativo ({@code 422})
+     */
     @PostMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
     @Transactional
     public ResponseEntity&lt;MovimientoResponse&gt; registrar(@Valid @RequestBody MovimientoRequest request) {
-<span class="nc" id="L46">        var movimiento = movimientoStockService.registrar(request, usernameAutenticado());</span>
-<span class="nc" id="L47">        return ResponseEntity.status(HttpStatus.CREATED).body(movimiento);</span>
+<span class="fc" id="L70">        var movimiento = movimientoStockService.registrar(request, usernameAutenticado());</span>
+<span class="fc" id="L71">        return ResponseEntity.status(HttpStatus.CREATED).body(movimiento);</span>
     }
 
     private String usernameAutenticado() {
-<span class="nc" id="L51">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
+<span class="fc" id="L75">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

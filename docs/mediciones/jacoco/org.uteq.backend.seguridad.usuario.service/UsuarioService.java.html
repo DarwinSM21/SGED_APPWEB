@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.service</a> &gt; <span class="el_source">UsuarioService.java</span></div><h1>UsuarioService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.service</a> &gt; <span class="el_source">UsuarioService.java</span></div><h1>UsuarioService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,10 +30,17 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Lógica de negocio de las cuentas de usuario: alta, edición, baja y
+ * reactivación, con la particularidad de que el rol de la cuenta debe ser
+ * coherente con la ficha de dominio (estudiante / entrenador / representante)
+ * que la persona ya tenga activa. Cruza a los repositorios de esos tres
+ * dominios solo para leer esa coherencia y para revincular una ficha que se
+ * creó antes que la cuenta.
+ */
 @Service
 @RequiredArgsConstructor
 public class UsuarioService {
-
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
@@ -43,214 +50,303 @@ public class UsuarioService {
     private final RepresentanteRepository representanteRepository;
     private final EstudianteRepository estudianteRepository;
 
+    /**
+     * Lista paginada de todas las cuentas (activas e inactivas).
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, envuelta en {@link UsuarioPageResponse}
+     */
     @Cacheable(value = RedisCacheConfig.CACHE_USUARIOS, key = &quot;#pageable.pageNumber + '-' + #pageable.pageSize&quot;)
     @Transactional(readOnly = true)
     public UsuarioPageResponse&lt;UsuarioResponse&gt; listar(Pageable pageable) {
-<span class="fc" id="L49">        Page&lt;Usuario&gt; page = usuarioRepository.findByActivoTrue(pageable);</span>
-<span class="fc" id="L50">        var content = page.getContent().stream().map(this::toResponse).toList();</span>
-<span class="fc" id="L51">        return new UsuarioPageResponse&lt;&gt;(</span>
+<span class="fc" id="L62">        Page&lt;Usuario&gt; page = usuarioRepository.findAll(pageable);</span>
+<span class="fc" id="L63">        var content = page.getContent().stream().map(this::toResponse).toList();</span>
+<span class="fc" id="L64">        return new UsuarioPageResponse&lt;&gt;(</span>
                 content,
-<span class="fc" id="L53">                page.getNumber(),</span>
-<span class="fc" id="L54">                page.getSize(),</span>
-<span class="fc" id="L55">                page.getTotalElements(),</span>
-<span class="fc" id="L56">                page.getTotalPages()</span>
+<span class="fc" id="L66">                page.getNumber(),</span>
+<span class="fc" id="L67">                page.getSize(),</span>
+<span class="fc" id="L68">                page.getTotalElements(),</span>
+<span class="fc" id="L69">                page.getTotalPages()</span>
         );
     }
 
+    /**
+     * Busca una cuenta activa por su identificador.
+     *
+     * @param id identificador de la cuenta
+     * @return la cuenta encontrada
+     * @throws RecursoNoEncontradoException si no existe o está inactivada
+     */
     @Transactional(readOnly = true)
     public UsuarioResponse buscarPorId(Long id) {
-<span class="fc" id="L62">        Usuario u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)</span>
-<span class="pc" id="L63">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
-<span class="nc" id="L64">        return toResponse(u);</span>
+<span class="fc" id="L82">        Usuario u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)</span>
+<span class="pc" id="L83">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+<span class="nc" id="L84">        return toResponse(u);</span>
  }
 
+    /**
+     * Crea una cuenta para una persona ya registrada. Si se indica rol, se
+     * valida contra la ficha de dominio activa de la persona y, tras guardar,
+     * se revincula esa ficha si estaba sin cuenta.
+     *
+     * @param request datos de la cuenta ({@code idPersona}, {@code username},
+     *                {@code password}, {@code idEstadoGeneral}, {@code rol}
+     *                opcional)
+     * @return la cuenta creada
+     * @throws IllegalArgumentException     si falta la contraseña, si el
+     *                                      {@code username} ya existe o si el
+     *                                      rol no es coherente con la ficha
+     * @throws RecursoNoEncontradoException si la persona o el estado no existen
+     */
     // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
-    // no tiene cache propia todavia): sin evictar esas listas quedarian con
-    // el dato viejo -sin cuenta vinculada- hasta que expire el TTL.
+    // no tiene caché propia todavía): sin evictar esas listas quedarían con el
+    // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
             @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
     })
-    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;)
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;,
+            descripcionSpel = &quot;'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'&quot;)
     @Transactional
     public UsuarioResponse crear(UsuarioRequest request) {
-<span class="pc bpc" id="L78" title="1 of 4 branches missed.">        if (request.password() == null || request.password().isBlank()) {</span>
-<span class="fc" id="L79">            throw new IllegalArgumentException(&quot;La contraseña es obligatoria&quot;);</span>
+<span class="pc bpc" id="L113" title="1 of 4 branches missed.">        if (request.password() == null || request.password().isBlank()) {</span>
+<span class="fc" id="L114">            throw new IllegalArgumentException(&quot;La contraseña es obligatoria&quot;);</span>
         }
-<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (usuarioRepository.existsByUsername(request.username())) {</span>
-<span class="fc" id="L82">            throw new IllegalArgumentException(&quot;El nombre de usuario ya se encuentra registrado&quot;);</span>
-        }
-
-<span class="fc" id="L85">        Persona persona = personaRepository.findById(request.idPersona())</span>
-<span class="fc" id="L86">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
-
-<span class="fc" id="L88">        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
-<span class="pc" id="L89">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
-
-<span class="fc" id="L91">        Usuario.UsuarioBuilder builder = Usuario.builder()</span>
-<span class="fc" id="L92">                .persona(persona)</span>
-<span class="fc" id="L93">                .estadoGeneral(estado)</span>
-<span class="fc" id="L94">                .username(request.username())</span>
-<span class="fc" id="L95">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L96">                .activo(true);</span>
-
-<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (request.rol() != null) {</span>
-<span class="fc" id="L99">            validarRolCoherente(request.idPersona(), request.rol());</span>
-<span class="fc" id="L100">            builder.roles(Set.of(buscarRol(request.rol())));</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {</span>
+<span class="fc" id="L117">            throw new IllegalArgumentException(&quot;El nombre de usuario ya se encuentra registrado&quot;);</span>
         }
 
-<span class="fc" id="L103">        Usuario usuario = usuarioRepository.save(builder.build());</span>
+<span class="fc" id="L120">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="fc" id="L121">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
 
-<span class="fc bfc" id="L105" title="All 2 branches covered.">        if (request.rol() != null) {</span>
-<span class="fc" id="L106">            vincularFichaExistente(request.idPersona(), request.rol(), usuario);</span>
+<span class="fc" id="L123">        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
+<span class="pc" id="L124">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
+
+<span class="fc" id="L126">        Usuario.UsuarioBuilder builder = Usuario.builder()</span>
+<span class="fc" id="L127">                .persona(persona)</span>
+<span class="fc" id="L128">                .estadoGeneral(estado)</span>
+<span class="fc" id="L129">                .username(request.username())</span>
+<span class="fc" id="L130">                .password_Hash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L131">                .activo(true);</span>
+
+<span class="fc bfc" id="L133" title="All 2 branches covered.">        if (request.rol() != null) {</span>
+<span class="fc" id="L134">            validarRolCoherente(request.idPersona(), request.rol());</span>
+<span class="fc" id="L135">            builder.roles(Set.of(buscarRol(request.rol())));</span>
         }
 
-<span class="fc" id="L109">        return toResponse(usuario);</span>
+<span class="fc" id="L138">        Usuario usuario = usuarioRepository.save(builder.build());</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (request.rol() != null) {</span>
+<span class="fc" id="L141">            vincularFichaExistente(request.idPersona(), request.rol(), usuario);</span>
+        }
+
+<span class="fc" id="L144">        return toResponse(usuario);</span>
     }
 
+    /**
+     * Actualiza una cuenta. La contraseña solo cambia si {@code request}
+     * trae una no vacía; el rol solo se revalida y reasigna si de verdad
+     * cambió.
+     *
+     * @param id      identificador de la cuenta a editar
+     * @param request datos nuevos
+     * @return la cuenta actualizada
+     * @throws RecursoNoEncontradoException si la cuenta, la persona o el
+     *                                      estado no existen
+     * @throws IllegalArgumentException     si el {@code username} nuevo ya
+     *                                      está ocupado o el rol no es
+     *                                      coherente con la ficha
+     */
+    // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
+    // no tiene caché propia todavía): sin evictar esas listas quedarían con el
+    // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
             @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
     })
-    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;)
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;,
+            descripcionSpel = &quot;'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'&quot;)
     @Transactional
     public UsuarioResponse editar(Long id, UsuarioRequest request) {
-<span class="fc" id="L120">        Usuario usuario = usuarioRepository.findById(id)</span>
-<span class="pc" id="L121">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L173">        Usuario usuario = usuarioRepository.findById(id)</span>
+<span class="pc" id="L174">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
 
-<span class="pc bpc" id="L123" title="3 of 4 branches missed.">        if (!usuario.getUsername().equals(request.username()) &amp;&amp; usuarioRepository.existsByUsername(request.username())) {</span>
-<span class="nc" id="L124">            throw new IllegalArgumentException(&quot;El nombre de usuario ya está ocupado&quot;);</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (!usuario.getUsername().equalsIgnoreCase(request.username())</span>
+<span class="nc bnc" id="L177" title="All 2 branches missed.">                &amp;&amp; usuarioRepository.existsByUsernameIgnoreCase(request.username())) {</span>
+<span class="nc" id="L178">            throw new IllegalArgumentException(&quot;El nombre de usuario ya está ocupado&quot;);</span>
         }
 
-<span class="fc" id="L127">        Persona persona = personaRepository.findById(request.idPersona())</span>
-<span class="pc" id="L128">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
+<span class="fc" id="L181">        Persona persona = personaRepository.findById(request.idPersona())</span>
+<span class="pc" id="L182">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Persona no encontrada con id: &quot; + request.idPersona()));</span>
 
-<span class="fc" id="L130">        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
-<span class="pc" id="L131">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
+<span class="fc" id="L184">        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
+<span class="pc" id="L185">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
 
-<span class="fc" id="L133">        usuario.setPersona(persona);</span>
-<span class="fc" id="L134">        usuario.setEstadoGeneral(estado);</span>
-<span class="fc" id="L135">        usuario.setUsername(request.username());</span>
+<span class="fc" id="L187">        usuario.setPersona(persona);</span>
+<span class="fc" id="L188">        usuario.setEstadoGeneral(estado);</span>
+<span class="fc" id="L189">        usuario.setUsername(request.username());</span>
 
-        // password en blanco significa &quot;no cambiarla&quot; -- ver comentario en UsuarioRequest
-<span class="pc bpc" id="L138" title="1 of 4 branches missed.">        if (request.password() != null &amp;&amp; !request.password().isBlank()) {</span>
-<span class="fc" id="L139">            usuario.setPassword_Hash(passwordEncoder.encode(request.password()));</span>
+<span class="fc" id="L191">        actualizarPasswordSiCorresponde(usuario, request.password());</span>
+<span class="fc" id="L192">        actualizarRolSiCambio(usuario, persona, request.rol());</span>
+
+<span class="fc" id="L194">        usuario = usuarioRepository.save(usuario);</span>
+
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        if (request.rol() != null) {</span>
+<span class="fc" id="L197">            vincularFichaExistente(persona.getIdPersona(), request.rol(), usuario);</span>
         }
 
-<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (request.rol() != null) {</span>
-<span class="pc bpc" id="L143" title="1 of 2 branches missed.">            String rolActual = usuario.getRoles() == null ? null</span>
-<span class="fc" id="L144">                    : usuario.getRoles().stream().findFirst().map(Rol::getNombre).orElse(null);</span>
-<span class="pc bpc" id="L145" title="1 of 2 branches missed.">            if (!request.rol().equals(rolActual)) {</span>
-<span class="fc" id="L146">                validarRolCoherente(persona.getIdPersona(), request.rol());</span>
-                // HashSet mutable: Hibernate necesita poder mutar la coleccion
-                // ya administrada de este Usuario persistido -- Set.of() es
-                // inmutable y hace fallar el flush con UnsupportedOperationException.
-<span class="fc" id="L150">                usuario.setRoles(new java.util.HashSet&lt;&gt;(Set.of(buscarRol(request.rol()))));</span>
-            }
-        }
-
-<span class="fc" id="L154">        usuario = usuarioRepository.save(usuario);</span>
-
-<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (request.rol() != null) {</span>
-<span class="fc" id="L157">            vincularFichaExistente(persona.getIdPersona(), request.rol(), usuario);</span>
-        }
-
-<span class="fc" id="L160">        return toResponse(usuario);</span>
+<span class="fc" id="L200">        return toResponse(usuario);</span>
     }
 
-    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;)
+    /**
+     * Baja lógica de una cuenta ({@code activo = false}).
+     *
+     * @param id identificador de la cuenta
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'desactivó la cuenta de usuario #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L167">        Usuario usuario = usuarioRepository.findById(id)</span>
-<span class="pc" id="L168">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
-<span class="fc" id="L169">        usuario.setActivo(false);</span>
-<span class="fc" id="L170">        usuarioRepository.save(usuario);</span>
-<span class="fc" id="L171">    }</span>
+<span class="fc" id="L214">        Usuario usuario = usuarioRepository.findById(id)</span>
+<span class="pc" id="L215">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L216">        usuario.setActivo(false);</span>
+<span class="fc" id="L217">        usuarioRepository.save(usuario);</span>
+<span class="fc" id="L218">    }</span>
+
+    /**
+     * Reactiva una cuenta dada de baja ({@code activo = true}).
+     *
+     * @param id identificador de la cuenta
+     * @return la cuenta reactivada
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si la cuenta ya está activa
+     */
+    @Auditado(accion = &quot;REACTIVAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'reactivo la cuenta de usuario #' + #p0&quot;)
+    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @Transactional
+    public UsuarioResponse reactivar(Long id) {
+<span class="fc" id="L233">        Usuario usuario = usuarioRepository.findById(id)</span>
+<span class="fc" id="L234">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Usuario no encontrado con id: &quot; + id));</span>
+
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        if (Boolean.TRUE.equals(usuario.getActivo())) {</span>
+<span class="fc" id="L237">            throw new IllegalArgumentException(&quot;La cuenta ya se encuentra activa&quot;);</span>
+        }
+
+<span class="fc" id="L240">        usuario.setActivo(true);</span>
+<span class="fc" id="L241">        return toResponse(usuarioRepository.save(usuario));</span>
+    }
+
+    // R-09 (informe de evaluación de calidad): extraído de editar() para bajar
+    // su complejidad ciclomática. &quot;password en blanco&quot; significa &quot;no cambiarla&quot;.
+    private void actualizarPasswordSiCorresponde(Usuario usuario, String nuevaPassword) {
+<span class="pc bpc" id="L247" title="1 of 4 branches missed.">        if (nuevaPassword != null &amp;&amp; !nuevaPassword.isBlank()) {</span>
+<span class="fc" id="L248">            usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));</span>
+        }
+<span class="fc" id="L250">    }</span>
+
+    // R-09: ídem. Solo revalida y reasigna el rol si de verdad cambió; si el
+    // rol pedido es null (el formulario de edición no toca roles) o es el
+    // mismo que ya tiene, no hace nada.
+    private void actualizarRolSiCambio(Usuario usuario, Persona persona, String rolPedido) {
+<span class="fc bfc" id="L256" title="All 2 branches covered.">        if (rolPedido == null) {</span>
+<span class="fc" id="L257">            return;</span>
+        }
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">        String rolActual = usuario.getRoles() == null ? null</span>
+<span class="fc" id="L260">                : usuario.getRoles().stream().findFirst().map(Rol::getNombre).orElse(null);</span>
+<span class="pc bpc" id="L261" title="1 of 2 branches missed.">        if (!rolPedido.equals(rolActual)) {</span>
+<span class="fc" id="L262">            validarRolCoherente(persona.getIdPersona(), rolPedido);</span>
+            // HashSet mutable: Hibernate necesita poder mutar la colección ya
+            // administrada de este Usuario persistido. Set.of() es inmutable y
+            // hace fallar el flush con UnsupportedOperationException.
+<span class="fc" id="L266">            usuario.setRoles(new java.util.HashSet&lt;&gt;(Set.of(buscarRol(rolPedido))));</span>
+        }
+<span class="fc" id="L268">    }</span>
 
     private Rol buscarRol(String nombre) {
-<span class="fc" id="L174">        return rolRepository.findByNombre(nombre)</span>
-<span class="fc" id="L175">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + nombre));</span>
+<span class="fc" id="L271">        return rolRepository.findByNombre(nombre)</span>
+<span class="fc" id="L272">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + nombre));</span>
     }
 
     /**
-     * El rol de la cuenta debe coincidir con la ficha de dominio que ya
-     * tiene la persona: un estudiante no puede tener una cuenta de
-     * entrenador. Solo pesan las fichas ACTIVAS -- si a alguien le dieron
-     * de baja su ficha de entrenador queda libre para tomar otro rol, que
-     * es para lo que sirve la baja logica.
+     * El rol de la cuenta debe coincidir con la ficha de dominio que ya tiene
+     * la persona: un estudiante no puede tener una cuenta de entrenador. Solo
+     * pesan las fichas activas —si a alguien le dieron de baja su ficha de
+     * entrenador, queda libre para tomar otro rol—. Una persona sin ninguna
+     * ficha acepta cualquier rol: es necesario, porque el alta de un
+     * entrenador crea primero la cuenta con rol {@code ENTRENADOR} y después
+     * la ficha.
      *
-     * Una persona sin ninguna ficha acepta cualquier rol: no es una
-     * excepcion comoda, es necesaria. El alta de un entrenador crea
-     * primero la cuenta con rol ENTRENADOR y despues la ficha (el
-     * formulario de Entrenador solo aparece si ya hay Usuario); sin esta
-     * puerta no se podria crear ningun entrenador. De paso, ADMINISTRADOR
-     * y RECEPCIONISTA solo quedan asignables a personas sin ficha, que es
-     * lo correcto: no tienen ficha de dominio propia.
+     * @param idPersona persona cuya coherencia se valida
+     * @param rol       rol que se le quiere asignar a la cuenta
+     * @throws IllegalArgumentException si la persona tiene una ficha activa de
+     *                                  otro rol
      */
     private void validarRolCoherente(Long idPersona, String rol) {
-<span class="fc bfc" id="L194" title="All 2 branches covered.">        if (estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="fc bfc" id="L195" title="All 2 branches covered.">                &amp;&amp; !&quot;ESTUDIANTE&quot;.equals(rol)) {</span>
-<span class="fc" id="L196">            throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L290" title="All 2 branches covered.">        if (estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">                &amp;&amp; !&quot;ESTUDIANTE&quot;.equals(rol)) {</span>
+<span class="fc" id="L292">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de estudiante activa: su cuenta solo puede tener el rol ESTUDIANTE&quot;);
         }
-<span class="fc bfc" id="L199" title="All 2 branches covered.">        if (entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                &amp;&amp; !&quot;ENTRENADOR&quot;.equals(rol)) {</span>
-<span class="fc" id="L201">            throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">        if (entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">                &amp;&amp; !&quot;ENTRENADOR&quot;.equals(rol)) {</span>
+<span class="fc" id="L297">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de entrenador activa: su cuenta solo puede tener el rol ENTRENADOR&quot;);
         }
-<span class="fc bfc" id="L204" title="All 2 branches covered.">        if (representanteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="pc bpc" id="L205" title="1 of 2 branches missed.">                &amp;&amp; !&quot;REPRESENTANTE&quot;.equals(rol)) {</span>
-<span class="fc" id="L206">            throw new IllegalArgumentException(</span>
+<span class="fc bfc" id="L300" title="All 2 branches covered.">        if (representanteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">                &amp;&amp; !&quot;REPRESENTANTE&quot;.equals(rol)) {</span>
+<span class="fc" id="L302">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de representante activa: su cuenta solo puede tener el rol REPRESENTANTE&quot;);
         }
-<span class="fc" id="L209">    }</span>
+<span class="fc" id="L305">    }</span>
 
     /**
-     * Si la persona ya tenia una ficha de dominio activa creada ANTES que
-     * esta cuenta -caso tipico: alumno inscrito primero, acceso habilitado
-     * despues desde la pantalla de Personas del administrador-, la ficha
-     * queda sin vincular porque se creo con id_usuario nulo. Sin este
-     * respaldo la cuenta inicia sesion con normalidad pero cada endpoint
-     * &quot;propio&quot; (mi historial, marcar asistencia, mis sesiones, mis
+     * Si la persona ya tenía una ficha de dominio activa creada &lt;em&gt;antes&lt;/em&gt;
+     * que esta cuenta (caso típico: alumno inscrito primero, acceso habilitado
+     * después desde la pantalla de Personas), la ficha quedó con
+     * {@code id_usuario} nulo. Sin este respaldo la cuenta inicia sesión pero
+     * cada endpoint &quot;propio&quot; (mi historial, marcar asistencia, mis
      * representados) resuelve la ficha por username y no la encuentra.
-     * validarRolCoherente ya garantizo que, si existe una ficha, es de este
-     * mismo rol -- por eso alcanza con mirar el rol nuevo, sin repetir esa
-     * validacion aqui.
+     *
+     * @param idPersona persona dueña de la ficha
+     * @param rol       rol de la cuenta, que determina qué ficha buscar
+     * @param usuario   cuenta recién guardada a la que vincular la ficha
      */
     private void vincularFichaExistente(Long idPersona, String rol, Usuario usuario) {
-<span class="pc bpc" id="L224" title="2 of 4 branches missed.">        switch (rol) {</span>
-<span class="fc" id="L225">            case &quot;ESTUDIANTE&quot; -&gt; estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="pc bnc" id="L226" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
-<span class="pc" id="L227">                    .ifPresent(e -&gt; { e.setUsuario(usuario); estudianteRepository.save(e); });</span>
-<span class="fc" id="L228">            case &quot;ENTRENADOR&quot; -&gt; entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="pc bnc" id="L229" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
-<span class="pc" id="L230">                    .ifPresent(e -&gt; { e.setUsuario(usuario); entrenadorRepository.save(e); });</span>
-<span class="nc" id="L231">            case &quot;REPRESENTANTE&quot; -&gt; representanteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="nc bnc" id="L232" title="All 2 branches missed.">                    .filter(r -&gt; r.getUsuario() == null)</span>
-<span class="nc" id="L233">                    .ifPresent(r -&gt; { r.setUsuario(usuario); representanteRepository.save(r); });</span>
+<span class="pc bpc" id="L320" title="2 of 4 branches missed.">        switch (rol) {</span>
+<span class="fc" id="L321">            case &quot;ESTUDIANTE&quot; -&gt; estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="pc bnc" id="L322" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
+<span class="pc" id="L323">                    .ifPresent(e -&gt; { e.setUsuario(usuario); estudianteRepository.save(e); });</span>
+<span class="fc" id="L324">            case &quot;ENTRENADOR&quot; -&gt; entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="pc bnc" id="L325" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
+<span class="pc" id="L326">                    .ifPresent(e -&gt; { e.setUsuario(usuario); entrenadorRepository.save(e); });</span>
+<span class="nc" id="L327">            case &quot;REPRESENTANTE&quot; -&gt; representanteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="nc bnc" id="L328" title="All 2 branches missed.">                    .filter(r -&gt; r.getUsuario() == null)</span>
+<span class="nc" id="L329">                    .ifPresent(r -&gt; { r.setUsuario(usuario); representanteRepository.save(r); });</span>
             default -&gt; { }
         }
-<span class="fc" id="L236">    }</span>
+<span class="fc" id="L332">    }</span>
 
     private UsuarioResponse toResponse(Usuario u) {
-<span class="fc bfc" id="L239" title="All 2 branches covered.">        List&lt;String&gt; roles = u.getRoles() == null ? List.of()</span>
-<span class="fc" id="L240">                : u.getRoles().stream().map(Rol::getNombre).toList();</span>
-<span class="fc" id="L241">        return new UsuarioResponse(</span>
-<span class="fc" id="L242">                u.getIdUsuario(),</span>
-<span class="fc" id="L243">                u.getPersona().getIdPersona(),</span>
-<span class="fc" id="L244">                u.getPersona().getNombre(),</span>
-<span class="fc" id="L245">                u.getPersona().getApellido(),</span>
-<span class="fc" id="L246">                u.getPersona().getCorreo(),</span>
-<span class="fc" id="L247">                u.getEstadoGeneral().getIdEstadoGeneral(),</span>
-<span class="fc" id="L248">                u.getEstadoGeneral().getNombre(),</span>
-<span class="fc" id="L249">                u.getUsername(),</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">        List&lt;String&gt; roles = u.getRoles() == null ? List.of()</span>
+<span class="fc" id="L336">                : u.getRoles().stream().map(Rol::getNombre).toList();</span>
+<span class="fc" id="L337">        return new UsuarioResponse(</span>
+<span class="fc" id="L338">                u.getIdUsuario(),</span>
+<span class="fc" id="L339">                u.getPersona().getIdPersona(),</span>
+<span class="fc" id="L340">                u.getPersona().getNombre(),</span>
+<span class="fc" id="L341">                u.getPersona().getApellido(),</span>
+<span class="fc" id="L342">                u.getPersona().getCorreo(),</span>
+<span class="fc" id="L343">                u.getEstadoGeneral().getIdEstadoGeneral(),</span>
+<span class="fc" id="L344">                u.getEstadoGeneral().getNombre(),</span>
+<span class="fc" id="L345">                u.getUsername(),</span>
                 roles,
-<span class="fc" id="L251">                u.getUltimoAcceso(),</span>
-<span class="fc" id="L252">                u.getActivo(),</span>
-<span class="fc" id="L253">                u.getCreatedAt()</span>
+<span class="fc" id="L347">                u.getUltimoAcceso(),</span>
+<span class="fc" id="L348">                u.getActivo(),</span>
+<span class="fc" id="L349">                u.getCreatedAt()</span>
         );
     }
 }

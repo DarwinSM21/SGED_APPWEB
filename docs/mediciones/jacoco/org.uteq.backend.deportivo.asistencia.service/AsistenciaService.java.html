@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AsistenciaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.service</a> &gt; <span class="el_source">AsistenciaService.java</span></div><h1>AsistenciaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AsistenciaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.asistencia.service</a> &gt; <span class="el_source">AsistenciaService.java</span></div><h1>AsistenciaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.asistencia.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,106 +11,308 @@ import org.uteq.backend.academico.representante.service.NotificacionService;
 import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.AsistenciaResponse;
+import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.DiaAsistenciaResponse;
+import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MapaAsistenciaResponse;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MiHistorialResponse;
+import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.FilaNomina;
+import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.MarcaAsistencia;
+import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.NominaResponse;
+import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.PasarListaRequest;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Registra la asistencia del ESTUDIANTE autenticado. El token QR ya se
- * canjeo en el controller (AsistenciaQrController.marcar) antes de llamar
- * aqui; este servicio solo resuelve quien es el estudiante, decide
- * PRESENTE vs TARDE, y persiste.
+ * Asistencia a sesiones de entrenamiento por dos vías: el QR que marca el
+ * propio estudiante (mejor dato, con hora real) y la lista manual del
+ * entrenador. La lista manual es la última palabra sobre quién estuvo en la
+ * cancha y no inventa hora de llegada: hora presente ⇒ la midió el QR, hora
+ * vacía ⇒ es palabra del entrenador.
  */
 @Service
 @RequiredArgsConstructor
 public class AsistenciaService {
-
     private final AsistenciaRepository asistenciaRepository;
     private final EstudianteRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
     private final NotificacionService notificacionService;
 
+    /** Minutos de gracia tras la hora de inicio antes de contar TARDE. */
     @Value(&quot;${asistencia.tolerancia-tarde-minutos:10}&quot;)
     private int toleranciaTardeMinutos;
 
+    /**
+     * Registra la asistencia del estudiante autenticado tras un canjeo de QR
+     * ya validado en el controlador. Resuelve quién es el estudiante, decide
+     * {@code PRESENTE} vs {@code TARDE}, persiste y notifica a los
+     * representantes.
+     *
+     * @param username nombre de usuario del estudiante
+     * @param idSesion sesión a la que corresponde el token canjeado
+     * @return la asistencia registrada
+     * @throws RecursoNoEncontradoException si la cuenta no tiene estudiante
+     *                                      asociado o la sesión no existe
+     * @throws IllegalArgumentException     si ya marcó asistencia en esa
+     *                                      sesión o la sesión no es de su
+     *                                      categoría
+     */
     @Transactional
     public Asistencia marcarPorQr(String username, Long idSesion) {
-<span class="fc" id="L45">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
-<span class="fc" id="L46">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
+<span class="fc" id="L73">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L74">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
 
-<span class="fc" id="L48">        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())</span>
-<span class="fc" id="L49">                .ifPresent(a -&gt; {</span>
-<span class="fc" id="L50">                    throw new IllegalArgumentException(&quot;Ya marcaste tu asistencia en esta sesión&quot;);</span>
+<span class="fc" id="L76">        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())</span>
+<span class="fc" id="L77">                .ifPresent(a -&gt; {</span>
+<span class="fc" id="L78">                    throw new IllegalArgumentException(&quot;Ya marcaste tu asistencia en esta sesión&quot;);</span>
                 });
 
-<span class="fc" id="L53">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
-<span class="pc" id="L54">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Sesión no encontrada con id: &quot; + idSesion));</span>
+<span class="fc" id="L81">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
+<span class="pc" id="L82">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Sesión no encontrada con id: &quot; + idSesion));</span>
 
-<span class="fc" id="L56">        Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(</span>
-<span class="fc" id="L57">                estudiante.getIdEstudiante(), idSesion);</span>
-<span class="fc bfc" id="L58" title="All 4 branches covered.">        if (categoriaCoincide == null || !categoriaCoincide) {</span>
-<span class="fc" id="L59">            throw new IllegalArgumentException(&quot;Esta sesión no corresponde a tu categoría&quot;);</span>
+<span class="fc" id="L84">        Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(</span>
+<span class="fc" id="L85">                estudiante.getIdEstudiante(), idSesion);</span>
+<span class="fc bfc" id="L86" title="All 4 branches covered.">        if (categoriaCoincide == null || !categoriaCoincide) {</span>
+<span class="fc" id="L87">            throw new IllegalArgumentException(&quot;Esta sesión no corresponde a tu categoría&quot;);</span>
         }
 
-<span class="fc" id="L62">        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);</span>
-<span class="fc" id="L63">        Asistencia asistencia = Asistencia.builder()</span>
-<span class="fc" id="L64">                .sesion(sesion)</span>
-<span class="fc" id="L65">                .estudiante(estudiante)</span>
-<span class="fc" id="L66">                .horaEntrada(ahora)</span>
-<span class="fc" id="L67">                .metodo(Asistencia.METODO_QR)</span>
-<span class="fc" id="L68">                .estado(calcularEstado(sesion.getHoraInicio(), ahora))</span>
-<span class="fc" id="L69">                .build();</span>
+<span class="fc" id="L90">        LocalTime ahora = LocalTime.now(Zonas.ECUADOR).truncatedTo(ChronoUnit.SECONDS);</span>
+<span class="fc" id="L91">        Asistencia asistencia = Asistencia.builder()</span>
+<span class="fc" id="L92">                .sesion(sesion)</span>
+<span class="fc" id="L93">                .estudiante(estudiante)</span>
+<span class="fc" id="L94">                .horaEntrada(ahora)</span>
+<span class="fc" id="L95">                .metodo(Asistencia.METODO_QR)</span>
+<span class="fc" id="L96">                .estado(calcularEstado(sesion.getHoraInicio(), ahora))</span>
+<span class="fc" id="L97">                .build();</span>
 
-<span class="fc" id="L71">        asistencia = asistenciaRepository.save(asistencia);</span>
-<span class="fc" id="L72">        notificacionService.notificarAsistencia(estudiante, asistencia.getEstado());</span>
-<span class="fc" id="L73">        return asistencia;</span>
-    }
-
-    /** Sin hora_inicio programada no hay contra que medir la tardanza: PRESENTE. */
-    private String calcularEstado(LocalTime horaInicio, LocalTime ahora) {
-<span class="fc bfc" id="L78" title="All 2 branches covered.">        if (horaInicio == null) {</span>
-<span class="fc" id="L79">            return Asistencia.ESTADO_PRESENTE;</span>
-        }
-<span class="fc" id="L81">        LocalTime limite = horaInicio.plusMinutes(toleranciaTardeMinutos);</span>
-<span class="fc bfc" id="L82" title="All 2 branches covered.">        return ahora.isAfter(limite) ? Asistencia.ESTADO_TARDE : Asistencia.ESTADO_PRESENTE;</span>
+<span class="fc" id="L99">        asistencia = asistenciaRepository.save(asistencia);</span>
+<span class="fc" id="L100">        notificacionService.notificarAsistencia(estudiante, asistencia.getEstado());</span>
+<span class="fc" id="L101">        return asistencia;</span>
     }
 
     /**
-     * Historial propio del ESTUDIANTE autenticado. Antes solo podia marcar
-     * asistencia, no consultar lo que ya habia marcado.
+     * Nómina de la sesión: &lt;em&gt;todos&lt;/em&gt; los estudiantes activos de la
+     * categoría, con lo que ya esté registrado de cada uno. Se parte de la
+     * categoría y no de la tabla de asistencias porque el entrenador necesita
+     * ver a quién le falta marcar.
+     *
+     * @param idSesion identificador de la sesión
+     * @return la nómina, con el indicador de si aún es editable
+     * @throws RecursoNoEncontradoException si la sesión no existe
+     */
+    @Transactional(readOnly = true)
+    public NominaResponse nomina(Long idSesion) {
+<span class="fc" id="L116">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
+<span class="pc" id="L117">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Sesión no encontrada con id: &quot; + idSesion));</span>
+
+<span class="fc" id="L119">        Map&lt;Long, Asistencia&gt; yaRegistradas = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
+<span class="fc" id="L121">            yaRegistradas.put(a.getEstudiante().getIdEstudiante(), a);</span>
+<span class="fc" id="L122">        }</span>
+
+<span class="fc" id="L124">        List&lt;FilaNomina&gt; filas = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        for (Estudiante e : estudianteRepository</span>
+<span class="fc" id="L126">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(</span>
+<span class="fc" id="L127">                        sesion.getCategoria().getIdCategoria())) {</span>
+<span class="fc" id="L128">            Asistencia a = yaRegistradas.get(e.getIdEstudiante());</span>
+<span class="fc" id="L129">            filas.add(new FilaNomina(</span>
+<span class="fc" id="L130">                    e.getIdEstudiante(),</span>
+<span class="fc" id="L131">                    e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
+<span class="fc bfc" id="L132" title="All 2 branches covered.">                    a == null ? null : a.getEstado(),</span>
+<span class="fc bfc" id="L133" title="All 2 branches covered.">                    a == null ? null : a.getMetodo(),</span>
+<span class="fc bfc" id="L134" title="All 2 branches covered.">                    a == null ? null : a.getHoraEntrada(),</span>
+<span class="fc bfc" id="L135" title="All 2 branches covered.">                    a == null ? null : a.getObservacion()));</span>
+<span class="fc" id="L136">        }</span>
+
+<span class="fc" id="L138">        String motivo = motivoNoEditable(sesion);</span>
+<span class="fc" id="L139">        return new NominaResponse(idSesion, sesion.getCategoria().getNombre(), sesion.getFecha(),</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">                sesion.getHoraInicio(), motivo == null, motivo, filas);</span>
+    }
+
+    /**
+     * Lista manual del entrenador. Es un &lt;em&gt;upsert&lt;/em&gt; por
+     * {@code (sesión, estudiante)}: se puede volver a pasar lista para
+     * corregir, y sobrescribe incluso lo que vino por QR.
+     *
+     * @param idSesion identificador de la sesión
+     * @param request  estado y observación por estudiante
+     * @return la nómina resultante
+     * @throws RecursoNoEncontradoException si la sesión o algún estudiante no
+     *                                      existen
+     * @throws IllegalArgumentException     si la sesión aún no ocurrió o
+     *                                      algún estudiante no es de la
+     *                                      categoría de la sesión
+     */
+    @Transactional
+    public NominaResponse pasarLista(Long idSesion, PasarListaRequest request) {
+<span class="fc" id="L159">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
+<span class="pc" id="L160">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Sesión no encontrada con id: &quot; + idSesion));</span>
+
+<span class="fc" id="L162">        String motivo = motivoNoEditable(sesion);</span>
+<span class="fc bfc" id="L163" title="All 2 branches covered.">        if (motivo != null) {</span>
+<span class="fc" id="L164">            throw new IllegalArgumentException(motivo);</span>
+        }
+
+<span class="fc" id="L167">        Map&lt;Long, Asistencia&gt; existentes = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
+<span class="fc" id="L169">            existentes.put(a.getEstudiante().getIdEstudiante(), a);</span>
+<span class="fc" id="L170">        }</span>
+
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        for (MarcaAsistencia marca : request.marcas()) {</span>
+<span class="fc" id="L173">            Estudiante estudiante = estudianteRepository</span>
+<span class="fc" id="L174">                    .findByIdEstudianteAndActivoTrue(marca.idEstudiante())</span>
+<span class="pc" id="L175">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L176">                            &quot;Estudiante no encontrado o inactivo: &quot; + marca.idEstudiante()));</span>
+
+            // Un estudiante de otra categoría ensuciaría el porcentaje de
+            // asistencia de ambas. Se resuelve en Java (no con el procedimiento
+            // que usa el QR): pasar lista valida a los veinticinco de una
+            // categoría, y el procedimiento sería un N+1.
+<span class="fc" id="L182">            if (!estudiante.getCategoria().getIdCategoria()</span>
+<span class="fc bfc" id="L183" title="All 2 branches covered.">                    .equals(sesion.getCategoria().getIdCategoria())) {</span>
+<span class="fc" id="L184">                throw new IllegalArgumentException(estudiante.getPersona().getNombre() + &quot; &quot;</span>
+<span class="fc" id="L185">                        + estudiante.getPersona().getApellido() + &quot; no pertenece a &quot;</span>
+<span class="fc" id="L186">                        + sesion.getCategoria().getNombre());</span>
+            }
+
+<span class="fc bfc" id="L189" title="All 2 branches covered.">            boolean estuvo = Asistencia.ESTADO_PRESENTE.equals(marca.estado())</span>
+<span class="fc bfc" id="L190" title="All 2 branches covered.">                    || Asistencia.ESTADO_TARDE.equals(marca.estado());</span>
+
+<span class="fc" id="L192">            Asistencia a = existentes.get(marca.idEstudiante());</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">            if (a == null) {</span>
+<span class="fc" id="L194">                a = Asistencia.builder().sesion(sesion).estudiante(estudiante).build();</span>
+            }
+<span class="fc" id="L196">            a.setEstado(marca.estado());</span>
+<span class="fc" id="L197">            a.setObservacion(marca.observacion());</span>
+
+            // La lista manual NO inventa una hora de llegada: el entrenador
+            // afirma que el chico estuvo, no a qué hora entró.
+<span class="fc bfc" id="L201" title="All 2 branches covered.">            if (!estuvo) {</span>
+<span class="fc" id="L202">                a.setHoraEntrada(null);</span>
+<span class="fc" id="L203">                a.setMetodo(Asistencia.METODO_MANUAL);</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">            } else if (a.getHoraEntrada() == null) {</span>
+<span class="fc" id="L205">                a.setMetodo(Asistencia.METODO_MANUAL);</span>
+            }
+<span class="fc" id="L207">            asistenciaRepository.save(a);</span>
+<span class="fc" id="L208">        }</span>
+
+<span class="fc" id="L210">        return nomina(idSesion);</span>
+    }
+
+    // Una sesión que todavía no ocurrió no admite lista: nadie pudo asistir.
+    private String motivoNoEditable(SesionEntrenamiento sesion) {
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        if (sesion.getFecha().isAfter(LocalDate.now(Zonas.ECUADOR))) {</span>
+<span class="fc" id="L216">            return &quot;La sesión es del &quot; + sesion.getFecha() + &quot;: todavía no ocurre&quot;;</span>
+        }
+<span class="fc" id="L218">        return null;</span>
+    }
+
+    // Sin hora_inicio programada no hay contra qué medir la tardanza: PRESENTE.
+    private String calcularEstado(LocalTime horaInicio, LocalTime ahora) {
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        if (horaInicio == null) {</span>
+<span class="fc" id="L224">            return Asistencia.ESTADO_PRESENTE;</span>
+        }
+<span class="fc" id="L226">        LocalTime limite = horaInicio.plusMinutes(toleranciaTardeMinutos);</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">        return ahora.isAfter(limite) ? Asistencia.ESTADO_TARDE : Asistencia.ESTADO_PRESENTE;</span>
+    }
+
+    /**
+     * Historial de asistencia del estudiante autenticado, con su porcentaje
+     * de los últimos 30 días.
+     *
+     * @param username nombre de usuario del estudiante
+     * @return el historial y el porcentaje reciente
+     * @throws RecursoNoEncontradoException si la cuenta no tiene estudiante
+     *                                      asociado
      */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
-<span class="fc" id="L91">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
-<span class="fc" id="L92">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
+<span class="fc" id="L241">        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L242">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
 
-<span class="fc" id="L94">        List&lt;AsistenciaResponse&gt; asistencias = asistenciaRepository</span>
-<span class="fc" id="L95">                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())</span>
-<span class="fc" id="L96">                .getContent().stream()</span>
-<span class="fc" id="L97">                .map(this::aResponse)</span>
-<span class="fc" id="L98">                .toList();</span>
+<span class="fc" id="L244">        List&lt;AsistenciaResponse&gt; asistencias = asistenciaRepository</span>
+<span class="fc" id="L245">                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())</span>
+<span class="fc" id="L246">                .getContent().stream()</span>
+<span class="fc" id="L247">                .map(this::aResponse)</span>
+<span class="fc" id="L248">                .toList();</span>
 
-<span class="fc" id="L100">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
-<span class="fc" id="L101">        BigDecimal porcentaje = asistenciaRepository</span>
-<span class="fc" id="L102">                .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);</span>
+<span class="fc" id="L250">        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L251">        BigDecimal porcentaje = asistenciaRepository</span>
+<span class="fc" id="L252">                .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);</span>
 
-<span class="fc" id="L104">        return new MiHistorialResponse(asistencias, porcentaje);</span>
+<span class="fc" id="L254">        return new MiHistorialResponse(asistencias, porcentaje);</span>
     }
 
     private AsistenciaResponse aResponse(Asistencia a) {
-<span class="fc" id="L108">        return new AsistenciaResponse(</span>
-<span class="fc" id="L109">                a.getIdAsistencia(),</span>
-<span class="fc" id="L110">                a.getSesion().getFecha(),</span>
-<span class="fc" id="L111">                a.getSesion().getCategoria().getNombre(),</span>
-<span class="fc" id="L112">                a.getHoraEntrada(),</span>
-<span class="fc" id="L113">                a.getEstado());</span>
+<span class="fc" id="L258">        return new AsistenciaResponse(</span>
+<span class="fc" id="L259">                a.getIdAsistencia(),</span>
+<span class="fc" id="L260">                a.getSesion().getFecha(),</span>
+<span class="fc" id="L261">                a.getSesion().getCategoria().getNombre(),</span>
+<span class="fc" id="L262">                a.getHoraEntrada(),</span>
+<span class="fc" id="L263">                a.getEstado());</span>
+    }
+
+    /**
+     * Mapa de asistencia de los últimos {@code dias} días. Solo devuelve los
+     * días que tuvieron entrenamiento; el corte es ayer, porque la sesión de
+     * hoy puede no haber ocurrido todavía.
+     *
+     * @param dias ventana solicitada; se acota a {@code [7, 120]}
+     * @return la serie diaria, el promedio y los días mejor y peor
+     */
+    @Transactional(readOnly = true)
+    public MapaAsistenciaResponse mapaDeAsistencia(int dias) {
+<span class="fc" id="L276">        int ventana = Math.max(7, Math.min(dias, 120));</span>
+<span class="fc" id="L277">        LocalDate hasta = LocalDate.now(Zonas.ECUADOR).minusDays(1);</span>
+<span class="fc" id="L278">        LocalDate desde = hasta.minusDays(ventana - 1L);</span>
+
+<span class="fc" id="L280">        Map&lt;LocalDate, long[]&gt; porDia = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">        for (Object[] fila : sesionRepository.resumenAsistenciaPorDia(desde, hasta)) {</span>
+<span class="fc" id="L282">            LocalDate fecha = (LocalDate) fila[0];</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">            long presentes = fila[1] == null ? 0L : ((Number) fila[1]).longValue();</span>
+<span class="pc bpc" id="L284" title="1 of 2 branches missed.">            long esperados = fila[2] == null ? 0L : ((Number) fila[2]).longValue();</span>
+<span class="fc" id="L285">            long[] acumulado = porDia.computeIfAbsent(fecha, f -&gt; new long[2]);</span>
+<span class="fc" id="L286">            acumulado[0] += presentes;</span>
+<span class="fc" id="L287">            acumulado[1] += esperados;</span>
+<span class="fc" id="L288">        }</span>
+
+<span class="fc" id="L290">        List&lt;DiaAsistenciaResponse&gt; diasConEntrenamiento = new ArrayList&lt;&gt;(porDia.size());</span>
+<span class="fc" id="L291">        porDia.forEach((fecha, acumulado) -&gt; diasConEntrenamiento.add(new DiaAsistenciaResponse(</span>
+<span class="fc" id="L292">                fecha, acumulado[0], acumulado[1], porcentaje(acumulado[0], acumulado[1]))));</span>
+<span class="fc" id="L293">        diasConEntrenamiento.sort(Comparator.comparing(DiaAsistenciaResponse::fecha));</span>
+
+<span class="fc" id="L295">        List&lt;DiaAsistenciaResponse&gt; medibles = diasConEntrenamiento.stream()</span>
+<span class="pc bpc" id="L296" title="1 of 2 branches missed.">                .filter(d -&gt; d.esperados() &gt; 0)</span>
+<span class="fc" id="L297">                .toList();</span>
+
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        BigDecimal promedio = medibles.isEmpty() ? BigDecimal.ZERO</span>
+<span class="fc" id="L300">                : medibles.stream()</span>
+<span class="fc" id="L301">                        .map(DiaAsistenciaResponse::porcentaje)</span>
+<span class="fc" id="L302">                        .reduce(BigDecimal.ZERO, BigDecimal::add)</span>
+<span class="fc" id="L303">                        .divide(BigDecimal.valueOf(medibles.size()), 2, RoundingMode.HALF_UP);</span>
+
+<span class="fc" id="L305">        return new MapaAsistenciaResponse(</span>
+                desde, hasta, diasConEntrenamiento, promedio,
+<span class="fc" id="L307">                medibles.stream().max(Comparator.comparing(DiaAsistenciaResponse::porcentaje)).orElse(null),</span>
+<span class="fc" id="L308">                medibles.stream().min(Comparator.comparing(DiaAsistenciaResponse::porcentaje)).orElse(null));</span>
+    }
+
+    private BigDecimal porcentaje(long presentes, long esperados) {
+<span class="pc bpc" id="L312" title="1 of 2 branches missed.">        if (esperados &lt;= 0) return BigDecimal.ZERO;</span>
+<span class="fc" id="L313">        return BigDecimal.valueOf(presentes)</span>
+<span class="fc" id="L314">                .multiply(BigDecimal.valueOf(100))</span>
+<span class="fc" id="L315">                .divide(BigDecimal.valueOf(esperados), 2, RoundingMode.HALF_UP);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

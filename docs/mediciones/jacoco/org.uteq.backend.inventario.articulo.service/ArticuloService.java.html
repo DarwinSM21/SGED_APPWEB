@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArticuloService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.articulo.service</a> &gt; <span class="el_source">ArticuloService.java</span></div><h1>ArticuloService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.articulo.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArticuloService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.articulo.service</a> &gt; <span class="el_source">ArticuloService.java</span></div><h1>ArticuloService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.articulo.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -13,96 +13,169 @@ import org.uteq.backend.inventario.articulo.repository.ArticuloRepository;
 
 import java.util.List;
 
+/**
+ * Lógica de negocio del catálogo de artículos de inventario. El
+ * {@code stockActual} no se modifica aquí: solo por movimientos de stock o
+ * asignaciones. Las bajas son lógicas ({@code activo = false}).
+ */
 @Service
 @RequiredArgsConstructor
 public class ArticuloService {
 
     private final ArticuloRepository articuloRepository;
 
+    /**
+     * Lista paginada de artículos.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, mapeada a {@link ArticuloResponse}
+     */
     @Transactional(readOnly = true)
     public Page&lt;ArticuloResponse&gt; listarPaginado(Pageable pageable) {
-<span class="fc" id="L24">        return articuloRepository.findByActivoTrue(pageable).map(this::toResponse);</span>
+<span class="fc" id="L35">        return articuloRepository.findAll(pageable).map(this::toResponse);</span>
     }
 
+    /**
+     * Lista completa de artículos activos, sin paginar.
+     *
+     * @return todos los artículos activos
+     */
     @Transactional(readOnly = true)
     public List&lt;ArticuloResponse&gt; listarActivos() {
-<span class="nc" id="L29">        return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();</span>
+<span class="nc" id="L45">        return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();</span>
     }
 
+    /**
+     * Busca un artículo por su identificador.
+     *
+     * @param id identificador del artículo
+     * @return el artículo encontrado
+     * @throws RecursoNoEncontradoException si no existe
+     */
     @Transactional(readOnly = true)
     public ArticuloResponse buscarPorId(Long id) {
-<span class="nc" id="L34">        return toResponse(buscarEntidad(id));</span>
+<span class="nc" id="L57">        return toResponse(buscarEntidad(id));</span>
     }
 
-    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;)
+    /**
+     * Crea un artículo con {@code stockActual} en 0.
+     *
+     * @param request datos del artículo
+     * @return el artículo creado
+     */
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;,
+            descripcionSpel = &quot;'creó el artículo ' + #result.nombre&quot;)
     @Transactional
     public ArticuloResponse crear(ArticuloRequest request) {
-<span class="fc" id="L40">        Articulo articulo = Articulo.builder()</span>
-<span class="fc" id="L41">                .nombre(request.nombre())</span>
-<span class="fc" id="L42">                .tipo(request.tipo())</span>
-<span class="fc" id="L43">                .talla(request.talla())</span>
-<span class="fc" id="L44">                .descripcion(request.descripcion())</span>
-<span class="fc" id="L45">                .stockActual(0)</span>
-<span class="fc" id="L46">                .stockMinimo(request.stockMinimo())</span>
-<span class="pc bpc" id="L47" title="3 of 4 branches missed.">                .unidadMedida(request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()</span>
-<span class="pc" id="L48">                        ? request.unidadMedida() : &quot;unidad&quot;)</span>
-<span class="fc" id="L49">                .activo(true)</span>
-<span class="fc" id="L50">                .build();</span>
+<span class="fc" id="L70">        Articulo articulo = Articulo.builder()</span>
+<span class="fc" id="L71">                .nombre(request.nombre())</span>
+<span class="fc" id="L72">                .tipo(request.tipo())</span>
+<span class="fc" id="L73">                .talla(request.talla())</span>
+<span class="fc" id="L74">                .descripcion(request.descripcion())</span>
+<span class="fc" id="L75">                .stockActual(0)</span>
+<span class="fc" id="L76">                .stockMinimo(request.stockMinimo())</span>
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">                .unidadMedida(request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()</span>
+<span class="fc" id="L78">                        ? request.unidadMedida() : &quot;unidad&quot;)</span>
+<span class="fc" id="L79">                .activo(true)</span>
+<span class="fc" id="L80">                .build();</span>
 
-<span class="fc" id="L52">        return toResponse(articuloRepository.save(articulo));</span>
+<span class="fc" id="L82">        return toResponse(articuloRepository.save(articulo));</span>
     }
 
-    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;)
+    /**
+     * Actualiza los datos de un artículo (no el stock).
+     *
+     * @param id      identificador del artículo a editar
+     * @param request datos nuevos
+     * @return el artículo actualizado
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;,
+            descripcionSpel = &quot;'editó el artículo ' + #result.nombre&quot;)
     @Transactional
     public ArticuloResponse editar(Long id, ArticuloRequest request) {
-<span class="fc" id="L58">        Articulo articulo = buscarEntidad(id);</span>
+<span class="fc" id="L97">        Articulo articulo = buscarEntidad(id);</span>
 
-<span class="fc" id="L60">        articulo.setNombre(request.nombre());</span>
-<span class="fc" id="L61">        articulo.setTipo(request.tipo());</span>
-<span class="fc" id="L62">        articulo.setTalla(request.talla());</span>
-<span class="fc" id="L63">        articulo.setDescripcion(request.descripcion());</span>
-<span class="fc" id="L64">        articulo.setStockMinimo(request.stockMinimo());</span>
-<span class="pc bpc" id="L65" title="2 of 4 branches missed.">        if (request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()) {</span>
-<span class="fc" id="L66">            articulo.setUnidadMedida(request.unidadMedida());</span>
+<span class="fc" id="L99">        articulo.setNombre(request.nombre());</span>
+<span class="fc" id="L100">        articulo.setTipo(request.tipo());</span>
+<span class="fc" id="L101">        articulo.setTalla(request.talla());</span>
+<span class="fc" id="L102">        articulo.setDescripcion(request.descripcion());</span>
+<span class="fc" id="L103">        articulo.setStockMinimo(request.stockMinimo());</span>
+<span class="pc bpc" id="L104" title="1 of 4 branches missed.">        if (request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()) {</span>
+<span class="fc" id="L105">            articulo.setUnidadMedida(request.unidadMedida());</span>
         }
 
-<span class="fc" id="L69">        return toResponse(articuloRepository.save(articulo));</span>
+<span class="fc" id="L108">        return toResponse(articuloRepository.save(articulo));</span>
     }
 
-    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;)
+    /**
+     * Baja lógica de un artículo ({@code activo = false}).
+     *
+     * @param id identificador del artículo
+     * @throws RecursoNoEncontradoException si no existe
+     */
+    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'desactivó el artículo #' + #p0&quot;)
     @Transactional
     public void eliminar(Long id) {
-<span class="fc" id="L75">        Articulo articulo = buscarEntidad(id);</span>
-<span class="fc" id="L76">        articulo.setActivo(false);</span>
-<span class="fc" id="L77">        articuloRepository.save(articulo);</span>
-<span class="fc" id="L78">    }</span>
+<span class="fc" id="L121">        Articulo articulo = buscarEntidad(id);</span>
+<span class="fc" id="L122">        articulo.setActivo(false);</span>
+<span class="fc" id="L123">        articuloRepository.save(articulo);</span>
+<span class="fc" id="L124">    }</span>
 
+    /**
+     * Reactiva un artículo dado de baja.
+     *
+     * @param id identificador del artículo
+     * @return el artículo reactivado
+     * @throws RecursoNoEncontradoException si no existe
+     * @throws IllegalArgumentException     si ya está activo
+     */
+    @Auditado(accion = &quot;REACTIVAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'reactivo el articulo #' + #p0&quot;)
+    @Transactional
+    public ArticuloResponse reactivar(Long id) {
+<span class="fc" id="L138">        Articulo articulo = buscarEntidad(id);</span>
+
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (Boolean.TRUE.equals(articulo.getActivo())) {</span>
+<span class="fc" id="L141">            throw new IllegalArgumentException(&quot;El articulo ya se encuentra activo&quot;);</span>
+        }
+
+<span class="fc" id="L144">        articulo.setActivo(true);</span>
+<span class="fc" id="L145">        return toResponse(articuloRepository.save(articulo));</span>
+    }
+
+    /**
+     * Artículos en o por debajo de su stock mínimo.
+     *
+     * @return el total y el listado de artículos en stock bajo
+     */
     @Transactional(readOnly = true)
     public StockBajoResponse stockBajo() {
-<span class="fc" id="L82">        List&lt;ArticuloResponse&gt; articulos = articuloRepository.findConStockBajo().stream()</span>
-<span class="fc" id="L83">                .map(this::toResponse)</span>
-<span class="fc" id="L84">                .toList();</span>
-<span class="fc" id="L85">        Long total = articuloRepository.contarStockBajo();</span>
-<span class="pc bpc" id="L86" title="1 of 2 branches missed.">        return new StockBajoResponse(total != null ? total : 0L, articulos);</span>
+<span class="fc" id="L155">        List&lt;ArticuloResponse&gt; articulos = articuloRepository.findConStockBajo().stream()</span>
+<span class="fc" id="L156">                .map(this::toResponse)</span>
+<span class="fc" id="L157">                .toList();</span>
+<span class="fc" id="L158">        Long total = articuloRepository.contarStockBajo();</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        return new StockBajoResponse(total != null ? total : 0L, articulos);</span>
     }
 
     private Articulo buscarEntidad(Long id) {
-<span class="fc" id="L90">        return articuloRepository.findById(id)</span>
-<span class="fc" id="L91">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Artículo no encontrado con ID: &quot; + id));</span>
+<span class="fc" id="L163">        return articuloRepository.findById(id)</span>
+<span class="fc" id="L164">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Artículo no encontrado con ID: &quot; + id));</span>
     }
 
     private ArticuloResponse toResponse(Articulo a) {
-<span class="fc" id="L95">        return new ArticuloResponse(</span>
-<span class="fc" id="L96">                a.getIdArticulo(),</span>
-<span class="fc" id="L97">                a.getNombre(),</span>
-<span class="fc" id="L98">                a.getTipo(),</span>
-<span class="fc" id="L99">                a.getTalla(),</span>
-<span class="fc" id="L100">                a.getDescripcion(),</span>
-<span class="fc" id="L101">                a.getStockActual(),</span>
-<span class="fc" id="L102">                a.getStockMinimo(),</span>
-<span class="fc" id="L103">                a.getUnidadMedida(),</span>
-<span class="fc" id="L104">                a.getActivo(),</span>
-<span class="fc" id="L105">                a.getCreatedAt()</span>
+<span class="fc" id="L168">        return new ArticuloResponse(</span>
+<span class="fc" id="L169">                a.getIdArticulo(),</span>
+<span class="fc" id="L170">                a.getNombre(),</span>
+<span class="fc" id="L171">                a.getTipo(),</span>
+<span class="fc" id="L172">                a.getTalla(),</span>
+<span class="fc" id="L173">                a.getDescripcion(),</span>
+<span class="fc" id="L174">                a.getStockActual(),</span>
+<span class="fc" id="L175">                a.getStockMinimo(),</span>
+<span class="fc" id="L176">                a.getUnidadMedida(),</span>
+<span class="fc" id="L177">                a.getActivo(),</span>
+<span class="fc" id="L178">                a.getCreatedAt()</span>
         );
     }
 }

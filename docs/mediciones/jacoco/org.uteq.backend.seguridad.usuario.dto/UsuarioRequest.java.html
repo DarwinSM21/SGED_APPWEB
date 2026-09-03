@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.dto</a> &gt; <span class="el_source">UsuarioRequest.java</span></div><h1>UsuarioRequest.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.dto;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UsuarioRequest.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.dto</a> &gt; <span class="el_source">UsuarioRequest.java</span></div><h1>UsuarioRequest.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -9,20 +9,7 @@ import jakarta.validation.constraints.Size;
         @NotNull(message = &quot;El ID de estado general es obligatorio&quot;) Long idEstadoGeneral,
         @NotBlank(message = &quot;El nombre de usuario es obligatorio&quot;)
         @Size(min = 4, max = 50, message = &quot;El username debe tener entre 4 y 50 caracteres&quot;) String username,
-        /**
-         * Opcional al editar: en blanco significa &quot;no cambiar la contraseña
-         * actual&quot;. Obligatoria al crear (validado a mano en
-         * UsuarioService.crear, ya que @NotBlank no puede depender de si es
-         * alta o edicion en el mismo DTO). @Size es null-safe: no dispara si
-         * el valor es null.
-         */
         @Size(min = 6, message = &quot;La contraseña debe tener al menos 6 caracteres&quot;) String password,
-        /**
-         * Opcional. Si viene, se valida contra seguridad.roles y se asigna al
-         * crear (mismo criterio que AuthController.registro, pero sin forzar
-         * una Persona nueva). Si es null, el usuario queda sin rol -- caso de
-         * edicion, que no toca los roles existentes.
-         */
         String rol
 ) {}
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

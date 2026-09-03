@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.controller</a> &gt; <span class="el_source">CategoriaController.java</span></div><h1>CategoriaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.controller</a> &gt; <span class="el_source">CategoriaController.java</span></div><h1>CategoriaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -15,53 +15,115 @@ import org.uteq.backend.deportivo.categoria.service.CategoriaService;
 import java.util.List;
 
 /**
- * CRUD del catalogo de categorias. La lectura la necesitan todos los roles
- * (el formulario de estudiante ofrece las categorias activas); la escritura
- * altera un catalogo del que dependen los estudiantes por clave foranea, y
- * queda restringida a ADMINISTRADOR.
+ * CRUD del catálogo de categorías. La lectura la necesitan todos los roles
+ * (el formulario de estudiante ofrece las categorías activas); la escritura
+ * altera un catálogo del que dependen los estudiantes por clave foránea y
+ * queda restringida a {@code ADMINISTRADOR}.
  */
 @RestController
 @RequestMapping(&quot;/api/categorias&quot;)
 @RequiredArgsConstructor
 public class CategoriaController {
-
     private final CategoriaService categoriaService;
 
+    /**
+     * Lista paginada de categorías activas.
+     *
+     * @param pageable paginación y orden
+     * @return {@code 200 OK} con la página
+     */
     @GetMapping
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;Page&lt;CategoriaResponse&gt;&gt; listarPaginado(Pageable pageable) {
-<span class="fc" id="L33">        return ResponseEntity.ok(categoriaService.listarPaginado(pageable));</span>
+<span class="fc" id="L38">        return ResponseEntity.ok(categoriaService.listarPaginado(pageable));</span>
     }
 
+    /**
+     * Lista completa de categorías activas, sin paginar (para desplegables).
+     *
+     * @return {@code 200 OK} con todas las categorías activas
+     */
     @GetMapping(&quot;/activas&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
     public ResponseEntity&lt;List&lt;CategoriaResponse&gt;&gt; listarActivas() {
-<span class="fc" id="L39">        return ResponseEntity.ok(categoriaService.listarTodasActivas());</span>
+<span class="fc" id="L49">        return ResponseEntity.ok(categoriaService.listarTodasActivas());</span>
     }
 
+    /**
+     * Busca una categoría por su identificador.
+     *
+     * @param id identificador de la categoría
+     * @return {@code 200 OK} con la categoría
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @GetMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; buscarPorId(@PathVariable Long id) {
-<span class="nc" id="L45">        return ResponseEntity.ok(categoriaService.buscarPorId(id));</span>
+<span class="nc" id="L63">        return ResponseEntity.ok(categoriaService.buscarPorId(id));</span>
     }
 
+    /**
+     * Crea una categoría (el nombre se normaliza a {@code SUB-&lt;edad&gt;}).
+     *
+     * @param request nombre, rango de edad y descripción; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con la categoría creada
+     * @throws IllegalArgumentException si el nombre ya existe o el rango de
+     *                                  edad es inválido ({@code 422})
+     */
     @PostMapping
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; crear(@Valid @RequestBody CategoriaRequest request) {
-<span class="fc" id="L51">        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crear(request));</span>
+<span class="fc" id="L78">        return ResponseEntity.status(HttpStatus.CREATED).body(categoriaService.crear(request));</span>
     }
 
+    /**
+     * Actualiza una categoría.
+     *
+     * @param id      identificador de la categoría a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con la categoría actualizada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si el nombre pertenece a otra
+     *                                  categoría o el rango de edad es
+     *                                  inválido ({@code 422})
+     */
     @PutMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;CategoriaResponse&gt; editar(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
-<span class="fc" id="L57">        return ResponseEntity.ok(categoriaService.editar(id, request));</span>
+<span class="fc" id="L96">        return ResponseEntity.ok(categoriaService.editar(id, request));</span>
     }
 
+    /**
+     * Deshace una baja: vuelve a poner una categoría en circulación. Es un
+     * endpoint aparte porque reactivar es una decisión explícita.
+     *
+     * @param id identificador de la categoría
+     * @return {@code 200 OK} con la categoría reactivada
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
+    @PostMapping(&quot;/{id}/reactivar&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;CategoriaResponse&gt; reactivar(@PathVariable Long id) {
+<span class="nc" id="L111">        return ResponseEntity.ok(categoriaService.reactivar(id));</span>
+    }
+
+    /**
+     * Baja lógica de una categoría.
+     *
+     * @param id identificador de la categoría
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     *         si no existe ({@code 404})
+     */
     @DeleteMapping(&quot;/{id}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;Void&gt; eliminar(@PathVariable Long id) {
-<span class="fc" id="L63">        categoriaService.eliminar(id);</span>
-<span class="fc" id="L64">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L125">        categoriaService.eliminar(id);</span>
+<span class="fc" id="L126">        return ResponseEntity.noContent().build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

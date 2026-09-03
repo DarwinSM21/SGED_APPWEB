@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Usuario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.entity</a> &gt; <span class="el_source">Usuario.java</span></div><h1>Usuario.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.entity;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Usuario.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.usuario.entity</a> &gt; <span class="el_source">Usuario.java</span></div><h1>Usuario.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.usuario.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,6 +7,7 @@ import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.rol.entity.Rol;
 
 import java.time.OffsetDateTime;
+import java.util.Locale;
 import java.util.Set;
 
 @Entity
@@ -17,7 +18,6 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Usuario {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_usuario&quot;)
@@ -60,14 +60,22 @@ public class Usuario {
 
     @PrePersist
     protected void onCreate() {
-<span class="nc" id="L63">        this.createdAt = OffsetDateTime.now();</span>
-<span class="nc" id="L64">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="nc bnc" id="L65" title="All 2 branches missed.">        if (this.activo == null) this.activo = true;</span>
-<span class="nc" id="L66">    }</span>
+<span class="fc" id="L63">        this.createdAt = OffsetDateTime.now();</span>
+<span class="fc" id="L64">        this.updatedAt = OffsetDateTime.now();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (this.activo == null) this.activo = true;</span>
+<span class="fc" id="L66">        normalizarUsername();</span>
+<span class="fc" id="L67">    }</span>
 
     @PreUpdate
     protected void onUpdate() {
-<span class="nc" id="L70">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="nc" id="L71">    }</span>
+<span class="fc" id="L71">        this.updatedAt = OffsetDateTime.now();</span>
+<span class="fc" id="L72">        normalizarUsername();</span>
+<span class="fc" id="L73">    }</span>
+
+    private void normalizarUsername() {
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        if (this.username != null) {</span>
+<span class="fc" id="L77">            this.username = this.username.trim().toLowerCase(Locale.ROOT);</span>
+        }
+<span class="fc" id="L79">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

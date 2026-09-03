@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlineacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.partido.service</a> &gt; <span class="el_source">AlineacionService.java</span></div><h1>AlineacionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.partido.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
+import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
+import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
+import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.partido.dto.AlineacionDtos.GuardarAlineacionRequest;
+import org.uteq.backend.deportivo.partido.dto.AlineacionDtos.JugadorEnCancha;
+import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.AlineacionResponse;
+import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.FeedbackAlineacionResponse;
+import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.JugadorConvocado;
+import org.uteq.backend.deportivo.partido.entity.Partido;
+import org.uteq.backend.deportivo.partido.service.ConvocatoriaService.Convocatoria;
+import org.uteq.backend.deportivo.posicion.entity.Posicion;
+import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * El once con el que se jugó un partido. Convive con
+ * {@link ConvocatoriaService}, que calcula la &lt;b&gt;sugerencia&lt;/b&gt;: si el
+ * entrenador guardó una alineación se devuelve esa, si no, la sugerida. Así
+ * el historial sale gratis sin duplicar el cálculo ni congelar sugerencias
+ * que nadie usó. La sugerencia no se guarda nunca por su cuenta.
+ */
+@Service
+@RequiredArgsConstructor
+public class AlineacionService {
+    private final AlineacionRepository alineacionRepository;
+    private final EstudianteRepository estudianteRepository;
+    private final PosicionRepository posicionRepository;
+    private final LesionRepository lesionRepository;
+    private final ConvocatoriaService convocatoriaService;
+    private final PartidoService partidoService;
+
+    @Value(&quot;${plantilla.titulares:11}&quot;)
+    private int cupoTitulares;
+
+    /**
+     * Alineación de un partido: la guardada si existe, o la sugerencia del
+     * sistema.
+     *
+     * @param idPartido identificador del partido
+     * @return el once, con la bandera {@code guardada} y los jugadores
+     *         disponibles para cambios
+     * @throws RecursoNoEncontradoException si el partido no existe
+     */
+    @Transactional(readOnly = true)
+    public AlineacionResponse ver(Long idPartido) {
+<span class="fc" id="L64">        Convocatoria convocatoria = convocatoriaService.calcular(idPartido);</span>
+<span class="fc" id="L65">        return alineacionRepository.findByPartido_IdPartido(idPartido)</span>
+<span class="pc" id="L66">                .map(a -&gt; desdeGuardada(convocatoria, a))</span>
+<span class="fc" id="L67">                .orElseGet(() -&gt; desdeSugerencia(convocatoria));</span>
+    }
+
+    /**
+     * Guarda el once que el entrenador decidió. Reemplaza por completo el
+     * anterior en vez de mezclar. Se valida &lt;em&gt;todo&lt;/em&gt; antes de tocar la
+     * base: si algo falla, la alineación anterior queda intacta.
+     *
+     * @param idPartido identificador del partido
+     * @param request   jugadores, su puesto, valoración y observación
+     * @return el once guardado
+     * @throws RecursoNoEncontradoException si el partido, un estudiante o una
+     *                                      posición no existen
+     * @throws IllegalArgumentException     si el partido está cerrado, un
+     *                                      jugador aparece dos veces, no es
+     *                                      de la categoría, arrastra una
+     *                                      lesión activa, dos titulares
+     *                                      comparten puesto, o se superan los
+     *                                      titulares permitidos
+     */
+    @Transactional
+    public AlineacionResponse guardar(Long idPartido, GuardarAlineacionRequest request) {
+<span class="fc" id="L89">        Convocatoria convocatoria = convocatoriaService.calcular(idPartido);</span>
+<span class="fc" id="L90">        Partido partido = convocatoria.partido();</span>
+<span class="fc" id="L91">        partidoService.exigirAbierto(partido);</span>
+<span class="fc" id="L92">        Long idCategoria = partido.getCategoria().getIdCategoria();</span>
+
+<span class="fc" id="L94">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
+<span class="fc" id="L95">        Set&lt;Long&gt; vistos = new LinkedHashSet&lt;&gt;();</span>
+<span class="fc" id="L96">        Map&lt;Long, Long&gt; puestoOcupado = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L97">        int titulares = 0;</span>
+
+<span class="fc" id="L99">        List&lt;AlineacionJugador&gt; nuevos = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        for (JugadorEnCancha j : request.jugadores()) {</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">            if (!vistos.add(j.idEstudiante())) {</span>
+<span class="fc" id="L102">                throw new IllegalArgumentException(&quot;Un jugador no puede estar dos veces en la alineación&quot;);</span>
+            }
+
+<span class="fc" id="L105">            Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())</span>
+<span class="pc" id="L106">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L107">                            &quot;Estudiante no encontrado o inactivo: &quot; + j.idEstudiante()));</span>
+<span class="fc" id="L108">            String nombre = ConvocatoriaService.nombreDe(estudiante);</span>
+
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            Long categoriaDelJugador = estudiante.getCategoria() == null</span>
+<span class="pc" id="L111">                    ? null : estudiante.getCategoria().getIdCategoria();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            if (!idCategoria.equals(categoriaDelJugador)) {</span>
+<span class="fc" id="L113">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L114">                        nombre + &quot; no pertenece a la categoría &quot; + partido.getCategoria().getNombre());</span>
+            }
+
+<span class="fc bfc" id="L117" title="All 2 branches covered.">            if (lesionados.contains(j.idEstudiante())) {</span>
+<span class="fc" id="L118">                throw new IllegalArgumentException(nombre + &quot; arrastra una lesión activa y no puede jugar&quot;);</span>
+            }
+
+<span class="fc" id="L121">            boolean esTitular = Boolean.TRUE.equals(j.titular());</span>
+<span class="fc" id="L122">            Posicion posicion = null;</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            if (j.idPosicion() != null) {</span>
+<span class="fc" id="L124">                posicion = posicionRepository.findById(j.idPosicion())</span>
+<span class="pc" id="L125">                        .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L126">                                &quot;Posicion no encontrada: &quot; + j.idPosicion()));</span>
+<span class="pc bpc" id="L127" title="1 of 4 branches missed.">                if (esTitular &amp;&amp; puestoOcupado.put(j.idPosicion(), j.idEstudiante()) != null) {</span>
+<span class="fc" id="L128">                    throw new IllegalArgumentException(</span>
+<span class="fc" id="L129">                            &quot;Dos titulares no pueden ocupar el puesto &quot; + posicion.getAbreviatura());</span>
+                }
+            }
+<span class="pc bpc" id="L132" title="1 of 4 branches missed.">            if (esTitular &amp;&amp; ++titulares &gt; cupoTitulares) {</span>
+<span class="fc" id="L133">                throw new IllegalArgumentException(</span>
+                        &quot;No podés poner más de &quot; + cupoTitulares + &quot; titulares en la cancha&quot;);
+            }
+
+<span class="fc" id="L137">            nuevos.add(AlineacionJugador.builder()</span>
+<span class="fc" id="L138">                    .estudiante(estudiante)</span>
+<span class="fc" id="L139">                    .posicion(posicion)</span>
+<span class="fc" id="L140">                    .titular(esTitular)</span>
+<span class="fc" id="L141">                    .build());</span>
+<span class="fc" id="L142">        }</span>
+
+<span class="nc" id="L144">        Alineacion alineacion = alineacionRepository.findByPartido_IdPartido(idPartido)</span>
+<span class="nc" id="L145">                .orElseGet(() -&gt; Alineacion.builder().partido(partido).build());</span>
+<span class="nc" id="L146">        alineacion.setValoracion(request.valoracion());</span>
+<span class="nc" id="L147">        alineacion.setObservacion(request.observacion());</span>
+
+<span class="nc bnc" id="L149" title="All 2 branches missed.">        if (!alineacion.getJugadores().isEmpty()) {</span>
+            // Vaciar y volver a llenar en el mismo flush hace que Hibernate
+            // intente insertar antes de borrar y choque contra
+            // uq_alineacion_jugador. El saveAndFlush intermedio fuerza que los
+            // DELETE salgan primero.
+<span class="nc" id="L154">            alineacion.getJugadores().clear();</span>
+<span class="nc" id="L155">            alineacionRepository.saveAndFlush(alineacion);</span>
+        }
+<span class="nc bnc" id="L157" title="All 2 branches missed.">        for (AlineacionJugador j : nuevos) {</span>
+<span class="nc" id="L158">            j.setAlineacion(alineacion);</span>
+<span class="nc" id="L159">            alineacion.getJugadores().add(j);</span>
+<span class="nc" id="L160">        }</span>
+<span class="nc" id="L161">        alineacionRepository.save(alineacion);</span>
+
+<span class="nc" id="L163">        return ver(idPartido);</span>
+    }
+
+    /**
+     * Descarta los cambios manuales y vuelve a la sugerencia del sistema.
+     *
+     * @param idPartido identificador del partido
+     * @return la sugerencia recalculada
+     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws IllegalArgumentException     si el partido está cerrado
+     */
+    @Transactional
+    public AlineacionResponse restablecer(Long idPartido) {
+<span class="fc" id="L176">        partidoService.exigirAbierto(convocatoriaService.calcular(idPartido).partido());</span>
+<span class="fc" id="L177">        alineacionRepository.findByPartido_IdPartido(idPartido).ifPresent(alineacionRepository::delete);</span>
+<span class="fc" id="L178">        return ver(idPartido);</span>
+    }
+
+    /**
+     * Comentario de IA sobre el once que hoy está en pantalla.
+     *
+     * @param idPartido identificador del partido
+     * @return el comentario generado, o un texto por defecto si no hay
+     *         alineación
+     * @throws RecursoNoEncontradoException si el partido no existe
+     */
+    @Transactional(readOnly = true)
+    public FeedbackAlineacionResponse feedback(Long idPartido) {
+<span class="nc" id="L191">        AlineacionResponse actual = ver(idPartido);</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">        if (actual.titulares().isEmpty()) {</span>
+<span class="nc" id="L193">            return new FeedbackAlineacionResponse(null, false, &quot;No hay alineación que comentar&quot;);</span>
+        }
+<span class="nc" id="L195">        var resultado = convocatoriaService.comentar(actual.titulares(), actual.categoria());</span>
+<span class="nc" id="L196">        return new FeedbackAlineacionResponse(</span>
+<span class="nc" id="L197">                resultado.texto(), resultado.disponible(), resultado.motivo());</span>
+    }
+
+    private AlineacionResponse desdeGuardada(Convocatoria c, Alineacion a) {
+<span class="nc" id="L201">        Map&lt;Long, BigDecimal&gt; promedios = c.promedios();</span>
+<span class="nc" id="L202">        Map&lt;Long, Long&gt; presencias = c.presencias();</span>
+
+<span class="nc" id="L204">        List&lt;JugadorConvocado&gt; titulares = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L205">        List&lt;JugadorConvocado&gt; suplentes = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L206">        Set&lt;Long&gt; yaEstan = new HashSet&lt;&gt;();</span>
+
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        for (AlineacionJugador j : a.getJugadores()) {</span>
+<span class="nc" id="L209">            Estudiante e = j.getEstudiante();</span>
+<span class="nc" id="L210">            yaEstan.add(e.getIdEstudiante());</span>
+<span class="nc" id="L211">            boolean titular = Boolean.TRUE.equals(j.getTitular());</span>
+<span class="nc bnc" id="L212" title="All 2 branches missed.">            Long idPosicion = j.getPosicion() == null ? null : j.getPosicion().getIdPosicion();</span>
+<span class="nc" id="L213">            JugadorConvocado fila = convocatoriaService.aConvocado(</span>
+<span class="nc" id="L214">                    e, idPosicion, titular, promedios, presencias, c.entrenamientos());</span>
+
+<span class="nc bnc" id="L216" title="All 2 branches missed.">            if (j.getPosicion() != null) {</span>
+<span class="nc" id="L217">                fila = new JugadorConvocado(fila.idEstudiante(), fila.nombreCompleto(),</span>
+<span class="nc" id="L218">                        j.getPosicion().getAbreviatura(), idPosicion, titular,</span>
+<span class="nc" id="L219">                        fila.promedio(), fila.presencias(), fila.entrenamientos());</span>
+            }
+<span class="nc bnc" id="L221" title="All 2 branches missed.">            (titular ? titulares : suplentes).add(fila);</span>
+<span class="nc" id="L222">        }</span>
+
+<span class="nc" id="L224">        return respuesta(c, true, a.getValoracion(), a.getObservacion(),</span>
+                titulares, suplentes, yaEstan);
+    }
+
+    private AlineacionResponse desdeSugerencia(Convocatoria c) {
+<span class="fc" id="L229">        Set&lt;Long&gt; yaEstan = new HashSet&lt;&gt;();</span>
+<span class="pc" id="L230">        c.titulares().forEach(t -&gt; yaEstan.add(t.idEstudiante()));</span>
+<span class="pc" id="L231">        c.suplentes().forEach(s -&gt; yaEstan.add(s.idEstudiante()));</span>
+<span class="fc" id="L232">        return respuesta(c, false, null, null, c.titulares(), c.suplentes(), yaEstan);</span>
+    }
+
+    private AlineacionResponse respuesta(Convocatoria c, boolean guardada, Short valoracion,
+                                         String observacion, List&lt;JugadorConvocado&gt; titulares,
+                                         List&lt;JugadorConvocado&gt; suplentes, Set&lt;Long&gt; yaEstan) {
+<span class="fc" id="L238">        List&lt;JugadorConvocado&gt; disponibles = new ArrayList&lt;&gt;();</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        for (JugadorConvocado j : c.titulares()) {</span>
+<span class="nc bnc" id="L240" title="All 2 branches missed.">            if (!yaEstan.contains(j.idEstudiante())) {</span>
+<span class="nc" id="L241">                disponibles.add(sinTitularidad(j));</span>
+            }
+<span class="nc" id="L243">        }</span>
+<span class="pc bpc" id="L244" title="1 of 2 branches missed.">        for (JugadorConvocado j : c.suplentes()) {</span>
+<span class="nc bnc" id="L245" title="All 2 branches missed.">            if (!yaEstan.contains(j.idEstudiante())) {</span>
+<span class="nc" id="L246">                disponibles.add(sinTitularidad(j));</span>
+            }
+<span class="nc" id="L248">        }</span>
+
+<span class="fc" id="L250">        Partido p = c.partido();</span>
+<span class="fc" id="L251">        return new AlineacionResponse(</span>
+<span class="fc" id="L252">                p.getIdPartido(), p.getCategoria().getIdCategoria(), p.getCategoria().getNombre(),</span>
+<span class="fc" id="L253">                p.getFecha(), guardada, valoracion, observacion, c.ventana(),</span>
+<span class="fc" id="L254">                titulares, suplentes, disponibles, c.noConvocables(), cupoTitulares,</span>
+<span class="fc" id="L255">                p.estaCerrado());</span>
+    }
+
+    private JugadorConvocado sinTitularidad(JugadorConvocado j) {
+<span class="nc" id="L259">        return new JugadorConvocado(j.idEstudiante(), j.nombreCompleto(), j.posicion(),</span>
+<span class="nc" id="L260">                j.idPosicion(), false, j.promedio(), j.presencias(), j.entrenamientos());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

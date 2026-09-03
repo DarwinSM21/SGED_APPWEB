@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EstudianteAccesoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.estudiante.service</a> &gt; <span class="el_source">EstudianteAccesoService.java</span></div><h1>EstudianteAccesoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.estudiante.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
+import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+
+import java.util.Set;
+
+/**
+ * Colaborador que concentra la relación {@code Estudiante}–{@code Usuario}:
+ * la única porción de {@code EstudianteService} que cruzaba de lleno al
+ * dominio de seguridad ({@code Usuario}, {@code Rol}, {@code PasswordEncoder}).
+ * Extraído para bajar el fan-out de {@code EstudianteService} (hallazgo
+ * MET-01 / R-06 del informe de evaluación de calidad). No orquesta el alta
+ * completa —eso lo sigue llamando {@code EstudianteService}—, sino que aloja
+ * el conocimiento de cómo se arma y valida una cuenta de rol
+ * {@code ESTUDIANTE}.
+ */
+@Service
+@RequiredArgsConstructor
+public class EstudianteAccesoService {
+    private final UsuarioRepository usuarioRepository;
+    private final RolRepository rolRepository;
+    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    /**
+     * Guarda simétrica a {@code UsuarioService.validarRolCoherente}: si la
+     * persona ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin
+     * cuenta no hay nada que validar.
+     *
+     * @param idPersona persona sobre la que se quiere crear la ficha de
+     *                  estudiante
+     * @throws IllegalArgumentException si la persona tiene una cuenta activa
+     *                                  con un rol distinto de {@code ESTUDIANTE}
+     */
+    public void validarCoherenciaConFichaEstudiante(Long idPersona) {
+<span class="fc" id="L46">        usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -&gt; {</span>
+<span class="pc bpc" id="L47" title="1 of 2 branches missed.">            boolean esEstudiante = usuario.getRoles() != null &amp;&amp; usuario.getRoles().stream()</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">                    .anyMatch(r -&gt; &quot;ESTUDIANTE&quot;.equals(r.getNombre()));</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            if (!esEstudiante) {</span>
+<span class="fc" id="L50">                throw new IllegalArgumentException(</span>
+                        &quot;La persona tiene una cuenta con otro rol: no se le puede crear una ficha de estudiante&quot;);
+            }
+<span class="fc" id="L53">        });</span>
+<span class="fc" id="L54">    }</span>
+
+    /**
+     * Crea el {@code Usuario} (rol {@code ESTUDIANTE}) sobre una persona que
+     * ya existe; no lo asocia a la ficha de {@code Estudiante} —eso lo hace
+     * el llamador una vez que tiene el {@code Usuario} guardado—.
+     *
+     * @param persona persona dueña de la cuenta
+     * @param request credenciales de la cuenta a crear
+     * @return el {@code Usuario} recién guardado
+     * @throws IllegalArgumentException si el {@code username} ya está en uso
+     * @throws IllegalStateException    si falta el rol {@code ESTUDIANTE} o el
+     *                                  catálogo de estados en la base
+     */
+    public Usuario crearCuentaDeEstudiante(Persona persona, HabilitarAccesoRequest request) {
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {</span>
+<span class="fc" id="L70">            throw new IllegalArgumentException(&quot;Ya existe una cuenta con ese usuario&quot;);</span>
+        }
+
+<span class="fc" id="L73">        Rol rolEstudiante = rolRepository.findByNombre(&quot;ESTUDIANTE&quot;)</span>
+<span class="fc" id="L74">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Falta el rol ESTUDIANTE (ver db/seed.sql)&quot;));</span>
+<span class="fc" id="L75">        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)</span>
+<span class="pc" id="L76">                .orElseThrow(() -&gt; new IllegalStateException(</span>
+                        &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
+
+<span class="fc" id="L79">        Usuario usuario = Usuario.builder()</span>
+<span class="fc" id="L80">                .persona(persona)</span>
+<span class="fc" id="L81">                .estadoGeneral(estadoActivo)</span>
+<span class="fc" id="L82">                .username(request.username())</span>
+<span class="fc" id="L83">                .password_Hash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L84">                .activo(true)</span>
+<span class="fc" id="L85">                .roles(Set.of(rolEstudiante))</span>
+<span class="fc" id="L86">                .build();</span>
+<span class="fc" id="L87">        return usuarioRepository.save(usuario);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

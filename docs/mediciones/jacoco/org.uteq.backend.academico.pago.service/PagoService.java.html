@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.service</a> &gt; <span class="el_source">PagoService.java</span></div><h1>PagoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>PagoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.pago.service</a> &gt; <span class="el_source">PagoService.java</span></div><h1>PagoService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.pago.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -8,6 +8,7 @@ import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.academico.pago.dto.PagoDtos.HistoricoIngresosResponse;
 import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
 import org.uteq.backend.common.Zonas;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
@@ -16,98 +17,216 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Registro de pagos. MEMBRESIA valida, antes de guardar nada, que ningun
- * mes solicitado este ya cubierto (todo o nada: si uno falla no se cobra
- * a medias). DIARIO no tiene esa validacion porque no cubre periodo.
+ * Registro de pagos. {@code MEMBRESIA} valida, antes de guardar nada, que
+ * ningún mes solicitado esté ya cubierto (todo o nada: si uno falla no se
+ * cobra a medias). {@code DIARIO} no tiene esa validación porque no cubre
+ * período. Las anulaciones no borran ni editan: dejan el pago con quién,
+ * cuándo y por qué se anuló, y el correcto se registra aparte.
  */
 @Service
 @RequiredArgsConstructor
 public class PagoService {
-
     private final PagoRepository pagoRepository;
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
 
+    /**
+     * Registra el pago de una o varias mensualidades. Es todo o nada: si
+     * cualquiera de los meses ya está cubierto, no se guarda ninguno.
+     *
+     * @param idEstudiante        estudiante que paga
+     * @param anio                año de las mensualidades
+     * @param meses               meses a cubrir (1–12); se ordenan y
+     *                            deduplican
+     * @param monto               monto por mes
+     * @param fechaPago           fecha del cobro; {@code null} usa la de hoy
+     * @param usernameRegistrador usuario que registra el pago
+     * @return los pagos creados, uno por mes
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws IllegalArgumentException     si algún mes ya está cubierto
+     */
     @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Pago&quot;,
             descripcionSpel = &quot;'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'&quot;)
     @Transactional
     public List&lt;Pago&gt; registrarMembresia(Long idEstudiante, int anio, List&lt;Integer&gt; meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-<span class="fc" id="L41">        Estudiante estudiante = buscarEstudiante(idEstudiante);</span>
-<span class="fc" id="L42">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
+<span class="fc" id="L63">        Estudiante estudiante = buscarEstudiante(idEstudiante);</span>
+<span class="fc" id="L64">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
 
-<span class="fc" id="L44">        List&lt;Integer&gt; mesesUnicos = meses.stream().distinct().sorted().toList();</span>
-<span class="fc bfc" id="L45" title="All 2 branches covered.">        for (Integer mes : mesesUnicos) {</span>
-<span class="fc bfc" id="L46" title="All 2 branches covered.">            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMes(</span>
-<span class="fc" id="L47">                    idEstudiante, TipoPago.MEMBRESIA, (short) anio, mes.shortValue())) {</span>
-<span class="fc" id="L48">                throw new IllegalArgumentException(</span>
+<span class="fc" id="L66">        List&lt;Integer&gt; mesesUnicos = meses.stream().distinct().sorted().toList();</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">        for (Integer mes : mesesUnicos) {</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(</span>
+<span class="fc" id="L69">                    idEstudiante, TipoPago.MEMBRESIA, (short) anio, mes.shortValue())) {</span>
+<span class="fc" id="L70">                throw new IllegalArgumentException(</span>
                         &quot;El mes &quot; + mes + &quot;/&quot; + anio + &quot; ya está cubierto para este estudiante&quot;);
             }
-<span class="fc" id="L51">        }</span>
+<span class="fc" id="L73">        }</span>
 
-<span class="fc bfc" id="L53" title="All 2 branches covered.">        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR);</span>
-<span class="fc" id="L54">        List&lt;Pago&gt; pagos = mesesUnicos.stream()</span>
-<span class="fc" id="L55">                .map(mes -&gt; Pago.builder()</span>
-<span class="fc" id="L56">                        .estudiante(estudiante)</span>
-<span class="fc" id="L57">                        .tipo(TipoPago.MEMBRESIA)</span>
-<span class="fc" id="L58">                        .anio((short) anio)</span>
-<span class="fc" id="L59">                        .mes(mes.shortValue())</span>
-<span class="fc" id="L60">                        .monto(monto)</span>
-<span class="fc" id="L61">                        .fechaPago(fecha)</span>
-<span class="fc" id="L62">                        .registradoPor(registrador)</span>
-<span class="fc" id="L63">                        .build())</span>
-<span class="fc" id="L64">                .toList();</span>
-<span class="fc" id="L65">        return pagoRepository.saveAll(pagos);</span>
+<span class="fc bfc" id="L75" title="All 2 branches covered.">        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L76">        List&lt;Pago&gt; pagos = mesesUnicos.stream()</span>
+<span class="fc" id="L77">                .map(mes -&gt; Pago.builder()</span>
+<span class="fc" id="L78">                        .estudiante(estudiante)</span>
+<span class="fc" id="L79">                        .tipo(TipoPago.MEMBRESIA)</span>
+<span class="fc" id="L80">                        .anio((short) anio)</span>
+<span class="fc" id="L81">                        .mes(mes.shortValue())</span>
+<span class="fc" id="L82">                        .monto(monto)</span>
+<span class="fc" id="L83">                        .fechaPago(fecha)</span>
+<span class="fc" id="L84">                        .registradoPor(registrador)</span>
+<span class="fc" id="L85">                        .build())</span>
+<span class="fc" id="L86">                .toList();</span>
+<span class="fc" id="L87">        return pagoRepository.saveAll(pagos);</span>
     }
 
-    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Pago&quot;, idSpel = &quot;#result.idPago&quot;)
+    /**
+     * Registra un pago diario (no cubre período, sin validación de duplicado).
+     *
+     * @param idEstudiante        estudiante que paga
+     * @param monto               monto pagado
+     * @param fechaPago           fecha del cobro; {@code null} usa la de hoy
+     * @param usernameRegistrador usuario que registra el pago
+     * @return el pago creado
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     */
+    @Auditado(accion = &quot;CREAR&quot;, entidad = &quot;Pago&quot;, idSpel = &quot;#result.idPago&quot;,
+            descripcionSpel = &quot;'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'&quot;)
     @Transactional
     public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-<span class="fc" id="L71">        Estudiante estudiante = buscarEstudiante(idEstudiante);</span>
-<span class="fc" id="L72">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
+<span class="fc" id="L104">        Estudiante estudiante = buscarEstudiante(idEstudiante);</span>
+<span class="fc" id="L105">        Usuario registrador = buscarUsuario(usernameRegistrador);</span>
 
-<span class="fc" id="L74">        return pagoRepository.save(Pago.builder()</span>
-<span class="fc" id="L75">                .estudiante(estudiante)</span>
-<span class="fc" id="L76">                .tipo(TipoPago.DIARIO)</span>
-<span class="fc" id="L77">                .monto(monto)</span>
-<span class="fc bfc" id="L78" title="All 2 branches covered.">                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR))</span>
-<span class="fc" id="L79">                .registradoPor(registrador)</span>
-<span class="fc" id="L80">                .build());</span>
+<span class="fc" id="L107">        return pagoRepository.save(Pago.builder()</span>
+<span class="fc" id="L108">                .estudiante(estudiante)</span>
+<span class="fc" id="L109">                .tipo(TipoPago.DIARIO)</span>
+<span class="fc" id="L110">                .monto(monto)</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR))</span>
+<span class="fc" id="L112">                .registradoPor(registrador)</span>
+<span class="fc" id="L113">                .build());</span>
     }
 
+    /**
+     * Historial de pagos de un estudiante, del más reciente al más antiguo.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @return la lista de pagos (incluye los anulados)
+     * @throws RecursoNoEncontradoException si el estudiante no existe
+     */
     @Transactional(readOnly = true)
     public List&lt;Pago&gt; historialDe(Long idEstudiante) {
-<span class="fc bfc" id="L85" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
-<span class="fc" id="L86">            throw new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
+<span class="fc" id="L126">            throw new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
         }
-<span class="fc" id="L88">        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);</span>
+<span class="fc" id="L128">        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);</span>
     }
 
-    /** Cuanto entro en caja este mes calendario (Ecuador), sin importar que mes cubre cada pago. */
+    /**
+     * Cuánto entró en caja este mes calendario (Ecuador), sin importar qué
+     * mes cubre cada pago.
+     *
+     * @return año, mes, total cobrado y número de pagos vigentes del mes
+     */
     @Transactional(readOnly = true)
     public IngresosMesResponse ingresosDelMes() {
-<span class="fc" id="L94">        YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);</span>
-<span class="fc" id="L95">        LocalDate inicio = mesActual.atDay(1);</span>
-<span class="fc" id="L96">        LocalDate fin = mesActual.atEndOfMonth();</span>
+<span class="fc" id="L139">        YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);</span>
+<span class="fc" id="L140">        LocalDate inicio = mesActual.atDay(1);</span>
+<span class="fc" id="L141">        LocalDate fin = mesActual.atEndOfMonth();</span>
 
-<span class="fc" id="L98">        BigDecimal total = pagoRepository.sumarMontoEntreFechas(inicio, fin);</span>
-<span class="fc" id="L99">        long cantidad = pagoRepository.countByFechaPagoBetween(inicio, fin);</span>
-<span class="fc" id="L100">        return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);</span>
+<span class="fc" id="L143">        BigDecimal total = pagoRepository.sumarMontoEntreFechas(inicio, fin);</span>
+<span class="fc" id="L144">        long cantidad = pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin);</span>
+<span class="fc" id="L145">        return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);</span>
+    }
+
+    /**
+     * Serie de recaudación de los últimos {@code meses} meses, contando el
+     * actual. Se arma sobre la lista completa de meses del rango: un mes sin
+     * cobros viaja en cero, porque si se omite el gráfico dibuja contiguos
+     * dos meses que no lo son. El promedio se divide entre todos los meses
+     * del rango, incluidos los de cero.
+     *
+     * @param meses número de meses solicitado; se acota a {@code [1, 24]}
+     * @return la serie mensual, el total, el promedio y el mejor mes
+     *         ({@code null} si no hubo cobros)
+     */
+    @Transactional(readOnly = true)
+    public HistoricoIngresosResponse historicoIngresos(int meses) {
+<span class="nc" id="L161">        int cantidad = Math.max(1, Math.min(meses, 24));</span>
+<span class="nc" id="L162">        YearMonth actual = YearMonth.now(Zonas.ECUADOR);</span>
+<span class="nc" id="L163">        YearMonth primero = actual.minusMonths(cantidad - 1L);</span>
+
+<span class="nc" id="L165">        Map&lt;YearMonth, IngresosMesResponse&gt; porMes = new HashMap&lt;&gt;();</span>
+<span class="nc bnc" id="L166" title="All 2 branches missed.">        for (Object[] fila : pagoRepository.totalesPorMesDeCobro(primero.atDay(1), actual.atEndOfMonth())) {</span>
+<span class="nc" id="L167">            int anio = ((Number) fila[0]).intValue();</span>
+<span class="nc" id="L168">            int mes = ((Number) fila[1]).intValue();</span>
+<span class="nc" id="L169">            porMes.put(YearMonth.of(anio, mes), new IngresosMesResponse(</span>
+<span class="nc" id="L170">                    anio, mes, (BigDecimal) fila[2], ((Number) fila[3]).longValue()));</span>
+<span class="nc" id="L171">        }</span>
+
+<span class="nc" id="L173">        List&lt;IngresosMesResponse&gt; serie = new ArrayList&lt;&gt;(cantidad);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">        for (int i = 0; i &lt; cantidad; i++) {</span>
+<span class="nc" id="L175">            YearMonth m = primero.plusMonths(i);</span>
+<span class="nc" id="L176">            serie.add(porMes.getOrDefault(m, new IngresosMesResponse(</span>
+<span class="nc" id="L177">                    m.getYear(), m.getMonthValue(), BigDecimal.ZERO, 0L)));</span>
+        }
+
+<span class="nc" id="L180">        BigDecimal total = serie.stream()</span>
+<span class="nc" id="L181">                .map(IngresosMesResponse::total)</span>
+<span class="nc" id="L182">                .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+<span class="nc" id="L184">        BigDecimal promedio = total.divide(BigDecimal.valueOf(cantidad), 2, RoundingMode.HALF_UP);</span>
+
+<span class="nc" id="L186">        IngresosMesResponse mejor = serie.stream()</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">                .filter(m -&gt; m.total().compareTo(BigDecimal.ZERO) &gt; 0)</span>
+<span class="nc" id="L188">                .max(Comparator.comparing(IngresosMesResponse::total))</span>
+<span class="nc" id="L189">                .orElse(null);</span>
+
+<span class="nc" id="L191">        return new HistoricoIngresosResponse(serie, total, promedio, mejor);</span>
+    }
+
+    /**
+     * Anula un pago mal registrado. No lo edita ni lo borra: el registro se
+     * queda con quién lo anuló, cuándo y por qué. Anular dos veces se rechaza
+     * en vez de ignorarse en silencio.
+     *
+     * @param idPago          identificador del pago
+     * @param motivo          motivo de la anulación
+     * @param usernameAnulador usuario que anula
+     * @return el pago anulado
+     * @throws RecursoNoEncontradoException si el pago no existe
+     * @throws IllegalArgumentException     si el pago ya estaba anulado
+     */
+    @Auditado(accion = &quot;ANULAR&quot;, entidad = &quot;Pago&quot;, idSpel = &quot;#p0&quot;)
+    @Transactional
+    public Pago anular(Long idPago, String motivo, String usernameAnulador) {
+<span class="fc" id="L209">        Pago pago = pagoRepository.findById(idPago)</span>
+<span class="fc" id="L210">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Pago no encontrado con id: &quot; + idPago));</span>
+
+<span class="fc bfc" id="L212" title="All 2 branches covered.">        if (!pago.estaVigente()) {</span>
+<span class="fc" id="L213">            throw new IllegalArgumentException(&quot;Este pago ya estaba anulado&quot;);</span>
+        }
+
+<span class="fc" id="L216">        pago.setAnuladoEn(java.time.OffsetDateTime.now());</span>
+<span class="fc" id="L217">        pago.setAnuladoPor(buscarUsuario(usernameAnulador));</span>
+<span class="fc" id="L218">        pago.setMotivoAnulacion(motivo);</span>
+<span class="fc" id="L219">        return pagoRepository.save(pago);</span>
     }
 
     private Estudiante buscarEstudiante(Long id) {
-<span class="fc" id="L104">        return estudianteRepository.findById(id)</span>
-<span class="fc" id="L105">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
+<span class="fc" id="L223">        return estudianteRepository.findById(id)</span>
+<span class="fc" id="L224">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
     }
 
     private Usuario buscarUsuario(String username) {
-<span class="fc" id="L109">        return usuarioRepository.findByUsername(username)</span>
-<span class="fc" id="L110">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Usuario autenticado no encontrado: &quot; + username));</span>
+<span class="fc" id="L228">        return usuarioRepository.findByUsername(username)</span>
+<span class="fc" id="L229">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Usuario autenticado no encontrado: &quot; + username));</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
