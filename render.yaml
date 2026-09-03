@@ -51,16 +51,14 @@ services:
       - key: SERVER_PORT
         value: "8080"
 
-      # Sin esto el backend cae al valor por defecto de SecurityConfig, que
-      # solo trae los localhost de desarrollo: el navegador nunca llega
-      # directo a sged-backend.onrender.com salvo prueba manual, porque la
-      # reescritura /api/* del sitio estatico lo hace del lado del servidor
-      # y ahi CORS no aplica -pero declarar el origen real es lo correcto
-      # para esa prueba manual y para no depender de ese detalle de Render.
+      # Origen del frontend desplegado. Render asigno el sufijo -r2rs porque
+      # el nombre "sged-frontend" ya estaba tomado a nivel global en
+      # .onrender.com (otro despliegue del equipo); el nombre real del
+      # servicio en este blueprint sigue siendo sged-frontend.
       # Sin comodin: *.onrender.com habilitaria credenciales cruzadas desde
       # cualquier otro servicio de Render, no solo el propio.
       - key: CORS_ALLOWED_ORIGIN_PATTERNS
-        value: "https://sged-frontend.onrender.com"
+        value: "https://sged-frontend-r2rs.onrender.com"
 
       # springdoc 2.3.0 empaqueta una copia vieja de Swagger UI con DOMPurify
       # 3.0.6, que ZAP marca como "Vulnerable JS Library" (severidad alta).
@@ -151,9 +149,13 @@ services:
       # Es reescritura y no redirección: el navegador sigue viendo el dominio
       # del frontend, así que la API queda en el mismo origen y las cookies
       # SameSite=Strict siguen funcionando.
+      # El backend quedo con sufijo -2p05: el nombre "sged-backend" ya
+      # estaba tomado a nivel global en .onrender.com. Si se re-crea el
+      # blueprint desde cero, Render asigna otro sufijo y hay que
+      # actualizar esta linea y CORS_ALLOWED_ORIGIN_PATTERNS de arriba.
       - type: rewrite
         source: /api/*
-        destination: https://sged-backend.onrender.com/api/*
+        destination: https://sged-backend-2p05.onrender.com/api/*
 
       # Enrutado del lado del cliente: cualquier ruta desconocida devuelve
       # index.html. Render no aplica reglas si existe un fichero en esa ruta,
