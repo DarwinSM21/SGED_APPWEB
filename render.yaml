@@ -1,18 +1,19 @@
 # Blueprint de Render para SGED.
 #
-# Render lee este fichero desde la raíz del repositorio y crea los cuatro
-# recursos de una sola vez, así que el despliegue queda versionado y
-# reproducible en vez de depender de lo que alguien haya hecho a mano en el
-# panel.
+# Render lee este fichero desde la raíz del repositorio y crea los recursos
+# de una sola vez, así que el despliegue queda versionado y reproducible en
+# vez de depender de lo que alguien haya hecho a mano en el panel.
 #
-# Todo vive en Render: no hacen falta cuentas en otros proveedores.
+# BASE DE DATOS: PostgreSQL gestionado en Supabase, NO en Render. El plan
+# gratuito de Render Postgres caduca a los 30 días de crearse y con él se
+# pierden los datos; Supabase no expira así. La cadena de conexión por
+# defecto del repo (.env.example) ya apunta a Supabase. Este blueprint no
+# crea ninguna base: DB_URL / DB_USER / DB_PASSWORD se completan a mano en
+# el panel con los datos del proyecto de Supabase (ver docs/despliegue/render.md).
 #
-# ADVERTENCIA SOBRE LA BASE DE DATOS: el plan gratuito de Render Postgres
-# CADUCA 30 DÍAS DESPUÉS DE CREARSE y con él se pierden los datos. Es una
-# decisión consciente para esta entrega, no un descuido: si el sistema debe
-# seguir en pie más allá de ese plazo hay que migrar a un plan de pago o a un
-# proveedor cuyo plan gratuito no expire (ver render.md). Anota la fecha de
-# creación.
+# El esquema se carga UNA vez con `psql ... -f db/schema.sql` (más
+# db/seed.sql) porque las migraciones de Flyway no reconstruyen la base
+# desde cero; por eso FLYWAY_ENABLED va en "false".
 #
 # Por qué el frontend es un sitio estático y no un contenedor: Render da 750
 # horas de instancia gratis por mes para TODO el workspace. Un contenedor de
@@ -20,13 +21,6 @@
 # servir ficheros y reenviar /api. Como sitio estático no consume horas, y
 # las reglas de reescritura cubren ambas funciones. Así la bolsa entera queda
 # para el backend, que es quien de verdad la necesita.
-
-databases:
-  - name: sged-postgres
-    plan: free
-    region: oregon
-    databaseName: sged_db
-    postgresMajorVersion: "16"
 
 services:
 
@@ -77,36 +71,47 @@ services:
       - key: SPRINGDOC_ENABLED
         value: "false"
 
-      # Redis por la red privada del workspace: no sale a internet, por eso
-      # sin TLS.
-      - key: REDIS_HOST
+      # Redis (Key Value de Render) por la red privada del workspace. Se pasa
+      # la cadena completa -rediss://:password@host:port- en vez de host/port
+      # sueltos: el Key Value exige AUTH aunque no salga a internet, y ese
+      # dato solo lo entrega la propiedad connectionString. Spring Data Redis
+      # toma spring.data.redis.url con prioridad sobre host/port/password.
+      - key: SPRING_DATA_REDIS_URL
         fromService:
           type: keyvalue
           name: sged-redis
-          property: host
-      - key: REDIS_PORT
-        fromService:
-          type: keyvalue
-          name: sged-redis
-          property: port
-      - key: REDIS_SSL
-        value: "false"
+          property: connectionString
 
       # Se genera solo y nunca se escribe en el repositorio.
       - key: JWT_SECRET
         generateValue: true
 
-      # Render entrega la cadena en formato postgres://, que Spring no acepta
-      # como spring.datasource.url -necesita el prefijo jdbc:-. Se deja aquí
-      # para tenerla a mano al construir DB_URL y para depurar.
-      - key: RENDER_DATABASE_URL
-        fromDatabase:
-          name: sged-postgres
-          property: connectionString
+      # application.yml exige estas sin valor por defecto: si faltan, el
+      # backend arranca y se mata con "Could not resolve placeholder". Los
+      # valores son los de .env.example (JWT RFC 7519, control de fuerza
+      # bruta del login, TTL de la caché de lecturas).
+      - key: JWT_EXPIRATION_MS
+        value: "3600000"
+      - key: JWT_REFRESH_EXPIRATION_MS
+        value: "604800000"
+      - key: JWT_ISSUER
+        value: "sged-backend"
+      - key: JWT_AUDIENCE
+        value: "sged-frontend"
+      - key: LOGIN_MAX_INTENTOS
+        value: "5"
+      - key: LOGIN_VENTANA_MINUTOS
+        value: "15"
+      - key: CACHE_TTL_SECONDS
+        value: "60"
 
-      # Estos tres se completan una sola vez en el panel al crear el
-      # Blueprint, con los datos que Render muestra para sged-postgres.
-      # Ver docs/despliegue/render.md, paso 2.
+      # Base de datos en Supabase (no Render). Se completan una sola vez en
+      # el panel al crear el Blueprint. Ver docs/despliegue/render.md, paso 2:
+      #   DB_URL      jdbc:postgresql://<host>.pooler.supabase.com:6543/postgres?prepareThreshold=0&preparedStatementCacheQueries=0
+      #   DB_USER     postgres.<id-del-proyecto>
+      #   DB_PASSWORD la contraseña del proyecto de Supabase
+      # El puerto 6543 es el Transaction Pooler (uso normal de la app); el
+      # esquema se carga aparte por el 5432 (ver render.md).
       - key: DB_URL
         sync: false
       - key: DB_USER
