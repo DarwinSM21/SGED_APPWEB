@@ -34,11 +34,25 @@ if errorlevel 1 (
     exit /b 1
 )
 
-echo  Esperando a que el backend responda...
+echo  Esperando a que el backend responda (max 120s)...
+set /a INTENTOS=0
 :esperar
 timeout /t 3 /nobreak >nul
+set /a INTENTOS+=1
 for /f "tokens=*" %%s in ('docker inspect -f "{{.State.Health.Status}}" sged_backend 2^>nul') do set ESTADO=%%s
-if not "%ESTADO%"=="healthy" goto esperar
+echo    estado backend: %ESTADO%
+if "%ESTADO%"=="healthy" goto backend_ok
+if %INTENTOS% GEQ 40 (
+    echo.
+    echo  ERROR: el backend no se levanto a tiempo.
+    echo  Revisa los logs: docker logs sged_backend --tail 30
+    echo  Y corrige el archivo .env (DB_URL, REDIS_HOST, FLYWAY_ENABLED).
+    echo.
+    pause
+    exit /b 1
+)
+goto esperar
+:backend_ok
 echo  Backend listo
 
 echo.
