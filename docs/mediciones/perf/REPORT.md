@@ -2,7 +2,7 @@
 
 - Fecha: 2026-08-14T18:44:22.770796+00:00
 - Commit: 73d5114
-- Herramienta: k6 v2.2.0 (commit/00a9a1b7f5, go1.26.5, linux/amd64)
+- Herramienta: k6 v2.2.0 (go1.26.5, linux/amd64)
 - Corridas independientes: 5 (50 VUs, 30 s, seed análisis = 42)
 
 | Corrida | media (ms) | mediana | p90 | p95 | errores | RPS |
