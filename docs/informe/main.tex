@@ -1213,9 +1213,11 @@ actualizaciones de ruta:
     la reestructuración, el resultado real es \textbf{39,8\,\%} — los
     controladores y servicios nuevos no tienen pruebas propias, y diluyeron
     el porcentaje agregado sobre 60 clases analizadas (antes eran menos).
-    Es una regresión real por debajo del umbral del 60\,\% exigido, no un
-    error de medición, y se reporta como tal en la
-    sección~\ref{sec:cobertura} en vez de repetir la cifra anterior.
+    Es una regresión real por debajo del umbral del 70\,\% exigido
+    (\texttt{COVEREDRATIO} $\geq$ 0,70 en \texttt{backend/pom.xml}, en
+    líneas y en \emph{branches}), no un error de medición, y se reporta
+    como tal en la sección~\ref{sec:cobertura} en vez de repetir la cifra
+    anterior.
   \item \textbf{Datos de salud sin resolución ética.} La reestructuración
     agregó campos \texttt{peso} y \texttt{altura} al estudiante, exponibles
     por API. \texttt{docs/etica/ETHICS.md} documentaba explícitamente que el
