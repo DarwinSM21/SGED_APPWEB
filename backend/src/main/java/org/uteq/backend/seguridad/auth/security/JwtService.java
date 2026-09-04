@@ -10,6 +10,11 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Emisión y validación de tokens JWT (acceso y refresco). Cada token lleva un
+ * {@code jti} único, firma HMAC derivada de {@code security.jwt.secret}, y
+ * reclamos de rol, tipo, emisor y audiencia configurados por propiedades.
+ */
 @Service
 public class JwtService {
     @Value("${security.jwt.secret}")
@@ -27,14 +32,38 @@ public class JwtService {
     @Value("${security.jwt.audience:sged-frontend}")
     private String audience;
 
+    /**
+     * Genera un token de acceso (tipo {@code access}) con la vigencia de
+     * {@code security.jwt.expiration-ms}.
+     *
+     * @param username nombre de usuario (sujeto del token)
+     * @param rol      rol del usuario, guardado como reclamo
+     * @return token JWT firmado
+     */
     public String generateToken(String username, String rol) {
         return buildToken(username, rol, expirationMs, "access");
     }
 
+    /**
+     * Genera un token de refresco (tipo {@code refresh}) con la vigencia de
+     * {@code security.jwt.refresh-expiration-ms}.
+     *
+     * @param username nombre de usuario (sujeto del token)
+     * @param rol      rol del usuario, guardado como reclamo
+     * @return token JWT firmado
+     */
     public String generateRefreshToken(String username, String rol) {
         return buildToken(username, rol, refreshExpirationMs, "refresh");
     }
 
+    /**
+     * Comprueba si un token es válido: firma y emisor correctos, audiencia
+     * esperada y expiración no vencida.
+     *
+     * @param token token JWT a examinar
+     * @return {@code true} si es válido; {@code false} si es inválido, mal
+     *         formado o está expirado
+     */
     public boolean isTokenValid(String token) {
         try {
             Claims claims = parseToken(token).getPayload();
@@ -45,22 +74,50 @@ public class JwtService {
         }
     }
 
+    /**
+     * Extrae el nombre de usuario (sujeto) de un token.
+     *
+     * @param token token JWT ya firmado
+     * @return el sujeto del token
+     */
     public String extractUsername(String token) {
         return parseToken(token).getPayload().getSubject();
     }
 
+    /**
+     * Extrae el rol del usuario guardado como reclamo del token.
+     *
+     * @param token token JWT ya firmado
+     * @return el valor del reclamo {@code rol}
+     */
     public String extractRol(String token) {
         return parseToken(token).getPayload().get("rol", String.class);
     }
 
+    /**
+     * Extrae el identificador único del token.
+     *
+     * @param token token JWT ya firmado
+     * @return el valor del reclamo {@code jti}
+     */
     public String extractJti(String token) {
         return parseToken(token).getPayload().getId();
     }
 
+    /**
+     * Vigencia de los tokens de acceso, en milisegundos.
+     *
+     * @return {@code security.jwt.expiration-ms}
+     */
     public long getExpirationMs() {
         return expirationMs;
     }
 
+    /**
+     * Vigencia de los tokens de refresco, en milisegundos.
+     *
+     * @return {@code security.jwt.refresh-expiration-ms}
+     */
     public long getRefreshExpirationMs() {
         return refreshExpirationMs;
     }

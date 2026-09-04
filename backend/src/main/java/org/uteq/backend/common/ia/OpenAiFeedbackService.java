@@ -15,6 +15,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Genera comentarios de evaluación en lenguaje natural usando una API
+ * compatible con OpenAI. Expuesto como {@code GeneradorFeedbackIA} y activo
+ * solo cuando la propiedad {@code ia.proveedor=openai}. Sin clave configurada
+ * o ante fallos del servicio externo, devuelve un {@code ResultadoFeedback}
+ * "no disponible" en lugar de romper la petición.
+ */
 @Service
 @ConditionalOnProperty(name = "ia.proveedor", havingValue = "openai")
 public class OpenAiFeedbackService implements GeneradorFeedbackIA {
@@ -26,6 +33,17 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
     private final boolean habilitado;
     private final int reintentos;
 
+    /**
+     * Configura el cliente HTTP contra la API compatible con OpenAI y registra
+     * si el generador queda habilitado (requiere clave no vacía).
+     *
+     * @param apiKey          clave de la API (pe. {@code sk-...})
+     * @param baseUrl         URL base del servicio de chat compatible
+     * @param modelo          identificador del modelo a usar (p. ej.
+     *                        {@code gpt-4o-mini})
+     * @param timeoutSegundos tiempo máximo de conexión y lectura, en segundos
+     * @param reintentos      reintentos ante fallos transitorios (mínimo 0)
+     */
     public OpenAiFeedbackService(
             @Value("${ia.openai.api-key:}") String apiKey,
             @Value("${ia.openai.base-url:https://api.openai.com/v1}") String baseUrl,
@@ -58,6 +76,13 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
         return habilitado;
     }
 
+    /**
+     * Genera el comentario de evaluación de un jugador anónimo.
+     *
+     * @param perfil datos anonimizados del jugador a evaluar
+     * @return resultado con el texto generado o {@code noDisponible} si el
+     *         servicio está deshabilitado o falla
+     */
     @Override
     public ResultadoFeedback generarComentarioJugador(PerfilJugadorAnonimo perfil) {
         if (!habilitado) {
@@ -66,6 +91,13 @@ public class OpenAiFeedbackService implements GeneradorFeedbackIA {
         return invocar(PromptsFeedback.deJugador(perfil));
     }
 
+    /**
+     * Genera el comentario de evaluación de una alineación completa.
+     *
+     * @param alineacion lista de perfiles anónimos que forman la plantilla
+     * @return resultado con el texto generado o {@code noDisponible} si el
+     *         servicio está deshabilitado, la alineación está vacía o falla
+     */
     @Override
     public ResultadoFeedback generarComentarioPlantilla(List<PerfilJugadorAnonimo> alineacion) {
         if (!habilitado) {

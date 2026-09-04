@@ -408,7 +408,10 @@ capítulos finales —Reproducibilidad, Amenazas a la validez
 (sección~\ref{sec:amenazas}), ética, CRediT, Discusión, Trabajo futuro
 (sección~\ref{sec:trabajo-futuro}) y Conclusiones— cierran el documento
 con la interpretación crítica y las declaraciones obligatorias exigidas
-por la Entrega Final (sección~\ref{sec:declaraciones}).
+por la Entrega Final (sección~\ref{sec:declaraciones}). El material de
+referencia —checklists y cuestionarios repro\-ducidos íntegros, y
+remisiones a observaciones y matriz de trazabilidad— se agrupa en los
+Anexos (sección~\ref{sec:anexos}).
 
 \subsection{Pila tecnológica}
 
@@ -2344,9 +2347,10 @@ este párrafo citaba 60\,\%, que nunca fue el valor configurado— con un
 margen de 1,24 puntos sobre el mínimo de \emph{branches}. El camino
 hasta esta cifra —41,9\,\% tras la reestructuración, 61,16\,\% con
 \texttt{main} dos semanas en rojo, 70,06\,\% de cierre provisional el
-2026-09-02— queda documentado como bitácora en la
+ 2026-09-02— queda documentado como bitácora en la
 sección~\ref{sec:estado-entrega}; ninguna de esas cifras intermedias
-describe el estado actual.
+describe el estado actual. El desglose por capa se resume en la
+Tabla~\ref{tab:cobertura-por-capa}.
 
 \begin{table}[htbp]
 \centering
@@ -2998,17 +3002,21 @@ corrigió a 72{,}5\,\%. La pregunta para la Entrega Final es si ese patrón
 se repite con el módulo de inventario y el resto del dominio deportivo,
 agregados después de esa medición. El reporte remedido para esta entrega
 (\ruta{docs/mediciones/jacoco/jacoco.xml}) responde que el patrón
-\textbf{no} se repitió: 86{,}12\,\% de líneas (1.924 de 2.234) y
-71{,}21\,\% de ramas (413 de 580) sobre el \texttt{main} que incluye ya
-el módulo de inventario y el dominio deportivo completo. La comparación
-con el episodio de la Segunda Entrega es la que da sentido a la pregunta:
-allí la cobertura cayó a 39{,}8\,\% al agregar cinco recursos sin pruebas
-propias y hubo que corregirla a 72{,}5\,\%; aquí el crecimiento se
-acompañó de pruebas desde el principio y la cifra subió en vez de caer.
+\textbf{no} se repitió: 84{,}66\,\% de líneas (2\,639 de 3\,117) y
+71{,}24\,\% de ramas (664 de 932) sobre el \texttt{main} que incluye ya
+el módulo de inventario y el dominio deportivo completo (la cifra coincide
+con la de la sección~\ref{sec:cobertura} y es la única vigente en el
+documento). La comparación con el episodio de la Segunda Entrega es la que
+da sentido a la pregunta: allí la cobertura cayó a 39{,}8\,\% al agregar
+cinco recursos sin pruebas propias y hubo que corregirla a 72{,}5\,\%;
+aquí el crecimiento se acompañó de pruebas desde el principio y la cifra
+subió en vez de caer.
 
-La advertencia que motivó RQ4 sigue siendo pertinente como práctica
-—
-ocurrir dos veces si no se vuelve a medir explícitamente.
+La advertencia que motivó RQ4 sigue siendo pertinente como práctica:
+el patrón puede volver a ocurrir si no se vuelve a medir explícitamente
+en cada crecimiento futuro del dominio, de modo que la cobertura quede
+vinculada a una corrida reproducible (\texttt{./mvnw verify}) y no a una
+cifra declarada.
 
 % ============================================================
 \section{Trabajo futuro}
@@ -3277,7 +3285,7 @@ Instrumento: \emph{System Usability Scale}~\cite{brooke1996}, diez
 5~=~totalmente de acuerdo), administrado en español. Protocolo
 completo, con las tareas previas y las condiciones de aplicación, en
 \ruta{docs/mediciones/sus/INSTRUMENTO-SUS.md}; lo esencial se
-reproduce a continuación.
+reproduce a continuación (Tabla~\ref{tab:sus-cuestionario}).
 
 \begin{table}[htbp]
 \centering
@@ -3305,7 +3313,9 @@ reproduce a continuación.
 contribuyen (respuesta$-1$); ítems pares (2,4,6,8,10) contribuyen
 ($5-$respuesta); puntuación SUS = suma de las diez contribuciones
 $\times\ 2{,}5$, rango 0--100. No es un porcentaje: es una puntuación
-compuesta sobre una distribución de referencia.
+compuesta sobre una distribución de referencia. La lectura cualitativa
+de la puntuación se interpreta con la escala adjetival de la
+Tabla~\ref{tab:sus-interpretacion}.
 
 \begin{table}[htbp]
 \centering
@@ -3396,7 +3406,8 @@ condiciones ni un estudio observacional puro sobre un sistema
 preexistente—, la misma clasificación que sustenta el enfoque DSR de
 la sección~\ref{sec:dsr}. Checklist completo, con evidencia concreta
 del repositorio en cada fila, en
-\ruta{docs/checklists/ralph2021-engineering-research.md}.
+\ruta{docs/checklists/ralph2021-engineering-research.md}
+(Tabla~\ref{tab:ralph-checklist}).
 
 \begin{table}[htbp]
 \centering
@@ -3437,7 +3448,9 @@ Evaluación de los 31 requisitos funcionales, 13 no funcionales y 3
 restricciones de diseño de SGED contra la \emph{INCOSE Guide to
 Writing Requirements} v4 (INCOSE-TP-2010-006-04)~\cite{incose2023},
 prometida como anexo desde la sección~\ref{sec:ingenieria-requisitos}.
-Checklist completo en \ruta{docs/checklists/incose2023-req.md}.
+Checklist completo en \ruta{docs/checklists/incose2023-req.md}; el
+detalle se resume en las Tablas~\ref{tab:incose-individual} y
+\ref{tab:incose-conjunto}.
 
 \begin{table}[htbp]
 \centering
@@ -3493,7 +3506,8 @@ aquí por primera vez.
 
 Los 50 requisitos individuales de SGED (31 RF, 13 RNF, 3 RD, más tres
 recursos de dominio sin RF formal propio) con su historia de usuario,
-caso de uso y estado. La versión completa —con endpoint/componente,
+caso de uso y estado (Tabla~\ref{tab:matriz-completa}). La versión
+completa —con endpoint/componente,
 archivo de implementación, prueba automatizada y evidencia empírica
 por fila, columnas que no caben en el ancho de esta página— es
 \ruta{docs/trazabilidad/matriz.csv}, validada automáticamente por
