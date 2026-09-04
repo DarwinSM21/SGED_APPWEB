@@ -14,6 +14,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Genera comentarios de evaluación en lenguaje natural usando la API de Google
+ * Gemini. Expuesto como {@code GeneradorFeedbackIA} y activo solo cuando la
+ * propiedad {@code ia.proveedor=gemini}. Si no hay clave configurada
+ * ({@code ia.gemini.habilitado=false}) o el servicio externo falla, devuelve
+ * un {@code ResultadoFeedback} "no disponible" en lugar de romper la petición.
+ */
 @Service
 @ConditionalOnProperty(name = "ia.proveedor", havingValue = "gemini", matchIfMissing = true)
 public class GeminiFeedbackService implements GeneradorFeedbackIA {
@@ -26,6 +33,17 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     private final boolean habilitado;
     private final int reintentos;
 
+    /**
+     * Configura el cliente HTTP contra Gemini y registra si el generador queda
+     * habilitado (requiere clave no vacía y {@code ia.gemini.habilitado=true}).
+     *
+     * @param apiKey          clave de la API de Gemini
+     * @param modelo          identificador del modelo a usar (p. ej.
+     *                        {@code gemini-2.0-flash})
+     * @param habilitado      si debe intentar generar texto
+     * @param timeoutSegundos tiempo máximo de conexión y lectura, en segundos
+     * @param reintentos      reintentos ante fallos transitorios (mínimo 0)
+     */
     public GeminiFeedbackService(
             @Value("${ia.gemini.api-key:}") String apiKey,
             @Value("${ia.gemini.modelo:gemini-2.0-flash}") String modelo,
@@ -58,6 +76,13 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         return habilitado;
     }
 
+    /**
+     * Genera el comentario de evaluación de un jugador anónimo.
+     *
+     * @param perfil datos anonimizados del jugador a evaluar
+     * @return resultado con el texto generado o {@code noDisponible} si el
+     *         servicio está deshabilitado o falla
+     */
     @Override
     public ResultadoFeedback generarComentarioJugador(PerfilJugadorAnonimo perfil) {
         if (!habilitado) {
@@ -66,6 +91,13 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         return invocar(PromptsFeedback.deJugador(perfil));
     }
 
+    /**
+     * Genera el comentario de evaluación de una alineación completa.
+     *
+     * @param alineacion lista de perfiles anónimos que forman la plantilla
+     * @return resultado con el texto generado o {@code noDisponible} si el
+     *         servicio está deshabilitado, la alineación está vacía o falla
+     */
     @Override
     public ResultadoFeedback generarComentarioPlantilla(List<PerfilJugadorAnonimo> alineacion) {
         if (!habilitado) {
