@@ -9,6 +9,24 @@ ProFútbol: estudiantes, entrenadores, asistencias, evaluaciones y reportes.
 
 **Versión de esta entrega:** `v1.0.0` (Entrega Final, PFC Aplicaciones Web, UTEQ)
 
+## Despliegue público
+
+| | URL |
+|---|---|
+| **Aplicación (frontend)** | https://sged-frontend-r2rs.onrender.com |
+| **API (backend)** | https://sged-backend-2p05.onrender.com |
+| Punto de salud | https://sged-backend-2p05.onrender.com/actuator/health → `{"status":"UP"}` |
+
+Alojado en Render (frontend como sitio estático, backend como contenedor
+Docker) con PostgreSQL gestionado en Supabase. El plan gratuito de Render
+apaga el backend tras 15 min sin tráfico; la primera petición tras ese lapso
+tarda ~1 min en responder mientras arranca en frío. Pasos de despliegue en
+[`docs/despliegue/render.md`](docs/despliegue/render.md).
+
+> Los sufijos `-r2rs` / `-2p05` los asignó Render porque los nombres
+> `sged-frontend` / `sged-backend` ya estaban tomados globalmente en
+> `.onrender.com` por otro despliegue del equipo.
+
 ## Pila tecnológica
 
 * Backend: Spring Boot 3.2.x (Java 21 LTS), Spring Data JPA, Spring Security (JWT en cookie HttpOnly), Flyway, Redis
