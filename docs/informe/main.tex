@@ -790,14 +790,14 @@ pares o un informe de coursework redistribuido.
   exc/.style={draw, rectangle, align=left, text width=4.4cm, font=\scriptsize, fill=black!3},
   arr/.style={-Stealth, thick}
 ]
-\node[box] (id) {Registros identificados en las 9 búsquedas\\ $n \approx 85$};
-\node[box, below=1.15cm of id] (dedup) {Tras eliminar duplicados y contenido no académico\\ $n \approx 28$};
-\node[box, below=1.15cm of dedup] (elig) {Elegibles para verificación bibliográfica completa\\ $n = 12$};
-\node[box, below=1.15cm of elig] (inc) {Incluidos en la Tabla~\ref{tab:trabajos-relacionados}\\ $n = 8$};
+\node[box] (id) {Records identified across 9 searches\\ $n \approx 85$};
+\node[box, below=1.15cm of id] (dedup) {After removing duplicates and non-academic content\\ $n \approx 28$};
+\node[box, below=1.15cm of dedup] (elig) {Eligible for full bibliographic verification\\ $n = 12$};
+\node[box, below=1.15cm of elig] (inc) {Included in Table~\ref{tab:trabajos-relacionados}\\ $n = 8$};
 
-\node[exc, right=1.6cm of id] (exc1) {Excluidos: blogs, documentación de producto, foros ($n \approx 57$)};
-\node[exc, right=1.6cm of dedup] (exc2) {Excluidos: fuera del dominio o del eje técnico del proyecto ($n = 16$)};
-\node[exc, right=1.6cm of elig] (exc3) {Excluidos: autoría o venue no verificable contra fuente primaria ($n = 4$)};
+\node[exc, right=1.6cm of id] (exc1) {Excluded: blogs, product documentation, forums ($n \approx 57$)};
+\node[exc, right=1.6cm of dedup] (exc2) {Excluded: outside the project's domain or technical scope ($n = 16$)};
+\node[exc, right=1.6cm of elig] (exc3) {Excluded: authorship or venue not verifiable against a primary source ($n = 4$)};
 
 \draw[arr] (id) -- (dedup);
 \draw[arr] (dedup) -- (elig);
