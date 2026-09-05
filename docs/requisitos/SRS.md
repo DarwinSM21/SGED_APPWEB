@@ -129,7 +129,7 @@ anotaciones `@PreAuthorize` del código.
 *El sistema deberá permitir que un usuario con rol ADMINISTRADOR registre
 nuevas cuentas de usuario, asociándolas a una persona y a uno o más roles.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `POST /api/auth/registro` — `AuthController.java:63`
 - **Restricción de acceso:** `@PreAuthorize("hasRole('ADMINISTRADOR')")`
 - **Verificación:** un usuario no autenticado o sin rol ADMINISTRADOR deberá
@@ -145,7 +145,7 @@ contraseña, y deberá emitir la credencial de sesión exclusivamente en una
 cookie `HttpOnly`, `Secure` y `SameSite=Strict`, sin exponer el token en el
 cuerpo de la respuesta ni en almacenamiento accesible por JavaScript.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `POST /api/auth/login` — `AuthController.java:99`
 - **Verificación:** la respuesta deberá contener `Set-Cookie` con los tres
   atributos y no deberá contener el JWT en el cuerpo. Pruebas:
@@ -160,7 +160,7 @@ emitido registrando su identificador (JTI) en una lista de revocación con
 tiempo de vida igual al tiempo restante del token, de modo que un token
 robado antes del cierre de sesión no siga siendo aceptado.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `POST /api/auth/logout` — `AuthController.java:143`;
   `RedisBlacklistService.java`
 - **Verificación:** pruebas `RedisBlacklistServiceTest.revocar_guarda_el_jti_con_el_ttl_restante`,
@@ -174,7 +174,7 @@ robado antes del cierre de sesión no siga siendo aceptado.*
 *El sistema deberá permitir renovar una sesión vigente mediante un token de
 refresco, sin exigir que el usuario vuelva a introducir sus credenciales.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Origen:** `POST /api/auth/refresh` — `AuthController.java:164`
 - **Verificación:** prueba `JwtServiceTest.refresh_token_valido`.
 
@@ -185,7 +185,7 @@ refresco, sin exigir que el usuario vuelva a introducir sus credenciales.*
 en curso (nombre de usuario, nombre completo y rol) a partir de la cookie de
 sesión, y deberá responder `401` cuando no exista sesión válida.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `GET /api/auth/me` — `AuthController.java:181`
 - **Verificación:** con sesión válida deberá responder `200` con
   `{username, nombre, rol}`; sin sesión, `401`.
@@ -198,7 +198,7 @@ un mismo usuario tras 5 fallos consecutivos dentro de una ventana de 15
 minutos, y el contador no deberá reiniciarse con cada nuevo fallo dentro de
 esa ventana.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `LoginAttemptService.java`; parámetros
   `LOGIN_MAX_INTENTOS=5`, `LOGIN_VENTANA_MINUTOS=15` (`application.yml`)
 - **Verificación:** el sexto intento deberá responder `429` con cuerpo
@@ -212,7 +212,7 @@ esa ventana.*
 *El sistema deberá exponer un endpoint público de comprobación de
 disponibilidad que no requiera autenticación.*
 
-- **Prioridad:** Baja · **Estado:** ✅ Implementado
+- **Prioridad:** Baja · **Estado:** ✅ Implementado · **MoSCoW:** Could
 - **Origen:** `GET /api/auth/ping` — `AuthController.java:202`
 - **Verificación:** prueba `AuthServiceTest.pingRespondePong`.
 
@@ -227,7 +227,7 @@ disponibilidad que no requiera autenticación.*
 paginada, indicando en la respuesta el número de página, el tamaño, el total
 de elementos y el total de páginas.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `GET /api/estudiantes` —
   `academico/estudiante/controller/EstudianteController.java`
 - **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`, `RECEPCIONISTA`
@@ -241,7 +241,7 @@ de elementos y el total de páginas.*
 deberá responder `404` con cuerpo `ProblemDetail` cuando el identificador no
 corresponda a ningún registro.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `GET /api/estudiantes/{id}` —
   `academico/estudiante/controller/EstudianteController.java`
 - **Verificación:** pruebas `EstudianteControllerTest.buscarPorId_existente`,
@@ -256,7 +256,7 @@ nuevo estudiante asociado a una persona, una categoría y un estado general
 existentes, con un código de estudiante único y fecha de ingreso, creando de
 forma transaccional el registro correspondiente.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `POST /api/estudiantes` —
   `academico/estudiante/controller/EstudianteController.java`
 - **Acceso:** `@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")`
@@ -284,7 +284,7 @@ responder `422 Unprocessable Entity` si la categoría indicada no existe o si
 falta.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado — **contenido reescrito
-  el 2026-07-30**
+  el 2026-07-30** · **MoSCoW:** Must
 - **Origen:** `EstudianteRequest.idCategoria` (`@NotNull`);
   `deportivo.categorias` como catálogo referenciado.
 - **Verificación:** prueba
@@ -309,6 +309,8 @@ con hasta 3 dígitos enteros y 2 decimales.*
 
 - **Prioridad:** No priorizado formalmente — apareció en la
   reestructuración de paquetes, no en un requisito previamente especificado.
+  · **MoSCoW:** Won't (esta entrega) — pausado por el hallazgo H-06, no por
+  olvido.
 - **Origen:** `EstudianteRequest.peso`, `.altura`
   (`@DecimalMin`, `@Digits`); columnas `academico.estudiantes.peso/altura`.
 - **Alerta:** este requisito se documenta pero **no se recomienda
@@ -325,7 +327,7 @@ con hasta 3 dígitos enteros y 2 decimales.*
 los datos propios de un estudiante existente (categoría, estado, código,
 fecha de ingreso, peso y altura).*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `PUT /api/estudiantes/{id}` —
   `academico/estudiante/controller/EstudianteController.java`
 - **Verificación:** prueba `EstudianteControllerTest.editar_actualiza_estudiante`.
@@ -337,7 +339,7 @@ fecha de ingreso, peso y altura).*
 no deberá eliminar físicamente el registro, con el fin de preservar el
 historial deportivo asociado.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `DELETE /api/estudiantes/{id}` —
   `academico/estudiante/controller/EstudianteController.java`
 - **Verificación:** deberá responder `204` y el registro deberá permanecer en
@@ -353,7 +355,7 @@ categoría, identificada por su clave, y dicho conteo deberá calcularse en el
 motor de base de datos mediante un procedimiento almacenado versionado, no
 en la capa de aplicación.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Origen:** `GET /api/estudiantes/conteo/categoria/{idCategoria}` —
   `academico/estudiante/controller/EstudianteController.java`;
   `academico.sp_contar_estudiantes_activos(p_categoria INT)`
@@ -375,7 +377,7 @@ transaccional, a todos los estudiantes activos de una categoría, e informar
 el número de registros afectados; dicha operación deberá ejecutarse mediante
 un procedimiento almacenado versionado.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Origen:** `POST /api/estudiantes/operaciones/desactivar-categoria` —
   `academico/estudiante/controller/EstudianteController.java`;
   `academico.sp_desactivar_estudiantes_categoria(p_categoria INT)`
@@ -397,7 +399,7 @@ paquetes y no tenían requisito documentado hasta ahora.
 categorías deportivas, cada una definida por un nombre y un rango de edad
 (mínima y máxima).*
 
-- **Prioridad:** Alta (bloquea RF-10/RF-11) · **Estado:** ✅ Implementado
+- **Prioridad:** Alta (bloquea RF-10/RF-11) · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `CategoriaController` (`/api/categorias`, 6 endpoints) —
   `deportivo/categoria/controller/CategoriaController.java`
 - **Verificación:** `CategoriaServiceTest` (9 pruebas: paginación, alta,
@@ -410,7 +412,7 @@ categorías deportivas, cada una definida por un nombre y un rango de edad
 *El sistema deberá permitir administrar cuentas de usuario (más allá del
 alta hecha en `POST /api/auth/registro`) de forma independiente.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Origen:** `UsuarioController` (`/api/usuarios`, 5 endpoints) —
   `seguridad/usuario/controller/UsuarioController.java`
 - **Verificación:** `UsuarioServiceTest` (paginación, username duplicado,
@@ -443,7 +445,7 @@ alta hecha en `POST /api/auth/registro`) de forma independiente.*
 (nombre, cédula, correo, teléfono, fecha de nacimiento) independientemente
 del rol que la persona tenga en el sistema.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Origen:** `PersonaController` (`/api/personas`, 6 endpoints) —
   `seguridad/persona/controller/PersonaController.java`
 - **Verificación:** `PersonaServiceTest` (8 pruebas: paginación, búsqueda por
@@ -462,7 +464,7 @@ del rol que la persona tenga en el sistema.*
 *El sistema deberá exponer el catálogo de estados generales utilizables por
 usuarios y estudiantes.*
 
-- **Prioridad:** Baja · **Estado:** ✅ Implementado (solo lectura — 1 endpoint)
+- **Prioridad:** Baja · **Estado:** ✅ Implementado (solo lectura — 1 endpoint) · **MoSCoW:** Could
 - **Origen:** `EstadoGeneralController` —
   `seguridad/estado/controller/EstadoGeneralController.java`
 - **Verificación:** `EstadoGeneralServiceTest` (2 pruebas),
@@ -487,7 +489,7 @@ y a una cuenta de usuario, con especialidad, años de experiencia y
 certificación, garantizando que una misma persona o cuenta no pueda
 registrarse dos veces como entrenador.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado (cambió de Modelado)
+- **Prioridad:** Alta · **Estado:** ✅ Implementado (cambió de Modelado) · **MoSCoW:** Must
 - **Origen:** `EntrenadorController` (`/api/entrenadores`, 5 endpoints) —
   `deportivo/entrenador/controller/EntrenadorController.java`
 - **Esquema:** `deportivo.entrenadores`, con `UNIQUE` sobre `id_persona` **e**
@@ -511,6 +513,10 @@ registrarse dos veces como entrenador.*
 *El sistema deberá permitir definir horarios semanales recurrentes por
 categoría y entrenador, y deberá impedir que la hora de fin sea anterior o
 igual a la hora de inicio.*
+
+- **Prioridad:** Alta · **MoSCoW:** Must — de él se generan las sesiones
+  (RF-18).
+
 `POST/GET /api/horarios`, `DELETE /api/horarios/{id}` (baja lógica), todos
 `hasRole('ENTRENADOR')` y acotados al propio entrenador autenticado (404 si
 el horario no es suyo). Esquema: `deportivo.horarios_entrenamiento`, con
@@ -524,6 +530,10 @@ antes, cada sesión —fuera una recurrente o una extra— se creaba a mano.
 *El sistema deberá registrar cada sesión de entrenamiento con su fecha,
 categoría, entrenador responsable y estado, admitiendo únicamente los
 estados PROGRAMADA, EN_CURSO, FINALIZADA y CANCELADA.*
+
+- **Prioridad:** Alta · **MoSCoW:** Must — de ella dependen asistencia
+  (RF-19) e historial (RF-35).
+
 `POST /api/sesiones` (jornada extra, fuera del horario fijo), `GET
 /api/sesiones/hoy` y `/mias`. Estos dos últimos generan primero, de forma
 idempotente, la sesión de hoy de cada horario fijo activo que caiga en el
@@ -540,6 +550,10 @@ si es una jornada extra).
 admitiendo el marcaje por RFID o manual, con estado PRESENTE, TARDE, AUSENTE
 o JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
 mismo estudiante en la misma sesión.*
+
+- **Prioridad:** Alta · **MoSCoW:** Must — precondición de notificaciones
+  (RF-22) e historial (RF-35).
+
 Esquema: `deportivo.asistencias`, con
 `UNIQUE (id_sesion, id_estudiante)` y `CHECK` sobre `metodo` y `estado`.
 
@@ -574,6 +588,10 @@ criterios configurables (técnica, condición física, táctica y actitud),
 registrando la posición jugada ese día, y deberá impedir puntajes negativos
 y evaluaciones duplicadas del mismo estudiante y criterio dentro de una
 misma evaluación.*
+
+- **Prioridad:** Media · **MoSCoW:** Should — solo esquema, sin
+  `endpoint` todavía.
+
 Esquema: `deportivo.evaluaciones_diarias`, `deportivo.criterios_evaluacion`,
 `deportivo.detalle_evaluacion`, con `CHECK (puntaje >= 0)` y
 `UNIQUE (id_evaluacion, id_estudiante, id_criterio)`.
@@ -583,6 +601,10 @@ Esquema: `deportivo.evaluaciones_diarias`, `deportivo.criterios_evaluacion`,
 **RF-21 — Consulta de promedios de evaluación** 🟡 Modelado
 *El sistema deberá calcular el promedio de puntajes por estudiante y
 evaluación en el motor de base de datos.*
+
+- **Prioridad:** Media · **MoSCoW:** Should — depende de RF-20, también
+  solo esquema.
+
 Esquema: vista `deportivo.v_promedio_evaluacion`.
 
 ---
@@ -590,6 +612,10 @@ Esquema: vista `deportivo.v_promedio_evaluacion`.
 **RF-33 — Agenda de partidos** ✅ Implementado (2026-08-25)
 *El sistema deberá permitir al entrenador agendar un partido de una
 categoría y registrar su resultado después de jugado.*
+
+- **Prioridad:** Alta · **MoSCoW:** Must — base del dominio de partidos
+  (RF-34).
+
 `deportivo.partidos` (`GET-POST-PUT-DELETE /api/partidos`). Los goles admiten
 nulo y no tienen valor por defecto: un partido recién agendado no va 0-0,
 todavía no se jugó, y `NULL` («sin resultado») y `0` («no metió ninguno») son
@@ -606,6 +632,10 @@ Solo se lleva el marcador propio. El sistema es de **una** academia:
 *El sistema deberá sugerir el once inicial de un partido a partir del
 rendimiento acumulado de las semanas previas, y deberá permitir al entrenador
 modificarlo y guardar la formación con la que efectivamente jugó.*
+
+- **Prioridad:** Alta · **MoSCoW:** Must — regla de negocio central del
+  módulo deportivo (tope de once titulares, exclusión por lesión).
+
 `deportivo.alineaciones` + `deportivo.alineacion_jugador`
 (`GET-PUT-DELETE /api/partidos/{id}/alineacion`).
 
@@ -638,6 +668,10 @@ los que fueron a **ese** entrenamiento.
 **RF-35 — Historial de asistencia de una sesión** ✅ Implementado (2026-08-25)
 *El sistema deberá mostrar, para una sesión ya ocurrida, quiénes asistieron y
 quiénes no.*
+
+- **Prioridad:** Media · **MoSCoW:** Should — reporte sobre datos que ya
+  existen por RF-19.
+
 `GET /api/sesiones/{id}/historial`. Se parte del **plantel** de la categoría
 y no de las filas de asistencia: si nadie pasó lista, la tabla está vacía y
 una consulta que solo lea de ahí diría «no había nadie convocado», que es
@@ -649,6 +683,11 @@ distinto de «no se registró la asistencia de nadie». Por eso existe el estado
 **RF-22 — Notificación a representantes** ✅ Implementado (2026-08-09)
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*
+
+- **Prioridad:** Media · **MoSCoW:** Should — depende de RF-19/RF-31;
+  hoy solo en-app, no correo/SMS/push (sección Trabajo futuro del
+  informe).
+
 El rol REPRESENTANTE, el vínculo con sus representados y la tabla de
 consentimientos que este requisito exige como precondición (hallazgo H-04 de
 `docs/etica/ETHICS.md`) existen desde 2026-08-03. La notificación en sí es
@@ -699,6 +738,10 @@ esa dependencia.
 estudiante (descripción y fecha estimada de retorno opcional), impidiendo
 una segunda lesión activa simultánea del mismo estudiante, y deberá
 permitir darla de alta cuando el estudiante se recupera.*
+
+- **Prioridad:** Alta · **MoSCoW:** Must — condiciona la exclusión de
+  lesionados en RF-34 y es dato de salud sensible (ver ETHICS.md).
+
 Esquema: `deportivo.lesiones` (`LesionController`, `LesionService`); el
 backend ya existía de una revisión anterior, pero sin frontend que lo
 consumiera. Se agregaron los botones "Marcar lesión" / "Dar de alta" a la
@@ -717,6 +760,10 @@ sesión programada, sus compañeros de equipo (solo nombre y posición, sin
 datos de contacto ni promedios — son menores de edad) y sus propias
 estadísticas de evaluación (promedio histórico por criterio, porcentaje
 de asistencia de los últimos 30 días e historial de lesiones propio).*
+
+- **Prioridad:** Media · **MoSCoW:** Should — transparencia hacia el
+  estudiante, no bloquea ningún otro requisito.
+
 `MiEquipoController` (`GET /api/estudiante/mi-equipo`,
 `GET /api/estudiante/mi-informe`), solo rol ESTUDIANTE. Las estadísticas
 reutilizan tal cual la lógica que `InformeService` ya usaba para el
@@ -743,7 +790,7 @@ entrenador asignado.
 baja artículos de inventario (uniformes, balones, implementos u otro),
 cada uno con un stock mínimo configurable para alertas de reposición.*
 
-- **Prioridad:** Alta (bloquea RF-28/RF-29) · **Estado:** ✅ Implementado
+- **Prioridad:** Alta (bloquea RF-28/RF-29) · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `ArticuloController` (`/api/inventario/articulos`, 6
   endpoints) — `inventario/articulo/controller/ArticuloController.java`
 - **Esquema:** `inventario.articulos`, con `CHECK` sobre `tipo` y
@@ -758,7 +805,7 @@ cada uno con un stock mínimo configurable para alertas de reposición.*
 artículo, y deberá impedir cualquier salida que deje el stock por debajo
 de cero.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `MovimientoStockController`
   (`/api/inventario/movimientos`, 3 endpoints) —
   `inventario/movimiento/controller/MovimientoStockController.java`
@@ -776,7 +823,7 @@ entrenador (nunca a ambos en la misma asignación), descontando el stock
 disponible, y deberá permitir marcar la devolución como DEVUELTO
 (repone el stock) o PERDIDO (no lo repone).*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Origen:** `AsignacionController` (`/api/inventario/asignaciones`, 5
   endpoints) — `inventario/asignacion/controller/AsignacionController.java`
 - **Esquema:** `inventario.asignaciones`, con
@@ -794,7 +841,7 @@ disponible, y deberá permitir marcar la devolución como DEVUELTO
 datos, el total de artículos activos cuyo stock actual esté en o por
 debajo de su stock mínimo.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Origen:** `GET /api/inventario/articulos/stock-bajo` — combina el
   listado (JPA) con el conteo agregado del procedimiento almacenado
   `inventario.sp_reporte_stock_bajo` (ver

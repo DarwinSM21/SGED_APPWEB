@@ -296,7 +296,7 @@ el inicio no resuelve el problema original: lo traslada a un sistema que
 puede exponerlo a mayor escala, como evidencia el propio hallazgo~H-08 de
 este trabajo (sección~\ref{sec:a01-falso-correcto}). La magnitud concreta
 del problema que SGED cubre se dimensiona con las cifras de su propia
-especificación: 47 requisitos individuales (31 funcionales, 13 no
+especificación: 52 requisitos individuales (36 funcionales, 13 no
 funcionales, 3 restricciones de diseño, sección~\ref{sec:ingenieria-requisitos})
 repartidos en cinco roles de usuario y cuatro dominios funcionales, que
 antes de este proyecto no tenían ningún soporte de software dedicado.
@@ -940,42 +940,42 @@ revocación con tiempo de vida igual al tiempo restante del token, de modo
 que un token robado antes del cierre de sesión no siga siendo aceptado."
 \end{quote}
 
-El SRS usa una escala de prioridad de tres niveles (Alta/Media/Baja), no
-las cuatro categorías MoSCoW textuales que exige la Entrega Final. La
-correspondencia natural es Alta→\emph{Must}, Media→\emph{Should},
-Baja→\emph{Could}; la categoría \emph{Won't (esta entrega)} se infiere de
-los requisitos explícitamente pausados por una razón declarada, no
+\textbf{Actualización (2026-09-04):} el SRS declara ahora un campo
+\texttt{MoSCoW:} explícito en las 36 entradas de requisito funcional
+—las 25 que ya tenían prioridad Alta/Media/Baja, mapeada de forma
+directa (Alta→\emph{Must}, Media→\emph{Should}, Baja→\emph{Could}), y
+las 11 que no tenían ningún campo de prioridad (RF-17 a RF-22 y RF-31 a
+RF-35, el módulo deportivo más reciente), a las que se les asignó una
+prioridad real según su rol en el flujo operativo, no una inferencia
+retroactiva. \emph{Won't (esta entrega)} se reserva para los
+requisitos explícitamente pausados por una razón declarada, no
 simplemente atrasados: RF-11b (peso/altura, pausado por el hallazgo H-06
-de \ruta{ETHICS.md}) y el módulo \texttt{equipo}/\texttt{partido}
-(esquema versionado en \texttt{V16}, sin API por decisión, no por
-omisión).
+de \ruta{ETHICS.md}). El módulo \texttt{equipo} (esquema versionado,
+sin API por decisión) no tiene RF formal propio, por lo que no entra en
+esta tabla — ver el hallazgo C10 del checklist INCOSE (Anexo~F).
 
 \begin{table}[htbp]
 \centering
-\caption{Requisitos funcionales de SGED por categoría MoSCoW inferida.}
+\caption{Requisitos funcionales de SGED por categoría MoSCoW, declarada explícitamente en el SRS.}
 \label{tab:moscow}
 \begin{tabular}{@{}lrl@{}}
 \toprule
-\textbf{Categoría MoSCoW (inferida)} & \textbf{Cantidad} & \textbf{Fuente} \\
+\textbf{Categoría MoSCoW} & \textbf{Cantidad} & \textbf{Fuente} \\
 \midrule
-Must (Alta) & 16 & RF-01,02,03,05,06,08,09,10,11,12,13,16,23,27,28,29 \\
-Should (Media) & 6 & RF-04,14,15,24,25,30 \\
-Could (Baja) & 2 & RF-07,26 \\
-Won't (esta entrega, declarado) & 2 & RF-11b, módulo equipo/partido \\
-\textbf{Sin prioridad formal en el SRS} & \textbf{6} & RF-17,18,19,20,21,22 \\
+Must & 22 & RF-01,02,03,05,06,08,09,10,11,12,13,16,17,18,19,23,27,28,29,31,33,34 \\
+Should & 11 & RF-04,14,15,20,21,22,24,25,30,32,35 \\
+Could & 2 & RF-07,26 \\
+Won't (esta entrega, declarado) & 1 & RF-11b \\
 \midrule
-\textbf{Total de requisitos funcionales} & \textbf{31} & RF-01 a RF-30 + RF-11b \\
+\textbf{Total de requisitos funcionales} & \textbf{36} & RF-01 a RF-35 + RF-11b \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\textbf{Hallazgo} (Tabla~\ref{tab:moscow})\textbf{:} seis requisitos del módulo deportivo (RF-17 a RF-22,
-los más recientes — implementados entre el 2026-08-09 y el 2026-08-13) no
-tienen todavía un campo \texttt{Prioridad:} explícito en el SRS, a
-diferencia de los 25 restantes. Es un defecto de forma menor y de
-corrección rápida (asignarles Must o Should según su rol en el flujo
-operativo), no un defecto de fondo — pero cuenta contra la característica
-INCOSE C6 (\emph{Complete}) mientras no se cierre.
+\textbf{Hallazgo cerrado} (Tabla~\ref{tab:moscow}): los 36 requisitos
+funcionales tienen hoy prioridad MoSCoW explícita en el SRS, ninguno
+por inferencia — cierra la característica INCOSE C6 (\emph{Complete})
+en este punto concreto.
 
 Los 13 requisitos no funcionales se clasifican según ISO/IEC~25010
 (sección~\ref{sec:marco-teorico}): eficiencia de desempeño (RNF-01,
@@ -1086,15 +1086,15 @@ de requisitos descrito en las subsecciones anteriores.
 \toprule
 \textbf{Métrica} & \textbf{Valor} \\
 \midrule
-Requisitos funcionales totales (RF) & 31 \\
+Requisitos funcionales totales (RF) & 36 \\
 Requisitos no funcionales (RNF) & 13 \\
 Restricciones de diseño (RD) & 3 \\
-\textbf{Total de requisitos individuales} & \textbf{47} \\
-RF en estado Implementado & 28 (90{,}3\,\%) \\
-RF en estado Modelado (solo esquema) & 3 (9{,}7\,\%) \\
+\textbf{Total de requisitos individuales} & \textbf{52} \\
+RF en estado Implementado & 34 (94{,}4\,\%) \\
+RF en estado Modelado (solo esquema) & 2 (5{,}6\,\%) \\
 RF en estado Planificado & 0 \\
-RF con verificación de prueba nombrada explícitamente & 31 de 31 (100\,\%)$^\ast$ \\
-RF con prioridad formal declarada & 25 de 31 (80{,}6\,\%) \\
+RF con verificación de prueba nombrada explícitamente & 33 de 36 (91{,}7\,\%)$^\ast$ \\
+RF con prioridad MoSCoW formal declarada & 36 de 36 (100\,\%) \\
 Historias de usuario & 14 (\textsc{hu}-01 a \textsc{hu}-14) \\
 Casos de uso detallados / identificados & 9 detallados + 6 identificados \\
 Entradas en el changelog de requisitos & 30 (cobertura: RF-01–RF-22 y RNF-01–RNF-07 únicamente) \\
@@ -1103,18 +1103,20 @@ Tasa de estabilidad (sobre el rango cubierto) & 63{,}6\,\% \\
 \end{tabular}
 \end{table}
 
-$^\ast$Incluye los 3 requisitos en estado Modelado, cuya "verificación"
-en el SRS describe la restricción de esquema (p. ej. la restricción
-\texttt{CHECK} de \textsc{rf}-19), no todavía una prueba de API porque el
-\emph{endpoint} no existe.
+$^\ast$Los tres sin prueba: RF-20 y RF-21 (estado Modelado — la
+"verificación" en el SRS describe la restricción de esquema, no todavía
+una prueba de API porque el \emph{endpoint} no existe) y RF-11b (sin
+prueba dedicada por el hallazgo ético H-06, sección~\ref{sec:ingenieria-requisitos}).
 
 Este capítulo satisface las nueve características INCOSE v4 de un
-requisito individual de forma desigual: fuerte en \emph{Verifiable} (toda
-entrada del SRS nombra su prueba) y en \emph{Correct} (cada corrección se
-documenta con su razón, nunca se sobreescribe en silencio); débil en
-\emph{Complete} mientras persistan los seis RF sin prioridad formal y las
+requisito individual de forma desigual: fuerte en \emph{Verifiable} (33
+de 36 entradas del SRS nombran su prueba, las tres restantes declaradas
+sin prueba por una razón concreta —arriba—, no por omisión) y en
+\emph{Correct} (cada corrección se documenta con su razón, nunca se
+sobreescribe en silencio); ya cerrado en la dimensión de prioridad
+formal (100\,\% de los RF con MoSCoW explícito), débil todavía en las
 historias/casos de uso desactualizados señalados arriba. La lista de
-verificación INCOSE completa queda pendiente como anexo.
+verificación INCOSE completa está en el Anexo~F.
 
 % ============================================================
 \section{Resolución de las observaciones previas (Bloque 0)}
@@ -3454,7 +3456,7 @@ rediseñando el estudio.
 \subsection*{Anexo F --- Checklist INCOSE v4 de calidad de requisitos}
 \addcontentsline{toc}{subsection}{Anexo F --- Checklist INCOSE v4 de calidad de requisitos}
 
-Evaluación de los 31 requisitos funcionales, 13 no funcionales y 3
+Evaluación de los 36 requisitos funcionales, 13 no funcionales y 3
 restricciones de diseño de SGED contra la \emph{INCOSE Guide to
 Writing Requirements} v4 (INCOSE-TP-2010-006-04)~\cite{incose2023},
 prometida como anexo desde la sección~\ref{sec:ingenieria-requisitos}.
@@ -3474,12 +3476,12 @@ detalle se resume en las Tablas~\ref{tab:incose-individual} y
 C1 \emph{Necessary} & \cumple & Cada RF traza a al menos una historia de usuario o caso de uso en \ruta{docs/trazabilidad/matriz.csv} \\
 C2 \emph{Appropriate} & \cumple & Los RF describen comportamiento observable, no detalles de implementación; las decisiones de implementación viven en los ADR \\
 C3 \emph{Unambiguous} & \cumple & Patrón sintáctico ISO/IEC/IEEE~29148:2018 aplicado de forma uniforme desde la resolución de OBS-01 \\
-C4 \emph{Complete} & \parcial & Seis RF del módulo deportivo sin campo \texttt{Prioridad:} explícito (sección~\ref{sec:ingenieria-requisitos}) \\
+C4 \emph{Complete} & \cumple & Los 36 RF tienen hoy campo \texttt{Prioridad:} y \texttt{MoSCoW:} explícitos (sección~\ref{sec:ingenieria-requisitos}); cerrado el 2026-09-04 \\
 C5 \emph{Singular} & \cumple & Ningún RF combina dos comportamientos verificables por separado; revisión manual línea por línea \\
-C6 \emph{Feasible} & \cumple & 28 de 31 RF en estado Implementado son la prueba directa de factibilidad \\
-C7 \emph{Verifiable} & \cumple & 31 de 31 RF referencian una prueba automatizada nombrada explícitamente en su entrada del SRS \\
+C6 \emph{Feasible} & \cumple & 34 de 36 RF en estado Implementado son la prueba directa de factibilidad \\
+C7 \emph{Verifiable} & \cumple & 33 de 36 RF referencian una prueba automatizada nombrada explícitamente en su entrada del SRS; los tres restantes declaran por qué no la tienen \\
 C8 \emph{Correct} & \parcial & RF-11b (peso/altura) es correcto técnicamente pero su base legal no está resuelta (hallazgo H-06) \\
-C9 \emph{Conforming} & \cumple & Los 31 RF siguen el mismo patrón \emph{``[condición] [sujeto] deberá [acción] [objeto] [restricción]''} \\
+C9 \emph{Conforming} & \cumple & Los 36 RF siguen el mismo patrón \emph{``[condición] [sujeto] deberá [acción] [objeto] [restricción]''} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -3495,7 +3497,7 @@ C9 \emph{Conforming} & \cumple & Los 31 RF siguen el mismo patrón \emph{``[cond
 \midrule
 C10 \emph{Complete} & \parcial & El módulo \texttt{Equipo}/\texttt{Partido} no tiene RF formal en el SRS pese a estar migrado \\
 C11 \emph{Consistent} & \parcial & RF-17, RF-18 y RF-22 figuran Implementado en el SRS pero desactualizados en \ruta{historias-usuario.md}/\ruta{casos-uso.md} \\
-C12 \emph{Feasible} & \cumple & 90,3\,\% de los RF implementados por un equipo de tres integrantes en tres entregas previas \\
+C12 \emph{Feasible} & \cumple & 94,4\,\% de los RF implementados por un equipo de tres integrantes en cuatro entregas \\
 C13 \emph{Comprehensible} & \cumple & El SRS incluye glosario, prioridad y estado por requisito \\
 C14 \emph{Able to be validated} & \cumple & Validación continua contra pruebas nombradas (C7) más el ciclo de observaciones docente-equipo \\
 C15 \emph{Correct} & \parcial & Mientras C11 no se cierre, ``el conjunto'' no tiene una única fuente de verdad consistente \\
@@ -3503,19 +3505,22 @@ C15 \emph{Correct} & \parcial & Mientras C11 no se cierre, ``el conjunto'' no ti
 \end{tabular}
 \end{table}
 
-\textbf{Resumen:} 10 de 15 características en \cumple, 5 en \parcial,
-0 en \emph{No cumple}. Las cinco parciales comparten una causa común:
-el crecimiento del sistema superó la velocidad a la que se
-actualizaron \ruta{historias-usuario.md}, \ruta{casos-uso.md} y los
-campos de prioridad del SRS —pendiente concreto declarado en la
-sección~\ref{sec:ingenieria-requisitos}, no una omisión encontrada
-aquí por primera vez.
+\textbf{Resumen:} 11 de 15 características en \cumple, 4 en \parcial,
+0 en \emph{No cumple} —una más en \cumple que en la medición anterior,
+al cerrarse C4 con el campo \texttt{MoSCoW:} explícito. Las cuatro
+parciales restantes ya no comparten una única causa: C8 depende de
+resolver el hallazgo ético H-06 (RF-11b); C10 y C11 dependen de que se
+sincronicen \ruta{historias-usuario.md} y \ruta{casos-uso.md} con el
+SRS y de que el módulo \texttt{Equipo} obtenga un RF formal —pendiente
+concreto declarado en la sección~\ref{sec:ingenieria-requisitos}—; C15
+es consecuencia directa de C11.
 
 \subsection*{Anexo G --- Matriz de trazabilidad completa}
 \addcontentsline{toc}{subsection}{Anexo G --- Matriz de trazabilidad completa}
 
-Los 50 requisitos individuales de SGED (31 RF, 13 RNF, 3 RD, más tres
-recursos de dominio sin RF formal propio) con su historia de usuario,
+Los 50 requisitos individuales de SGED (36 RF, 13 RNF, más el módulo
+\texttt{Equipo} sin RF formal propio; las 3 restricciones de diseño
+RD-01 a RD-03 no se rastrean en esta matriz) con su historia de usuario,
 caso de uso y estado (Tabla~\ref{tab:matriz-completa}). La versión
 completa —con endpoint/componente,
 archivo de implementación, prueba automatizada y evidencia empírica
