@@ -1006,5 +1006,5 @@ repositorio.
 |---|---|---|---|
 | Autor (equipo) | Arcalle Grefa Darwin Orlando | <img src="firmas/darwin-arcalle.png" height="40"> | 2026-09-04 |
 | Autor (equipo) | Pallo Pinto Alejandro Daniel | <img src="firmas/alejandro-pallo.png" height="40"> | 2026-09-04 |
-| Autor (equipo) | Velez Lopez Ricardo Elias | ______________________ | ____________ |
+| Autor (equipo) | Velez Lopez Ricardo Elias | <img src="firmas/ricardo-velez.png" height="40"> | 2026-09-04 |
 | Docente evaluador | Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. | ______________________ | ____________ |
