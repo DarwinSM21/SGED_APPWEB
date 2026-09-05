@@ -994,6 +994,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.0 | 2026-05-xx | Entrega 1A | Versión inicial. |
 | 1.1 | 2026-07-15 | Entrega 1B / Tercera | Resuelve OBS-01 y OBS-12; se añaden módulos de catálogos, inventario y dominio deportivo. |
 | 1.2 | 2026-08-24 | Entrega Final (`v1.0.0`) | Reestructuración de paquetes `academico`/`deportivo`/`seguridad`; RF-35 e historial de asistencia; cierre de trazabilidad (matriz de 47 filas). |
+| 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 
 ## 7. Aprobación
 
