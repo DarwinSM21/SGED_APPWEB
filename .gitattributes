@@ -16,7 +16,8 @@
 
 # Scripts de shell: NUNCA CRLF, o se rompen en Linux/Mac/CI
 *.sh  text eol=lf
-mvnw  text eol=lf   # Maven wrapper Unix (sin .sh, por eso regla explicita)
+# Maven wrapper Unix (sin .sh, por eso regla explicita)
+mvnw  text eol=lf
 
 # Batch de Windows
 *.bat text eol=crlf
