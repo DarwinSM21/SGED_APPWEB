@@ -1,140 +1,141 @@
-// Fuente unica del modelo C4 (niveles 1-3) del sistema SGED.
-// Los PNG de este mismo directorio (L1-contexto, L2-contenedores,
-// L3-componentes) se generan desde aqui con `make diagrams`; no se editan
-// a mano. Los .puml sueltos que antes vivian en docs/diagramas/ se
-// eliminaron por duplicar este modelo con un contenido desactualizado.
-// docs/diagramas/ conserva solo el MER, que no se modela aqui.
-workspace "SGED - ProFútbol" "Sistema de Gestión para la Escuela Deportiva ProFútbol. Modelo C4 (niveles 1-3) en Structurizr DSL." {
+// Single source of truth for the SGED system's C4 model (levels 1-3).
+// The PNG files in this same directory (L1-contexto, L2-contenedores,
+// L3-componentes) are generated from here with `make diagrams`; they are
+// not edited by hand. The loose .puml files that used to live in
+// docs/diagramas/ were removed for duplicating this model with outdated
+// content. docs/diagramas/ only keeps the ER diagram, which is not
+// modeled here.
+workspace "SGED - ProFútbol" "Management System for the ProFútbol Youth Football Academy. C4 model (levels 1-3) in Structurizr DSL." {
 
     !identifiers hierarchical
 
     model {
 
         # ------------------------------------------------------------
-        # Actores (Nivel 1)
+        # Actors (Level 1)
         # ------------------------------------------------------------
-        estudiante = person "Estudiante" "Jugador de la escuela; consulta su perfil, evaluaciones y estado de membresía." "Usuario"
-        entrenador = person "Entrenador" "Registra asistencia, evaluaciones diarias y plantillas de partido." "Usuario"
-        recepcionista = person "Recepcionista" "Gestiona estudiantes, pagos, membresías e inventario." "Usuario"
-        administrador = person "Administrador" "Supervisa el sistema, gestiona usuarios, permisos y reportes." "Usuario"
+        estudiante = person "Student" "Academy player; checks their profile, evaluations and membership status." "User"
+        entrenador = person "Coach" "Registers attendance, daily evaluations and match lineups." "User"
+        recepcionista = person "Receptionist" "Manages students, payments, memberships and inventory." "User"
+        administrador = person "Administrator" "Oversees the system, manages users, permissions and reports." "User"
 
         # ------------------------------------------------------------
-        # Sistemas externos (Nivel 1)
-        # NOTA: SMTP y RFID están en el modelo de datos / roadmap pero
-        # aún no tienen integración en el código (backend/src). Se marcan
-        # como "planned" para no sobre-representar el estado actual.
+        # External systems (Level 1)
+        # NOTE: SMTP and RFID are in the data model / roadmap but are
+        # not yet integrated in the code (backend/src). They are marked
+        # "planned" so as not to overrepresent the current state.
         # ------------------------------------------------------------
-        smtp = softwareSystem "Servidor SMTP" "Envía correos de notificación (Gmail/Mailgun). Planeado, aún no integrado en backend/src." "Externo,Planeado"
-        lectorRfid = softwareSystem "Lector RFID" "Hardware que reportaría presencia al endpoint de asistencias. Columna rfid_codigo ya existe en BD; endpoint pendiente." "Externo,Planeado"
+        smtp = softwareSystem "SMTP Server" "Sends notification emails (Gmail/Mailgun). Planned, not yet integrated in backend/src." "External,Planned"
+        lectorRfid = softwareSystem "RFID Reader" "Hardware that would report attendance to the attendance endpoint. Column rfid_codigo already exists in the DB; endpoint pending." "External,Planned"
 
-        sged = softwareSystem "SGED (ProFútbol)" "Aplicación web para gestión administrativa y deportiva: estudiantes, entrenadores, asistencias, evaluaciones y reportes." {
+        sged = softwareSystem "SGED (ProFútbol)" "Web application for administrative and sports management: students, coaches, attendance, evaluations and reports." {
 
             # --------------------------------------------------------
-            # Contenedores (Nivel 2) - reflejan docker-compose.yml
+            # Containers (Level 2) - reflect docker-compose.yml
             # --------------------------------------------------------
-            spa = container "SPA Angular (servida por nginx)" "Interfaz de usuario: login, registro, guard/interceptor JWT, dashboard. El mismo contenedor sirve los estáticos y termina TLS en :8443 con certificado autofirmado (OWASP A02); :4200 queda en HTTP para desarrollo." "Angular 21, TypeScript, Signals, nginx" "WebApp"
+            spa = container "Angular SPA (served by nginx)" "User interface: login, registration, JWT guard/interceptor, dashboard. The same container serves the static assets and terminates TLS on :8443 with a self-signed certificate (OWASP A02); :4200 remains HTTP for development." "Angular 21, TypeScript, Signals, nginx" "WebApp"
 
-            api = container "API Spring Boot" "Expone la API REST, aplica reglas de negocio y seguridad (JWT en cookie HttpOnly, RBAC)." "Spring Boot 3.2.5, Java 21" "API" {
+            api = container "Spring Boot API" "Exposes the REST API, applies business rules and security (JWT in HttpOnly cookie, RBAC)." "Spring Boot 3.2.5, Java 21" "API" {
 
                 # ----------------------------------------------------
-                # Componentes (Nivel 3) - reflejan backend/src/main/java
-                # tras la reestructuracion en tres dominios:
+                # Components (Level 3) - reflect backend/src/main/java
+                # after the restructuring into three domains:
                 # academico / deportivo / seguridad.
                 # ----------------------------------------------------
 
-                # --- Dominio seguridad ---
-                authController = component "AuthController" "Endpoints /api/auth: login, registro, logout, refresh, me." "Spring MVC REST Controller"
-                usuarioController = component "UsuarioController" "CRUD de cuentas de usuario (/api/usuarios), con paginación y baja lógica." "Spring MVC REST Controller"
-                personaController = component "PersonaController" "CRUD de datos personales (/api/personas); unicidad de cédula y correo." "Spring MVC REST Controller"
-                estadoGeneralController = component "EstadoGeneralController" "Catálogo de estados administrativos (/api/estados_generales), de solo lectura." "Spring MVC REST Controller"
+                # --- Security domain ---
+                authController = component "AuthController" "Endpoints /api/auth: login, register, logout, refresh, me." "Spring MVC REST Controller"
+                usuarioController = component "UsuarioController" "CRUD for user accounts (/api/usuarios), with pagination and soft delete." "Spring MVC REST Controller"
+                personaController = component "PersonaController" "CRUD for personal data (/api/personas); uniqueness of ID number and email." "Spring MVC REST Controller"
+                estadoGeneralController = component "EstadoGeneralController" "Read-only catalog of administrative statuses (/api/estados_generales)." "Spring MVC REST Controller"
 
-                jwtAuthFilter = component "JwtAuthenticationFilter" "Filtro que valida el JWT de la cookie en cada petición y puebla el contexto de seguridad." "Spring Security Filter"
-                jwtService = component "JwtService" "Emisión y validación de tokens JWT (jjwt 0.12), con claims iss/aud/nbf." "Servicio"
-                loginAttemptService = component "LoginAttemptService" "Control de intentos fallidos de login (mitigación de fuerza bruta)." "Servicio"
-                redisBlacklistService = component "RedisBlacklistService" "Lista negra de tokens invalidados (logout) respaldada en Redis." "Servicio"
-                userDetailsService = component "UserDetailsServiceImpl" "Carga de usuario/roles para Spring Security." "Servicio"
-                securityConfig = component "SecurityConfig" "Cadena de filtros, CORS, BCrypt(12), política stateless, CSP explícito." "Configuración Spring Security"
+                jwtAuthFilter = component "JwtAuthenticationFilter" "Filter that validates the JWT from the cookie on every request and populates the security context." "Spring Security Filter"
+                jwtService = component "JwtService" "Issuance and validation of JWT tokens (jjwt 0.12), with iss/aud/nbf claims." "Service"
+                loginAttemptService = component "LoginAttemptService" "Tracks failed login attempts (brute-force mitigation)." "Service"
+                redisBlacklistService = component "RedisBlacklistService" "Blacklist of invalidated tokens (logout) backed by Redis." "Service"
+                userDetailsService = component "UserDetailsServiceImpl" "Loads user/roles for Spring Security." "Service"
+                securityConfig = component "SecurityConfig" "Filter chain, CORS, BCrypt(12), stateless policy, explicit CSP." "Spring Security Configuration"
 
-                usuarioService = component "UsuarioService" "Reglas de negocio de cuentas: alta con contraseña codificada, unicidad de username, baja lógica." "Servicio"
-                personaService = component "PersonaService" "Reglas de negocio de personas: unicidad de cédula/correo al crear y editar." "Servicio"
-                estadoGeneralService = component "EstadoGeneralService" "Consulta del catálogo de estados." "Servicio"
+                usuarioService = component "UsuarioService" "Account business rules: creation with encoded password, username uniqueness, soft delete." "Service"
+                personaService = component "PersonaService" "Person business rules: ID number/email uniqueness on create and edit." "Service"
+                estadoGeneralService = component "EstadoGeneralService" "Status catalog lookup." "Service"
 
-                # --- Dominio academico ---
-                estudianteController = component "EstudianteController" "CRUD de estudiantes (/api/estudiantes) con paginación, baja lógica y operaciones por categoría." "Spring MVC REST Controller"
-                estudianteService = component "EstudianteService" "Reglas de negocio de estudiantes: alta, edición, baja lógica, conteo y desactivación por categoría." "Servicio"
+                # --- Academic domain ---
+                estudianteController = component "EstudianteController" "CRUD for students (/api/estudiantes) with pagination, soft delete and per-category operations." "Spring MVC REST Controller"
+                estudianteService = component "EstudianteService" "Student business rules: create, edit, soft delete, count and deactivate by category." "Service"
 
-                # --- Dominio deportivo ---
-                categoriaController = component "CategoriaController" "CRUD del catálogo de categorías (/api/categorias), con validación de rango de edad." "Spring MVC REST Controller"
-                entrenadorController = component "EntrenadorController" "CRUD de entrenadores (/api/entrenadores), vinculados a persona y cuenta de usuario." "Spring MVC REST Controller"
-                categoriaService = component "CategoriaService" "Reglas de negocio del catálogo de categorías." "Servicio"
-                entrenadorService = component "EntrenadorService" "Reglas de negocio de entrenadores: unicidad de persona y usuario asociados." "Servicio"
+                # --- Sports domain ---
+                categoriaController = component "CategoriaController" "CRUD for the category catalog (/api/categorias), with age-range validation." "Spring MVC REST Controller"
+                entrenadorController = component "EntrenadorController" "CRUD for coaches (/api/entrenadores), linked to a person and a user account." "Spring MVC REST Controller"
+                categoriaService = component "CategoriaService" "Category catalog business rules." "Service"
+                entrenadorService = component "EntrenadorService" "Coach business rules: uniqueness of the linked person and user account." "Service"
 
-                # --- Persistencia ---
-                seguridadRepository = component "UsuarioRepository / PersonaRepository / RolRepository / EstadoGeneralRepository" "Acceso a datos del dominio seguridad vía Spring Data JPA." "Repositorio JPA"
-                estudianteRepository = component "EstudianteRepository" "Acceso a datos de estudiantes vía Spring Data JPA; invoca los procedimientos almacenados con @Procedure." "Repositorio JPA"
-                deportivoRepository = component "CategoriaRepository / EntrenadorRepository" "Acceso a datos del dominio deportivo vía Spring Data JPA." "Repositorio JPA"
+                # --- Persistence ---
+                seguridadRepository = component "UsuarioRepository / PersonaRepository / RolRepository / EstadoGeneralRepository" "Data access for the security domain via Spring Data JPA." "JPA Repository"
+                estudianteRepository = component "EstudianteRepository" "Data access for students via Spring Data JPA; invokes stored procedures with @Procedure." "JPA Repository"
+                deportivoRepository = component "CategoriaRepository / EntrenadorRepository" "Data access for the sports domain via Spring Data JPA." "JPA Repository"
 
-                # --- Transversal ---
-                globalExceptionHandler = component "GlobalExceptionHandler / ProblemDetailsAuthHandlers" "Traduce excepciones a respuestas RFC 7807 (Problem Details); @Valid responde 422." "Componente transversal"
-                redisCacheConfig = component "RedisCacheConfig" "Serialización JSON de la caché de entidades (soporte de java.time.Instant y del @class raíz)." "Configuración"
+                # --- Cross-cutting ---
+                globalExceptionHandler = component "GlobalExceptionHandler / ProblemDetailsAuthHandlers" "Translates exceptions into RFC 7807 (Problem Details) responses; @Valid returns 422." "Cross-cutting Component"
+                redisCacheConfig = component "RedisCacheConfig" "JSON serialization for the entity cache (support for java.time.Instant and the root @class)." "Configuration"
 
-                # Relaciones internas del contenedor API
-                authController -> jwtService "Emite/valida tokens"
-                authController -> loginAttemptService "Registra intentos fallidos"
-                authController -> redisBlacklistService "Invalida token en logout"
-                authController -> seguridadRepository "Lee/crea usuario y persona"
-                userDetailsService -> seguridadRepository "Carga usuario + roles"
-                jwtAuthFilter -> userDetailsService "Resuelve el usuario autenticado"
-                jwtAuthFilter -> redisBlacklistService "Verifica si el token está invalidado"
-                jwtAuthFilter -> jwtService "Valida firma y claims del token"
-                securityConfig -> jwtAuthFilter "Registra el filtro en la cadena"
+                # Internal relationships of the API container
+                authController -> jwtService "Issues/validates tokens"
+                authController -> loginAttemptService "Records failed attempts"
+                authController -> redisBlacklistService "Invalidates token on logout"
+                authController -> seguridadRepository "Reads/creates user and person"
+                userDetailsService -> seguridadRepository "Loads user + roles"
+                jwtAuthFilter -> userDetailsService "Resolves the authenticated user"
+                jwtAuthFilter -> redisBlacklistService "Checks whether the token is invalidated"
+                jwtAuthFilter -> jwtService "Validates token signature and claims"
+                securityConfig -> jwtAuthFilter "Registers the filter in the chain"
 
-                estudianteController -> estudianteService "Delega reglas de negocio"
-                estudianteService -> estudianteRepository "CRUD, paginación, baja lógica y llamada a procedimientos"
+                estudianteController -> estudianteService "Delegates business rules"
+                estudianteService -> estudianteRepository "CRUD, pagination, soft delete and procedure calls"
 
-                usuarioController -> usuarioService "Delega reglas de negocio"
-                usuarioService -> seguridadRepository "CRUD de cuentas"
-                personaController -> personaService "Delega reglas de negocio"
-                personaService -> seguridadRepository "CRUD de personas"
-                estadoGeneralController -> estadoGeneralService "Delega consulta"
-                estadoGeneralService -> seguridadRepository "Lee el catálogo"
+                usuarioController -> usuarioService "Delegates business rules"
+                usuarioService -> seguridadRepository "Account CRUD"
+                personaController -> personaService "Delegates business rules"
+                personaService -> seguridadRepository "Person CRUD"
+                estadoGeneralController -> estadoGeneralService "Delegates lookup"
+                estadoGeneralService -> seguridadRepository "Reads the catalog"
 
-                categoriaController -> categoriaService "Delega reglas de negocio"
-                categoriaService -> deportivoRepository "CRUD de categorías"
-                entrenadorController -> entrenadorService "Delega reglas de negocio"
-                entrenadorService -> deportivoRepository "CRUD de entrenadores"
-                entrenadorService -> seguridadRepository "Verifica persona y usuario asociados"
-                estudianteService -> deportivoRepository "Resuelve la categoría por clave foránea"
+                categoriaController -> categoriaService "Delegates business rules"
+                categoriaService -> deportivoRepository "Category CRUD"
+                entrenadorController -> entrenadorService "Delegates business rules"
+                entrenadorService -> deportivoRepository "Coach CRUD"
+                entrenadorService -> seguridadRepository "Verifies the linked person and user"
+                estudianteService -> deportivoRepository "Resolves the category by foreign key"
 
-                authController -> globalExceptionHandler "Errores gestionados"
-                estudianteController -> globalExceptionHandler "Errores gestionados"
-                usuarioController -> globalExceptionHandler "Errores gestionados"
-                personaController -> globalExceptionHandler "Errores gestionados"
-                categoriaController -> globalExceptionHandler "Errores gestionados"
-                entrenadorController -> globalExceptionHandler "Errores gestionados"
-                estadoGeneralController -> globalExceptionHandler "Errores gestionados"
+                authController -> globalExceptionHandler "Errors handled"
+                estudianteController -> globalExceptionHandler "Errors handled"
+                usuarioController -> globalExceptionHandler "Errors handled"
+                personaController -> globalExceptionHandler "Errors handled"
+                categoriaController -> globalExceptionHandler "Errors handled"
+                entrenadorController -> globalExceptionHandler "Errors handled"
+                estadoGeneralController -> globalExceptionHandler "Errors handled"
 
-                redisCacheConfig -> estudianteService "Configura la caché de la entidad"
+                redisCacheConfig -> estudianteService "Configures the entity cache"
             }
 
-            postgres = container "PostgreSQL 16" "Esquemas 'seguridad', 'academico' y 'deportivo'. Incluye los procedimientos almacenados academico.sp_contar_estudiantes_activos y academico.sp_desactivar_estudiantes_categoria, invocados vía @Procedure." "PostgreSQL 16" "Database"
-            redis = container "Redis 7" "Cache de sesión y lista negra de tokens JWT invalidados." "Redis 7" "Database"
+            postgres = container "PostgreSQL 16" "Schemas 'seguridad', 'academico' and 'deportivo'. Includes the stored procedures academico.sp_contar_estudiantes_activos and academico.sp_desactivar_estudiantes_categoria, invoked via @Procedure." "PostgreSQL 16" "Database"
+            redis = container "Redis 7" "Session cache and blacklist of invalidated JWT tokens." "Redis 7" "Database"
         }
 
         # ------------------------------------------------------------
-        # Relaciones Nivel 1 y 2
+        # Level 1 and 2 relationships
         # ------------------------------------------------------------
-        estudiante -> sged.spa "Consulta perfil y evaluaciones" "HTTPS"
-        entrenador -> sged.spa "Registra asistencia y evaluaciones" "HTTPS"
-        recepcionista -> sged.spa "Gestiona estudiantes, pagos, membresías" "HTTPS"
-        administrador -> sged.spa "Gestiona usuarios y reportes" "HTTPS"
+        estudiante -> sged.spa "Checks profile and evaluations" "HTTPS"
+        entrenador -> sged.spa "Registers attendance and evaluations" "HTTPS"
+        recepcionista -> sged.spa "Manages students, payments, memberships" "HTTPS"
+        administrador -> sged.spa "Manages users and reports" "HTTPS"
 
-        sged.spa -> sged.api "Consume API REST" "HTTP/JSON, cookie JWT HttpOnly"
-        sged.api -> sged.postgres "Lee/escribe" "JDBC, Spring Data JPA"
-        sged.api -> sged.redis "Lee/escribe" "Lettuce/Redis protocol"
+        sged.spa -> sged.api "Consumes REST API" "HTTP/JSON, HttpOnly JWT cookie"
+        sged.api -> sged.postgres "Reads/writes" "JDBC, Spring Data JPA"
+        sged.api -> sged.redis "Reads/writes" "Lettuce/Redis protocol"
 
-        sged -> smtp "Enviaría correos de notificación (roadmap)" "SMTP/TLS"
-        lectorRfid -> sged "Enviaría señal de presencia (roadmap)" "HTTP POST"
+        sged -> smtp "Would send notification emails (roadmap)" "SMTP/TLS"
+        lectorRfid -> sged "Would send presence signal (roadmap)" "HTTP POST"
     }
 
     views {
@@ -142,35 +143,35 @@ workspace "SGED - ProFútbol" "Sistema de Gestión para la Escuela Deportiva Pro
         systemContext sged "C4_Nivel1_Contexto" {
             include *
             autoLayout lr
-            title "Nivel 1 — Contexto del sistema SGED"
-            description "Actores, el sistema SGED y los sistemas externos (uno de ellos, planeado)."
+            title "Level 1 - SGED System Context"
+            description "Actors, the SGED system and external systems (one of them planned)."
         }
 
         container sged "C4_Nivel2_Contenedores" {
             include *
             autoLayout lr
-            title "Nivel 2 — Contenedores de SGED"
-            description "SPA Angular, API Spring Boot, PostgreSQL y Redis, según docker-compose.yml (nginx termina TLS en :8443)."
+            title "Level 2 - SGED Containers"
+            description "Angular SPA, Spring Boot API, PostgreSQL and Redis, per docker-compose.yml (nginx terminates TLS on :8443)."
         }
 
         component sged.api "C4_Nivel3_Componentes_API" {
             include *
             autoLayout lr
-            title "Nivel 3 — Componentes del contenedor API Spring Boot"
-            description "Controladores, servicios, repositorios y filtros de seguridad de los tres dominios: academico, deportivo y seguridad."
+            title "Level 3 - Components of the Spring Boot API Container"
+            description "Controllers, services, repositories and security filters of the three domains: academico, deportivo and seguridad."
         }
 
         styles {
-            element "Usuario" {
+            element "User" {
                 background #08427b
                 color #ffffff
                 shape person
             }
-            element "Externo" {
+            element "External" {
                 background #999999
                 color #ffffff
             }
-            element "Planeado" {
+            element "Planned" {
                 background #cccccc
                 color #333333
                 border dashed
@@ -194,11 +195,11 @@ workspace "SGED - ProFútbol" "Sistema de Gestión para la Escuela Deportiva Pro
                 color #000000
                 shape roundedBox
             }
-            element "Servicio" {
+            element "Service" {
                 background #85bbf0
                 color #000000
             }
-            element "Repositorio JPA" {
+            element "JPA Repository" {
                 background #6ba4e0
                 color #000000
                 shape cylinder
@@ -207,17 +208,17 @@ workspace "SGED - ProFútbol" "Sistema de Gestión para la Escuela Deportiva Pro
                 background #b8a5f5
                 color #000000
             }
-            element "Configuración Spring Security" {
+            element "Spring Security Configuration" {
                 background #b8a5f5
                 color #000000
                 shape folder
             }
-            element "Configuración" {
+            element "Configuration" {
                 background #d4c9f7
                 color #000000
                 shape folder
             }
-            element "Componente transversal" {
+            element "Cross-cutting Component" {
                 background #f5d5a5
                 color #000000
             }
