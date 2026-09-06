@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.pago.controller;
+package org.uteq.backend.academico.payment.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,9 +8,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.uteq.backend.academico.pago.dto.PagoDtos.*;
-import org.uteq.backend.academico.pago.entity.Pago;
-import org.uteq.backend.academico.pago.service.PagoService;
+import org.uteq.backend.academico.payment.dto.PaymentDtos.*;
+import org.uteq.backend.academico.payment.entity.Payment;
+import org.uteq.backend.academico.payment.service.PaymentService;
 
 import java.util.List;
 
@@ -20,15 +20,15 @@ import java.util.List;
  * cliente.
  *
  * <p>Los métodos llevan {@code @Transactional} propio porque
- * {@code aResponse()} navega relaciones LAZY ({@code Pago -> Estudiante ->
- * Person}, {@code Pago -> UserAccount -> Person}) con open-in-view
+ * {@code toResponse()} navega relaciones LAZY ({@code Payment -> Estudiante ->
+ * Person}, {@code Payment -> UserAccount -> Person}) con open-in-view
  * deshabilitado.
  */
 @RestController
 @RequestMapping("/api/pagos")
 @RequiredArgsConstructor
-public class PagoController {
-    private final PagoService pagoService;
+public class PaymentController {
+    private final PaymentService pagoService;
 
     /**
      * Registra el pago de una o varias mensualidades de membresía (todo o
@@ -45,11 +45,11 @@ public class PagoController {
     @PostMapping("/membresia")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional
-    public ResponseEntity<List<PagoResponse>> registrarMembresia(@Valid @RequestBody RegistrarMembresiaRequest request) {
-        var pagos = pagoService.registrarMembresia(
+    public ResponseEntity<List<PaymentResponse>> registerMembership(@Valid @RequestBody RegisterMembershipRequest request) {
+        var pagos = pagoService.registerMembership(
                 request.idEstudiante(), request.anio(), request.meses(),
                 request.monto(), request.fechaPago(), usernameAutenticado());
-        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::aResponse).toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::toResponse).toList());
     }
 
     /**
@@ -63,10 +63,10 @@ public class PagoController {
     @PostMapping("/diario")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional
-    public ResponseEntity<PagoResponse> registrarDiario(@Valid @RequestBody RegistrarDiarioRequest request) {
-        var pago = pagoService.registrarDiario(
+    public ResponseEntity<PaymentResponse> registerDaily(@Valid @RequestBody RegisterDailyRequest request) {
+        var pago = pagoService.registerDaily(
                 request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());
-        return ResponseEntity.status(HttpStatus.CREATED).body(aResponse(pago));
+        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(pago));
     }
 
     /**
@@ -84,10 +84,10 @@ public class PagoController {
     @PostMapping("/{idPago}/anular")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional
-    public ResponseEntity<PagoResponse> anular(@PathVariable Long idPago,
-                                               @Valid @RequestBody AnularPagoRequest request) {
-        return ResponseEntity.ok(aResponse(
-                pagoService.anular(idPago, request.motivo(), usernameAutenticado())));
+    public ResponseEntity<PaymentResponse> cancel(@PathVariable Long idPago,
+                                               @Valid @RequestBody CancelPaymentRequest request) {
+        return ResponseEntity.ok(toResponse(
+                pagoService.cancel(idPago, request.motivo(), usernameAutenticado())));
     }
 
     /**
@@ -101,8 +101,8 @@ public class PagoController {
     @GetMapping("/estudiante/{idEstudiante}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)
-    public ResponseEntity<List<PagoResponse>> historial(@PathVariable Long idEstudiante) {
-        return ResponseEntity.ok(pagoService.historialDe(idEstudiante).stream().map(this::aResponse).toList());
+    public ResponseEntity<List<PaymentResponse>> history(@PathVariable Long idEstudiante) {
+        return ResponseEntity.ok(pagoService.historyFor(idEstudiante).stream().map(this::toResponse).toList());
     }
 
     /**
@@ -113,8 +113,8 @@ public class PagoController {
     @GetMapping("/ingresos-mes")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)
-    public ResponseEntity<IngresosMesResponse> ingresosDelMes() {
-        return ResponseEntity.ok(pagoService.ingresosDelMes());
+    public ResponseEntity<MonthlyIncomeResponse> currentMonthIncome() {
+        return ResponseEntity.ok(pagoService.currentMonthIncome());
     }
 
     /**
@@ -127,19 +127,19 @@ public class PagoController {
     @GetMapping("/ingresos-historico")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
     @Transactional(readOnly = true)
-    public ResponseEntity<HistoricoIngresosResponse> historicoIngresos(
+    public ResponseEntity<IncomeHistoryResponse> incomeHistory(
             @RequestParam(defaultValue = "6") int meses) {
-        return ResponseEntity.ok(pagoService.historicoIngresos(meses));
+        return ResponseEntity.ok(pagoService.incomeHistory(meses));
     }
 
     private String usernameAutenticado() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-    private PagoResponse aResponse(Pago p) {
+    private PaymentResponse toResponse(Payment p) {
         var persona = p.getEstudiante().getPersona();
         var registrador = p.getRegistradoPor().getPersona();
-        return new PagoResponse(
+        return new PaymentResponse(
                 p.getIdPago(),
                 p.getEstudiante().getIdEstudiante(),
                 persona.getNombre() + " " + persona.getApellido(),

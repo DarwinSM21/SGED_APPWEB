@@ -11,8 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.pago.entity.Pago;
-import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.academico.payment.entity.Payment;
+import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class ReportServiceTest {
     @Mock private EstudianteRepository estudianteRepository;
-    @Mock private PagoRepository pagoRepository;
+    @Mock private PaymentRepository pagoRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
@@ -94,9 +94,9 @@ class ReportServiceTest {
     @DisplayName("pagos con resultados genera un PDF valido")
     void paymentsWithResultsGeneratesPdf() {
         UserAccount registrador = UserAccount.builder().persona(persona("Luis", "Gómez")).build();
-        Pago pago = Pago.builder()
+        Payment pago = Payment.builder()
                 .estudiante(estudiante(1L, "SUB-12"))
-                .tipo(Pago.TipoPago.DIARIO)
+                .tipo(Payment.TipoPago.DIARIO)
                 .monto(BigDecimal.TEN)
                 .fechaPago(LocalDate.of(2026, 8, 1))
                 .registradoPor(registrador)

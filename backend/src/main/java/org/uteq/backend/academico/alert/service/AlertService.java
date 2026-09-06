@@ -8,8 +8,8 @@ import org.uteq.backend.academico.alert.dto.AlertDtos.StudentAtRiskResponse;
 import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
-import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
@@ -42,7 +42,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AlertService {
     private final EstudianteRepository estudianteRepository;
-    private final PagoRepository pagoRepository;
+    private final PaymentRepository pagoRepository;
     private final LesionRepository lesionRepository;
     private final AsistenciaRepository asistenciaRepository;
 
@@ -76,7 +76,7 @@ public class AlertService {
         List<Estudiante> activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();
 
         Set<Long> alDia = new HashSet<>(
-                pagoRepository.idsConMembresiaCubierta(TipoPago.MEMBRESIA, anio, mes));
+                pagoRepository.idsWithMembershipCovered(TipoPago.MEMBRESIA, anio, mes));
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
 
         LocalDate corte = hoy.minusDays(1);

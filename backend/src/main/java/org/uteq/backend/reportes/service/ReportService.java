@@ -7,8 +7,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.pago.entity.Pago;
-import org.uteq.backend.academico.pago.repository.PagoRepository;
+import org.uteq.backend.academico.payment.entity.Payment;
+import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -47,7 +47,7 @@ public class ReportService {
 
     private final ReportPdfService pdfService;
     private final EstudianteRepository estudianteRepository;
-    private final PagoRepository pagoRepository;
+    private final PaymentRepository pagoRepository;
     private final AsistenciaRepository asistenciaRepository;
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
@@ -87,9 +87,9 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] payments(Long idEstudiante, LocalDate desde, LocalDate hasta) {
-        Specification<Pago> spec = Specification.<Pago>where(igualA("estudiante.idEstudiante", idEstudiante))
-                .and(this.<Pago>desdeDe("fechaPago", desde))
-                .and(this.<Pago>hastaDe("fechaPago", hasta));
+        Specification<Payment> spec = Specification.<Payment>where(igualA("estudiante.idEstudiante", idEstudiante))
+                .and(this.<Payment>desdeDe("fechaPago", desde))
+                .and(this.<Payment>hastaDe("fechaPago", hasta));
         var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaPago"))).getContent()).stream()
                 .map(this::filaPago)
                 .toList();
@@ -200,8 +200,8 @@ public class ReportService {
         return resultados;
     }
 
-    private List<String> filaPago(Pago p) {
-        String periodo = p.getTipo() == Pago.TipoPago.MEMBRESIA ? p.getMes() + "/" + p.getAnio() : "-";
+    private List<String> filaPago(Payment p) {
+        String periodo = p.getTipo() == Payment.TipoPago.MEMBRESIA ? p.getMes() + "/" + p.getAnio() : "-";
         var registrador = p.getRegistradoPor().getPersona();
         return List.of(
                 p.getEstudiante().getPersona().getNombre() + " " + p.getEstudiante().getPersona().getApellido(),

@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.pago.entity;
+package org.uteq.backend.academico.payment.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -18,7 +18,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pago {
+public class Payment {
     public enum TipoPago { MEMBRESIA, DIARIO }
 
     @Id
@@ -58,7 +58,7 @@ public class Pago {
     @Column(name = "motivo_anulacion", length = 255)
     private String motivoAnulacion;
 
-    public boolean estaVigente() {
+    public boolean isActive() {
         return anuladoEn == null;
     }
 

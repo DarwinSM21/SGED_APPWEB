@@ -15,11 +15,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.pago.controller.PagoController;
-import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
-import org.uteq.backend.academico.pago.entity.Pago;
-import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
-import org.uteq.backend.academico.pago.service.PagoService;
+import org.uteq.backend.academico.payment.controller.PaymentController;
+import org.uteq.backend.academico.payment.dto.PaymentDtos.MonthlyIncomeResponse;
+import org.uteq.backend.academico.payment.entity.Payment;
+import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.service.PaymentService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -41,10 +41,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class PagoControllerTest {
-    @Mock private PagoService pagoService;
+class PaymentControllerTest {
+    @Mock private PaymentService pagoService;
 
-    @InjectMocks private PagoController controller;
+    @InjectMocks private PaymentController controller;
 
     private MockMvc mockMvc;
 
@@ -66,14 +66,14 @@ class PagoControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    private Pago pago(Long id, TipoPago tipo, Integer anio, Integer mes) {
+    private Payment pago(Long id, TipoPago tipo, Integer anio, Integer mes) {
         var estudiante = Estudiante.builder().idEstudiante(1L)
                 .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
         var registrador = UserAccount.builder().idUsuario(9L)
                 .persona(Person.builder().nombre("Ana").apellido("Admin").build())
                 .build();
-        return Pago.builder()
+        return Payment.builder()
                 .idPago(id)
                 .estudiante(estudiante)
                 .tipo(tipo)
@@ -89,7 +89,7 @@ class PagoControllerTest {
     @DisplayName("registrarMembresia devuelve 201 usando el usuario autenticado, no uno del body")
     void registrarMembresia_devuelve_201() throws Exception {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
-        when(pagoService.registrarMembresia(eq(1L), eq(2026), eq(List.of(8)),
+        when(pagoService.registerMembership(eq(1L), eq(2026), eq(List.of(8)),
                 eq(new BigDecimal("30.00")), isNull(), eq("recepcion@sged.test")))
                 .thenReturn(List.of(pago(1L, TipoPago.MEMBRESIA, 2026, 8)));
 
@@ -107,7 +107,7 @@ class PagoControllerTest {
     @DisplayName("registrarMembresia propaga como 400 el mes ya cubierto")
     void registrarMembresia_mes_cubierto_da_400() throws Exception {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
-        when(pagoService.registrarMembresia(any(), anyInt(), any(), any(), any(), any()))
+        when(pagoService.registerMembership(any(), anyInt(), any(), any(), any(), any()))
                 .thenThrow(new IllegalArgumentException("El mes 8/2026 ya está cubierto para este estudiante"));
 
         mockMvc.perform(post("/api/pagos/membresia")
@@ -129,7 +129,7 @@ class PagoControllerTest {
     @DisplayName("registrarDiario devuelve 201 con anio y mes nulos (no cubre un periodo)")
     void registrarDiario_devuelve_201() throws Exception {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
-        when(pagoService.registrarDiario(eq(1L), eq(new BigDecimal("5.00")), isNull(), eq("recepcion@sged.test")))
+        when(pagoService.registerDaily(eq(1L), eq(new BigDecimal("5.00")), isNull(), eq("recepcion@sged.test")))
                 .thenReturn(pago(2L, TipoPago.DIARIO, null, null));
 
         mockMvc.perform(post("/api/pagos/diario")
@@ -144,7 +144,7 @@ class PagoControllerTest {
     @Test
     @DisplayName("historial devuelve la lista de pagos del estudiante")
     void historial_devuelve_lista() throws Exception {
-        when(pagoService.historialDe(1L)).thenReturn(List.of(pago(3L, TipoPago.DIARIO, null, null)));
+        when(pagoService.historyFor(1L)).thenReturn(List.of(pago(3L, TipoPago.DIARIO, null, null)));
 
         mockMvc.perform(get("/api/pagos/estudiante/1"))
                 .andExpect(status().isOk())
@@ -154,7 +154,7 @@ class PagoControllerTest {
     @Test
     @DisplayName("historial responde 404 si el estudiante no existe")
     void historial_estudiante_inexistente_da_404() throws Exception {
-        when(pagoService.historialDe(99L))
+        when(pagoService.historyFor(99L))
                 .thenThrow(new ResourceNotFoundException("Estudiante no encontrado con id: 99"));
 
         mockMvc.perform(get("/api/pagos/estudiante/99"))
@@ -164,7 +164,7 @@ class PagoControllerTest {
     @Test
     @DisplayName("ingresosDelMes devuelve el total y la cantidad de pagos del mes vigente")
     void ingresosDelMes_devuelve_200() throws Exception {
-        when(pagoService.ingresosDelMes()).thenReturn(new IngresosMesResponse(2026, 8, new BigDecimal("150.00"), 3L));
+        when(pagoService.currentMonthIncome()).thenReturn(new MonthlyIncomeResponse(2026, 8, new BigDecimal("150.00"), 3L));
 
         mockMvc.perform(get("/api/pagos/ingresos-mes"))
                 .andExpect(status().isOk())

@@ -1,15 +1,15 @@
-package org.uteq.backend.academico.pago.service;
+package org.uteq.backend.academico.payment.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.pago.entity.Pago;
-import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
-import org.uteq.backend.academico.pago.repository.PagoRepository;
-import org.uteq.backend.academico.pago.dto.PagoDtos.HistoricoIngresosResponse;
-import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
+import org.uteq.backend.academico.payment.entity.Payment;
+import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.repository.PaymentRepository;
+import org.uteq.backend.academico.payment.dto.PaymentDtos.IncomeHistoryResponse;
+import org.uteq.backend.academico.payment.dto.PaymentDtos.MonthlyIncomeResponse;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.audit.aop.Audited;
@@ -35,8 +35,8 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
-public class PagoService {
-    private final PagoRepository pagoRepository;
+public class PaymentService {
+    private final PaymentRepository pagoRepository;
     private final EstudianteRepository estudianteRepository;
     private final UserAccountRepository usuarioRepository;
 
@@ -58,7 +58,7 @@ public class PagoService {
     @Audited(accion = "CREAR", entidad = "Pago",
             descripcionSpel = "'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'")
     @Transactional
-    public List<Pago> registrarMembresia(Long idEstudiante, int anio, List<Integer> meses,
+    public List<Payment> registerMembership(Long idEstudiante, int anio, List<Integer> meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
         Estudiante estudiante = buscarEstudiante(idEstudiante);
         UserAccount registrador = buscarUsuario(usernameRegistrador);
@@ -73,8 +73,8 @@ public class PagoService {
         }
 
         LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR);
-        List<Pago> pagos = mesesUnicos.stream()
-                .map(mes -> Pago.builder()
+        List<Payment> pagos = mesesUnicos.stream()
+                .map(mes -> Payment.builder()
                         .estudiante(estudiante)
                         .tipo(TipoPago.MEMBRESIA)
                         .anio((short) anio)
@@ -100,11 +100,11 @@ public class PagoService {
     @Audited(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago",
             descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
     @Transactional
-    public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
+    public Payment registerDaily(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
         Estudiante estudiante = buscarEstudiante(idEstudiante);
         UserAccount registrador = buscarUsuario(usernameRegistrador);
 
-        return pagoRepository.save(Pago.builder()
+        return pagoRepository.save(Payment.builder()
                 .estudiante(estudiante)
                 .tipo(TipoPago.DIARIO)
                 .monto(monto)
@@ -121,7 +121,7 @@ public class PagoService {
      * @throws ResourceNotFoundException si el estudiante no existe
      */
     @Transactional(readOnly = true)
-    public List<Pago> historialDe(Long idEstudiante) {
+    public List<Payment> historyFor(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
@@ -135,14 +135,14 @@ public class PagoService {
      * @return año, mes, total cobrado y número de pagos vigentes del mes
      */
     @Transactional(readOnly = true)
-    public IngresosMesResponse ingresosDelMes() {
+    public MonthlyIncomeResponse currentMonthIncome() {
         YearMonth mesActual = YearMonth.now(Zones.ECUADOR);
         LocalDate inicio = mesActual.atDay(1);
         LocalDate fin = mesActual.atEndOfMonth();
 
-        BigDecimal total = pagoRepository.sumarMontoEntreFechas(inicio, fin);
+        BigDecimal total = pagoRepository.sumAmountBetweenDates(inicio, fin);
         long cantidad = pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin);
-        return new IngresosMesResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
+        return new MonthlyIncomeResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
     }
 
     /**
@@ -157,38 +157,38 @@ public class PagoService {
      *         ({@code null} si no hubo cobros)
      */
     @Transactional(readOnly = true)
-    public HistoricoIngresosResponse historicoIngresos(int meses) {
+    public IncomeHistoryResponse incomeHistory(int meses) {
         int cantidad = Math.max(1, Math.min(meses, 24));
         YearMonth actual = YearMonth.now(Zones.ECUADOR);
         YearMonth primero = actual.minusMonths(cantidad - 1L);
 
-        Map<YearMonth, IngresosMesResponse> porMes = new HashMap<>();
-        for (Object[] fila : pagoRepository.totalesPorMesDeCobro(primero.atDay(1), actual.atEndOfMonth())) {
+        Map<YearMonth, MonthlyIncomeResponse> porMes = new HashMap<>();
+        for (Object[] fila : pagoRepository.monthlyBillingTotals(primero.atDay(1), actual.atEndOfMonth())) {
             int anio = ((Number) fila[0]).intValue();
             int mes = ((Number) fila[1]).intValue();
-            porMes.put(YearMonth.of(anio, mes), new IngresosMesResponse(
+            porMes.put(YearMonth.of(anio, mes), new MonthlyIncomeResponse(
                     anio, mes, (BigDecimal) fila[2], ((Number) fila[3]).longValue()));
         }
 
-        List<IngresosMesResponse> serie = new ArrayList<>(cantidad);
+        List<MonthlyIncomeResponse> serie = new ArrayList<>(cantidad);
         for (int i = 0; i < cantidad; i++) {
             YearMonth m = primero.plusMonths(i);
-            serie.add(porMes.getOrDefault(m, new IngresosMesResponse(
+            serie.add(porMes.getOrDefault(m, new MonthlyIncomeResponse(
                     m.getYear(), m.getMonthValue(), BigDecimal.ZERO, 0L)));
         }
 
         BigDecimal total = serie.stream()
-                .map(IngresosMesResponse::total)
+                .map(MonthlyIncomeResponse::total)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal promedio = total.divide(BigDecimal.valueOf(cantidad), 2, RoundingMode.HALF_UP);
 
-        IngresosMesResponse mejor = serie.stream()
+        MonthlyIncomeResponse mejor = serie.stream()
                 .filter(m -> m.total().compareTo(BigDecimal.ZERO) > 0)
-                .max(Comparator.comparing(IngresosMesResponse::total))
+                .max(Comparator.comparing(MonthlyIncomeResponse::total))
                 .orElse(null);
 
-        return new HistoricoIngresosResponse(serie, total, promedio, mejor);
+        return new IncomeHistoryResponse(serie, total, promedio, mejor);
     }
 
     /**
@@ -205,11 +205,11 @@ public class PagoService {
      */
     @Audited(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
     @Transactional
-    public Pago anular(Long idPago, String motivo, String usernameAnulador) {
-        Pago pago = pagoRepository.findById(idPago)
+    public Payment cancel(Long idPago, String motivo, String usernameAnulador) {
+        Payment pago = pagoRepository.findById(idPago)
                 .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + idPago));
 
-        if (!pago.estaVigente()) {
+        if (!pago.isActive()) {
             throw new IllegalArgumentException("Este pago ya estaba anulado");
         }
 

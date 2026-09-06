@@ -8,10 +8,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.pago.entity.Pago;
-import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
-import org.uteq.backend.academico.pago.repository.PagoRepository;
-import org.uteq.backend.academico.pago.service.PagoService;
+import org.uteq.backend.academico.payment.entity.Payment;
+import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.repository.PaymentRepository;
+import org.uteq.backend.academico.payment.service.PaymentService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -33,12 +33,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class PagoServiceTest {
-    @Mock private PagoRepository pagoRepository;
+class PaymentServiceTest {
+    @Mock private PaymentRepository pagoRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private UserAccountRepository usuarioRepository;
 
-    @InjectMocks private PagoService service;
+    @InjectMocks private PaymentService service;
 
     private static final Long ID_EST = 1L;
     private static final String USERNAME = "recepcion@sged.test";
@@ -67,10 +67,10 @@ class PagoServiceTest {
         LocalDate inicio = hoy.atDay(1);
         LocalDate fin = hoy.atEndOfMonth();
 
-        when(pagoRepository.sumarMontoEntreFechas(inicio, fin)).thenReturn(new BigDecimal("150.00"));
+        when(pagoRepository.sumAmountBetweenDates(inicio, fin)).thenReturn(new BigDecimal("150.00"));
         when(pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin)).thenReturn(3L);
 
-        var response = service.ingresosDelMes();
+        var response = service.currentMonthIncome();
 
         assertThat(response.anio()).isEqualTo(hoy.getYear());
         assertThat(response.mes()).isEqualTo(hoy.getMonthValue());
@@ -81,10 +81,10 @@ class PagoServiceTest {
     @Test
     @DisplayName("ingresosDelMes devuelve cero, no null, cuando no hay pagos este mes")
     void ingresosDelMes_sin_pagos_devuelve_cero() {
-        when(pagoRepository.sumarMontoEntreFechas(any(), any())).thenReturn(BigDecimal.ZERO);
+        when(pagoRepository.sumAmountBetweenDates(any(), any())).thenReturn(BigDecimal.ZERO);
         when(pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(any(), any())).thenReturn(0L);
 
-        var response = service.ingresosDelMes();
+        var response = service.currentMonthIncome();
 
         assertThat(response.total()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.cantidadPagos()).isZero();
@@ -99,7 +99,7 @@ class PagoServiceTest {
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
         var meses = List.of(3, 1, 2, 1);
-        var pagos = service.registrarMembresia(ID_EST, 2026, meses, new BigDecimal("30.00"), null, USERNAME);
+        var pagos = service.registerMembership(ID_EST, 2026, meses, new BigDecimal("30.00"), null, USERNAME);
 
         assertThat(pagos).extracting(p -> p.getMes().intValue()).containsExactly(1, 2, 3);
         assertThat(pagos).allSatisfy(p -> {
@@ -118,7 +118,7 @@ class PagoServiceTest {
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
         var fechaFija = LocalDate.of(2026, 1, 15);
-        var pagos = service.registrarMembresia(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), fechaFija, USERNAME);
+        var pagos = service.registerMembership(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), fechaFija, USERNAME);
 
         assertThat(pagos).singleElement().satisfies(p -> assertThat(p.getFechaPago()).isEqualTo(fechaFija));
     }
@@ -133,7 +133,7 @@ class PagoServiceTest {
                 ID_EST, TipoPago.MEMBRESIA, (short) 2026, (short) 2)).thenReturn(true);
 
         var e = assertThrows(IllegalArgumentException.class, () ->
-                service.registrarMembresia(ID_EST, 2026, List.of(1, 2), new BigDecimal("30.00"), null, USERNAME));
+                service.registerMembership(ID_EST, 2026, List.of(1, 2), new BigDecimal("30.00"), null, USERNAME));
 
         assertThat(e.getMessage()).contains("2/2026").contains("ya está cubierto");
         verify(pagoRepository, never()).saveAll(anyList());
@@ -145,7 +145,7 @@ class PagoServiceTest {
         when(estudianteRepository.findById(ID_EST)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
-                service.registrarMembresia(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), null, USERNAME));
+                service.registerMembership(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), null, USERNAME));
 
         verify(pagoRepository, never()).saveAll(anyList());
     }
@@ -157,7 +157,7 @@ class PagoServiceTest {
         when(usuarioRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
 
         assertThrows(IllegalStateException.class, () ->
-                service.registrarMembresia(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), null, USERNAME));
+                service.registerMembership(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), null, USERNAME));
 
         verify(pagoRepository, never()).saveAll(anyList());
     }
@@ -166,10 +166,10 @@ class PagoServiceTest {
     @DisplayName("registrarDiario guarda un pago DIARIO con la fecha dada")
     void registrarDiario_usa_la_fecha_dada() {
         existenEstudianteYUsuario();
-        when(pagoRepository.save(any(Pago.class))).thenAnswer(i -> i.getArgument(0));
+        when(pagoRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
         var fechaFija = LocalDate.of(2026, 3, 10);
-        var pago = service.registrarDiario(ID_EST, new BigDecimal("5.00"), fechaFija, USERNAME);
+        var pago = service.registerDaily(ID_EST, new BigDecimal("5.00"), fechaFija, USERNAME);
 
         assertThat(pago.getTipo()).isEqualTo(TipoPago.DIARIO);
         assertThat(pago.getFechaPago()).isEqualTo(fechaFija);
@@ -181,9 +181,9 @@ class PagoServiceTest {
     @DisplayName("registrarDiario usa la fecha de hoy en Ecuador si no se especifica")
     void registrarDiario_usa_fecha_de_hoy_si_no_se_da() {
         existenEstudianteYUsuario();
-        when(pagoRepository.save(any(Pago.class))).thenAnswer(i -> i.getArgument(0));
+        when(pagoRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
 
-        var pago = service.registrarDiario(ID_EST, new BigDecimal("5.00"), null, USERNAME);
+        var pago = service.registerDaily(ID_EST, new BigDecimal("5.00"), null, USERNAME);
 
         assertThat(pago.getFechaPago()).isEqualTo(LocalDate.now(Zones.ECUADOR));
     }
@@ -193,7 +193,7 @@ class PagoServiceTest {
     void historialDe_estudiante_inexistente() {
         when(estudianteRepository.existsById(ID_EST)).thenReturn(false);
 
-        assertThrows(ResourceNotFoundException.class, () -> service.historialDe(ID_EST));
+        assertThrows(ResourceNotFoundException.class, () -> service.historyFor(ID_EST));
 
         verify(pagoRepository, never()).findByEstudiante_IdEstudianteOrderByFechaPagoDesc(any());
     }
@@ -202,10 +202,10 @@ class PagoServiceTest {
     @DisplayName("historialDe devuelve los pagos del estudiante ordenados por fecha descendente")
     void historialDe_devuelve_pagos_del_estudiante() {
         when(estudianteRepository.existsById(ID_EST)).thenReturn(true);
-        var esperado = List.of(Pago.builder().idPago(1L).tipo(TipoPago.DIARIO).build());
+        var esperado = List.of(Payment.builder().idPago(1L).tipo(TipoPago.DIARIO).build());
         when(pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(ID_EST)).thenReturn(esperado);
 
-        var pagos = service.historialDe(ID_EST);
+        var pagos = service.historyFor(ID_EST);
 
         assertThat(pagos).isEqualTo(esperado);
     }
@@ -213,15 +213,15 @@ class PagoServiceTest {
     @Test
     @DisplayName("anular deja constancia de quien, cuando y por que")
     void anular_registra_la_trazabilidad() {
-        Pago pago = Pago.builder()
-                .idPago(9L).tipo(Pago.TipoPago.DIARIO)
+        Payment pago = Payment.builder()
+                .idPago(9L).tipo(Payment.TipoPago.DIARIO)
                 .monto(new BigDecimal("250.00")).fechaPago(LocalDate.now())
                 .build();
         when(pagoRepository.findById(9L)).thenReturn(Optional.of(pago));
         when(usuarioRepository.findByUsername(USERNAME)).thenReturn(Optional.of(registrador()));
         when(pagoRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
-        Pago resultado = service.anular(9L, "Monto mal digitado", USERNAME);
+        Payment resultado = service.cancel(9L, "Monto mal digitado", USERNAME);
 
         assertThat(resultado.getAnuladoEn()).isNotNull();
         assertThat(resultado.getAnuladoPor()).isNotNull();
@@ -233,8 +233,8 @@ class PagoServiceTest {
     @Test
     @DisplayName("anular dos veces se rechaza en vez de pasar en silencio")
     void anular_dos_veces_falla() {
-        Pago yaAnulado = Pago.builder()
-                .idPago(9L).tipo(Pago.TipoPago.DIARIO)
+        Payment yaAnulado = Payment.builder()
+                .idPago(9L).tipo(Payment.TipoPago.DIARIO)
                 .monto(new BigDecimal("25.00")).fechaPago(LocalDate.now())
                 .anuladoEn(java.time.OffsetDateTime.now())
                 .motivoAnulacion("ya estaba")
@@ -242,7 +242,7 @@ class PagoServiceTest {
         when(pagoRepository.findById(9L)).thenReturn(Optional.of(yaAnulado));
 
         assertThrows(IllegalArgumentException.class,
-                () -> service.anular(9L, "otra vez", USERNAME));
+                () -> service.cancel(9L, "otra vez", USERNAME));
 
         verify(pagoRepository, never()).save(any());
     }
@@ -253,6 +253,6 @@ class PagoServiceTest {
         when(pagoRepository.findById(404L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,
-                () -> service.anular(404L, "motivo", USERNAME));
+                () -> service.cancel(404L, "motivo", USERNAME));
     }
 }

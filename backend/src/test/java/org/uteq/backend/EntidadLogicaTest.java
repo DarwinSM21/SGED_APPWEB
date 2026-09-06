@@ -2,7 +2,7 @@ package org.uteq.backend;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.uteq.backend.academico.pago.entity.Pago;
+import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.representante.entity.Consentimiento;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionDiaria;
@@ -32,13 +32,13 @@ class EntidadLogicaTest {
     }
 
     @Test
-    @DisplayName("Pago.estaVigente(): deja de estarlo al anularse")
+    @DisplayName("Payment.isActive(): deja de estarlo al anularse")
     void pago_estaVigente() {
-        Pago p = Pago.builder().build();
-        assertThat(p.estaVigente()).isTrue();
+        Payment p = Payment.builder().build();
+        assertThat(p.isActive()).isTrue();
 
         p.setAnuladoEn(OffsetDateTime.now());
-        assertThat(p.estaVigente()).isFalse();
+        assertThat(p.isActive()).isFalse();
     }
 
     @Test

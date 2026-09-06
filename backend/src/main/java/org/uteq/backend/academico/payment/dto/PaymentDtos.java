@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.pago.dto;
+package org.uteq.backend.academico.payment.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
@@ -7,16 +7,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-public final class PagoDtos {
-    private PagoDtos() {}
+public final class PaymentDtos {
+    private PaymentDtos() {}
 
-    public record RegistrarMembresiaRequest(
+    public record RegisterMembershipRequest(
             @NotNull Long idEstudiante,
             @NotNull @Min(2020) @Max(2100) Integer anio,
             @NotEmpty List<@Min(1) @Max(12) Integer> meses,
@@ -24,13 +24,13 @@ public final class PagoDtos {
             LocalDate fechaPago
     ) {}
 
-    public record RegistrarDiarioRequest(
+    public record RegisterDailyRequest(
             @NotNull Long idEstudiante,
             @NotNull @DecimalMin(value = "0.01") BigDecimal monto,
             LocalDate fechaPago
     ) {}
 
-    public record PagoResponse(
+    public record PaymentResponse(
             Long idPago,
             Long idEstudiante,
             String estudiante,
@@ -49,23 +49,23 @@ public final class PagoDtos {
         }
     }
 
-    public record AnularPagoRequest(
+    public record CancelPaymentRequest(
             @NotBlank(message = "Indica por qué se anula el pago")
             @Size(max = 255, message = "El motivo no puede superar los 255 caracteres")
             String motivo
     ) {}
 
-    public record IngresosMesResponse(
+    public record MonthlyIncomeResponse(
             Integer anio,
             Integer mes,
             BigDecimal total,
             Long cantidadPagos
     ) {}
 
-    public record HistoricoIngresosResponse(
-            List<IngresosMesResponse> meses,
+    public record IncomeHistoryResponse(
+            List<MonthlyIncomeResponse> meses,
             BigDecimal total,
             BigDecimal promedioMensual,
-            IngresosMesResponse mejorMes
+            MonthlyIncomeResponse mejorMes
     ) {}
 }
