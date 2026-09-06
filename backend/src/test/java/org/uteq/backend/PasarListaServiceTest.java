@@ -9,7 +9,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.academico.representante.service.NotificacionService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.MarcaAsistencia;
@@ -53,7 +53,7 @@ class PasarListaServiceTest {
     private Estudiante estudiante(Long id, Long idCategoria) {
         return Estudiante.builder()
                 .idEstudiante(id)
-                .persona(Persona.builder().nombre("Ana").apellido("Vera").build())
+                .persona(Person.builder().nombre("Ana").apellido("Vera").build())
                 .categoria(categoria(idCategoria, "SUB-18"))
                 .build();
     }

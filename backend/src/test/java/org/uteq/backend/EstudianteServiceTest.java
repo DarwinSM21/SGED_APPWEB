@@ -24,8 +24,8 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.math.BigDecimal;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class EstudianteServiceTest {
     @Mock private EstudianteRepository estudianteRepository;
-    @Mock private PersonaRepository personaRepository;
+    @Mock private PersonRepository personaRepository;
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private RepresentanteEstudianteRepository representanteEstudianteRepository;
@@ -49,14 +49,14 @@ class EstudianteServiceTest {
 
     @InjectMocks private EstudianteService service;
 
-    private Persona personaDummy;
+    private Person personaDummy;
     private Categoria categoriaDummy;
     private GeneralStatus estadoDummy;
     private Estudiante estudianteDummy;
 
     @BeforeEach
     void setUp() {
-        personaDummy = Persona.builder()
+        personaDummy = Person.builder()
                 .idPersona(1L)
                 .nombre("Ana")
                 .apellido("Gomez")
@@ -353,8 +353,8 @@ class EstudianteServiceTest {
                 () -> service.habilitarAcceso(99L, new HabilitarAccesoRequest("x@sged.test", "password123")));
     }
 
-    private Persona personaDeEdad(int anios) {
-        return Persona.builder()
+    private Person personaDeEdad(int anios) {
+        return Person.builder()
                 .idPersona(1L)
                 .nombre("Ana")
                 .apellido("Gomez")
@@ -363,7 +363,7 @@ class EstudianteServiceTest {
                 .build();
     }
 
-    private void prepararCrear(Persona persona) {
+    private void prepararCrear(Person persona) {
         when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));

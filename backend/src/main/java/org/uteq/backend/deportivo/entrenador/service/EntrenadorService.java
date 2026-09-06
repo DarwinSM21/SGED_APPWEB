@@ -16,15 +16,15 @@ import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 
 /**
  * Lógica de negocio de {@code Entrenador}. Cada entrenador se apoya en una
- * {@code Persona} y una cuenta de rol {@code ENTRENADOR} ya creadas; la
+ * {@code Person} y una cuenta de rol {@code ENTRENADOR} ya creadas; la
  * especialidad es opcional. Las bajas son lógicas ({@code activo = false}).
  */
 @Service
@@ -32,7 +32,7 @@ import org.uteq.backend.seguridad.audit.aop.Audited;
 public class EntrenadorService {
 
     private final EntrenadorRepository entrenadorRepository;
-    private final PersonaRepository personaRepository;
+    private final PersonRepository personaRepository;
     private final UsuarioRepository usuarioRepository;
     private final EspecialidadRepository especialidadRepository;
 
@@ -91,8 +91,8 @@ public class EntrenadorService {
             throw new IllegalArgumentException("El usuario ya está asignado a otro entrenador");
         }
 
-        Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.idPersona())
+                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
 
         Usuario usuario = usuarioRepository.findById(request.idUsuario())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));

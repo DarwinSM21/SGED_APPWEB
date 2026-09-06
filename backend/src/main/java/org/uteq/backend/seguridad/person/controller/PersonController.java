@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.persona.controller;
+package org.uteq.backend.seguridad.person.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,23 +9,23 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
-import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
-import org.uteq.backend.seguridad.persona.service.PersonaService;
+import org.uteq.backend.seguridad.person.dto.PersonRequest;
+import org.uteq.backend.seguridad.person.dto.PersonResponse;
+import org.uteq.backend.seguridad.person.service.PersonService;
 
 /**
- * CRUD de {@code Persona}. Concentra los datos identificativos (cédula,
+ * CRUD de {@code Person}. Concentra los datos identificativos (cédula,
  * correo) de estudiantes menores de edad, por lo que casi todos los
  * endpoints quedan restringidos a {@code ADMINISTRADOR}. La excepción es
- * {@link #crear}: la recepcionista también la necesita, porque toda
- * {@code Estudiante} cuelga de una {@code Persona} ya existente y ese es el
+ * {@link #create}: la recepcionista también la necesita, porque toda
+ * {@code Estudiante} cuelga de una {@code Person} ya existente y ese es el
  * primer paso del alta.
  */
 @RestController
 @RequestMapping("/api/personas")
 @RequiredArgsConstructor
-public class PersonaController {
-    private final PersonaService personaService;
+public class PersonController {
+    private final PersonService personaService;
 
     /**
      * Lista paginada de personas activas.
@@ -36,9 +36,9 @@ public class PersonaController {
      */
     @GetMapping
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<Page<PersonaResponse>> listar(
+    public ResponseEntity<Page<PersonResponse>> list(
             @PageableDefault(size = 10, sort = "apellido") Pageable pageable) {
-        return ResponseEntity.ok(personaService.listar(pageable));
+        return ResponseEntity.ok(personaService.list(pageable));
     }
 
     /**
@@ -51,8 +51,8 @@ public class PersonaController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<PersonaResponse> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(personaService.buscarPorId(id));
+    public ResponseEntity<PersonResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(personaService.findById(id));
     }
 
     /**
@@ -65,8 +65,8 @@ public class PersonaController {
      */
     @GetMapping("/cedula/{cedula}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<PersonaResponse> buscarPorCedula(@PathVariable String cedula) {
-        return ResponseEntity.ok(personaService.buscarPorCedula(cedula));
+    public ResponseEntity<PersonResponse> findByCedula(@PathVariable String cedula) {
+        return ResponseEntity.ok(personaService.findByCedula(cedula));
     }
 
     /**
@@ -79,8 +79,8 @@ public class PersonaController {
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<PersonaResponse> crear(@Valid @RequestBody PersonaRequest request) {
-        PersonaResponse personaCreada = personaService.crear(request);
+    public ResponseEntity<PersonResponse> create(@Valid @RequestBody PersonRequest request) {
+        PersonResponse personaCreada = personaService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(personaCreada);
     }
 
@@ -97,10 +97,10 @@ public class PersonaController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<PersonaResponse> editar(
+    public ResponseEntity<PersonResponse> update(
             @PathVariable Long id,
-            @Valid @RequestBody PersonaRequest request) {
-        return ResponseEntity.ok(personaService.editar(id, request));
+            @Valid @RequestBody PersonRequest request) {
+        return ResponseEntity.ok(personaService.update(id, request));
     }
 
     /**
@@ -113,8 +113,8 @@ public class PersonaController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        personaService.eliminar(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        personaService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

@@ -23,7 +23,7 @@ import org.uteq.backend.deportivo.lesion.service.LesionService;
  * restringida a entrenador y administrador.
  *
  * <p>Los métodos llevan {@code @Transactional} propio: {@code aResponse()}
- * navega {@code Lesion -> Estudiante -> Persona} (LAZY) con open-in-view
+ * navega {@code Lesion -> Estudiante -> Person} (LAZY) con open-in-view
  * deshabilitado, y la transacción de {@code LesionService} ya se cerró al
  * volver aquí.
  */

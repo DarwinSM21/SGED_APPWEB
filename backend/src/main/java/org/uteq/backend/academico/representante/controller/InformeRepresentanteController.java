@@ -20,7 +20,7 @@ import java.util.List;
  *
  * <p>{@code @Transactional(readOnly = true)} va también aquí, no solo en el
  * servicio: open-in-view está deshabilitado y la respuesta navega relaciones
- * LAZY ({@code Persona}, {@code Categoria}) al construir el DTO; sin
+ * LAZY ({@code Person}, {@code Categoria}) al construir el DTO; sin
  * transacción activa en ese momento la navegación lanza
  * {@code LazyInitializationException}.
  */

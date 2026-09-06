@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.reportes.service.ReportPdfService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
@@ -52,7 +52,7 @@ public class PerfilController {
         Usuario usuario = usuarioRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + auth.getName()));
 
-        Persona persona = usuario.getPersona();
+        Person persona = usuario.getPersona();
         String roles = usuario.getRoles() == null || usuario.getRoles().isEmpty()
                 ? "-"
                 : usuario.getRoles().stream().map(Role::getNombre).reduce((a, b) -> a + ", " + b).orElse("-");

@@ -24,7 +24,7 @@ import org.uteq.backend.deportivo.partido.service.PartidoService;
 import org.uteq.backend.deportivo.partido.service.ConvocatoriaService.Convocatoria;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -74,7 +74,7 @@ class AlineacionServiceTest {
     private Estudiante jugador(long id, Categoria suCategoria) {
         return Estudiante.builder()
                 .idEstudiante(id).activo(true).categoria(suCategoria)
-                .persona(Persona.builder().idPersona(id).nombre("Jugador").apellido("N" + id).build())
+                .persona(Person.builder().idPersona(id).nombre("Jugador").apellido("N" + id).build())
                 .build();
     }
 

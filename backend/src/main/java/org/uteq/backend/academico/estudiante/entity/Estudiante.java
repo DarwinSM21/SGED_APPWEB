@@ -7,7 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.math.BigDecimal;
@@ -29,7 +29,7 @@ public class Estudiante {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
-    private Persona persona;
+    private Person persona;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria", nullable = false)

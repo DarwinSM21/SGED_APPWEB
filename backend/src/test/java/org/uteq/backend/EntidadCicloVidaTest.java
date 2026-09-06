@@ -7,7 +7,7 @@ import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
 import org.uteq.backend.seguridad.audit.entity.AuditLog;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.lang.reflect.Method;
@@ -67,9 +67,9 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Persona.onCreate()/onUpdate(): timestamps y activo por defecto")
+    @DisplayName("Person.onCreate()/onUpdate(): timestamps y activo por defecto")
     void persona_ciclo_vida() throws Exception {
-        Persona p = new Persona();
+        Person p = new Person();
         invocar(p, "onCreate");
         assertThat(p.getCreatedAt()).isNotNull();
         assertThat(p.getUpdatedAt()).isNotNull();

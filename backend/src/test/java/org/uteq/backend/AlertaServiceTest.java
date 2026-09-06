@@ -17,7 +17,7 @@ import org.uteq.backend.academico.pago.repository.PagoRepository;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.util.List;
 
@@ -46,8 +46,8 @@ class AlertaServiceTest {
     }
 
     private Estudiante estudiante(long id, String nombre, String apellido, Categoria categoria) {
-        Persona persona = nombre == null ? null
-                : Persona.builder().nombre(nombre).apellido(apellido).build();
+        Person persona = nombre == null ? null
+                : Person.builder().nombre(nombre).apellido(apellido).build();
         return Estudiante.builder()
                 .idEstudiante(id)
                 .persona(persona)

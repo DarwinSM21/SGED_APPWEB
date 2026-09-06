@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.persona.dto;
+package org.uteq.backend.seguridad.person.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
-public record PersonaRequest(
+public record PersonRequest(
 
         @NotBlank(message = "El nombre es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")

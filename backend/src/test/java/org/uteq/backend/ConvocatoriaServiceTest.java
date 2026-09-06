@@ -21,7 +21,7 @@ import org.uteq.backend.deportivo.partido.repository.PartidoRepository;
 import org.uteq.backend.deportivo.partido.service.ConvocatoriaService;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -69,7 +69,7 @@ class ConvocatoriaServiceTest {
                 .activo(true)
                 .categoria(categoria)
                 .posicion(posicion)
-                .persona(Persona.builder().idPersona(id).nombre("Jugador").apellido(apellido).build())
+                .persona(Person.builder().idPersona(id).nombre("Jugador").apellido(apellido).build())
                 .build();
     }
 

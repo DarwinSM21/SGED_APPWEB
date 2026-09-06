@@ -22,7 +22,7 @@ import org.uteq.backend.inventario.assignment.entity.Assignment.AssignmentStatus
 import org.uteq.backend.inventario.assignment.entity.Assignment.RecipientType;
 import org.uteq.backend.inventario.assignment.repository.AssignmentRepository;
 import org.uteq.backend.inventario.assignment.service.AssignmentService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -57,17 +57,17 @@ class AssignmentServiceTest {
     }
 
     private Estudiante estudiante() {
-        Persona persona = Persona.builder().nombre("Juan").apellido("Perez").build();
+        Person persona = Person.builder().nombre("Juan").apellido("Perez").build();
         return Estudiante.builder().idEstudiante(5L).persona(persona).build();
     }
 
     private Entrenador entrenador() {
-        Persona persona = Persona.builder().nombre("Carlos").apellido("Ruiz").build();
+        Person persona = Person.builder().nombre("Carlos").apellido("Ruiz").build();
         return Entrenador.builder().idEntrenador(7L).persona(persona).build();
     }
 
     private Usuario registrador() {
-        Persona persona = Persona.builder().nombre("Ana").apellido("Diaz").build();
+        Person persona = Person.builder().nombre("Ana").apellido("Diaz").build();
         return Usuario.builder().idUsuario(9L).username("recepcion").persona(persona).build();
     }
 

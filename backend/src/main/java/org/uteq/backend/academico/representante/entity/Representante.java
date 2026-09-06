@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.time.Instant;
@@ -24,7 +24,7 @@ public class Representante {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false, unique = true)
-    private Persona persona;
+    private Person persona;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)

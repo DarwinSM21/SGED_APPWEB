@@ -19,8 +19,8 @@ import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.entrenador.service.EntrenadorService;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
@@ -40,7 +40,7 @@ class EntrenadorServiceTest {
     @Mock
     private EntrenadorRepository entrenadorRepository;
     @Mock
-    private PersonaRepository personaRepository;
+    private PersonRepository personaRepository;
     @Mock
     private UsuarioRepository usuarioRepository;
     @Mock
@@ -49,8 +49,8 @@ class EntrenadorServiceTest {
     @InjectMocks
     private EntrenadorService entrenadorService;
 
-    private Persona persona() {
-        return Persona.builder().idPersona(1L).nombre("Carlos").apellido("Mora")
+    private Person persona() {
+        return Person.builder().idPersona(1L).nombre("Carlos").apellido("Mora")
                 .cedula("1234567890").correo("carlos@sged.test").build();
     }
 

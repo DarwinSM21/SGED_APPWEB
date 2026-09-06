@@ -27,7 +27,7 @@ import org.uteq.backend.deportivo.sesion.dto.SesionHoyResponse;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 import org.uteq.backend.deportivo.sesion.service.SesionEntrenamientoService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -58,7 +58,7 @@ class SesionEntrenamientoServiceTest {
     private Entrenador entrenador(long id, String nombre) {
         return Entrenador.builder()
                 .idEntrenador(id)
-                .persona(Persona.builder().nombre(nombre).apellido("Apellido").build())
+                .persona(Person.builder().nombre(nombre).apellido("Apellido").build())
                 .build();
     }
 
@@ -250,7 +250,7 @@ class SesionEntrenamientoServiceTest {
     private Estudiante estudianteDe(long id, String nombre, Posicion posicion) {
         return Estudiante.builder()
                 .idEstudiante(id)
-                .persona(Persona.builder().nombre(nombre).apellido("Apellido").build())
+                .persona(Person.builder().nombre(nombre).apellido("Apellido").build())
                 .posicion(posicion)
                 .build();
     }

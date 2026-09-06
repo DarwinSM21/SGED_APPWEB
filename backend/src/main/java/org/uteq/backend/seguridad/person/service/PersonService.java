@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.persona.service;
+package org.uteq.backend.seguridad.person.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -7,13 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.audit.aop.Audited;
-import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
-import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.dto.PersonRequest;
+import org.uteq.backend.seguridad.person.dto.PersonResponse;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 
 /**
- * Lógica de negocio de {@code Persona}: el registro de identificación
+ * Lógica de negocio de {@code Person}: el registro de identificación
  * (nombre, cédula, correo, fecha de nacimiento) del que dependen por clave
  * foránea estudiantes, entrenadores, representantes y usuarios. Las bajas
  * son lógicas ({@code activo = false}); la unicidad de cédula y correo se
@@ -21,17 +21,17 @@ import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
  */
 @Service
 @RequiredArgsConstructor
-public class PersonaService {
-    private final PersonaRepository personaRepository;
+public class PersonService {
+    private final PersonRepository personaRepository;
 
     /**
      * Lista paginada de personas activas.
      *
      * @param pageable paginación y orden
-     * @return la página solicitada, mapeada a {@link PersonaResponse}
+     * @return la página solicitada, mapeada a {@link PersonResponse}
      */
     @Transactional(readOnly = true)
-    public Page<PersonaResponse> listar(Pageable pageable) {
+    public Page<PersonResponse> list(Pageable pageable) {
         return personaRepository.findByActivoTrue(pageable)
                 .map(this::toResponse);
     }
@@ -44,8 +44,8 @@ public class PersonaService {
      * @throws ResourceNotFoundException si no existe o está inactivada
      */
     @Transactional(readOnly = true)
-    public PersonaResponse buscarPorId(Long id) {
-        Persona p = personaRepository.findByIdPersonaAndActivoTrue(id)
+    public PersonResponse findById(Long id) {
+        Person p = personaRepository.findByIdPersonaAndActivoTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada o inactivada con id: " + id));
         return toResponse(p);
     }
@@ -59,8 +59,8 @@ public class PersonaService {
      *                                      con esa cédula
      */
     @Transactional(readOnly = true)
-    public PersonaResponse buscarPorCedula(String cedula) {
-        Persona persona = personaRepository.findByCedulaAndActivoTrue(cedula)
+    public PersonResponse findByCedula(String cedula) {
+        Person persona = personaRepository.findByCedulaAndActivoTrue(cedula)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con cédula: " + cedula));
         return toResponse(persona);
     }
@@ -76,10 +76,10 @@ public class PersonaService {
     @Audited(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona",
             descripcionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
-    public PersonaResponse crear(PersonaRequest request) {
-        validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), null);
+    public PersonResponse create(PersonRequest request) {
+        validateUniqueCedulaAndEmail(request.cedula(), request.correo(), null);
 
-        Persona persona = Persona.builder()
+        Person persona = Person.builder()
                 .nombre(request.nombre())
                 .apellido(request.apellido())
                 .cedula(request.cedula())
@@ -108,11 +108,11 @@ public class PersonaService {
     @Audited(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona",
             descripcionSpel = "'editó los datos de ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
-    public PersonaResponse editar(Long id, PersonaRequest request) {
-        Persona persona = personaRepository.findById(id)
+    public PersonResponse update(Long id, PersonRequest request) {
+        Person persona = personaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + id));
 
-        validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), id);
+        validateUniqueCedulaAndEmail(request.cedula(), request.correo(), id);
 
         persona.setNombre(request.nombre());
         persona.setApellido(request.apellido());
@@ -135,8 +135,8 @@ public class PersonaService {
     @Audited(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0",
             descripcionSpel = "'desactivó la persona #' + #p0")
     @Transactional
-    public void eliminar(Long id) {
-        Persona persona = personaRepository.findById(id)
+    public void delete(Long id) {
+        Person persona = personaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + id));
 
         persona.setActivo(false);
@@ -144,8 +144,8 @@ public class PersonaService {
     }
 
     // Al crear valida contra personas activas; al editar usa las consultas
-    // JPQL que excluyen la fila idActual (existeOtraPersonaCon...).
-    private void validarUnicidadCedulaYCorreo(String cedula, String correo, Long idActual) {
+    // JPQL que excluyen la fila idActual (existsAnotherPersonWith...).
+    private void validateUniqueCedulaAndEmail(String cedula, String correo, Long idActual) {
         if (idActual == null) {
             if (personaRepository.existsByCedulaAndActivoTrue(cedula)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
@@ -154,17 +154,17 @@ public class PersonaService {
                 throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
             }
         } else {
-            if (personaRepository.existeOtraPersonaConCedula(cedula, idActual)) {
+            if (personaRepository.existsAnotherPersonWithCedula(cedula, idActual)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }
-            if (personaRepository.existeOtraPersonaConCorreo(correo, idActual)) {
+            if (personaRepository.existsAnotherPersonWithEmail(correo, idActual)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
             }
         }
     }
 
-    private PersonaResponse toResponse(Persona p) {
-        return new PersonaResponse(
+    private PersonResponse toResponse(Person p) {
+        return new PersonResponse(
                 p.getIdPersona(),
                 p.getNombre(),
                 p.getApellido(),

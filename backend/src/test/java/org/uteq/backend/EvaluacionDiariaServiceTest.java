@@ -20,7 +20,7 @@ import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -58,7 +58,7 @@ class EvaluacionDiariaServiceTest {
     private Estudiante estudiante() {
         return Estudiante.builder()
                 .idEstudiante(ID_ESTUDIANTE)
-                .persona(Persona.builder().nombre("Juan").apellido("Perez").build())
+                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .categoria(Categoria.builder().idCategoria(3L).nombre("SUB-12").build())
                 .build();
     }

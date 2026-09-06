@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -65,7 +65,7 @@ public class EstudianteAccesoService {
      * @throws IllegalStateException    si falta el rol {@code ESTUDIANTE} o el
      *                                  catálogo de estados en la base
      */
-    public Usuario crearCuentaDeEstudiante(Persona persona, HabilitarAccesoRequest request) {
+    public Usuario crearCuentaDeEstudiante(Person persona, HabilitarAccesoRequest request) {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
         }

@@ -21,7 +21,7 @@ import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.reportes.service.ReportService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.math.BigDecimal;
@@ -49,8 +49,8 @@ class ReportServiceTest {
                 pagoRepository, asistenciaRepository, lesionRepository, evaluacionEstudianteRepository);
     }
 
-    private Persona persona(String nombre, String apellido) {
-        return Persona.builder().nombre(nombre).apellido(apellido).build();
+    private Person persona(String nombre, String apellido) {
+        return Person.builder().nombre(nombre).apellido(apellido).build();
     }
 
     private Estudiante estudiante(Long id, String categoria) {

@@ -16,7 +16,7 @@ import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -48,7 +48,7 @@ class MiEquipoServiceTest {
     private Estudiante estudiante(Long id, String nombre, Posicion posicion) {
         return Estudiante.builder()
                 .idEstudiante(id)
-                .persona(Persona.builder().nombre(nombre).apellido("Perez").build())
+                .persona(Person.builder().nombre(nombre).apellido("Perez").build())
                 .categoria(categoria())
                 .posicion(posicion)
                 .build();
@@ -120,7 +120,7 @@ class MiEquipoServiceTest {
         var especialidad = Especialidad.builder().nombre("Tecnico").build();
         var entrenador = Entrenador.builder()
                 .idEntrenador(9L)
-                .persona(Persona.builder().nombre("Pedro").apellido("Gomez").build())
+                .persona(Person.builder().nombre("Pedro").apellido("Gomez").build())
                 .especialidad(especialidad)
                 .build();
         var proximaSesion = SesionEntrenamiento.builder()

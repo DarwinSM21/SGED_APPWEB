@@ -17,8 +17,8 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
@@ -43,7 +43,7 @@ class UsuarioServiceTest {
     @Mock
     private UsuarioRepository usuarioRepository;
     @Mock
-    private PersonaRepository personaRepository;
+    private PersonRepository personaRepository;
     @Mock
     private GeneralStatusRepository estadoGeneralRepository;
     @Mock
@@ -60,8 +60,8 @@ class UsuarioServiceTest {
     @InjectMocks
     private UsuarioService usuarioService;
 
-    private Persona persona() {
-        return Persona.builder().idPersona(1L).nombre("Ana").apellido("Torres")
+    private Person persona() {
+        return Person.builder().idPersona(1L).nombre("Ana").apellido("Torres")
                 .correo("ana@sged.test").build();
     }
 

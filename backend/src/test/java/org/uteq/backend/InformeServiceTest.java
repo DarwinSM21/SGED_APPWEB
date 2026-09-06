@@ -26,7 +26,7 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -57,14 +57,14 @@ class InformeServiceTest {
     private Representante representante() {
         return Representante.builder()
                 .idRepresentante(1L)
-                .persona(Persona.builder().nombre("Ana").apellido("Vera").build())
+                .persona(Person.builder().nombre("Ana").apellido("Vera").build())
                 .build();
     }
 
     private Estudiante estudiante(long id, String nombre) {
         return Estudiante.builder()
                 .idEstudiante(id)
-                .persona(Persona.builder().nombre(nombre).apellido("Hijo").build())
+                .persona(Person.builder().nombre(nombre).apellido("Hijo").build())
                 .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
                 .build();
     }

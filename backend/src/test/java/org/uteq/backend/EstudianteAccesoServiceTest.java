@@ -11,7 +11,7 @@ import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -36,7 +36,7 @@ class EstudianteAccesoServiceTest {
 
     @InjectMocks private EstudianteAccesoService service;
 
-    private final Persona persona = Persona.builder().idPersona(1L).nombre("Ana").apellido("Vera").build();
+    private final Person persona = Person.builder().idPersona(1L).nombre("Ana").apellido("Vera").build();
 
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante no lanza si la persona no tiene cuenta")

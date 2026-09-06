@@ -14,7 +14,7 @@ import org.uteq.backend.academico.pago.repository.PagoRepository;
 import org.uteq.backend.academico.pago.service.PagoService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -45,13 +45,13 @@ class PagoServiceTest {
 
     private Estudiante estudiante() {
         return Estudiante.builder().idEstudiante(ID_EST)
-                .persona(Persona.builder().nombre("Juan").apellido("Perez").build())
+                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
     }
 
     private Usuario registrador() {
         return Usuario.builder().idUsuario(9L).username(USERNAME)
-                .persona(Persona.builder().nombre("Ana").apellido("Admin").build())
+                .persona(Person.builder().nombre("Ana").apellido("Admin").build())
                 .build();
     }
 

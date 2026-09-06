@@ -1,9 +1,9 @@
-package org.uteq.backend.seguridad.persona.dto;
+package org.uteq.backend.seguridad.person.dto;
 
 import java.time.Instant;
 import java.time.LocalDate;
 
-public record PersonaResponse(
+public record PersonResponse(
         Long idPersona,
         String nombre,
         String apellido,

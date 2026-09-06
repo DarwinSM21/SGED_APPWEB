@@ -12,7 +12,7 @@ import org.uteq.backend.academico.representante.repository.NotificacionRepositor
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.util.List;
 
@@ -42,7 +42,7 @@ class NotificacionServiceTest {
     private NotificacionService notificacionService;
 
     private Estudiante estudianteValido() {
-        Persona persona = Persona.builder().nombre("Andres").apellido("Rivas").build();
+        Person persona = Person.builder().nombre("Andres").apellido("Rivas").build();
         return Estudiante.builder().idEstudiante(6L).persona(persona).build();
     }
 
@@ -136,7 +136,7 @@ class NotificacionServiceTest {
     }
 
     private Estudiante estudianteCon(Long id) {
-        Persona persona = Persona.builder().nombre("Juan").apellido("Perez").build();
+        Person persona = Person.builder().nombre("Juan").apellido("Perez").build();
         return Estudiante.builder().idEstudiante(id).persona(persona).build();
     }
 

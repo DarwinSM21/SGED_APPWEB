@@ -3,7 +3,7 @@ package org.uteq.backend.seguridad.usuario.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
 
 import java.time.OffsetDateTime;
@@ -25,7 +25,7 @@ public class Usuario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
-    private Persona persona;
+    private Person persona;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_general", nullable = false)

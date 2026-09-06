@@ -15,7 +15,7 @@ import org.uteq.backend.inventario.movement.entity.StockMovement;
 import org.uteq.backend.inventario.movement.entity.StockMovement.MovementType;
 import org.uteq.backend.inventario.movement.repository.StockMovementRepository;
 import org.uteq.backend.inventario.movement.service.StockMovementService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -48,7 +48,7 @@ class StockMovementServiceTest {
     }
 
     private Usuario registrador() {
-        Persona persona = Persona.builder().nombre("Ana").apellido("Diaz").build();
+        Person persona = Person.builder().nombre("Ana").apellido("Diaz").build();
         return Usuario.builder().idUsuario(9L).username("recepcion").persona(persona).build();
     }
 

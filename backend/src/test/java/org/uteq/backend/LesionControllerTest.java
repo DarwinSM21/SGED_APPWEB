@@ -24,7 +24,7 @@ import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.controller.LesionController;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.service.LesionService;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -74,7 +74,7 @@ class LesionControllerTest {
 
     private Lesion lesion(Long id, boolean activa) {
         var estudiante = Estudiante.builder().idEstudiante(1L)
-                .persona(Persona.builder().nombre("Juan").apellido("Perez").build())
+                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
         return Lesion.builder()
                 .idLesion(id)

@@ -22,8 +22,8 @@ import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -50,7 +50,7 @@ public class AuthService {
     private final RedisBlacklistService blacklistService;
     private final LoginAttemptService loginAttemptService;
     private final UsuarioRepository usuarioRepository;
-    private final PersonaRepository personaRepository;
+    private final PersonRepository personaRepository;
     private final RoleRepository rolRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
@@ -68,7 +68,7 @@ public class AuthService {
     public record LoginResult(String accessToken, String refreshToken, SessionResponse session) {}
 
     /**
-     * Da de alta una {@link Persona} y su {@link Usuario} en una sola
+     * Da de alta una {@link Person} y su {@link Usuario} en una sola
      * transacción. El campo {@code rol} es obligatorio ({@code @NotBlank} en
      * {@link RegisterRequest}): no hay un rol genérico por defecto. Quien
      * llama ya es {@code ADMINISTRADOR}, así que puede pedir cualquier rol
@@ -95,7 +95,7 @@ public class AuthService {
         Role rol = rolRepository.findByNombre(request.rol())
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.rol()));
 
-        Persona persona = Persona.builder()
+        Person persona = Person.builder()
                 .nombre(request.nombre())
                 .apellido(request.apellido())
                 .cedula(request.cedula())

@@ -16,10 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.persona.controller.PersonaController;
-import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
-import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
-import org.uteq.backend.seguridad.persona.service.PersonaService;
+import org.uteq.backend.seguridad.person.controller.PersonController;
+import org.uteq.backend.seguridad.person.dto.PersonRequest;
+import org.uteq.backend.seguridad.person.dto.PersonResponse;
+import org.uteq.backend.seguridad.person.service.PersonService;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -32,15 +32,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-class PersonaControllerTest {
+class PersonControllerTest {
 
     private MockMvc mockMvc;
 
     @Mock
-    private PersonaService personaService;
+    private PersonService personaService;
 
     @InjectMocks
-    private PersonaController personaController;
+    private PersonController personaController;
 
     @BeforeEach
     void setUp() {
@@ -50,15 +50,15 @@ class PersonaControllerTest {
                 .build();
     }
 
-    private PersonaResponse respuesta() {
-        return new PersonaResponse(1L, "Maria", "Lopez", "1234567890", "maria@sged.test",
+    private PersonResponse respuesta() {
+        return new PersonResponse(1L, "Maria", "Lopez", "1234567890", "maria@sged.test",
                 "0999999999", null, LocalDate.of(2012, 5, 10), true, Instant.now());
     }
 
     @Test
     @DisplayName("GET /api/personas - lista paginada")
     void listar_devuelve_200() throws Exception {
-        when(personaService.listar(any())).thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+        when(personaService.list(any())).thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/personas"))
                 .andExpect(status().isOk())
@@ -68,7 +68,7 @@ class PersonaControllerTest {
     @Test
     @DisplayName("GET /api/personas/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(personaService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
+        when(personaService.findById(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/personas/99"))
                 .andExpect(status().isNotFound());
@@ -77,7 +77,7 @@ class PersonaControllerTest {
     @Test
     @DisplayName("GET /api/personas/cedula/{cedula} - devuelve la persona")
     void buscarPorCedula_devuelve_200() throws Exception {
-        when(personaService.buscarPorCedula("1234567890")).thenReturn(respuesta());
+        when(personaService.findByCedula("1234567890")).thenReturn(respuesta());
 
         mockMvc.perform(get("/api/personas/cedula/1234567890"))
                 .andExpect(status().isOk())
@@ -87,7 +87,7 @@ class PersonaControllerTest {
     @Test
     @DisplayName("POST /api/personas - crea y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        when(personaService.crear(any(PersonaRequest.class))).thenReturn(respuesta());
+        when(personaService.create(any(PersonRequest.class))).thenReturn(respuesta());
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -108,7 +108,7 @@ class PersonaControllerTest {
     @Test
     @DisplayName("POST /api/personas - cedula duplicada da 400")
     void crear_con_cedula_duplicada_da_400() throws Exception {
-        when(personaService.crear(any(PersonaRequest.class)))
+        when(personaService.create(any(PersonRequest.class)))
                 .thenThrow(new IllegalArgumentException("Ya existe una persona registrada con la cédula: 1234567890"));
 
         mockMvc.perform(post("/api/personas")
@@ -120,7 +120,7 @@ class PersonaControllerTest {
     @Test
     @DisplayName("DELETE /api/personas/{id} - elimina y devuelve 204")
     void eliminar_devuelve_204() throws Exception {
-        doNothing().when(personaService).eliminar(1L);
+        doNothing().when(personaService).delete(1L);
 
         mockMvc.perform(delete("/api/personas/1"))
                 .andExpect(status().isNoContent());

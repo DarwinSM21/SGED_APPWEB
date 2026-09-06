@@ -22,7 +22,7 @@ import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.service.PagoService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.math.BigDecimal;
@@ -68,10 +68,10 @@ class PagoControllerTest {
 
     private Pago pago(Long id, TipoPago tipo, Integer anio, Integer mes) {
         var estudiante = Estudiante.builder().idEstudiante(1L)
-                .persona(Persona.builder().nombre("Juan").apellido("Perez").build())
+                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
         var registrador = Usuario.builder().idUsuario(9L)
-                .persona(Persona.builder().nombre("Ana").apellido("Admin").build())
+                .persona(Person.builder().nombre("Ana").apellido("Admin").build())
                 .build();
         return Pago.builder()
                 .idPago(id)

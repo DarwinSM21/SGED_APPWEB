@@ -24,8 +24,8 @@ import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
 import java.time.LocalDate;
@@ -50,7 +50,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EstudianteService {
     private final EstudianteRepository estudianteRepository;
-    private final PersonaRepository personaRepository;
+    private final PersonRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PosicionRepository posicionRepository;
@@ -151,8 +151,8 @@ public class EstudianteService {
             throw new IllegalArgumentException("El código de estudiante '" + request.codigoEstudiante() + "' ya se encuentra en uso.");
         }
 
-        Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.idPersona())
+                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con ID: " + request.idPersona()));
 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
@@ -260,8 +260,8 @@ public class EstudianteService {
         if (estudianteRepository.existsByPersona_IdPersona(idPersonaNueva)) {
             throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
         }
-        Persona nuevaPersona = personaRepository.findById(idPersonaNueva)
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + idPersonaNueva));
+        Person nuevaPersona = personaRepository.findById(idPersonaNueva)
+                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con ID: " + idPersonaNueva));
         estudiante.setPersona(nuevaPersona);
     }
 
@@ -284,7 +284,7 @@ public class EstudianteService {
      * @throws IllegalArgumentException si la edad queda fuera del rango
      *                                  {@code [edadMin, edadMax]}
      */
-    private void validarEdadEnCategoria(Persona persona, Categoria categoria) {
+    private void validarEdadEnCategoria(Person persona, Categoria categoria) {
         LocalDate nacimiento = persona.getFechaNacimiento();
         if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {
             return;

@@ -19,7 +19,7 @@ import org.uteq.backend.deportivo.horario.repository.HorarioRepository;
 import org.uteq.backend.deportivo.horario.service.HorarioService;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
+import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -48,7 +48,7 @@ class HorarioServiceTest {
 
     private Entrenador entrenador(long id) {
         return Entrenador.builder().idEntrenador(id)
-                .persona(Persona.builder().nombre("Carlos").apellido("Apellido").build())
+                .persona(Person.builder().nombre("Carlos").apellido("Apellido").build())
                 .build();
     }
 

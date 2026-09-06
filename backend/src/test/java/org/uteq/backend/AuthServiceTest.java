@@ -26,8 +26,8 @@ import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
 import org.uteq.backend.seguridad.auth.service.AuthService;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -55,7 +55,7 @@ class AuthServiceTest {
     @Mock private JwtService jwtService;
     @Mock private RedisBlacklistService blacklistService;
     @Mock private UsuarioRepository usuarioRepository;
-    @Mock private PersonaRepository personaRepository;
+    @Mock private PersonRepository personaRepository;
     @Mock private RoleRepository rolRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -89,7 +89,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
         when(jwtService.generateRefreshToken(anyString(), anyString())).thenReturn("mock-refresh-token");
 
-        Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
+        Person persona = Person.builder().nombre("Admin").apellido("SGED").activo(true).build();
         Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
                 .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
 
@@ -192,8 +192,8 @@ class AuthServiceTest {
     @Test
     void registrarExitosoCreaPersonaYUsuario() {
         when(usuarioRepository.existsByUsernameIgnoreCase("new@test.com")).thenReturn(false);
-        when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
-            Persona p = i.getArgument(0);
+        when(personaRepository.save(any(Person.class))).thenAnswer(i -> {
+            Person p = i.getArgument(0);
             p.setIdPersona(1L);
             return p;
         });
@@ -240,8 +240,8 @@ class AuthServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("sinestado@test.com")).thenReturn(false);
         when(personaRepository.existsByCedulaAndActivoTrue("0912345682")).thenReturn(false);
         when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
-        when(personaRepository.save(any(Persona.class))).thenAnswer(i -> {
-            Persona p = i.getArgument(0);
+        when(personaRepository.save(any(Person.class))).thenAnswer(i -> {
+            Person p = i.getArgument(0);
             p.setIdPersona(9L);
             return p;
         });
@@ -309,7 +309,7 @@ class AuthServiceTest {
         var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
+        Person persona = Person.builder().nombre("Admin").apellido("SGED").activo(true).build();
         Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
                 .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
         when(usuarioRepository.findByUsername("admin@test.com")).thenReturn(Optional.of(usuario));

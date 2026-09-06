@@ -24,8 +24,8 @@ import org.uteq.backend.academico.representante.repository.RepresentanteReposito
 import org.uteq.backend.academico.representante.service.RepresentanteService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
@@ -44,15 +44,15 @@ class RepresentanteServiceTest {
 
     @Mock private RepresentanteRepository representanteRepository;
     @Mock private RepresentanteEstudianteRepository vinculoRepository;
-    @Mock private PersonaRepository personaRepository;
+    @Mock private PersonRepository personaRepository;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private EstudianteRepository estudianteRepository;
 
     @InjectMocks
     private RepresentanteService representanteService;
 
-    private Persona persona() {
-        return Persona.builder().idPersona(1L).nombre("Ana").apellido("Vera")
+    private Person persona() {
+        return Person.builder().idPersona(1L).nombre("Ana").apellido("Vera")
                 .cedula("1234567890").correo("ana@sged.test").build();
     }
 
@@ -74,7 +74,7 @@ class RepresentanteServiceTest {
     private Estudiante estudiante(long id, String nombre) {
         return Estudiante.builder()
                 .idEstudiante(id)
-                .persona(Persona.builder().nombre(nombre).apellido("Hijo").build())
+                .persona(Person.builder().nombre(nombre).apellido("Hijo").build())
                 .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
                 .build();
     }

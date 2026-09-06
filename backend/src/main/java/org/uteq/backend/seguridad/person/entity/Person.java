@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.persona.entity;
+package org.uteq.backend.seguridad.person.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Persona {
+public class Person {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

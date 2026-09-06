@@ -17,8 +17,8 @@ import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
@@ -42,7 +42,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
-    private final PersonaRepository personaRepository;
+    private final PersonRepository personaRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final RoleRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
@@ -117,8 +117,8 @@ public class UsuarioService {
             throw new IllegalArgumentException("El nombre de usuario ya se encuentra registrado");
         }
 
-        Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.idPersona())
+                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
 
         GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
@@ -178,8 +178,8 @@ public class UsuarioService {
             throw new IllegalArgumentException("El nombre de usuario ya está ocupado");
         }
 
-        Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.idPersona())
+                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
 
         GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
@@ -252,7 +252,7 @@ public class UsuarioService {
     // R-09: ídem. Solo revalida y reasigna el rol si de verdad cambió; si el
     // rol pedido es null (el formulario de edición no toca roles) o es el
     // mismo que ya tiene, no hace nada.
-    private void actualizarRolSiCambio(Usuario usuario, Persona persona, String rolPedido) {
+    private void actualizarRolSiCambio(Usuario usuario, Person persona, String rolPedido) {
         if (rolPedido == null) {
             return;
         }

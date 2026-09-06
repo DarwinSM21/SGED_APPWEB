@@ -17,8 +17,8 @@ import org.uteq.backend.academico.representante.entity.RepresentanteEstudiante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -37,7 +37,7 @@ import org.uteq.backend.seguridad.audit.aop.Audited;
 public class RepresentanteService {
     private final RepresentanteRepository representanteRepository;
     private final RepresentanteEstudianteRepository vinculoRepository;
-    private final PersonaRepository personaRepository;
+    private final PersonRepository personaRepository;
     private final UsuarioRepository usuarioRepository;
     private final EstudianteRepository estudianteRepository;
 
@@ -91,8 +91,8 @@ public class RepresentanteService {
             throw new IllegalArgumentException("El usuario ya está asignado a otro representante");
         }
 
-        Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.idPersona())
+                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
         Usuario usuario = usuarioRepository.findById(request.idUsuario())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
