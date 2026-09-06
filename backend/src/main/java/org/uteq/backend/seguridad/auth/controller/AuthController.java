@@ -51,8 +51,8 @@ public class AuthController {
      */
     @PostMapping("/registro")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<SesionResponse> registro(@Valid @RequestBody RegisterRequest request) {
-        return authService.registrar(request)
+    public ResponseEntity<SessionResponse> register(@Valid @RequestBody RegisterRequest request) {
+        return authService.register(request)
                 .map(sesion -> ResponseEntity.status(HttpStatus.CREATED).body(sesion))
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.CONFLICT).build());
     }
@@ -71,7 +71,7 @@ public class AuthController {
      *         si las credenciales son incorrectas
      */
     @PostMapping("/login")
-    public ResponseEntity<SesionResponse> login(
+    public ResponseEntity<SessionResponse> login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
@@ -81,7 +81,7 @@ public class AuthController {
         // repite en el cuerpo, que sería legible por cualquier fetch del
         // frontend y anularía la protección que declaran ADR-002 y ADR-008.
         setAuthCookies(httpResponse, resultado.accessToken(), resultado.refreshToken());
-        return ResponseEntity.ok(resultado.sesion());
+        return ResponseEntity.ok(resultado.session());
     }
 
     /**
@@ -114,7 +114,7 @@ public class AuthController {
     public ResponseEntity<Void> refresh(
             @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
-        return authService.refrescar(refreshToken)
+        return authService.refresh(refreshToken)
                 .map(nuevoAccessToken -> {
                     setAccessCookie(httpResponse, nuevoAccessToken);
                     return ResponseEntity.noContent().<Void>build();
@@ -129,8 +129,8 @@ public class AuthController {
      *         autenticada
      */
     @GetMapping("/me")
-    public ResponseEntity<SesionResponse> me() {
-        return authService.obtenerSesionActual()
+    public ResponseEntity<SessionResponse> me() {
+        return authService.getCurrentSession()
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }

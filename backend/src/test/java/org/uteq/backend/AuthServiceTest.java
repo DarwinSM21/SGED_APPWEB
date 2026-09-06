@@ -19,7 +19,7 @@ import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
-import org.uteq.backend.seguridad.auth.dto.SesionResponse;
+import org.uteq.backend.seguridad.auth.dto.SessionResponse;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
@@ -83,7 +83,7 @@ class AuthServiceTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
 
-        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
+        when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(auth);
         when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
@@ -100,9 +100,9 @@ class AuthServiceTest {
 
         assertThat(resultado.accessToken()).isEqualTo("mock-jwt-token");
         assertThat(resultado.refreshToken()).isEqualTo("mock-refresh-token");
-        assertThat(resultado.sesion().getUsername()).isEqualTo("admin@test.com");
-        assertThat(resultado.sesion().getNombre()).isEqualTo("Admin SGED");
-        assertThat(resultado.sesion().getRol()).isEqualTo("ADMINISTRADOR");
+        assertThat(resultado.session().getUsername()).isEqualTo("admin@test.com");
+        assertThat(resultado.session().getNombre()).isEqualTo("Admin SGED");
+        assertThat(resultado.session().getRol()).isEqualTo("ADMINISTRADOR");
     }
 
     @Test
@@ -111,7 +111,7 @@ class AuthServiceTest {
         Authentication auth = new UsernamePasswordAuthenticationToken(
                 userDetails, null, userDetails.getAuthorities());
 
-        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
+        when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(auth);
         when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
@@ -121,12 +121,12 @@ class AuthServiceTest {
         AuthService.LoginResult resultado = authService.login(
                 new LoginRequest("sinficha@test.com", "Admin2026!"), "127.0.0.1");
 
-        assertThat(resultado.sesion().getNombre()).isEqualTo("sinficha@test.com");
+        assertThat(resultado.session().getNombre()).isEqualTo("sinficha@test.com");
     }
 
     @Test
     void loginConContrasenaIncorrectaLanzaBadCredentialsYRegistraFallo() {
-        when(loginAttemptService.estaBloqueada(anyString())).thenReturn(false);
+        when(loginAttemptService.isBlocked(anyString())).thenReturn(false);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Credenciales invalidas"));
 
@@ -135,12 +135,12 @@ class AuthServiceTest {
         assertThatThrownBy(() -> authService.login(loginRequest, "127.0.0.1"))
                 .isInstanceOf(BadCredentialsException.class);
 
-        verify(loginAttemptService).registrarFallo("127.0.0.1");
+        verify(loginAttemptService).recordFailure("127.0.0.1");
     }
 
     @Test
     void loginConIpBloqueadaLanzaTooManyRequestsSinAutenticar() {
-        when(loginAttemptService.estaBloqueada("10.0.0.1")).thenReturn(true);
+        when(loginAttemptService.isBlocked("10.0.0.1")).thenReturn(true);
 
         LoginRequest loginRequest = new LoginRequest("admin@test.com", "Admin2026!");
 
@@ -158,7 +158,7 @@ class AuthServiceTest {
                 "Test", "User", "0912345678", "test@test.com",
                 LocalDate.of(2000, 1, 1), "test@test.com", "test123", "ENTRENADOR");
 
-        assertThat(authService.registrar(registerRequest)).isEmpty();
+        assertThat(authService.register(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
     }
 
@@ -171,7 +171,7 @@ class AuthServiceTest {
                 "Test", "User", "0912345678", "cedula.dup.correo@test.com",
                 LocalDate.of(2000, 1, 1), "cedula.dup@test.com", "test123", "ENTRENADOR");
 
-        assertThat(authService.registrar(registerRequest)).isEmpty();
+        assertThat(authService.register(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
     }
 
@@ -185,7 +185,7 @@ class AuthServiceTest {
                 "Test", "User", "0912345681", "correo.dup.persona@test.com",
                 LocalDate.of(2000, 1, 1), "correo.dup@test.com", "test123", "ENTRENADOR");
 
-        assertThat(authService.registrar(registerRequest)).isEmpty();
+        assertThat(authService.register(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
     }
 
@@ -212,7 +212,7 @@ class AuthServiceTest {
                 "Test", "User", "0912345678", "nuevo.correo@test.com",
                 LocalDate.of(2000, 1, 1), "new@test.com", "password123", "ENTRENADOR");
 
-        Optional<SesionResponse> resultado = authService.registrar(registerRequest);
+        Optional<SessionResponse> resultado = authService.register(registerRequest);
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getUsername()).isEqualTo("new@test.com");
@@ -229,7 +229,7 @@ class AuthServiceTest {
                 "Test", "User", "0912345680", "otro.correo@test.com",
                 LocalDate.of(2000, 1, 1), "otro@test.com", "password123", "SUPERADMIN");
 
-        assertThatThrownBy(() -> authService.registrar(registerRequest))
+        assertThatThrownBy(() -> authService.register(registerRequest))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(personaRepository, never()).save(any());
@@ -253,7 +253,7 @@ class AuthServiceTest {
                 "Test", "User", "0912345682", "sinestado.persona@test.com",
                 LocalDate.of(2000, 1, 1), "sinestado@test.com", "test123", "ENTRENADOR");
 
-        assertThatThrownBy(() -> authService.registrar(registerRequest))
+        assertThatThrownBy(() -> authService.register(registerRequest))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -264,7 +264,7 @@ class AuthServiceTest {
 
         authService.logout("token-valido");
 
-        verify(blacklistService).revocar("jti-123", 900_000L);
+        verify(blacklistService).revoke("jti-123", 900_000L);
         verify(auditoriaService).recordEvent(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
     }
 
@@ -273,7 +273,7 @@ class AuthServiceTest {
         authService.logout(null);
 
         verify(jwtService, never()).extractJti(any());
-        verify(blacklistService, never()).revocar(any(), anyLong());
+        verify(blacklistService, never()).revoke(any(), anyLong());
     }
 
     @Test
@@ -282,7 +282,7 @@ class AuthServiceTest {
 
         authService.logout("token-corrupto");
 
-        verify(blacklistService, never()).revocar(any(), anyLong());
+        verify(blacklistService, never()).revoke(any(), anyLong());
         verify(auditoriaService).recordEvent(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
     }
 
@@ -290,7 +290,7 @@ class AuthServiceTest {
     void refrescarConTokenInvalidoDevuelveVacio() {
         when(jwtService.isTokenValid("bad-token")).thenReturn(false);
 
-        assertThat(authService.refrescar("bad-token")).isEmpty();
+        assertThat(authService.refresh("bad-token")).isEmpty();
     }
 
     @Test
@@ -300,7 +300,7 @@ class AuthServiceTest {
         when(jwtService.extractRol("good-token")).thenReturn("ADMINISTRADOR");
         when(jwtService.generateToken("admin@test.com", "ADMINISTRADOR")).thenReturn("nuevo-access-token");
 
-        assertThat(authService.refrescar("good-token")).contains("nuevo-access-token");
+        assertThat(authService.refresh("good-token")).contains("nuevo-access-token");
     }
 
     @Test
@@ -314,7 +314,7 @@ class AuthServiceTest {
                 .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
         when(usuarioRepository.findByUsername("admin@test.com")).thenReturn(Optional.of(usuario));
 
-        Optional<SesionResponse> resultado = authService.obtenerSesionActual();
+        Optional<SessionResponse> resultado = authService.getCurrentSession();
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getUsername()).isEqualTo("admin@test.com");
@@ -330,7 +330,7 @@ class AuthServiceTest {
 
         when(usuarioRepository.findByUsername("huerfano@test.com")).thenReturn(Optional.empty());
 
-        Optional<SesionResponse> resultado = authService.obtenerSesionActual();
+        Optional<SessionResponse> resultado = authService.getCurrentSession();
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getNombre()).isEqualTo("huerfano@test.com");
@@ -338,6 +338,6 @@ class AuthServiceTest {
 
     @Test
     void obtenerSesionActualSinAutenticarDevuelveVacio() {
-        assertThat(authService.obtenerSesionActual()).isEmpty();
+        assertThat(authService.getCurrentSession()).isEmpty();
     }
 }

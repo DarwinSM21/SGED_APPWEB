@@ -7,7 +7,7 @@ import lombok.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SesionResponse {
+public class SessionResponse {
     private String username;
     private String nombre;
     private String rol;

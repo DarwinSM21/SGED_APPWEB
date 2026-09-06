@@ -25,7 +25,7 @@ public class RedisBlacklistService {
      * @param jti    identificador único del token a revocar
      * @param ttlMs  vigencia de la revocación, en milisegundos
      */
-    public void agregar(String jti, long ttlMs) {
+    public void add(String jti, long ttlMs) {
         redis.opsForValue().set(PREFIX + jti, "revoked", Duration.ofMillis(ttlMs));
     }
 
@@ -35,7 +35,7 @@ public class RedisBlacklistService {
      * @param jti identificador único del token a comprobar
      * @return {@code true} si el token está en la lista negra
      */
-    public boolean estaRevocado(String jti) {
+    public boolean isRevoked(String jti) {
         return Boolean.TRUE.equals(redis.hasKey(PREFIX + jti));
     }
 
@@ -46,7 +46,7 @@ public class RedisBlacklistService {
      * @param jti                identificador único del token a revocar
      * @param tiempoRestanteMs   milisegundos de vida que le quedan al token
      */
-    public void revocar(String jti, long tiempoRestanteMs) {
+    public void revoke(String jti, long tiempoRestanteMs) {
         if (tiempoRestanteMs > 0) {
             redis.opsForValue().set(PREFIX + jti, "revoked",
                     Duration.ofMillis(tiempoRestanteMs));

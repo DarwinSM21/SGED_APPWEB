@@ -33,7 +33,7 @@ public class LoginAttemptService {
      * @param ip dirección IP a comprobar
      * @return {@code true} si el contador alcanza o supera el máximo
      */
-    public boolean estaBloqueada(String ip) {
+    public boolean isBlocked(String ip) {
         String valor = redis.opsForValue().get(PREFIX + ip);
         return valor != null && Integer.parseInt(valor) >= maxIntentos;
     }
@@ -44,7 +44,7 @@ public class LoginAttemptService {
      *
      * @param ip dirección IP que falló el inicio de sesión
      */
-    public void registrarFallo(String ip) {
+    public void recordFailure(String ip) {
         String clave = PREFIX + ip;
         Long intentos = redis.opsForValue().increment(clave);
         if (intentos != null && intentos == 1L) {
@@ -57,7 +57,7 @@ public class LoginAttemptService {
      *
      * @param ip dirección IP que inició sesión correctamente
      */
-    public void registrarExito(String ip) {
+    public void recordSuccess(String ip) {
         redis.delete(PREFIX + ip);
     }
 }

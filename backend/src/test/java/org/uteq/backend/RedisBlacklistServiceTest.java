@@ -36,7 +36,7 @@ class RedisBlacklistServiceTest {
     void agregar_guarda_el_jti_con_el_ttl() {
         when(redis.opsForValue()).thenReturn(valueOps);
 
-        service.agregar(JTI_TEST, 60_000L);
+        service.add(JTI_TEST, 60_000L);
 
         verify(valueOps).set(CLAVE_REDIS, "revoked", Duration.ofMillis(60_000L));
     }
@@ -46,7 +46,7 @@ class RedisBlacklistServiceTest {
     void revocar_guarda_el_jti_con_el_ttl_restante() {
         when(redis.opsForValue()).thenReturn(valueOps);
 
-        service.revocar(JTI_TEST, 60_000L);
+        service.revoke(JTI_TEST, 60_000L);
 
         verify(valueOps).set(CLAVE_REDIS, "revoked", Duration.ofMillis(60_000L));
     }
@@ -54,8 +54,8 @@ class RedisBlacklistServiceTest {
     @Test
     @DisplayName("revocar - Ignora la revocación cuando el tiempo restante es cero o negativo")
     void revocar_ignora_ttl_no_positivo() {
-        service.revocar(JTI_TEST, 0L);
-        service.revocar(JTI_TEST, -100L);
+        service.revoke(JTI_TEST, 0L);
+        service.revoke(JTI_TEST, -100L);
 
         verify(redis, never()).opsForValue();
     }
@@ -65,7 +65,7 @@ class RedisBlacklistServiceTest {
     void estaRevocado_true_si_existe_la_clave() {
         when(redis.hasKey(CLAVE_REDIS)).thenReturn(true);
 
-        assertTrue(service.estaRevocado(JTI_TEST));
+        assertTrue(service.isRevoked(JTI_TEST));
     }
 
     @Test
@@ -73,7 +73,7 @@ class RedisBlacklistServiceTest {
     void estaRevocado_false_si_no_existe() {
         when(redis.hasKey("jwt:blacklist:jti-999")).thenReturn(false);
 
-        assertFalse(service.estaRevocado("jti-999"));
+        assertFalse(service.isRevoked("jti-999"));
     }
 
     @Test
@@ -81,6 +81,6 @@ class RedisBlacklistServiceTest {
     void estaRevocado_false_si_redis_responde_null() {
         when(redis.hasKey(CLAVE_REDIS)).thenReturn(null);
 
-        assertFalse(service.estaRevocado(JTI_TEST));
+        assertFalse(service.isRevoked(JTI_TEST));
     }
 }

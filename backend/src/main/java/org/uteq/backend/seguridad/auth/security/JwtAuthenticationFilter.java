@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 String jti = jwtService.extractJti(token);
 
-                if (jti != null && blacklistService.estaRevocado(jti)) {
+                if (jti != null && blacklistService.isRevoked(jti)) {
                     filterChain.doFilter(request, response);
                     return;
                 }

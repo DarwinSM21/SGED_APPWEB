@@ -15,7 +15,7 @@ import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.seguridad.auth.controller.AuthController;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
-import org.uteq.backend.seguridad.auth.dto.SesionResponse;
+import org.uteq.backend.seguridad.auth.dto.SessionResponse;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.service.AuthService;
 
@@ -54,7 +54,7 @@ class AuthControllerTest {
 
     @Test
     void loginDelegaEnAuthServiceYPonelasCookies() throws Exception {
-        SesionResponse sesion = SesionResponse.builder()
+        SessionResponse sesion = SessionResponse.builder()
                 .username("admin@test.com").nombre("Admin SGED").rol("ADMINISTRADOR").build();
         when(authService.login(any(LoginRequest.class), anyString()))
                 .thenReturn(new AuthService.LoginResult("mock-jwt-token", "mock-refresh-token", sesion));
@@ -79,7 +79,7 @@ class AuthControllerTest {
 
     @Test
     void registroDelegaEnAuthServiceYDevuelveConflictSiVacio() throws Exception {
-        when(authService.registrar(any(RegisterRequest.class))).thenReturn(Optional.empty());
+        when(authService.register(any(RegisterRequest.class))).thenReturn(Optional.empty());
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "test@test.com",
@@ -103,7 +103,7 @@ class AuthControllerTest {
                         .content(cuerpoIncompleto))
                 .andExpect(status().isUnprocessableEntity());
 
-        verify(authService, never()).registrar(any());
+        verify(authService, never()).register(any());
     }
 
     @Test
@@ -119,7 +119,7 @@ class AuthControllerTest {
                         .content(cuerpoSinRol))
                 .andExpect(status().isUnprocessableEntity());
 
-        verify(authService, never()).registrar(any());
+        verify(authService, never()).register(any());
     }
 
     @Test
@@ -150,7 +150,7 @@ class AuthControllerTest {
 
     @Test
     void refreshSinCookieDa401() throws Exception {
-        when(authService.refrescar(isNull())).thenReturn(Optional.empty());
+        when(authService.refresh(isNull())).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/auth/refresh"))
                 .andExpect(status().isUnauthorized());
@@ -158,7 +158,7 @@ class AuthControllerTest {
 
     @Test
     void refreshConTokenInvalidoDa401() throws Exception {
-        when(authService.refrescar("refresh-invalido")).thenReturn(Optional.empty());
+        when(authService.refresh("refresh-invalido")).thenReturn(Optional.empty());
 
         mockMvc.perform(post("/api/auth/refresh")
                         .cookie(new Cookie("sged_refresh", "refresh-invalido")))
@@ -167,7 +167,7 @@ class AuthControllerTest {
 
     @Test
     void refreshConTokenValidoPoneLaCookieYDevuelve204() throws Exception {
-        when(authService.refrescar("refresh-valido")).thenReturn(Optional.of("nuevo-access"));
+        when(authService.refresh("refresh-valido")).thenReturn(Optional.of("nuevo-access"));
         when(jwtService.getExpirationMs()).thenReturn(900_000L);
 
         mockMvc.perform(post("/api/auth/refresh")
@@ -178,7 +178,7 @@ class AuthControllerTest {
 
     @Test
     void meSinAutenticarDa401() throws Exception {
-        when(authService.obtenerSesionActual()).thenReturn(Optional.empty());
+        when(authService.getCurrentSession()).thenReturn(Optional.empty());
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isUnauthorized());
@@ -186,9 +186,9 @@ class AuthControllerTest {
 
     @Test
     void meAutenticadoDevuelveLaSesion() throws Exception {
-        SesionResponse sesion = SesionResponse.builder()
+        SessionResponse sesion = SessionResponse.builder()
                 .username("admin@test.com").nombre("Admin SGED").rol("ADMINISTRADOR").build();
-        when(authService.obtenerSesionActual()).thenReturn(Optional.of(sesion));
+        when(authService.getCurrentSession()).thenReturn(Optional.of(sesion));
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())

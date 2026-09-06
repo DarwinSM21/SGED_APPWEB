@@ -183,7 +183,7 @@ class JwtAuthenticationFilterTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-revocado");
         when(jwtService.extractUsername("token-revocado")).thenReturn("coach@sged.test");
         when(jwtService.extractJti("token-revocado")).thenReturn("jti-revocado");
-        when(blacklistService.estaRevocado("jti-revocado")).thenReturn(true);
+        when(blacklistService.isRevoked("jti-revocado")).thenReturn(true);
 
         filter.doFilter(request, response, filterChain);
 

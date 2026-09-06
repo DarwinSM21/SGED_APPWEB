@@ -35,7 +35,7 @@ class LoginAttemptServiceTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("login_attempts:1.2.3.4")).thenReturn("4");
 
-        assertFalse(service.estaBloqueada("1.2.3.4"));
+        assertFalse(service.isBlocked("1.2.3.4"));
     }
 
     @Test
@@ -43,7 +43,7 @@ class LoginAttemptServiceTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("login_attempts:1.2.3.4")).thenReturn("5");
 
-        assertTrue(service.estaBloqueada("1.2.3.4"));
+        assertTrue(service.isBlocked("1.2.3.4"));
     }
 
     @Test
@@ -51,7 +51,7 @@ class LoginAttemptServiceTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("login_attempts:1.2.3.4")).thenReturn(null);
 
-        assertFalse(service.estaBloqueada("1.2.3.4"));
+        assertFalse(service.isBlocked("1.2.3.4"));
     }
 
     @Test
@@ -59,7 +59,7 @@ class LoginAttemptServiceTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.increment("login_attempts:1.2.3.4")).thenReturn(1L);
 
-        service.registrarFallo("1.2.3.4");
+        service.recordFailure("1.2.3.4");
 
         verify(redis).expire("login_attempts:1.2.3.4", java.time.Duration.ofMinutes(15));
     }
@@ -69,7 +69,7 @@ class LoginAttemptServiceTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.increment("login_attempts:1.2.3.4")).thenReturn(2L);
 
-        service.registrarFallo("1.2.3.4");
+        service.recordFailure("1.2.3.4");
 
         verify(redis, org.mockito.Mockito.never()).expire(
                 org.mockito.ArgumentMatchers.anyString(), org.mockito.ArgumentMatchers.any());
@@ -77,7 +77,7 @@ class LoginAttemptServiceTest {
 
     @Test
     void exito_borra_el_contador() {
-        service.registrarExito("1.2.3.4");
+        service.recordSuccess("1.2.3.4");
         verify(redis).delete("login_attempts:1.2.3.4");
     }
 }

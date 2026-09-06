@@ -16,7 +16,7 @@ import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
-import org.uteq.backend.seguridad.auth.dto.SesionResponse;
+import org.uteq.backend.seguridad.auth.dto.SessionResponse;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
@@ -63,9 +63,9 @@ public class AuthService {
      *
      * @param accessToken  JWT de acceso, de vida corta
      * @param refreshToken JWT de refresco, de vida larga
-     * @param sesion       datos no sensibles de la sesión (nunca el token)
+     * @param session      datos no sensibles de la sesión (nunca el token)
      */
-    public record LoginResult(String accessToken, String refreshToken, SesionResponse sesion) {}
+    public record LoginResult(String accessToken, String refreshToken, SessionResponse session) {}
 
     /**
      * Da de alta una {@link Persona} y su {@link Usuario} en una sola
@@ -85,7 +85,7 @@ public class AuthService {
      *                                  {@code seguridad.estados_general}
      */
     @Transactional
-    public Optional<SesionResponse> registrar(RegisterRequest request) {
+    public Optional<SessionResponse> register(RegisterRequest request) {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
                 || personaRepository.existsByCedulaAndActivoTrue(request.cedula())
                 || personaRepository.existsByCorreo(request.correo())) {
@@ -122,7 +122,7 @@ public class AuthService {
         usuario = usuarioRepository.save(usuario);
 
         String nombreCompleto = persona.getNombre() + " " + persona.getApellido();
-        return Optional.of(SesionResponse.builder()
+        return Optional.of(SessionResponse.builder()
                 .username(usuario.getUsername())
                 .nombre(nombreCompleto)
                 .rol(rol.getNombre())
@@ -146,7 +146,7 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public LoginResult login(LoginRequest request, String ip) {
-        if (loginAttemptService.estaBloqueada(ip)) {
+        if (loginAttemptService.isBlocked(ip)) {
             throw new TooManyRequestsException(
                     "Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.");
         }
@@ -156,14 +156,14 @@ public class AuthService {
             auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.username(), request.password()));
         } catch (BadCredentialsException e) {
-            loginAttemptService.registrarFallo(ip);
+            loginAttemptService.recordFailure(ip);
             AUTH_AUDIT_LOG.warn("AUTH_LOGIN_FAIL ip={} sub={}", ip, request.username());
             auditoriaService.recordEventWithIdentity(request.username(), null,
                     "LOGIN_FALLIDO", "Usuario", null, "intento de inicio de sesión fallido");
             throw e;
         }
 
-        loginAttemptService.registrarExito(ip);
+        loginAttemptService.recordSuccess(ip);
 
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "");
@@ -178,13 +178,13 @@ public class AuthService {
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
                 .orElse(userDetails.getUsername());
 
-        SesionResponse sesion = SesionResponse.builder()
+        SessionResponse session = SessionResponse.builder()
                 .username(userDetails.getUsername())
                 .nombre(nombre)
                 .rol(rol)
                 .build();
 
-        return new LoginResult(accessToken, refreshToken, sesion);
+        return new LoginResult(accessToken, refreshToken, session);
     }
 
     /**
@@ -201,7 +201,7 @@ public class AuthService {
             try {
                 String jti = jwtService.extractJti(accessToken);
                 if (jti != null) {
-                    blacklistService.revocar(jti, jwtService.getExpirationMs());
+                    blacklistService.revoke(jti, jwtService.getExpirationMs());
                 }
             } catch (Exception e) {
                 // Token ya inválido: nada que revocar.
@@ -221,7 +221,7 @@ public class AuthService {
      *         refresh token falta o no es válido (el controlador lo traduce a
      *         {@code 401})
      */
-    public Optional<String> refrescar(String refreshToken) {
+    public Optional<String> refresh(String refreshToken) {
         if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {
             return Optional.empty();
         }
@@ -239,7 +239,7 @@ public class AuthService {
      *         sesión autenticada en el contexto
      */
     @Transactional(readOnly = true)
-    public Optional<SesionResponse> obtenerSesionActual() {
+    public Optional<SessionResponse> getCurrentSession() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails userDetails)) {
             return Optional.empty();
@@ -251,7 +251,7 @@ public class AuthService {
                 .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
                 .orElse(userDetails.getUsername());
 
-        return Optional.of(SesionResponse.builder()
+        return Optional.of(SessionResponse.builder()
                 .username(userDetails.getUsername())
                 .nombre(nombre)
                 .rol(rol)
