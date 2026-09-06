@@ -29,7 +29,8 @@ documentación de este repositorio por parte de Alejandro.
 > sesiones de trabajo, deben añadir su propia declaración en esta misma
 > sección antes de la entrega — no se asume ni se descarta su uso a falta de
 > esa confirmación, siguiendo el mismo criterio de no rellenar con valores no
-> confirmados ya aplicado al ORCID pendiente en `CITATION.cff`.
+> confirmados ya aplicado, por ejemplo, a los ORCID hasta que estuvieron
+> verificados en la API de `orcid.org`.
 
 ## 3. Fases del proyecto en que se usó, y con qué propósito
 

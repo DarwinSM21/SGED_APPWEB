@@ -6,28 +6,29 @@ version: 1.0.0
 date-released: 2026-07-30
 repository-code: "https://github.com/DarwinSM21/SGED_APPWEB"
 license: MIT
-# DOI del software (Zenodo). El DOI del dataset de mediciones es un
-# deposito SEPARADO (Bloque D.3) y todavia no existe; cuando se cree,
-# se referencia aqui bajo `identifiers`, no en este campo `doi`.
+# DOI del software (Zenodo).
 doi: 10.5281/zenodo.21713240
+# DOI del dataset de mediciones (Zenodo, deposito separado, CC BY 4.0).
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.22422305"
+    description: "Conjunto de datos de mediciones del proyecto SGED"
 authors:
-  # ORCID pendiente de registro (gratuito, en orcid.org) para los tres
-  # integrantes -- Bloque B.1. Se agrega el campo `orcid:` a cada autor
-  # en cuanto exista el identificador; no se rellena con un valor
-  # provisional para no declarar como cerrado lo que no lo esta.
+  # ORCID de cada autor, verificados contra la API publica de orcid.org
+  # (querys HTTP 200) el 2026-09-05 -- Bloque B.1.
   - family-names: Arcalle Grefa
     given-names: Darwin Orlando
     affiliation: "Universidad Técnica Estatal de Quevedo"
-    # orcid: "https://orcid.org/PENDIENTE"
+    orcid: "https://orcid.org/0009-0005-8002-1649"
   - family-names: Pallo Pinto
     given-names: Alejandro Daniel
     email: dpallop@uteq.edu.ec
     affiliation: "Universidad Técnica Estatal de Quevedo"
-    # orcid: "https://orcid.org/PENDIENTE"
+    orcid: "https://orcid.org/0009-0009-0717-4250"
   - family-names: Velez Lopez
     given-names: Ricardo Elias
     affiliation: "Universidad Técnica Estatal de Quevedo"
-    # orcid: "https://orcid.org/PENDIENTE"
+    orcid: "https://orcid.org/0009-0005-9463-6847"
 keywords:
   - spring-boot
   - angular

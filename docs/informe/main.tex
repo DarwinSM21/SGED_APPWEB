@@ -92,7 +92,7 @@
 \textbf{Etiqueta:} & \texttt{v1.0.0} \\[0.2cm]
 \textbf{\emph{Commit} del corte:} & el \emph{commit} al que apunta la etiqueta \texttt{v1.0.0} \\[0.2cm]
 \textbf{DOI del software:} & \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240} \\[0.2cm]
-\textbf{DOI del \emph{dataset}:} & \pendiente{} (depósito separado en Zenodo, Bloque D.3) \\
+\textbf{DOI del \emph{dataset}:} & \href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305} \\
 \end{tabular}\\[0.9cm]
 
 {\large\bfseries Integrantes y ORCID:}\\[0.3cm]
@@ -119,11 +119,9 @@ Velez Lopez Ricardo Elias & ORCID: \url{https://orcid.org/0009-0005-9463-6847} \
 Nota de versión (honesta, no cosmética): esta entrega queda cerrada en la
 etiqueta \texttt{v1.0.0}, cuyo \emph{commit} consta arriba. Los tres
 ORCID ya están registrados y verificados contra la API pública de
-\url{orcid.org}. El único campo que sigue marcado \pendiente{} es el
-DOI del \emph{dataset}, que depende del depósito en Zenodo y no de este
-repositorio; se declara como faltante en vez de omitirlo, siguiendo la
-misma disciplina que \ruta{VERSIONING.md}
-ya aplica: no se declara cerrado lo que todavía no lo está.
+\url{orcid.org}. El DOI del \emph{dataset} de mediciones está publicado
+en Zenodo (\href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305})
+bajo licencia CC BY 4.0, como depósito separado del software.
 \end{quote}
 
 \tableofcontents
@@ -3155,9 +3153,9 @@ Zenodo: \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240}.
 \textbf{Disponibilidad de datos.} Los datos crudos de todas las
 mediciones (rendimiento, seguridad, cobertura, calidad web, usabilidad)
 están versionados en \ruta{docs/mediciones/} bajo la misma licencia del
-repositorio. \textbf{Pendiente:} el depósito separado del \emph{dataset}
-de mediciones en Zenodo con DOI propio y licencia Creative Commons
-Attribution~4.0, distinto del DOI del software, que exige el Bloque~D.3.
+repositorio. El depósito separado del \emph{dataset} de mediciones está
+publicado en Zenodo con DOI propio (\href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305})
+y licencia Creative Commons Attribution~4.0.
 
 \textbf{Disponibilidad de materiales.} Colección Postman
 (\ruta{docs/postman/coleccion.json}, 32 peticiones, que cubre el catálogo
@@ -3440,7 +3438,7 @@ El procedimiento de evaluación es reproducible por un tercero & \parcial & \tex
 Se declara el contexto/entorno de la evaluación & \cumple & Sección~\ref{sec:entorno} (o equivalente): SO, versión de Docker, JDK, estado inicial de la base de datos \\
 Se declaran las limitaciones de la muestra cuando aplica & \cumple & Sección~\ref{sec:muestreo}: $N=15$ para SUS, muestreo por conveniencia declarado según Baltes y Ralph (2022) \\
 Amenazas a la validez tratadas por categoría & \cumple & Capítulo~\ref{sec:amenazas}, cuatro categorías con mitigación declarada por cada una \\
-El artefacto y los datos de evaluación están disponibles para un tercero & \parcial & Repositorio público con DOI de \emph{software}; falta el DOI separado del \emph{dataset} de mediciones (Bloque~D.3, sección~\ref{sec:declaraciones}) \\
+El artefacto y los datos de evaluación están disponibles para un tercero & \cumple & Repositorio público con DOI de \emph{software} (\href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240}); \emph{dataset} de mediciones con DOI propio (\href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305}) y licencia CC BY 4.0 (sección~\ref{sec:declaraciones}) \\
 Conflictos de interés y financiamiento declarados & \cumple & Sección~\ref{sec:declaraciones} \\
 Los resultados se interpretan sin sobregeneralizar & \cumple & Sección~\ref{sec:discusion} responde cada RQ contra evidencia concreta; las Conclusiones distinguen lo cumplido de lo pendiente \\
 Defectos del propio proceso de medición se reportan si se encuentran & \cumple & Rasgo distintivo del proyecto: cinco instrumentos de medición defectuosos detectados y corregidos a lo largo de las cuatro entregas, documentados como hallazgo \\
