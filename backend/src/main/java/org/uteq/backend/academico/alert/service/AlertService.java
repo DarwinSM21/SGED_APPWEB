@@ -1,11 +1,11 @@
-package org.uteq.backend.academico.alerta.service;
+package org.uteq.backend.academico.alert.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.alerta.dto.AlertaDtos.EstudianteEnRiesgoResponse;
-import org.uteq.backend.academico.alerta.dto.AlertaDtos.PanelAlertasResponse;
+import org.uteq.backend.academico.alert.dto.AlertDtos.StudentAtRiskResponse;
+import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
@@ -40,7 +40,7 @@ import java.util.Set;
  */
 @Service
 @RequiredArgsConstructor
-public class AlertaService {
+public class AlertService {
     private final EstudianteRepository estudianteRepository;
     private final PagoRepository pagoRepository;
     private final LesionRepository lesionRepository;
@@ -68,7 +68,7 @@ public class AlertaService {
      * @return el panel de alertas
      */
     @Transactional(readOnly = true)
-    public PanelAlertasResponse panel() {
+    public AlertsPanelResponse panel() {
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         short anio = (short) hoy.getYear();
         short mes = (short) hoy.getMonthValue();
@@ -85,23 +85,23 @@ public class AlertaService {
 
         Map<Long, BigDecimal> porcentajes = porcentajesPorEstudiante(desde, corte);
 
-        List<EstudianteEnRiesgoResponse> enRiesgo = activos.stream()
+        List<StudentAtRiskResponse> enRiesgo = activos.stream()
                 .map(e -> evaluar(e, alDia, lesionados, porcentajes, umbral))
                 .filter(r -> r.totalAlertas() > 0)
                 .sorted(Comparator
-                        .comparingInt(EstudianteEnRiesgoResponse::totalAlertas).reversed()
-                        .thenComparing(EstudianteEnRiesgoResponse::nombreCompleto))
+                        .comparingInt(StudentAtRiskResponse::totalAlertas).reversed()
+                        .thenComparing(StudentAtRiskResponse::nombreCompleto))
                 .toList();
 
-        List<EstudianteEnRiesgoResponse> detalle = enRiesgo.size() > topeDetalle
+        List<StudentAtRiskResponse> detalle = enRiesgo.size() > topeDetalle
                 ? enRiesgo.subList(0, topeDetalle)
                 : enRiesgo;
 
-        return new PanelAlertasResponse(
+        return new AlertsPanelResponse(
                 anio, mes, umbralAsistencia, activos.size(),
-                enRiesgo.stream().filter(EstudianteEnRiesgoResponse::mensualidadPendiente).count(),
-                enRiesgo.stream().filter(EstudianteEnRiesgoResponse::asistenciaBaja).count(),
-                enRiesgo.stream().filter(EstudianteEnRiesgoResponse::lesionActiva).count(),
+                enRiesgo.stream().filter(StudentAtRiskResponse::mensualidadPendiente).count(),
+                enRiesgo.stream().filter(StudentAtRiskResponse::asistenciaBaja).count(),
+                enRiesgo.stream().filter(StudentAtRiskResponse::lesionActiva).count(),
                 enRiesgo.size(),
                 detalle);
     }
@@ -126,7 +126,7 @@ public class AlertaService {
         return porcentajes;
     }
 
-    private EstudianteEnRiesgoResponse evaluar(
+    private StudentAtRiskResponse evaluar(
             Estudiante e, Set<Long> alDia, Set<Long> lesionados,
             Map<Long, BigDecimal> porcentajes, BigDecimal umbral) {
         Long id = e.getIdEstudiante();
@@ -140,7 +140,7 @@ public class AlertaService {
         int total = (debe ? 1 : 0) + (asistenciaBaja ? 1 : 0) + (lesionada ? 1 : 0);
         var persona = e.getPersona();
 
-        return new EstudianteEnRiesgoResponse(
+        return new StudentAtRiskResponse(
                 id,
                 persona == null ? "(sin persona)" : persona.getNombre() + " " + persona.getApellido(),
                 e.getCategoria() == null ? null : e.getCategoria().getNombre(),

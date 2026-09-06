@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.alerta.controller;
+package org.uteq.backend.academico.alert.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -6,8 +6,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.uteq.backend.academico.alerta.dto.AlertaDtos.PanelAlertasResponse;
-import org.uteq.backend.academico.alerta.service.AlertaService;
+import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
+import org.uteq.backend.academico.alert.service.AlertService;
 
 /**
  * Panel de estudiantes que requieren atención. Restringido a
@@ -18,8 +18,8 @@ import org.uteq.backend.academico.alerta.service.AlertaService;
 @RestController
 @RequestMapping("/api/alertas")
 @RequiredArgsConstructor
-public class AlertaController {
-    private final AlertaService alertaService;
+public class AlertController {
+    private final AlertService alertaService;
 
     /**
      * Panel operativo del día: contadores por tipo de alerta y el detalle de
@@ -29,7 +29,7 @@ public class AlertaController {
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<PanelAlertasResponse> panel() {
+    public ResponseEntity<AlertsPanelResponse> panel() {
         return ResponseEntity.ok(alertaService.panel());
     }
 }

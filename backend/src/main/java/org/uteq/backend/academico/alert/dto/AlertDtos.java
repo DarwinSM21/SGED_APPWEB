@@ -1,12 +1,12 @@
-package org.uteq.backend.academico.alerta.dto;
+package org.uteq.backend.academico.alert.dto;
 
 import java.math.BigDecimal;
 import java.util.List;
 
-public final class AlertaDtos {
-    private AlertaDtos() {}
+public final class AlertDtos {
+    private AlertDtos() {}
 
-    public record EstudianteEnRiesgoResponse(
+    public record StudentAtRiskResponse(
             Long idEstudiante,
             String nombreCompleto,
             String categoria,
@@ -17,7 +17,7 @@ public final class AlertaDtos {
             int totalAlertas
     ) {}
 
-    public record PanelAlertasResponse(
+    public record AlertsPanelResponse(
             int anio,
             int mes,
             int umbralAsistencia,
@@ -26,6 +26,6 @@ public final class AlertaDtos {
             long conAsistenciaBaja,
             long conLesionActiva,
             long totalEnRiesgo,
-            List<EstudianteEnRiesgoResponse> estudiantes
+            List<StudentAtRiskResponse> estudiantes
     ) {}
 }

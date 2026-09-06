@@ -9,9 +9,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.academico.alerta.controller.AlertaController;
-import org.uteq.backend.academico.alerta.dto.AlertaDtos.PanelAlertasResponse;
-import org.uteq.backend.academico.alerta.service.AlertaService;
+import org.uteq.backend.academico.alert.controller.AlertController;
+import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
+import org.uteq.backend.academico.alert.service.AlertService;
 
 import java.util.List;
 
@@ -21,15 +21,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class AlertaControllerTest {
+class AlertControllerTest {
 
     private MockMvc mockMvc;
 
     @Mock
-    private AlertaService alertaService;
+    private AlertService alertaService;
 
     @InjectMocks
-    private AlertaController alertaController;
+    private AlertController alertaController;
 
     @BeforeEach
     void setUp() {
@@ -39,7 +39,7 @@ class AlertaControllerTest {
     @Test
     @DisplayName("GET /api/alertas - delega en el servicio y devuelve el panel")
     void panel_devuelve_200() throws Exception {
-        when(alertaService.panel()).thenReturn(new PanelAlertasResponse(
+        when(alertaService.panel()).thenReturn(new AlertsPanelResponse(
                 2026, 9, 75, 40, 3, 2, 1, 4, List.of()));
 
         mockMvc.perform(get("/api/alertas"))
