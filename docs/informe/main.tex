@@ -238,15 +238,13 @@ web-quality auditing (Lighthouse), and usability (System Usability
 Scale, $N=15$), with reproducible raw data. \textbf{Main results.} The
 system meets the performance thresholds (p95 under 200\,ms), all six
 OWASP controls, and the required coverage; the measurement process
-itself uncovered and fixed three instruments producing misleading
-readings, including a real exposure of underage students' personal
-data (finding H-08, now fixed). Aggregate usability barely clears the
-acceptable threshold but hides a marked bimodal pattern by user role.
+uncovered and fixed three faulty instruments, including a real
+exposure of underage students' data (H-08, fixed). Aggregate usability
+barely clears the threshold but hides a bimodal pattern by user role.
 \textbf{Conclusions.} The hybrid data-access strategy is sustainable
-without sacrificing security, and reporting faulty measurement
-instruments — not just their results — is itself a methodological
-contribution. Open work remains on the bimodal usability pattern and
-the public exposure of the remaining sports domain.
+without sacrificing security, and reporting faulty instruments rather
+than just their results is a methodological contribution. Open work
+remains on the bimodal pattern and the public sports-domain exposure.
 
 \textbf{Keywords:} sports school management systems; requirements
 engineering; empirical software validation; web application security;
@@ -364,8 +362,9 @@ reproducible de sus atributos de calidad.
 
 \begin{enumerate}[leftmargin=*]
   \item Un sistema web de gestión escolar deportiva con arquitectura
-    documentada en C4 (niveles 1 a 3) y siete registros de decisión
-    arquitectónica, en \ruta{docs/arquitectura/} y \ruta{docs/adr/}.
+    documentada en C4 (niveles 1 a 3) y ocho registros de decisión
+    arquitectónica (ADR-001 a ADR-008), en \ruta{docs/arquitectura/} y
+    \ruta{docs/adr/}.
   \item Una estrategia híbrida de acceso a datos auditada empíricamente
     contra inyección SQL, con procedimientos almacenados versionados y
     catalogados en \ruta{db/procs/} y \ruta{docs/basedatos/CATALOGO-SP.md}
@@ -1802,7 +1801,7 @@ actividades:
     específicos trazados a las cuatro preguntas de investigación.
   \item \textbf{Diseño y desarrollo} — Capítulo~\ref{sec:arquitectura} y
     sección~\ref{sec:acceso-datos}: arquitectura en C4, estrategia
-    híbrida de acceso a datos, siete ADR.
+    híbrida de acceso a datos, ocho ADR.
   \item \textbf{Demostración} — el sistema desplegado y operable
     (\texttt{make up}), con datos sembrados y los cinco roles de usuario
     reales.
@@ -3454,7 +3453,7 @@ del repositorio en cada fila, en
 El problema y su motivación están claramente descritos & \cumple & Sección~\ref{sec:contexto-motivacion}, con tres referencias que sustentan la carencia de digitalización en clubes deportivos de formación \\
 Preguntas de investigación explícitas y verificables & \cumple & RQ1--RQ4 (sección~\ref{sec:rqs}), cada una cerrada y trazada a evidencia empírica concreta \\
 El artefacto está descrito con detalle suficiente para juzgar su novedad y su contribución & \cumple & Capítulos~\ref{sec:arquitectura} e \ref{sec:implementacion}; estrategia híbrida de acceso a datos como aporte técnico explícito, con ADR-006 \\
-El proceso de diseño/construcción del artefacto está documentado & \cumple & Siete ADR, C4 niveles 1--3 generados desde \ruta{workspace.dsl}, \ruta{docs/observaciones/OBSERVACIONES.md} como bitácora del proceso iterativo \\
+El proceso de diseño/construcción del artefacto está documentado & \cumple & Ocho ADR (ADR-001 a ADR-008), C4 niveles 1--3 generados desde \ruta{workspace.dsl}, \ruta{docs/observaciones/OBSERVACIONES.md} como bitácora del proceso iterativo \\
 La evaluación usa métodos apropiados a las preguntas planteadas & \cumple & k6 para RQ1, OWASP+ZAP+análisis estático para RQ2, SUS para RQ3, JaCoCo+matriz de trazabilidad para RQ4 \\
 El procedimiento de evaluación es reproducible por un tercero & \parcial & \texttt{make bench}/\texttt{make audit}/\texttt{make test} reproducen el procedimiento; parte de la evidencia archivada quedó desactualizada frente al crecimiento del sistema hasta la corrección del 2026-09-02 (sección~\ref{sec:cobertura}) \\
 Se declara el contexto/entorno de la evaluación & \cumple & Sección~\ref{sec:entorno} (o equivalente): SO, versión de Docker, JDK, estado inicial de la base de datos \\
