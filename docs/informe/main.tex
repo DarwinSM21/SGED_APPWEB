@@ -2245,6 +2245,28 @@ escaneo cubrió el \emph{backend}; una corrida equivalente contra el
 \emph{frontend} Angular queda pendiente, junto con la puesta en
 producción (Bloque~A.4).
 
+\textbf{Calidad de código: SonarQube.} Complementario a SpotBugs
+—que audita específicamente inyección SQL con un filtro restringido—,
+se ejecutó SonarQube Community Edition (instancia efímera en Docker)
+contra las 9\,355 líneas de \texttt{backend/src/}, con el reporte de
+cobertura JaCoCo importado para correlacionar hallazgos con líneas
+cubiertas por prueba. Resultado: \textbf{0 \emph{bugs}, 0
+vulnerabilidades, 0 \emph{security hotspots}}, calificación A en las
+tres dimensiones (fiabilidad, seguridad, mantenibilidad), \emph{Quality
+Gate} \ok. Los 64 \emph{code smells} encontrados son en su totalidad
+hallazgos de mantenibilidad —23 literales de cadena duplicados (regla
+\texttt{java:S1192}, mensajes de error como \emph{"Estudiante no
+encontrado con id: "} repetidos en varios servicios), 4 métodos vacíos
+sin comentario (regla \texttt{java:S1186}, en su mayoría \emph{pointcuts}
+de \texttt{AuditoriaAspectTest} que no necesitan cuerpo) y 2 métodos con
+complejidad cognitiva sobre el umbral (regla \texttt{java:S3776}:
+\texttt{AlineacionService} y \texttt{SesionEntrenamientoService}, ambos
+con lógica de negocio real, candidatos a extracción de métodos, no
+\emph{spaghetti code} accidental—. No se integró como paso de CI en
+esta entrega por requerir un servidor SonarQube persistente, no una
+instancia efímera; queda declarado como trabajo futuro. Reporte y datos
+crudos completos en \ruta{docs/mediciones/sonarqube/}.
+
 \subsection{Cobertura de pruebas}
 \label{sec:cobertura}
 
