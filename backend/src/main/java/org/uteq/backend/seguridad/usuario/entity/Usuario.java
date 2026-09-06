@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.role.entity.Role;
 
 import java.time.OffsetDateTime;
 import java.util.Locale;
@@ -56,7 +56,7 @@ public class Usuario {
         joinColumns = @JoinColumn(name = "id_usuario"),
         inverseJoinColumns = @JoinColumn(name = "id_rol")
     )
-    private Set<Rol> roles;
+    private Set<Role> roles;
 
     @PrePersist
     protected void onCreate() {

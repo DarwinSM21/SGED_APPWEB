@@ -7,8 +7,8 @@ import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -17,7 +17,7 @@ import java.util.Set;
 /**
  * Colaborador que concentra la relación {@code Estudiante}–{@code Usuario}:
  * la única porción de {@code EstudianteService} que cruzaba de lleno al
- * dominio de seguridad ({@code Usuario}, {@code Rol}, {@code PasswordEncoder}).
+ * dominio de seguridad ({@code Usuario}, {@code Role}, {@code PasswordEncoder}).
  * Extraído para bajar el fan-out de {@code EstudianteService} (hallazgo
  * MET-01 / R-06 del informe de evaluación de calidad). No orquesta el alta
  * completa —eso lo sigue llamando {@code EstudianteService}—, sino que aloja
@@ -28,7 +28,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class EstudianteAccesoService {
     private final UsuarioRepository usuarioRepository;
-    private final RolRepository rolRepository;
+    private final RoleRepository rolRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -70,7 +70,7 @@ public class EstudianteAccesoService {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
         }
 
-        Rol rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
+        Role rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
                 .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));
         EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
                 .orElseThrow(() -> new IllegalStateException(

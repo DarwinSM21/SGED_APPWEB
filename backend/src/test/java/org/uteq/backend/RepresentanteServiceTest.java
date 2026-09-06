@@ -26,7 +26,7 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -58,7 +58,7 @@ class RepresentanteServiceTest {
 
     private Usuario usuario() {
         return Usuario.builder().idUsuario(1L).username("ana.vera@sged.test")
-                .roles(Set.of(Rol.builder().idRol(1L).nombre("REPRESENTANTE").build())).build();
+                .roles(Set.of(Role.builder().idRol(1L).nombre("REPRESENTANTE").build())).build();
     }
 
     private Representante representante() {
@@ -132,7 +132,7 @@ class RepresentanteServiceTest {
     void crear_sin_rol_representante_lanza_excepcion() {
         RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Madre", "0999999999", null);
         Usuario usuarioSinRol = Usuario.builder().idUsuario(1L).username("ana.vera@sged.test")
-                .roles(Set.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
+                .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
         when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
         when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));

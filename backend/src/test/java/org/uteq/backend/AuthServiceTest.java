@@ -28,8 +28,8 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -56,7 +56,7 @@ class AuthServiceTest {
     @Mock private RedisBlacklistService blacklistService;
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PersonaRepository personaRepository;
-    @Mock private RolRepository rolRepository;
+    @Mock private RoleRepository rolRepository;
     @Mock private EstadoGeneralRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private LoginAttemptService loginAttemptService;
@@ -91,7 +91,7 @@ class AuthServiceTest {
 
         Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
         Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
-                .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
+                .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
 
         when(usuarioRepository.findByUsernameAndActivoTrue("admin@test.com")).thenReturn(Optional.of(usuario));
 
@@ -198,7 +198,7 @@ class AuthServiceTest {
             return p;
         });
         when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
-                Optional.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()));
+                Optional.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(
                 Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
@@ -246,7 +246,7 @@ class AuthServiceTest {
             return p;
         });
         when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
-                Optional.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build()));
+                Optional.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.empty());
 
         RegisterRequest registerRequest = new RegisterRequest(
@@ -311,7 +311,7 @@ class AuthServiceTest {
 
         Persona persona = Persona.builder().nombre("Admin").apellido("SGED").activo(true).build();
         Usuario usuario = Usuario.builder().username("admin@test.com").persona(persona)
-                .roles(Set.of(Rol.builder().nombre("ADMINISTRADOR").build())).build();
+                .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
         when(usuarioRepository.findByUsername("admin@test.com")).thenReturn(Optional.of(usuario));
 
         Optional<SesionResponse> resultado = authService.obtenerSesionActual();

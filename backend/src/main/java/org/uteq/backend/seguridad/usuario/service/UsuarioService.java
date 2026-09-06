@@ -19,8 +19,8 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
@@ -44,7 +44,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
-    private final RolRepository rolRepository;
+    private final RoleRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntrenadorRepository entrenadorRepository;
     private final RepresentanteRepository representanteRepository;
@@ -257,7 +257,7 @@ public class UsuarioService {
             return;
         }
         String rolActual = usuario.getRoles() == null ? null
-                : usuario.getRoles().stream().findFirst().map(Rol::getNombre).orElse(null);
+                : usuario.getRoles().stream().findFirst().map(Role::getNombre).orElse(null);
         if (!rolPedido.equals(rolActual)) {
             validarRolCoherente(persona.getIdPersona(), rolPedido);
             // HashSet mutable: Hibernate necesita poder mutar la colección ya
@@ -267,7 +267,7 @@ public class UsuarioService {
         }
     }
 
-    private Rol buscarRol(String nombre) {
+    private Role buscarRol(String nombre) {
         return rolRepository.findByNombre(nombre)
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + nombre));
     }
@@ -333,7 +333,7 @@ public class UsuarioService {
 
     private UsuarioResponse toResponse(Usuario u) {
         List<String> roles = u.getRoles() == null ? List.of()
-                : u.getRoles().stream().map(Rol::getNombre).toList();
+                : u.getRoles().stream().map(Role::getNombre).toList();
         return new UsuarioResponse(
                 u.getIdUsuario(),
                 u.getPersona().getIdPersona(),

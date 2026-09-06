@@ -11,7 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.uteq.backend.seguridad.auth.security.UserDetailsServiceImpl;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -39,7 +39,7 @@ class UserDetailsServiceImplTest {
                 .activo(true)
                 .persona(Persona.builder().idPersona(1L).nombre("Juan").apellido("Perez").build())
                 .estadoGeneral(EstadoGeneral.builder().idEstadoGeneral(1L).nombre("Activo").build())
-                .roles(Set.of(Rol.builder().idRol(1L).nombre("ESTUDIANTE").build()))
+                .roles(Set.of(Role.builder().idRol(1L).nombre("ESTUDIANTE").build()))
                 .build();
     }
 

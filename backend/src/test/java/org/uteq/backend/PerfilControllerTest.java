@@ -16,7 +16,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.controller.PerfilController;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
@@ -68,7 +68,7 @@ class PerfilControllerTest {
                         .correo("ana@sged.test").telefono("0999999999")
                         .fechaNacimiento(LocalDate.of(2010, 5, 20))
                         .build())
-                .roles(Set.of(Rol.builder().nombre("ESTUDIANTE").build()))
+                .roles(Set.of(Role.builder().nombre("ESTUDIANTE").build()))
                 .build();
         when(usuarioRepository.findByUsername("estudiante1")).thenReturn(Optional.of(usuario));
 

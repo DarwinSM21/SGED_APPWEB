@@ -12,8 +12,8 @@ import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class EstudianteAccesoServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
-    @Mock private RolRepository rolRepository;
+    @Mock private RoleRepository rolRepository;
     @Mock private EstadoGeneralRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
 
@@ -50,7 +50,7 @@ class EstudianteAccesoServiceTest {
     @DisplayName("validarCoherenciaConFichaEstudiante lanza si la cuenta existente es de otro rol")
     void validarCoherencia_con_cuenta_de_otro_rol_lanza() {
         Usuario cuentaEntrenador = Usuario.builder().idUsuario(9L)
-                .roles(Set.of(Rol.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
+                .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
 
         assertThatThrownBy(() -> service.validarCoherenciaConFichaEstudiante(1L))
@@ -61,7 +61,7 @@ class EstudianteAccesoServiceTest {
     @DisplayName("validarCoherenciaConFichaEstudiante no lanza si la cuenta ya es de rol ESTUDIANTE")
     void validarCoherencia_con_cuenta_de_estudiante_no_lanza() {
         Usuario cuentaEstudiante = Usuario.builder().idUsuario(9L)
-                .roles(Set.of(Rol.builder().idRol(5L).nombre("ESTUDIANTE").build())).build();
+                .roles(Set.of(Role.builder().idRol(5L).nombre("ESTUDIANTE").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
 
         service.validarCoherenciaConFichaEstudiante(1L);
@@ -83,7 +83,7 @@ class EstudianteAccesoServiceTest {
     @DisplayName("crearCuentaDeEstudiante crea el usuario con rol ESTUDIANTE, la contrasena hasheada y sobre la Persona dada")
     void crearCuenta_exitosa() {
         HabilitarAccesoRequest request = new HabilitarAccesoRequest("andres@sged.test", "password123");
-        Rol rolEstudiante = Rol.builder().idRol(6L).nombre("ESTUDIANTE").build();
+        Role rolEstudiante = Role.builder().idRol(6L).nombre("ESTUDIANTE").build();
 
         when(usuarioRepository.existsByUsernameIgnoreCase("andres@sged.test")).thenReturn(false);
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));

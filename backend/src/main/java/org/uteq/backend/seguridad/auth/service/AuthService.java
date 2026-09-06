@@ -24,8 +24,8 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -51,7 +51,7 @@ public class AuthService {
     private final LoginAttemptService loginAttemptService;
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
-    private final RolRepository rolRepository;
+    private final RoleRepository rolRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditoriaService;
@@ -92,7 +92,7 @@ public class AuthService {
             return Optional.empty();
         }
 
-        Rol rol = rolRepository.findByNombre(request.rol())
+        Role rol = rolRepository.findByNombre(request.rol())
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.rol()));
 
         Persona persona = Persona.builder()

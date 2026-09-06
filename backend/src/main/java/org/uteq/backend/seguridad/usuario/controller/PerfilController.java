@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +55,7 @@ public class PerfilController {
         Persona persona = usuario.getPersona();
         String roles = usuario.getRoles() == null || usuario.getRoles().isEmpty()
                 ? "-"
-                : usuario.getRoles().stream().map(Rol::getNombre).reduce((a, b) -> a + ", " + b).orElse("-");
+                : usuario.getRoles().stream().map(Role::getNombre).reduce((a, b) -> a + ", " + b).orElse("-");
 
         List<List<String>> filas = List.of(
                 List.of("Usuario", usuario.getUsername()),

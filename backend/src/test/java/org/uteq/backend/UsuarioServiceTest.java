@@ -19,8 +19,8 @@ import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
@@ -47,7 +47,7 @@ class UsuarioServiceTest {
     @Mock
     private EstadoGeneralRepository estadoGeneralRepository;
     @Mock
-    private RolRepository rolRepository;
+    private RoleRepository rolRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
@@ -190,7 +190,7 @@ class UsuarioServiceTest {
     @DisplayName("crear con rol lo busca y lo asigna al usuario nuevo")
     void crear_con_rol_asigna_el_rol() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "coach.nuevo", "clave123", "ENTRENADOR");
-        Rol entrenador = Rol.builder().idRol(2L).nombre("ENTRENADOR").build();
+        Role entrenador = Role.builder().idRol(2L).nombre("ENTRENADOR").build();
         when(usuarioRepository.existsByUsernameIgnoreCase("coach.nuevo")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
@@ -294,9 +294,9 @@ class UsuarioServiceTest {
     @DisplayName("editar cambia el rol cuando la persona no tiene ninguna ficha activa")
     void editar_cambia_el_rol_sin_ficha_activa() {
         Usuario existente = usuario();
-        existente.setRoles(Set.of(Rol.builder().idRol(1L).nombre("RECEPCIONISTA").build()));
+        existente.setRoles(Set.of(Role.builder().idRol(1L).nombre("RECEPCIONISTA").build()));
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", null, "ENTRENADOR");
-        Rol entrenador = Rol.builder().idRol(2L).nombre("ENTRENADOR").build();
+        Role entrenador = Role.builder().idRol(2L).nombre("ENTRENADOR").build();
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
@@ -315,7 +315,7 @@ class UsuarioServiceTest {
     @DisplayName("editar rechaza el cambio de rol cuando la persona tiene ficha de entrenador activa")
     void editar_rechaza_cambio_de_rol_con_ficha_entrenador() {
         Usuario existente = usuario();
-        existente.setRoles(Set.of(Rol.builder().idRol(1L).nombre("ENTRENADOR").build()));
+        existente.setRoles(Set.of(Role.builder().idRol(1L).nombre("ENTRENADOR").build()));
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "ana.torres", null, "RECEPCIONISTA");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
@@ -350,7 +350,7 @@ class UsuarioServiceTest {
     @DisplayName("crear acepta el rol que si corresponde a la ficha de la persona")
     void crear_con_rol_coherente_persiste() {
         UsuarioRequest request = new UsuarioRequest(1L, 1L, "fernanda.c", "clave123", "ESTUDIANTE");
-        Rol estudiante = Rol.builder().idRol(5L).nombre("ESTUDIANTE").build();
+        Role estudiante = Role.builder().idRol(5L).nombre("ESTUDIANTE").build();
         when(usuarioRepository.existsByUsernameIgnoreCase("fernanda.c")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));

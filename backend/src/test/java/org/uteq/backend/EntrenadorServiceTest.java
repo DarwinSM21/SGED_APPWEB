@@ -21,7 +21,7 @@ import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
+import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -56,7 +56,7 @@ class EntrenadorServiceTest {
 
     private Usuario usuario() {
         return Usuario.builder().idUsuario(1L).username("carlos.mora")
-                .roles(Set.of(Rol.builder().idRol(1L).nombre("ENTRENADOR").build())).build();
+                .roles(Set.of(Role.builder().idRol(1L).nombre("ENTRENADOR").build())).build();
     }
 
     private Especialidad especialidad() {
@@ -161,7 +161,7 @@ class EntrenadorServiceTest {
     void crear_sin_rol_entrenador_lanza_excepcion() {
         EntrenadorRequest request = new EntrenadorRequest(1L, 1L, null, (short) 3, null);
         Usuario usuarioSinRol = Usuario.builder().idUsuario(1L).username("carlos.mora")
-                .roles(Set.of(Rol.builder().idRol(2L).nombre("RECEPCIONISTA").build())).build();
+                .roles(Set.of(Role.builder().idRol(2L).nombre("RECEPCIONISTA").build())).build();
         when(entrenadorRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
         when(entrenadorRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));

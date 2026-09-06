@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.rol.entity;
+package org.uteq.backend.seguridad.role.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Rol {
+public class Role {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
