@@ -13,8 +13,8 @@ import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionDiariaRepository;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.horario.service.HorarioService;
@@ -46,7 +46,7 @@ public class SesionEntrenamientoService {
     private final CategoriaRepository categoriaRepository;
     private final HorarioService horarioService;
     private final AsistenciaRepository asistenciaRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
 
     /**
      * Sesiones de hoy. Antes de consultar, materializa las sesiones
@@ -180,13 +180,13 @@ public class SesionEntrenamientoService {
             porEstudiante.put(a.getEstudiante().getIdEstudiante(), a);
         }
 
-        List<Estudiante> plantel = estudianteRepository
+        List<Student> plantel = estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(
                         s.getCategoria().getIdCategoria());
 
         List<SesionHistorialResponse.FilaAsistencia> filas = new ArrayList<>();
         int presentes = 0, tarde = 0, ausentes = 0, justificados = 0, sinRegistro = 0;
-        for (Estudiante e : plantel) {
+        for (Student e : plantel) {
             Asistencia a = porEstudiante.remove(e.getIdEstudiante());
             String estado = a == null ? "SIN_REGISTRO" : a.getEstado();
             switch (estado) {
@@ -207,7 +207,7 @@ public class SesionEntrenamientoService {
         }
 
         for (Asistencia a : porEstudiante.values()) {
-            Estudiante e = a.getEstudiante();
+            Student e = a.getEstudiante();
             switch (a.getEstado()) {
                 case Asistencia.ESTADO_PRESENTE -> presentes++;
                 case Asistencia.ESTADO_TARDE -> tarde++;

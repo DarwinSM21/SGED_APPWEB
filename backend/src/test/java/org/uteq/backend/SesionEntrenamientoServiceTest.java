@@ -8,8 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -51,7 +51,7 @@ class SesionEntrenamientoServiceTest {
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private HorarioService horarioService;
     @Mock private AsistenciaRepository asistenciaRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
 
     @InjectMocks private SesionEntrenamientoService sesionService;
 
@@ -247,8 +247,8 @@ class SesionEntrenamientoServiceTest {
         verify(sesionRepository, never()).save(any());
     }
 
-    private Estudiante estudianteDe(long id, String nombre, Posicion posicion) {
-        return Estudiante.builder()
+    private Student estudianteDe(long id, String nombre, Posicion posicion) {
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(Person.builder().nombre(nombre).apellido("Apellido").build())
                 .posicion(posicion)
@@ -276,11 +276,11 @@ class SesionEntrenamientoServiceTest {
         when(sesionRepository.findById(500L)).thenReturn(Optional.of(sesion));
 
         var arquero = Posicion.builder().abreviatura("POR").build();
-        Estudiante presente = estudianteDe(1L, "Ana", arquero);
-        Estudiante tarde = estudianteDe(2L, "Beto", null);
-        Estudiante ausente = estudianteDe(3L, "Cindy", null);
-        Estudiante justificado = estudianteDe(4L, "Dario", null);
-        Estudiante sinRegistro = estudianteDe(5L, "Eva", null);
+        Student presente = estudianteDe(1L, "Ana", arquero);
+        Student tarde = estudianteDe(2L, "Beto", null);
+        Student ausente = estudianteDe(3L, "Cindy", null);
+        Student justificado = estudianteDe(4L, "Dario", null);
+        Student sinRegistro = estudianteDe(5L, "Eva", null);
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(1L))
                 .thenReturn(List.of(presente, tarde, ausente, justificado, sinRegistro));
 
@@ -331,7 +331,7 @@ class SesionEntrenamientoServiceTest {
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(1L))
                 .thenReturn(List.of());
 
-        Estudiante deBaja = estudianteDe(9L, "Fabio", null);
+        Student deBaja = estudianteDe(9L, "Fabio", null);
         when(asistenciaRepository.historialDeSesion(501L)).thenReturn(List.of(
                 Asistencia.builder().estudiante(deBaja).estado(Asistencia.ESTADO_PRESENTE).build()));
         when(evaluacionRepository.findBySesionIdSesion(501L))

@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.estudiante.service;
+package org.uteq.backend.academico.student.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -7,12 +7,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
-import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
-import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
-import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.dto.StudentPageResponse;
+import org.uteq.backend.academico.student.dto.StudentRequest;
+import org.uteq.backend.academico.student.dto.StudentResponse;
+import org.uteq.backend.academico.student.dto.EnableAccessRequest;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -35,44 +35,44 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Lógica de negocio de {@code Estudiante}: alta (con reactivación de una
+ * Lógica de negocio de {@code Student}: alta (con reactivación de una
  * ficha inactiva de la misma persona), edición por reasignación selectiva,
  * baja y reactivación lógicas, y las operaciones de conjunto por categoría
  * que delegan en procedimientos almacenados. El alta valida además que la
  * edad de la persona caiga en el rango de la categoría.
  *
  * <p>El cruce al dominio de seguridad (crear la cuenta del estudiante,
- * validar coherencia de rol) vive en {@link EstudianteAccesoService};
+ * validar coherencia de rol) vive en {@link StudentAccessService};
  * extraerlo bajó el fan-out interno de esta clase, el más alto del sistema
  * (hallazgo MET-01 / R-06 del informe de evaluación de calidad).
  */
 @Service
 @RequiredArgsConstructor
-public class EstudianteService {
-    private final EstudianteRepository estudianteRepository;
+public class StudentService {
+    private final StudentRepository estudianteRepository;
     private final PersonRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PosicionRepository posicionRepository;
     private final GuardianStudentRepository representanteEstudianteRepository;
 
-    private final EstudianteAccesoService estudianteAccesoService;
+    private final StudentAccessService estudianteAccesoService;
 
     /**
      * Lista paginada de estudiantes.
      *
      * @param pageable paginación y orden
-     * @return la página solicitada, envuelta en {@link EstudiantePageResponse}
+     * @return la página solicitada, envuelta en {@link StudentPageResponse}
      */
     @Cacheable(value = RedisCacheConfig.CACHE_STUDENTS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public EstudiantePageResponse<EstudianteResponse> listar(Pageable pageable) {
-        Page<Estudiante> page = estudianteRepository.findAll(pageable);
+    public StudentPageResponse<StudentResponse> list(Pageable pageable) {
+        Page<Student> page = estudianteRepository.findAll(pageable);
 
-        List<EstudianteResponse> content = page.getContent().stream()
+        List<StudentResponse> content = page.getContent().stream()
         .map(this::toResponse)
         .collect(Collectors.toList());
-        return new EstudiantePageResponse<>(
+        return new StudentPageResponse<>(
                 content,
                 page.getNumber(),
                 page.getSize(),
@@ -89,8 +89,8 @@ public class EstudianteService {
      * @throws ResourceNotFoundException si no existe o está inactivado
      */
     @Transactional(readOnly = true)
-    public EstudianteResponse buscarPorId(Long id) {
-        Estudiante e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
+    public StudentResponse findById(Long id) {
+        Student e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
             .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
         return toResponse(e);
     }
@@ -113,14 +113,14 @@ public class EstudianteService {
             descripcionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
-    public EstudianteResponse crear(EstudianteRequest request) {
-        estudianteAccesoService.validarCoherenciaConFichaEstudiante(request.idPersona());
+    public StudentResponse create(StudentRequest request) {
+        estudianteAccesoService.validateConsistencyWithStudentRecord(request.idPersona());
 
         // 1. ¿La persona YA tiene un registro como estudiante (activo o inactivo)?
-        Optional<Estudiante> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
+        Optional<Student> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
 
         if (estudianteExistente.isPresent()) {
-            Estudiante est = estudianteExistente.get();
+            Student est = estudianteExistente.get();
 
             if (Boolean.TRUE.equals(est.getActivo())) {
                 throw new IllegalArgumentException("La persona seleccionada ya cuenta con una ficha de estudiante activa.");
@@ -162,7 +162,7 @@ public class EstudianteService {
         GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
-        Estudiante estudiante = Estudiante.builder()
+        Student estudiante = Student.builder()
                 .persona(persona)
                 .categoria(categoria)
                 .estadoGeneral(estadoGeneral)
@@ -196,8 +196,8 @@ public class EstudianteService {
             descripcionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
-    public EstudianteResponse editar(Long id, EstudianteRequest request) {
-        Estudiante estudiante = estudianteRepository.findById(id)
+    public StudentResponse update(Long id, StudentRequest request) {
+        Student estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
 
@@ -228,7 +228,7 @@ public class EstudianteService {
      * {@code ENTRENADOR} pueda asignarla, cambiarla o quitarla desde
      * evaluación diaria sin abrir la puerta a que edite categoría, código o
      * fecha de ingreso —eso sigue siendo de {@code ADMINISTRADOR} /
-     * {@code RECEPCIONISTA} vía {@link #editar}—.
+     * {@code RECEPCIONISTA} vía {@link #update}—.
      *
      * @param id         identificador del estudiante
      * @param idPosicion identificador de la posición, o {@code null} para
@@ -241,19 +241,19 @@ public class EstudianteService {
             descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
-    public EstudianteResponse actualizarPosicion(Long id, Long idPosicion) {
-        Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
+    public StudentResponse updatePosition(Long id, Long idPosicion) {
+        Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
         estudiante.setPosicion(resolverPosicion(idPosicion));
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
     }
 
-    // R-09 (informe de evaluación de calidad): las reasignaciones de editar()
+    // R-09 (informe de evaluación de calidad): las reasignaciones de update()
     // seguían el mismo patrón —si el id pedido difiere del actual, buscar la
     // nueva fila y reasignarla— y sumaban complejidad al método. Extraídas
-    // para que editar() quede lineal: valida, reasigna lo que cambió, guarda.
-    private void reasignarPersonaSiCambio(Estudiante estudiante, Long idPersonaNueva) {
+    // para que update() quede lineal: valida, reasigna lo que cambió, guarda.
+    private void reasignarPersonaSiCambio(Student estudiante, Long idPersonaNueva) {
         if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {
             return;
         }
@@ -299,7 +299,7 @@ public class EstudianteService {
         }
     }
 
-    private void reasignarCategoriaSiCambio(Estudiante estudiante, Long idCategoriaNueva) {
+    private void reasignarCategoriaSiCambio(Student estudiante, Long idCategoriaNueva) {
         if (estudiante.getCategoria().getIdCategoria().equals(idCategoriaNueva)) {
             return;
         }
@@ -309,7 +309,7 @@ public class EstudianteService {
         estudiante.setCategoria(categoria);
     }
 
-    private void reasignarEstadoGeneralSiCambio(Estudiante estudiante, Long idEstadoGeneralNuevo) {
+    private void reasignarEstadoGeneralSiCambio(Student estudiante, Long idEstadoGeneralNuevo) {
         if (estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(idEstadoGeneralNuevo)) {
             return;
         }
@@ -321,7 +321,7 @@ public class EstudianteService {
     // A diferencia de categoría/estadoGeneral, la posición es opcional y puede
     // pasar de asignada a sin asignar (idPosicionNueva null): hay que poder
     // desasignarla, no solo cambiarla.
-    private void reasignarPosicionSiCambio(Estudiante estudiante, Long idPosicionNueva) {
+    private void reasignarPosicionSiCambio(Student estudiante, Long idPosicionNueva) {
         Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
         if (java.util.Objects.equals(actual, idPosicionNueva)) {
             return;
@@ -347,8 +347,8 @@ public class EstudianteService {
             descripcionSpel = "'desactivó la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
-    public void eliminar(Long id) {
-        Estudiante estudiante = estudianteRepository.findById(id)
+    public void delete(Long id) {
+        Student estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
         estudiante.setActivo(false);
@@ -367,8 +367,8 @@ public class EstudianteService {
             descripcionSpel = "'reactivo la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
-    public EstudianteResponse reactivar(Long id) {
-        Estudiante estudiante = estudianteRepository.findById(id)
+    public StudentResponse reactivate(Long id) {
+        Student estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
 
@@ -389,8 +389,8 @@ public class EstudianteService {
      *         devuelve {@code null}
      */
     @Transactional(readOnly = true)
-    public long contarActivosPorCategoria(Long idCategoria) {
-        Long resultado = estudianteRepository.contarEstudiantesActivosPorCategoria(idCategoria);
+    public long countActiveByCategory(Long idCategoria) {
+        Long resultado = estudianteRepository.countActiveStudentsByCategory(idCategoria);
         return resultado != null ? resultado : 0L;
     }
 
@@ -404,8 +404,8 @@ public class EstudianteService {
             descripcionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
-    public void desactivarPorCategoria(Long idCategoria) {
-        estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
+    public void deactivateByCategory(Long idCategoria) {
+        estudianteRepository.deactivateStudentsByCategory(idCategoria);
     }
 
     /**
@@ -416,8 +416,8 @@ public class EstudianteService {
      * @return el código propuesto
      */
     @Transactional(readOnly = true)
-    public String generarSiguienteCodigo(int anio) {
-        return estudianteRepository.generarSiguienteCodigo(anio);
+    public String generateNextCode(int anio) {
+        return estudianteRepository.generateNextCode(anio);
     }
 
     /**
@@ -429,7 +429,7 @@ public class EstudianteService {
      * @throws ResourceNotFoundException si el estudiante no existe
      */
     @Transactional(readOnly = true)
-    public String contactoDeEmergencia(Long idEstudiante) {
+    public String emergencyContact(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
@@ -449,17 +449,17 @@ public class EstudianteService {
      *                                      el {@code username} está en uso
      */
     @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
-            descripcionSpel = "'habilitó acceso al Estudiante #' + #result.idEstudiante")
+            descripcionSpel = "'habilitó acceso al Student #' + #result.idEstudiante")
     @Transactional
-    public EstudianteResponse habilitarAcceso(Long idEstudiante, HabilitarAccesoRequest request) {
-        Estudiante estudiante = estudianteRepository.findById(idEstudiante)
+    public StudentResponse enableAccess(Long idEstudiante, EnableAccessRequest request) {
+        Student estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));
 
         if (estudiante.getUsuario() != null) {
             throw new IllegalArgumentException("Este estudiante ya tiene una cuenta de acceso");
         }
 
-        UserAccount usuario = estudianteAccesoService.crearCuentaDeEstudiante(estudiante.getPersona(), request);
+        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPersona(), request);
 
         estudiante.setUsuario(usuario);
         estudiante = estudianteRepository.save(estudiante);
@@ -467,8 +467,8 @@ public class EstudianteService {
     }
 
     // Mapeador privado entidad -> DTO.
-    private EstudianteResponse toResponse(Estudiante e) {
-        return new EstudianteResponse(
+    private StudentResponse toResponse(Student e) {
+        return new StudentResponse(
                 e.getIdEstudiante(),
                 e.getPersona() != null ? e.getPersona().getIdPersona() : null,
                 e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,

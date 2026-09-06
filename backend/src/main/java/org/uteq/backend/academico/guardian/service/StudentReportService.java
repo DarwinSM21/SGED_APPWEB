@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.dto.ReportDtos.*;
 import org.uteq.backend.academico.guardian.entity.Guardian;
 import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
@@ -43,7 +43,7 @@ import java.util.Map;
 public class StudentReportService {
     private final GuardianRepository representanteRepository;
     private final GuardianStudentRepository vinculoRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     private final AsistenciaRepository asistenciaRepository;
@@ -63,7 +63,7 @@ public class StudentReportService {
         return vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(representante.getIdRepresentante())
                 .stream()
                 .map(v -> {
-                    Estudiante e = v.getEstudiante();
+                    Student e = v.getEstudiante();
                     return new StudentSummaryResponse(
                             e.getIdEstudiante(),
                             e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
@@ -92,7 +92,7 @@ public class StudentReportService {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
 
-        Estudiante estudiante = vinculoRepository
+        Student estudiante = vinculoRepository
                 .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(representante.getIdRepresentante(), idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante))
                 .getEstudiante();
@@ -112,7 +112,7 @@ public class StudentReportService {
      */
     @Transactional(readOnly = true)
     public StudentReportResponse myReport(String username) {
-        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
         return construirInforme(estudiante);
     }
@@ -187,7 +187,7 @@ public class StudentReportService {
                 resultado.text(), resultado.isAvailable(), resultado.reason());
     }
 
-    private StudentReportResponse construirInforme(Estudiante estudiante) {
+    private StudentReportResponse construirInforme(Student estudiante) {
         Long idEstudiante = estudiante.getIdEstudiante();
 
         List<CriterionAverageResponse> promedios = evaluacionEstudianteRepository

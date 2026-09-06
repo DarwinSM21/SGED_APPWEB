@@ -10,8 +10,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.alert.dto.AlertDtos.StudentAtRiskResponse;
 import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
 import org.uteq.backend.academico.alert.service.AlertService;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class AlertServiceTest {
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private PaymentRepository pagoRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
@@ -45,10 +45,10 @@ class AlertServiceTest {
         ReflectionTestUtils.setField(service, "topeDetalle", 25);
     }
 
-    private Estudiante estudiante(long id, String nombre, String apellido, Categoria categoria) {
+    private Student estudiante(long id, String nombre, String apellido, Categoria categoria) {
         Person persona = nombre == null ? null
                 : Person.builder().nombre(nombre).apellido(apellido).build();
-        return Estudiante.builder()
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(persona)
                 .categoria(categoria)
@@ -59,7 +59,7 @@ class AlertServiceTest {
     @DisplayName("Un estudiante sin ninguna alerta no aparece en el panel")
     void estudianteSinAlertasQuedaFueraDelPanel() {
         Categoria sub12 = Categoria.builder().nombre("SUB-12").build();
-        Estudiante e1 = estudiante(1L, "Ana", "Perez", sub12);
+        Student e1 = estudiante(1L, "Ana", "Perez", sub12);
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1));
@@ -80,7 +80,7 @@ class AlertServiceTest {
     @DisplayName("Mensualidad pendiente, asistencia baja y lesion activa se acumulan en un mismo estudiante")
     void lasTresAlertasSeAcumulan() {
         Categoria sub15 = Categoria.builder().nombre("SUB-15").build();
-        Estudiante e1 = estudiante(2L, "Luis", "Gomez", sub15);
+        Student e1 = estudiante(2L, "Luis", "Gomez", sub15);
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1));
@@ -109,7 +109,7 @@ class AlertServiceTest {
     @Test
     @DisplayName("Un estudiante sin persona ni categoria vinculada no rompe el calculo")
     void estudianteSinPersonaNiCategoriaUsaValoresPorDefecto() {
-        Estudiante sinPersona = estudiante(3L, null, null, null);
+        Student sinPersona = estudiante(3L, null, null, null);
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(sinPersona));
@@ -132,7 +132,7 @@ class AlertServiceTest {
     @DisplayName("Una categoria sin sesiones programadas (programadas=0) se descarta, no divide por cero")
     void categoriaSinSesionesProgramadasSeDescarta() {
         Categoria sub18 = Categoria.builder().nombre("SUB-18").build();
-        Estudiante e1 = estudiante(4L, "Rosa", "Diaz", sub18);
+        Student e1 = estudiante(4L, "Rosa", "Diaz", sub18);
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1));
@@ -153,8 +153,8 @@ class AlertServiceTest {
     void detalleSeTruncaAlTope() {
         ReflectionTestUtils.setField(service, "topeDetalle", 1);
         Categoria sub12 = Categoria.builder().nombre("SUB-12").build();
-        Estudiante e1 = estudiante(5L, "Ana", "Ramos", sub12);
-        Estudiante e2 = estudiante(6L, "Beto", "Soto", sub12);
+        Student e1 = estudiante(5L, "Ana", "Ramos", sub12);
+        Student e2 = estudiante(6L, "Beto", "Soto", sub12);
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1, e2));

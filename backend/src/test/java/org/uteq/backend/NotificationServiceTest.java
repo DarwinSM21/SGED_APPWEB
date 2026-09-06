@@ -7,7 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.guardian.repository.NotificationRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
@@ -41,9 +41,9 @@ class NotificationServiceTest {
     @InjectMocks
     private NotificationService notificacionService;
 
-    private Estudiante estudianteValido() {
+    private Student estudianteValido() {
         Person persona = Person.builder().nombre("Andres").apellido("Rivas").build();
-        return Estudiante.builder().idEstudiante(6L).persona(persona).build();
+        return Student.builder().idEstudiante(6L).persona(persona).build();
     }
 
     @Test
@@ -69,7 +69,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("notificarAsistencia no propaga si el estudiante no tiene persona asociada")
     void notificarAsistencia_no_propaga_dato_incompleto() {
-        Estudiante sinPersona = Estudiante.builder().idEstudiante(7L).build();
+        Student sinPersona = Student.builder().idEstudiante(7L).build();
 
         assertThatCode(() -> notificacionService.notifyAttendance(sinPersona, "TARDE"))
                 .doesNotThrowAnyException();
@@ -87,7 +87,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("sin consentimiento vigente no se crea ninguna notificacion")
     void sin_consentimiento_no_se_notifica() {
-        Estudiante estudiante = estudianteCon(7L);
+        Student estudiante = estudianteCon(7L);
         Guardian representante = representanteCon(3L);
         when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(7L))
                 .thenReturn(List.of(vinculoDe(representante, estudiante)));
@@ -104,7 +104,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("con consentimiento vigente si se crea la notificacion")
     void con_consentimiento_se_notifica() {
-        Estudiante estudiante = estudianteCon(7L);
+        Student estudiante = estudianteCon(7L);
         Guardian representante = representanteCon(3L);
         when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(7L))
                 .thenReturn(List.of(vinculoDe(representante, estudiante)));
@@ -121,7 +121,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("el consentimiento de asistencia no habilita el de lesion")
     void el_alcance_no_se_mezcla() {
-        Estudiante estudiante = estudianteCon(7L);
+        Student estudiante = estudianteCon(7L);
         Guardian representante = representanteCon(3L);
         when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(7L))
                 .thenReturn(List.of(vinculoDe(representante, estudiante)));
@@ -135,16 +135,16 @@ class NotificationServiceTest {
         verify(notificacionRepository, never()).save(any(Notification.class));
     }
 
-    private Estudiante estudianteCon(Long id) {
+    private Student estudianteCon(Long id) {
         Person persona = Person.builder().nombre("Juan").apellido("Perez").build();
-        return Estudiante.builder().idEstudiante(id).persona(persona).build();
+        return Student.builder().idEstudiante(id).persona(persona).build();
     }
 
     private Guardian representanteCon(Long id) {
         return Guardian.builder().idRepresentante(id).build();
     }
 
-    private GuardianStudent vinculoDe(Guardian r, Estudiante e) {
+    private GuardianStudent vinculoDe(Guardian r, Student e) {
         return GuardianStudent.builder().representante(r).estudiante(e).build();
     }
 }

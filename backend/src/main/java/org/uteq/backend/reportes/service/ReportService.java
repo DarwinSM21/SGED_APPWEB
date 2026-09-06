@@ -6,7 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -46,7 +46,7 @@ public class ReportService {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final ReportPdfService pdfService;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final PaymentRepository pagoRepository;
     private final AsistenciaRepository asistenciaRepository;
     private final LesionRepository lesionRepository;
@@ -63,7 +63,7 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] studentProfiles(Long idCategoria, Boolean activo) {
-        var encontrados = sinVacio(estudianteRepository.buscarParaReporte(idCategoria, activo));
+        var encontrados = sinVacio(estudianteRepository.findForReport(idCategoria, activo));
         var filas = encontrados.stream()
                 .map(e -> List.of(
                         e.getCodigoEstudiante(),

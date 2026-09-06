@@ -20,7 +20,7 @@ import java.util.List;
  * cliente.
  *
  * <p>Los métodos llevan {@code @Transactional} propio porque
- * {@code toResponse()} navega relaciones LAZY ({@code Payment -> Estudiante ->
+ * {@code toResponse()} navega relaciones LAZY ({@code Payment -> Student ->
  * Person}, {@code Payment -> UserAccount -> Person}) con open-in-view
  * deshabilitado.
  */

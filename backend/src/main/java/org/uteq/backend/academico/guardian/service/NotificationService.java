@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.guardian.dto.NotificationDtos.NotificationResponse;
 import org.uteq.backend.academico.guardian.entity.Notification;
 import org.uteq.backend.academico.guardian.entity.Notification.Type;
@@ -49,7 +49,7 @@ public class NotificationService {
      * @param estadoAsistencia estado marcado ({@code "TARDE"} o presente)
      */
     @Transactional
-    public void notifyAttendance(Estudiante estudiante, String estadoAsistencia) {
+    public void notifyAttendance(Student estudiante, String estadoAsistencia) {
         sinTumbarElFlujoPrincipal("asistencia", () -> {
             String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
             crearParaCadaRepresentante(estudiante, Type.ASISTENCIA,
@@ -66,7 +66,7 @@ public class NotificationService {
      * @param descripcionLesion descripción de la lesión registrada
      */
     @Transactional
-    public void notifyInjury(Estudiante estudiante, String descripcionLesion) {
+    public void notifyInjury(Student estudiante, String descripcionLesion) {
         sinTumbarElFlujoPrincipal("lesion", () ->
                 crearParaCadaRepresentante(estudiante, Type.LESION,
                         Consent.ALCANCE_NOTIFICACIONES_LESION,
@@ -155,7 +155,7 @@ public class NotificationService {
         notificacionRepository.save(notificacion);
     }
 
-    private void crearParaCadaRepresentante(Estudiante estudiante, Type tipo,
+    private void crearParaCadaRepresentante(Student estudiante, Type tipo,
                                             String alcanceRequerido, String mensaje) {
         List<Guardian> representantes = vinculoRepository
                 .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())
@@ -178,7 +178,7 @@ public class NotificationService {
         }
     }
 
-    private boolean autorizo(Guardian representante, Estudiante estudiante, String alcance) {
+    private boolean autorizo(Guardian representante, Student estudiante, String alcance) {
         Long idR = representante.getIdRepresentante();
         Long idE = estudiante.getIdEstudiante();
         return vigente(idR, idE, alcance)
@@ -197,7 +197,7 @@ public class NotificationService {
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 
-    private String nombreCompleto(Estudiante e) {
+    private String nombreCompleto(Student e) {
         var p = e.getPersona();
         return p.getNombre() + " " + p.getApellido();
     }

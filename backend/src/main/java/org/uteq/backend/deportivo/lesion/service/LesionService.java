@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -27,7 +27,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class LesionService {
     private final LesionRepository lesionRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final NotificationService notificacionService;
 

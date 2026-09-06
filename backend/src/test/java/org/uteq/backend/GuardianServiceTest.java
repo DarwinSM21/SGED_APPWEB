@@ -11,8 +11,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.dto.GuardianPageResponse;
 import org.uteq.backend.academico.guardian.dto.GuardianRequest;
 import org.uteq.backend.academico.guardian.dto.GuardianResponse;
@@ -46,7 +46,7 @@ class GuardianServiceTest {
     @Mock private GuardianStudentRepository vinculoRepository;
     @Mock private PersonRepository personaRepository;
     @Mock private UserAccountRepository usuarioRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
 
     @InjectMocks
     private GuardianService representanteService;
@@ -71,8 +71,8 @@ class GuardianServiceTest {
                 .build();
     }
 
-    private Estudiante estudiante(long id, String nombre) {
-        return Estudiante.builder()
+    private Student estudiante(long id, String nombre) {
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(Person.builder().nombre(nombre).apellido("Hijo").build())
                 .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())

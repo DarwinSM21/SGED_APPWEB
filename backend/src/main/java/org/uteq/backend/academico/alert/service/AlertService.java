@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.alert.dto.AlertDtos.StudentAtRiskResponse;
 import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.Zones;
@@ -41,7 +41,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class AlertService {
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final PaymentRepository pagoRepository;
     private final LesionRepository lesionRepository;
     private final AsistenciaRepository asistenciaRepository;
@@ -73,7 +73,7 @@ public class AlertService {
         short anio = (short) hoy.getYear();
         short mes = (short) hoy.getMonthValue();
 
-        List<Estudiante> activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();
+        List<Student> activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();
 
         Set<Long> alDia = new HashSet<>(
                 pagoRepository.idsWithMembershipCovered(TipoPago.MEMBRESIA, anio, mes));
@@ -127,7 +127,7 @@ public class AlertService {
     }
 
     private StudentAtRiskResponse evaluar(
-            Estudiante e, Set<Long> alDia, Set<Long> lesionados,
+            Student e, Set<Long> alDia, Set<Long> lesionados,
             Map<Long, BigDecimal> porcentajes, BigDecimal umbral) {
         Long id = e.getIdEstudiante();
         boolean debe = !alDia.contains(id);

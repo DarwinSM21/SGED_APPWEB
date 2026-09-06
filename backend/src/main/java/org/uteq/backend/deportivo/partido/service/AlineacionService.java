@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
@@ -41,7 +41,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AlineacionService {
     private final AlineacionRepository alineacionRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final PosicionRepository posicionRepository;
     private final LesionRepository lesionRepository;
     private final ConvocatoriaService convocatoriaService;
@@ -102,7 +102,7 @@ public class AlineacionService {
                 throw new IllegalArgumentException("Un jugador no puede estar dos veces en la alineación");
             }
 
-            Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())
+            Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Estudiante no encontrado o inactivo: " + j.idEstudiante()));
             String nombre = ConvocatoriaService.nombreDe(estudiante);
@@ -206,7 +206,7 @@ public class AlineacionService {
         Set<Long> yaEstan = new HashSet<>();
 
         for (AlineacionJugador j : a.getJugadores()) {
-            Estudiante e = j.getEstudiante();
+            Student e = j.getEstudiante();
             yaEstan.add(e.getIdEstudiante());
             boolean titular = Boolean.TRUE.equals(j.getTitular());
             Long idPosicion = j.getPosicion() == null ? null : j.getPosicion().getIdPosicion();

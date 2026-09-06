@@ -8,8 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class AlineacionServiceTest {
     @Mock private AlineacionRepository alineacionRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private PosicionRepository posicionRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private ConvocatoriaService convocatoriaService;
@@ -71,8 +71,8 @@ class AlineacionServiceTest {
                 List.of(), List.of(), List.of(), Map.of(), Map.of(), 8L);
     }
 
-    private Estudiante jugador(long id, Categoria suCategoria) {
-        return Estudiante.builder()
+    private Student jugador(long id, Categoria suCategoria) {
+        return Student.builder()
                 .idEstudiante(id).activo(true).categoria(suCategoria)
                 .persona(Person.builder().idPersona(id).nombre("Jugador").apellido("N" + id).build())
                 .build();

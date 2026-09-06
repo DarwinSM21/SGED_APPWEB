@@ -1,9 +1,9 @@
-package org.uteq.backend.academico.estudiante.dto;
+package org.uteq.backend.academico.student.dto;
 
 import java.io.Serializable;
 import java.util.List;
 
-public record EstudiantePageResponse<T>(
+public record StudentPageResponse<T>(
         List<T> content,
         int page,
         int size,

@@ -6,9 +6,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.estudiante.service.MiEquipoService;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.academico.student.service.MyTeamService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
@@ -29,12 +29,12 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class MiEquipoServiceTest {
+class MyTeamServiceTest {
 
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
 
-    @InjectMocks private MiEquipoService servicio;
+    @InjectMocks private MyTeamService servicio;
 
     private static final Long ID_CATEGORIA = 3L;
 
@@ -45,8 +45,8 @@ class MiEquipoServiceTest {
                 .build();
     }
 
-    private Estudiante estudiante(Long id, String nombre, Posicion posicion) {
-        return Estudiante.builder()
+    private Student estudiante(Long id, String nombre, Posicion posicion) {
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(Person.builder().nombre(nombre).apellido("Perez").build())
                 .categoria(categoria())
@@ -59,7 +59,7 @@ class MiEquipoServiceTest {
     void sinEstudianteAsociado() {
         when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> servicio.miEquipo("huerfano@sged.test"))
+        assertThatThrownBy(() -> servicio.myTeam("huerfano@sged.test"))
                 .isInstanceOf(ResourceNotFoundException.class);
     }
 
@@ -73,7 +73,7 @@ class MiEquipoServiceTest {
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
-        var equipo = servicio.miEquipo("juan@sged.test");
+        var equipo = servicio.myTeam("juan@sged.test");
 
         assertThat(equipo.posicion()).isNull();
     }
@@ -88,7 +88,7 @@ class MiEquipoServiceTest {
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
-        var equipo = servicio.miEquipo("juan@sged.test");
+        var equipo = servicio.myTeam("juan@sged.test");
 
         assertThat(equipo.entrenador()).isNull();
     }
@@ -106,7 +106,7 @@ class MiEquipoServiceTest {
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of(companero));
 
-        var equipo = servicio.miEquipo("juan@sged.test");
+        var equipo = servicio.myTeam("juan@sged.test");
 
         assertThat(equipo.companeros()).hasSize(1);
         assertThat(equipo.companeros().get(0).nombre()).isEqualTo("Carlos Perez");
@@ -134,7 +134,7 @@ class MiEquipoServiceTest {
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
-        var equipo = servicio.miEquipo("juan@sged.test");
+        var equipo = servicio.myTeam("juan@sged.test");
 
         assertThat(equipo.entrenador()).isNotNull();
         assertThat(equipo.entrenador().nombre()).isEqualTo("Pedro Gomez");
@@ -151,7 +151,7 @@ class MiEquipoServiceTest {
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
-        var equipo = servicio.miEquipo("juan@sged.test");
+        var equipo = servicio.myTeam("juan@sged.test");
 
         assertThat(equipo.categoria().nombre()).isEqualTo("SUB-12");
         assertThat(equipo.categoria().edadMin()).isEqualTo(10);

@@ -5,8 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
@@ -34,7 +34,7 @@ import java.time.LocalDate;
 public class AssignmentService {
     private final AssignmentRepository asignacionRepository;
     private final ItemRepository articuloRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
     private final UserAccountRepository usuarioRepository;
 
@@ -185,7 +185,7 @@ public class AssignmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado con ID: " + id));
     }
 
-    private Estudiante findStudent(Long id) {
+    private Student findStudent(Long id) {
         return estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
     }

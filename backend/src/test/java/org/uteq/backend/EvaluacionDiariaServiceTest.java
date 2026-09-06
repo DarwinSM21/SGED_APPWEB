@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -41,7 +41,7 @@ class EvaluacionDiariaServiceTest {
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private PosicionRepository posicionRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
 
     @InjectMocks private EvaluacionDiariaService servicio;
 
@@ -55,8 +55,8 @@ class EvaluacionDiariaServiceTest {
                 .build();
     }
 
-    private Estudiante estudiante() {
-        return Estudiante.builder()
+    private Student estudiante() {
+        return Student.builder()
                 .idEstudiante(ID_ESTUDIANTE)
                 .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .categoria(Categoria.builder().idCategoria(3L).nombre("SUB-12").build())

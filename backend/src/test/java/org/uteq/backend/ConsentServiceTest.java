@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.dto.ConsentDtos.ConsentResponse;
 import org.uteq.backend.academico.guardian.dto.ConsentDtos.GrantConsentRequest;
 import org.uteq.backend.academico.guardian.entity.Consent;
@@ -33,7 +33,7 @@ class ConsentServiceTest {
 
     @Mock private ConsentRepository consentimientoRepository;
     @Mock private GuardianRepository representanteRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks
@@ -43,8 +43,8 @@ class ConsentServiceTest {
         return Guardian.builder().idRepresentante(1L).build();
     }
 
-    private Estudiante estudiante() {
-        return Estudiante.builder().idEstudiante(10L).build();
+    private Student estudiante() {
+        return Student.builder().idEstudiante(10L).build();
     }
 
     @Test

@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.inventario.item.entity.Item;
@@ -42,7 +42,7 @@ public class Assignment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estudiante")
-    private Estudiante estudiante;
+    private Student estudiante;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_entrenador")

@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -38,7 +38,7 @@ class AssignmentServiceTest {
 
     @Mock private AssignmentRepository asignacionRepository;
     @Mock private ItemRepository articuloRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private EntrenadorRepository entrenadorRepository;
     @Mock private UserAccountRepository usuarioRepository;
 
@@ -56,9 +56,9 @@ class AssignmentServiceTest {
                 .build();
     }
 
-    private Estudiante estudiante() {
+    private Student estudiante() {
         Person persona = Person.builder().nombre("Juan").apellido("Perez").build();
-        return Estudiante.builder().idEstudiante(5L).persona(persona).build();
+        return Student.builder().idEstudiante(5L).persona(persona).build();
     }
 
     private Entrenador entrenador() {

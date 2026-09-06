@@ -18,7 +18,7 @@ import org.uteq.backend.seguridad.person.service.PersonService;
  * correo) de estudiantes menores de edad, por lo que casi todos los
  * endpoints quedan restringidos a {@code ADMINISTRADOR}. La excepción es
  * {@link #create}: la recepcionista también la necesita, porque toda
- * {@code Estudiante} cuelga de una {@code Person} ya existente y ese es el
+ * {@code Student} cuelga de una {@code Person} ya existente y ese es el
  * primer paso del alta.
  */
 @RestController

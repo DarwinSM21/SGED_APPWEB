@@ -1,12 +1,12 @@
-package org.uteq.backend.academico.estudiante.service;
+package org.uteq.backend.academico.student.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.*;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.dto.MyTeamDtos.*;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
@@ -22,8 +22,8 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class MiEquipoService {
-    private final EstudianteRepository estudianteRepository;
+public class MyTeamService {
+    private final StudentRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
 
     /**
@@ -36,34 +36,34 @@ public class MiEquipoService {
      *                                      asociado
      */
     @Transactional(readOnly = true)
-    public MiEquipoResponse miEquipo(String username) {
-        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
+    public MyTeamResponse myTeam(String username) {
+        Student estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         var categoria = estudiante.getCategoria();
-        var categoriaResponse = new CategoriaDetalleResponse(
+        var categoriaResponse = new CategoryDetailResponse(
                 categoria.getNombre(),
                 categoria.getEdadMin() == null ? null : categoria.getEdadMin().intValue(),
                 categoria.getEdadMax() == null ? null : categoria.getEdadMax().intValue(),
                 categoria.getDescripcion());
 
         var posicion = estudiante.getPosicion();
-        PosicionResponse posicionResponse = posicion == null ? null
-                : new PosicionResponse(posicion.getNombre(), posicion.getAbreviatura());
+        PositionResponse posicionResponse = posicion == null ? null
+                : new PositionResponse(posicion.getNombre(), posicion.getAbreviatura());
 
-        EntrenadorAsignadoResponse entrenadorResponse = proximoEntrenadorDe(categoria.getIdCategoria());
+        AssignedCoachResponse entrenadorResponse = proximoEntrenadorDe(categoria.getIdCategoria());
 
-        List<CompaneroResponse> companeros = estudianteRepository
+        List<TeammateResponse> companeros = estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(
                         categoria.getIdCategoria(), estudiante.getIdEstudiante())
                 .stream()
                 .map(this::aCompanero)
                 .toList();
 
-        return new MiEquipoResponse(categoriaResponse, posicionResponse, entrenadorResponse, companeros);
+        return new MyTeamResponse(categoriaResponse, posicionResponse, entrenadorResponse, companeros);
     }
 
-    private EntrenadorAsignadoResponse proximoEntrenadorDe(Long idCategoria) {
+    private AssignedCoachResponse proximoEntrenadorDe(Long idCategoria) {
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         List<SesionEntrenamiento> proximas = sesionRepository
                 .findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
@@ -74,12 +74,12 @@ public class MiEquipoService {
         var entrenador = proximas.get(0).getEntrenador();
         var persona = entrenador.getPersona();
         String especialidad = entrenador.getEspecialidad() == null ? null : entrenador.getEspecialidad().getNombre();
-        return new EntrenadorAsignadoResponse(persona.getNombre() + " " + persona.getApellido(), especialidad);
+        return new AssignedCoachResponse(persona.getNombre() + " " + persona.getApellido(), especialidad);
     }
 
-    private CompaneroResponse aCompanero(Estudiante e) {
+    private TeammateResponse aCompanero(Student e) {
         var persona = e.getPersona();
         String posicion = e.getPosicion() == null ? null : e.getPosicion().getNombre();
-        return new CompaneroResponse(e.getIdEstudiante(), persona.getNombre() + " " + persona.getApellido(), posicion);
+        return new TeammateResponse(e.getIdEstudiante(), persona.getNombre() + " " + persona.getApellido(), posicion);
     }
 }

@@ -12,11 +12,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.academico.estudiante.controller.EstudianteController;
-import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
-import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
-import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
-import org.uteq.backend.academico.estudiante.service.EstudianteService;
+import org.uteq.backend.academico.student.controller.StudentController;
+import org.uteq.backend.academico.student.dto.StudentPageResponse;
+import org.uteq.backend.academico.student.dto.StudentRequest;
+import org.uteq.backend.academico.student.dto.StudentResponse;
+import org.uteq.backend.academico.student.service.StudentService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 
@@ -33,15 +33,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-class EstudianteControllerTest {
+class StudentControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;
 
     @Mock
-    private EstudianteService estudianteService;
+    private StudentService estudianteService;
 
     @InjectMocks
-    private EstudianteController estudianteController;
+    private StudentController estudianteController;
 
     @BeforeEach
     void setUp() {
@@ -54,8 +54,8 @@ class EstudianteControllerTest {
                 .build();
     }
 
-    private EstudianteResponse crearEstudianteResponse() {
-        return new EstudianteResponse(
+    private StudentResponse crearEstudianteResponse() {
+        return new StudentResponse(
                 1L,
                 1L,
                 1L,
@@ -76,8 +76,8 @@ class EstudianteControllerTest {
         );
     }
 
-    private EstudianteRequest crearEstudianteRequestValido() {
-        return new EstudianteRequest(
+    private StudentRequest crearEstudianteRequestValido() {
+        return new StudentRequest(
                 1L,
                 2L,
                 1L,
@@ -92,10 +92,10 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("GET /api/estudiantes - Listar devuelve página con éxito")
     void listar_devuelve_pagina() throws Exception {
-        EstudiantePageResponse<EstudianteResponse> pagina =
-                new EstudiantePageResponse<>(List.of(crearEstudianteResponse()), 0, 10, 1, 1);
+        StudentPageResponse<StudentResponse> pagina =
+                new StudentPageResponse<>(List.of(crearEstudianteResponse()), 0, 10, 1, 1);
 
-        when(estudianteService.listar(any())).thenReturn(pagina);
+        when(estudianteService.list(any())).thenReturn(pagina);
 
         mockMvc.perform(get("/api/estudiantes"))
                 .andExpect(status().isOk())
@@ -107,7 +107,7 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("GET /api/estudiantes/{id} - Devuelve el estudiante cuando existe")
     void buscarPorId_existente() throws Exception {
-        when(estudianteService.buscarPorId(1L)).thenReturn(crearEstudianteResponse());
+        when(estudianteService.findById(1L)).thenReturn(crearEstudianteResponse());
 
         mockMvc.perform(get("/api/estudiantes/1"))
                 .andExpect(status().isOk())
@@ -119,7 +119,7 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("GET /api/estudiantes/{id} - Devuelve 404 cuando no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(estudianteService.buscarPorId(99L))
+        when(estudianteService.findById(99L))
                 .thenThrow(new ResourceNotFoundException("Estudiante no encontrado con id: 99"));
 
         mockMvc.perform(get("/api/estudiantes/99"))
@@ -129,8 +129,8 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("POST /api/estudiantes - Crea correctamente un estudiante y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        EstudianteRequest request = crearEstudianteRequestValido();
-        when(estudianteService.crear(any(EstudianteRequest.class))).thenReturn(crearEstudianteResponse());
+        StudentRequest request = crearEstudianteRequestValido();
+        when(estudianteService.create(any(StudentRequest.class))).thenReturn(crearEstudianteResponse());
 
         mockMvc.perform(post("/api/estudiantes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -143,7 +143,7 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("POST /api/estudiantes - Falla validación con Request incompleto (Devuelve 400)")
     void crear_con_datos_invalidos_da_422() throws Exception {
-        EstudianteRequest requestInvalido = new EstudianteRequest(
+        StudentRequest requestInvalido = new StudentRequest(
                 null, null, null, "", LocalDate.now().plusDays(1), new BigDecimal("0.00"), new BigDecimal("0.00"), null
         );
 
@@ -156,8 +156,8 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("PUT /api/estudiantes/{id} - Edita correctamente y devuelve 200")
     void editar_actualiza_estudiante() throws Exception {
-        EstudianteRequest request = crearEstudianteRequestValido();
-        when(estudianteService.editar(eq(1L), any(EstudianteRequest.class))).thenReturn(crearEstudianteResponse());
+        StudentRequest request = crearEstudianteRequestValido();
+        when(estudianteService.update(eq(1L), any(StudentRequest.class))).thenReturn(crearEstudianteResponse());
 
         mockMvc.perform(put("/api/estudiantes/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -169,7 +169,7 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("DELETE /api/estudiantes/{id} - Elimina (soft delete) y devuelve 204")
     void eliminar_devuelve_204() throws Exception {
-        doNothing().when(estudianteService).eliminar(1L);
+        doNothing().when(estudianteService).delete(1L);
 
         mockMvc.perform(delete("/api/estudiantes/1"))
                 .andExpect(status().isNoContent());
@@ -178,7 +178,7 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("GET /api/estudiantes/conteo/categoria/{idCategoria} - Devuelve conteo de activos")
     void contarActivos_delega_en_service() throws Exception {
-        when(estudianteService.contarActivosPorCategoria(2L)).thenReturn(5L);
+        when(estudianteService.countActiveByCategory(2L)).thenReturn(5L);
 
         mockMvc.perform(get("/api/estudiantes/conteo/categoria/2"))
                 .andExpect(status().isOk())
@@ -188,7 +188,7 @@ class EstudianteControllerTest {
     @Test
     @DisplayName("POST /api/estudiantes/operaciones/desactivar-categoria - Delega en service")
     void desactivarCategoria_delega_en_service() throws Exception {
-        doNothing().when(estudianteService).desactivarPorCategoria(2L);
+        doNothing().when(estudianteService).deactivateByCategory(2L);
 
         mockMvc.perform(post("/api/estudiantes/operaciones/desactivar-categoria")
                         .contentType(MediaType.APPLICATION_JSON)

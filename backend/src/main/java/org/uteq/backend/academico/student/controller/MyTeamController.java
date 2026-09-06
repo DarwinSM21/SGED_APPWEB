@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.estudiante.controller;
+package org.uteq.backend.academico.student.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -9,8 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.MiEquipoResponse;
-import org.uteq.backend.academico.estudiante.service.MiEquipoService;
+import org.uteq.backend.academico.student.dto.MyTeamDtos.MyTeamResponse;
+import org.uteq.backend.academico.student.service.MyTeamService;
 import org.uteq.backend.academico.guardian.dto.ReportDtos.ReportCommentResponse;
 import org.uteq.backend.academico.guardian.dto.ReportDtos.StudentReportResponse;
 import org.uteq.backend.academico.guardian.service.StudentReportService;
@@ -28,9 +28,9 @@ import org.uteq.backend.academico.guardian.service.StudentReportService;
 @RequestMapping("/api/estudiante")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ESTUDIANTE')")
-public class MiEquipoController {
+public class MyTeamController {
     private final StudentReportService informeService;
-    private final MiEquipoService miEquipoService;
+    private final MyTeamService miEquipoService;
 
     /**
      * Informe de evaluación del estudiante autenticado.
@@ -41,7 +41,7 @@ public class MiEquipoController {
      */
     @GetMapping("/mi-informe")
     @Transactional(readOnly = true)
-    public ResponseEntity<StudentReportResponse> miInforme() {
+    public ResponseEntity<StudentReportResponse> myReport() {
         return ResponseEntity.ok(informeService.myReport(usernameAutenticado()));
     }
 
@@ -56,7 +56,7 @@ public class MiEquipoController {
      */
     @PostMapping("/mi-informe/comentario")
     @Transactional(readOnly = true)
-    public ResponseEntity<ReportCommentResponse> miComentario() {
+    public ResponseEntity<ReportCommentResponse> myComment() {
         return ResponseEntity.ok(informeService.myComment(usernameAutenticado()));
     }
 
@@ -70,8 +70,8 @@ public class MiEquipoController {
      */
     @GetMapping("/mi-equipo")
     @Transactional(readOnly = true)
-    public ResponseEntity<MiEquipoResponse> miEquipo() {
-        return ResponseEntity.ok(miEquipoService.miEquipo(usernameAutenticado()));
+    public ResponseEntity<MyTeamResponse> myTeam() {
+        return ResponseEntity.ok(miEquipoService.myTeam(usernameAutenticado()));
     }
 
     private String usernameAutenticado() {

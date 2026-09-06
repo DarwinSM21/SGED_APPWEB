@@ -7,8 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
-import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
+import org.uteq.backend.academico.student.dto.EnableAccessRequest;
+import org.uteq.backend.academico.student.service.StudentAccessService;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -28,13 +28,13 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class EstudianteAccesoServiceTest {
+class StudentAccessServiceTest {
     @Mock private UserAccountRepository usuarioRepository;
     @Mock private RoleRepository rolRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
 
-    @InjectMocks private EstudianteAccesoService service;
+    @InjectMocks private StudentAccessService service;
 
     private final Person persona = Person.builder().idPersona(1L).nombre("Ana").apellido("Vera").build();
 
@@ -43,7 +43,7 @@ class EstudianteAccesoServiceTest {
     void validarCoherencia_sin_cuenta_no_lanza() {
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.empty());
 
-        service.validarCoherenciaConFichaEstudiante(1L);
+        service.validateConsistencyWithStudentRecord(1L);
     }
 
     @Test
@@ -53,7 +53,7 @@ class EstudianteAccesoServiceTest {
                 .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
 
-        assertThatThrownBy(() -> service.validarCoherenciaConFichaEstudiante(1L))
+        assertThatThrownBy(() -> service.validateConsistencyWithStudentRecord(1L))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -64,7 +64,7 @@ class EstudianteAccesoServiceTest {
                 .roles(Set.of(Role.builder().idRol(5L).nombre("ESTUDIANTE").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
 
-        service.validarCoherenciaConFichaEstudiante(1L);
+        service.validateConsistencyWithStudentRecord(1L);
     }
 
     @Test
@@ -72,8 +72,8 @@ class EstudianteAccesoServiceTest {
     void crearCuenta_username_duplicado_lanza() {
         when(usuarioRepository.existsByUsernameIgnoreCase("dup@sged.test")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.crearCuentaDeEstudiante(
-                persona, new HabilitarAccesoRequest("dup@sged.test", "password123")))
+        assertThatThrownBy(() -> service.createStudentAccount(
+                persona, new EnableAccessRequest("dup@sged.test", "password123")))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verify(usuarioRepository, never()).save(any());
@@ -82,7 +82,7 @@ class EstudianteAccesoServiceTest {
     @Test
     @DisplayName("crearCuentaDeEstudiante crea el usuario con rol ESTUDIANTE, la contrasena hasheada y sobre la Persona dada")
     void crearCuenta_exitosa() {
-        HabilitarAccesoRequest request = new HabilitarAccesoRequest("andres@sged.test", "password123");
+        EnableAccessRequest request = new EnableAccessRequest("andres@sged.test", "password123");
         Role rolEstudiante = Role.builder().idRol(6L).nombre("ESTUDIANTE").build();
 
         when(usuarioRepository.existsByUsernameIgnoreCase("andres@sged.test")).thenReturn(false);
@@ -95,7 +95,7 @@ class EstudianteAccesoServiceTest {
             return u;
         });
 
-        UserAccount resultado = service.crearCuentaDeEstudiante(persona, request);
+        UserAccount resultado = service.createStudentAccount(persona, request);
 
         assertThat(resultado.getIdUsuario()).isEqualTo(9L);
         assertThat(resultado.getPersona()).isSameAs(persona);
@@ -109,7 +109,7 @@ class EstudianteAccesoServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("x@sged.test")).thenReturn(false);
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.crearCuentaDeEstudiante(persona, new HabilitarAccesoRequest("x@sged.test", "password123")))
+        assertThatThrownBy(() -> service.createStudentAccount(persona, new EnableAccessRequest("x@sged.test", "password123")))
                 .isInstanceOf(IllegalStateException.class);
     }
 }

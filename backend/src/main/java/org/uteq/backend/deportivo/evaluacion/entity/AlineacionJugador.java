@@ -2,7 +2,7 @@ package org.uteq.backend.deportivo.evaluacion.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 
 import java.time.Instant;
@@ -22,7 +22,7 @@ public class AlineacionJugador {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Estudiante estudiante;
+    private Student estudiante;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_posicion")

@@ -11,8 +11,8 @@ import org.uteq.backend.common.ia.AIFeedbackGenerator;
 import org.uteq.backend.common.ia.AnonymousPlayerProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.dto.ReportDtos.StudentSummaryResponse;
 import org.uteq.backend.academico.guardian.dto.ReportDtos.StudentReportResponse;
 import org.uteq.backend.academico.guardian.entity.Guardian;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.when;
 class StudentReportServiceTest {
     @Mock private GuardianRepository representanteRepository;
     @Mock private GuardianStudentRepository vinculoRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
@@ -61,8 +61,8 @@ class StudentReportServiceTest {
                 .build();
     }
 
-    private Estudiante estudiante(long id, String nombre) {
-        return Estudiante.builder()
+    private Student estudiante(long id, String nombre) {
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(Person.builder().nombre(nombre).apellido("Hijo").build())
                 .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
@@ -123,7 +123,7 @@ class StudentReportServiceTest {
     @DisplayName("informeDe arma promedios y lesiones reutilizando las queries existentes cuando el estudiante si es suyo")
     void informeDe_devuelve_informe_de_un_representado_propio() {
         Guardian r = representante();
-        Estudiante hijo = estudiante(10L, "Juan");
+        Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
                 .representante(r).estudiante(hijo).activo(true).build();
         Lesion lesion = Lesion.builder()
@@ -165,7 +165,7 @@ class StudentReportServiceTest {
     @Test
     @DisplayName("miInforme arma el mismo DTO que informeDe, resuelto por la cuenta autenticada")
     void miInforme_devuelve_el_informe_del_propio_estudiante() {
-        Estudiante yo = estudiante(10L, "Juan");
+        Student yo = estudiante(10L, "Juan");
         Lesion lesion = Lesion.builder()
                 .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
                 .fechaAlta(null).build();
@@ -204,7 +204,7 @@ class StudentReportServiceTest {
     @DisplayName("sin evaluaciones no se llama al modelo: no hay nada que comentar")
     void comentarioDe_sinEvaluaciones_noLlamaAlModelo() {
         Guardian r = representante();
-        Estudiante hijo = estudiante(10L, "Juan");
+        Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
                 .representante(r).estudiante(hijo).activo(true).build();
 
@@ -228,7 +228,7 @@ class StudentReportServiceTest {
     @DisplayName("al modelo solo le llegan promedios y categoria: ningun dato que identifique al menor")
     void comentarioDe_noEnviaIdentidadAlModelo() {
         Guardian r = representante();
-        Estudiante hijo = estudiante(10L, "Juan");
+        Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
                 .representante(r).estudiante(hijo).activo(true).build();
 
@@ -263,7 +263,7 @@ class StudentReportServiceTest {
     @DisplayName("si el modelo no responde, el informe no se cae: devuelve el motivo")
     void comentarioDe_modeloCaido_noRompeElInforme() {
         Guardian r = representante();
-        Estudiante hijo = estudiante(10L, "Juan");
+        Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
                 .representante(r).estudiante(hijo).activo(true).build();
 

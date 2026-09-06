@@ -8,8 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
@@ -30,7 +30,7 @@ import static org.mockito.Mockito.*;
 class LesionServiceTest {
 
     @Mock private LesionRepository lesionRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private EntrenadorRepository entrenadorRepository;
     @Mock private NotificationService notificacionService;
 
@@ -41,7 +41,7 @@ class LesionServiceTest {
 
     private void existenAmbos() {
         when(estudianteRepository.findById(ID_EST))
-                .thenReturn(Optional.of(Estudiante.builder().idEstudiante(ID_EST).build()));
+                .thenReturn(Optional.of(Student.builder().idEstudiante(ID_EST).build()));
         when(entrenadorRepository.findById(ID_ENT))
                 .thenReturn(Optional.of(Entrenador.builder().idEntrenador(ID_ENT).build()));
     }
@@ -100,7 +100,7 @@ class LesionServiceTest {
     @DisplayName("Entrenador inexistente da 404")
     void entrenadorInexistente() {
         when(estudianteRepository.findById(ID_EST))
-                .thenReturn(Optional.of(Estudiante.builder().idEstudiante(ID_EST).build()));
+                .thenReturn(Optional.of(Student.builder().idEstudiante(ID_EST).build()));
         when(entrenadorRepository.findById(ID_ENT)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,

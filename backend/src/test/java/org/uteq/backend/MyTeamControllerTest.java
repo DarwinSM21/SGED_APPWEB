@@ -13,9 +13,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.academico.estudiante.controller.MiEquipoController;
-import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.*;
-import org.uteq.backend.academico.estudiante.service.MiEquipoService;
+import org.uteq.backend.academico.student.controller.MyTeamController;
+import org.uteq.backend.academico.student.dto.MyTeamDtos.*;
+import org.uteq.backend.academico.student.service.MyTeamService;
 import org.uteq.backend.academico.guardian.dto.ReportDtos.StudentReportResponse;
 import org.uteq.backend.academico.guardian.service.StudentReportService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
@@ -30,12 +30,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class MiEquipoControllerTest {
+class MyTeamControllerTest {
 
     @Mock private StudentReportService informeService;
-    @Mock private MiEquipoService miEquipoService;
+    @Mock private MyTeamService miEquipoService;
 
-    @InjectMocks private MiEquipoController controller;
+    @InjectMocks private MyTeamController controller;
 
     private MockMvc mockMvc;
 
@@ -83,12 +83,12 @@ class MiEquipoControllerTest {
     @Test
     @DisplayName("miEquipo devuelve 200 con categoria, posicion, entrenador y companeros")
     void miEquipo_devuelve_200() throws Exception {
-        var respuesta = new MiEquipoResponse(
-                new CategoriaDetalleResponse("SUB-12", 10, 12, "Sub 12 anios"),
-                new PosicionResponse("Delantero", "DC"),
-                new EntrenadorAsignadoResponse("Pedro Gomez", "Tecnico"),
-                List.of(new CompaneroResponse(2L, "Carlos Perez", "Defensa")));
-        when(miEquipoService.miEquipo("juan@sged.test")).thenReturn(respuesta);
+        var respuesta = new MyTeamResponse(
+                new CategoryDetailResponse("SUB-12", 10, 12, "Sub 12 anios"),
+                new PositionResponse("Delantero", "DC"),
+                new AssignedCoachResponse("Pedro Gomez", "Tecnico"),
+                List.of(new TeammateResponse(2L, "Carlos Perez", "Defensa")));
+        when(miEquipoService.myTeam("juan@sged.test")).thenReturn(respuesta);
 
         mockMvc.perform(get("/api/estudiante/mi-equipo"))
                 .andExpect(status().isOk())
@@ -101,7 +101,7 @@ class MiEquipoControllerTest {
     @Test
     @DisplayName("miEquipo responde 404 si la cuenta no tiene estudiante asociado")
     void miEquipo_sin_estudiante_da_404() throws Exception {
-        when(miEquipoService.miEquipo("juan@sged.test"))
+        when(miEquipoService.myTeam("juan@sged.test"))
                 .thenThrow(new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         mockMvc.perform(get("/api/estudiante/mi-equipo"))

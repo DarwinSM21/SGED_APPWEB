@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
@@ -48,7 +48,7 @@ public class UserAccountService {
     private final PasswordEncoder passwordEncoder;
     private final EntrenadorRepository entrenadorRepository;
     private final GuardianRepository representanteRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
 
     /**
      * Lista paginada de todas las cuentas (activas e inactivas).
@@ -98,7 +98,7 @@ public class UserAccountService {
      *                                      rol no es coherente con la ficha
      * @throws ResourceNotFoundException si la persona o el estado no existen
      */
-    // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
+    // vincularFichaExistente puede mutar Student/Entrenador (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
@@ -158,7 +158,7 @@ public class UserAccountService {
      *                                      está ocupado o el rol no es
      *                                      coherente con la ficha
      */
-    // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
+    // vincularFichaExistente puede mutar Student/Entrenador (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {

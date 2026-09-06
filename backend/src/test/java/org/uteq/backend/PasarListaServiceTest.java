@@ -7,8 +7,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PasarListaServiceTest {
     @Mock private AsistenciaRepository asistenciaRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private NotificationService notificacionService;
 
@@ -50,8 +50,8 @@ class PasarListaServiceTest {
         return Categoria.builder().idCategoria(id).nombre(nombre).build();
     }
 
-    private Estudiante estudiante(Long id, Long idCategoria) {
-        return Estudiante.builder()
+    private Student estudiante(Long id, Long idCategoria) {
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(Person.builder().nombre("Ana").apellido("Vera").build())
                 .categoria(categoria(idCategoria, "SUB-18"))

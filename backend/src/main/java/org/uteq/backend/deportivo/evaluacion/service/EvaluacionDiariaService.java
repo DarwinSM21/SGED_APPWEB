@@ -3,8 +3,8 @@ package org.uteq.backend.deportivo.evaluacion.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -45,7 +45,7 @@ public class EvaluacionDiariaService {
     private final SesionEntrenamientoRepository sesionRepository;
     private final LesionRepository lesionRepository;
     private final PosicionRepository posicionRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
 
     /**
      * Abre la pantalla de evaluación de una sesión. Si todavía no existe la
@@ -85,11 +85,11 @@ public class EvaluacionDiariaService {
             asistenciaPorEstudiante.put(asistencia.getEstudiante().getIdEstudiante(), asistencia);
         }
 
-        List<Estudiante> estudiantesCategoria = estudianteRepository
+        List<Student> estudiantesCategoria = estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(sesion.getCategoria().getIdCategoria());
 
         List<JugadorEvaluableResponse> jugadores = new ArrayList<>();
-        for (Estudiante estudiante : estudiantesCategoria) {
+        for (Student estudiante : estudiantesCategoria) {
             jugadores.add(construirJugador(
                     estudiante, asistenciaPorEstudiante.get(estudiante.getIdEstudiante()),
                     evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
@@ -108,7 +108,7 @@ public class EvaluacionDiariaService {
                 evaluacion.getObservacionGeneral());
     }
 
-    private JugadorEvaluableResponse construirJugador(Estudiante estudiante, Asistencia asistencia,
+    private JugadorEvaluableResponse construirJugador(Student estudiante, Asistencia asistencia,
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
                                                       Map<Long, Long> lesionActivaPorEstudiante) {

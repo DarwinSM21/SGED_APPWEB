@@ -3,7 +3,7 @@ package org.uteq.backend.academico.guardian.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 
 import java.time.Instant;
 
@@ -28,7 +28,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Estudiante estudiante;
+    private Student estudiante;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

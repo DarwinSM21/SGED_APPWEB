@@ -5,8 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.dto.GuardianPageResponse;
 import org.uteq.backend.academico.guardian.dto.GuardianRequest;
 import org.uteq.backend.academico.guardian.dto.GuardianResponse;
@@ -39,7 +39,7 @@ public class GuardianService {
     private final GuardianStudentRepository vinculoRepository;
     private final PersonRepository personaRepository;
     private final UserAccountRepository usuarioRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
 
     /**
      * Lista paginada de representantes.
@@ -226,7 +226,7 @@ public class GuardianService {
     // desplaza al anterior en vez de dejar dos marcados.
     private void vincular(Guardian representante, Long idEstudiante,
                           String relacion, boolean contactoPrincipal) {
-        Estudiante estudiante = estudianteRepository.findById(idEstudiante)
+        Student estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));
 
         if (contactoPrincipal) {

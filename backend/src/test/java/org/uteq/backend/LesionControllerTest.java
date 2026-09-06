@@ -17,7 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -73,7 +73,7 @@ class LesionControllerTest {
     }
 
     private Lesion lesion(Long id, boolean activa) {
-        var estudiante = Estudiante.builder().idEstudiante(1L)
+        var estudiante = Student.builder().idEstudiante(1L)
                 .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
         return Lesion.builder()

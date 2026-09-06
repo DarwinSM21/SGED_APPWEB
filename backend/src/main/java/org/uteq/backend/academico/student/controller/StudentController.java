@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.estudiante.controller;
+package org.uteq.backend.academico.student.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,15 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.uteq.backend.academico.estudiante.dto.ActualizarPosicionRequest;
-import org.uteq.backend.academico.estudiante.dto.EstudiantePageResponse;
-import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
-import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
-import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
-import org.uteq.backend.academico.estudiante.service.EstudianteService;
+import org.uteq.backend.academico.student.dto.UpdatePositionRequest;
+import org.uteq.backend.academico.student.dto.StudentPageResponse;
+import org.uteq.backend.academico.student.dto.StudentRequest;
+import org.uteq.backend.academico.student.dto.StudentResponse;
+import org.uteq.backend.academico.student.dto.EnableAccessRequest;
+import org.uteq.backend.academico.student.service.StudentService;
 
 /**
- * CRUD de {@code Estudiante} con paginación y baja lógica, más operaciones
+ * CRUD de {@code Student} con paginación y baja lógica, más operaciones
  * de conjunto por categoría (conteo, desactivación) y la habilitación del
  * acceso propio del estudiante. Los endpoints de escritura quedan
  * restringidos a {@code ADMINISTRADOR} / {@code RECEPCIONISTA} vía
@@ -25,8 +25,8 @@ import org.uteq.backend.academico.estudiante.service.EstudianteService;
 @RestController
 @RequestMapping("/api/estudiantes")
 @RequiredArgsConstructor
-public class EstudianteController {
-    private final EstudianteService estudianteService;
+public class StudentController {
+    private final StudentService estudianteService;
 
     /**
      * Lista paginada de estudiantes activos.
@@ -39,7 +39,7 @@ public class EstudianteController {
      */
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<EstudiantePageResponse<EstudianteResponse>> listar(
+    public ResponseEntity<StudentPageResponse<StudentResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "idEstudiante,asc") String[] sort) {
@@ -48,7 +48,7 @@ public class EstudianteController {
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));
 
-        return ResponseEntity.ok(estudianteService.listar(pageRequest));
+        return ResponseEntity.ok(estudianteService.list(pageRequest));
     }
 
     /**
@@ -61,8 +61,8 @@ public class EstudianteController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<EstudianteResponse> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(estudianteService.buscarPorId(id));
+    public ResponseEntity<StudentResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(estudianteService.findById(id));
     }
 
     /**
@@ -78,10 +78,10 @@ public class EstudianteController {
      */
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<EstudianteResponse> crear(
-            @Valid @RequestBody EstudianteRequest request) {
+    public ResponseEntity<StudentResponse> create(
+            @Valid @RequestBody StudentRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(estudianteService.crear(request));
+                .body(estudianteService.create(request));
     }
 
     /**
@@ -97,15 +97,15 @@ public class EstudianteController {
      */
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<EstudianteResponse> editar(
+    public ResponseEntity<StudentResponse> update(
             @PathVariable Long id,
-            @Valid @RequestBody EstudianteRequest request) {
-        return ResponseEntity.ok(estudianteService.editar(id, request));
+            @Valid @RequestBody StudentRequest request) {
+        return ResponseEntity.ok(estudianteService.update(id, request));
     }
 
     /**
      * Actualiza solo la posición nominal, no el resto de la ficha: a
-     * diferencia de {@link #editar}, esto también lo puede usar
+     * diferencia de {@link #update}, esto también lo puede usar
      * {@code ENTRENADOR} desde evaluación diaria.
      *
      * @param id      identificador del estudiante
@@ -116,9 +116,9 @@ public class EstudianteController {
      */
     @PutMapping("/{id}/posicion")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<EstudianteResponse> actualizarPosicion(
-            @PathVariable Long id, @RequestBody ActualizarPosicionRequest request) {
-        return ResponseEntity.ok(estudianteService.actualizarPosicion(id, request.idPosicion()));
+    public ResponseEntity<StudentResponse> updatePosition(
+            @PathVariable Long id, @RequestBody UpdatePositionRequest request) {
+        return ResponseEntity.ok(estudianteService.updatePosition(id, request.idPosicion()));
     }
 
     /**
@@ -131,8 +131,8 @@ public class EstudianteController {
      */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        estudianteService.eliminar(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        estudianteService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -145,8 +145,8 @@ public class EstudianteController {
      */
     @GetMapping("/conteo/categoria/{idCategoria}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<Long> contarActivos(@PathVariable Long idCategoria) {
-        return ResponseEntity.ok(estudianteService.contarActivosPorCategoria(idCategoria));
+    public ResponseEntity<Long> countActive(@PathVariable Long idCategoria) {
+        return ResponseEntity.ok(estudianteService.countActiveByCategory(idCategoria));
     }
 
     /**
@@ -158,8 +158,8 @@ public class EstudianteController {
      */
     @PostMapping("/operaciones/desactivar-categoria")
     @PreAuthorize("hasRole('ADMINISTRADOR')")
-    public ResponseEntity<Void> desactivarPorCategoria(@RequestBody Long idCategoria) {
-        estudianteService.desactivarPorCategoria(idCategoria);
+    public ResponseEntity<Void> deactivateByCategory(@RequestBody Long idCategoria) {
+        estudianteService.deactivateByCategory(idCategoria);
         return ResponseEntity.ok().build();
     }
 
@@ -174,8 +174,8 @@ public class EstudianteController {
      */
     @PostMapping("/{id}/reactivar")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<EstudianteResponse> reactivar(@PathVariable Long id) {
-        return ResponseEntity.ok(estudianteService.reactivar(id));
+    public ResponseEntity<StudentResponse> reactivate(@PathVariable Long id) {
+        return ResponseEntity.ok(estudianteService.reactivate(id));
     }
 
     /**
@@ -187,8 +187,8 @@ public class EstudianteController {
      */
     @GetMapping("/operaciones/siguiente-codigo")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<String> siguienteCodigo(@RequestParam int anio) {
-        return ResponseEntity.ok(estudianteService.generarSiguienteCodigo(anio));
+    public ResponseEntity<String> nextCode(@RequestParam int anio) {
+        return ResponseEntity.ok(estudianteService.generateNextCode(anio));
     }
 
     /**
@@ -202,8 +202,8 @@ public class EstudianteController {
      */
     @GetMapping("/{id}/contacto-emergencia")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<String> contactoEmergencia(@PathVariable Long id) {
-        return ResponseEntity.ok(estudianteService.contactoDeEmergencia(id));
+    public ResponseEntity<String> emergencyContact(@PathVariable Long id) {
+        return ResponseEntity.ok(estudianteService.emergencyContact(id));
     }
 
     /**
@@ -222,9 +222,9 @@ public class EstudianteController {
      */
     @PostMapping("/{id}/acceso")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<EstudianteResponse> habilitarAcceso(
-            @PathVariable Long id, @Valid @RequestBody HabilitarAccesoRequest request) {
+    public ResponseEntity<StudentResponse> enableAccess(
+            @PathVariable Long id, @Valid @RequestBody EnableAccessRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(estudianteService.habilitarAcceso(id, request));
+                .body(estudianteService.enableAccess(id, request));
     }
 }

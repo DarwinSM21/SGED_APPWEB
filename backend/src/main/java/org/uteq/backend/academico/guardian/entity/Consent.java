@@ -2,7 +2,7 @@ package org.uteq.backend.academico.guardian.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.OffsetDateTime;
@@ -31,7 +31,7 @@ public class Consent {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Estudiante estudiante;
+    private Student estudiante;
 
     @Column(name = "alcance", nullable = false, length = 50)
     private String alcance;

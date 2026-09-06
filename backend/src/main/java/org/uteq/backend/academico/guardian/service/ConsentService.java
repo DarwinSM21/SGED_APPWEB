@@ -3,8 +3,8 @@ package org.uteq.backend.academico.guardian.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.dto.ConsentDtos.*;
 import org.uteq.backend.academico.guardian.entity.Consent;
 import org.uteq.backend.academico.guardian.entity.Guardian;
@@ -27,7 +27,7 @@ import java.util.List;
 public class ConsentService {
     private final ConsentRepository consentimientoRepository;
     private final GuardianRepository representanteRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final UserAccountRepository usuarioRepository;
 
     /**
@@ -47,7 +47,7 @@ public class ConsentService {
         Guardian representante = representanteRepository.findById(request.idRepresentante())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Representante no encontrado con id: " + request.idRepresentante()));
-        Estudiante estudiante = estudianteRepository.findById(request.idEstudiante())
+        Student estudiante = estudianteRepository.findById(request.idEstudiante())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + request.idEstudiante()));
 

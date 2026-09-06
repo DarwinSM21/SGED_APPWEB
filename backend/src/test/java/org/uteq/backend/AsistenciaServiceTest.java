@@ -9,8 +9,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -37,15 +37,15 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AsistenciaServiceTest {
     @Mock private AsistenciaRepository asistenciaRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private NotificationService notificacionService;
 
     @InjectMocks
     private AsistenciaService asistenciaService;
 
-    private Estudiante estudiante() {
-        return Estudiante.builder().idEstudiante(6L).build();
+    private Student estudiante() {
+        return Student.builder().idEstudiante(6L).build();
     }
 
     private SesionEntrenamiento sesionConHoraInicio(LocalTime horaInicio) {
@@ -69,7 +69,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr rechaza un segundo marcado en la misma sesion")
     void marcarPorQr_rechaza_doble_marcado() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L))
                 .thenReturn(Optional.of(Asistencia.builder().idAsistencia(50L).build()));
@@ -81,7 +81,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr marca PRESENTE dentro de la tolerancia")
     void marcarPorQr_marca_presente_dentro_de_tolerancia() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
@@ -101,7 +101,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr marca TARDE fuera de la tolerancia")
     void marcarPorQr_marca_tarde_fuera_de_tolerancia() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
 
         LocalTime ahora = LocalTime.now(Zones.ECUADOR);
         LocalTime horaInicio = ahora.isBefore(LocalTime.of(1, 0)) ? LocalTime.MIDNIGHT : ahora.minusHours(1);
@@ -122,7 +122,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr marca PRESENTE si la sesion no tiene hora de inicio programada")
     void marcarPorQr_sin_hora_inicio_marca_presente() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(null);
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
@@ -141,7 +141,7 @@ class AsistenciaServiceTest {
     @DisplayName("la tolerancia es configurable via asistencia.tolerancia-tarde-minutos")
     void tolerancia_es_configurable() {
         ReflectionTestUtils.setField(asistenciaService, "toleranciaTardeMinutos", 1);
-        Estudiante e = estudiante();
+        Student e = estudiante();
 
         LocalTime ahoraTolerancia = LocalTime.now(Zones.ECUADOR);
         LocalTime horaInicioTolerancia = ahoraTolerancia.isBefore(LocalTime.of(0, 5))
@@ -163,7 +163,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr rechaza una sesion que no es de la categoria del estudiante")
     void marcarPorQr_rechaza_categoria_no_coincidente() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
@@ -179,7 +179,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr rechaza si el procedimiento no puede determinar la categoria (null)")
     void marcarPorQr_rechaza_categoria_indeterminada() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
         when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
@@ -203,7 +203,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("misAsistencias devuelve el historial propio ordenado y el porcentaje de los ultimos 30 dias")
     void misAsistencias_devuelve_historial_y_porcentaje() {
-        Estudiante e = estudiante();
+        Student e = estudiante();
         SesionEntrenamiento sesion = SesionEntrenamiento.builder()
                 .idSesion(1L).fecha(LocalDate.of(2026, 8, 10))
                 .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())

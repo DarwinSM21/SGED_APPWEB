@@ -8,8 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.AIFeedbackGenerator;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ConvocatoriaServiceTest {
     @Mock private PartidoRepository partidoRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
@@ -61,10 +61,10 @@ class ConvocatoriaServiceTest {
         return Partido.builder().idPartido(ID_PARTIDO).categoria(categoria).fecha(FECHA).build();
     }
 
-    private Estudiante jugador(long id, String apellido, Long idPosicion, String abreviatura) {
+    private Student jugador(long id, String apellido, Long idPosicion, String abreviatura) {
         Posicion posicion = idPosicion == null ? null
                 : Posicion.builder().idPosicion(idPosicion).abreviatura(abreviatura).nombre(abreviatura).build();
-        return Estudiante.builder()
+        return Student.builder()
                 .idEstudiante(id)
                 .activo(true)
                 .categoria(categoria)
@@ -73,7 +73,7 @@ class ConvocatoriaServiceTest {
                 .build();
     }
 
-    private void plantel(List<Estudiante> estudiantes) {
+    private void plantel(List<Student> estudiantes) {
         when(partidoRepository.findWithCategoriaByIdPartido(ID_PARTIDO)).thenReturn(Optional.of(partido()));
         when(estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))

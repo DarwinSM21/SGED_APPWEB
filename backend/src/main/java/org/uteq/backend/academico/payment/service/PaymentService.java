@@ -3,8 +3,8 @@ package org.uteq.backend.academico.payment.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
@@ -37,7 +37,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentService {
     private final PaymentRepository pagoRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final UserAccountRepository usuarioRepository;
 
     /**
@@ -60,7 +60,7 @@ public class PaymentService {
     @Transactional
     public List<Payment> registerMembership(Long idEstudiante, int anio, List<Integer> meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-        Estudiante estudiante = buscarEstudiante(idEstudiante);
+        Student estudiante = buscarEstudiante(idEstudiante);
         UserAccount registrador = buscarUsuario(usernameRegistrador);
 
         List<Integer> mesesUnicos = meses.stream().distinct().sorted().toList();
@@ -101,7 +101,7 @@ public class PaymentService {
             descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
     @Transactional
     public Payment registerDaily(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-        Estudiante estudiante = buscarEstudiante(idEstudiante);
+        Student estudiante = buscarEstudiante(idEstudiante);
         UserAccount registrador = buscarUsuario(usernameRegistrador);
 
         return pagoRepository.save(Payment.builder()
@@ -219,7 +219,7 @@ public class PaymentService {
         return pagoRepository.save(pago);
     }
 
-    private Estudiante buscarEstudiante(Long id) {
+    private Student buscarEstudiante(Long id) {
         return estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
     }

@@ -11,7 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -55,7 +55,7 @@ class UserAccountServiceTest {
     @Mock
     private GuardianRepository representanteRepository;
     @Mock
-    private EstudianteRepository estudianteRepository;
+    private StudentRepository estudianteRepository;
 
     @InjectMocks
     private UserAccountService usuarioService;

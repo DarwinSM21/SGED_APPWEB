@@ -14,7 +14,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.payment.controller.PaymentController;
 import org.uteq.backend.academico.payment.dto.PaymentDtos.MonthlyIncomeResponse;
 import org.uteq.backend.academico.payment.entity.Payment;
@@ -67,7 +67,7 @@ class PaymentControllerTest {
     }
 
     private Payment pago(Long id, TipoPago tipo, Integer anio, Integer mes) {
-        var estudiante = Estudiante.builder().idEstudiante(1L)
+        var estudiante = Student.builder().idEstudiante(1L)
                 .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
         var registrador = UserAccount.builder().idUsuario(9L)

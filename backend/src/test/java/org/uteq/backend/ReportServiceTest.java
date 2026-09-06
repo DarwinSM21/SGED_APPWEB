@@ -9,8 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class ReportServiceTest {
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private PaymentRepository pagoRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private LesionRepository lesionRepository;
@@ -53,8 +53,8 @@ class ReportServiceTest {
         return Person.builder().nombre(nombre).apellido(apellido).build();
     }
 
-    private Estudiante estudiante(Long id, String categoria) {
-        return Estudiante.builder()
+    private Student estudiante(Long id, String categoria) {
+        return Student.builder()
                 .idEstudiante(id)
                 .persona(persona("Ana", "Torres"))
                 .categoria(Categoria.builder().idCategoria(1L).nombre(categoria).build())
@@ -67,7 +67,7 @@ class ReportServiceTest {
     @Test
     @DisplayName("estudiantesFichas sin resultados lanza 404 en vez de generar un PDF vacio")
     void studentProfilesNoResultsReturns404() {
-        when(estudianteRepository.buscarParaReporte(any(), any())).thenReturn(List.of());
+        when(estudianteRepository.findForReport(any(), any())).thenReturn(List.of());
 
         assertThrows(ResourceNotFoundException.class, () -> servicio.studentProfiles(1L, true));
     }
@@ -75,7 +75,7 @@ class ReportServiceTest {
     @Test
     @DisplayName("estudiantesFichas con resultados genera un PDF valido")
     void studentProfilesWithResultsGeneratesPdf() {
-        when(estudianteRepository.buscarParaReporte(any(), any())).thenReturn(List.of(estudiante(1L, "SUB-12")));
+        when(estudianteRepository.findForReport(any(), any())).thenReturn(List.of(estudiante(1L, "SUB-12")));
 
         byte[] pdf = servicio.studentProfiles(null, null);
 

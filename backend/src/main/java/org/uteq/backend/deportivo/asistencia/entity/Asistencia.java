@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
+import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 
 import java.time.Instant;
@@ -32,7 +32,7 @@ public class Asistencia {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Estudiante estudiante;
+    private Student estudiante;
 
     @Column(name = "hora_entrada")
     private LocalTime horaEntrada;

@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -45,7 +45,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AsistenciaService {
     private final AsistenciaRepository asistenciaRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
     private final NotificationService notificacionService;
 
@@ -70,7 +70,7 @@ public class AsistenciaService {
      */
     @Transactional
     public Asistencia marcarPorQr(String username, Long idSesion) {
-        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())
@@ -122,7 +122,7 @@ public class AsistenciaService {
         }
 
         List<FilaNomina> filas = new ArrayList<>();
-        for (Estudiante e : estudianteRepository
+        for (Student e : estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(
                         sesion.getCategoria().getIdCategoria())) {
             Asistencia a = yaRegistradas.get(e.getIdEstudiante());
@@ -170,7 +170,7 @@ public class AsistenciaService {
         }
 
         for (MarcaAsistencia marca : request.marcas()) {
-            Estudiante estudiante = estudianteRepository
+            Student estudiante = estudianteRepository
                     .findByIdEstudianteAndActivoTrue(marca.idEstudiante())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Estudiante no encontrado o inactivo: " + marca.idEstudiante()));
@@ -238,7 +238,7 @@ public class AsistenciaService {
      */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
-        Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         List<AsistenciaResponse> asistencias = asistenciaRepository

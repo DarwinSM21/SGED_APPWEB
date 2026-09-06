@@ -1,4 +1,4 @@
-package org.uteq.backend.academico.estudiante.dto;
+package org.uteq.backend.academico.student.dto;
 
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
@@ -10,7 +10,7 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record EstudianteRequest(
+public record StudentRequest(
         @NotNull(message = "El ID de la persona es obligatorio")
         Long idPersona,
         @NotNull(message = "El ID de la categoría es obligatorio")

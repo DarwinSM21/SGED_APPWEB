@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.AIFeedbackGenerator;
 import org.uteq.backend.common.ia.AnonymousPlayerProfile;
@@ -52,7 +52,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ConvocatoriaService {
     private final PartidoRepository partidoRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     private final AsistenciaRepository asistenciaRepository;
     private final SesionEntrenamientoRepository sesionRepository;
@@ -110,21 +110,21 @@ public class ConvocatoriaService {
         VentanaRendimiento ventana =
                 new VentanaRendimiento(semanasRendimiento, desde, hasta, entrenamientos);
 
-        List<Estudiante> plantel = estudianteRepository
+        List<Student> plantel = estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(idCategoria);
         if (plantel.isEmpty()) {
             return new Convocatoria(partido, ventana, List.of(), List.of(), List.of(),
                     Map.of(), Map.of(), entrenamientos);
         }
 
-        List<Long> ids = plantel.stream().map(Estudiante::getIdEstudiante).toList();
+        List<Long> ids = plantel.stream().map(Student::getIdEstudiante).toList();
         Map<Long, BigDecimal> promedios = promediosDe(ids, desde, hasta);
         Map<Long, Long> presencias = presenciasDe(ids, desde, hasta);
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
 
-        List<Estudiante> convocables = new ArrayList<>();
+        List<Student> convocables = new ArrayList<>();
         List<NoConvocable> fuera = new ArrayList<>();
-        for (Estudiante e : plantel) {
+        for (Student e : plantel) {
             Long id = e.getIdEstudiante();
             if (lesionados.contains(id)) {
                 fuera.add(new NoConvocable(id, nombreDe(e), "Lesión activa"));
@@ -143,7 +143,7 @@ public class ConvocatoriaService {
 
         Map<Long, JugadorConvocado> titularPorPuesto = new LinkedHashMap<>();
         List<JugadorConvocado> suplentes = new ArrayList<>();
-        for (Estudiante e : convocables) {
+        for (Student e : convocables) {
             Long idPosicion = e.getPosicion() == null ? null : e.getPosicion().getIdPosicion();
             boolean hayCupo = titularPorPuesto.size() < cantidadTitulares;
             boolean titulariza = idPosicion != null && hayCupo && !titularPorPuesto.containsKey(idPosicion);
@@ -188,14 +188,14 @@ public class ConvocatoriaService {
     // Promedio primero, presencias después, id al final. El desempate por id
     // no es cosmético: sin él, dos llamadas con los mismos datos podrían
     // devolver onces distintos.
-    private Comparator<Estudiante> porRendimiento(Map<Long, BigDecimal> promedios,
+    private Comparator<Student> porRendimiento(Map<Long, BigDecimal> promedios,
                                                   Map<Long, Long> presencias) {
         return Comparator
-                .comparing((Estudiante e) -> promedios.getOrDefault(
+                .comparing((Student e) -> promedios.getOrDefault(
                         e.getIdEstudiante(), BigDecimal.ZERO)).reversed()
                 .thenComparing(Comparator.comparingLong(
-                        (Estudiante e) -> presencias.getOrDefault(e.getIdEstudiante(), 0L)).reversed())
-                .thenComparing(Estudiante::getIdEstudiante);
+                        (Student e) -> presencias.getOrDefault(e.getIdEstudiante(), 0L)).reversed())
+                .thenComparing(Student::getIdEstudiante);
     }
 
     private Map<Long, BigDecimal> promediosDe(List<Long> ids, LocalDate desde, LocalDate hasta) {
@@ -231,7 +231,7 @@ public class ConvocatoriaService {
      * @return la fila del jugador ({@code promedio} es {@code null}, no
      *         {@code 0.0}, si no lo evaluaron)
      */
-    public JugadorConvocado aConvocado(Estudiante e, Long idPosicion, boolean titular,
+    public JugadorConvocado aConvocado(Student e, Long idPosicion, boolean titular,
                                        Map<Long, BigDecimal> promedios, Map<Long, Long> presencias,
                                        long entrenamientos) {
         String abreviatura = null;
@@ -253,7 +253,7 @@ public class ConvocatoriaService {
      * @param e estudiante
      * @return el nombre completo
      */
-    public static String nombreDe(Estudiante e) {
+    public static String nombreDe(Student e) {
         return e.getPersona().getNombre() + " " + e.getPersona().getApellido();
     }
 

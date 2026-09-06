@@ -6,8 +6,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
@@ -35,7 +35,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class PaymentServiceTest {
     @Mock private PaymentRepository pagoRepository;
-    @Mock private EstudianteRepository estudianteRepository;
+    @Mock private StudentRepository estudianteRepository;
     @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks private PaymentService service;
@@ -43,8 +43,8 @@ class PaymentServiceTest {
     private static final Long ID_EST = 1L;
     private static final String USERNAME = "recepcion@sged.test";
 
-    private Estudiante estudiante() {
-        return Estudiante.builder().idEstudiante(ID_EST)
+    private Student estudiante() {
+        return Student.builder().idEstudiante(ID_EST)
                 .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
     }

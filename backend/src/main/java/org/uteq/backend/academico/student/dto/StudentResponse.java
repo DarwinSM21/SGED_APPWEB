@@ -1,10 +1,10 @@
-package org.uteq.backend.academico.estudiante.dto;
+package org.uteq.backend.academico.student.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
-public record EstudianteResponse(
+public record StudentResponse(
         Long idEstudiante,
         Long idPersona,
         Long idCategoria,
