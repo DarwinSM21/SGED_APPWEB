@@ -24,7 +24,7 @@ public class EvaluacionDiariaController {
      *
      * @param idSesion identificador de la sesión
      * @return {@code 200 OK} con criterios, jugadores evaluables y estado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no existe ({@code 404})
      */
     @GetMapping("/sesion/{idSesion}")
@@ -42,7 +42,7 @@ public class EvaluacionDiariaController {
      * @param request  posición jugada y puntajes por criterio; validado con
      *                 {@code @Valid}
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no tiene evaluación abierta o la posición no
      *         existe ({@code 404})
      * @throws IllegalArgumentException si la evaluación ya fue finalizada, el
@@ -63,7 +63,7 @@ public class EvaluacionDiariaController {
      * @param idSesion           identificador de la sesión
      * @param observacionGeneral observación general de la sesión (opcional)
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no tiene evaluación abierta ({@code 404})
      * @throws IllegalArgumentException si la evaluación ya estaba finalizada
      *         ({@code 422})

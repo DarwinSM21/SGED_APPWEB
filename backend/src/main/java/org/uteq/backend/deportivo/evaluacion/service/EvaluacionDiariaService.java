@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.*;
@@ -57,12 +57,12 @@ public class EvaluacionDiariaService {
      * @param idSesion identificador de la sesión
      * @return criterios activos, jugadores evaluables con su precarga y el
      *         estado de la evaluación
-     * @throws RecursoNoEncontradoException si la sesión no existe
+     * @throws ResourceNotFoundException si la sesión no existe
      */
     @Transactional
     public EvaluacionSesionResponse abrir(Long idSesion) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la sesion " + idSesion));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la sesion " + idSesion));
 
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)
                 .orElseGet(() -> evaluacionRepository.save(EvaluacionDiaria.builder()
@@ -178,7 +178,7 @@ public class EvaluacionDiariaService {
      * @param idSesion identificador de la sesión
      * @param request  posición jugada ({@code null} = quitarla) y puntajes
      *                 por criterio
-     * @throws RecursoNoEncontradoException si la sesión no tiene evaluación
+     * @throws ResourceNotFoundException si la sesión no tiene evaluación
      *                                      abierta o la posición no existe
      * @throws IllegalArgumentException     si la evaluación ya fue
      *                                      finalizada, el estudiante no tiene
@@ -190,7 +190,7 @@ public class EvaluacionDiariaService {
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "La sesion " + idSesion + " no tiene evaluacion abierta"));
 
         if (evaluacion.estaFinalizada()) {
@@ -226,7 +226,7 @@ public class EvaluacionDiariaService {
         // explícita de "quitar la posición", no "no tocar nada".
         if (request.idPosicionJugada() != null) {
             ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())
-                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                    .orElseThrow(() -> new ResourceNotFoundException(
                             "No existe la posicion " + request.idPosicionJugada())));
         } else {
             ee.setPosicionJugada(null);
@@ -279,7 +279,7 @@ public class EvaluacionDiariaService {
      * @param idSesion           identificador de la sesión
      * @param observacionGeneral observación general de la sesión; puede ser
      *                           {@code null}
-     * @throws RecursoNoEncontradoException si la sesión no tiene evaluación
+     * @throws ResourceNotFoundException si la sesión no tiene evaluación
      *                                      abierta
      * @throws IllegalArgumentException     si ya estaba finalizada
      */
@@ -288,7 +288,7 @@ public class EvaluacionDiariaService {
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "La sesion " + idSesion + " no tiene evaluacion abierta"));
 
         if (evaluacion.estaFinalizada()) {

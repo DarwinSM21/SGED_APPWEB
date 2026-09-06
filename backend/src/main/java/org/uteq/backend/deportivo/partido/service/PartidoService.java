@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
@@ -66,12 +66,12 @@ public class PartidoService {
      *
      * @param idPartido identificador del partido
      * @return el partido, con su estado de alineación y resultado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public PartidoResponse buscarPorId(Long idPartido) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el partido " + idPartido));
         return conAlineacion(List.of(p)).get(0);
     }
 
@@ -80,7 +80,7 @@ public class PartidoService {
      *
      * @param request categoría, fecha, hora y observación
      * @return el partido creado
-     * @throws RecursoNoEncontradoException si la categoría no existe
+     * @throws ResourceNotFoundException si la categoría no existe
      * @throws IllegalArgumentException     si la categoría está inactiva
      */
     @Auditado(accion = "CREAR", entidad = "Partido", idSpel = "#result.idPartido",
@@ -88,7 +88,7 @@ public class PartidoService {
     @Transactional
     public PartidoResponse crear(CrearPartidoRequest request) {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No existe la categoría " + request.idCategoria()));
         if (!Boolean.TRUE.equals(categoria.getActivo())) {
             throw new IllegalArgumentException(
@@ -112,7 +112,7 @@ public class PartidoService {
      * @param idPartido identificador del partido
      * @param request   goles a favor, en contra y observación opcional
      * @return el partido cerrado
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido ya estaba cerrado
      */
     @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
@@ -120,7 +120,7 @@ public class PartidoService {
     @Transactional
     public PartidoResponse registrarResultado(Long idPartido, ResultadoRequest request) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el partido " + idPartido));
 
         exigirAbierto(p);
 
@@ -141,7 +141,7 @@ public class PartidoService {
      *
      * @param idPartido identificador del partido
      * @return el partido reabierto
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido no estaba cerrado
      */
     @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
@@ -149,7 +149,7 @@ public class PartidoService {
     @Transactional
     public PartidoResponse reabrir(Long idPartido) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el partido " + idPartido));
 
         if (!p.estaCerrado()) {
             throw new IllegalArgumentException("Este partido no está cerrado");
@@ -190,7 +190,7 @@ public class PartidoService {
      * CASCADE}): sin partido no significa nada.
      *
      * @param idPartido identificador del partido
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el partido está cerrado
      */
     @Auditado(accion = "ELIMINAR", entidad = "Partido", idSpel = "#p0",
@@ -198,7 +198,7 @@ public class PartidoService {
     @Transactional
     public void eliminar(Long idPartido) {
         Partido p = partidoRepository.findById(idPartido)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el partido " + idPartido));
 
         exigirAbierto(p);
 

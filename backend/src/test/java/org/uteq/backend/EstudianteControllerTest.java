@@ -18,7 +18,7 @@ import org.uteq.backend.academico.estudiante.dto.EstudianteRequest;
 import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -120,7 +120,7 @@ class EstudianteControllerTest {
     @DisplayName("GET /api/estudiantes/{id} - Devuelve 404 cuando no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
         when(estudianteService.buscarPorId(99L))
-                .thenThrow(new RecursoNoEncontradoException("Estudiante no encontrado con id: 99"));
+                .thenThrow(new ResourceNotFoundException("Estudiante no encontrado con id: 99"));
 
         mockMvc.perform(get("/api/estudiantes/99"))
                 .andExpect(status().isNotFound());

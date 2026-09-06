@@ -73,7 +73,7 @@ public class AsignacionController {
      * @param request artículo, cantidad, destinatario y fecha esperada de
      *                devolución; validado con {@code @Valid}
      * @return {@code 201 Created} con la asignación creada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el artículo o el destinatario no existen ({@code 404})
      * @throws IllegalArgumentException si el destinatario está mal
      *         especificado o no hay stock suficiente ({@code 422})
@@ -94,7 +94,7 @@ public class AsignacionController {
      * @param request estado de la devolución y observaciones; validado con
      *                {@code @Valid}
      * @return {@code 200 OK} con la asignación actualizada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la asignación no existe ({@code 404})
      * @throws IllegalArgumentException si el estado es inválido o la
      *         asignación ya estaba resuelta ({@code 422})

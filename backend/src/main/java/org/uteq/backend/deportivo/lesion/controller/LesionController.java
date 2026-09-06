@@ -11,7 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.dto.LesionDtos.*;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -74,7 +74,7 @@ public class LesionController {
      * @param request estudiante, entrenador (opcional para ENTRENADOR),
      *                descripción y fechas; validado con {@code @Valid}
      * @return {@code 201 Created} con la lesión registrada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante o el entrenador no existen ({@code 404})
      * @throws IllegalArgumentException si el estudiante ya tiene una lesión
      *         activa, faltó {@code idEntrenador} para una cuenta no
@@ -97,7 +97,7 @@ public class LesionController {
      * @param idLesion identificador de la lesión
      * @param request  fecha de alta (opcional; por defecto hoy)
      * @return {@code 200 OK} con la lesión dada de alta
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la lesión no existe ({@code 404})
      * @throws IllegalArgumentException si la lesión ya tiene alta o la fecha
      *         es anterior a la de la lesión ({@code 422})
@@ -125,7 +125,7 @@ public class LesionController {
             return idEntrenadorDelBody;
         }
         return entrenadorRepository.findByUsuario_Username(auth.getName())
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un entrenador asociado a esta cuenta"))
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un entrenador asociado a esta cuenta"))
                 .getIdEntrenador();
     }
 

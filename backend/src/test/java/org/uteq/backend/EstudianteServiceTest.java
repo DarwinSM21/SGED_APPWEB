@@ -19,7 +19,7 @@ import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
@@ -129,11 +129,11 @@ class EstudianteServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId - Lanza RecursoNoEncontradoException cuando no existe")
+    @DisplayName("buscarPorId - Lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_404() {
         when(estudianteRepository.findByIdEstudianteAndActivoTrue(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.buscarPorId(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.buscarPorId(99L));
     }
 
     @Test
@@ -293,11 +293,11 @@ class EstudianteServiceTest {
     }
 
     @Test
-    @DisplayName("contactoDeEmergencia - Lanza RecursoNoEncontradoException si el estudiante no existe")
+    @DisplayName("contactoDeEmergencia - Lanza ResourceNotFoundException si el estudiante no existe")
     void contactoDeEmergencia_estudiante_inexistente_lanza_404() {
         when(estudianteRepository.existsById(99L)).thenReturn(false);
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.contactoDeEmergencia(99L));
+        assertThrows(ResourceNotFoundException.class, () -> service.contactoDeEmergencia(99L));
         verify(representanteEstudianteRepository, never()).contactoDe(any());
     }
 
@@ -345,11 +345,11 @@ class EstudianteServiceTest {
     }
 
     @Test
-    @DisplayName("habilitarAcceso - Lanza RecursoNoEncontradoException si el estudiante no existe")
+    @DisplayName("habilitarAcceso - Lanza ResourceNotFoundException si el estudiante no existe")
     void habilitarAcceso_estudiante_inexistente_lanza_404() {
         when(estudianteRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> service.habilitarAcceso(99L, new HabilitarAccesoRequest("x@sged.test", "password123")));
     }
 

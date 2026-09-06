@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
@@ -83,7 +83,7 @@ public class AsignacionService {
      *                            esperada de devolución
      * @param usernameRegistrador usuario que registra la asignación
      * @return la asignación creada
-     * @throws RecursoNoEncontradoException si el artículo o el destinatario
+     * @throws ResourceNotFoundException si el artículo o el destinatario
      *                                      no existen
      * @throws IllegalArgumentException     si el destinatario está mal
      *                                      especificado o no hay stock
@@ -111,7 +111,7 @@ public class AsignacionService {
                 .articulo(articulo)
                 .cantidad(request.cantidad())
                 .tipoDestinatario(request.tipoDestinatario())
-                .fechaAsignacion(LocalDate.now(Zonas.ECUADOR))
+                .fechaAsignacion(LocalDate.now(Zones.ECUADOR))
                 .fechaDevolucionEsperada(request.fechaDevolucionEsperada())
                 .estado(EstadoAsignacion.ASIGNADO)
                 .registradoPor(registrador)
@@ -133,7 +133,7 @@ public class AsignacionService {
      * @param id      identificador de la asignación
      * @param request estado de la devolución y observaciones
      * @return la asignación actualizada
-     * @throws RecursoNoEncontradoException si la asignación no existe
+     * @throws ResourceNotFoundException si la asignación no existe
      * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
      *                                      la asignación ya estaba resuelta
      */
@@ -146,7 +146,7 @@ public class AsignacionService {
         }
 
         Asignacion asignacion = asignacionRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Asignación no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Asignación no encontrada con ID: " + id));
 
         if (asignacion.getEstado() != EstadoAsignacion.ASIGNADO) {
             throw new IllegalArgumentException(
@@ -160,7 +160,7 @@ public class AsignacionService {
         }
 
         asignacion.setEstado(request.estado());
-        asignacion.setFechaDevolucionReal(LocalDate.now(Zonas.ECUADOR));
+        asignacion.setFechaDevolucionReal(LocalDate.now(Zones.ECUADOR));
         if (request.observaciones() != null && !request.observaciones().isBlank()) {
             asignacion.setObservaciones(request.observaciones());
         }
@@ -182,17 +182,17 @@ public class AsignacionService {
 
     private Articulo buscarArticulo(Long id) {
         return articuloRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Artículo no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado con ID: " + id));
     }
 
     private Estudiante buscarEstudiante(Long id) {
         return estudianteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
     }
 
     private Entrenador buscarEntrenador(Long id) {
         return entrenadorRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con ID: " + id));
     }
 
     private Usuario buscarUsuario(String username) {

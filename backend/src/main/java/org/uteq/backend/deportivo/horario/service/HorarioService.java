@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
@@ -56,7 +56,7 @@ public class HorarioService {
      * @param username nombre de usuario del entrenador
      * @param request  categoría, día de semana, franja horaria y campo
      * @return el horario creado
-     * @throws RecursoNoEncontradoException si la cuenta no tiene entrenador
+     * @throws ResourceNotFoundException si la cuenta no tiene entrenador
      *                                      asociado o la categoría no existe
      * @throws IllegalArgumentException     si la hora de fin no es posterior
      *                                      a la de inicio, o el horario se
@@ -71,7 +71,7 @@ public class HorarioService {
         }
 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
 
         // SIN_ID_TODAVIA porque el horario aún no existe: no hay nada que excluir.
@@ -159,7 +159,7 @@ public class HorarioService {
      *
      * @param username  nombre de usuario del entrenador
      * @param idHorario identificador del horario
-     * @throws RecursoNoEncontradoException si el horario no existe o no es
+     * @throws ResourceNotFoundException si el horario no existe o no es
      *                                      del entrenador
      */
     @Transactional
@@ -167,7 +167,7 @@ public class HorarioService {
         Entrenador entrenador = entrenadorAutenticado(username);
         Horario horario = horarioRepository
                 .findByIdHorarioAndEntrenador_IdEntrenador(idHorario, entrenador.getIdEntrenador())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Horario no encontrado con id: " + idHorario));
+                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado con id: " + idHorario));
         horario.setActivo(false);
         horarioRepository.save(horario);
     }
@@ -180,7 +180,7 @@ public class HorarioService {
      * @param idHorario identificador del horario
      * @param request   datos nuevos
      * @return el horario actualizado
-     * @throws RecursoNoEncontradoException si el horario no existe o no es
+     * @throws ResourceNotFoundException si el horario no existe o no es
      *                                      suyo, o la categoría no existe
      * @throws IllegalArgumentException     si la franja es inválida o se
      *                                      cruza con otro horario suyo
@@ -190,14 +190,14 @@ public class HorarioService {
         Entrenador entrenador = entrenadorAutenticado(username);
         Horario horario = horarioRepository
                 .findByIdHorarioAndEntrenador_IdEntrenador(idHorario, entrenador.getIdEntrenador())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Horario no encontrado con id: " + idHorario));
+                .orElseThrow(() -> new ResourceNotFoundException("Horario no encontrado con id: " + idHorario));
 
         if (!request.horaFin().isAfter(request.horaInicio())) {
             throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
         }
 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
 
         // Se excluye a sí mismo: mover un horario media hora no es chocar consigo.
@@ -220,7 +220,7 @@ public class HorarioService {
     // registró nada: una sesión con asistencia o evaluación se queda como
     // está, son hechos que ya pasaron.
     private void rehacerSesionesFuturas(Horario horario) {
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
 
         for (SesionEntrenamiento sesion : sesionRepository
                 .findByHorario_IdHorarioAndFechaGreaterThanEqual(horario.getIdHorario(), hoy)) {
@@ -246,7 +246,7 @@ public class HorarioService {
      */
     @Transactional
     public void generarSesionesProgramadas() {
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
 
         for (int desplazamiento = 0; desplazamiento <= Math.max(0, diasProgramados); desplazamiento++) {
             LocalDate fecha = hoy.plusDays(desplazamiento);
@@ -272,7 +272,7 @@ public class HorarioService {
 
     private Entrenador entrenadorAutenticado(String username) {
         return entrenadorRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un entrenador asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un entrenador asociado a esta cuenta"));
     }
 
     private HorarioResponse aResponse(Horario h) {

@@ -31,7 +31,7 @@ public class ConsentimientoController {
      * @param request representante, estudiante y alcance; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con el consentimiento registrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el representante o el estudiante no existen ({@code 404})
      * @throws IllegalArgumentException si ya hay un consentimiento vigente
      *         con ese alcance ({@code 422})
@@ -48,7 +48,7 @@ public class ConsentimientoController {
      *
      * @param id identificador del consentimiento
      * @return {@code 200 OK} con el consentimiento revocado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si ya estaba revocado ({@code 422})
      */

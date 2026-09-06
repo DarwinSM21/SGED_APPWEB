@@ -10,8 +10,8 @@ import org.uteq.backend.academico.representante.dto.InformeDtos.*;
 import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.GeneradorFeedbackIA;
 import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -54,7 +54,7 @@ public class InformeService {
      *
      * @param username nombre de usuario del representante autenticado
      * @return el resumen de cada representado
-     * @throws RecursoNoEncontradoException si la cuenta no tiene un
+     * @throws ResourceNotFoundException si la cuenta no tiene un
      *                                      representante asociado
      */
     @Transactional(readOnly = true)
@@ -78,7 +78,7 @@ public class InformeService {
      * @param username     nombre de usuario del representante
      * @param idEstudiante identificador del estudiante
      * @return el informe (promedios por criterio, lesiones, % de asistencia)
-     * @throws RecursoNoEncontradoException si la cuenta no tiene representante
+     * @throws ResourceNotFoundException si la cuenta no tiene representante
      *                                      asociado, o el estudiante no
      *                                      existe o no es representado suyo
      */
@@ -89,12 +89,12 @@ public class InformeService {
         boolean esSuyo = vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(
                 representante.getIdRepresentante(), idEstudiante);
         if (!esSuyo) {
-            throw new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante);
+            throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
 
         Estudiante estudiante = vinculoRepository
                 .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(representante.getIdRepresentante(), idEstudiante)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante))
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante))
                 .getEstudiante();
 
         return construirInforme(estudiante);
@@ -107,13 +107,13 @@ public class InformeService {
      *
      * @param username nombre de usuario del estudiante autenticado
      * @return el informe del estudiante
-     * @throws RecursoNoEncontradoException si la cuenta no tiene un estudiante
+     * @throws ResourceNotFoundException si la cuenta no tiene un estudiante
      *                                      asociado
      */
     @Transactional(readOnly = true)
     public InformeEstudianteResponse miInforme(String username) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
         return construirInforme(estudiante);
     }
 
@@ -127,7 +127,7 @@ public class InformeService {
      * @param idEstudiante identificador del estudiante
      * @return el comentario generado, o un texto por defecto si aún no hay
      *         evaluaciones
-     * @throws RecursoNoEncontradoException si el estudiante no es representado
+     * @throws ResourceNotFoundException si el estudiante no es representado
      *                                      del representante
      */
     @Transactional(readOnly = true)
@@ -143,7 +143,7 @@ public class InformeService {
      * @param username nombre de usuario del estudiante autenticado
      * @return el comentario generado, o un texto por defecto si aún no hay
      *         evaluaciones
-     * @throws RecursoNoEncontradoException si la cuenta no tiene un estudiante
+     * @throws ResourceNotFoundException si la cuenta no tiene un estudiante
      *                                      asociado
      */
     @Transactional(readOnly = true)
@@ -169,7 +169,7 @@ public class InformeService {
         boolean lesionado = informe.historialLesiones().stream()
                 .anyMatch(LesionResumenResponse::activa);
 
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         long asistencias = asistenciaRepository
                 .contarAsistenciasDesde(informe.idEstudiante(), hoy.minusDays(30));
 
@@ -203,7 +203,7 @@ public class InformeService {
                 .map(this::aLesionResumen)
                 .toList();
 
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         BigDecimal porcentajeAsistencia = asistenciaRepository
                 .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);
 
@@ -218,7 +218,7 @@ public class InformeService {
 
     private Representante representanteDe(String username) {
         return representanteRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un representante asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 
     private LesionResumenResponse aLesionResumen(Lesion l) {

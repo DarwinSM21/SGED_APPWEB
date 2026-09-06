@@ -54,7 +54,7 @@ public class AsistenciaQrController {
      * @return {@code 201 Created} con el estado marcado
      *         ({@code PRESENTE} / {@code TARDE}), o {@code 410 Gone} si el
      *         token no es válido o ya se usó
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene ficha de estudiante ({@code 404})
      */
     @PostMapping("/marcar")

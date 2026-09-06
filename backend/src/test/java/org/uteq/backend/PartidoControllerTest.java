@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.partido.controller.PartidoController;
 import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.AlineacionResponse;
 import org.uteq.backend.deportivo.partido.dto.ConvocatoriaDtos.FeedbackAlineacionResponse;
@@ -96,7 +96,7 @@ class PartidoControllerTest {
     @Test
     @DisplayName("GET /api/partidos/{id} - 404 si no existe")
     void ver_inexistente_da_404() throws Exception {
-        when(partidoService.buscarPorId(99L)).thenThrow(new RecursoNoEncontradoException("No existe el partido 99"));
+        when(partidoService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("No existe el partido 99"));
 
         mockMvc.perform(get("/api/partidos/99"))
                 .andExpect(status().isNotFound());

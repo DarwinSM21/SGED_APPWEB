@@ -56,7 +56,7 @@ public class EstudianteController {
      *
      * @param id identificador del estudiante
      * @return {@code 200 OK} con el estudiante
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{id}")
@@ -71,7 +71,7 @@ public class EstudianteController {
      *
      * @param request datos del estudiante; validado con {@code @Valid}
      * @return {@code 201 Created} con el estudiante registrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la persona, la categoría o el estado referidos no existen
      * @throws IllegalArgumentException si la persona ya tiene ficha activa o
      *         el código de estudiante está en uso ({@code 422})
@@ -90,7 +90,7 @@ public class EstudianteController {
      * @param id      identificador del estudiante a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con el estudiante actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante o alguna referencia no existen ({@code 404})
      * @throws IllegalArgumentException si el código nuevo pertenece a otro
      *         estudiante ({@code 422})
@@ -111,7 +111,7 @@ public class EstudianteController {
      * @param id      identificador del estudiante
      * @param request cuerpo con {@code idPosicion} ({@code null} para quitarla)
      * @return {@code 200 OK} con el estudiante actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante o la posición no existen ({@code 404})
      */
     @PutMapping("/{id}/posicion")
@@ -126,7 +126,7 @@ public class EstudianteController {
      *
      * @param id identificador del estudiante
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")
@@ -168,7 +168,7 @@ public class EstudianteController {
      *
      * @param id identificador del estudiante
      * @return {@code 200 OK} con el estudiante reactivado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si ya está activo ({@code 422})
      */
@@ -197,7 +197,7 @@ public class EstudianteController {
      *
      * @param id identificador del estudiante
      * @return {@code 200 OK} con el texto del contacto
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no existe ({@code 404})
      */
     @GetMapping("/{id}/contacto-emergencia")
@@ -215,7 +215,7 @@ public class EstudianteController {
      * @param request credenciales de la cuenta a crear; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con el estudiante y su acceso habilitado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no existe ({@code 404})
      * @throws IllegalArgumentException si el {@code username} ya existe o la
      *         persona tiene una cuenta de otro rol ({@code 422})

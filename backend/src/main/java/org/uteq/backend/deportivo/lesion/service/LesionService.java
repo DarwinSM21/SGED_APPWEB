@@ -7,8 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
@@ -41,7 +41,7 @@ public class LesionService {
      * @param fechaEstimadaRetorno fecha estimada de retorno; puede ser
      *                             {@code null}
      * @return la lesión registrada
-     * @throws RecursoNoEncontradoException si el estudiante o el entrenador
+     * @throws ResourceNotFoundException si el estudiante o el entrenador
      *                                      no existen
      * @throws IllegalArgumentException     si el estudiante ya tiene una
      *                                      lesión activa, o la fecha estimada
@@ -54,10 +54,10 @@ public class LesionService {
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
                             LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
         var estudiante = estudianteRepository.findById(idEstudiante)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No existe el estudiante " + idEstudiante));
         var entrenador = entrenadorRepository.findById(idEntrenador)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No existe el entrenador " + idEntrenador));
 
         // La base tiene un índice único parcial que impide dos lesiones activas
@@ -69,7 +69,7 @@ public class LesionService {
                             + l.getFechaLesion() + ". Da de alta esa antes de registrar otra.");
         });
 
-        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now(Zonas.ECUADOR);
+        LocalDate fecha = fechaLesion != null ? fechaLesion : LocalDate.now(Zones.ECUADOR);
         if (fechaEstimadaRetorno != null && fechaEstimadaRetorno.isBefore(fecha)) {
             throw new IllegalArgumentException(
                     "La fecha estimada de retorno no puede ser anterior a la de la lesion");
@@ -92,7 +92,7 @@ public class LesionService {
      * @param idLesion  identificador de la lesión
      * @param fechaAlta fecha de alta; {@code null} usa hoy
      * @return la lesión dada de alta
-     * @throws RecursoNoEncontradoException si la lesión no existe
+     * @throws ResourceNotFoundException si la lesión no existe
      * @throws IllegalArgumentException     si ya tiene fecha de alta, o el
      *                                      alta es anterior a la fecha de la
      *                                      lesión
@@ -102,14 +102,14 @@ public class LesionService {
     @Transactional
     public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {
         var lesion = lesionRepository.findById(idLesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "No existe la lesion " + idLesion));
 
         if (lesion.getFechaAlta() != null) {
             throw new IllegalArgumentException("Esa lesion ya tiene fecha de alta");
         }
 
-        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now(Zonas.ECUADOR);
+        LocalDate fecha = fechaAlta != null ? fechaAlta : LocalDate.now(Zones.ECUADOR);
         if (fecha.isBefore(lesion.getFechaLesion())) {
             throw new IllegalArgumentException(
                     "El alta no puede ser anterior a la fecha de la lesion");

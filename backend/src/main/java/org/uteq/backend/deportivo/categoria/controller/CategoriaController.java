@@ -54,7 +54,7 @@ public class CategoriaController {
      *
      * @param id identificador de la categoría
      * @return {@code 200 OK} con la categoría
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{id}")
@@ -84,7 +84,7 @@ public class CategoriaController {
      * @param id      identificador de la categoría a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con la categoría actualizada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si el nombre pertenece a otra
      *                                  categoría o el rango de edad es
@@ -102,7 +102,7 @@ public class CategoriaController {
      *
      * @param id identificador de la categoría
      * @return {@code 200 OK} con la categoría reactivada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @PostMapping("/{id}/reactivar")
@@ -116,7 +116,7 @@ public class CategoriaController {
      *
      * @param id identificador de la categoría
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")

@@ -77,7 +77,7 @@ public class SesionEntrenamientoController {
      *
      * @param idSesion identificador de la sesión
      * @return {@code 200 OK} con el resumen y la nómina de asistencia
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no existe ({@code 404})
      */
     @GetMapping("/{idSesion}/historial")
@@ -95,7 +95,7 @@ public class SesionEntrenamientoController {
      * @param request categoría, fecha, franja horaria y campo; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con la sesión creada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene entrenador asociado o la categoría no
      *         existe ({@code 404})
      * @throws IllegalArgumentException si la franja es inválida o se solapa

@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.*;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
@@ -32,13 +32,13 @@ public class MiEquipoService {
      * @param username nombre de usuario del estudiante autenticado
      * @return categoría, posición, entrenador de la próxima sesión y
      *         compañeros de categoría
-     * @throws RecursoNoEncontradoException si la cuenta no tiene un estudiante
+     * @throws ResourceNotFoundException si la cuenta no tiene un estudiante
      *                                      asociado
      */
     @Transactional(readOnly = true)
     public MiEquipoResponse miEquipo(String username) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         var categoria = estudiante.getCategoria();
         var categoriaResponse = new CategoriaDetalleResponse(
@@ -64,7 +64,7 @@ public class MiEquipoService {
     }
 
     private EntrenadorAsignadoResponse proximoEntrenadorDe(Long idCategoria) {
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         List<SesionEntrenamiento> proximas = sesionRepository
                 .findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
                         idCategoria, hoy, PageRequest.of(0, 1));

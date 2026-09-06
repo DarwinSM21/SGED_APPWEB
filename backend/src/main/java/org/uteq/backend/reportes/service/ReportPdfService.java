@@ -11,7 +11,7 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.Zones;
 
 import java.awt.Color;
 import java.io.ByteArrayOutputStream;
@@ -96,6 +96,6 @@ public class ReportPdfService {
     }
 
     private String fechaActual() {
-        return LocalDateTime.now(Zonas.ECUADOR).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
+        return LocalDateTime.now(Zones.ECUADOR).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

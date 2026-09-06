@@ -11,7 +11,7 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.academico.representante.service.NotificacionService;
-import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.MarcaAsistencia;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.PasarListaRequest;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
@@ -74,7 +74,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("pasarLista registra al estudiante que no escaneo el QR")
     void pasarLista_registra_al_que_no_escaneo() {
-        var hoy = LocalDate.now(Zonas.ECUADOR);
+        var hoy = LocalDate.now(Zones.ECUADOR);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
         when(estudianteRepository.findByIdEstudianteAndActivoTrue(6L))
@@ -93,7 +93,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("la lista manual no inventa una hora de llegada")
     void pasarLista_no_inventa_hora_de_llegada() {
-        var hoy = LocalDate.now(Zonas.ECUADOR);
+        var hoy = LocalDate.now(Zones.ECUADOR);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
         when(estudianteRepository.findByIdEstudianteAndActivoTrue(6L))
@@ -112,7 +112,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("corregir a PRESENTE conserva la hora real que ya habia medido el QR")
     void pasarLista_conserva_la_hora_del_qr() {
-        var hoy = LocalDate.now(Zonas.ECUADOR);
+        var hoy = LocalDate.now(Zones.ECUADOR);
         var horaReal = LocalTime.of(18, 3, 12);
         var yaMarcada = Asistencia.builder()
                 .estudiante(estudiante(6L, ID_CATEGORIA))
@@ -140,7 +140,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("marcar AUSENTE borra la hora de entrada que hubiera")
     void pasarLista_ausente_borra_la_hora() {
-        var hoy = LocalDate.now(Zonas.ECUADOR);
+        var hoy = LocalDate.now(Zones.ECUADOR);
         var yaMarcada = Asistencia.builder()
                 .estudiante(estudiante(6L, ID_CATEGORIA))
                 .estado(Asistencia.ESTADO_PRESENTE)
@@ -165,7 +165,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("no se puede pasar lista de una sesion que todavia no ocurrio")
     void pasarLista_rechaza_sesion_futura() {
-        var manana = LocalDate.now(Zonas.ECUADOR).plusDays(1);
+        var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
 
         assertThatThrownBy(() -> asistenciaService.pasarLista(ID_SESION, lista(6L, Asistencia.ESTADO_PRESENTE)))
@@ -178,7 +178,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("un estudiante de otra categoria no entra en la lista de esta sesion")
     void pasarLista_rechaza_estudiante_de_otra_categoria() {
-        var hoy = LocalDate.now(Zonas.ECUADOR);
+        var hoy = LocalDate.now(Zones.ECUADOR);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
         when(estudianteRepository.findByIdEstudianteAndActivoTrue(9L))
@@ -194,7 +194,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("la nomina lista a toda la categoria, no solo a quienes ya marcaron")
     void nomina_incluye_a_los_que_faltan_por_marcar() {
-        var hoy = LocalDate.now(Zonas.ECUADOR);
+        var hoy = LocalDate.now(Zones.ECUADOR);
         var conMarca = Asistencia.builder()
                 .estudiante(estudiante(6L, ID_CATEGORIA))
                 .estado(Asistencia.ESTADO_PRESENTE)
@@ -220,7 +220,7 @@ class PasarListaServiceTest {
     @Test
     @DisplayName("la nomina de una sesion futura se puede ver pero no editar")
     void nomina_de_sesion_futura_no_es_editable() {
-        var manana = LocalDate.now(Zonas.ECUADOR).plusDays(1);
+        var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
         when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))

@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
 import org.uteq.backend.inventario.articulo.repository.ArticuloRepository;
 import org.uteq.backend.inventario.movimiento.dto.MovimientoDtos.*;
@@ -59,7 +59,7 @@ public class MovimientoStockService {
      *                            motivo
      * @param usernameRegistrador usuario que registra el movimiento
      * @return el movimiento registrado
-     * @throws RecursoNoEncontradoException si el artículo no existe
+     * @throws ResourceNotFoundException si el artículo no existe
      * @throws IllegalArgumentException     si una salida dejaría el stock
      *                                      negativo
      */
@@ -97,7 +97,7 @@ public class MovimientoStockService {
 
     private Articulo buscarArticulo(Long id) {
         return articuloRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Artículo no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado con ID: " + id));
     }
 
     private Usuario buscarUsuario(String username) {

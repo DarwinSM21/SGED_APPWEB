@@ -8,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.AsistenciaResponse;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.DiaAsistenciaResponse;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.MapaAsistenciaResponse;
@@ -62,7 +62,7 @@ public class AsistenciaService {
      * @param username nombre de usuario del estudiante
      * @param idSesion sesión a la que corresponde el token canjeado
      * @return la asistencia registrada
-     * @throws RecursoNoEncontradoException si la cuenta no tiene estudiante
+     * @throws ResourceNotFoundException si la cuenta no tiene estudiante
      *                                      asociado o la sesión no existe
      * @throws IllegalArgumentException     si ya marcó asistencia en esa
      *                                      sesión o la sesión no es de su
@@ -71,7 +71,7 @@ public class AsistenciaService {
     @Transactional
     public Asistencia marcarPorQr(String username, Long idSesion) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())
                 .ifPresent(a -> {
@@ -79,7 +79,7 @@ public class AsistenciaService {
                 });
 
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Sesión no encontrada con id: " + idSesion));
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada con id: " + idSesion));
 
         Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(
                 estudiante.getIdEstudiante(), idSesion);
@@ -87,7 +87,7 @@ public class AsistenciaService {
             throw new IllegalArgumentException("Esta sesión no corresponde a tu categoría");
         }
 
-        LocalTime ahora = LocalTime.now(Zonas.ECUADOR).truncatedTo(ChronoUnit.SECONDS);
+        LocalTime ahora = LocalTime.now(Zones.ECUADOR).truncatedTo(ChronoUnit.SECONDS);
         Asistencia asistencia = Asistencia.builder()
                 .sesion(sesion)
                 .estudiante(estudiante)
@@ -109,12 +109,12 @@ public class AsistenciaService {
      *
      * @param idSesion identificador de la sesión
      * @return la nómina, con el indicador de si aún es editable
-     * @throws RecursoNoEncontradoException si la sesión no existe
+     * @throws ResourceNotFoundException si la sesión no existe
      */
     @Transactional(readOnly = true)
     public NominaResponse nomina(Long idSesion) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Sesión no encontrada con id: " + idSesion));
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada con id: " + idSesion));
 
         Map<Long, Asistencia> yaRegistradas = new LinkedHashMap<>();
         for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {
@@ -148,7 +148,7 @@ public class AsistenciaService {
      * @param idSesion identificador de la sesión
      * @param request  estado y observación por estudiante
      * @return la nómina resultante
-     * @throws RecursoNoEncontradoException si la sesión o algún estudiante no
+     * @throws ResourceNotFoundException si la sesión o algún estudiante no
      *                                      existen
      * @throws IllegalArgumentException     si la sesión aún no ocurrió o
      *                                      algún estudiante no es de la
@@ -157,7 +157,7 @@ public class AsistenciaService {
     @Transactional
     public NominaResponse pasarLista(Long idSesion, PasarListaRequest request) {
         SesionEntrenamiento sesion = sesionRepository.findById(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Sesión no encontrada con id: " + idSesion));
+                .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada con id: " + idSesion));
 
         String motivo = motivoNoEditable(sesion);
         if (motivo != null) {
@@ -172,7 +172,7 @@ public class AsistenciaService {
         for (MarcaAsistencia marca : request.marcas()) {
             Estudiante estudiante = estudianteRepository
                     .findByIdEstudianteAndActivoTrue(marca.idEstudiante())
-                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                    .orElseThrow(() -> new ResourceNotFoundException(
                             "Estudiante no encontrado o inactivo: " + marca.idEstudiante()));
 
             // Un estudiante de otra categoría ensuciaría el porcentaje de
@@ -212,7 +212,7 @@ public class AsistenciaService {
 
     // Una sesión que todavía no ocurrió no admite lista: nadie pudo asistir.
     private String motivoNoEditable(SesionEntrenamiento sesion) {
-        if (sesion.getFecha().isAfter(LocalDate.now(Zonas.ECUADOR))) {
+        if (sesion.getFecha().isAfter(LocalDate.now(Zones.ECUADOR))) {
             return "La sesión es del " + sesion.getFecha() + ": todavía no ocurre";
         }
         return null;
@@ -233,13 +233,13 @@ public class AsistenciaService {
      *
      * @param username nombre de usuario del estudiante
      * @return el historial y el porcentaje reciente
-     * @throws RecursoNoEncontradoException si la cuenta no tiene estudiante
+     * @throws ResourceNotFoundException si la cuenta no tiene estudiante
      *                                      asociado
      */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
         Estudiante estudiante = estudianteRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         List<AsistenciaResponse> asistencias = asistenciaRepository
                 .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())
@@ -247,7 +247,7 @@ public class AsistenciaService {
                 .map(this::aResponse)
                 .toList();
 
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         BigDecimal porcentaje = asistenciaRepository
                 .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);
 
@@ -274,7 +274,7 @@ public class AsistenciaService {
     @Transactional(readOnly = true)
     public MapaAsistenciaResponse mapaDeAsistencia(int dias) {
         int ventana = Math.max(7, Math.min(dias, 120));
-        LocalDate hasta = LocalDate.now(Zonas.ECUADOR).minusDays(1);
+        LocalDate hasta = LocalDate.now(Zones.ECUADOR).minusDays(1);
         LocalDate desde = hasta.minusDays(ventana - 1L);
 
         Map<LocalDate, long[]> porDia = new LinkedHashMap<>();

@@ -48,7 +48,7 @@ public class InformeRepresentanteController {
      *
      * @param idEstudiante identificador del estudiante
      * @return {@code 200 OK} con el informe
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no está vinculado al representante ({@code 404})
      */
     @GetMapping("/estudiantes/{idEstudiante}/informe")
@@ -64,7 +64,7 @@ public class InformeRepresentanteController {
      *
      * @param idEstudiante identificador del estudiante
      * @return {@code 200 OK} con el comentario generado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no está vinculado al representante ({@code 404})
      */
     @PostMapping("/estudiantes/{idEstudiante}/informe/comentario")
@@ -100,7 +100,7 @@ public class InformeRepresentanteController {
      *
      * @param idNotificacion identificador de la notificación
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la notificación no existe o no es del representante
      *         ({@code 404})
      */

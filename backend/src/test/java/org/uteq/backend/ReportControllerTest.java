@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.reportes.controller.ReportController;
 import org.uteq.backend.reportes.service.ReportService;
 
@@ -68,7 +68,7 @@ class ReportControllerTest {
     @DisplayName("Sin resultados para los filtros, el servicio 404 se propaga tal cual")
     void noResultsReturns404() throws Exception {
         when(reportService.injuries(any(), any(), any(), any()))
-                .thenThrow(new RecursoNoEncontradoException("No hay datos para los filtros seleccionados"));
+                .thenThrow(new ResourceNotFoundException("No hay datos para los filtros seleccionados"));
 
         mockMvc.perform(get("/api/reportes/lesiones"))
                 .andExpect(status().isNotFound());

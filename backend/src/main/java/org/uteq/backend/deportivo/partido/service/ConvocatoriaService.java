@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.GeneradorFeedbackIA;
 import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -81,12 +81,12 @@ public class ConvocatoriaService {
      *
      * @param idPartido identificador del partido
      * @return la convocatoria sugerida (no se guarda sola)
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      */
     @Transactional(readOnly = true)
     public Convocatoria calcular(Long idPartido) {
         Partido partido = partidoRepository.findWithCategoriaByIdPartido(idPartido)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe el partido " + idPartido));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe el partido " + idPartido));
         return calcular(partido);
     }
 

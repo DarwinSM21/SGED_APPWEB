@@ -10,7 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.rol.entity.Rol;
@@ -42,7 +42,7 @@ public class PerfilController {
      *
      * @return {@code 200 OK} con el PDF como {@code application/pdf} y
      *         {@code Content-Disposition: attachment}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el usuario en sesión no se encuentra en base
      */
     @GetMapping("/datos-pdf")
@@ -50,7 +50,7 @@ public class PerfilController {
     public ResponseEntity<byte[]> descargarMisDatos() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Usuario usuario = usuarioRepository.findByUsername(auth.getName())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + auth.getName()));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + auth.getName()));
 
         Persona persona = usuario.getPersona();
         String roles = usuario.getRoles() == null || usuario.getRoles().isEmpty()

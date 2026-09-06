@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.Zones;
 import org.uteq.backend.seguridad.auditoria.dto.AuditoriaResponse;
 import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
 
@@ -57,9 +57,9 @@ public class AuditoriaController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "fecha"));
         OffsetDateTime desde = fechaDesde != null
-                ? fechaDesde.atStartOfDay(Zonas.ECUADOR).toOffsetDateTime() : null;
+                ? fechaDesde.atStartOfDay(Zones.ECUADOR).toOffsetDateTime() : null;
         OffsetDateTime hasta = fechaHasta != null
-                ? fechaHasta.plusDays(1).atStartOfDay(Zonas.ECUADOR).toOffsetDateTime() : null;
+                ? fechaHasta.plusDays(1).atStartOfDay(Zones.ECUADOR).toOffsetDateTime() : null;
 
         return ResponseEntity.ok(auditoriaService.buscar(usuario, accion, entidad, desde, hasta, pageable));
     }

@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaRequest;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaResponse;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -54,12 +54,12 @@ public class CategoriaService {
      *
      * @param id identificador de la categoría
      * @return la categoría encontrada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public CategoriaResponse buscarPorId(Long id) {
         Categoria c = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         return toResponse(c);
     }
 
@@ -97,7 +97,7 @@ public class CategoriaService {
      * @param id      identificador de la categoría a editar
      * @param request datos nuevos
      * @return la categoría actualizada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el nombre pertenece a otra
      *                                      categoría o el rango es inválido
      */
@@ -111,7 +111,7 @@ public class CategoriaService {
         validarEdades(request.edadMin(), request.edadMax());
 
         Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
 
         categoria.setNombre(nombre);
         categoria.setEdadMin(request.edadMin());
@@ -129,12 +129,12 @@ public class CategoriaService {
      *
      * @param id identificador de la categoría
      * @return la categoría reactivada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional
     public CategoriaResponse reactivar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         categoria.setActivo(true);
         return toResponse(categoriaRepository.save(categoria));
     }
@@ -143,14 +143,14 @@ public class CategoriaService {
      * Baja lógica de una categoría ({@code activo = false}).
      *
      * @param id identificador de la categoría
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Categoria", idSpel = "#p0",
             descripcionSpel = "'desactivo la categoria #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
         categoria.setActivo(false);
         categoriaRepository.save(categoria);
     }

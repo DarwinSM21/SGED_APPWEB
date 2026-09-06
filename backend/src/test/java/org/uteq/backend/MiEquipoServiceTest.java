@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.estudiante.service.MiEquipoService;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
@@ -60,7 +60,7 @@ class MiEquipoServiceTest {
         when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> servicio.miEquipo("huerfano@sged.test"))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

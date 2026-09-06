@@ -33,7 +33,7 @@ public class HorarioController {
      * @param request categoría, día, franja horaria y campo; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con el horario creado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene entrenador asociado o la categoría no
      *         existe ({@code 404})
      * @throws IllegalArgumentException si la franja es inválida o se cruza
@@ -62,7 +62,7 @@ public class HorarioController {
      * @param idHorario identificador del horario
      * @param request   datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con el horario actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el horario no existe o no es suyo ({@code 404})
      * @throws IllegalArgumentException si la franja es inválida o se cruza
      *         con otro horario suyo ({@code 422})
@@ -78,7 +78,7 @@ public class HorarioController {
      *
      * @param idHorario identificador del horario
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el horario no existe o no es suyo ({@code 404})
      */
     @DeleteMapping("/{idHorario}")

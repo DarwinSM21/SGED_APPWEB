@@ -43,7 +43,7 @@ public class UsuarioController {
      *
      * @param id identificador de la cuenta
      * @return {@code 200 OK} con la cuenta
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe o está inactivada ({@code 404})
      */
     @GetMapping("/{id}")
@@ -72,7 +72,7 @@ public class UsuarioController {
      * @param id      identificador de la cuenta a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con la cuenta actualizada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta o la persona no existen ({@code 404})
      * @throws IllegalArgumentException si el {@code username} nuevo ya está
      *                                  ocupado o el rol no es coherente
@@ -90,7 +90,7 @@ public class UsuarioController {
      *
      * @param id identificador de la cuenta
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")
@@ -104,7 +104,7 @@ public class UsuarioController {
      *
      * @param id identificador de la cuenta
      * @return {@code 200 OK} con la cuenta reactivada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si la cuenta ya está activa ({@code 422})
      */

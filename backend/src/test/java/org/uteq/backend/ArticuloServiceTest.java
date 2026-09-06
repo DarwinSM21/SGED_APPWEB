@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.ArticuloRequest;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.ArticuloResponse;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.StockBajoResponse;
@@ -66,12 +66,12 @@ class ArticuloServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException cuando no existe")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(articuloRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> articuloService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

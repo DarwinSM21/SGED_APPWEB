@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadRequest;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadResponse;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
@@ -61,12 +61,12 @@ class EspecialidadServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException cuando no existe")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(especialidadRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> especialidadService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

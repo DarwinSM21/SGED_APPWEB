@@ -65,7 +65,7 @@ public class ArticuloController {
      *
      * @param id identificador del artículo
      * @return {@code 200 OK} con el artículo
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{id}")
@@ -92,7 +92,7 @@ public class ArticuloController {
      * @param id      identificador del artículo a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con el artículo actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @PutMapping("/{id}")
@@ -106,7 +106,7 @@ public class ArticuloController {
      *
      * @param id identificador del artículo
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")
@@ -121,7 +121,7 @@ public class ArticuloController {
      *
      * @param id identificador del artículo
      * @return {@code 200 OK} con el artículo reactivado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si ya está activo ({@code 422})
      */

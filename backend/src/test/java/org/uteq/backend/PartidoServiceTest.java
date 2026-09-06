@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
@@ -89,7 +89,7 @@ class PartidoServiceTest {
     void resultadoDePartidoInexistente() {
         when(partidoRepository.findWithCategoriaByIdPartido(99L)).thenReturn(Optional.empty());
         var request = new ResultadoRequest((short) 1, (short) 0, null);
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.registrarResultado(99L, request));
+        assertThrows(ResourceNotFoundException.class, () -> servicio.registrarResultado(99L, request));
     }
 
     @Test

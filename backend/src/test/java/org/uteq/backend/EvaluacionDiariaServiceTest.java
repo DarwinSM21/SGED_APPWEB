@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -197,7 +197,7 @@ class EvaluacionDiariaServiceTest {
     void sesionInexistente() {
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.abrir(ID_SESION));
+        assertThrows(ResourceNotFoundException.class, () -> servicio.abrir(ID_SESION));
         verify(evaluacionRepository, never()).save(any());
     }
 

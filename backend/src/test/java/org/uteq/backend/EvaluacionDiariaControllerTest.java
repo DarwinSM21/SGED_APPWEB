@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.evaluacion.controller.EvaluacionDiariaController;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.EvaluacionSesionResponse;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.GuardarJugadorRequest;
@@ -58,7 +58,7 @@ class EvaluacionDiariaControllerTest {
     @Test
     @DisplayName("GET /api/evaluaciones/sesion/{id} - 404 si la sesion no existe")
     void abrir_sesion_inexistente_da_404() throws Exception {
-        when(evaluacionService.abrir(99L)).thenThrow(new RecursoNoEncontradoException("no existe"));
+        when(evaluacionService.abrir(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/evaluaciones/sesion/99"))
                 .andExpect(status().isNotFound());

@@ -10,8 +10,8 @@ import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
 import org.uteq.backend.academico.pago.dto.PagoDtos.HistoricoIngresosResponse;
 import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
@@ -52,7 +52,7 @@ public class PagoService {
      * @param fechaPago           fecha del cobro; {@code null} usa la de hoy
      * @param usernameRegistrador usuario que registra el pago
      * @return los pagos creados, uno por mes
-     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws ResourceNotFoundException si el estudiante no existe
      * @throws IllegalArgumentException     si algún mes ya está cubierto
      */
     @Auditado(accion = "CREAR", entidad = "Pago",
@@ -72,7 +72,7 @@ public class PagoService {
             }
         }
 
-        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR);
+        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR);
         List<Pago> pagos = mesesUnicos.stream()
                 .map(mes -> Pago.builder()
                         .estudiante(estudiante)
@@ -95,7 +95,7 @@ public class PagoService {
      * @param fechaPago           fecha del cobro; {@code null} usa la de hoy
      * @param usernameRegistrador usuario que registra el pago
      * @return el pago creado
-     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws ResourceNotFoundException si el estudiante no existe
      */
     @Auditado(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago",
             descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
@@ -108,7 +108,7 @@ public class PagoService {
                 .estudiante(estudiante)
                 .tipo(TipoPago.DIARIO)
                 .monto(monto)
-                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zonas.ECUADOR))
+                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR))
                 .registradoPor(registrador)
                 .build());
     }
@@ -118,12 +118,12 @@ public class PagoService {
      *
      * @param idEstudiante identificador del estudiante
      * @return la lista de pagos (incluye los anulados)
-     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws ResourceNotFoundException si el estudiante no existe
      */
     @Transactional(readOnly = true)
     public List<Pago> historialDe(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
-            throw new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante);
+            throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
         return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);
     }
@@ -136,7 +136,7 @@ public class PagoService {
      */
     @Transactional(readOnly = true)
     public IngresosMesResponse ingresosDelMes() {
-        YearMonth mesActual = YearMonth.now(Zonas.ECUADOR);
+        YearMonth mesActual = YearMonth.now(Zones.ECUADOR);
         LocalDate inicio = mesActual.atDay(1);
         LocalDate fin = mesActual.atEndOfMonth();
 
@@ -159,7 +159,7 @@ public class PagoService {
     @Transactional(readOnly = true)
     public HistoricoIngresosResponse historicoIngresos(int meses) {
         int cantidad = Math.max(1, Math.min(meses, 24));
-        YearMonth actual = YearMonth.now(Zonas.ECUADOR);
+        YearMonth actual = YearMonth.now(Zones.ECUADOR);
         YearMonth primero = actual.minusMonths(cantidad - 1L);
 
         Map<YearMonth, IngresosMesResponse> porMes = new HashMap<>();
@@ -200,14 +200,14 @@ public class PagoService {
      * @param motivo          motivo de la anulación
      * @param usernameAnulador usuario que anula
      * @return el pago anulado
-     * @throws RecursoNoEncontradoException si el pago no existe
+     * @throws ResourceNotFoundException si el pago no existe
      * @throws IllegalArgumentException     si el pago ya estaba anulado
      */
     @Auditado(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
     @Transactional
     public Pago anular(Long idPago, String motivo, String usernameAnulador) {
         Pago pago = pagoRepository.findById(idPago)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pago no encontrado con id: " + idPago));
+                .orElseThrow(() -> new ResourceNotFoundException("Pago no encontrado con id: " + idPago));
 
         if (!pago.estaVigente()) {
             throw new IllegalArgumentException("Este pago ya estaba anulado");
@@ -221,7 +221,7 @@ public class PagoService {
 
     private Estudiante buscarEstudiante(Long id) {
         return estudianteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
     }
 
     private Usuario buscarUsuario(String username) {

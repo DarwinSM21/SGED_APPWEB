@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.inventario.articulo.controller.ArticuloController;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.ArticuloRequest;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.ArticuloResponse;
@@ -87,7 +87,7 @@ class ArticuloControllerTest {
     @Test
     @DisplayName("GET /api/inventario/articulos/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(articuloService.buscarPorId(99L)).thenThrow(new RecursoNoEncontradoException("no existe"));
+        when(articuloService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/inventario/articulos/99"))
                 .andExpect(status().isNotFound());

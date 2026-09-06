@@ -17,7 +17,7 @@ import org.uteq.backend.academico.representante.dto.RepresentanteRequest;
 import org.uteq.backend.academico.representante.dto.RepresentanteResponse;
 import org.uteq.backend.academico.representante.service.RepresentanteService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 
 import java.time.Instant;
 import java.util.List;
@@ -67,7 +67,7 @@ class RepresentanteControllerTest {
     @Test
     @DisplayName("GET /api/representantes/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(representanteService.buscarPorId(99L)).thenThrow(new RecursoNoEncontradoException("no existe"));
+        when(representanteService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/representantes/99"))
                 .andExpect(status().isNotFound());

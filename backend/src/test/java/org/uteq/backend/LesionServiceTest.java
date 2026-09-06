@@ -11,7 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -92,7 +92,7 @@ class LesionServiceTest {
     void estudianteInexistente() {
         when(estudianteRepository.findById(ID_EST)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> servicio.registrar(ID_EST, ID_ENT, "x", null, null));
     }
 
@@ -103,7 +103,7 @@ class LesionServiceTest {
                 .thenReturn(Optional.of(Estudiante.builder().idEstudiante(ID_EST).build()));
         when(entrenadorRepository.findById(ID_ENT)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> servicio.registrar(ID_EST, ID_ENT, "x", null, null));
 
         verify(lesionRepository, never()).save(any());
@@ -153,7 +153,7 @@ class LesionServiceTest {
     void darDeAltaLesionInexistente() {
         when(lesionRepository.findById(9L)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.darDeAlta(9L, null));
+        assertThrows(ResourceNotFoundException.class, () -> servicio.darDeAlta(9L, null));
     }
 
     @Test

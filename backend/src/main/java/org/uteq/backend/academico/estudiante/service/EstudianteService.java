@@ -14,8 +14,8 @@ import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
@@ -64,7 +64,7 @@ public class EstudianteService {
      * @param pageable paginación y orden
      * @return la página solicitada, envuelta en {@link EstudiantePageResponse}
      */
-    @Cacheable(value = RedisCacheConfig.CACHE_ESTUDIANTES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    @Cacheable(value = RedisCacheConfig.CACHE_STUDENTS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EstudiantePageResponse<EstudianteResponse> listar(Pageable pageable) {
         Page<Estudiante> page = estudianteRepository.findAll(pageable);
@@ -86,12 +86,12 @@ public class EstudianteService {
      *
      * @param id identificador del estudiante
      * @return el estudiante encontrado
-     * @throws RecursoNoEncontradoException si no existe o está inactivado
+     * @throws ResourceNotFoundException si no existe o está inactivado
      */
     @Transactional(readOnly = true)
     public EstudianteResponse buscarPorId(Long id) {
         Estudiante e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
-            .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + id));
+            .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
         return toResponse(e);
     }
 
@@ -102,7 +102,7 @@ public class EstudianteService {
      *
      * @param request datos del estudiante
      * @return el estudiante registrado o reactivado
-     * @throws RecursoNoEncontradoException si la persona, la categoría o el
+     * @throws ResourceNotFoundException si la persona, la categoría o el
      *                                      estado referidos no existen
      * @throws IllegalArgumentException     si la persona ya tiene ficha
      *                                      activa, si el código de estudiante
@@ -111,7 +111,7 @@ public class EstudianteService {
      */
     @Auditado(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public EstudianteResponse crear(EstudianteRequest request) {
         estudianteAccesoService.validarCoherenciaConFichaEstudiante(request.idPersona());
@@ -128,15 +128,15 @@ public class EstudianteService {
 
             // Estaba inactivo: se reactiva y se actualiza con los datos nuevos.
             Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
 
             EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
+                    .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
             est.setCategoria(categoria);
             est.setEstadoGeneral(estadoGeneral);
             est.setCodigoEstudiante(request.codigoEstudiante());
-            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR));
+            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));
             est.setPeso(request.peso());
             est.setAltura(request.altura());
             est.setPosicion(resolverPosicion(request.idPosicion()));
@@ -152,22 +152,22 @@ public class EstudianteService {
         }
 
         Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + request.idPersona()));
 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + request.idCategoria()));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
 
         validarEdadEnCategoria(persona, categoria);
 
         EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + request.idEstadoGeneral()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
         Estudiante estudiante = Estudiante.builder()
                 .persona(persona)
                 .categoria(categoria)
                 .estadoGeneral(estadoGeneral)
                 .codigoEstudiante(request.codigoEstudiante())
-                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zonas.ECUADOR))
+                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))
                 .peso(request.peso())
                 .altura(request.altura())
                 .posicion(resolverPosicion(request.idPosicion()))
@@ -185,7 +185,7 @@ public class EstudianteService {
      * @param id      identificador del estudiante a editar
      * @param request datos nuevos
      * @return el estudiante actualizado
-     * @throws RecursoNoEncontradoException si el estudiante o alguna
+     * @throws ResourceNotFoundException si el estudiante o alguna
      *                                      referencia nueva no existen
      * @throws IllegalArgumentException     si el código pertenece a otro
      *                                      estudiante, la persona nueva ya es
@@ -194,11 +194,11 @@ public class EstudianteService {
      */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public EstudianteResponse editar(Long id, EstudianteRequest request) {
         Estudiante estudiante = estudianteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
 
         // Si cambia de código, ese código no puede pertenecer a otro estudiante.
@@ -234,16 +234,16 @@ public class EstudianteService {
      * @param idPosicion identificador de la posición, o {@code null} para
      *                   dejar al estudiante sin posición
      * @return el estudiante actualizado
-     * @throws RecursoNoEncontradoException si el estudiante o la posición no
+     * @throws ResourceNotFoundException si el estudiante o la posición no
      *                                      existen
      */
     @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public EstudianteResponse actualizarPosicion(Long id, Long idPosicion) {
         Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
         estudiante.setPosicion(resolverPosicion(idPosicion));
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
@@ -261,7 +261,7 @@ public class EstudianteService {
             throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
         }
         Persona nuevaPersona = personaRepository.findById(idPersonaNueva)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + idPersonaNueva));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + idPersonaNueva));
         estudiante.setPersona(nuevaPersona);
     }
 
@@ -290,7 +290,7 @@ public class EstudianteService {
             return;
         }
 
-        int edad = Period.between(nacimiento, LocalDate.now(Zonas.ECUADOR)).getYears();
+        int edad = Period.between(nacimiento, LocalDate.now(Zones.ECUADOR)).getYears();
         if (edad < categoria.getEdadMin() || edad > categoria.getEdadMax()) {
             throw new IllegalArgumentException(
                     persona.getNombre() + " " + persona.getApellido() + " tiene " + edad
@@ -304,7 +304,7 @@ public class EstudianteService {
             return;
         }
         Categoria categoria = categoriaRepository.findById(idCategoriaNueva)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + idCategoriaNueva));
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + idCategoriaNueva));
         validarEdadEnCategoria(estudiante.getPersona(), categoria);
         estudiante.setCategoria(categoria);
     }
@@ -314,7 +314,7 @@ public class EstudianteService {
             return;
         }
         EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estado General no encontrado: " + idEstadoGeneralNuevo));
+                .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + idEstadoGeneralNuevo));
         estudiante.setEstadoGeneral(estadoGeneral);
     }
 
@@ -334,22 +334,22 @@ public class EstudianteService {
             return null;
         }
         return posicionRepository.findById(idPosicion)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Posición no encontrada: " + idPosicion));
+                .orElseThrow(() -> new ResourceNotFoundException("Posición no encontrada: " + idPosicion));
     }
 
     /**
      * Baja lógica de un estudiante ({@code activo = false}).
      *
      * @param id identificador del estudiante
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0",
             descripcionSpel = "'desactivó la ficha de estudiante #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
         Estudiante estudiante = estudianteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
         estudiante.setActivo(false);
         estudianteRepository.save(estudiante);
@@ -360,16 +360,16 @@ public class EstudianteService {
      *
      * @param id identificador del estudiante
      * @return el estudiante reactivado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la ficha ya está activa
      */
     @Auditado(accion = "REACTIVAR", entidad = "Estudiante", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de estudiante #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public EstudianteResponse reactivar(Long id) {
         Estudiante estudiante = estudianteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
 
         if (Boolean.TRUE.equals(estudiante.getActivo())) {
@@ -402,7 +402,7 @@ public class EstudianteService {
      */
     @Auditado(accion = "EDITAR", entidad = "Estudiante",
             descripcionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void desactivarPorCategoria(Long idCategoria) {
         estudianteRepository.desactivarEstudiantesPorCategoria(idCategoria);
@@ -426,12 +426,12 @@ public class EstudianteService {
      *
      * @param idEstudiante identificador del estudiante
      * @return el texto de contacto, o {@code null}
-     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws ResourceNotFoundException si el estudiante no existe
      */
     @Transactional(readOnly = true)
     public String contactoDeEmergencia(Long idEstudiante) {
         if (!estudianteRepository.existsById(idEstudiante)) {
-            throw new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante);
+            throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
         return representanteEstudianteRepository.contactoDe(idEstudiante);
     }
@@ -444,7 +444,7 @@ public class EstudianteService {
      * @param idEstudiante identificador del estudiante
      * @param request      credenciales de la cuenta a crear
      * @return el estudiante con su acceso habilitado
-     * @throws RecursoNoEncontradoException si el estudiante no existe
+     * @throws ResourceNotFoundException si el estudiante no existe
      * @throws IllegalArgumentException     si el estudiante ya tiene cuenta o
      *                                      el {@code username} está en uso
      */
@@ -453,7 +453,7 @@ public class EstudianteService {
     @Transactional
     public EstudianteResponse habilitarAcceso(Long idEstudiante, HabilitarAccesoRequest request) {
         Estudiante estudiante = estudianteRepository.findById(idEstudiante)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));
 
         if (estudiante.getUsuario() != null) {
             throw new IllegalArgumentException("Este estudiante ya tiene una cuenta de acceso");

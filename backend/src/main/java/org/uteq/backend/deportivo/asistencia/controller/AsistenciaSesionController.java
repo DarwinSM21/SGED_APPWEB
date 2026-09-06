@@ -35,7 +35,7 @@ public class AsistenciaSesionController {
      *
      * @param idSesion identificador de la sesión
      * @return {@code 200 OK} con la nómina
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no existe ({@code 404})
      */
     @GetMapping("/sesion/{idSesion}")
@@ -52,7 +52,7 @@ public class AsistenciaSesionController {
      * @param idSesion identificador de la sesión
      * @param request  estado por estudiante; validado con {@code @Valid}
      * @return {@code 200 OK} con la nómina actualizada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no existe ({@code 404})
      * @throws IllegalArgumentException si la sesión aún no ocurrió o el
      *         cuerpo referencia estudiantes que no son de la categoría

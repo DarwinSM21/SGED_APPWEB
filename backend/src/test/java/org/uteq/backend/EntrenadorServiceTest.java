@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorPageResponse;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorRequest;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorResponse;
@@ -88,12 +88,12 @@ class EntrenadorServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException cuando no existe")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(entrenadorRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> entrenadorService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -153,7 +153,7 @@ class EntrenadorServiceTest {
         when(especialidadRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> entrenadorService.crear(request))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

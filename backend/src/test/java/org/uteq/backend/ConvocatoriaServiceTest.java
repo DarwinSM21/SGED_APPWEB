@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.GeneradorFeedbackIA;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -201,7 +201,7 @@ class ConvocatoriaServiceTest {
     @DisplayName("partido inexistente da 404, no una convocatoria vacia")
     void partidoInexistente() {
         when(partidoRepository.findWithCategoriaByIdPartido(99L)).thenReturn(Optional.empty());
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.calcular(99L));
+        assertThrows(ResourceNotFoundException.class, () -> servicio.calcular(99L));
         verifyNoInteractions(estudianteRepository);
     }
 

@@ -8,7 +8,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
@@ -208,13 +208,13 @@ class AsignacionServiceTest {
     }
 
     @Test
-    @DisplayName("devolver una asignacion inexistente lanza RecursoNoEncontradoException")
+    @DisplayName("devolver una asignacion inexistente lanza ResourceNotFoundException")
     void devolver_asignacion_inexistente_lanza_excepcion() {
         when(asignacionRepository.findById(404L)).thenReturn(Optional.empty());
 
         DevolucionRequest request = new DevolucionRequest(EstadoAsignacion.DEVUELTO, null);
 
         assertThatThrownBy(() -> asignacionService.devolver(404L, request))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 }

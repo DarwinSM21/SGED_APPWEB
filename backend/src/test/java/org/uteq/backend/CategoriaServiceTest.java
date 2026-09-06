@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaRequest;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaResponse;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -78,12 +78,12 @@ class CategoriaServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException cuando no existe")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(categoriaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> categoriaService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

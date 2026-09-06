@@ -58,7 +58,7 @@ public class MovimientoStockController {
      * @param request artículo, tipo, cantidad y motivo; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con el movimiento registrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el artículo no existe ({@code 404})
      * @throws IllegalArgumentException si una salida dejaría el stock
      *         negativo ({@code 422})

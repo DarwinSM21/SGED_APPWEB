@@ -13,7 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
@@ -134,21 +134,21 @@ class UsuarioServiceTest {
     }
 
     @Test
-    @DisplayName("reactivar lanza RecursoNoEncontradoException si el usuario no existe")
+    @DisplayName("reactivar lanza ResourceNotFoundException si el usuario no existe")
     void reactivar_usuario_inexistente() {
         when(usuarioRepository.findById(404L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.reactivar(404L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException cuando no existe o esta inactivo")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe o esta inactivo")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(usuarioRepository.findByIdUsuarioAndActivoTrue(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -224,14 +224,14 @@ class UsuarioServiceTest {
     }
 
     @Test
-    @DisplayName("crear lanza RecursoNoEncontradoException si la persona no existe")
+    @DisplayName("crear lanza ResourceNotFoundException si la persona no existe")
     void crear_persona_inexistente_lanza_excepcion() {
         UsuarioRequest request = new UsuarioRequest(99L, 1L, "nuevo", "clave123", null);
         when(usuarioRepository.existsByUsernameIgnoreCase("nuevo")).thenReturn(false);
         when(personaRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.crear(request))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

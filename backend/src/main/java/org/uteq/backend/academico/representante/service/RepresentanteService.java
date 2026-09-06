@@ -16,7 +16,7 @@ import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.entity.RepresentanteEstudiante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -60,12 +60,12 @@ public class RepresentanteService {
      *
      * @param id identificador del representante
      * @return el representante encontrado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public RepresentanteResponse buscarPorId(Long id) {
         Representante r = representanteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
         return toResponse(r);
     }
 
@@ -76,7 +76,7 @@ public class RepresentanteService {
      * @param request persona, usuario, parentesco, contacto y representados
      *                iniciales
      * @return el representante registrado
-     * @throws RecursoNoEncontradoException si la persona, el usuario o algún
+     * @throws ResourceNotFoundException si la persona, el usuario o algún
      *                                      estudiante inicial no existen
      * @throws IllegalArgumentException     si la persona o el usuario ya
      *                                      están asignados, o si el usuario
@@ -92,9 +92,9 @@ public class RepresentanteService {
         }
 
         Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
         Usuario usuario = usuarioRepository.findById(request.idUsuario())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + request.idUsuario()));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
         boolean tieneRolRepresentante = usuario.getRoles().stream()
                 .anyMatch(r -> "REPRESENTANTE".equals(r.getNombre()));
@@ -128,12 +128,12 @@ public class RepresentanteService {
      * @param id      identificador del representante
      * @param request datos nuevos
      * @return el representante actualizado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional
     public RepresentanteResponse editar(Long id, RepresentanteRequest request) {
         Representante representante = representanteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
         representante.setParentesco(request.parentesco());
         representante.setTelefonoContacto(request.telefonoContacto());
         representante = representanteRepository.save(representante);
@@ -144,14 +144,14 @@ public class RepresentanteService {
      * Baja lógica de un representante ({@code activo = false}).
      *
      * @param id identificador del representante
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Representante", idSpel = "#p0",
             descripcionSpel = "'desactivo la ficha de representante #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Representante representante = representanteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
         representante.setActivo(false);
         representanteRepository.save(representante);
     }
@@ -161,7 +161,7 @@ public class RepresentanteService {
      *
      * @param id identificador del representante
      * @return el representante reactivado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
     @Auditado(accion = "REACTIVAR", entidad = "Representante", idSpel = "#p0",
@@ -169,7 +169,7 @@ public class RepresentanteService {
     @Transactional
     public RepresentanteResponse reactivar(Long id) {
         Representante representante = representanteRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
 
         if (Boolean.TRUE.equals(representante.getActivo())) {
             throw new IllegalArgumentException("La ficha de representante ya se encuentra activa");
@@ -188,13 +188,13 @@ public class RepresentanteService {
      * @param request         relación y marca de contacto principal; puede
      *                        ser {@code null}
      * @return el representante con su lista de representados actualizada
-     * @throws RecursoNoEncontradoException si el representante o el estudiante
+     * @throws ResourceNotFoundException si el representante o el estudiante
      *                                      no existen
      */
     @Transactional
     public RepresentanteResponse vincularEstudiante(Long idRepresentante, Long idEstudiante, VinculoRequest request) {
         Representante representante = representanteRepository.findById(idRepresentante)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Representante no encontrado con id: " + idRepresentante));
+                .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + idRepresentante));
         String relacion = request == null ? null : request.relacion();
         boolean contactoPrincipal = request != null && Boolean.TRUE.equals(request.contactoPrincipal());
         vincular(representante, idEstudiante, relacion, contactoPrincipal);
@@ -207,13 +207,13 @@ public class RepresentanteService {
      *
      * @param idRepresentante identificador del representante
      * @param idEstudiante    identificador del estudiante
-     * @throws RecursoNoEncontradoException si no hay un vínculo entre ambos
+     * @throws ResourceNotFoundException si no hay un vínculo entre ambos
      */
     @Transactional
     public void desvincularEstudiante(Long idRepresentante, Long idEstudiante) {
         RepresentanteEstudiante vinculo = vinculoRepository
                 .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(idRepresentante, idEstudiante)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Ese estudiante no está vinculado a este representante"));
+                .orElseThrow(() -> new ResourceNotFoundException("Ese estudiante no está vinculado a este representante"));
         vinculo.setActivo(false);
         vinculoRepository.save(vinculo);
     }
@@ -227,7 +227,7 @@ public class RepresentanteService {
     private void vincular(Representante representante, Long idEstudiante,
                           String relacion, boolean contactoPrincipal) {
         Estudiante estudiante = estudianteRepository.findById(idEstudiante)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estudiante no encontrado con id: " + idEstudiante));
+                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));
 
         if (contactoPrincipal) {
             vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(idEstudiante).stream()

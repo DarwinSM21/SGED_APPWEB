@@ -56,7 +56,7 @@ public class EspecialidadController {
      *
      * @param id identificador de la especialidad
      * @return {@code 200 OK} con la especialidad
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{id}")
@@ -85,7 +85,7 @@ public class EspecialidadController {
      * @param id      identificador de la especialidad a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con la especialidad actualizada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si el nombre pertenece a otra
      *                                  especialidad ({@code 422})
@@ -101,7 +101,7 @@ public class EspecialidadController {
      *
      * @param id identificador de la especialidad
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")

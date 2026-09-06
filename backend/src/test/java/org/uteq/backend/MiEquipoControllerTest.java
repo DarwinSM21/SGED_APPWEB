@@ -19,7 +19,7 @@ import org.uteq.backend.academico.estudiante.service.MiEquipoService;
 import org.uteq.backend.academico.representante.dto.InformeDtos.InformeEstudianteResponse;
 import org.uteq.backend.academico.representante.service.InformeService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -74,7 +74,7 @@ class MiEquipoControllerTest {
     @DisplayName("miInforme responde 404 si la cuenta no tiene estudiante asociado")
     void miInforme_sin_estudiante_da_404() throws Exception {
         when(informeService.miInforme("juan@sged.test"))
-                .thenThrow(new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+                .thenThrow(new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         mockMvc.perform(get("/api/estudiante/mi-informe"))
                 .andExpect(status().isNotFound());
@@ -102,7 +102,7 @@ class MiEquipoControllerTest {
     @DisplayName("miEquipo responde 404 si la cuenta no tiene estudiante asociado")
     void miEquipo_sin_estudiante_da_404() throws Exception {
         when(miEquipoService.miEquipo("juan@sged.test"))
-                .thenThrow(new RecursoNoEncontradoException("No hay un estudiante asociado a esta cuenta"));
+                .thenThrow(new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         mockMvc.perform(get("/api/estudiante/mi-equipo"))
                 .andExpect(status().isNotFound());

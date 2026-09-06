@@ -13,7 +13,7 @@ import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.NotificacionRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 
 import java.util.List;
 import org.uteq.backend.academico.representante.entity.Consentimiento;
@@ -110,7 +110,7 @@ public class NotificacionService {
      *
      * @param username nombre de usuario del representante
      * @return la lista de notificaciones
-     * @throws RecursoNoEncontradoException si la cuenta no tiene un
+     * @throws ResourceNotFoundException si la cuenta no tiene un
      *                                      representante asociado
      */
     @Transactional(readOnly = true)
@@ -126,7 +126,7 @@ public class NotificacionService {
      *
      * @param username nombre de usuario del representante
      * @return el conteo de no leídas
-     * @throws RecursoNoEncontradoException si la cuenta no tiene un
+     * @throws ResourceNotFoundException si la cuenta no tiene un
      *                                      representante asociado
      */
     @Transactional(readOnly = true)
@@ -142,7 +142,7 @@ public class NotificacionService {
      *
      * @param username       nombre de usuario del representante
      * @param idNotificacion identificador de la notificación
-     * @throws RecursoNoEncontradoException si la notificación no existe o no
+     * @throws ResourceNotFoundException si la notificación no existe o no
      *                                      pertenece al representante
      */
     @Transactional
@@ -150,7 +150,7 @@ public class NotificacionService {
         Representante representante = representanteDe(username);
         Notificacion notificacion = notificacionRepository
                 .findByIdNotificacionAndRepresentante_IdRepresentante(idNotificacion, representante.getIdRepresentante())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Notificación no encontrada con id: " + idNotificacion));
+                .orElseThrow(() -> new ResourceNotFoundException("Notificación no encontrada con id: " + idNotificacion));
         notificacion.setLeida(true);
         notificacionRepository.save(notificacion);
     }
@@ -194,7 +194,7 @@ public class NotificacionService {
 
     private Representante representanteDe(String username) {
         return representanteRepository.findByUsuario_Username(username)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No hay un representante asociado a esta cuenta"));
+                .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 
     private String nombreCompleto(Estudiante e) {

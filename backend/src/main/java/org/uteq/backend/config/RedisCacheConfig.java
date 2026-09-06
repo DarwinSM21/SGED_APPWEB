@@ -16,9 +16,9 @@ import java.time.Duration;
 
 @Configuration
 public class RedisCacheConfig {
-    public static final String CACHE_ESTUDIANTES = "estudiantes";
-    public static final String CACHE_ENTRENADORES = "entrenadores";
-    public static final String CACHE_USUARIOS = "usuarios";
+    public static final String CACHE_STUDENTS = "estudiantes";
+    public static final String CACHE_COACHES = "entrenadores";
+    public static final String CACHE_USERS = "usuarios";
 
     @Value("${cache.estudiantes.ttl-seconds:60}")
     private long ttlEstudiantesSeconds;
@@ -50,9 +50,9 @@ public class RedisCacheConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));
 
         return RedisCacheManager.builder(factory)
-                .withCacheConfiguration(CACHE_ESTUDIANTES, configEstudiantes)
-                .withCacheConfiguration(CACHE_ENTRENADORES, configEntrenadores)
-                .withCacheConfiguration(CACHE_USUARIOS, configUsuarios)
+                .withCacheConfiguration(CACHE_STUDENTS, configEstudiantes)
+                .withCacheConfiguration(CACHE_COACHES, configEntrenadores)
+                .withCacheConfiguration(CACHE_USERS, configUsuarios)
                 .build();
     }
 }

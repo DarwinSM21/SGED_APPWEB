@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadRequest;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadResponse;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
@@ -52,12 +52,12 @@ public class EspecialidadService {
      *
      * @param id identificador de la especialidad
      * @return la especialidad encontrada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public EspecialidadResponse buscarPorId(Long id) {
         Especialidad especialidad = especialidadRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Especialidad no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada con ID: " + id));
         return toResponse(especialidad);
     }
 
@@ -88,14 +88,14 @@ public class EspecialidadService {
      * @param id      identificador de la especialidad a editar
      * @param request datos nuevos
      * @return la especialidad actualizada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el nombre nuevo pertenece a
      *                                      otra especialidad
      */
     @Transactional
     public EspecialidadResponse editar(Long id, EspecialidadRequest request) {
         Especialidad especialidad = especialidadRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Especialidad no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada con ID: " + id));
 
         if (!especialidad.getNombre().equalsIgnoreCase(request.nombre())
                 && especialidadRepository.existsByNombreIgnoreCase(request.nombre())) {
@@ -111,12 +111,12 @@ public class EspecialidadService {
      * Baja lógica de una especialidad ({@code activo = false}).
      *
      * @param id identificador de la especialidad
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional
     public void eliminar(Long id) {
         Especialidad especialidad = especialidadRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Especialidad no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada con ID: " + id));
         especialidad.setActivo(false);
         especialidadRepository.save(especialidad);
     }

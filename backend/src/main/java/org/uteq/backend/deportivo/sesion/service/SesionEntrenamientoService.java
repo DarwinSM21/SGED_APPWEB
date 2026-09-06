@@ -6,8 +6,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
@@ -61,7 +61,7 @@ public class SesionEntrenamientoService {
     @Transactional
     public List<SesionHoyResponse> sesionesDeHoy(String username, boolean veTodasLasSesiones) {
         horarioService.generarSesionesProgramadas();
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
 
         List<SesionEntrenamiento> sesiones;
         if (veTodasLasSesiones) {
@@ -118,7 +118,7 @@ public class SesionEntrenamientoService {
      * @param username usuario autenticado (entrenador)
      * @param request  categoría, fecha, franja horaria y campo
      * @return la sesión creada
-     * @throws RecursoNoEncontradoException si la cuenta no tiene entrenador
+     * @throws ResourceNotFoundException si la cuenta no tiene entrenador
      *                                      asociado o la categoría no existe
      * @throws IllegalArgumentException     si la franja es inválida o se
      *                                      solapa con otra sesión de la misma
@@ -128,7 +128,7 @@ public class SesionEntrenamientoService {
     public SesionHoyResponse crear(String username, SesionCrearRequest request) {
         Entrenador entrenador = entrenadorPorUsername(username);
         if (entrenador == null) {
-            throw new RecursoNoEncontradoException("No hay un entrenador asociado a esta cuenta");
+            throw new ResourceNotFoundException("No hay un entrenador asociado a esta cuenta");
         }
 
         if (!request.horaFin().isAfter(request.horaInicio())) {
@@ -136,7 +136,7 @@ public class SesionEntrenamientoService {
         }
 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Categoria no encontrada con id: " + request.idCategoria()));
 
         if (sesionRepository.existeSolape(request.idCategoria(), request.fecha(),
@@ -168,12 +168,12 @@ public class SesionEntrenamientoService {
      *
      * @param idSesion identificador de la sesión
      * @return el resumen por estado y la fila de cada estudiante del plantel
-     * @throws RecursoNoEncontradoException si la sesión no existe
+     * @throws ResourceNotFoundException si la sesión no existe
      */
     @Transactional(readOnly = true)
     public SesionHistorialResponse historial(Long idSesion) {
         SesionEntrenamiento s = sesionRepository.findById(idSesion)
-                .orElseThrow(() -> new RecursoNoEncontradoException("No existe la sesion " + idSesion));
+                .orElseThrow(() -> new ResourceNotFoundException("No existe la sesion " + idSesion));
 
         Map<Long, Asistencia> porEstudiante = new HashMap<>();
         for (Asistencia a : asistenciaRepository.historialDeSesion(idSesion)) {

@@ -12,8 +12,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.service.NotificacionService;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
@@ -53,17 +53,17 @@ class AsistenciaServiceTest {
     }
 
     private LocalTime enUnaHora() {
-        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
+        LocalTime ahora = LocalTime.now(Zones.ECUADOR);
         return ahora.isAfter(LocalTime.of(23, 0)) ? LocalTime.of(23, 59) : ahora.plusHours(1);
     }
 
     @Test
-    @DisplayName("marcarPorQr lanza RecursoNoEncontradoException si la cuenta no tiene estudiante asociado")
+    @DisplayName("marcarPorQr lanza ResourceNotFoundException si la cuenta no tiene estudiante asociado")
     void marcarPorQr_sin_estudiante_asociado_lanza_excepcion() {
         when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> asistenciaService.marcarPorQr("huerfano@sged.test", 1L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -103,7 +103,7 @@ class AsistenciaServiceTest {
     void marcarPorQr_marca_tarde_fuera_de_tolerancia() {
         Estudiante e = estudiante();
 
-        LocalTime ahora = LocalTime.now(Zonas.ECUADOR);
+        LocalTime ahora = LocalTime.now(Zones.ECUADOR);
         LocalTime horaInicio = ahora.isBefore(LocalTime.of(1, 0)) ? LocalTime.MIDNIGHT : ahora.minusHours(1);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicio);
 
@@ -143,7 +143,7 @@ class AsistenciaServiceTest {
         ReflectionTestUtils.setField(asistenciaService, "toleranciaTardeMinutos", 1);
         Estudiante e = estudiante();
 
-        LocalTime ahoraTolerancia = LocalTime.now(Zonas.ECUADOR);
+        LocalTime ahoraTolerancia = LocalTime.now(Zones.ECUADOR);
         LocalTime horaInicioTolerancia = ahoraTolerancia.isBefore(LocalTime.of(0, 5))
                 ? LocalTime.MIDNIGHT : ahoraTolerancia.minusMinutes(5);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicioTolerancia);
@@ -192,12 +192,12 @@ class AsistenciaServiceTest {
     }
 
     @Test
-    @DisplayName("misAsistencias lanza RecursoNoEncontradoException si la cuenta no tiene estudiante asociado")
+    @DisplayName("misAsistencias lanza ResourceNotFoundException si la cuenta no tiene estudiante asociado")
     void misAsistencias_sin_estudiante_asociado_lanza_excepcion() {
         when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> asistenciaService.misAsistencias("huerfano@sged.test"))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -233,7 +233,7 @@ class AsistenciaServiceTest {
 
     @Test
     void mapaSumaLasCategoriasQueEntrenaronElMismoDia() {
-        LocalDate dia = LocalDate.now(Zonas.ECUADOR).minusDays(3);
+        LocalDate dia = LocalDate.now(Zones.ECUADOR).minusDays(3);
         when(sesionRepository.resumenAsistenciaPorDia(any(), any()))
                 .thenReturn(List.of(fila(dia, 8, 10), fila(dia, 6, 10)));
 
@@ -255,14 +255,14 @@ class AsistenciaServiceTest {
         ArgumentCaptor<LocalDate> hasta = ArgumentCaptor.forClass(LocalDate.class);
         verify(sesionRepository).resumenAsistenciaPorDia(desde.capture(), hasta.capture());
 
-        LocalDate ayer = LocalDate.now(Zonas.ECUADOR).minusDays(1);
+        LocalDate ayer = LocalDate.now(Zones.ECUADOR).minusDays(1);
         assertThat(hasta.getValue()).isEqualTo(ayer);
         assertThat(desde.getValue()).isEqualTo(ayer.minusDays(29));
     }
 
     @Test
     void mapaPromediaSoloSobreLosDiasQueTuvieronEntrenamiento() {
-        LocalDate base = LocalDate.now(Zonas.ECUADOR).minusDays(5);
+        LocalDate base = LocalDate.now(Zones.ECUADOR).minusDays(5);
         when(sesionRepository.resumenAsistenciaPorDia(any(), any())).thenReturn(List.of(
                 fila(base, 10, 10),
                 fila(base.plusDays(1), 6, 10)

@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
 import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
@@ -57,7 +57,7 @@ public class AlineacionService {
      * @param idPartido identificador del partido
      * @return el once, con la bandera {@code guardada} y los jugadores
      *         disponibles para cambios
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      */
     @Transactional(readOnly = true)
     public AlineacionResponse ver(Long idPartido) {
@@ -75,7 +75,7 @@ public class AlineacionService {
      * @param idPartido identificador del partido
      * @param request   jugadores, su puesto, valoración y observación
      * @return el once guardado
-     * @throws RecursoNoEncontradoException si el partido, un estudiante o una
+     * @throws ResourceNotFoundException si el partido, un estudiante o una
      *                                      posición no existen
      * @throws IllegalArgumentException     si el partido está cerrado, un
      *                                      jugador aparece dos veces, no es
@@ -103,7 +103,7 @@ public class AlineacionService {
             }
 
             Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())
-                    .orElseThrow(() -> new RecursoNoEncontradoException(
+                    .orElseThrow(() -> new ResourceNotFoundException(
                             "Estudiante no encontrado o inactivo: " + j.idEstudiante()));
             String nombre = ConvocatoriaService.nombreDe(estudiante);
 
@@ -122,7 +122,7 @@ public class AlineacionService {
             Posicion posicion = null;
             if (j.idPosicion() != null) {
                 posicion = posicionRepository.findById(j.idPosicion())
-                        .orElseThrow(() -> new RecursoNoEncontradoException(
+                        .orElseThrow(() -> new ResourceNotFoundException(
                                 "Posicion no encontrada: " + j.idPosicion()));
                 if (esTitular && puestoOcupado.put(j.idPosicion(), j.idEstudiante()) != null) {
                     throw new IllegalArgumentException(
@@ -168,7 +168,7 @@ public class AlineacionService {
      *
      * @param idPartido identificador del partido
      * @return la sugerencia recalculada
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido está cerrado
      */
     @Transactional
@@ -184,7 +184,7 @@ public class AlineacionService {
      * @param idPartido identificador del partido
      * @return el comentario generado, o un texto por defecto si no hay
      *         alineación
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      */
     @Transactional(readOnly = true)
     public FeedbackAlineacionResponse feedback(Long idPartido) {

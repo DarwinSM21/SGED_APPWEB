@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
@@ -41,12 +41,12 @@ public class PersonaService {
      *
      * @param id identificador de la persona
      * @return la persona encontrada
-     * @throws RecursoNoEncontradoException si no existe o está inactivada
+     * @throws ResourceNotFoundException si no existe o está inactivada
      */
     @Transactional(readOnly = true)
     public PersonaResponse buscarPorId(Long id) {
         Persona p = personaRepository.findByIdPersonaAndActivoTrue(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada o inactivada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada o inactivada con id: " + id));
         return toResponse(p);
     }
 
@@ -55,13 +55,13 @@ public class PersonaService {
      *
      * @param cedula número de cédula
      * @return la persona encontrada
-     * @throws RecursoNoEncontradoException si no existe una persona activa
+     * @throws ResourceNotFoundException si no existe una persona activa
      *                                      con esa cédula
      */
     @Transactional(readOnly = true)
     public PersonaResponse buscarPorCedula(String cedula) {
         Persona persona = personaRepository.findByCedulaAndActivoTrue(cedula)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con cédula: " + cedula));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con cédula: " + cedula));
         return toResponse(persona);
     }
 
@@ -101,7 +101,7 @@ public class PersonaService {
      * @param id      identificador de la persona a editar
      * @param request datos nuevos
      * @return la persona actualizada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la cédula o el correo
      *                                      pertenecen a otra persona
      */
@@ -110,7 +110,7 @@ public class PersonaService {
     @Transactional
     public PersonaResponse editar(Long id, PersonaRequest request) {
         Persona persona = personaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + id));
 
         validarUnicidadCedulaYCorreo(request.cedula(), request.correo(), id);
 
@@ -130,14 +130,14 @@ public class PersonaService {
      * Baja lógica de una persona ({@code activo = false}); no borra la fila.
      *
      * @param id identificador de la persona
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0",
             descripcionSpel = "'desactivó la persona #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Persona persona = personaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + id));
 
         persona.setActivo(false);
         personaRepository.save(persona);

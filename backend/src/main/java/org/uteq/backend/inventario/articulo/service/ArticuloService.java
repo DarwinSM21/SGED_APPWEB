@@ -5,7 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
 import org.uteq.backend.inventario.articulo.dto.ArticuloDtos.*;
 import org.uteq.backend.inventario.articulo.entity.Articulo;
@@ -50,7 +50,7 @@ public class ArticuloService {
      *
      * @param id identificador del artículo
      * @return el artículo encontrado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public ArticuloResponse buscarPorId(Long id) {
@@ -88,7 +88,7 @@ public class ArticuloService {
      * @param id      identificador del artículo a editar
      * @param request datos nuevos
      * @return el artículo actualizado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo",
             descripcionSpel = "'editó el artículo ' + #result.nombre")
@@ -112,7 +112,7 @@ public class ArticuloService {
      * Baja lógica de un artículo ({@code activo = false}).
      *
      * @param id identificador del artículo
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0",
             descripcionSpel = "'desactivó el artículo #' + #p0")
@@ -128,7 +128,7 @@ public class ArticuloService {
      *
      * @param id identificador del artículo
      * @return el artículo reactivado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
     @Auditado(accion = "REACTIVAR", entidad = "Articulo", idSpel = "#p0",
@@ -161,7 +161,7 @@ public class ArticuloService {
 
     private Articulo buscarEntidad(Long id) {
         return articuloRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Artículo no encontrado con ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado con ID: " + id));
     }
 
     private ArticuloResponse toResponse(Articulo a) {

@@ -9,7 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.entity.DetalleEvaluacion;
@@ -58,7 +58,7 @@ public class ReportService {
      * @param idCategoria categoría por la que filtrar, o {@code null}
      * @param activo      estado por el que filtrar, o {@code null}
      * @return el PDF como arreglo de bytes
-     * @throws RecursoNoEncontradoException si no hay estudiantes para los
+     * @throws ResourceNotFoundException si no hay estudiantes para los
      *                                      filtros
      */
     @Transactional(readOnly = true)
@@ -83,7 +83,7 @@ public class ReportService {
      * @param desde        límite inferior de fecha de pago, o {@code null}
      * @param hasta        límite superior de fecha de pago, o {@code null}
      * @return el PDF como arreglo de bytes
-     * @throws RecursoNoEncontradoException si no hay pagos para los filtros
+     * @throws ResourceNotFoundException si no hay pagos para los filtros
      */
     @Transactional(readOnly = true)
     public byte[] payments(Long idEstudiante, LocalDate desde, LocalDate hasta) {
@@ -105,7 +105,7 @@ public class ReportService {
      * @param desde        límite inferior de fecha de sesión, o {@code null}
      * @param hasta        límite superior de fecha de sesión, o {@code null}
      * @return el PDF como arreglo de bytes
-     * @throws RecursoNoEncontradoException si no hay asistencias para los
+     * @throws ResourceNotFoundException si no hay asistencias para los
      *                                      filtros
      */
     @Transactional(readOnly = true)
@@ -129,7 +129,7 @@ public class ReportService {
      * @param desde        límite inferior de fecha de evaluación, o {@code null}
      * @param hasta        límite superior de fecha de evaluación, o {@code null}
      * @return el PDF como arreglo de bytes
-     * @throws RecursoNoEncontradoException si no hay evaluaciones para los
+     * @throws ResourceNotFoundException si no hay evaluaciones para los
      *                                      filtros
      */
     @Transactional(readOnly = true)
@@ -153,7 +153,7 @@ public class ReportService {
      * @param desde        límite inferior de fecha de lesión, o {@code null}
      * @param hasta        límite superior de fecha de lesión, o {@code null}
      * @return el PDF como arreglo de bytes
-     * @throws RecursoNoEncontradoException si no hay lesiones para los filtros
+     * @throws ResourceNotFoundException si no hay lesiones para los filtros
      */
     @Transactional(readOnly = true)
     public byte[] injuries(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
@@ -195,7 +195,7 @@ public class ReportService {
 
     private <T> List<T> sinVacio(List<T> resultados) {
         if (resultados.isEmpty()) {
-            throw new RecursoNoEncontradoException("No hay datos para los filtros seleccionados");
+            throw new ResourceNotFoundException("No hay datos para los filtros seleccionados");
         }
         return resultados;
     }

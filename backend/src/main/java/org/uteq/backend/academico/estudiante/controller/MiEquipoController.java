@@ -36,7 +36,7 @@ public class MiEquipoController {
      * Informe de evaluación del estudiante autenticado.
      *
      * @return {@code 200 OK} con las estadísticas del estudiante
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene ficha de estudiante asociada
      */
     @GetMapping("/mi-informe")
@@ -51,7 +51,7 @@ public class MiEquipoController {
      * servicio externo: se pide a demanda, no al abrir la pantalla.
      *
      * @return {@code 200 OK} con el comentario generado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene ficha de estudiante asociada
      */
     @PostMapping("/mi-informe/comentario")
@@ -65,7 +65,7 @@ public class MiEquipoController {
      * la próxima sesión y compañeros de categoría.
      *
      * @return {@code 200 OK} con los datos del equipo
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene ficha de estudiante asociada
      */
     @GetMapping("/mi-equipo")

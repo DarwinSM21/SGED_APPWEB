@@ -13,7 +13,7 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
@@ -69,7 +69,7 @@ class ReportServiceTest {
     void studentProfilesNoResultsReturns404() {
         when(estudianteRepository.buscarParaReporte(any(), any())).thenReturn(List.of());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.studentProfiles(1L, true));
+        assertThrows(ResourceNotFoundException.class, () -> servicio.studentProfiles(1L, true));
     }
 
     @Test
@@ -87,7 +87,7 @@ class ReportServiceTest {
     void paymentsNoResultsReturns404() {
         when(pagoRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.payments(1L, null, null));
+        assertThrows(ResourceNotFoundException.class, () -> servicio.payments(1L, null, null));
     }
 
     @Test
@@ -113,7 +113,7 @@ class ReportServiceTest {
     void injuriesNoResultsReturns404() {
         when(lesionRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        assertThrows(RecursoNoEncontradoException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> servicio.injuries(null, null, null, null));
     }
 

@@ -21,7 +21,7 @@ import org.uteq.backend.academico.representante.entity.Notificacion.Tipo;
 import org.uteq.backend.academico.representante.service.InformeService;
 import org.uteq.backend.academico.representante.service.NotificacionService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 
 import java.time.Instant;
 import java.util.List;
@@ -90,7 +90,7 @@ class InformeRepresentanteControllerTest {
     @DisplayName("GET /api/representante/estudiantes/{id}/informe - 404 si el estudiante no es suyo")
     void informe_de_estudiante_ajeno_devuelve_404() throws Exception {
         when(informeService.informeDe("marta.representante@sged.test", 1L))
-                .thenThrow(new RecursoNoEncontradoException("Estudiante no encontrado con id: 1"));
+                .thenThrow(new ResourceNotFoundException("Estudiante no encontrado con id: 1"));
 
         mockMvc.perform(get("/api/representante/estudiantes/1/informe"))
                 .andExpect(status().isNotFound());
@@ -122,7 +122,7 @@ class InformeRepresentanteControllerTest {
     @Test
     @DisplayName("POST /api/representante/notificaciones/{id}/leida - 404 si no es suya")
     void marcarLeida_ajena_devuelve_404() throws Exception {
-        doThrow(new RecursoNoEncontradoException("Notificación no encontrada con id: 9"))
+        doThrow(new ResourceNotFoundException("Notificación no encontrada con id: 9"))
                 .when(notificacionService).marcarLeida("marta.representante@sged.test", 9L);
 
         mockMvc.perform(post("/api/representante/notificaciones/9/leida"))

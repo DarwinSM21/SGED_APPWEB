@@ -10,7 +10,7 @@ import org.uteq.backend.academico.representante.entity.Consentimiento;
 import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.ConsentimientoRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -37,7 +37,7 @@ public class ConsentimientoService {
      * @param request       representante, estudiante y alcance
      * @param usernameAdmin  administrador que registra el consentimiento
      * @return el consentimiento registrado
-     * @throws RecursoNoEncontradoException si el representante o el estudiante
+     * @throws ResourceNotFoundException si el representante o el estudiante
      *                                      no existen
      * @throws IllegalArgumentException     si ya existe un consentimiento
      *                                      vigente con ese alcance
@@ -45,10 +45,10 @@ public class ConsentimientoService {
     @Transactional
     public ConsentimientoResponse otorgar(OtorgarConsentimientoRequest request, String usernameAdmin) {
         Representante representante = representanteRepository.findById(request.idRepresentante())
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Representante no encontrado con id: " + request.idRepresentante()));
         Estudiante estudiante = estudianteRepository.findById(request.idEstudiante())
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + request.idEstudiante()));
 
         consentimientoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
@@ -77,13 +77,13 @@ public class ConsentimientoService {
      * @param idConsentimiento identificador del consentimiento
      * @param usernameAdmin    administrador que revoca
      * @return el consentimiento revocado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya estaba revocado
      */
     @Transactional
     public ConsentimientoResponse revocar(Long idConsentimiento, String usernameAdmin) {
         Consentimiento consentimiento = consentimientoRepository.findById(idConsentimiento)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
+                .orElseThrow(() -> new ResourceNotFoundException(
                         "Consentimiento no encontrado con id: " + idConsentimiento));
 
         if (!consentimiento.estaVigente()) {

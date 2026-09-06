@@ -10,7 +10,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -214,7 +214,7 @@ class SesionEntrenamientoServiceTest {
     }
 
     @Test
-    @DisplayName("crear lanza 404 (RecursoNoEncontradoException) si la categoria no existe")
+    @DisplayName("crear lanza 404 (ResourceNotFoundException) si la categoria no existe")
     void crearCategoriaInexistenteLanzaExcepcion() {
         var yo = entrenador(1L, "Carlos");
         when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
@@ -224,7 +224,7 @@ class SesionEntrenamientoServiceTest {
                 LocalTime.of(16, 0), LocalTime.of(17, 0), null);
 
         assertThatThrownBy(() -> sesionService.crear("carlos@sged.test", request))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -261,7 +261,7 @@ class SesionEntrenamientoServiceTest {
         when(sesionRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> sesionService.historial(999L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

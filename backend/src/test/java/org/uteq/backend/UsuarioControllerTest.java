@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.usuario.controller.UsuarioController;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
 import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
@@ -65,7 +65,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("GET /api/usuarios/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(usuarioService.buscarPorId(99L)).thenThrow(new RecursoNoEncontradoException("no existe"));
+        when(usuarioService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/usuarios/99"))
                 .andExpect(status().isNotFound());

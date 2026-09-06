@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -64,12 +64,12 @@ class PersonaServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException si esta inactiva o no existe")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException si esta inactiva o no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(personaRepository.findByIdPersonaAndActivoTrue(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> personaService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

@@ -10,7 +10,7 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
-import org.uteq.backend.common.Zonas;
+import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 
@@ -69,7 +69,7 @@ public class AlertaService {
      */
     @Transactional(readOnly = true)
     public PanelAlertasResponse panel() {
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         short anio = (short) hoy.getYear();
         short mes = (short) hoy.getMonthValue();
 

@@ -26,7 +26,7 @@ public class MiAsistenciaController {
      * Historial de asistencia del estudiante autenticado.
      *
      * @return {@code 200 OK} con el historial
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene ficha de estudiante ({@code 404})
      */
     @GetMapping("/mi-asistencia")

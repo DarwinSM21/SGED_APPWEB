@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.controller.AsistenciaSesionController;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.NominaResponse;
 import org.uteq.backend.deportivo.asistencia.service.AsistenciaService;
@@ -62,7 +62,7 @@ class AsistenciaSesionControllerTest {
     @Test
     @DisplayName("GET /api/asistencias/sesion/{id} - 404 si la sesión no existe")
     void nomina_sesion_inexistente_da_404() throws Exception {
-        when(asistenciaService.nomina(99L)).thenThrow(new RecursoNoEncontradoException("Sesión no encontrada con id: 99"));
+        when(asistenciaService.nomina(99L)).thenThrow(new ResourceNotFoundException("Sesión no encontrada con id: 99"));
 
         mockMvc.perform(get("/api/asistencias/sesion/99"))
                 .andExpect(status().isNotFound());

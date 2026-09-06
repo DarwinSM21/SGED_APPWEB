@@ -21,7 +21,7 @@ import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.service.PagoService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -155,7 +155,7 @@ class PagoControllerTest {
     @DisplayName("historial responde 404 si el estudiante no existe")
     void historial_estudiante_inexistente_da_404() throws Exception {
         when(pagoService.historialDe(99L))
-                .thenThrow(new RecursoNoEncontradoException("Estudiante no encontrado con id: 99"));
+                .thenThrow(new ResourceNotFoundException("Estudiante no encontrado con id: 99"));
 
         mockMvc.perform(get("/api/pagos/estudiante/99"))
                 .andExpect(status().isNotFound());

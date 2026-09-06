@@ -15,7 +15,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.horario.controller.HorarioController;
 import org.uteq.backend.deportivo.horario.dto.HorarioResponse;
 import org.uteq.backend.deportivo.horario.service.HorarioService;
@@ -103,7 +103,7 @@ class HorarioControllerTest {
     @DisplayName("desactivar un horario ajeno responde 404, no 403: mismo criterio IDOR del resto de la app")
     void desactivar_ajeno_devuelve_404() throws Exception {
         autenticarComo("carlos@sged.test");
-        doThrow(new RecursoNoEncontradoException("Horario no encontrado con id: 99"))
+        doThrow(new ResourceNotFoundException("Horario no encontrado con id: 99"))
                 .when(horarioService).desactivar("carlos@sged.test", 99L);
 
         mockMvc.perform(delete("/api/horarios/99"))

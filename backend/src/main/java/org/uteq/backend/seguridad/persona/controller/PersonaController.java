@@ -46,7 +46,7 @@ public class PersonaController {
      *
      * @param id identificador de la persona
      * @return {@code 200 OK} con la persona
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe o está inactivada ({@code 404})
      */
     @GetMapping("/{id}")
@@ -60,7 +60,7 @@ public class PersonaController {
      *
      * @param cedula número de cédula
      * @return {@code 200 OK} con la persona
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe una persona activa con esa cédula ({@code 404})
      */
     @GetMapping("/cedula/{cedula}")
@@ -90,7 +90,7 @@ public class PersonaController {
      * @param id      identificador de la persona a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con la persona actualizada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si la cédula o el correo pertenecen a
      *                                  otra persona ({@code 422})
@@ -108,7 +108,7 @@ public class PersonaController {
      *
      * @param id identificador de la persona
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")

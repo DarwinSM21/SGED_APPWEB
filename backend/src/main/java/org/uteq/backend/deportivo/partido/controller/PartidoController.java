@@ -55,7 +55,7 @@ public class PartidoController {
      *
      * @param idPartido identificador del partido
      * @return {@code 200 OK} con el partido
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{idPartido}")
@@ -69,7 +69,7 @@ public class PartidoController {
      * @param request categoría, rival, fecha y localía; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con el partido creado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la categoría no existe ({@code 404})
      */
     @PostMapping
@@ -83,7 +83,7 @@ public class PartidoController {
      * @param idPartido identificador del partido
      * @param request   goles a favor y en contra; validado con {@code @Valid}
      * @return {@code 200 OK} con el partido cerrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el partido no existe ({@code 404})
      * @throws IllegalArgumentException si el partido ya estaba cerrado
      *         ({@code 422})
@@ -99,7 +99,7 @@ public class PartidoController {
      *
      * @param idPartido identificador del partido
      * @return {@code 200 OK} con el partido reabierto
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el partido no existe ({@code 404})
      * @throws IllegalArgumentException si el partido no estaba cerrado
      *         ({@code 422})
@@ -114,7 +114,7 @@ public class PartidoController {
      *
      * @param idPartido identificador del partido
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{idPartido}")
@@ -129,7 +129,7 @@ public class PartidoController {
      *
      * @param idPartido identificador del partido
      * @return {@code 200 OK} con la alineación y la bandera "guardada"
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el partido no existe ({@code 404})
      */
     @GetMapping("/{idPartido}/alineacion")
@@ -145,7 +145,7 @@ public class PartidoController {
      * @param request   jugadores y su puesto en cancha; validado con
      *                  {@code @Valid}
      * @return {@code 200 OK} con la alineación guardada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el partido o algún jugador no existen ({@code 404})
      * @throws IllegalArgumentException si el partido está cerrado o la
      *         alineación es inválida ({@code 422})
@@ -162,7 +162,7 @@ public class PartidoController {
      *
      * @param idPartido identificador del partido
      * @return {@code 200 OK} con la sugerencia recalculada
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el partido no existe ({@code 404})
      */
     @DeleteMapping("/{idPartido}/alineacion")
@@ -177,7 +177,7 @@ public class PartidoController {
      *
      * @param idPartido identificador del partido
      * @return {@code 200 OK} con el comentario generado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el partido no existe ({@code 404})
      */
     @PostMapping("/{idPartido}/alineacion/feedback")

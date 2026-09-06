@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.auditoria.aop.Auditado;
@@ -56,7 +56,7 @@ public class UsuarioService {
      * @param pageable paginación y orden
      * @return la página solicitada, envuelta en {@link UsuarioPageResponse}
      */
-    @Cacheable(value = RedisCacheConfig.CACHE_USUARIOS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    @Cacheable(value = RedisCacheConfig.CACHE_USERS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public UsuarioPageResponse<UsuarioResponse> listar(Pageable pageable) {
         Page<Usuario> page = usuarioRepository.findAll(pageable);
@@ -75,12 +75,12 @@ public class UsuarioService {
      *
      * @param id identificador de la cuenta
      * @return la cuenta encontrada
-     * @throws RecursoNoEncontradoException si no existe o está inactivada
+     * @throws ResourceNotFoundException si no existe o está inactivada
      */
     @Transactional(readOnly = true)
     public UsuarioResponse buscarPorId(Long id) {
         Usuario u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
         return toResponse(u);
  }
 
@@ -96,15 +96,15 @@ public class UsuarioService {
      * @throws IllegalArgumentException     si falta la contraseña, si el
      *                                      {@code username} ya existe o si el
      *                                      rol no es coherente con la ficha
-     * @throws RecursoNoEncontradoException si la persona o el estado no existen
+     * @throws ResourceNotFoundException si la persona o el estado no existen
      */
     // vincularFichaExistente puede mutar Estudiante/Entrenador (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
-            @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
-            @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
-            @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
     @Auditado(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario",
             descripcionSpel = "'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
@@ -118,10 +118,10 @@ public class UsuarioService {
         }
 
         Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
         EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
         Usuario.UsuarioBuilder builder = Usuario.builder()
                 .persona(persona)
@@ -152,7 +152,7 @@ public class UsuarioService {
      * @param id      identificador de la cuenta a editar
      * @param request datos nuevos
      * @return la cuenta actualizada
-     * @throws RecursoNoEncontradoException si la cuenta, la persona o el
+     * @throws ResourceNotFoundException si la cuenta, la persona o el
      *                                      estado no existen
      * @throws IllegalArgumentException     si el {@code username} nuevo ya
      *                                      está ocupado o el rol no es
@@ -162,16 +162,16 @@ public class UsuarioService {
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
-            @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true),
-            @CacheEvict(value = RedisCacheConfig.CACHE_ESTUDIANTES, allEntries = true),
-            @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
+            @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
     @Auditado(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario",
             descripcionSpel = "'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UsuarioResponse editar(Long id, UsuarioRequest request) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
         if (!usuario.getUsername().equalsIgnoreCase(request.username())
                 && usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
@@ -179,10 +179,10 @@ public class UsuarioService {
         }
 
         Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
         EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
+                .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
         usuario.setPersona(persona);
         usuario.setEstadoGeneral(estado);
@@ -204,15 +204,15 @@ public class UsuarioService {
      * Baja lógica de una cuenta ({@code activo = false}).
      *
      * @param id identificador de la cuenta
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0",
             descripcionSpel = "'desactivó la cuenta de usuario #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
     }
@@ -222,16 +222,16 @@ public class UsuarioService {
      *
      * @param id identificador de la cuenta
      * @return la cuenta reactivada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la cuenta ya está activa
      */
     @Auditado(accion = "REACTIVAR", entidad = "Usuario", idSpel = "#p0",
             descripcionSpel = "'reactivo la cuenta de usuario #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_USUARIOS, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
     public UsuarioResponse reactivar(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
         if (Boolean.TRUE.equals(usuario.getActivo())) {
             throw new IllegalArgumentException("La cuenta ya se encuentra activa");

@@ -44,7 +44,7 @@ public class EntrenadorController {
      *
      * @param id identificador del entrenador
      * @return {@code 200 OK} con el entrenador
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{id}")
@@ -59,7 +59,7 @@ public class EntrenadorController {
      * @param request persona, usuario, especialidad y datos profesionales;
      *                validado con {@code @Valid}
      * @return {@code 201 Created} con el entrenador registrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la persona, el usuario o la especialidad no existen
      *         ({@code 404})
      * @throws IllegalArgumentException si la persona o el usuario ya están
@@ -78,7 +78,7 @@ public class EntrenadorController {
      * @param id      identificador del entrenador a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con el entrenador actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el entrenador o la especialidad no existen ({@code 404})
      */
     @PutMapping("/{id}")
@@ -94,7 +94,7 @@ public class EntrenadorController {
      *
      * @param id identificador del entrenador
      * @return {@code 200 OK} con el entrenador reactivado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si ya está activo ({@code 422})
      */
@@ -109,7 +109,7 @@ public class EntrenadorController {
      *
      * @param id identificador del entrenador
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")

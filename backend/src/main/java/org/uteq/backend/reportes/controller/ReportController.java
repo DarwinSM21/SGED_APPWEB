@@ -34,7 +34,7 @@ public class ReportController {
      * @param activo    {@code true}/{@code false} para filtrar por estado
      *                  (opcional)
      * @return {@code 200 OK} con el PDF {@code fichas-estudiantes.pdf}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no hay datos para los filtros ({@code 404})
      */
     @GetMapping("/estudiantes-fichas")
@@ -52,7 +52,7 @@ public class ReportController {
      * @param fechaDesde   límite inferior de fecha de pago (opcional)
      * @param fechaHasta   límite superior de fecha de pago (opcional)
      * @return {@code 200 OK} con el PDF {@code pagos.pdf}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no hay datos para los filtros ({@code 404})
      */
     @GetMapping("/pagos")
@@ -72,7 +72,7 @@ public class ReportController {
      * @param fechaDesde    límite inferior de fecha de sesión (opcional)
      * @param fechaHasta    límite superior de fecha de sesión (opcional)
      * @return {@code 200 OK} con el PDF {@code asistencias.pdf}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no hay datos para los filtros ({@code 404})
      */
     @GetMapping("/asistencias")
@@ -93,7 +93,7 @@ public class ReportController {
      * @param fechaDesde    límite inferior de fecha de evaluación (opcional)
      * @param fechaHasta    límite superior de fecha de evaluación (opcional)
      * @return {@code 200 OK} con el PDF {@code evaluaciones.pdf}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no hay datos para los filtros ({@code 404})
      */
     @GetMapping("/evaluaciones")
@@ -114,7 +114,7 @@ public class ReportController {
      * @param fechaDesde    límite inferior de fecha de lesión (opcional)
      * @param fechaHasta    límite superior de fecha de lesión (opcional)
      * @return {@code 200 OK} con el PDF {@code lesiones.pdf}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no hay datos para los filtros ({@code 404})
      */
     @GetMapping("/lesiones")

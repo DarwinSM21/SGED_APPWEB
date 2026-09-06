@@ -12,8 +12,8 @@ import org.uteq.backend.academico.pago.entity.Pago;
 import org.uteq.backend.academico.pago.entity.Pago.TipoPago;
 import org.uteq.backend.academico.pago.repository.PagoRepository;
 import org.uteq.backend.academico.pago.service.PagoService;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
@@ -63,7 +63,7 @@ class PagoServiceTest {
     @Test
     @DisplayName("ingresosDelMes suma por fecha real de pago del mes calendario vigente en Ecuador")
     void ingresosDelMes_suma_el_mes_calendario_vigente() {
-        YearMonth hoy = YearMonth.now(Zonas.ECUADOR);
+        YearMonth hoy = YearMonth.now(Zones.ECUADOR);
         LocalDate inicio = hoy.atDay(1);
         LocalDate fin = hoy.atEndOfMonth();
 
@@ -105,7 +105,7 @@ class PagoServiceTest {
         assertThat(pagos).allSatisfy(p -> {
             assertThat(p.getTipo()).isEqualTo(TipoPago.MEMBRESIA);
             assertThat(p.getAnio()).isEqualTo((short) 2026);
-            assertThat(p.getFechaPago()).isEqualTo(LocalDate.now(Zonas.ECUADOR));
+            assertThat(p.getFechaPago()).isEqualTo(LocalDate.now(Zones.ECUADOR));
         });
     }
 
@@ -144,7 +144,7 @@ class PagoServiceTest {
     void registrarMembresia_estudiante_inexistente() {
         when(estudianteRepository.findById(ID_EST)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class, () ->
+        assertThrows(ResourceNotFoundException.class, () ->
                 service.registrarMembresia(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), null, USERNAME));
 
         verify(pagoRepository, never()).saveAll(anyList());
@@ -185,7 +185,7 @@ class PagoServiceTest {
 
         var pago = service.registrarDiario(ID_EST, new BigDecimal("5.00"), null, USERNAME);
 
-        assertThat(pago.getFechaPago()).isEqualTo(LocalDate.now(Zonas.ECUADOR));
+        assertThat(pago.getFechaPago()).isEqualTo(LocalDate.now(Zones.ECUADOR));
     }
 
     @Test
@@ -193,7 +193,7 @@ class PagoServiceTest {
     void historialDe_estudiante_inexistente() {
         when(estudianteRepository.existsById(ID_EST)).thenReturn(false);
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.historialDe(ID_EST));
+        assertThrows(ResourceNotFoundException.class, () -> service.historialDe(ID_EST));
 
         verify(pagoRepository, never()).findByEstudiante_IdEstudianteOrderByFechaPagoDesc(any());
     }
@@ -252,7 +252,7 @@ class PagoServiceTest {
     void anular_inexistente() {
         when(pagoRepository.findById(404L)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> service.anular(404L, "motivo", USERNAME));
     }
 }

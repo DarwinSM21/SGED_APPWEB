@@ -20,7 +20,7 @@ import org.uteq.backend.academico.representante.entity.RepresentanteEstudiante;
 import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.InformeService;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
@@ -70,12 +70,12 @@ class InformeServiceTest {
     }
 
     @Test
-    @DisplayName("misRepresentados lanza RecursoNoEncontradoException si la cuenta no tiene fila de representante")
+    @DisplayName("misRepresentados lanza ResourceNotFoundException si la cuenta no tiene fila de representante")
     void misRepresentados_sin_representante_asociado_lanza_excepcion() {
         when(representanteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> informeService.misRepresentados("huerfano@sged.test"))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -95,7 +95,7 @@ class InformeServiceTest {
     }
 
     @Test
-    @DisplayName("informeDe responde 404 (RecursoNoEncontradoException) si el estudiante no es un representado suyo")
+    @DisplayName("informeDe responde 404 (ResourceNotFoundException) si el estudiante no es un representado suyo")
     void informeDe_lanza404_cuandoEstudianteNoEsSuyo() {
         Representante r = representante();
         when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
@@ -103,7 +103,7 @@ class InformeServiceTest {
                 .thenReturn(false);
 
         assertThatThrownBy(() -> informeService.informeDe("ana.vera@sged.test", 999L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -116,7 +116,7 @@ class InformeServiceTest {
                 .thenReturn(false);
 
         assertThatThrownBy(() -> informeService.informeDe("ana.vera@sged.test", 10L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -159,7 +159,7 @@ class InformeServiceTest {
         when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> informeService.miInforme("huerfano@sged.test"))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -195,7 +195,7 @@ class InformeServiceTest {
                 .thenReturn(false);
 
         assertThatThrownBy(() -> informeService.comentarioDe("ana.vera@sged.test", 999L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
 
         verifyNoInteractions(generadorFeedback);
     }

@@ -14,7 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.especialidad.controller.EspecialidadController;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadRequest;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadResponse;
@@ -73,7 +73,7 @@ class EspecialidadControllerTest {
     @Test
     @DisplayName("GET /api/especialidades/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(especialidadService.buscarPorId(99L)).thenThrow(new RecursoNoEncontradoException("no existe"));
+        when(especialidadService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/especialidades/99"))
                 .andExpect(status().isNotFound());

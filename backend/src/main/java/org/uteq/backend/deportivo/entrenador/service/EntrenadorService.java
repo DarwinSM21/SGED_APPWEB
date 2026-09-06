@@ -7,7 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorPageResponse;
 import org.uteq.backend.deportivo.entrenador.dto.EntrenadorRequest;
@@ -42,7 +42,7 @@ public class EntrenadorService {
      * @param pageable paginación y orden
      * @return la página solicitada, envuelta en {@link EntrenadorPageResponse}
      */
-    @Cacheable(value = RedisCacheConfig.CACHE_ENTRENADORES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
+    @Cacheable(value = RedisCacheConfig.CACHE_COACHES, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
     public EntrenadorPageResponse<EntrenadorResponse> listar(Pageable pageable) {
         Page<Entrenador> page = entrenadorRepository.findAll(pageable);
@@ -61,12 +61,12 @@ public class EntrenadorService {
      *
      * @param id identificador del entrenador
      * @return el entrenador encontrado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public EntrenadorResponse buscarPorId(Long id) {
         Entrenador e = entrenadorRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con id: " + id));
         return toResponse(e);
     }
 
@@ -75,13 +75,13 @@ public class EntrenadorService {
      *
      * @param request persona, usuario, especialidad y datos profesionales
      * @return el entrenador registrado
-     * @throws RecursoNoEncontradoException si la persona, el usuario o la
+     * @throws ResourceNotFoundException si la persona, el usuario o la
      *                                      especialidad no existen
      * @throws IllegalArgumentException     si la persona o el usuario ya
      *                                      están asignados, o si el usuario
      *                                      no tiene rol {@code ENTRENADOR}
      */
-    @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public EntrenadorResponse crear(EntrenadorRequest request) {
         if (entrenadorRepository.existsByPersona_IdPersona(request.idPersona())) {
@@ -92,10 +92,10 @@ public class EntrenadorService {
         }
 
         Persona persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Persona no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
         Usuario usuario = usuarioRepository.findById(request.idUsuario())
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con id: " + request.idUsuario()));
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
         boolean tieneRolEntrenador = usuario.getRoles().stream()
                 .anyMatch(r -> "ENTRENADOR".equals(r.getNombre()));
@@ -123,14 +123,14 @@ public class EntrenadorService {
      * @param id      identificador del entrenador a editar
      * @param request datos nuevos
      * @return el entrenador actualizado
-     * @throws RecursoNoEncontradoException si el entrenador o la especialidad
+     * @throws ResourceNotFoundException si el entrenador o la especialidad
      *                                      no existen
      */
-    @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public EntrenadorResponse editar(Long id, EntrenadorRequest request) {
         Entrenador entrenador = entrenadorRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con id: " + id));
 
         entrenador.setEspecialidad(resolverEspecialidad(request.idEspecialidad()));
         entrenador.setExperienciaAnios(request.experienciaAnios());
@@ -144,15 +144,15 @@ public class EntrenadorService {
      * Baja lógica de un entrenador ({@code activo = false}).
      *
      * @param id identificador del entrenador
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Auditado(accion = "ELIMINAR", entidad = "Entrenador", idSpel = "#p0",
             descripcionSpel = "'desactivo la ficha de entrenador #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
         Entrenador entrenador = entrenadorRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con id: " + id));
         entrenador.setActivo(false);
         entrenadorRepository.save(entrenador);
     }
@@ -162,16 +162,16 @@ public class EntrenadorService {
      *
      * @param id identificador del entrenador
      * @return el entrenador reactivado
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
     @Auditado(accion = "REACTIVAR", entidad = "Entrenador", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de entrenador #' + #p0")
-    @CacheEvict(value = RedisCacheConfig.CACHE_ENTRENADORES, allEntries = true)
+    @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public EntrenadorResponse reactivar(Long id) {
         Entrenador entrenador = entrenadorRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Entrenador no encontrado con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con id: " + id));
 
         if (Boolean.TRUE.equals(entrenador.getActivo())) {
             throw new IllegalArgumentException("La ficha de entrenador ya se encuentra activa");
@@ -184,7 +184,7 @@ public class EntrenadorService {
     private Especialidad resolverEspecialidad(Long idEspecialidad) {
         if (idEspecialidad == null) return null;
         return especialidadRepository.findById(idEspecialidad)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Especialidad no encontrada con id: " + idEspecialidad));
+                .orElseThrow(() -> new ResourceNotFoundException("Especialidad no encontrada con id: " + idEspecialidad));
     }
 
     private EntrenadorResponse toResponse(Entrenador e) {

@@ -22,7 +22,7 @@ import org.uteq.backend.academico.representante.repository.RepresentanteEstudian
 import org.uteq.backend.academico.representante.dto.VinculoRequest;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.RepresentanteService;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
@@ -94,12 +94,12 @@ class RepresentanteServiceTest {
     }
 
     @Test
-    @DisplayName("buscarPorId lanza RecursoNoEncontradoException cuando no existe")
+    @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
         when(representanteRepository.findById(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> representanteService.buscarPorId(99L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -172,7 +172,7 @@ class RepresentanteServiceTest {
     }
 
     @Test
-    @DisplayName("crear lanza RecursoNoEncontradoException si un estudiante inicial no existe")
+    @DisplayName("crear lanza ResourceNotFoundException si un estudiante inicial no existe")
     void crear_falla_si_estudiante_inicial_no_existe() {
         RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Madre", null, List.of(999L));
         when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
@@ -183,7 +183,7 @@ class RepresentanteServiceTest {
         when(estudianteRepository.findById(999L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> representanteService.crear(request))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -217,13 +217,13 @@ class RepresentanteServiceTest {
     }
 
     @Test
-    @DisplayName("desvincularEstudiante lanza RecursoNoEncontradoException si no habia vinculo")
+    @DisplayName("desvincularEstudiante lanza ResourceNotFoundException si no habia vinculo")
     void desvincular_sin_vinculo_lanza_excepcion() {
         when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> representanteService.desvincularEstudiante(1L, 10L))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test
@@ -292,7 +292,7 @@ class RepresentanteServiceTest {
         RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Padre", "0999999999", null);
 
         assertThatThrownBy(() -> representanteService.editar(99L, request))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

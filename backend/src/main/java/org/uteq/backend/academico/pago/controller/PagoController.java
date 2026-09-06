@@ -37,7 +37,7 @@ public class PagoController {
      * @param request estudiante, año, meses, monto y fecha; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con la lista de pagos creados
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no existe ({@code 404})
      * @throws IllegalArgumentException si algún mes ya está cubierto
      *         ({@code 422})
@@ -57,7 +57,7 @@ public class PagoController {
      *
      * @param request estudiante, monto y fecha; validado con {@code @Valid}
      * @return {@code 201 Created} con el pago creado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no existe ({@code 404})
      */
     @PostMapping("/diario")
@@ -76,7 +76,7 @@ public class PagoController {
      * @param idPago  identificador del pago
      * @param request motivo de la anulación; validado con {@code @Valid}
      * @return {@code 200 OK} con el pago anulado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el pago no existe ({@code 404})
      * @throws IllegalArgumentException si el pago ya estaba anulado
      *         ({@code 422})
@@ -95,7 +95,7 @@ public class PagoController {
      *
      * @param idEstudiante identificador del estudiante
      * @return {@code 200 OK} con la lista de pagos
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el estudiante no existe ({@code 404})
      */
     @GetMapping("/estudiante/{idEstudiante}")

@@ -15,7 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.persona.controller.PersonaController;
 import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
@@ -68,7 +68,7 @@ class PersonaControllerTest {
     @Test
     @DisplayName("GET /api/personas/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(personaService.buscarPorId(99L)).thenThrow(new RecursoNoEncontradoException("no existe"));
+        when(personaService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/personas/99"))
                 .andExpect(status().isNotFound());

@@ -15,7 +15,7 @@ import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.ConsentimientoRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.ConsentimientoService;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -48,13 +48,13 @@ class ConsentimientoServiceTest {
     }
 
     @Test
-    @DisplayName("otorgar lanza RecursoNoEncontradoException si el representante no existe")
+    @DisplayName("otorgar lanza ResourceNotFoundException si el representante no existe")
     void otorgar_representante_inexistente_lanza_excepcion() {
         var request = new OtorgarConsentimientoRequest(1L, 10L, Consentimiento.ALCANCE_INFORMES);
         when(representanteRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> consentimientoService.otorgar(request, "admin"))
-                .isInstanceOf(RecursoNoEncontradoException.class);
+                .isInstanceOf(ResourceNotFoundException.class);
     }
 
     @Test

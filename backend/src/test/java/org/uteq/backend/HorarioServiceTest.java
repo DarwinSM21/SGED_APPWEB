@@ -7,8 +7,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
-import org.uteq.backend.common.Zonas;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
@@ -73,7 +73,7 @@ class HorarioServiceTest {
 
         var request = new HorarioRequest(999L, 1, LocalTime.of(16, 0), LocalTime.of(17, 0), null, null);
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.crear("carlos@sged.test", request));
+        assertThrows(ResourceNotFoundException.class, () -> service.crear("carlos@sged.test", request));
     }
 
     @Test
@@ -111,7 +111,7 @@ class HorarioServiceTest {
         when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(Optional.of(entrenador(1L)));
         when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(50L, 1L)).thenReturn(Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> service.desactivar("carlos@sged.test", 50L));
+        assertThrows(ResourceNotFoundException.class, () -> service.desactivar("carlos@sged.test", 50L));
         verify(horarioRepository, never()).save(any());
     }
 
@@ -120,7 +120,7 @@ class HorarioServiceTest {
     void generarSesionesProgramadas_crea_solo_las_que_faltan() {
         var yo = entrenador(1L);
         var categoria = Categoria.builder().idCategoria(5L).nombre("SUB-12").build();
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         short diaDeHoy = (short) hoy.getDayOfWeek().getValue();
         var horarioSinSesionHoy = Horario.builder().idHorario(1L).entrenador(yo).categoria(categoria)
                 .diaSemana(diaDeHoy).horaInicio(LocalTime.of(16, 0)).horaFin(LocalTime.of(18, 0)).build();
@@ -158,7 +158,7 @@ class HorarioServiceTest {
         service.generarSesionesProgramadas();
 
         long esperadas = java.util.stream.IntStream.rangeClosed(0, 7)
-                .mapToObj(i -> LocalDate.now(Zonas.ECUADOR).plusDays(i))
+                .mapToObj(i -> LocalDate.now(Zones.ECUADOR).plusDays(i))
                 .filter(fecha -> fecha.getDayOfWeek().getValue() <= 5)
                 .count();
 
@@ -186,7 +186,7 @@ class HorarioServiceTest {
 
         var guardadas = org.mockito.ArgumentCaptor.forClass(SesionEntrenamiento.class);
         verify(sesionRepository, times(8)).save(guardadas.capture());
-        LocalDate hoy = LocalDate.now(Zonas.ECUADOR);
+        LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         assertThat(guardadas.getAllValues())
                 .allSatisfy(s -> assertThat(s.getFecha()).isAfterOrEqualTo(hoy));
     }
@@ -228,7 +228,7 @@ class HorarioServiceTest {
         when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
                 .thenReturn(java.util.Optional.empty());
 
-        assertThrows(RecursoNoEncontradoException.class,
+        assertThrows(ResourceNotFoundException.class,
                 () -> service.editar("carlos@sged.test", 9L, peticion(LocalTime.of(16, 0), LocalTime.of(18, 0))));
     }
 
@@ -250,7 +250,7 @@ class HorarioServiceTest {
         var yo = entrenador(1L);
         var horario = horarioDe(yo);
         var yaUsada = SesionEntrenamiento.builder().idSesion(50L).horario(horario)
-                .fecha(LocalDate.now(Zonas.ECUADOR)).build();
+                .fecha(LocalDate.now(Zones.ECUADOR)).build();
 
         when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
         when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))
@@ -272,7 +272,7 @@ class HorarioServiceTest {
         var yo = entrenador(1L);
         var horario = horarioDe(yo);
         var vacia = SesionEntrenamiento.builder().idSesion(51L).horario(horario)
-                .fecha(LocalDate.now(Zonas.ECUADOR).plusDays(3)).build();
+                .fecha(LocalDate.now(Zones.ECUADOR).plusDays(3)).build();
 
         when(entrenadorRepository.findByUsuario_Username("carlos@sged.test")).thenReturn(java.util.Optional.of(yo));
         when(horarioRepository.findByIdHorarioAndEntrenador_IdEntrenador(9L, 1L))

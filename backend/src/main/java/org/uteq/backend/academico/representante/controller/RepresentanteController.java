@@ -48,7 +48,7 @@ public class RepresentanteController {
      *
      * @param id identificador del representante
      * @return {@code 200 OK} con el representante
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping("/{id}")
@@ -63,7 +63,7 @@ public class RepresentanteController {
      * @param request persona, usuario, parentesco, contacto y representados
      *                iniciales; validado con {@code @Valid}
      * @return {@code 201 Created} con el representante registrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la persona, el usuario o algún estudiante no existen
      *         ({@code 404})
      * @throws IllegalArgumentException si la persona o el usuario ya están
@@ -82,7 +82,7 @@ public class RepresentanteController {
      * @param id      identificador del representante
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con el representante actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @PutMapping("/{id}")
@@ -97,7 +97,7 @@ public class RepresentanteController {
      *
      * @param id identificador del representante
      * @return {@code 200 OK} con el representante reactivado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si ya está activo ({@code 422})
      */
@@ -112,7 +112,7 @@ public class RepresentanteController {
      *
      * @param id identificador del representante
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")
@@ -131,7 +131,7 @@ public class RepresentanteController {
      * @param request      relación y marca de contacto principal (opcional);
      *                     validado con {@code @Valid}
      * @return {@code 200 OK} con el representante y su lista de representados
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el representante o el estudiante no existen ({@code 404})
      */
     @PostMapping("/{id}/estudiantes/{idEstudiante}")
@@ -148,7 +148,7 @@ public class RepresentanteController {
      * @param id           identificador del representante
      * @param idEstudiante identificador del estudiante a desvincular
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si ese estudiante no está vinculado a este representante
      *         ({@code 404})
      */
