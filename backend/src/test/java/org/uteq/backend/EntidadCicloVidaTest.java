@@ -2,7 +2,7 @@ package org.uteq.backend;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.uteq.backend.academico.representante.entity.Consentimiento;
+import org.uteq.backend.academico.guardian.entity.Consent;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
@@ -109,14 +109,14 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Consentimiento.onCreate(): fija otorgadoEn solo si viene nulo")
+    @DisplayName("Consent.onCreate(): fija otorgadoEn solo si viene nulo")
     void consentimiento_onCreate() throws Exception {
-        Consentimiento c = new Consentimiento();
+        Consent c = new Consent();
         invocar(c, "onCreate");
         assertThat(c.getOtorgadoEn()).isNotNull();
 
         OffsetDateTime fija = OffsetDateTime.now().minusHours(5);
-        Consentimiento d = new Consentimiento();
+        Consent d = new Consent();
         d.setOtorgadoEn(fija);
         invocar(d, "onCreate");
         assertThat(d.getOtorgadoEn()).isEqualTo(fija);

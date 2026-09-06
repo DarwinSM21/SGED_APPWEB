@@ -18,7 +18,7 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
 import org.uteq.backend.academico.estudiante.service.EstudianteService;
-import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
@@ -44,7 +44,7 @@ class EstudianteServiceTest {
     @Mock private PersonRepository personaRepository;
     @Mock private CategoriaRepository categoriaRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
-    @Mock private RepresentanteEstudianteRepository representanteEstudianteRepository;
+    @Mock private GuardianStudentRepository representanteEstudianteRepository;
     @Mock private EstudianteAccesoService estudianteAccesoService;
 
     @InjectMocks private EstudianteService service;

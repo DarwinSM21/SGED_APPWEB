@@ -3,7 +3,7 @@ package org.uteq.backend;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.uteq.backend.academico.payment.entity.Payment;
-import org.uteq.backend.academico.representante.entity.Consentimiento;
+import org.uteq.backend.academico.guardian.entity.Consent;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionDiaria;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -22,13 +22,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class EntidadLogicaTest {
 
     @Test
-    @DisplayName("Consentimiento.estaVigente(): vigente mientras no se revoque")
+    @DisplayName("Consent.isActive(): vigente mientras no se revoque")
     void consentimiento_estaVigente() {
-        Consentimiento c = Consentimiento.builder().build();
-        assertThat(c.estaVigente()).isTrue();
+        Consent c = Consent.builder().build();
+        assertThat(c.isActive()).isTrue();
 
         c.setRevocadoEn(OffsetDateTime.now());
-        assertThat(c.estaVigente()).isFalse();
+        assertThat(c.isActive()).isFalse();
     }
 
     @Test

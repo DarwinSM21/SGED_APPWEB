@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.dto.AsistenciaDtos.AsistenciaResponse;
@@ -47,7 +47,7 @@ public class AsistenciaService {
     private final AsistenciaRepository asistenciaRepository;
     private final EstudianteRepository estudianteRepository;
     private final SesionEntrenamientoRepository sesionRepository;
-    private final NotificacionService notificacionService;
+    private final NotificationService notificacionService;
 
     /** Minutos de gracia tras la hora de inicio antes de contar TARDE. */
     @Value("${asistencia.tolerancia-tarde-minutos:10}")
@@ -97,7 +97,7 @@ public class AsistenciaService {
                 .build();
 
         asistencia = asistenciaRepository.save(asistencia);
-        notificacionService.notificarAsistencia(estudiante, asistencia.getEstado());
+        notificacionService.notifyAttendance(estudiante, asistencia.getEstado());
         return asistencia;
     }
 

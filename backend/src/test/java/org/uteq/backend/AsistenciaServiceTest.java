@@ -11,7 +11,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
@@ -39,7 +39,7 @@ class AsistenciaServiceTest {
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
-    @Mock private NotificacionService notificacionService;
+    @Mock private NotificationService notificacionService;
 
     @InjectMocks
     private AsistenciaService asistenciaService;

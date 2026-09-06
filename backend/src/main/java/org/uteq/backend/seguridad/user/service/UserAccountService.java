@@ -10,7 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -47,7 +47,7 @@ public class UserAccountService {
     private final RoleRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntrenadorRepository entrenadorRepository;
-    private final RepresentanteRepository representanteRepository;
+    private final GuardianRepository representanteRepository;
     private final EstudianteRepository estudianteRepository;
 
     /**

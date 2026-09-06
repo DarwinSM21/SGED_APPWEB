@@ -12,7 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
@@ -53,7 +53,7 @@ class UserAccountServiceTest {
     @Mock
     private EntrenadorRepository entrenadorRepository;
     @Mock
-    private RepresentanteRepository representanteRepository;
+    private GuardianRepository representanteRepository;
     @Mock
     private EstudianteRepository estudianteRepository;
 

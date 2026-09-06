@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
@@ -29,7 +29,7 @@ public class LesionService {
     private final LesionRepository lesionRepository;
     private final EstudianteRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
-    private final NotificacionService notificacionService;
+    private final NotificationService notificacionService;
 
     /**
      * Registra una lesión y notifica a los representantes del estudiante.
@@ -82,7 +82,7 @@ public class LesionService {
                 .fechaLesion(fecha)
                 .fechaEstimadaRetorno(fechaEstimadaRetorno)
                 .build());
-        notificacionService.notificarLesion(estudiante, descripcion);
+        notificacionService.notifyInjury(estudiante, descripcion);
         return lesion;
     }
 

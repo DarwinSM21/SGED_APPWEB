@@ -11,16 +11,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.MiEquipoResponse;
 import org.uteq.backend.academico.estudiante.service.MiEquipoService;
-import org.uteq.backend.academico.representante.dto.InformeDtos.ComentarioInformeResponse;
-import org.uteq.backend.academico.representante.dto.InformeDtos.InformeEstudianteResponse;
-import org.uteq.backend.academico.representante.service.InformeService;
+import org.uteq.backend.academico.guardian.dto.ReportDtos.ReportCommentResponse;
+import org.uteq.backend.academico.guardian.dto.ReportDtos.StudentReportResponse;
+import org.uteq.backend.academico.guardian.service.StudentReportService;
 
 /**
  * Lo que un {@code ESTUDIANTE} ve sobre sí mismo más allá de su asistencia
  * (que ya cubre {@code MiAsistenciaController}): sus estadísticas de
  * evaluación y su equipo (categoría, posición, entrenador, compañeros).
  *
- * <p>{@code mi-informe} reutiliza {@link InformeService} tal cual lo usa el
+ * <p>{@code mi-informe} reutiliza {@link StudentReportService} tal cual lo usa el
  * representante para el informe de un representado —mismas piezas, misma
  * forma de respuesta—, solo que resuelto por la propia cuenta autenticada.
  */
@@ -29,7 +29,7 @@ import org.uteq.backend.academico.representante.service.InformeService;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ESTUDIANTE')")
 public class MiEquipoController {
-    private final InformeService informeService;
+    private final StudentReportService informeService;
     private final MiEquipoService miEquipoService;
 
     /**
@@ -41,8 +41,8 @@ public class MiEquipoController {
      */
     @GetMapping("/mi-informe")
     @Transactional(readOnly = true)
-    public ResponseEntity<InformeEstudianteResponse> miInforme() {
-        return ResponseEntity.ok(informeService.miInforme(usernameAutenticado()));
+    public ResponseEntity<StudentReportResponse> miInforme() {
+        return ResponseEntity.ok(informeService.myReport(usernameAutenticado()));
     }
 
     /**
@@ -56,8 +56,8 @@ public class MiEquipoController {
      */
     @PostMapping("/mi-informe/comentario")
     @Transactional(readOnly = true)
-    public ResponseEntity<ComentarioInformeResponse> miComentario() {
-        return ResponseEntity.ok(informeService.miComentario(usernameAutenticado()));
+    public ResponseEntity<ReportCommentResponse> miComentario() {
+        return ResponseEntity.ok(informeService.myComment(usernameAutenticado()));
     }
 
     /**

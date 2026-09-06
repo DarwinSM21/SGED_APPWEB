@@ -16,8 +16,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.academico.estudiante.controller.MiEquipoController;
 import org.uteq.backend.academico.estudiante.dto.MiEquipoDtos.*;
 import org.uteq.backend.academico.estudiante.service.MiEquipoService;
-import org.uteq.backend.academico.representante.dto.InformeDtos.InformeEstudianteResponse;
-import org.uteq.backend.academico.representante.service.InformeService;
+import org.uteq.backend.academico.guardian.dto.ReportDtos.StudentReportResponse;
+import org.uteq.backend.academico.guardian.service.StudentReportService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 
@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 class MiEquipoControllerTest {
 
-    @Mock private InformeService informeService;
+    @Mock private StudentReportService informeService;
     @Mock private MiEquipoService miEquipoService;
 
     @InjectMocks private MiEquipoController controller;
@@ -61,8 +61,8 @@ class MiEquipoControllerTest {
     @Test
     @DisplayName("miInforme devuelve 200 con el mismo DTO que ya usa el representante")
     void miInforme_devuelve_200() throws Exception {
-        when(informeService.miInforme("juan@sged.test")).thenReturn(
-                new InformeEstudianteResponse(1L, "Juan Perez", "SUB-12", List.of(), List.of(), new BigDecimal("90.00")));
+        when(informeService.myReport("juan@sged.test")).thenReturn(
+                new StudentReportResponse(1L, "Juan Perez", "SUB-12", List.of(), List.of(), new BigDecimal("90.00")));
 
         mockMvc.perform(get("/api/estudiante/mi-informe"))
                 .andExpect(status().isOk())
@@ -73,7 +73,7 @@ class MiEquipoControllerTest {
     @Test
     @DisplayName("miInforme responde 404 si la cuenta no tiene estudiante asociado")
     void miInforme_sin_estudiante_da_404() throws Exception {
-        when(informeService.miInforme("juan@sged.test"))
+        when(informeService.myReport("juan@sged.test"))
                 .thenThrow(new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         mockMvc.perform(get("/api/estudiante/mi-informe"))

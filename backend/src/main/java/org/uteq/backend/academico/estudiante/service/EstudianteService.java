@@ -13,7 +13,7 @@ import org.uteq.backend.academico.estudiante.dto.EstudianteResponse;
 import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.academico.representante.repository.RepresentanteEstudianteRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
@@ -54,7 +54,7 @@ public class EstudianteService {
     private final CategoriaRepository categoriaRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PosicionRepository posicionRepository;
-    private final RepresentanteEstudianteRepository representanteEstudianteRepository;
+    private final GuardianStudentRepository representanteEstudianteRepository;
 
     private final EstudianteAccesoService estudianteAccesoService;
 

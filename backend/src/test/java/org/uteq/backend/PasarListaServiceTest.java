@@ -10,7 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.academico.representante.service.NotificacionService;
+import org.uteq.backend.academico.guardian.service.NotificationService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.MarcaAsistencia;
 import org.uteq.backend.deportivo.asistencia.dto.PasarListaDtos.PasarListaRequest;
@@ -38,7 +38,7 @@ class PasarListaServiceTest {
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
-    @Mock private NotificacionService notificacionService;
+    @Mock private NotificationService notificacionService;
 
     @InjectMocks
     private AsistenciaService asistenciaService;
