@@ -12,7 +12,7 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -48,7 +48,7 @@ public class LesionService {
      *                                      de retorno es anterior a la de la
      *                                      lesión
      */
-    @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion",
+    @Audited(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion",
             descripcionSpel = "'registró una lesión del estudiante #' + #p0")
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
@@ -97,7 +97,7 @@ public class LesionService {
      *                                      alta es anterior a la fecha de la
      *                                      lesión
      */
-    @Auditado(accion = "EDITAR", entidad = "Lesion", idSpel = "#result.idLesion",
+    @Audited(accion = "EDITAR", entidad = "Lesion", idSpel = "#result.idLesion",
             descripcionSpel = "'dio de alta la lesión #' + #result.idLesion")
     @Transactional
     public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {

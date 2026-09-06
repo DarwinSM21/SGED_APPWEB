@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.auditoria.aop;
+package org.uteq.backend.seguridad.audit.aop;
 
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -11,19 +11,19 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 
 @Aspect
 @Component
 @RequiredArgsConstructor
-public class AuditoriaAspect {
-    private static final Logger log = LoggerFactory.getLogger(AuditoriaAspect.class);
+public class AuditAspect {
+    private static final Logger log = LoggerFactory.getLogger(AuditAspect.class);
     private static final ExpressionParser PARSER = new SpelExpressionParser();
 
-    private final AuditoriaService auditoriaService;
+    private final AuditService auditoriaService;
 
     @Around("@annotation(auditado)")
-    public Object auditar(ProceedingJoinPoint pjp, Auditado auditado) throws Throwable {
+    public Object audit(ProceedingJoinPoint pjp, Audited auditado) throws Throwable {
         Object resultado = pjp.proceed();
         try {
             StandardEvaluationContext contexto = new StandardEvaluationContext();
@@ -38,7 +38,7 @@ public class AuditoriaAspect {
                     ? descripcionGenerica(auditado, entidadId)
                     : String.valueOf(evaluar(auditado.descripcionSpel(), contexto));
 
-            auditoriaService.registrar(auditado.accion(), auditado.entidad(), entidadId, descripcion);
+            auditoriaService.recordEvent(auditado.accion(), auditado.entidad(), entidadId, descripcion);
         } catch (Exception e) {
             log.error("No se pudo auditar la llamada a {}", pjp.getSignature(), e);
         }
@@ -61,7 +61,7 @@ public class AuditoriaAspect {
         return expresion.getValue(contexto);
     }
 
-    private String descripcionGenerica(Auditado auditado, Long entidadId) {
+    private String descripcionGenerica(Audited auditado, Long entidadId) {
         String verbo = switch (auditado.accion()) {
             case "CREAR" -> "creó";
             case "EDITAR" -> "editó";

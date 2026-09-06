@@ -12,7 +12,7 @@ import org.uteq.backend.academico.pago.dto.PagoDtos.HistoricoIngresosResponse;
 import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -55,7 +55,7 @@ public class PagoService {
      * @throws ResourceNotFoundException si el estudiante no existe
      * @throws IllegalArgumentException     si algún mes ya está cubierto
      */
-    @Auditado(accion = "CREAR", entidad = "Pago",
+    @Audited(accion = "CREAR", entidad = "Pago",
             descripcionSpel = "'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'")
     @Transactional
     public List<Pago> registrarMembresia(Long idEstudiante, int anio, List<Integer> meses,
@@ -97,7 +97,7 @@ public class PagoService {
      * @return el pago creado
      * @throws ResourceNotFoundException si el estudiante no existe
      */
-    @Auditado(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago",
+    @Audited(accion = "CREAR", entidad = "Pago", idSpel = "#result.idPago",
             descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
     @Transactional
     public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
@@ -203,7 +203,7 @@ public class PagoService {
      * @throws ResourceNotFoundException si el pago no existe
      * @throws IllegalArgumentException     si el pago ya estaba anulado
      */
-    @Auditado(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
+    @Audited(accion = "ANULAR", entidad = "Pago", idSpel = "#p0")
     @Transactional
     public Pago anular(Long idPago, String motivo, String usernameAnulador) {
         Pago pago = pagoRepository.findById(idPago)

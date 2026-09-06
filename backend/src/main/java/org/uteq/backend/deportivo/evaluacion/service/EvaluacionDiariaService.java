@@ -13,7 +13,7 @@ import org.uteq.backend.deportivo.evaluacion.entity.*;
 import org.uteq.backend.deportivo.evaluacion.repository.*;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
@@ -185,7 +185,7 @@ public class EvaluacionDiariaService {
      *                                      asistencia habilitante, o un
      *                                      puntaje supera su máximo
      */
-    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#p1.idEstudiante",
+    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#p1.idEstudiante",
             descripcionSpel = "'editó estadísticas de estudiante #' + #p1.idEstudiante")
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
@@ -283,7 +283,7 @@ public class EvaluacionDiariaService {
      *                                      abierta
      * @throws IllegalArgumentException     si ya estaba finalizada
      */
-    @Auditado(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
+    @Audited(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
             descripcionSpel = "'finalizó la evaluación de la sesión #' + #p0")
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {

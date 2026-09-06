@@ -12,7 +12,7 @@ import org.uteq.backend.inventario.movement.dto.StockMovementDtos.*;
 import org.uteq.backend.inventario.movement.entity.StockMovement;
 import org.uteq.backend.inventario.movement.entity.StockMovement.MovementType;
 import org.uteq.backend.inventario.movement.repository.StockMovementRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -63,7 +63,7 @@ public class StockMovementService {
      * @throws IllegalArgumentException     si una salida dejaría el stock
      *                                      negativo
      */
-    @Auditado(accion = "CREAR", entidad = "MovimientoStock", idSpel = "#result.idMovimiento",
+    @Audited(accion = "CREAR", entidad = "MovimientoStock", idSpel = "#result.idMovimiento",
             descripcionSpel = "'registró ' + #result.tipoMovimiento + ' de ' + #result.cantidad + ' (' + #result.articulo + ')'")
     @Transactional
     public StockMovementResponse register(StockMovementRequest request, String usernameRegistrador) {

@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.TooManyRequestsException;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.dto.SesionResponse;
@@ -54,7 +54,7 @@ public class AuthService {
     private final RolRepository rolRepository;
     private final EstadoGeneralRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuditoriaService auditoriaService;
+    private final AuditService auditoriaService;
 
     /**
      * Resultado de un inicio de sesión correcto: los dos tokens que el
@@ -158,7 +158,7 @@ public class AuthService {
         } catch (BadCredentialsException e) {
             loginAttemptService.registrarFallo(ip);
             AUTH_AUDIT_LOG.warn("AUTH_LOGIN_FAIL ip={} sub={}", ip, request.username());
-            auditoriaService.registrarConIdentidad(request.username(), null,
+            auditoriaService.recordEventWithIdentity(request.username(), null,
                     "LOGIN_FALLIDO", "Usuario", null, "intento de inicio de sesión fallido");
             throw e;
         }
@@ -168,7 +168,7 @@ public class AuthService {
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "");
         AUTH_AUDIT_LOG.info("AUTH_LOGIN_OK ip={} sub={}", ip, userDetails.getUsername());
-        auditoriaService.registrarConIdentidad(userDetails.getUsername(), rol,
+        auditoriaService.recordEventWithIdentity(userDetails.getUsername(), rol,
                 "LOGIN", "Usuario", null, "inició sesión");
 
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
@@ -208,7 +208,7 @@ public class AuthService {
             }
         }
 
-        auditoriaService.registrar("LOGOUT", "Usuario", null, "cerró sesión");
+        auditoriaService.recordEvent("LOGOUT", "Usuario", null, "cerró sesión");
         SecurityContextHolder.clearContext();
     }
 

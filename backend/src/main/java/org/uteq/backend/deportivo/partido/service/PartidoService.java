@@ -15,7 +15,7 @@ import org.uteq.backend.deportivo.partido.dto.PartidoDtos.PartidoResponse;
 import org.uteq.backend.deportivo.partido.dto.PartidoDtos.ResultadoRequest;
 import org.uteq.backend.deportivo.partido.entity.Partido;
 import org.uteq.backend.deportivo.partido.repository.PartidoRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -83,7 +83,7 @@ public class PartidoService {
      * @throws ResourceNotFoundException si la categoría no existe
      * @throws IllegalArgumentException     si la categoría está inactiva
      */
-    @Auditado(accion = "CREAR", entidad = "Partido", idSpel = "#result.idPartido",
+    @Audited(accion = "CREAR", entidad = "Partido", idSpel = "#result.idPartido",
             descripcionSpel = "'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha")
     @Transactional
     public PartidoResponse crear(CrearPartidoRequest request) {
@@ -115,7 +115,7 @@ public class PartidoService {
      * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido ya estaba cerrado
      */
-    @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
+    @Audited(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'cargó el resultado del partido ' + #p0 + ' y lo cerró'")
     @Transactional
     public PartidoResponse registrarResultado(Long idPartido, ResultadoRequest request) {
@@ -144,7 +144,7 @@ public class PartidoService {
      * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido no estaba cerrado
      */
-    @Auditado(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
+    @Audited(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'reabrio el partido ' + #p0 + ' para corregirlo'")
     @Transactional
     public PartidoResponse reabrir(Long idPartido) {
@@ -193,7 +193,7 @@ public class PartidoService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el partido está cerrado
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Partido", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Partido", idSpel = "#p0",
             descripcionSpel = "'eliminó el partido ' + #p0")
     @Transactional
     public void eliminar(Long idPartido) {

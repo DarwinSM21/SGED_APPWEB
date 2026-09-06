@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.auditoria.entity;
+package org.uteq.backend.seguridad.audit.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +13,7 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Auditoria {
+public class AuditLog {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

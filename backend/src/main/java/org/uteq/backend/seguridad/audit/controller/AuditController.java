@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.auditoria.controller;
+package org.uteq.backend.seguridad.audit.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.common.Zones;
-import org.uteq.backend.seguridad.auditoria.dto.AuditoriaResponse;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.dto.AuditLogResponse;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -21,15 +21,15 @@ import java.time.OffsetDateTime;
 /**
  * Consulta del registro de auditoría ({@code seguridad.auditoria}). Solo
  * lectura y solo {@code ADMINISTRADOR}; las filas las escribe
- * {@link AuditoriaService} desde el aspecto {@code @Auditado}.
+ * {@link AuditService} desde el aspecto {@code @Audited}.
  */
 @RestController
 @RequestMapping("/api/admin/auditorias")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMINISTRADOR')")
-public class AuditoriaController {
+public class AuditController {
 
-    private final AuditoriaService auditoriaService;
+    private final AuditService auditoriaService;
 
     /**
      * Busca eventos de auditoría con filtros opcionales, ordenados por fecha
@@ -46,7 +46,7 @@ public class AuditoriaController {
      * @return {@code 200 OK} con la página de eventos
      */
     @GetMapping
-    public ResponseEntity<Page<AuditoriaResponse>> listar(
+    public ResponseEntity<Page<AuditLogResponse>> list(
             @RequestParam(required = false) String usuario,
             @RequestParam(required = false) String accion,
             @RequestParam(required = false) String entidad,
@@ -61,6 +61,6 @@ public class AuditoriaController {
         OffsetDateTime hasta = fechaHasta != null
                 ? fechaHasta.plusDays(1).atStartOfDay(Zones.ECUADOR).toOffsetDateTime() : null;
 
-        return ResponseEntity.ok(auditoriaService.buscar(usuario, accion, entidad, desde, hasta, pageable));
+        return ResponseEntity.ok(auditoriaService.search(usuario, accion, entidad, desde, hasta, pageable));
     }
 }

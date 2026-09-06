@@ -9,9 +9,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
-import org.uteq.backend.seguridad.auditoria.aop.AuditoriaAspect;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.aop.Audited;
+import org.uteq.backend.seguridad.audit.aop.AuditAspect;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 
 import java.lang.reflect.Method;
 import java.util.List;
@@ -26,36 +26,36 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuditoriaAspectTest {
-    @Mock private AuditoriaService auditoriaService;
+class AuditAspectTest {
+    @Mock private AuditService auditoriaService;
     @Mock private ProceedingJoinPoint pjp;
 
-    private AuditoriaAspect aspecto;
+    private AuditAspect aspecto;
 
     @BeforeEach
     void setUp() {
-        aspecto = new AuditoriaAspect(auditoriaService);
+        aspecto = new AuditAspect(auditoriaService);
     }
 
     static class MetodosDeEjemplo {
-        @Auditado(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion")
+        @Audited(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion")
         void conResultado() {
         }
 
-        @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
+        @Audited(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
         void conArgumentoPosicional(Long id) {
         }
 
-        @Auditado(accion = "CREAR", entidad = "Pago",
+        @Audited(accion = "CREAR", entidad = "Pago",
                 descripcionSpel = "'creó ' + #result.size() + ' pago(s)'")
         void conDescripcionPersonalizada() {
         }
     }
 
-    private Auditado anotacionDe(String nombreMetodo) throws NoSuchMethodException {
+    private Audited anotacionDe(String nombreMetodo) throws NoSuchMethodException {
         for (Method m : MetodosDeEjemplo.class.getDeclaredMethods()) {
             if (m.getName().equals(nombreMetodo)) {
-                return m.getAnnotation(Auditado.class);
+                return m.getAnnotation(Audited.class);
             }
         }
         throw new NoSuchMethodException(nombreMetodo);
@@ -67,12 +67,12 @@ class AuditoriaAspectTest {
         Lesion resultado = Lesion.builder().idLesion(45L).build();
         when(pjp.proceed()).thenReturn(resultado);
         when(pjp.getArgs()).thenReturn(new Object[0]);
-        Auditado auditado = anotacionDe("conResultado");
+        Audited auditado = anotacionDe("conResultado");
 
-        Object devuelto = aspecto.auditar(pjp, auditado);
+        Object devuelto = aspecto.audit(pjp, auditado);
 
         assertSame(resultado, devuelto);
-        verify(auditoriaService).registrar(eq("CREAR"), eq("Lesion"), eq(45L), eq("creó Lesion #45"));
+        verify(auditoriaService).recordEvent(eq("CREAR"), eq("Lesion"), eq(45L), eq("creó Lesion #45"));
     }
 
     @Test
@@ -80,11 +80,11 @@ class AuditoriaAspectTest {
     void evaluaIdSobreArgumento() throws Throwable {
         when(pjp.proceed()).thenReturn(null);
         when(pjp.getArgs()).thenReturn(new Object[]{99L});
-        Auditado auditado = anotacionDe("conArgumentoPosicional");
+        Audited auditado = anotacionDe("conArgumentoPosicional");
 
-        aspecto.auditar(pjp, auditado);
+        aspecto.audit(pjp, auditado);
 
-        verify(auditoriaService).registrar(eq("ELIMINAR"), eq("Estudiante"), eq(99L), eq("eliminó Estudiante #99"));
+        verify(auditoriaService).recordEvent(eq("ELIMINAR"), eq("Estudiante"), eq(99L), eq("eliminó Estudiante #99"));
     }
 
     @Test
@@ -92,11 +92,11 @@ class AuditoriaAspectTest {
     void usaDescripcionPersonalizada() throws Throwable {
         when(pjp.proceed()).thenReturn(List.of("a", "b"));
         when(pjp.getArgs()).thenReturn(new Object[0]);
-        Auditado auditado = anotacionDe("conDescripcionPersonalizada");
+        Audited auditado = anotacionDe("conDescripcionPersonalizada");
 
-        aspecto.auditar(pjp, auditado);
+        aspecto.audit(pjp, auditado);
 
-        verify(auditoriaService).registrar(eq("CREAR"), eq("Pago"), isNull(), eq("creó 2 pago(s)"));
+        verify(auditoriaService).recordEvent(eq("CREAR"), eq("Pago"), isNull(), eq("creó 2 pago(s)"));
     }
 
     @Test
@@ -106,10 +106,10 @@ class AuditoriaAspectTest {
         when(pjp.proceed()).thenReturn(resultado);
         when(pjp.getArgs()).thenReturn(new Object[0]);
         when(pjp.getSignature()).thenReturn(mock(Signature.class));
-        doThrow(new RuntimeException("fallo")).when(auditoriaService).registrar(any(), any(), any(), any());
-        Auditado auditado = anotacionDe("conResultado");
+        doThrow(new RuntimeException("fallo")).when(auditoriaService).recordEvent(any(), any(), any(), any());
+        Audited auditado = anotacionDe("conResultado");
 
-        Object devuelto = aspecto.auditar(pjp, auditado);
+        Object devuelto = aspecto.audit(pjp, auditado);
 
         assertSame(resultado, devuelto);
     }

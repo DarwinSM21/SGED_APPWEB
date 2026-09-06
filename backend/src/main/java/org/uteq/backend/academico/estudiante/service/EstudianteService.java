@@ -23,7 +23,7 @@ import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -109,7 +109,7 @@ public class EstudianteService {
      *                                      está en uso o si la edad no cae en
      *                                      el rango de la categoría
      */
-    @Auditado(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+    @Audited(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
@@ -192,7 +192,7 @@ public class EstudianteService {
      *                                      estudiante o la edad no cae en el
      *                                      rango de la categoría nueva
      */
-    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
@@ -237,7 +237,7 @@ public class EstudianteService {
      * @throws ResourceNotFoundException si el estudiante o la posición no
      *                                      existen
      */
-    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
@@ -343,7 +343,7 @@ public class EstudianteService {
      * @param id identificador del estudiante
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0",
             descripcionSpel = "'desactivó la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
@@ -363,7 +363,7 @@ public class EstudianteService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la ficha ya está activa
      */
-    @Auditado(accion = "REACTIVAR", entidad = "Estudiante", idSpel = "#p0",
+    @Audited(accion = "REACTIVAR", entidad = "Estudiante", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
@@ -400,7 +400,7 @@ public class EstudianteService {
      *
      * @param idCategoria identificador de la categoría
      */
-    @Auditado(accion = "EDITAR", entidad = "Estudiante",
+    @Audited(accion = "EDITAR", entidad = "Estudiante",
             descripcionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
@@ -448,7 +448,7 @@ public class EstudianteService {
      * @throws IllegalArgumentException     si el estudiante ya tiene cuenta o
      *                                      el {@code username} está en uso
      */
-    @Auditado(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
+    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
             descripcionSpel = "'habilitó acceso al Estudiante #' + #result.idEstudiante")
     @Transactional
     public EstudianteResponse habilitarAcceso(Long idEstudiante, HabilitarAccesoRequest request) {

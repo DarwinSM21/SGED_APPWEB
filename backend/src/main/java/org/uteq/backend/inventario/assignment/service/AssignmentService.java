@@ -18,7 +18,7 @@ import org.uteq.backend.inventario.assignment.entity.Assignment;
 import org.uteq.backend.inventario.assignment.entity.Assignment.AssignmentStatus;
 import org.uteq.backend.inventario.assignment.entity.Assignment.RecipientType;
 import org.uteq.backend.inventario.assignment.repository.AssignmentRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -89,7 +89,7 @@ public class AssignmentService {
      *                                      especificado o no hay stock
      *                                      suficiente
      */
-    @Auditado(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
+    @Audited(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
             descripcionSpel = "'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)")
     @Transactional
     public AssignmentResponse create(AssignmentRequest request, String usernameRegistrador) {
@@ -137,7 +137,7 @@ public class AssignmentService {
      * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
      *                                      la asignación ya estaba resuelta
      */
-    @Auditado(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
+    @Audited(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
             descripcionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
     @Transactional
     public AssignmentResponse registerReturn(Long id, ReturnRequest request) {

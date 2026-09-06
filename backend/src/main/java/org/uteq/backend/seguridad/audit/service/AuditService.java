@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.auditoria.service;
+package org.uteq.backend.seguridad.audit.service;
 
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -14,9 +14,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.uteq.backend.seguridad.auditoria.dto.AuditoriaResponse;
-import org.uteq.backend.seguridad.auditoria.entity.Auditoria;
-import org.uteq.backend.seguridad.auditoria.repository.AuditoriaRepository;
+import org.uteq.backend.seguridad.audit.dto.AuditLogResponse;
+import org.uteq.backend.seguridad.audit.entity.AuditLog;
+import org.uteq.backend.seguridad.audit.repository.AuditLogRepository;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.time.OffsetDateTime;
@@ -38,10 +38,10 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class AuditoriaService {
-    private static final Logger log = LoggerFactory.getLogger(AuditoriaService.class);
+public class AuditService {
+    private static final Logger log = LoggerFactory.getLogger(AuditService.class);
 
-    private final AuditoriaRepository auditoriaRepository;
+    private final AuditLogRepository auditoriaRepository;
     private final UsuarioRepository usuarioRepository;
 
     /**
@@ -55,13 +55,13 @@ public class AuditoriaService {
      * @param descripcion texto legible del evento
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void registrar(String accion, String entidad, Long entidadId, String descripcion) {
+    public void recordEvent(String accion, String entidad, Long entidadId, String descripcion) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = (auth != null && auth.isAuthenticated()) ? auth.getName() : "desconocido";
         String rol = (auth != null && !auth.getAuthorities().isEmpty())
                 ? auth.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "")
                 : null;
-        registrarConIdentidad(username, rol, accion, entidad, entidadId, descripcion);
+        recordEventWithIdentity(username, rol, accion, entidad, entidadId, descripcion);
     }
 
     /**
@@ -79,10 +79,10 @@ public class AuditoriaService {
      * @param descripcion texto legible del evento
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void registrarConIdentidad(String username, String rol, String accion, String entidad,
+    public void recordEventWithIdentity(String username, String rol, String accion, String entidad,
                                        Long entidadId, String descripcion) {
         try {
-            Auditoria.AuditoriaBuilder builder = Auditoria.builder()
+            AuditLog.AuditLogBuilder builder = AuditLog.builder()
                     .fecha(OffsetDateTime.now())
                     .usuarioNombre(username)
                     .rol(rol)
@@ -114,12 +114,12 @@ public class AuditoriaService {
      * @return la página de eventos que cumplen los filtros
      */
     @Transactional(readOnly = true)
-    public Page<AuditoriaResponse> buscar(String usuario, String accion, String entidad,
+    public Page<AuditLogResponse> search(String usuario, String accion, String entidad,
                                            OffsetDateTime fechaDesde, OffsetDateTime fechaHasta,
                                            Pageable pageable) {
-        Specification<Auditoria> filtro = construirFiltro(usuario, accion, entidad, fechaDesde, fechaHasta);
+        Specification<AuditLog> filtro = buildFilter(usuario, accion, entidad, fechaDesde, fechaHasta);
         return auditoriaRepository.findAll(filtro, pageable)
-                .map(a -> new AuditoriaResponse(
+                .map(a -> new AuditLogResponse(
                         a.getIdAuditoria(),
                         a.getFecha(),
                         a.getUsuarioNombre(),
@@ -135,7 +135,7 @@ public class AuditoriaService {
     // parámetro preparado y el driver responde "could not determine data type
     // of parameter". Con Specification cada predicado se agrega solo si el
     // filtro está presente.
-    private Specification<Auditoria> construirFiltro(String usuario, String accion, String entidad,
+    private Specification<AuditLog> buildFilter(String usuario, String accion, String entidad,
                                                        OffsetDateTime fechaDesde, OffsetDateTime fechaHasta) {
         return (root, query, cb) -> {
             List<Predicate> predicados = new ArrayList<>();

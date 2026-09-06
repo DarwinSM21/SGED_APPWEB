@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.inventario.item.dto.ItemDtos.*;
 import org.uteq.backend.inventario.item.entity.Item;
 import org.uteq.backend.inventario.item.repository.ItemRepository;
@@ -63,7 +63,7 @@ public class ItemService {
      * @param request datos del artículo
      * @return el artículo creado
      */
-    @Auditado(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo",
+    @Audited(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo",
             descripcionSpel = "'creó el artículo ' + #result.nombre")
     @Transactional
     public ItemResponse create(ItemRequest request) {
@@ -90,7 +90,7 @@ public class ItemService {
      * @return el artículo actualizado
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo",
+    @Audited(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo",
             descripcionSpel = "'editó el artículo ' + #result.nombre")
     @Transactional
     public ItemResponse update(Long id, ItemRequest request) {
@@ -114,7 +114,7 @@ public class ItemService {
      * @param id identificador del artículo
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0",
             descripcionSpel = "'desactivó el artículo #' + #p0")
     @Transactional
     public void delete(Long id) {
@@ -131,7 +131,7 @@ public class ItemService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Auditado(accion = "REACTIVAR", entidad = "Articulo", idSpel = "#p0",
+    @Audited(accion = "REACTIVAR", entidad = "Articulo", idSpel = "#p0",
             descripcionSpel = "'reactivo el articulo #' + #p0")
     @Transactional
     public ItemResponse reactivate(Long id) {

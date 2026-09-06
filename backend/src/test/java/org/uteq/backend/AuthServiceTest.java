@@ -16,7 +16,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.common.exception.TooManyRequestsException;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.dto.SesionResponse;
@@ -60,7 +60,7 @@ class AuthServiceTest {
     @Mock private EstadoGeneralRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private LoginAttemptService loginAttemptService;
-    @Mock private AuditoriaService auditoriaService;
+    @Mock private AuditService auditoriaService;
 
     @InjectMocks private AuthService authService;
 
@@ -265,7 +265,7 @@ class AuthServiceTest {
         authService.logout("token-valido");
 
         verify(blacklistService).revocar("jti-123", 900_000L);
-        verify(auditoriaService).registrar(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
+        verify(auditoriaService).recordEvent(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
     }
 
     @Test
@@ -283,7 +283,7 @@ class AuthServiceTest {
         authService.logout("token-corrupto");
 
         verify(blacklistService, never()).revocar(any(), anyLong());
-        verify(auditoriaService).registrar(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
+        verify(auditoriaService).recordEvent(eq("LOGOUT"), eq("Usuario"), isNull(), anyString());
     }
 
     @Test

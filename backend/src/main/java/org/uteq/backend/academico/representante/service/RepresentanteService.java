@@ -23,7 +23,7 @@ import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
 import java.util.List;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 
 /**
  * CRUD administrativo de {@code Representante}. El alta y la vinculación con
@@ -146,7 +146,7 @@ public class RepresentanteService {
      * @param id identificador del representante
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Representante", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Representante", idSpel = "#p0",
             descripcionSpel = "'desactivo la ficha de representante #' + #p0")
     @Transactional
     public void eliminar(Long id) {
@@ -164,7 +164,7 @@ public class RepresentanteService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Auditado(accion = "REACTIVAR", entidad = "Representante", idSpel = "#p0",
+    @Audited(accion = "REACTIVAR", entidad = "Representante", idSpel = "#p0",
             descripcionSpel = "'reactivo la ficha de representante #' + #p0")
     @Transactional
     public RepresentanteResponse reactivar(Long id) {

@@ -12,7 +12,7 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 
 import java.util.List;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 
 /**
  * Lógica de negocio del catálogo de categorías (grupos etarios). El nombre
@@ -145,7 +145,7 @@ public class CategoriaService {
      * @param id identificador de la categoría
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Categoria", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Categoria", idSpel = "#p0",
             descripcionSpel = "'desactivo la categoria #' + #p0")
     @Transactional
     public void eliminar(Long id) {

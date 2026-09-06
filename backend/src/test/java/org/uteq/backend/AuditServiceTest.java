@@ -22,9 +22,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import org.uteq.backend.seguridad.auditoria.entity.Auditoria;
-import org.uteq.backend.seguridad.auditoria.repository.AuditoriaRepository;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.entity.AuditLog;
+import org.uteq.backend.seguridad.audit.repository.AuditLogRepository;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 
@@ -45,11 +45,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class AuditoriaServiceTest {
-    @Mock private AuditoriaRepository auditoriaRepository;
+class AuditServiceTest {
+    @Mock private AuditLogRepository auditoriaRepository;
     @Mock private UsuarioRepository usuarioRepository;
 
-    @InjectMocks private AuditoriaService servicio;
+    @InjectMocks private AuditService servicio;
 
     @AfterEach
     void limpiarContextoDeSeguridad() {
@@ -69,11 +69,11 @@ class AuditoriaServiceTest {
         autenticarComo("ana.torres", "ADMINISTRADOR");
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.empty());
 
-        servicio.registrar("EDITAR", "Lesion", 45L, "editó Lesion #45");
+        servicio.recordEvent("EDITAR", "Lesion", 45L, "editó Lesion #45");
 
-        ArgumentCaptor<Auditoria> captor = ArgumentCaptor.forClass(Auditoria.class);
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
-        Auditoria guardada = captor.getValue();
+        AuditLog guardada = captor.getValue();
         assertEquals("ana.torres", guardada.getUsuarioNombre());
         assertEquals("ADMINISTRADOR", guardada.getRol());
         assertEquals("EDITAR", guardada.getAccion());
@@ -86,9 +86,9 @@ class AuditoriaServiceTest {
     void registrarConIdentidadNoRequiereContexto() {
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.empty());
 
-        servicio.registrarConIdentidad("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");
+        servicio.recordEventWithIdentity("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");
 
-        ArgumentCaptor<Auditoria> captor = ArgumentCaptor.forClass(Auditoria.class);
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
         assertEquals("ana.torres", captor.getValue().getUsuarioNombre());
         assertEquals("LOGIN", captor.getValue().getAccion());
@@ -101,7 +101,7 @@ class AuditoriaServiceTest {
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.empty());
         when(auditoriaRepository.save(any())).thenThrow(new RuntimeException("DB caida"));
 
-        servicio.registrar("EDITAR", "Lesion", 45L, "editó Lesion #45");
+        servicio.recordEvent("EDITAR", "Lesion", 45L, "editó Lesion #45");
 
     }
 
@@ -109,14 +109,14 @@ class AuditoriaServiceTest {
     @DisplayName("buscar delega los filtros y el paginado al repositorio")
     void buscarDelegaAlRepositorio() {
         var pageable = PageRequest.of(0, 20);
-        var fila = Auditoria.builder()
+        var fila = AuditLog.builder()
                 .idAuditoria(1L).usuarioNombre("ana.torres").rol("ADMINISTRADOR")
                 .accion("EDITAR").entidad("Lesion").entidadId(45L)
                 .descripcion("editó Lesion #45").build();
         when(auditoriaRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(fila)));
 
-        var resultado = servicio.buscar("ana", "EDITAR", "Lesion", null, null, pageable);
+        var resultado = servicio.search("ana", "EDITAR", "Lesion", null, null, pageable);
 
         assertEquals(1, resultado.getTotalElements());
         assertEquals("ana.torres", resultado.getContent().get(0).usuario());
@@ -128,9 +128,9 @@ class AuditoriaServiceTest {
     void registrarSinAutenticacionUsaDesconocido() {
         when(usuarioRepository.findByUsername("desconocido")).thenReturn(Optional.empty());
 
-        servicio.registrar("EDITAR", "Lesion", 45L, "editó Lesion #45");
+        servicio.recordEvent("EDITAR", "Lesion", 45L, "editó Lesion #45");
 
-        ArgumentCaptor<Auditoria> captor = ArgumentCaptor.forClass(Auditoria.class);
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
         assertEquals("desconocido", captor.getValue().getUsuarioNombre());
         assertNull(captor.getValue().getRol());
@@ -142,9 +142,9 @@ class AuditoriaServiceTest {
         Usuario usuario = Usuario.builder().idUsuario(7L).username("ana.torres").build();
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.of(usuario));
 
-        servicio.registrarConIdentidad("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");
+        servicio.recordEventWithIdentity("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");
 
-        ArgumentCaptor<Auditoria> captor = ArgumentCaptor.forClass(Auditoria.class);
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
         assertEquals(usuario, captor.getValue().getUsuario());
     }
@@ -157,9 +157,9 @@ class AuditoriaServiceTest {
         when(requestHttp.getRemoteAddr()).thenReturn("10.0.0.5");
         RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(requestHttp));
 
-        servicio.registrarConIdentidad("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");
+        servicio.recordEventWithIdentity("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");
 
-        ArgumentCaptor<Auditoria> captor = ArgumentCaptor.forClass(Auditoria.class);
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
         assertEquals("10.0.0.5", captor.getValue().getIp());
     }
@@ -171,7 +171,7 @@ class AuditoriaServiceTest {
         when(auditoriaRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        servicio.buscar("ana", "EDITAR", "Lesion",
+        servicio.search("ana", "EDITAR", "Lesion",
                 OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), pageable);
 
         ArgumentCaptor<Specification> captor = ArgumentCaptor.forClass(Specification.class);
@@ -186,7 +186,7 @@ class AuditoriaServiceTest {
         when(auditoriaRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        servicio.buscar(null, null, null, null, null, pageable);
+        servicio.search(null, null, null, null, null, pageable);
 
         ArgumentCaptor<Specification> captor = ArgumentCaptor.forClass(Specification.class);
         verify(auditoriaRepository).findAll(captor.capture(), eq(pageable));
@@ -200,7 +200,7 @@ class AuditoriaServiceTest {
         when(auditoriaRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        servicio.buscar("   ", "", null, null, null, pageable);
+        servicio.search("   ", "", null, null, null, pageable);
 
         ArgumentCaptor<Specification> captor = ArgumentCaptor.forClass(Specification.class);
         verify(auditoriaRepository).findAll(captor.capture(), eq(pageable));

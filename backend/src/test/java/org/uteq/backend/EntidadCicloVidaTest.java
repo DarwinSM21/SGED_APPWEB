@@ -6,7 +6,7 @@ import org.uteq.backend.academico.representante.entity.Consentimiento;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
-import org.uteq.backend.seguridad.auditoria.entity.Auditoria;
+import org.uteq.backend.seguridad.audit.entity.AuditLog;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -95,14 +95,14 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Auditoria.onCreate(): fija la fecha solo si viene nula")
+    @DisplayName("AuditLog.onCreate(): fija la fecha solo si viene nula")
     void auditoria_onCreate() throws Exception {
-        Auditoria a = new Auditoria();
+        AuditLog a = new AuditLog();
         invocar(a, "onCreate");
         assertThat(a.getFecha()).isNotNull();
 
         OffsetDateTime fija = OffsetDateTime.now().minusDays(3);
-        Auditoria b = new Auditoria();
+        AuditLog b = new AuditLog();
         b.setFecha(fija);
         invocar(b, "onCreate");
         assertThat(b.getFecha()).isEqualTo(fija);

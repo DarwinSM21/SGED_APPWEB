@@ -14,7 +14,7 @@ import org.uteq.backend.academico.representante.repository.RepresentanteReposito
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
 import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -106,7 +106,7 @@ public class UsuarioService {
             @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
-    @Auditado(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario",
+    @Audited(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario",
             descripcionSpel = "'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UsuarioResponse crear(UsuarioRequest request) {
@@ -166,7 +166,7 @@ public class UsuarioService {
             @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
-    @Auditado(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario",
+    @Audited(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario",
             descripcionSpel = "'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UsuarioResponse editar(Long id, UsuarioRequest request) {
@@ -206,7 +206,7 @@ public class UsuarioService {
      * @param id identificador de la cuenta
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0",
             descripcionSpel = "'desactivó la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
@@ -225,7 +225,7 @@ public class UsuarioService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la cuenta ya está activa
      */
-    @Auditado(accion = "REACTIVAR", entidad = "Usuario", idSpel = "#p0",
+    @Audited(accion = "REACTIVAR", entidad = "Usuario", idSpel = "#p0",
             descripcionSpel = "'reactivo la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional

@@ -1,8 +1,8 @@
-package org.uteq.backend.seguridad.auditoria.dto;
+package org.uteq.backend.seguridad.audit.dto;
 
 import java.time.OffsetDateTime;
 
-public record AuditoriaResponse(
+public record AuditLogResponse(
         Long id,
         OffsetDateTime fecha,
         String usuario,

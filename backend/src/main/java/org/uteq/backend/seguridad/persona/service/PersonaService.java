@@ -6,7 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.persona.dto.PersonaRequest;
 import org.uteq.backend.seguridad.persona.dto.PersonaResponse;
 import org.uteq.backend.seguridad.persona.entity.Persona;
@@ -73,7 +73,7 @@ public class PersonaService {
      * @throws IllegalArgumentException si la cédula o el correo ya están en
      *                                  uso por otra persona activa
      */
-    @Auditado(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona",
+    @Audited(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona",
             descripcionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonaResponse crear(PersonaRequest request) {
@@ -105,7 +105,7 @@ public class PersonaService {
      * @throws IllegalArgumentException     si la cédula o el correo
      *                                      pertenecen a otra persona
      */
-    @Auditado(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona",
+    @Audited(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona",
             descripcionSpel = "'editó los datos de ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonaResponse editar(Long id, PersonaRequest request) {
@@ -132,7 +132,7 @@ public class PersonaService {
      * @param id identificador de la persona
      * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0",
+    @Audited(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0",
             descripcionSpel = "'desactivó la persona #' + #p0")
     @Transactional
     public void eliminar(Long id) {

@@ -12,9 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.seguridad.auditoria.controller.AuditoriaController;
-import org.uteq.backend.seguridad.auditoria.dto.AuditoriaResponse;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.controller.AuditController;
+import org.uteq.backend.seguridad.audit.dto.AuditLogResponse;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -28,9 +28,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class AuditoriaControllerTest {
-    @Mock private AuditoriaService auditoriaService;
-    @InjectMocks private AuditoriaController controller;
+class AuditControllerTest {
+    @Mock private AuditService auditoriaService;
+    @InjectMocks private AuditController controller;
 
     private MockMvc mockMvc;
 
@@ -41,15 +41,15 @@ class AuditoriaControllerTest {
                 .build();
     }
 
-    private AuditoriaResponse fila() {
-        return new AuditoriaResponse(1L, OffsetDateTime.now(), "ana.torres", "ADMINISTRADOR",
+    private AuditLogResponse fila() {
+        return new AuditLogResponse(1L, OffsetDateTime.now(), "ana.torres", "ADMINISTRADOR",
                 "EDITAR", "Lesion", 45L, "editó Lesion #45");
     }
 
     @Test
     @DisplayName("GET /api/admin/auditorias sin filtros devuelve la pagina completa")
     void listarSinFiltros() throws Exception {
-        when(auditoriaService.buscar(isNull(), isNull(), isNull(), isNull(), isNull(), any()))
+        when(auditoriaService.search(isNull(), isNull(), isNull(), isNull(), isNull(), any()))
                 .thenReturn(new PageImpl<>(List.of(fila()), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/admin/auditorias"))
@@ -62,7 +62,7 @@ class AuditoriaControllerTest {
     @Test
     @DisplayName("GET /api/admin/auditorias reenvia los filtros de query al servicio")
     void listarConFiltros() throws Exception {
-        when(auditoriaService.buscar(eq("ana"), eq("EDITAR"), eq("Lesion"), any(), any(), any()))
+        when(auditoriaService.search(eq("ana"), eq("EDITAR"), eq("Lesion"), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(fila()), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/admin/auditorias")
