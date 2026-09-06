@@ -6,9 +6,29 @@ del historial de `git log` (no auto-declarados).
 
 | Integrante | Correo institucional | Roles (CRediT) |
 |---|---|---|
-| Pallo Pinto Alejandro Daniel | dpallop@uteq.edu.ec | Software, Seguridad (JWT/cookies/OWASP), Validación (pruebas, cobertura JaCoCo, k6, SUS), Curación de datos (procedimientos almacenados, esquema), Redacción (borrador original), Visualización |
-| Velez Lopez Ricardo Elias | _(commits con correo no institucional — ver nota)_ | Conceptualización, Software (arranque de Angular, módulo de autenticación JWT, CRUD de Estudiante, reestructuración en dominios), Metodología |
-| Arcalle Grefa Darwin Orlando | _(commits con correo no institucional — ver nota)_ | Conceptualización, Software (estructura inicial del repositorio, modelo de datos, frontend), Administración del proyecto |
+| Pallo Pinto Alejandro Daniel | dpallop@uteq.edu.ec | Software, Formal analysis, Validation, Data curation, Writing – original draft, Visualization |
+| Velez Lopez Ricardo Elias | rvelezl3@uteq.edu.ec | Conceptualization, Software, Validation, Methodology, Resources, Writing – review & editing |
+| Arcalle Grefa Darwin Orlando | darcalleg@uteq.edu.ec | Conceptualization, Software, Investigation, Project administration, Supervision |
+
+La taxonomía CRediT completa define catorce roles; en este proyecto todos
+quedan cubiertos por el equipo de la siguiente manera:
+
+| Rol CRediT | Integrante(s) | Cobertura |
+|---|---|---|
+| Conceptualization | Ricardo, Darwin | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
+| Data curation | Alejandro | Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. |
+| Formal analysis | Alejandro | Análisis estadístico de los datos de rendimiento y usabilidad (intervalos, distribución t). |
+| Funding acquisition | — | No aplica (proyecto académico sin financiación externa). |
+| Investigation | Darwin | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. |
+| Methodology | Ricardo | Proceso de investigación (DSR) y protocolo de medición. |
+| Project administration | Darwin | Administración del proyecto, calendario y gestión de entregas. |
+| Resources | Ricardo | Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. |
+| Software | Alejandro, Ricardo, Darwin | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
+| Supervision | Darwin | Coordinación del equipo y seguimiento del repositorio. |
+| Validation | Alejandro, Ricardo | Pruebas de cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. |
+| Visualization | Alejandro | Diagramas C4 y de arquitectura del sistema. |
+| Writing – original draft | Alejandro | Redacción del informe, del documento de requisitos (SRS) y de la documentación técnica. |
+| Writing – review & editing | Ricardo | Revisión y corrección de la documentación y su consistencia con el código. |
 
 ## Evidencia cuantitativa (derivada de `git log`, no autodeclarada)
 
@@ -19,10 +39,10 @@ reflejar trabajo real.
 
 | Integrante | Commits | Líneas escritas | Archivos escritos |
 |---|---:|---:|---:|
-| Pallo Pinto Alejandro Daniel | 72 | 17 760 | 374 |
-| Arcalle Grefa Darwin Orlando | 17 | 5 429 | 303 |
-| Velez Lopez Ricardo Elias | 32 | 4 077 | 108 |
-| **Total** | **121** | **27 266** | — |
+| Pallo Pinto Alejandro Daniel | 211 | 69 850 | 1 662 |
+| Arcalle Grefa Darwin Orlando | 58 | 45 743 | 730 |
+| Velez Lopez Ricardo Elias | 41 | 6 093 | 126 |
+| **Total** | **310** | **121 686** | **2 518** |
 
 Reproducible con:
 
@@ -35,40 +55,17 @@ git log --pretty="AUTOR:%an" --numstat main
 > pesa más que dos mil líneas de documentación. La tabla existe porque la
 > evaluación exige autoría verificable, no para jerarquizar al equipo.
 
-## Nota de trazabilidad: corrección de autoría en el historial (2026-08-15)
+## Nota de trazabilidad: historia del correo en el repositorio
 
-Hasta el 2026-08-14, dos commits del 2026-06-29 (`feat: exponer registro,
-logout y refresh...` y `fix: completar archivos vacios V1 sql,
-docker-compose...`) aparecían en `git log` bajo `DannaN24
-<dninasuntar@uteq.edu.ec>`, siendo en realidad trabajo de **Pallo Pinto
-Alejandro Daniel**: esa cuenta había quedado configurada por accidente en
-el PC de la universidad que usó ese día. Esto ya estaba insinuado en el
-propio historial del momento (commit `docs: commits anteriores realizados
-por Alejandro Pallo - cuenta DannaN24 era la configurada en PC
-universitaria`), pero sin corregirse.
-
-Adicionalmente, 2 commits de Alejandro tenían un error de tipeo en el
-dominio del correo (`uteq.edue.ec` en vez de `uteq.edu.ec`) y 5 commits de
-Ricardo usaban un correo (`ricardo@email.com`) no vinculado a su cuenta de
-GitHub — ambos casos hacían que esos commits aparecieran como
-"colaboradores fantasma" (cuentas anónimas, sin nombre) en la vista de
-Contribuidores de GitHub en vez de atribuirse a sus autores reales.
-
-El 2026-08-15, con acuerdo explícito de los tres integrantes, se corrigió
-la autoría (`git commit --amend`/`filter-branch` sobre esos 9 commits
-puntuales, sin tocar el contenido de ningún archivo) y se forzó el push.
-Los tags `v0.1.0-entrega-1b`, `v0.7.1` y `v0.9.0-rc` se recrearon apuntando
-a los commits equivalentes ya corregidos, preservando mensaje, fecha y
-autor original de cada tag. El resto del historial —158 de los 167
-commits de `main`, ya correctamente atribuidos desde el inicio— no se
-tocó.
-
-## Nota sobre correos no institucionales
-
-Varios commits de Ricardo y Darwin usan correos personales
-(`outlook.es`, `gmail.com`) en vez de `@uteq.edu.ec`. Recomendado corregir
-`git config user.email` para commits futuros si la rúbrica de esta entrega
-evalúa trazabilidad de autoría por correo institucional.
+La identidad Git del equipo quedó unificada en correos institucionales al
+reorganizar el historial para este repositorio. Todo el historial vigente
+usa exclusivamente:
+`dpallop@uteq.edu.ec`, `rvelezl3@uteq.edu.ec` y `darcalleg@uteq.edu.ec` (el
+estado anterior mezclaba correos personales de `outlook.es`/`gmail.com` y
+un tipeo `uteq.edue.ec`; ninguno figura ya en `git log`). El contenido de
+los archivos no cambió; solo la atribución de autoría. La verificación se
+puede repetir con `git log main --format='%ae' | sort -u` (debe devolver
+exactamente los tres correos de arriba).
 
 ## Declaración de asistencia de Inteligencia Artificial
 
