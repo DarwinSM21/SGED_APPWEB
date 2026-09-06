@@ -4,8 +4,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
@@ -29,7 +29,7 @@ import java.util.Set;
 public class EstudianteAccesoService {
     private final UsuarioRepository usuarioRepository;
     private final RoleRepository rolRepository;
-    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
@@ -72,7 +72,7 @@ public class EstudianteAccesoService {
 
         Role rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
                 .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));
-        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
+        GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)
                 .orElseThrow(() -> new IllegalStateException(
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
 

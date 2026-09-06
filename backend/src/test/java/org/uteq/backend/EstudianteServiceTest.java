@@ -22,8 +22,8 @@ import org.uteq.backend.academico.representante.repository.RepresentanteEstudian
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -43,7 +43,7 @@ class EstudianteServiceTest {
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private PersonaRepository personaRepository;
     @Mock private CategoriaRepository categoriaRepository;
-    @Mock private EstadoGeneralRepository estadoGeneralRepository;
+    @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private RepresentanteEstudianteRepository representanteEstudianteRepository;
     @Mock private EstudianteAccesoService estudianteAccesoService;
 
@@ -51,7 +51,7 @@ class EstudianteServiceTest {
 
     private Persona personaDummy;
     private Categoria categoriaDummy;
-    private EstadoGeneral estadoDummy;
+    private GeneralStatus estadoDummy;
     private Estudiante estudianteDummy;
 
     @BeforeEach
@@ -70,7 +70,7 @@ class EstudianteServiceTest {
                 .edadMax((short) 12)
                 .build();
 
-        estadoDummy = EstadoGeneral.builder()
+        estadoDummy = GeneralStatus.builder()
                 .idEstadoGeneral(1L)
                 .nombre("ACTIVO")
                 .build();

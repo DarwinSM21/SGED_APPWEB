@@ -24,8 +24,8 @@ import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
 import org.uteq.backend.seguridad.auth.service.AuthService;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
@@ -57,7 +57,7 @@ class AuthServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private PersonaRepository personaRepository;
     @Mock private RoleRepository rolRepository;
-    @Mock private EstadoGeneralRepository estadoGeneralRepository;
+    @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private AuditService auditoriaService;
@@ -200,7 +200,7 @@ class AuthServiceTest {
         when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
                 Optional.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(
-                Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
+                Optional.of(GeneralStatus.builder().idEstadoGeneral(1L).build()));
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
             Usuario u = i.getArgument(0);
             u.setIdUsuario(1L);

@@ -6,10 +6,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.seguridad.estado.dto.EstadoGeneralResponse;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
-import org.uteq.backend.seguridad.estado.service.EstadoGeneralService;
+import org.uteq.backend.seguridad.status.dto.GeneralStatusResponse;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
+import org.uteq.backend.seguridad.status.service.GeneralStatusService;
 
 import java.util.List;
 
@@ -17,23 +17,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class EstadoGeneralServiceTest {
+class GeneralStatusServiceTest {
 
     @Mock
-    private EstadoGeneralRepository estadoGeneralRepository;
+    private GeneralStatusRepository estadoGeneralRepository;
 
     @InjectMocks
-    private EstadoGeneralService estadoGeneralService;
+    private GeneralStatusService estadoGeneralService;
 
     @Test
-    @DisplayName("listarTodos mapea todas las entidades a EstadoGeneralResponse")
+    @DisplayName("listarTodos mapea todas las entidades a GeneralStatusResponse")
     void listarTodos_devuelve_todos_los_estados() {
         when(estadoGeneralRepository.findAll()).thenReturn(List.of(
-                EstadoGeneral.builder().idEstadoGeneral(1L).nombre("ACTIVO").build(),
-                EstadoGeneral.builder().idEstadoGeneral(2L).nombre("INACTIVO").build()
+                GeneralStatus.builder().idEstadoGeneral(1L).nombre("ACTIVO").build(),
+                GeneralStatus.builder().idEstadoGeneral(2L).nombre("INACTIVO").build()
         ));
 
-        List<EstadoGeneralResponse> resultado = estadoGeneralService.listarTodos();
+        List<GeneralStatusResponse> resultado = estadoGeneralService.findAll();
 
         assertThat(resultado).hasSize(2);
         assertThat(resultado.get(0).nombre()).isEqualTo("ACTIVO");
@@ -45,7 +45,7 @@ class EstadoGeneralServiceTest {
     void listarTodos_devuelve_vacio() {
         when(estadoGeneralRepository.findAll()).thenReturn(List.of());
 
-        List<EstadoGeneralResponse> resultado = estadoGeneralService.listarTodos();
+        List<GeneralStatusResponse> resultado = estadoGeneralService.findAll();
 
         assertThat(resultado).isEmpty();
     }

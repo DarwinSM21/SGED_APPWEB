@@ -6,7 +6,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -37,7 +37,7 @@ public class Estudiante {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_general", nullable = false)
-    private EstadoGeneral estadoGeneral;
+    private GeneralStatus estadoGeneral;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_posicion")

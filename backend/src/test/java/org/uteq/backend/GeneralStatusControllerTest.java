@@ -9,9 +9,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.uteq.backend.seguridad.estado.controller.EstadoGeneralController;
-import org.uteq.backend.seguridad.estado.dto.EstadoGeneralResponse;
-import org.uteq.backend.seguridad.estado.service.EstadoGeneralService;
+import org.uteq.backend.seguridad.status.controller.GeneralStatusController;
+import org.uteq.backend.seguridad.status.dto.GeneralStatusResponse;
+import org.uteq.backend.seguridad.status.service.GeneralStatusService;
 
 import java.util.List;
 
@@ -21,15 +21,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class EstadoGeneralControllerTest {
+class GeneralStatusControllerTest {
 
     private MockMvc mockMvc;
 
     @Mock
-    private EstadoGeneralService estadoGeneralService;
+    private GeneralStatusService estadoGeneralService;
 
     @InjectMocks
-    private EstadoGeneralController estadoGeneralController;
+    private GeneralStatusController estadoGeneralController;
 
     @BeforeEach
     void setUp() {
@@ -39,9 +39,9 @@ class EstadoGeneralControllerTest {
     @Test
     @DisplayName("GET /api/estados_generales - lista todos los estados")
     void listarTodos_devuelve_200() throws Exception {
-        when(estadoGeneralService.listarTodos()).thenReturn(List.of(
-                new EstadoGeneralResponse(1L, "ACTIVO"),
-                new EstadoGeneralResponse(2L, "INACTIVO")
+        when(estadoGeneralService.findAll()).thenReturn(List.of(
+                new GeneralStatusResponse(1L, "ACTIVO"),
+                new GeneralStatusResponse(2L, "INACTIVO")
         ));
 
         mockMvc.perform(get("/api/estados_generales"))

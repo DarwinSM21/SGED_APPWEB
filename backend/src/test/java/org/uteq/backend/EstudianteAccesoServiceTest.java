@@ -9,8 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.estudiante.dto.HabilitarAccesoRequest;
 import org.uteq.backend.academico.estudiante.service.EstudianteAccesoService;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
@@ -31,7 +31,7 @@ import static org.mockito.Mockito.when;
 class EstudianteAccesoServiceTest {
     @Mock private UsuarioRepository usuarioRepository;
     @Mock private RoleRepository rolRepository;
-    @Mock private EstadoGeneralRepository estadoGeneralRepository;
+    @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
 
     @InjectMocks private EstudianteAccesoService service;
@@ -87,7 +87,7 @@ class EstudianteAccesoServiceTest {
 
         when(usuarioRepository.existsByUsernameIgnoreCase("andres@sged.test")).thenReturn(false);
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
-        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(EstadoGeneral.builder().idEstadoGeneral(1L).build()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(GeneralStatus.builder().idEstadoGeneral(1L).build()));
         when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
         when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
             Usuario u = i.getArgument(0);

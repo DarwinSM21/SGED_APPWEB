@@ -15,8 +15,8 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
@@ -43,7 +43,7 @@ import java.util.Set;
 public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
-    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final GeneralStatusRepository estadoGeneralRepository;
     private final RoleRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntrenadorRepository entrenadorRepository;
@@ -120,7 +120,7 @@ public class UsuarioService {
         Persona persona = personaRepository.findById(request.idPersona())
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
-        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
+        GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
         Usuario.UsuarioBuilder builder = Usuario.builder()
@@ -181,7 +181,7 @@ public class UsuarioService {
         Persona persona = personaRepository.findById(request.idPersona())
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
-        EstadoGeneral estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
+        GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
         usuario.setPersona(persona);

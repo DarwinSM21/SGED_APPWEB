@@ -21,8 +21,8 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
@@ -52,7 +52,7 @@ public class EstudianteService {
     private final EstudianteRepository estudianteRepository;
     private final PersonaRepository personaRepository;
     private final CategoriaRepository categoriaRepository;
-    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final GeneralStatusRepository estadoGeneralRepository;
     private final PosicionRepository posicionRepository;
     private final RepresentanteEstudianteRepository representanteEstudianteRepository;
 
@@ -130,7 +130,7 @@ public class EstudianteService {
             Categoria categoria = categoriaRepository.findById(request.idCategoria())
                     .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
 
-            EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
+            GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                     .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
             est.setCategoria(categoria);
@@ -159,7 +159,7 @@ public class EstudianteService {
 
         validarEdadEnCategoria(persona, categoria);
 
-        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
+        GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
         Estudiante estudiante = Estudiante.builder()
@@ -313,7 +313,7 @@ public class EstudianteService {
         if (estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(idEstadoGeneralNuevo)) {
             return;
         }
-        EstadoGeneral estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)
+        GeneralStatus estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)
                 .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + idEstadoGeneralNuevo));
         estudiante.setEstadoGeneral(estadoGeneral);
     }

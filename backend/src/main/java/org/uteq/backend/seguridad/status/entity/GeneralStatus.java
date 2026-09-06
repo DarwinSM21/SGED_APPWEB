@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.estado.entity;
+package org.uteq.backend.seguridad.status.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -10,7 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EstadoGeneral {
+public class GeneralStatus {
 
     @Id
     @Column(name = "id_estado_general")

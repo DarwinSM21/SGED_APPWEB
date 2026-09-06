@@ -2,7 +2,7 @@ package org.uteq.backend.seguridad.usuario.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.role.entity.Role;
 
@@ -29,7 +29,7 @@ public class Usuario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_general", nullable = false)
-    private EstadoGeneral estadoGeneral;
+    private GeneralStatus estadoGeneral;
 
     @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;

@@ -20,8 +20,8 @@ import org.uteq.backend.seguridad.auth.dto.SesionResponse;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
@@ -52,7 +52,7 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PersonaRepository personaRepository;
     private final RoleRepository rolRepository;
-    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditoriaService;
 
@@ -107,7 +107,7 @@ public class AuthService {
 
         // id_estado_general es NOT NULL: sin esto el alta también falla en base
         // de datos aunque la persona ya se haya podido insertar.
-        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)
+        GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)
                 .orElseThrow(() -> new IllegalStateException(
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
 

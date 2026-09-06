@@ -15,8 +15,8 @@ import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
@@ -45,7 +45,7 @@ class UsuarioServiceTest {
     @Mock
     private PersonaRepository personaRepository;
     @Mock
-    private EstadoGeneralRepository estadoGeneralRepository;
+    private GeneralStatusRepository estadoGeneralRepository;
     @Mock
     private RoleRepository rolRepository;
     @Mock
@@ -65,8 +65,8 @@ class UsuarioServiceTest {
                 .correo("ana@sged.test").build();
     }
 
-    private EstadoGeneral estadoActivo() {
-        return EstadoGeneral.builder().idEstadoGeneral(1L).nombre("ACTIVO").build();
+    private GeneralStatus estadoActivo() {
+        return GeneralStatus.builder().idEstadoGeneral(1L).nombre("ACTIVO").build();
     }
 
     private Usuario usuario() {

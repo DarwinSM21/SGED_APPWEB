@@ -1,10 +1,10 @@
-package org.uteq.backend.seguridad.estado.service;
+package org.uteq.backend.seguridad.status.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.seguridad.estado.dto.EstadoGeneralResponse;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
+import org.uteq.backend.seguridad.status.dto.GeneralStatusResponse;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,20 +16,20 @@ import java.util.stream.Collectors;
  */
 @Service
 @RequiredArgsConstructor
-public class EstadoGeneralService {
+public class GeneralStatusService {
 
-    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final GeneralStatusRepository estadoGeneralRepository;
 
     /**
      * Devuelve todos los estados del catálogo.
      *
-     * @return la lista completa, mapeada a {@link EstadoGeneralResponse}
+     * @return la lista completa, mapeada a {@link GeneralStatusResponse}
      */
     @Transactional(readOnly = true)
-    public List<EstadoGeneralResponse> listarTodos() {
+    public List<GeneralStatusResponse> findAll() {
         return estadoGeneralRepository.findAll()
                 .stream()
-                .map(estado -> new EstadoGeneralResponse(
+                .map(estado -> new GeneralStatusResponse(
                         estado.getIdEstadoGeneral(),
                         estado.getNombre()
                 ))
