@@ -23,7 +23,7 @@ import org.uteq.backend.academico.pago.service.PagoService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -70,7 +70,7 @@ class PagoControllerTest {
         var estudiante = Estudiante.builder().idEstudiante(1L)
                 .persona(Person.builder().nombre("Juan").apellido("Perez").build())
                 .build();
-        var registrador = Usuario.builder().idUsuario(9L)
+        var registrador = UserAccount.builder().idUsuario(9L)
                 .persona(Person.builder().nombre("Ana").apellido("Admin").build())
                 .build();
         return Pago.builder()

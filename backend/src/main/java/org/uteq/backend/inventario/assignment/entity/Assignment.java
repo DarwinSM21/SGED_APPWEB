@@ -8,7 +8,7 @@ import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.inventario.item.entity.Item;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -65,7 +65,7 @@ public class Assignment {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
-    private Usuario registradoPor;
+    private UserAccount registradoPor;
 
     @Column(length = 255)
     private String observaciones;

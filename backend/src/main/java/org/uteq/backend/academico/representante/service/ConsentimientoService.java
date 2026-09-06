@@ -11,8 +11,8 @@ import org.uteq.backend.academico.representante.entity.Representante;
 import org.uteq.backend.academico.representante.repository.ConsentimientoRepository;
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -28,7 +28,7 @@ public class ConsentimientoService {
     private final ConsentimientoRepository consentimientoRepository;
     private final RepresentanteRepository representanteRepository;
     private final EstudianteRepository estudianteRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     /**
      * Registra un consentimiento otorgado por un representante sobre un
@@ -57,7 +57,7 @@ public class ConsentimientoService {
                     throw new IllegalArgumentException("Ya existe un consentimiento vigente con ese alcance");
                 });
 
-        Usuario admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);
+        UserAccount admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);
 
         Consentimiento consentimiento = Consentimiento.builder()
                 .representante(representante)
@@ -90,7 +90,7 @@ public class ConsentimientoService {
             throw new IllegalArgumentException("Ese consentimiento ya estaba revocado");
         }
 
-        Usuario admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);
+        UserAccount admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);
         consentimiento.setRevocadoEn(OffsetDateTime.now());
         consentimiento.setRevocadoPor(admin);
         consentimiento = consentimientoRepository.save(consentimiento);

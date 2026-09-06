@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.usuario.service;
+package org.uteq.backend.seguridad.user.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -21,11 +21,11 @@ import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.dto.UserAccountPageResponse;
+import org.uteq.backend.seguridad.user.dto.UserAccountRequest;
+import org.uteq.backend.seguridad.user.dto.UserAccountResponse;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.List;
 import java.util.Set;
@@ -40,8 +40,8 @@ import java.util.Set;
  */
 @Service
 @RequiredArgsConstructor
-public class UsuarioService {
-    private final UsuarioRepository usuarioRepository;
+public class UserAccountService {
+    private final UserAccountRepository usuarioRepository;
     private final PersonRepository personaRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final RoleRepository rolRepository;
@@ -54,14 +54,14 @@ public class UsuarioService {
      * Lista paginada de todas las cuentas (activas e inactivas).
      *
      * @param pageable paginación y orden
-     * @return la página solicitada, envuelta en {@link UsuarioPageResponse}
+     * @return la página solicitada, envuelta en {@link UserAccountPageResponse}
      */
     @Cacheable(value = RedisCacheConfig.CACHE_USERS, key = "#pageable.pageNumber + '-' + #pageable.pageSize")
     @Transactional(readOnly = true)
-    public UsuarioPageResponse<UsuarioResponse> listar(Pageable pageable) {
-        Page<Usuario> page = usuarioRepository.findAll(pageable);
+    public UserAccountPageResponse<UserAccountResponse> list(Pageable pageable) {
+        Page<UserAccount> page = usuarioRepository.findAll(pageable);
         var content = page.getContent().stream().map(this::toResponse).toList();
-        return new UsuarioPageResponse<>(
+        return new UserAccountPageResponse<>(
                 content,
                 page.getNumber(),
                 page.getSize(),
@@ -78,8 +78,8 @@ public class UsuarioService {
      * @throws ResourceNotFoundException si no existe o está inactivada
      */
     @Transactional(readOnly = true)
-    public UsuarioResponse buscarPorId(Long id) {
-        Usuario u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)
+    public UserAccountResponse findById(Long id) {
+        UserAccount u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
         return toResponse(u);
  }
@@ -109,7 +109,7 @@ public class UsuarioService {
     @Audited(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario",
             descripcionSpel = "'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
-    public UsuarioResponse crear(UsuarioRequest request) {
+    public UserAccountResponse create(UserAccountRequest request) {
         if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("La contraseña es obligatoria");
         }
@@ -118,12 +118,12 @@ public class UsuarioService {
         }
 
         Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
         GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
-        Usuario.UsuarioBuilder builder = Usuario.builder()
+        UserAccount.UserAccountBuilder builder = UserAccount.builder()
                 .persona(persona)
                 .estadoGeneral(estado)
                 .username(request.username())
@@ -135,7 +135,7 @@ public class UsuarioService {
             builder.roles(Set.of(buscarRol(request.rol())));
         }
 
-        Usuario usuario = usuarioRepository.save(builder.build());
+        UserAccount usuario = usuarioRepository.save(builder.build());
 
         if (request.rol() != null) {
             vincularFichaExistente(request.idPersona(), request.rol(), usuario);
@@ -169,8 +169,8 @@ public class UsuarioService {
     @Audited(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario",
             descripcionSpel = "'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
-    public UsuarioResponse editar(Long id, UsuarioRequest request) {
-        Usuario usuario = usuarioRepository.findById(id)
+    public UserAccountResponse update(Long id, UserAccountRequest request) {
+        UserAccount usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
         if (!usuario.getUsername().equalsIgnoreCase(request.username())
@@ -179,7 +179,7 @@ public class UsuarioService {
         }
 
         Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
         GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
@@ -210,8 +210,8 @@ public class UsuarioService {
             descripcionSpel = "'desactivó la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
-    public void eliminar(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
+    public void delete(Long id) {
+        UserAccount usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
         usuario.setActivo(false);
         usuarioRepository.save(usuario);
@@ -229,8 +229,8 @@ public class UsuarioService {
             descripcionSpel = "'reactivo la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
-    public UsuarioResponse reactivar(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
+    public UserAccountResponse reactivate(Long id) {
+        UserAccount usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
         if (Boolean.TRUE.equals(usuario.getActivo())) {
@@ -243,7 +243,7 @@ public class UsuarioService {
 
     // R-09 (informe de evaluación de calidad): extraído de editar() para bajar
     // su complejidad ciclomática. "password en blanco" significa "no cambiarla".
-    private void actualizarPasswordSiCorresponde(Usuario usuario, String nuevaPassword) {
+    private void actualizarPasswordSiCorresponde(UserAccount usuario, String nuevaPassword) {
         if (nuevaPassword != null && !nuevaPassword.isBlank()) {
             usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
         }
@@ -252,7 +252,7 @@ public class UsuarioService {
     // R-09: ídem. Solo revalida y reasigna el rol si de verdad cambió; si el
     // rol pedido es null (el formulario de edición no toca roles) o es el
     // mismo que ya tiene, no hace nada.
-    private void actualizarRolSiCambio(Usuario usuario, Person persona, String rolPedido) {
+    private void actualizarRolSiCambio(UserAccount usuario, Person persona, String rolPedido) {
         if (rolPedido == null) {
             return;
         }
@@ -316,7 +316,7 @@ public class UsuarioService {
      * @param rol       rol de la cuenta, que determina qué ficha buscar
      * @param usuario   cuenta recién guardada a la que vincular la ficha
      */
-    private void vincularFichaExistente(Long idPersona, String rol, Usuario usuario) {
+    private void vincularFichaExistente(Long idPersona, String rol, UserAccount usuario) {
         switch (rol) {
             case "ESTUDIANTE" -> estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
                     .filter(e -> e.getUsuario() == null)
@@ -331,10 +331,10 @@ public class UsuarioService {
         }
     }
 
-    private UsuarioResponse toResponse(Usuario u) {
+    private UserAccountResponse toResponse(UserAccount u) {
         List<String> roles = u.getRoles() == null ? List.of()
                 : u.getRoles().stream().map(Role::getNombre).toList();
-        return new UsuarioResponse(
+        return new UserAccountResponse(
                 u.getIdUsuario(),
                 u.getPersona().getIdPersona(),
                 u.getPersona().getNombre(),

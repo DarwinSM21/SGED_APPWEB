@@ -21,7 +21,7 @@ import java.util.List;
  *
  * <p>Los métodos llevan {@code @Transactional} propio porque
  * {@code aResponse()} navega relaciones LAZY ({@code Pago -> Estudiante ->
- * Person}, {@code Pago -> Usuario -> Person}) con open-in-view
+ * Person}, {@code Pago -> UserAccount -> Person}) con open-in-view
  * deshabilitado.
  */
 @RestController

@@ -1,25 +1,25 @@
-package org.uteq.backend.seguridad.usuario.repository;
+package org.uteq.backend.seguridad.user.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.util.Optional;
 
-public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+public interface UserAccountRepository extends JpaRepository<UserAccount, Long> {
     @EntityGraph(attributePaths = {"roles", "persona"})
-    Optional<Usuario> findByIdUsuarioAndActivoTrue(Long idUsuario);
-    Page<Usuario> findByActivoTrue(Pageable pageable);
+    Optional<UserAccount> findByIdUsuarioAndActivoTrue(Long idUsuario);
+    Page<UserAccount> findByActivoTrue(Pageable pageable);
 
-    Optional<Usuario> findByUsername(String username);
-
-    @EntityGraph(attributePaths = {"roles", "persona"})
-    Optional<Usuario> findByUsernameAndActivoTrue(String username);
+    Optional<UserAccount> findByUsername(String username);
 
     @EntityGraph(attributePaths = {"roles", "persona"})
-    Optional<Usuario> findByUsernameIgnoreCaseAndActivoTrue(String username);
+    Optional<UserAccount> findByUsernameAndActivoTrue(String username);
+
+    @EntityGraph(attributePaths = {"roles", "persona"})
+    Optional<UserAccount> findByUsernameIgnoreCaseAndActivoTrue(String username);
 
     boolean existsByUsername(String username);
 
@@ -28,5 +28,5 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByPersona_IdPersona(Long idPersona);
 
     @EntityGraph(attributePaths = {"roles"})
-    Optional<Usuario> findByPersona_IdPersonaAndActivoTrue(Long idPersona);
+    Optional<UserAccount> findByPersona_IdPersonaAndActivoTrue(Long idPersona);
 }

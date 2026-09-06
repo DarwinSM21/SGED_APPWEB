@@ -1,10 +1,10 @@
-package org.uteq.backend.seguridad.usuario.dto;
+package org.uteq.backend.seguridad.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public record UsuarioRequest(
+public record UserAccountRequest(
         @NotNull(message = "El ID de persona es obligatorio") Long idPersona,
         @NotNull(message = "El ID de estado general es obligatorio") Long idEstadoGeneral,
         @NotBlank(message = "El nombre de usuario es obligatorio")

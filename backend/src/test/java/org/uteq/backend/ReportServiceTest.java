@@ -22,7 +22,7 @@ import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.reportes.service.ReportService;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -93,7 +93,7 @@ class ReportServiceTest {
     @Test
     @DisplayName("pagos con resultados genera un PDF valido")
     void paymentsWithResultsGeneratesPdf() {
-        Usuario registrador = Usuario.builder().persona(persona("Luis", "Gómez")).build();
+        UserAccount registrador = UserAccount.builder().persona(persona("Luis", "Gómez")).build();
         Pago pago = Pago.builder()
                 .estudiante(estudiante(1L, "SUB-12"))
                 .tipo(Pago.TipoPago.DIARIO)

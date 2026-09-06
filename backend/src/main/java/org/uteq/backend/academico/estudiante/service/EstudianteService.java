@@ -26,7 +26,7 @@ import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -152,7 +152,7 @@ public class EstudianteService {
         }
 
         Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con ID: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + request.idPersona()));
 
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
@@ -261,7 +261,7 @@ public class EstudianteService {
             throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
         }
         Person nuevaPersona = personaRepository.findById(idPersonaNueva)
-                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con ID: " + idPersonaNueva));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + idPersonaNueva));
         estudiante.setPersona(nuevaPersona);
     }
 
@@ -438,7 +438,7 @@ public class EstudianteService {
 
     /**
      * Habilita el acceso propio de un estudiante que ya existe: crea un
-     * {@code Usuario} (rol {@code ESTUDIANTE}) sobre la persona que el
+     * {@code UserAccount} (rol {@code ESTUDIANTE}) sobre la persona que el
      * estudiante ya tiene, sin duplicarla.
      *
      * @param idEstudiante identificador del estudiante
@@ -459,7 +459,7 @@ public class EstudianteService {
             throw new IllegalArgumentException("Este estudiante ya tiene una cuenta de acceso");
         }
 
-        Usuario usuario = estudianteAccesoService.crearCuentaDeEstudiante(estudiante.getPersona(), request);
+        UserAccount usuario = estudianteAccesoService.crearCuentaDeEstudiante(estudiante.getPersona(), request);
 
         estudiante.setUsuario(usuario);
         estudiante = estudianteRepository.save(estudiante);

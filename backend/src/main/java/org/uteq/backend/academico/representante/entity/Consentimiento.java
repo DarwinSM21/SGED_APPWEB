@@ -3,7 +3,7 @@ package org.uteq.backend.academico.representante.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.OffsetDateTime;
 
@@ -41,14 +41,14 @@ public class Consentimiento {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "registrado_por_id_usuario")
-    private Usuario registradoPor;
+    private UserAccount registradoPor;
 
     @Column(name = "revocado_en")
     private OffsetDateTime revocadoEn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "revocado_por_id_usuario")
-    private Usuario revocadoPor;
+    private UserAccount revocadoPor;
 
     @Transient
     public boolean estaVigente() {

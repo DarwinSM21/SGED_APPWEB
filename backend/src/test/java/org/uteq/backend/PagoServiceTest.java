@@ -15,8 +15,8 @@ import org.uteq.backend.academico.pago.service.PagoService;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -36,7 +36,7 @@ import static org.mockito.Mockito.when;
 class PagoServiceTest {
     @Mock private PagoRepository pagoRepository;
     @Mock private EstudianteRepository estudianteRepository;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks private PagoService service;
 
@@ -49,8 +49,8 @@ class PagoServiceTest {
                 .build();
     }
 
-    private Usuario registrador() {
-        return Usuario.builder().idUsuario(9L).username(USERNAME)
+    private UserAccount registrador() {
+        return UserAccount.builder().idUsuario(9L).username(USERNAME)
                 .persona(Person.builder().nombre("Ana").apellido("Admin").build())
                 .build();
     }

@@ -16,8 +16,8 @@ import org.uteq.backend.academico.representante.repository.ConsentimientoReposit
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.academico.representante.service.ConsentimientoService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -34,7 +34,7 @@ class ConsentimientoServiceTest {
     @Mock private ConsentimientoRepository consentimientoRepository;
     @Mock private RepresentanteRepository representanteRepository;
     @Mock private EstudianteRepository estudianteRepository;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks
     private ConsentimientoService consentimientoService;
@@ -84,7 +84,7 @@ class ConsentimientoServiceTest {
                         1L, 10L, Consentimiento.ALCANCE_INFORMES))
                 .thenReturn(Optional.empty());
         when(usuarioRepository.findByUsername("admin")).thenReturn(
-                Optional.of(Usuario.builder().idUsuario(99L).username("admin").build()));
+                Optional.of(UserAccount.builder().idUsuario(99L).username("admin").build()));
         when(consentimientoRepository.save(any(Consentimiento.class))).thenAnswer(inv -> {
             Consentimiento c = inv.getArgument(0);
             c.setIdConsentimiento(7L);
@@ -110,7 +110,7 @@ class ConsentimientoServiceTest {
                 .build();
         when(consentimientoRepository.findById(7L)).thenReturn(Optional.of(existente));
         when(usuarioRepository.findByUsername("admin")).thenReturn(
-                Optional.of(Usuario.builder().idUsuario(99L).username("admin").build()));
+                Optional.of(UserAccount.builder().idUsuario(99L).username("admin").build()));
         when(consentimientoRepository.save(any(Consentimiento.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ConsentimientoResponse resultado = consentimientoService.revocar(7L, "admin");

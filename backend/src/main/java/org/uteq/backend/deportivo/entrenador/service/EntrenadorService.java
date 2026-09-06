@@ -18,8 +18,8 @@ import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 
 /**
@@ -33,7 +33,7 @@ public class EntrenadorService {
 
     private final EntrenadorRepository entrenadorRepository;
     private final PersonRepository personaRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
     private final EspecialidadRepository especialidadRepository;
 
     /**
@@ -92,9 +92,9 @@ public class EntrenadorService {
         }
 
         Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
 
-        Usuario usuario = usuarioRepository.findById(request.idUsuario())
+        UserAccount usuario = usuarioRepository.findById(request.idUsuario())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
         boolean tieneRolEntrenador = usuario.getRoles().stream()

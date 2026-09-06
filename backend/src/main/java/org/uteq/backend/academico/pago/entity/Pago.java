@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -46,14 +46,14 @@ public class Pago {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
-    private Usuario registradoPor;
+    private UserAccount registradoPor;
 
     @Column(name = "anulado_en")
     private java.time.OffsetDateTime anuladoEn;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "anulado_por_id_usuario")
-    private Usuario anuladoPor;
+    private UserAccount anuladoPor;
 
     @Column(name = "motivo_anulacion", length = 255)
     private String motivoAnulacion;

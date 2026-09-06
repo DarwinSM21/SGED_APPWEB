@@ -19,8 +19,8 @@ import org.uteq.backend.academico.representante.repository.RepresentanteReposito
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.List;
 import org.uteq.backend.seguridad.audit.aop.Audited;
@@ -38,7 +38,7 @@ public class RepresentanteService {
     private final RepresentanteRepository representanteRepository;
     private final RepresentanteEstudianteRepository vinculoRepository;
     private final PersonRepository personaRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
     private final EstudianteRepository estudianteRepository;
 
     /**
@@ -92,8 +92,8 @@ public class RepresentanteService {
         }
 
         Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Person no encontrada con id: " + request.idPersona()));
-        Usuario usuario = usuarioRepository.findById(request.idUsuario())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        UserAccount usuario = usuarioRepository.findById(request.idUsuario())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
         boolean tieneRolRepresentante = usuario.getRoles().stream()

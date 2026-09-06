@@ -14,8 +14,8 @@ import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Optional;
 import java.util.Set;
@@ -29,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class EstudianteAccesoServiceTest {
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
     @Mock private RoleRepository rolRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
@@ -49,7 +49,7 @@ class EstudianteAccesoServiceTest {
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante lanza si la cuenta existente es de otro rol")
     void validarCoherencia_con_cuenta_de_otro_rol_lanza() {
-        Usuario cuentaEntrenador = Usuario.builder().idUsuario(9L)
+        UserAccount cuentaEntrenador = UserAccount.builder().idUsuario(9L)
                 .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
 
@@ -60,7 +60,7 @@ class EstudianteAccesoServiceTest {
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante no lanza si la cuenta ya es de rol ESTUDIANTE")
     void validarCoherencia_con_cuenta_de_estudiante_no_lanza() {
-        Usuario cuentaEstudiante = Usuario.builder().idUsuario(9L)
+        UserAccount cuentaEstudiante = UserAccount.builder().idUsuario(9L)
                 .roles(Set.of(Role.builder().idRol(5L).nombre("ESTUDIANTE").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
 
@@ -89,13 +89,13 @@ class EstudianteAccesoServiceTest {
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(GeneralStatus.builder().idEstadoGeneral(1L).build()));
         when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
-        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(i -> {
-            Usuario u = i.getArgument(0);
+        when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(i -> {
+            UserAccount u = i.getArgument(0);
             u.setIdUsuario(9L);
             return u;
         });
 
-        Usuario resultado = service.crearCuentaDeEstudiante(persona, request);
+        UserAccount resultado = service.crearCuentaDeEstudiante(persona, request);
 
         assertThat(resultado.getIdUsuario()).isEqualTo(9L);
         assertThat(resultado.getPersona()).isSameAs(persona);

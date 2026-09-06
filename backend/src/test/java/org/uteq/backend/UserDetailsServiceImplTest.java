@@ -12,8 +12,8 @@ import org.uteq.backend.seguridad.auth.security.UserDetailsServiceImpl;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Optional;
 import java.util.Set;
@@ -26,13 +26,13 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserDetailsServiceImplTest {
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UserAccountRepository usuarioRepository;
 
     @InjectMocks
     private UserDetailsServiceImpl userDetailsService;
 
-    private Usuario usuarioDe(String username) {
-        return Usuario.builder()
+    private UserAccount usuarioDe(String username) {
+        return UserAccount.builder()
                 .idUsuario(1L)
                 .username(username)
                 .password_Hash("$2b$12$hashfalso")

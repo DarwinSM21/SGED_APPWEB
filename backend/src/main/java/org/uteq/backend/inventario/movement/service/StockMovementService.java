@@ -13,8 +13,8 @@ import org.uteq.backend.inventario.movement.entity.StockMovement;
 import org.uteq.backend.inventario.movement.entity.StockMovement.MovementType;
 import org.uteq.backend.inventario.movement.repository.StockMovementRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 /**
  * Entradas, salidas y ajustes de stock. {@code ENTRADA} y {@code AJUSTE}
@@ -26,7 +26,7 @@ import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
 public class StockMovementService {
     private final StockMovementRepository movimientoStockRepository;
     private final ItemRepository articuloRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     /**
      * Lista paginada de movimientos, del más reciente al más antiguo.
@@ -68,7 +68,7 @@ public class StockMovementService {
     @Transactional
     public StockMovementResponse register(StockMovementRequest request, String usernameRegistrador) {
         Item articulo = findItem(request.idArticulo());
-        Usuario registrador = findUser(usernameRegistrador);
+        UserAccount registrador = findUser(usernameRegistrador);
 
         int delta = request.tipoMovimiento() == MovementType.SALIDA
                 ? -request.cantidad()
@@ -100,7 +100,7 @@ public class StockMovementService {
                 .orElseThrow(() -> new ResourceNotFoundException("Artículo no encontrado con ID: " + id));
     }
 
-    private Usuario findUser(String username) {
+    private UserAccount findUser(String username) {
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado: " + username));
     }

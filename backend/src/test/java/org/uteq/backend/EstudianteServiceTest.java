@@ -26,7 +26,7 @@ import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -305,7 +305,7 @@ class EstudianteServiceTest {
     @DisplayName("habilitarAcceso - Crea el usuario sobre la Persona YA existente, no una nueva")
     void habilitarAcceso_crea_usuario_sobre_persona_existente() {
         HabilitarAccesoRequest request = new HabilitarAccesoRequest("andres@sged.test", "password123");
-        Usuario usuarioCreado = Usuario.builder().idUsuario(9L).persona(personaDummy).build();
+        UserAccount usuarioCreado = UserAccount.builder().idUsuario(9L).persona(personaDummy).build();
 
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
         when(estudianteAccesoService.crearCuentaDeEstudiante(personaDummy, request)).thenReturn(usuarioCreado);
@@ -322,7 +322,7 @@ class EstudianteServiceTest {
     @Test
     @DisplayName("habilitarAcceso - Rechaza si el estudiante ya tiene una cuenta")
     void habilitarAcceso_rechaza_si_ya_tiene_cuenta() {
-        estudianteDummy.setUsuario(Usuario.builder().idUsuario(5L).build());
+        estudianteDummy.setUsuario(UserAccount.builder().idUsuario(5L).build());
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
 
         assertThrows(IllegalArgumentException.class,

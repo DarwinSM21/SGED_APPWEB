@@ -13,8 +13,8 @@ import org.uteq.backend.academico.pago.dto.PagoDtos.IngresosMesResponse;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.audit.aop.Audited;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -38,7 +38,7 @@ import java.util.Map;
 public class PagoService {
     private final PagoRepository pagoRepository;
     private final EstudianteRepository estudianteRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     /**
      * Registra el pago de una o varias mensualidades. Es todo o nada: si
@@ -61,7 +61,7 @@ public class PagoService {
     public List<Pago> registrarMembresia(Long idEstudiante, int anio, List<Integer> meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
         Estudiante estudiante = buscarEstudiante(idEstudiante);
-        Usuario registrador = buscarUsuario(usernameRegistrador);
+        UserAccount registrador = buscarUsuario(usernameRegistrador);
 
         List<Integer> mesesUnicos = meses.stream().distinct().sorted().toList();
         for (Integer mes : mesesUnicos) {
@@ -102,7 +102,7 @@ public class PagoService {
     @Transactional
     public Pago registrarDiario(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
         Estudiante estudiante = buscarEstudiante(idEstudiante);
-        Usuario registrador = buscarUsuario(usernameRegistrador);
+        UserAccount registrador = buscarUsuario(usernameRegistrador);
 
         return pagoRepository.save(Pago.builder()
                 .estudiante(estudiante)
@@ -224,7 +224,7 @@ public class PagoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
     }
 
-    private Usuario buscarUsuario(String username) {
+    private UserAccount buscarUsuario(String username) {
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado: " + username));
     }

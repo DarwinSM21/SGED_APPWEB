@@ -17,7 +17,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.uteq.backend.seguridad.audit.dto.AuditLogResponse;
 import org.uteq.backend.seguridad.audit.entity.AuditLog;
 import org.uteq.backend.seguridad.audit.repository.AuditLogRepository;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -42,7 +42,7 @@ public class AuditService {
     private static final Logger log = LoggerFactory.getLogger(AuditService.class);
 
     private final AuditLogRepository auditoriaRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     /**
      * Registra un evento resolviendo la identidad del actor desde el contexto

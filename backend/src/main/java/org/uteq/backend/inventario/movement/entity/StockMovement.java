@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.uteq.backend.inventario.item.entity.Item;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.Instant;
 
@@ -39,7 +39,7 @@ public class StockMovement {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
-    private Usuario registradoPor;
+    private UserAccount registradoPor;
 
     @Column(name = "fecha_movimiento", nullable = false)
     @Builder.Default

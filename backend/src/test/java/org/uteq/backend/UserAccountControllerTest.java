@@ -14,11 +14,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.seguridad.usuario.controller.UsuarioController;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
-import org.uteq.backend.seguridad.usuario.service.UsuarioService;
+import org.uteq.backend.seguridad.user.controller.UserAccountController;
+import org.uteq.backend.seguridad.user.dto.UserAccountPageResponse;
+import org.uteq.backend.seguridad.user.dto.UserAccountRequest;
+import org.uteq.backend.seguridad.user.dto.UserAccountResponse;
+import org.uteq.backend.seguridad.user.service.UserAccountService;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -30,14 +30,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ExtendWith(MockitoExtension.class)
-class UsuarioControllerTest {
+class UserAccountControllerTest {
     private MockMvc mockMvc;
 
     @Mock
-    private UsuarioService usuarioService;
+    private UserAccountService usuarioService;
 
     @InjectMocks
-    private UsuarioController usuarioController;
+    private UserAccountController usuarioController;
 
     @BeforeEach
     void setUp() {
@@ -47,15 +47,15 @@ class UsuarioControllerTest {
                 .build();
     }
 
-    private UsuarioResponse respuesta() {
-        return new UsuarioResponse(1L, 1L, "Ana", "Torres", "ana@sged.test", 1L, "ACTIVO",
+    private UserAccountResponse respuesta() {
+        return new UserAccountResponse(1L, 1L, "Ana", "Torres", "ana@sged.test", 1L, "ACTIVO",
                 "ana.torres", List.of(), null, true, OffsetDateTime.now());
     }
 
     @Test
     @DisplayName("GET /api/usuarios - lista paginada")
     void listar_devuelve_200() throws Exception {
-        when(usuarioService.listar(any())).thenReturn(new UsuarioPageResponse<>(List.of(respuesta()), 0, 10, 1, 1));
+        when(usuarioService.list(any())).thenReturn(new UserAccountPageResponse<>(List.of(respuesta()), 0, 10, 1, 1));
 
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isOk())
@@ -65,7 +65,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("GET /api/usuarios/{id} - 404 si no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
-        when(usuarioService.buscarPorId(99L)).thenThrow(new ResourceNotFoundException("no existe"));
+        when(usuarioService.findById(99L)).thenThrow(new ResourceNotFoundException("no existe"));
 
         mockMvc.perform(get("/api/usuarios/99"))
                 .andExpect(status().isNotFound());
@@ -74,7 +74,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("POST /api/usuarios - crea y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        when(usuarioService.crear(any(UsuarioRequest.class))).thenReturn(respuesta());
+        when(usuarioService.create(any(UserAccountRequest.class))).thenReturn(respuesta());
 
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -86,7 +86,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("POST /api/usuarios - username duplicado da 400")
     void crear_username_duplicado_da_400() throws Exception {
-        when(usuarioService.crear(any(UsuarioRequest.class)))
+        when(usuarioService.create(any(UserAccountRequest.class)))
                 .thenThrow(new IllegalArgumentException("El nombre de usuario ya se encuentra registrado"));
 
         mockMvc.perform(post("/api/usuarios")
@@ -107,7 +107,7 @@ class UsuarioControllerTest {
     @Test
     @DisplayName("DELETE /api/usuarios/{id} - elimina y devuelve 204")
     void eliminar_devuelve_204() throws Exception {
-        doNothing().when(usuarioService).eliminar(1L);
+        doNothing().when(usuarioService).delete(1L);
 
         mockMvc.perform(delete("/api/usuarios/1"))
                 .andExpect(status().isNoContent());

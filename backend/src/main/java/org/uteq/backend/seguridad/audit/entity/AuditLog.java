@@ -2,7 +2,7 @@ package org.uteq.backend.seguridad.audit.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.OffsetDateTime;
 
@@ -25,7 +25,7 @@ public class AuditLog {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario")
-    private Usuario usuario;
+    private UserAccount usuario;
 
     @Column(name = "usuario_nombre", nullable = false, length = 150)
     private String usuarioNombre;

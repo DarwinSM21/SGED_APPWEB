@@ -27,8 +27,8 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +45,7 @@ class RepresentanteServiceTest {
     @Mock private RepresentanteRepository representanteRepository;
     @Mock private RepresentanteEstudianteRepository vinculoRepository;
     @Mock private PersonRepository personaRepository;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
     @Mock private EstudianteRepository estudianteRepository;
 
     @InjectMocks
@@ -56,8 +56,8 @@ class RepresentanteServiceTest {
                 .cedula("1234567890").correo("ana@sged.test").build();
     }
 
-    private Usuario usuario() {
-        return Usuario.builder().idUsuario(1L).username("ana.vera@sged.test")
+    private UserAccount usuario() {
+        return UserAccount.builder().idUsuario(1L).username("ana.vera@sged.test")
                 .roles(Set.of(Role.builder().idRol(1L).nombre("REPRESENTANTE").build())).build();
     }
 
@@ -131,7 +131,7 @@ class RepresentanteServiceTest {
     @DisplayName("crear rechaza cuando el usuario no tiene el rol REPRESENTANTE")
     void crear_sin_rol_representante_lanza_excepcion() {
         RepresentanteRequest request = new RepresentanteRequest(1L, 1L, "Madre", "0999999999", null);
-        Usuario usuarioSinRol = Usuario.builder().idUsuario(1L).username("ana.vera@sged.test")
+        UserAccount usuarioSinRol = UserAccount.builder().idUsuario(1L).username("ana.vera@sged.test")
                 .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
         when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
         when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);

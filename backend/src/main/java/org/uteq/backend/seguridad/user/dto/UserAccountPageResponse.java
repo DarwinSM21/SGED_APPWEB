@@ -1,8 +1,8 @@
-package org.uteq.backend.seguridad.usuario.dto;
+package org.uteq.backend.seguridad.user.dto;
 
 import java.util.List;
 
-public record UsuarioPageResponse<T>(
+public record UserAccountPageResponse<T>(
         List<T> content,
         int pageNumber,
         int pageSize,

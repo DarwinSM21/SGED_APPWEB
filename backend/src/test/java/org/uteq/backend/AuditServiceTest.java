@@ -25,8 +25,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import org.uteq.backend.seguridad.audit.entity.AuditLog;
 import org.uteq.backend.seguridad.audit.repository.AuditLogRepository;
 import org.uteq.backend.seguridad.audit.service.AuditService;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuditServiceTest {
     @Mock private AuditLogRepository auditoriaRepository;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks private AuditService servicio;
 
@@ -139,7 +139,7 @@ class AuditServiceTest {
     @Test
     @DisplayName("registrarConIdentidad vincula la fila de Usuario cuando existe")
     void registrarConIdentidadVinculaUsuarioExistente() {
-        Usuario usuario = Usuario.builder().idUsuario(7L).username("ana.torres").build();
+        UserAccount usuario = UserAccount.builder().idUsuario(7L).username("ana.torres").build();
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.of(usuario));
 
         servicio.recordEventWithIdentity("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");

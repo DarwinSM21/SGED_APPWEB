@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.usuario.controller;
+package org.uteq.backend.seguridad.user.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
@@ -14,8 +14,8 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * Endpoint propio del usuario autenticado (cualquier rol), separado de
- * {@code UsuarioController} porque ese controlador es
+ * {@code UserAccountController} porque ese controlador es
  * {@code @PreAuthorize hasRole('ADMINISTRADOR')} a nivel de clase: "mis
  * datos" tiene que quedar accesible a los cinco roles.
  */
@@ -33,7 +33,7 @@ import java.util.List;
 public class PerfilController {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
     private final ReportPdfService pdfService;
 
     /**
@@ -49,7 +49,7 @@ public class PerfilController {
     @Transactional(readOnly = true)
     public ResponseEntity<byte[]> descargarMisDatos() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        Usuario usuario = usuarioRepository.findByUsername(auth.getName())
+        UserAccount usuario = usuarioRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + auth.getName()));
 
         Person persona = usuario.getPersona();

@@ -9,15 +9,15 @@ import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Set;
 
 /**
- * Colaborador que concentra la relación {@code Estudiante}–{@code Usuario}:
+ * Colaborador que concentra la relación {@code Estudiante}–{@code UserAccount}:
  * la única porción de {@code EstudianteService} que cruzaba de lleno al
- * dominio de seguridad ({@code Usuario}, {@code Role}, {@code PasswordEncoder}).
+ * dominio de seguridad ({@code UserAccount}, {@code Role}, {@code PasswordEncoder}).
  * Extraído para bajar el fan-out de {@code EstudianteService} (hallazgo
  * MET-01 / R-06 del informe de evaluación de calidad). No orquesta el alta
  * completa —eso lo sigue llamando {@code EstudianteService}—, sino que aloja
@@ -27,13 +27,13 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class EstudianteAccesoService {
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
     private final RoleRepository rolRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * Guarda simétrica a {@code UsuarioService.validarRolCoherente}: si la
+     * Guarda simétrica a {@code UserAccountService.validarRolCoherente}: si la
      * persona ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin
      * cuenta no hay nada que validar.
      *
@@ -54,18 +54,18 @@ public class EstudianteAccesoService {
     }
 
     /**
-     * Crea el {@code Usuario} (rol {@code ESTUDIANTE}) sobre una persona que
+     * Crea el {@code UserAccount} (rol {@code ESTUDIANTE}) sobre una persona que
      * ya existe; no lo asocia a la ficha de {@code Estudiante} —eso lo hace
-     * el llamador una vez que tiene el {@code Usuario} guardado—.
+     * el llamador una vez que tiene el {@code UserAccount} guardado—.
      *
      * @param persona persona dueña de la cuenta
      * @param request credenciales de la cuenta a crear
-     * @return el {@code Usuario} recién guardado
+     * @return el {@code UserAccount} recién guardado
      * @throws IllegalArgumentException si el {@code username} ya está en uso
      * @throws IllegalStateException    si falta el rol {@code ESTUDIANTE} o el
      *                                  catálogo de estados en la base
      */
-    public Usuario crearCuentaDeEstudiante(Person persona, HabilitarAccesoRequest request) {
+    public UserAccount crearCuentaDeEstudiante(Person persona, HabilitarAccesoRequest request) {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
         }
@@ -76,7 +76,7 @@ public class EstudianteAccesoService {
                 .orElseThrow(() -> new IllegalStateException(
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
 
-        Usuario usuario = Usuario.builder()
+        UserAccount usuario = UserAccount.builder()
                 .persona(persona)
                 .estadoGeneral(estadoActivo)
                 .username(request.username())

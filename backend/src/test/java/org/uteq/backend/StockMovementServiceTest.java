@@ -16,8 +16,8 @@ import org.uteq.backend.inventario.movement.entity.StockMovement.MovementType;
 import org.uteq.backend.inventario.movement.repository.StockMovementRepository;
 import org.uteq.backend.inventario.movement.service.StockMovementService;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Optional;
 
@@ -31,7 +31,7 @@ class StockMovementServiceTest {
 
     @Mock private StockMovementRepository movimientoStockRepository;
     @Mock private ItemRepository articuloRepository;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks
     private StockMovementService movimientoStockService;
@@ -47,9 +47,9 @@ class StockMovementServiceTest {
                 .build();
     }
 
-    private Usuario registrador() {
+    private UserAccount registrador() {
         Person persona = Person.builder().nombre("Ana").apellido("Diaz").build();
-        return Usuario.builder().idUsuario(9L).username("recepcion").persona(persona).build();
+        return UserAccount.builder().idUsuario(9L).username("recepcion").persona(persona).build();
     }
 
     @Test

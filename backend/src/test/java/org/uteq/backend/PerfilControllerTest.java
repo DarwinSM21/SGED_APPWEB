@@ -17,9 +17,9 @@ import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
-import org.uteq.backend.seguridad.usuario.controller.PerfilController;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.controller.PerfilController;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 class PerfilControllerTest {
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
 
     private PerfilController controller;
     private MockMvc mockMvc;
@@ -61,7 +61,7 @@ class PerfilControllerTest {
     @DisplayName("GET /api/usuarios/me/datos-pdf devuelve el PDF del usuario autenticado, sin restringir por rol")
     void descargaMisDatosParaCualquierRolAutenticado() throws Exception {
         autenticarComo("estudiante1", "ESTUDIANTE");
-        Usuario usuario = Usuario.builder()
+        UserAccount usuario = UserAccount.builder()
                 .username("estudiante1")
                 .persona(Person.builder()
                         .nombre("Ana").apellido("Torres").cedula("1234567890")

@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.usuario.controller;
+package org.uteq.backend.seguridad.user.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -8,10 +8,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioPageResponse;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioRequest;
-import org.uteq.backend.seguridad.usuario.dto.UsuarioResponse;
-import org.uteq.backend.seguridad.usuario.service.UsuarioService;
+import org.uteq.backend.seguridad.user.dto.UserAccountPageResponse;
+import org.uteq.backend.seguridad.user.dto.UserAccountRequest;
+import org.uteq.backend.seguridad.user.dto.UserAccountResponse;
+import org.uteq.backend.seguridad.user.service.UserAccountService;
 
 /**
  * CRUD de cuentas de usuario. Toda la clase está reservada a
@@ -22,9 +22,9 @@ import org.uteq.backend.seguridad.usuario.service.UsuarioService;
 @RequestMapping("/api/usuarios")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('ADMINISTRADOR')")
-public class UsuarioController {
+public class UserAccountController {
 
-    private final UsuarioService usuarioService;
+    private final UserAccountService usuarioService;
 
     /**
      * Lista paginada de cuentas.
@@ -33,9 +33,9 @@ public class UsuarioController {
      * @return {@code 200 OK} con la página
      */
     @GetMapping
-    public ResponseEntity<UsuarioPageResponse<UsuarioResponse>> listar(
+    public ResponseEntity<UserAccountPageResponse<UserAccountResponse>> list(
             @PageableDefault(page = 0, size = 10) Pageable pageable) {
-        return ResponseEntity.ok(usuarioService.listar(pageable));
+        return ResponseEntity.ok(usuarioService.list(pageable));
     }
 
     /**
@@ -47,8 +47,8 @@ public class UsuarioController {
      *         si no existe o está inactivada ({@code 404})
      */
     @GetMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(usuarioService.buscarPorId(id));
+    public ResponseEntity<UserAccountResponse> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.findById(id));
     }
 
     /**
@@ -61,8 +61,8 @@ public class UsuarioController {
      *                                  con la ficha de la persona ({@code 422})
      */
     @PostMapping
-    public ResponseEntity<UsuarioResponse> crear(@Valid @RequestBody UsuarioRequest request) {
-        UsuarioResponse creado = usuarioService.crear(request);
+    public ResponseEntity<UserAccountResponse> create(@Valid @RequestBody UserAccountRequest request) {
+        UserAccountResponse creado = usuarioService.create(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(creado);
     }
 
@@ -79,10 +79,10 @@ public class UsuarioController {
      *                                  ({@code 422})
      */
     @PutMapping("/{id}")
-    public ResponseEntity<UsuarioResponse> editar(
+    public ResponseEntity<UserAccountResponse> update(
             @PathVariable Long id,
-            @Valid @RequestBody UsuarioRequest request) {
-        return ResponseEntity.ok(usuarioService.editar(id, request));
+            @Valid @RequestBody UserAccountRequest request) {
+        return ResponseEntity.ok(usuarioService.update(id, request));
     }
 
     /**
@@ -94,8 +94,8 @@ public class UsuarioController {
      *         si no existe ({@code 404})
      */
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        usuarioService.eliminar(id);
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        usuarioService.delete(id);
         return ResponseEntity.noContent().build();
     }
 
@@ -109,7 +109,7 @@ public class UsuarioController {
      * @throws IllegalArgumentException si la cuenta ya está activa ({@code 422})
      */
     @PostMapping("/{id}/reactivar")
-    public ResponseEntity<UsuarioResponse> reactivar(@PathVariable Long id) {
-        return ResponseEntity.ok(usuarioService.reactivar(id));
+    public ResponseEntity<UserAccountResponse> reactivate(@PathVariable Long id) {
+        return ResponseEntity.ok(usuarioService.reactivate(id));
     }
 }

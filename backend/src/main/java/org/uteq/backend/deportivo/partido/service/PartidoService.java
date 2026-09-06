@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.time.Instant;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 /**
  * Alta, agenda e historial de partidos. Un partido con resultado queda
@@ -37,7 +37,7 @@ public class PartidoService {
     private final PartidoRepository partidoRepository;
     private final CategoriaRepository categoriaRepository;
     private final AlineacionRepository alineacionRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     /**
      * Lista paginada de partidos, opcionalmente filtrada por categoría,

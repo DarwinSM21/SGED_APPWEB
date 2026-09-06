@@ -19,8 +19,8 @@ import org.uteq.backend.inventario.assignment.entity.Assignment.AssignmentStatus
 import org.uteq.backend.inventario.assignment.entity.Assignment.RecipientType;
 import org.uteq.backend.inventario.assignment.repository.AssignmentRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.time.LocalDate;
 
@@ -36,7 +36,7 @@ public class AssignmentService {
     private final ItemRepository articuloRepository;
     private final EstudianteRepository estudianteRepository;
     private final EntrenadorRepository entrenadorRepository;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     /**
      * Lista paginada de asignaciones, de la más reciente a la más antigua.
@@ -105,7 +105,7 @@ public class AssignmentService {
         articulo.setStockActual(nuevoStock);
         articuloRepository.save(articulo);
 
-        Usuario registrador = findUser(usernameRegistrador);
+        UserAccount registrador = findUser(usernameRegistrador);
 
         Assignment.AssignmentBuilder builder = Assignment.builder()
                 .articulo(articulo)
@@ -195,7 +195,7 @@ public class AssignmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con ID: " + id));
     }
 
-    private Usuario findUser(String username) {
+    private UserAccount findUser(String username) {
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado: " + username));
     }

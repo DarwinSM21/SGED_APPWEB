@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.OffsetDateTime;
 
@@ -28,7 +28,7 @@ public class Entrenador {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)
-    private Usuario usuario;
+    private UserAccount usuario;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_especialidad")

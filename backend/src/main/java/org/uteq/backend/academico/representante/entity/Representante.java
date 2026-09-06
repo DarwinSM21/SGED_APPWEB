@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.Instant;
 
@@ -28,7 +28,7 @@ public class Representante {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)
-    private Usuario usuario;
+    private UserAccount usuario;
 
     @Column(name = "parentesco", length = 30)
     private String parentesco;

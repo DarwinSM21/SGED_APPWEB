@@ -8,7 +8,7 @@ import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
 import org.uteq.backend.seguridad.audit.entity.AuditLog;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.lang.reflect.Method;
 import java.time.OffsetDateTime;
@@ -32,9 +32,9 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Usuario.onCreate(): sella timestamps, activo por defecto y normaliza el username")
+    @DisplayName("UserAccount.onCreate(): sella timestamps, activo por defecto y normaliza el username")
     void usuario_onCreate() throws Exception {
-        Usuario u = new Usuario();
+        UserAccount u = new UserAccount();
         u.setUsername("  DarwinSM21  ");
         invocar(u, "onCreate");
 
@@ -45,18 +45,18 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Usuario.onCreate(): respeta activo si ya viene seteado")
+    @DisplayName("UserAccount.onCreate(): respeta activo si ya viene seteado")
     void usuario_onCreate_respeta_activo() throws Exception {
-        Usuario u = new Usuario();
+        UserAccount u = new UserAccount();
         u.setActivo(false);
         invocar(u, "onCreate");
         assertThat(u.getActivo()).isFalse();
     }
 
     @Test
-    @DisplayName("Usuario.onUpdate(): refresca updatedAt y renormaliza; username null no rompe")
+    @DisplayName("UserAccount.onUpdate(): refresca updatedAt y renormaliza; username null no rompe")
     void usuario_onUpdate() throws Exception {
-        Usuario u = new Usuario();
+        UserAccount u = new UserAccount();
         invocar(u, "onUpdate");
         assertThat(u.getUpdatedAt()).isNotNull();
         assertThat(u.getUsername()).isNull();

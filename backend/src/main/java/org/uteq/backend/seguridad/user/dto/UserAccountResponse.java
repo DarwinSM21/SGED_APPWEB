@@ -1,9 +1,9 @@
-package org.uteq.backend.seguridad.usuario.dto;
+package org.uteq.backend.seguridad.user.dto;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
-public record UsuarioResponse(
+public record UserAccountResponse(
         Long idUsuario,
         Long idPersona,
         String nombrePersona,

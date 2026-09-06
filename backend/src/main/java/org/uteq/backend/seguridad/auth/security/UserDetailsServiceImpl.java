@@ -8,22 +8,22 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
 
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String buscado = username == null ? "" : username.trim();
 
-        Usuario usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(buscado)
+        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(buscado)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Usuario no encontrado: " + buscado));
 

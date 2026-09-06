@@ -26,8 +26,8 @@ import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
 import org.uteq.backend.seguridad.role.repository.RoleRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Optional;
 import java.util.Set;
@@ -49,7 +49,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final RedisBlacklistService blacklistService;
     private final LoginAttemptService loginAttemptService;
-    private final UsuarioRepository usuarioRepository;
+    private final UserAccountRepository usuarioRepository;
     private final PersonRepository personaRepository;
     private final RoleRepository rolRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
@@ -68,7 +68,7 @@ public class AuthService {
     public record LoginResult(String accessToken, String refreshToken, SessionResponse session) {}
 
     /**
-     * Da de alta una {@link Person} y su {@link Usuario} en una sola
+     * Da de alta una {@link Person} y su {@link UserAccount} en una sola
      * transacción. El campo {@code rol} es obligatorio ({@code @NotBlank} en
      * {@link RegisterRequest}): no hay un rol genérico por defecto. Quien
      * llama ya es {@code ADMINISTRADOR}, así que puede pedir cualquier rol
@@ -111,7 +111,7 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalStateException(
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
 
-        Usuario usuario = Usuario.builder()
+        UserAccount usuario = UserAccount.builder()
                 .persona(persona)
                 .estadoGeneral(estadoActivo)
                 .username(request.username())

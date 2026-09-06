@@ -23,8 +23,8 @@ import org.uteq.backend.inventario.assignment.entity.Assignment.RecipientType;
 import org.uteq.backend.inventario.assignment.repository.AssignmentRepository;
 import org.uteq.backend.inventario.assignment.service.AssignmentService;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Optional;
 
@@ -40,7 +40,7 @@ class AssignmentServiceTest {
     @Mock private ItemRepository articuloRepository;
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private EntrenadorRepository entrenadorRepository;
-    @Mock private UsuarioRepository usuarioRepository;
+    @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks
     private AssignmentService asignacionService;
@@ -66,9 +66,9 @@ class AssignmentServiceTest {
         return Entrenador.builder().idEntrenador(7L).persona(persona).build();
     }
 
-    private Usuario registrador() {
+    private UserAccount registrador() {
         Person persona = Person.builder().nombre("Ana").apellido("Diaz").build();
-        return Usuario.builder().idUsuario(9L).username("recepcion").persona(persona).build();
+        return UserAccount.builder().idUsuario(9L).username("recepcion").persona(persona).build();
     }
 
     private void stubGuardarAsignacion() {

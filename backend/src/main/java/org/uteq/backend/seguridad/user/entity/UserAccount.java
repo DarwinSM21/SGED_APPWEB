@@ -1,4 +1,4 @@
-package org.uteq.backend.seguridad.usuario.entity;
+package org.uteq.backend.seguridad.user.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -17,7 +17,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Usuario {
+public class UserAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")

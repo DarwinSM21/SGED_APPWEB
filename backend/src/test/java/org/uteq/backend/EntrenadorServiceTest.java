@@ -22,8 +22,8 @@ import org.uteq.backend.deportivo.especialidad.repository.EspecialidadRepository
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,7 +42,7 @@ class EntrenadorServiceTest {
     @Mock
     private PersonRepository personaRepository;
     @Mock
-    private UsuarioRepository usuarioRepository;
+    private UserAccountRepository usuarioRepository;
     @Mock
     private EspecialidadRepository especialidadRepository;
 
@@ -54,8 +54,8 @@ class EntrenadorServiceTest {
                 .cedula("1234567890").correo("carlos@sged.test").build();
     }
 
-    private Usuario usuario() {
-        return Usuario.builder().idUsuario(1L).username("carlos.mora")
+    private UserAccount usuario() {
+        return UserAccount.builder().idUsuario(1L).username("carlos.mora")
                 .roles(Set.of(Role.builder().idRol(1L).nombre("ENTRENADOR").build())).build();
     }
 
@@ -160,7 +160,7 @@ class EntrenadorServiceTest {
     @DisplayName("crear rechaza cuando el usuario no tiene el rol ENTRENADOR")
     void crear_sin_rol_entrenador_lanza_excepcion() {
         EntrenadorRequest request = new EntrenadorRequest(1L, 1L, null, (short) 3, null);
-        Usuario usuarioSinRol = Usuario.builder().idUsuario(1L).username("carlos.mora")
+        UserAccount usuarioSinRol = UserAccount.builder().idUsuario(1L).username("carlos.mora")
                 .roles(Set.of(Role.builder().idRol(2L).nombre("RECEPCIONISTA").build())).build();
         when(entrenadorRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
         when(entrenadorRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);

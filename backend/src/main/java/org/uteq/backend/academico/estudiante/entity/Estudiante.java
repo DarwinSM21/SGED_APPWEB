@@ -8,7 +8,7 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.posicion.entity.Posicion;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.person.entity.Person;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -45,7 +45,7 @@ public class Estudiante {
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", unique = true)
-    private Usuario usuario;
+    private UserAccount usuario;
 
     @Column(name = "codigo_estudiante", nullable = false, unique = true, length = 30)
     private String codigoEstudiante;
