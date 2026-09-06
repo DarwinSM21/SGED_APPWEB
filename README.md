@@ -13,9 +13,9 @@ ProFútbol: estudiantes, entrenadores, asistencias, evaluaciones y reportes.
 
 | | URL |
 |---|---|
-| **Aplicación (frontend)** | https://sged-frontend-r2rs.onrender.com |
-| **API (backend)** | https://sged-backend-2p05.onrender.com |
-| Punto de salud | https://sged-backend-2p05.onrender.com/actuator/health → `{"status":"UP"}` |
+| **Aplicación (frontend)** | https://sged-frontend-jofa.onrender.com |
+| **API (backend)** | https://sged-backend-5nh7.onrender.com |
+| Punto de salud | https://sged-backend-5nh7.onrender.com/actuator/health → `{"status":"UP"}` |
 
 Alojado en Render (frontend como sitio estático, backend como contenedor
 Docker) con PostgreSQL gestionado en Supabase. El plan gratuito de Render

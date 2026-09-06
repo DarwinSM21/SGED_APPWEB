@@ -58,7 +58,7 @@ services:
       # Sin comodin: *.onrender.com habilitaria credenciales cruzadas desde
       # cualquier otro servicio de Render, no solo el propio.
       - key: CORS_ALLOWED_ORIGIN_PATTERNS
-        value: "https://sged-frontend-r2rs.onrender.com"
+        value: "https://sged-frontend-jofa.onrender.com"
 
       # springdoc 2.3.0 empaqueta una copia vieja de Swagger UI con DOMPurify
       # 3.0.6, que ZAP marca como "Vulnerable JS Library" (severidad alta).
@@ -155,7 +155,7 @@ services:
       # actualizar esta linea y CORS_ALLOWED_ORIGIN_PATTERNS de arriba.
       - type: rewrite
         source: /api/*
-        destination: https://sged-backend-2p05.onrender.com/api/*
+        destination: https://sged-backend-5nh7.onrender.com/api/*
 
       # Enrutado del lado del cliente: cualquier ruta desconocida devuelve
       # index.html. Render no aplica reglas si existe un fichero en esa ruta,

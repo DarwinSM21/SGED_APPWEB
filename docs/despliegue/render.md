@@ -109,8 +109,8 @@ Los nombres `sged-backend` / `sged-frontend` son globales en `.onrender.com`.
 Si ya están tomados (otro despliegue del equipo), Render agrega un sufijo
 aleatorio distinto por servicio. En el despliegue actual quedaron:
 
-- backend  → `https://sged-backend-2p05.onrender.com`
-- frontend → `https://sged-frontend-r2rs.onrender.com`
+- backend  → `https://sged-backend-5nh7.onrender.com`
+- frontend → `https://sged-frontend-jofa.onrender.com`
 
 `render.yaml` ya apunta a esas dos (regla `/api/*` del frontend y
 `CORS_ALLOWED_ORIGIN_PATTERNS` del backend). **Si se re-crea el blueprint
@@ -123,7 +123,7 @@ porque las llamadas a la API se cuelgan contra el nombre viejo.
 Primero que el backend viva:
 
 ```bash
-curl -s https://sged-backend-2p05.onrender.com/actuator/health
+curl -s https://sged-backend-5nh7.onrender.com/actuator/health
 ```
 
 Debe responder `{"status":"UP",...}`. La primera petición puede tardar
@@ -132,7 +132,7 @@ bastante: 0.1 CPU y Spring Boot arranca lento.
 Después **el flujo de cookies, que es lo más frágil de este diseño**:
 
 ```bash
-curl -s -D - -o /dev/null -X POST https://sged-frontend-r2rs.onrender.com/api/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"TU_PASSWORD"}' | grep -i "set-cookie"
+curl -s -D - -o /dev/null -X POST https://sged-frontend-jofa.onrender.com/api/auth/login -H "Content-Type: application/json" -d '{"username":"admin","password":"TU_PASSWORD"}' | grep -i "set-cookie"
 ```
 
 Deben aparecer `sged_access` y `sged_refresh` con `Secure; HttpOnly;
