@@ -22,32 +22,32 @@ final class PromptsFeedback {
             - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
             """;
 
-    static String deJugador(PerfilJugadorAnonimo p) {
+    static String deJugador(AnonymousPlayerProfile p) {
         var sb = new StringBuilder();
         sb.append("Resume como viene rindiendo este jugador, para que lo lea su padre, ")
           .append("madre o representante. Traduce los numeros a lenguaje corriente en vez ")
           .append("de repetirlos: quien lo lee no sabe si un 5.5 es bueno o malo. Di en que ")
           .append("viene mejor y en que le cuesta mas, sin emitir un veredicto sobre el ")
           .append("chico.\n\n");
-        sb.append("Categoria: ").append(p.categoria()).append('\n');
-        if (p.posicion() != null) {
-            sb.append("Posicion en la que juega: ").append(p.posicion()).append('\n');
+        sb.append("Categoria: ").append(p.category()).append('\n');
+        if (p.position() != null) {
+            sb.append("Posicion en la que juega: ").append(p.position()).append('\n');
         }
-        sb.append("Promedio por criterio (sobre 10): ").append(formatear(p.puntajes())).append('\n');
-        if (!p.puntajesPrevios().isEmpty()) {
-            sb.append("Promedio historico: ").append(formatear(p.puntajesPrevios())).append('\n');
+        sb.append("Promedio por criterio (sobre 10): ").append(formatear(p.scores())).append('\n');
+        if (!p.previousScores().isEmpty()) {
+            sb.append("Promedio historico: ").append(formatear(p.previousScores())).append('\n');
         }
-        if (p.asistenciasUltimoMes() != null) {
+        if (p.lastMonthAttendances() != null) {
             sb.append("Entrenamientos a los que asistio en el ultimo mes: ")
-              .append(p.asistenciasUltimoMes()).append('\n');
+              .append(p.lastMonthAttendances()).append('\n');
         }
-        if (p.lesionado()) {
+        if (p.injured()) {
             sb.append("Arrastra una lesion activa: no sugieras aumentar la carga fisica.\n");
         }
         return sb.toString();
     }
 
-    static String dePlantilla(List<PerfilJugadorAnonimo> alineacion) {
+    static String dePlantilla(List<AnonymousPlayerProfile> alineacion) {
         var sb = new StringBuilder();
         sb.append("Comenta brevemente esta alineacion, ya seleccionada por el sistema ")
           .append("segun puntaje acumulado. No propongas cambios de jugadores ni de posiciones: ")
@@ -55,9 +55,9 @@ final class PromptsFeedback {
           .append("señala una fortaleza del once planteado y un aspecto a vigilar ")
           .append("(por ejemplo un puntaje mas bajo en alguna posicion o criterio).\n\n");
         for (var p : alineacion) {
-            sb.append("- ").append(p.referencia())
-              .append(" (").append(p.posicion() == null ? "sin posicion" : p.posicion()).append("): ")
-              .append(formatear(p.puntajes())).append('\n');
+            sb.append("- ").append(p.reference())
+              .append(" (").append(p.position() == null ? "sin posicion" : p.position()).append("): ")
+              .append(formatear(p.scores())).append('\n');
         }
         return sb.toString();
     }

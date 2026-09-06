@@ -12,8 +12,8 @@ import org.uteq.backend.academico.representante.repository.RepresentanteEstudian
 import org.uteq.backend.academico.representante.repository.RepresentanteRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.common.ia.GeneradorFeedbackIA;
-import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
+import org.uteq.backend.common.ia.AIFeedbackGenerator;
+import org.uteq.backend.common.ia.AnonymousPlayerProfile;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
@@ -47,7 +47,7 @@ public class InformeService {
     private final LesionRepository lesionRepository;
     private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     private final AsistenciaRepository asistenciaRepository;
-    private final GeneradorFeedbackIA generadorFeedback;
+    private final AIFeedbackGenerator generadorFeedback;
 
     /**
      * Lista de estudiantes a cargo del representante dueño de la cuenta.
@@ -152,7 +152,7 @@ public class InformeService {
     }
 
     // Arma el perfil seudonimizado y pide el texto. Al modelo va un
-    // PerfilJugadorAnonimo, que no tiene nombre, cédula, correo ni fecha de
+    // AnonymousPlayerProfile, que no tiene nombre, cédula, correo ni fecha de
     // nacimiento: solo salen del sistema promedios, categoría y cuántos
     // entrenamientos asistió. El titular de estos datos es un menor.
     private ComentarioInformeResponse comentarSobre(InformeEstudianteResponse informe) {
@@ -173,7 +173,7 @@ public class InformeService {
         long asistencias = asistenciaRepository
                 .contarAsistenciasDesde(informe.idEstudiante(), hoy.minusDays(30));
 
-        var perfil = new PerfilJugadorAnonimo(
+        var perfil = new AnonymousPlayerProfile(
                 "Jugador",
                 informe.categoria(),
                 null,
@@ -182,9 +182,9 @@ public class InformeService {
                 (int) asistencias,
                 lesionado);
 
-        var resultado = generadorFeedback.generarComentarioJugador(perfil);
+        var resultado = generadorFeedback.generatePlayerComment(perfil);
         return new ComentarioInformeResponse(
-                resultado.texto(), resultado.disponible(), resultado.motivo());
+                resultado.text(), resultado.isAvailable(), resultado.reason());
     }
 
     private InformeEstudianteResponse construirInforme(Estudiante estudiante) {

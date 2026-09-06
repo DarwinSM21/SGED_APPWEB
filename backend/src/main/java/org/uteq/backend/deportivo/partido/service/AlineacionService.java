@@ -194,7 +194,7 @@ public class AlineacionService {
         }
         var resultado = convocatoriaService.comentar(actual.titulares(), actual.categoria());
         return new FeedbackAlineacionResponse(
-                resultado.texto(), resultado.disponible(), resultado.motivo());
+                resultado.text(), resultado.isAvailable(), resultado.reason());
     }
 
     private AlineacionResponse desdeGuardada(Convocatoria c, Alineacion a) {

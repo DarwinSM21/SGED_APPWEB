@@ -13,7 +13,7 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("deJugador incluye la posicion cuando el perfil la trae")
     void deJugadorIncluyePosicionCuandoExiste() {
-        var perfil = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", "Mediocentro",
+        var perfil = new AnonymousPlayerProfile("Jugador 1", "SUB-12", "Mediocentro",
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
         String prompt = PromptsFeedback.deJugador(perfil);
@@ -24,7 +24,7 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("deJugador omite la linea de posicion cuando no viene en el perfil")
     void deJugadorOmitePosicionCuandoEsNula() {
-        var perfil = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", null,
+        var perfil = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
         String prompt = PromptsFeedback.deJugador(perfil);
@@ -35,9 +35,9 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("deJugador agrega el promedio historico solo si hay puntajes previos")
     void deJugadorAgregaHistoricoSoloSiExiste() {
-        var conHistorico = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", null,
+        var conHistorico = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of("Tecnica", 6.0), null, false);
-        var sinHistorico = new PerfilJugadorAnonimo("Jugador 2", "SUB-12", null,
+        var sinHistorico = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
         assertThat(PromptsFeedback.deJugador(conHistorico)).contains("Promedio historico");
@@ -47,9 +47,9 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("deJugador reporta asistencias del ultimo mes solo cuando el dato existe")
     void deJugadorReportaAsistenciasSoloSiExiste() {
-        var conAsistencias = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", null,
+        var conAsistencias = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), 10, false);
-        var sinAsistencias = new PerfilJugadorAnonimo("Jugador 2", "SUB-12", null,
+        var sinAsistencias = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
         assertThat(PromptsFeedback.deJugador(conAsistencias))
@@ -61,9 +61,9 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("deJugador advierte sobre lesion activa solo cuando el jugador esta lesionado")
     void deJugadorAdvierteLesionSoloSiAplica() {
-        var lesionado = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", null,
+        var lesionado = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, true);
-        var sano = new PerfilJugadorAnonimo("Jugador 2", "SUB-12", null,
+        var sano = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
         assertThat(PromptsFeedback.deJugador(lesionado)).contains("Arrastra una lesion activa");
@@ -73,9 +73,9 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("dePlantilla marca 'sin posicion' cuando un jugador de la alineacion no la tiene")
     void dePlantillaMarcaSinPosicionCuandoFalta() {
-        var conPosicion = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", "Defensa",
+        var conPosicion = new AnonymousPlayerProfile("Jugador 1", "SUB-12", "Defensa",
                 Map.of("Tecnica", 8.0), Map.of(), null, false);
-        var sinPosicion = new PerfilJugadorAnonimo("Jugador 2", "SUB-12", null,
+        var sinPosicion = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 6.0), Map.of(), null, false);
 
         String prompt = PromptsFeedback.dePlantilla(List.of(conPosicion, sinPosicion));
@@ -87,7 +87,7 @@ class PromptsFeedbackTest {
     @Test
     @DisplayName("los puntajes vacios se reportan explicitamente como 'sin datos'")
     void puntajesVaciosSeReportanComoSinDatos() {
-        var perfil = new PerfilJugadorAnonimo("Jugador 1", "SUB-12", null,
+        var perfil = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of(), Map.of(), null, false);
 
         String prompt = PromptsFeedback.dePlantilla(List.of(perfil));

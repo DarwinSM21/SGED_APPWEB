@@ -53,11 +53,11 @@ spring:
 
 # Generacion de texto con modelo de lenguaje (modulo Entrenador).
 # Deshabilitada por defecto: el sistema debe funcionar completo sin ella.
-# Solo se envian datos seudonimizados (ver PerfilJugadorAnonimo).
+# Solo se envian datos seudonimizados (ver AnonymousPlayerProfile).
 ia:
   # Que proveedor genera el texto: 'gemini' u 'openai'. Solo se crea el bean
   # del elegido, asi que cambiar de proveedor no toca ni una linea del dominio
-  # -PlantillaService depende de la interfaz GeneradorFeedbackIA, no de una
+  # -PlantillaService depende de la interfaz AIFeedbackGenerator, no de una
   # implementacion concreta-.
   proveedor: ${IA_PROVEEDOR:gemini}
 

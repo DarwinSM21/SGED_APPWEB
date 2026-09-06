@@ -7,8 +7,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.common.ia.GeneradorFeedbackIA;
-import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
+import org.uteq.backend.common.ia.AIFeedbackGenerator;
+import org.uteq.backend.common.ia.AnonymousPlayerProfile;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
@@ -57,7 +57,7 @@ public class ConvocatoriaService {
     private final AsistenciaRepository asistenciaRepository;
     private final SesionEntrenamientoRepository sesionRepository;
     private final LesionRepository lesionRepository;
-    private final GeneradorFeedbackIA generadorFeedback;
+    private final AIFeedbackGenerator generadorFeedback;
 
     /** Cupo de titulares del once. */
     @Value("${plantilla.titulares:11}")
@@ -170,19 +170,19 @@ public class ConvocatoriaService {
      * @param categoria categoría del equipo
      * @return el comentario generado, con su disponibilidad y motivo
      */
-    public GeneradorFeedbackIA.ResultadoFeedback comentar(
+    public AIFeedbackGenerator.FeedbackResult comentar(
             List<JugadorConvocado> titulares, String categoria) {
-        List<PerfilJugadorAnonimo> perfiles = new ArrayList<>();
+        List<AnonymousPlayerProfile> perfiles = new ArrayList<>();
         for (int i = 0; i < titulares.size(); i++) {
             JugadorConvocado t = titulares.get(i);
             double promedio = t.promedio() == null ? 0.0 : t.promedio().doubleValue();
-            perfiles.add(new PerfilJugadorAnonimo(
+            perfiles.add(new AnonymousPlayerProfile(
                     "Jugador " + (i + 1), categoria, t.posicion(),
                     Map.of("Promedio acumulado", promedio,
                             "Entrenamientos asistidos", (double) t.presencias()),
                     Map.of(), null, false));
         }
-        return generadorFeedback.generarComentarioPlantilla(perfiles);
+        return generadorFeedback.generateLineupComment(perfiles);
     }
 
     // Promedio primero, presencias después, id al final. El desempate por id

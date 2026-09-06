@@ -16,14 +16,14 @@ import java.util.Map;
 
 /**
  * Genera comentarios de evaluación en lenguaje natural usando la API de Google
- * Gemini. Expuesto como {@code GeneradorFeedbackIA} y activo solo cuando la
+ * Gemini. Expuesto como {@code AIFeedbackGenerator} y activo solo cuando la
  * propiedad {@code ia.proveedor=gemini}. Si no hay clave configurada
  * ({@code ia.gemini.habilitado=false}) o el servicio externo falla, devuelve
- * un {@code ResultadoFeedback} "no disponible" en lugar de romper la petición.
+ * un {@code FeedbackResult} "no disponible" en lugar de romper la petición.
  */
 @Service
 @ConditionalOnProperty(name = "ia.proveedor", havingValue = "gemini", matchIfMissing = true)
-public class GeminiFeedbackService implements GeneradorFeedbackIA {
+public class GeminiFeedbackService implements AIFeedbackGenerator {
     private static final Logger log = LoggerFactory.getLogger(GeminiFeedbackService.class);
     private static final String BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -72,44 +72,44 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     }
 
     @Override
-    public boolean estaDisponible() {
+    public boolean isAvailable() {
         return habilitado;
     }
 
     /**
      * Genera el comentario de evaluación de un jugador anónimo.
      *
-     * @param perfil datos anonimizados del jugador a evaluar
-     * @return resultado con el texto generado o {@code noDisponible} si el
+     * @param profile datos anonimizados del jugador a evaluar
+     * @return resultado con el texto generado o {@code unavailable} si el
      *         servicio está deshabilitado o falla
      */
     @Override
-    public ResultadoFeedback generarComentarioJugador(PerfilJugadorAnonimo perfil) {
+    public FeedbackResult generatePlayerComment(AnonymousPlayerProfile profile) {
         if (!habilitado) {
-            return ResultadoFeedback.noDisponible("Generacion de texto deshabilitada");
+            return FeedbackResult.unavailable("Generacion de texto deshabilitada");
         }
-        return invocar(PromptsFeedback.deJugador(perfil));
+        return invocar(PromptsFeedback.deJugador(profile));
     }
 
     /**
      * Genera el comentario de evaluación de una alineación completa.
      *
-     * @param alineacion lista de perfiles anónimos que forman la plantilla
-     * @return resultado con el texto generado o {@code noDisponible} si el
+     * @param lineup lista de perfiles anónimos que forman la plantilla
+     * @return resultado con el texto generado o {@code unavailable} si el
      *         servicio está deshabilitado, la alineación está vacía o falla
      */
     @Override
-    public ResultadoFeedback generarComentarioPlantilla(List<PerfilJugadorAnonimo> alineacion) {
+    public FeedbackResult generateLineupComment(List<AnonymousPlayerProfile> lineup) {
         if (!habilitado) {
-            return ResultadoFeedback.noDisponible("Generacion de texto deshabilitada");
+            return FeedbackResult.unavailable("Generacion de texto deshabilitada");
         }
-        if (alineacion == null || alineacion.isEmpty()) {
-            return ResultadoFeedback.noDisponible("La alineacion esta vacia");
+        if (lineup == null || lineup.isEmpty()) {
+            return FeedbackResult.unavailable("La alineacion esta vacia");
         }
-        return invocar(PromptsFeedback.dePlantilla(alineacion));
+        return invocar(PromptsFeedback.dePlantilla(lineup));
     }
 
-    private ResultadoFeedback invocar(String prompt) {
+    private FeedbackResult invocar(String prompt) {
         Exception ultimoFallo = null;
 
         for (int intento = 0; intento <= reintentos; intento++) {
@@ -118,7 +118,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
 
             } catch (HttpClientErrorException e) {
                 log.warn("Gemini rechazo la peticion: {}", e.getStatusCode());
-                return ResultadoFeedback.noDisponible(motivoDeRechazo(e));
+                return FeedbackResult.unavailable(motivoDeRechazo(e));
 
             } catch (Exception e) {
                 ultimoFallo = e;
@@ -133,7 +133,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
 
         log.warn("No se pudo generar feedback con IA tras {} intento(s): {}",
                 reintentos + 1, ultimoFallo == null ? "sin detalle" : ultimoFallo.getClass().getSimpleName());
-        return ResultadoFeedback.noDisponible("El servicio de generacion no respondio");
+        return FeedbackResult.unavailable("El servicio de generacion no respondio");
     }
 
     private String motivoDeRechazo(HttpClientErrorException e) {
@@ -147,7 +147,7 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         return "El servicio de IA rechazo la peticion (codigo " + codigo + ")";
     }
 
-    private ResultadoFeedback intentarUnaVez(String prompt) {
+    private FeedbackResult intentarUnaVez(String prompt) {
         var cuerpo = Map.of(
                 "systemInstruction", Map.of(
                         "parts", List.of(Map.of("text", PromptsFeedback.INSTRUCCION_SISTEMA))),
@@ -168,9 +168,9 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
         String texto = extraerTexto(respuesta);
         if (texto == null || texto.isBlank()) {
             log.warn("Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)");
-            return ResultadoFeedback.noDisponible("El modelo no devolvio texto");
+            return FeedbackResult.unavailable("El modelo no devolvio texto");
         }
-        return ResultadoFeedback.ok(texto.trim());
+        return FeedbackResult.ok(texto.trim());
     }
 
     private void esperarAntesDeReintentar(int intento) {

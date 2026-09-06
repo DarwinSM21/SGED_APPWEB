@@ -7,8 +7,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.common.ia.GeneradorFeedbackIA;
-import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
+import org.uteq.backend.common.ia.AIFeedbackGenerator;
+import org.uteq.backend.common.ia.AnonymousPlayerProfile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
@@ -49,7 +49,7 @@ class InformeServiceTest {
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
-    @Mock private GeneradorFeedbackIA generadorFeedback;
+    @Mock private AIFeedbackGenerator generadorFeedback;
 
     @InjectMocks
     private InformeService informeService;
@@ -242,21 +242,21 @@ class InformeServiceTest {
         when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
                 .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
         when(asistenciaRepository.contarAsistenciasDesde(eq(10L), any(LocalDate.class))).thenReturn(12L);
-        when(generadorFeedback.generarComentarioJugador(any()))
-                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.ok("Viene creciendo en actitud."));
+        when(generadorFeedback.generatePlayerComment(any()))
+                .thenReturn(AIFeedbackGenerator.FeedbackResult.ok("Viene creciendo en actitud."));
 
         var respuesta = informeService.comentarioDe("ana.vera@sged.test", 10L);
 
         assertThat(respuesta.disponible()).isTrue();
         assertThat(respuesta.comentario()).isEqualTo("Viene creciendo en actitud.");
 
-        ArgumentCaptor<PerfilJugadorAnonimo> captor = ArgumentCaptor.forClass(PerfilJugadorAnonimo.class);
-        verify(generadorFeedback).generarComentarioJugador(captor.capture());
-        PerfilJugadorAnonimo enviado = captor.getValue();
+        ArgumentCaptor<AnonymousPlayerProfile> captor = ArgumentCaptor.forClass(AnonymousPlayerProfile.class);
+        verify(generadorFeedback).generatePlayerComment(captor.capture());
+        AnonymousPlayerProfile enviado = captor.getValue();
 
-        assertThat(enviado.referencia()).doesNotContain("Juan").doesNotContain("Hijo");
-        assertThat(enviado.puntajes()).containsEntry("Tecnica", 7.5);
-        assertThat(enviado.asistenciasUltimoMes()).isEqualTo(12);
+        assertThat(enviado.reference()).doesNotContain("Juan").doesNotContain("Hijo");
+        assertThat(enviado.scores()).containsEntry("Tecnica", 7.5);
+        assertThat(enviado.lastMonthAttendances()).isEqualTo(12);
     }
 
     @Test
@@ -277,8 +277,8 @@ class InformeServiceTest {
         when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
                 .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
         when(asistenciaRepository.contarAsistenciasDesde(eq(10L), any(LocalDate.class))).thenReturn(3L);
-        when(generadorFeedback.generarComentarioJugador(any()))
-                .thenReturn(GeneradorFeedbackIA.ResultadoFeedback.noDisponible("El servicio no respondio"));
+        when(generadorFeedback.generatePlayerComment(any()))
+                .thenReturn(AIFeedbackGenerator.FeedbackResult.unavailable("El servicio no respondio"));
 
         var respuesta = informeService.comentarioDe("ana.vera@sged.test", 10L);
 

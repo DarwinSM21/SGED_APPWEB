@@ -11,7 +11,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.uteq.backend.academico.estudiante.entity.Estudiante;
 import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.common.ia.GeneradorFeedbackIA;
+import org.uteq.backend.common.ia.AIFeedbackGenerator;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
@@ -40,7 +40,7 @@ class ConvocatoriaServiceTest {
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private SesionEntrenamientoRepository sesionRepository;
     @Mock private LesionRepository lesionRepository;
-    @Mock private GeneradorFeedbackIA generadorFeedback;
+    @Mock private AIFeedbackGenerator generadorFeedback;
 
     @InjectMocks private ConvocatoriaService servicio;
 

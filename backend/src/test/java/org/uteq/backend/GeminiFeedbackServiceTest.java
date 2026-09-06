@@ -3,7 +3,7 @@ package org.uteq.backend;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.uteq.backend.common.ia.GeminiFeedbackService;
-import org.uteq.backend.common.ia.PerfilJugadorAnonimo;
+import org.uteq.backend.common.ia.AnonymousPlayerProfile;
 
 import java.util.List;
 import java.util.Map;
@@ -11,7 +11,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 class GeminiFeedbackServiceTest {
-    private static final PerfilJugadorAnonimo PERFIL = new PerfilJugadorAnonimo(
+    private static final AnonymousPlayerProfile PERFIL = new AnonymousPlayerProfile(
             "Jugador 1", "SUB-12", "Mediocentro",
             Map.of("Tecnica", 7.5, "Actitud", 9.0),
             Map.of("Tecnica", 6.8),
@@ -25,14 +25,14 @@ class GeminiFeedbackServiceTest {
     @DisplayName("Sin clave configurada el servicio queda no disponible, no falla")
     void sinClaveNoEstaDisponible() {
         var s = servicio("", true);
-        assertFalse(s.estaDisponible());
+        assertFalse(s.isAvailable());
     }
 
     @Test
     @DisplayName("Con clave pero deshabilitado explicitamente, tampoco esta disponible")
     void deshabilitadoNoEstaDisponible() {
         var s = servicio("clave-de-prueba", false);
-        assertFalse(s.estaDisponible());
+        assertFalse(s.isAvailable());
     }
 
     @Test
@@ -40,11 +40,11 @@ class GeminiFeedbackServiceTest {
     void comentarioJugadorSinProveedorNoLanza() {
         var s = servicio("", false);
 
-        var r = assertDoesNotThrow(() -> s.generarComentarioJugador(PERFIL));
+        var r = assertDoesNotThrow(() -> s.generatePlayerComment(PERFIL));
 
-        assertFalse(r.disponible());
-        assertNull(r.texto());
-        assertNotNull(r.motivo(), "Debe explicar por que no hay texto");
+        assertFalse(r.isAvailable());
+        assertNull(r.text());
+        assertNotNull(r.reason(), "Debe explicar por que no hay texto");
     }
 
     @Test
@@ -52,21 +52,21 @@ class GeminiFeedbackServiceTest {
     void plantillaVaciaNoSeEnvia() {
         var s = servicio("clave-de-prueba", true);
 
-        var r = s.generarComentarioPlantilla(List.of());
+        var r = s.generateLineupComment(List.of());
 
-        assertFalse(r.disponible());
+        assertFalse(r.isAvailable());
     }
 
     @Test
     @DisplayName("Un proveedor inalcanzable degrada a resultado no disponible, no rompe la evaluacion")
     void proveedorInalcanzableDegrada() {
         var s = servicio("clave-invalida-de-prueba", true);
-        assertTrue(s.estaDisponible());
+        assertTrue(s.isAvailable());
 
-        var r = assertDoesNotThrow(() -> s.generarComentarioJugador(PERFIL));
+        var r = assertDoesNotThrow(() -> s.generatePlayerComment(PERFIL));
 
-        assertFalse(r.disponible());
-        assertNotNull(r.motivo());
+        assertFalse(r.isAvailable());
+        assertNotNull(r.reason());
     }
 
     @Test
@@ -74,17 +74,17 @@ class GeminiFeedbackServiceTest {
     void conReintentosTambienDegrada() {
         var s = new GeminiFeedbackService("clave-invalida-de-prueba", "gemini-2.0-flash", true, 2, 2);
 
-        var r = assertDoesNotThrow(() -> s.generarComentarioJugador(PERFIL));
+        var r = assertDoesNotThrow(() -> s.generatePlayerComment(PERFIL));
 
-        assertFalse(r.disponible());
-        assertNull(r.texto());
-        assertNotNull(r.motivo());
+        assertFalse(r.isAvailable());
+        assertNull(r.text());
+        assertNotNull(r.reason());
     }
 
     @Test
     @DisplayName("El perfil anonimo rechaza construirse sin referencia")
     void perfilExigeReferencia() {
         assertThrows(IllegalArgumentException.class,
-                () -> new PerfilJugadorAnonimo(" ", "SUB-12", null, Map.of(), Map.of(), 0, false));
+                () -> new AnonymousPlayerProfile(" ", "SUB-12", null, Map.of(), Map.of(), 0, false));
     }
 }
