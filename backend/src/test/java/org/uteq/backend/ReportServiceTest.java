@@ -19,8 +19,8 @@ import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
 import org.uteq.backend.deportivo.lesion.entity.Lesion;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
-import org.uteq.backend.reportes.service.ReportePdfService;
-import org.uteq.backend.reportes.service.ReporteService;
+import org.uteq.backend.reportes.service.ReportPdfService;
+import org.uteq.backend.reportes.service.ReportService;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
 
@@ -34,18 +34,18 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class ReporteServiceTest {
+class ReportServiceTest {
     @Mock private EstudianteRepository estudianteRepository;
     @Mock private PagoRepository pagoRepository;
     @Mock private AsistenciaRepository asistenciaRepository;
     @Mock private LesionRepository lesionRepository;
     @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
 
-    private ReporteService servicio;
+    private ReportService servicio;
 
     @BeforeEach
     void setUp() {
-        servicio = new ReporteService(new ReportePdfService(), estudianteRepository,
+        servicio = new ReportService(new ReportPdfService(), estudianteRepository,
                 pagoRepository, asistenciaRepository, lesionRepository, evaluacionEstudianteRepository);
     }
 
@@ -66,33 +66,33 @@ class ReporteServiceTest {
 
     @Test
     @DisplayName("estudiantesFichas sin resultados lanza 404 en vez de generar un PDF vacio")
-    void estudiantesFichasSinResultadosDa404() {
+    void studentProfilesNoResultsReturns404() {
         when(estudianteRepository.buscarParaReporte(any(), any())).thenReturn(List.of());
 
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.estudiantesFichas(1L, true));
+        assertThrows(RecursoNoEncontradoException.class, () -> servicio.studentProfiles(1L, true));
     }
 
     @Test
     @DisplayName("estudiantesFichas con resultados genera un PDF valido")
-    void estudiantesFichasConResultadosGeneraPdf() {
+    void studentProfilesWithResultsGeneratesPdf() {
         when(estudianteRepository.buscarParaReporte(any(), any())).thenReturn(List.of(estudiante(1L, "SUB-12")));
 
-        byte[] pdf = servicio.estudiantesFichas(null, null);
+        byte[] pdf = servicio.studentProfiles(null, null);
 
         assertTrue(pdf.length > 0);
     }
 
     @Test
     @DisplayName("pagos sin resultados lanza 404")
-    void pagosSinResultadosDa404() {
+    void paymentsNoResultsReturns404() {
         when(pagoRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
-        assertThrows(RecursoNoEncontradoException.class, () -> servicio.pagos(1L, null, null));
+        assertThrows(RecursoNoEncontradoException.class, () -> servicio.payments(1L, null, null));
     }
 
     @Test
     @DisplayName("pagos con resultados genera un PDF valido")
-    void pagosConResultadosGeneraPdf() {
+    void paymentsWithResultsGeneratesPdf() {
         Usuario registrador = Usuario.builder().persona(persona("Luis", "Gómez")).build();
         Pago pago = Pago.builder()
                 .estudiante(estudiante(1L, "SUB-12"))
@@ -103,23 +103,23 @@ class ReporteServiceTest {
                 .build();
         when(pagoRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(pago)));
 
-        byte[] pdf = servicio.pagos(null, null, null);
+        byte[] pdf = servicio.payments(null, null, null);
 
         assertTrue(pdf.length > 0);
     }
 
     @Test
     @DisplayName("lesiones sin resultados lanza 404")
-    void lesionesSinResultadosDa404() {
+    void injuriesNoResultsReturns404() {
         when(lesionRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
         assertThrows(RecursoNoEncontradoException.class,
-                () -> servicio.lesiones(null, null, null, null));
+                () -> servicio.injuries(null, null, null, null));
     }
 
     @Test
     @DisplayName("lesiones con resultados genera un PDF valido, incluyendo lesiones activas")
-    void lesionesConResultadosGeneraPdf() {
+    void injuriesWithResultsGeneratesPdf() {
         Lesion lesion = Lesion.builder()
                 .estudiante(estudiante(1L, "SUB-12"))
                 .descripcion("Esguince de tobillo")
@@ -127,7 +127,7 @@ class ReporteServiceTest {
                 .build();
         when(lesionRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(lesion)));
 
-        byte[] pdf = servicio.lesiones(null, null, null, null);
+        byte[] pdf = servicio.injuries(null, null, null, null);
 
         assertTrue(pdf.length > 0);
     }

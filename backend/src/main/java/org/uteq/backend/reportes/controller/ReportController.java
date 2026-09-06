@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.uteq.backend.reportes.service.ReporteService;
+import org.uteq.backend.reportes.service.ReportService;
 
 import java.time.LocalDate;
 
@@ -18,14 +18,14 @@ import java.time.LocalDate;
  * Descarga de reportes en PDF. Cada endpoint devuelve un
  * {@code application/pdf} con {@code Content-Disposition: attachment} y
  * acepta filtros opcionales; todos los filtros ausentes traen el conjunto
- * completo (acotado internamente por {@link ReporteService}).
+ * completo (acotado internamente por {@link ReportService}).
  */
 @RestController
 @RequestMapping("/api/reportes")
 @RequiredArgsConstructor
-public class ReporteController {
+public class ReportController {
 
-    private final ReporteService reporteService;
+    private final ReportService reportService;
 
     /**
      * Fichas de estudiantes.
@@ -39,10 +39,10 @@ public class ReporteController {
      */
     @GetMapping("/estudiantes-fichas")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<byte[]> estudiantesFichas(
+    public ResponseEntity<byte[]> studentProfiles(
             @RequestParam(required = false) Long categoria,
             @RequestParam(required = false) Boolean activo) {
-        return pdf("fichas-estudiantes.pdf", reporteService.estudiantesFichas(categoria, activo));
+        return pdf("fichas-estudiantes.pdf", reportService.studentProfiles(categoria, activo));
     }
 
     /**
@@ -57,11 +57,11 @@ public class ReporteController {
      */
     @GetMapping("/pagos")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<byte[]> pagos(
+    public ResponseEntity<byte[]> payments(
             @RequestParam(required = false) Long estudianteId,
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta) {
-        return pdf("pagos.pdf", reporteService.pagos(estudianteId, fechaDesde, fechaHasta));
+        return pdf("pagos.pdf", reportService.payments(estudianteId, fechaDesde, fechaHasta));
     }
 
     /**
@@ -77,12 +77,12 @@ public class ReporteController {
      */
     @GetMapping("/asistencias")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<byte[]> asistencias(
+    public ResponseEntity<byte[]> attendances(
             @RequestParam(required = false) Long estudianteId,
             @RequestParam(required = false) Long categoria,
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta) {
-        return pdf("asistencias.pdf", reporteService.asistencias(estudianteId, categoria, fechaDesde, fechaHasta));
+        return pdf("asistencias.pdf", reportService.attendances(estudianteId, categoria, fechaDesde, fechaHasta));
     }
 
     /**
@@ -98,12 +98,12 @@ public class ReporteController {
      */
     @GetMapping("/evaluaciones")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<byte[]> evaluaciones(
+    public ResponseEntity<byte[]> evaluations(
             @RequestParam(required = false) Long estudianteId,
             @RequestParam(required = false) Long categoria,
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta) {
-        return pdf("evaluaciones.pdf", reporteService.evaluaciones(estudianteId, categoria, fechaDesde, fechaHasta));
+        return pdf("evaluaciones.pdf", reportService.evaluations(estudianteId, categoria, fechaDesde, fechaHasta));
     }
 
     /**
@@ -119,12 +119,12 @@ public class ReporteController {
      */
     @GetMapping("/lesiones")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
-    public ResponseEntity<byte[]> lesiones(
+    public ResponseEntity<byte[]> injuries(
             @RequestParam(required = false) Long estudianteId,
             @RequestParam(required = false) Long categoria,
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta) {
-        return pdf("lesiones.pdf", reporteService.lesiones(estudianteId, categoria, fechaDesde, fechaHasta));
+        return pdf("lesiones.pdf", reportService.injuries(estudianteId, categoria, fechaDesde, fechaHasta));
     }
 
     private ResponseEntity<byte[]> pdf(String nombreArchivo, byte[] contenido) {

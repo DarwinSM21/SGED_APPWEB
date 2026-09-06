@@ -26,14 +26,14 @@ import java.util.List;
 
 /**
  * Arma las filas de cada reporte reutilizando los repositorios de negocio
- * ya existentes (sin duplicar lógica de consulta); {@link ReportePdfService}
+ * ya existentes (sin duplicar lógica de consulta); {@link ReportPdfService}
  * solo se encarga del formato del PDF. Los filtros opcionales se construyen
  * con Criteria API en vez de {@code (:x IS NULL OR campo = :x)} en JPQL, que
  * dispara "could not determine data type of parameter" en Postgres.
  */
 @Service
 @RequiredArgsConstructor
-public class ReporteService {
+public class ReportService {
     /**
      * Tope de filas por reporte. Sin él, {@code findAll(spec, sort)} con los
      * filtros vacíos se trae la tabla entera y el proceso se queda sin heap.
@@ -45,7 +45,7 @@ public class ReporteService {
 
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    private final ReportePdfService pdfService;
+    private final ReportPdfService pdfService;
     private final EstudianteRepository estudianteRepository;
     private final PagoRepository pagoRepository;
     private final AsistenciaRepository asistenciaRepository;
@@ -62,7 +62,7 @@ public class ReporteService {
      *                                      filtros
      */
     @Transactional(readOnly = true)
-    public byte[] estudiantesFichas(Long idCategoria, Boolean activo) {
+    public byte[] studentProfiles(Long idCategoria, Boolean activo) {
         var encontrados = sinVacio(estudianteRepository.buscarParaReporte(idCategoria, activo));
         var filas = encontrados.stream()
                 .map(e -> List.of(
@@ -72,7 +72,7 @@ public class ReporteService {
                         Boolean.TRUE.equals(e.getActivo()) ? "Activo" : "Inactivo",
                         e.getFechaIngreso().format(FECHA)))
                 .toList();
-        return pdfService.generar(titulo("Reporte de Fichas de Estudiantes", filas),
+        return pdfService.generate(titulo("Reporte de Fichas de Estudiantes", filas),
                 List.of("Código", "Estudiante", "Categoría", "Estado", "Fecha ingreso"), recortar(filas));
     }
 
@@ -86,14 +86,14 @@ public class ReporteService {
      * @throws RecursoNoEncontradoException si no hay pagos para los filtros
      */
     @Transactional(readOnly = true)
-    public byte[] pagos(Long idEstudiante, LocalDate desde, LocalDate hasta) {
+    public byte[] payments(Long idEstudiante, LocalDate desde, LocalDate hasta) {
         Specification<Pago> spec = Specification.<Pago>where(igualA("estudiante.idEstudiante", idEstudiante))
                 .and(this.<Pago>desdeDe("fechaPago", desde))
                 .and(this.<Pago>hastaDe("fechaPago", hasta));
         var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaPago"))).getContent()).stream()
                 .map(this::filaPago)
                 .toList();
-        return pdfService.generar(titulo("Reporte de Pagos", filas),
+        return pdfService.generate(titulo("Reporte de Pagos", filas),
                 List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), recortar(filas));
     }
 
@@ -109,7 +109,7 @@ public class ReporteService {
      *                                      filtros
      */
     @Transactional(readOnly = true)
-    public byte[] asistencias(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
+    public byte[] attendances(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<Asistencia> spec = Specification.<Asistencia>where(igualA("estudiante.idEstudiante", idEstudiante))
                 .and(this.<Asistencia>igualA("estudiante.categoria.idCategoria", idCategoria))
                 .and(this.<Asistencia>desdeDe("sesion.fecha", desde))
@@ -117,7 +117,7 @@ public class ReporteService {
         var filas = sinVacio(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
                 .map(this::filaAsistencia)
                 .toList();
-        return pdfService.generar(titulo("Reporte de Asistencias", filas),
+        return pdfService.generate(titulo("Reporte de Asistencias", filas),
                 List.of("Estudiante", "Categoría", "Fecha sesión", "Estado", "Método"), recortar(filas));
     }
 
@@ -133,7 +133,7 @@ public class ReporteService {
      *                                      filtros
      */
     @Transactional(readOnly = true)
-    public byte[] evaluaciones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
+    public byte[] evaluations(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<EvaluacionEstudiante> spec = Specification.<EvaluacionEstudiante>where(igualA("estudiante.idEstudiante", idEstudiante))
                 .and(this.<EvaluacionEstudiante>igualA("categoriaDia.idCategoria", idCategoria))
                 .and(this.<EvaluacionEstudiante>desdeDe("evaluacion.fecha", desde))
@@ -141,7 +141,7 @@ public class ReporteService {
         var filas = sinVacio(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
                 .map(this::filaEvaluacion)
                 .toList();
-        return pdfService.generar(titulo("Reporte de Evaluaciones", filas),
+        return pdfService.generate(titulo("Reporte de Evaluaciones", filas),
                 List.of("Estudiante", "Categoría", "Fecha", "Posición", "Promedio"), recortar(filas));
     }
 
@@ -156,7 +156,7 @@ public class ReporteService {
      * @throws RecursoNoEncontradoException si no hay lesiones para los filtros
      */
     @Transactional(readOnly = true)
-    public byte[] lesiones(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
+    public byte[] injuries(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<Lesion> spec = Specification.<Lesion>where(igualA("estudiante.idEstudiante", idEstudiante))
                 .and(this.<Lesion>igualA("estudiante.categoria.idCategoria", idCategoria))
                 .and(this.<Lesion>desdeDe("fechaLesion", desde))
@@ -164,7 +164,7 @@ public class ReporteService {
         var filas = sinVacio(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()
                 .map(this::filaLesion)
                 .toList();
-        return pdfService.generar(titulo("Reporte de Lesiones", filas),
+        return pdfService.generate(titulo("Reporte de Lesiones", filas),
                 List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), recortar(filas));
     }
 

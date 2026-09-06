@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
-import org.uteq.backend.reportes.service.ReportePdfService;
+import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.rol.entity.Rol;
 import org.uteq.backend.seguridad.usuario.entity.Usuario;
@@ -34,7 +34,7 @@ public class PerfilController {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final UsuarioRepository usuarioRepository;
-    private final ReportePdfService pdfService;
+    private final ReportPdfService pdfService;
 
     /**
      * Genera un PDF con los datos de la cuenta y la persona del usuario en
@@ -68,7 +68,7 @@ public class PerfilController {
                 List.of("Cuenta creada el", usuario.getCreatedAt() != null ? usuario.getCreatedAt().format(FECHA) : "-")
         );
 
-        byte[] pdf = pdfService.generar("Mis Datos", List.of("Campo", "Valor"), filas);
+        byte[] pdf = pdfService.generate("Mis Datos", List.of("Campo", "Valor"), filas);
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)

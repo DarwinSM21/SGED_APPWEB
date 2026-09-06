@@ -25,7 +25,7 @@ import java.util.List;
  * solo arma sus filas.
  */
 @Service
-public class ReportePdfService {
+public class ReportPdfService {
     private static final Font FUENTE_TITULO = new Font(Font.HELVETICA, 16, Font.BOLD);
     private static final Font FUENTE_ENCABEZADO = new Font(Font.HELVETICA, 9, Font.BOLD, Color.WHITE);
     private static final Font FUENTE_CELDA = new Font(Font.HELVETICA, 9);
@@ -43,7 +43,7 @@ public class ReportePdfService {
      * @throws IllegalStateException si la librería de PDF falla al construir
      *                               el documento
      */
-    public byte[] generar(String titulo, List<String> encabezados, List<List<String>> filas) {
+    public byte[] generate(String titulo, List<String> encabezados, List<List<String>> filas) {
         Document documento = new Document(PageSize.A4, 36, 36, 54, 54);
         try {
             ByteArrayOutputStream salida = new ByteArrayOutputStream();

@@ -14,7 +14,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
-import org.uteq.backend.reportes.service.ReportePdfService;
+import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.persona.entity.Persona;
 import org.uteq.backend.seguridad.rol.entity.Rol;
 import org.uteq.backend.seguridad.usuario.controller.PerfilController;
@@ -40,7 +40,7 @@ class PerfilControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new PerfilController(usuarioRepository, new ReportePdfService());
+        controller = new PerfilController(usuarioRepository, new ReportPdfService());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

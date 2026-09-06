@@ -11,8 +11,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.RecursoNoEncontradoException;
-import org.uteq.backend.reportes.controller.ReporteController;
-import org.uteq.backend.reportes.service.ReporteService;
+import org.uteq.backend.reportes.controller.ReportController;
+import org.uteq.backend.reportes.service.ReportService;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -24,10 +24,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class ReporteControllerTest {
+class ReportControllerTest {
 
-    @Mock private ReporteService reporteService;
-    @InjectMocks private ReporteController controller;
+    @Mock private ReportService reportService;
+    @InjectMocks private ReportController controller;
 
     private MockMvc mockMvc;
 
@@ -40,9 +40,9 @@ class ReporteControllerTest {
 
     @Test
     @DisplayName("GET /api/reportes/estudiantes-fichas devuelve un PDF descargable")
-    void estudiantesFichasDevuelvePdf() throws Exception {
+    void studentProfilesReturnsPdf() throws Exception {
         byte[] pdf = "%PDF-1.4 contenido".getBytes();
-        when(reporteService.estudiantesFichas(isNull(), isNull())).thenReturn(pdf);
+        when(reportService.studentProfiles(isNull(), isNull())).thenReturn(pdf);
 
         mockMvc.perform(get("/api/reportes/estudiantes-fichas"))
                 .andExpect(status().isOk())
@@ -54,8 +54,8 @@ class ReporteControllerTest {
 
     @Test
     @DisplayName("GET /api/reportes/pagos reenvia los filtros de query al servicio")
-    void pagosReenviaFiltros() throws Exception {
-        when(reporteService.pagos(eq(7L), any(), any())).thenReturn("%PDF".getBytes());
+    void paymentsForwardsFilters() throws Exception {
+        when(reportService.payments(eq(7L), any(), any())).thenReturn("%PDF".getBytes());
 
         mockMvc.perform(get("/api/reportes/pagos")
                         .param("estudianteId", "7")
@@ -66,8 +66,8 @@ class ReporteControllerTest {
 
     @Test
     @DisplayName("Sin resultados para los filtros, el servicio 404 se propaga tal cual")
-    void sinResultadosDa404() throws Exception {
-        when(reporteService.lesiones(any(), any(), any(), any()))
+    void noResultsReturns404() throws Exception {
+        when(reportService.injuries(any(), any(), any(), any()))
                 .thenThrow(new RecursoNoEncontradoException("No hay datos para los filtros seleccionados"));
 
         mockMvc.perform(get("/api/reportes/lesiones"))
