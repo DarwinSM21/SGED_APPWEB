@@ -134,8 +134,8 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
 * Video de demostración: PENDIENTE (enlace) — falta grabarlo y enlazarlo
-* DOI Zenodo del software: [`10.5281/zenodo.21713240`](https://doi.org/10.5281/zenodo.21713240) — ya emitido
-* DOI Zenodo del *dataset*: PENDIENTE — depósito separado, distinto del DOI del software
+* DOI Zenodo del software: [`10.5281/zenodo.21713240`](https://doi.org/10.5281/zenodo.21713240) — emitido, pero fijo a la versión `v0.9.0-rc` del repositorio `DarwinSM21/SGED_APPWEB`; pendiente re-emitir contra `darcalleg/SGED_APPWEB` (ver nota abajo)
+* DOI Zenodo del *dataset*: [`10.5281/zenodo.22422305`](https://doi.org/10.5281/zenodo.22422305) — publicado, versión 1.0.0, CC BY 4.0
 * Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
 
 ## Integrantes
