@@ -532,8 +532,8 @@ aproximación local— destapó que la regla de JaCoCo volvía a fallar:
 Consultada la API de GitHub Actions (Anexo~D), \texttt{main} llevaba
 \textbf{63 corridas consecutivas en rojo} —no cuatro, como una primera
 revisión superficial de la lista visible había sugerido—: desde el
-\emph{commit}~\texttt{cc891b1} (2026-08-18, \#112) hasta
-\texttt{dfa5802} (2026-09-02, \#174), dos semanas completas. La
+\emph{commit}~\texttt{accb446} (2026-08-18, \#112) hasta
+\texttt{bee9995} (2026-09-02, \#174), dos semanas completas. La
 mayoría de esas 63 corridas rojas corresponden a \emph{commits} de
 código de funcionalidad del equipo, pero varias son también
 \emph{commits} de este mismo informe hechos sin advertir que no podían
@@ -1138,65 +1138,65 @@ que la afirmación sea verificable con \texttt{git show <hash>} y no
 OBS-01 & Los requisitos se redactan como títulos («Registro de
 estudiantes»); no usan «El sistema deberá\ldots». &
 \ruta{docs/requisitos/SRS.md} reescribe los 22 RF y 13 RNF con la forma
-normativa y criterio de verificación~\cite{iso29148}. & \texttt{98bab0d} \\
+normativa y criterio de verificación~\cite{iso29148}. & \texttt{6480584} \\
 
 OBS-02 & Los diagramas C4 N1/N2 y el MER contienen texto marcador
 «[Reemplazar con PNG]». & \ruta{docs/arquitectura/} contiene los C4 de
 niveles 1--3 en PNG, generados desde \texttt{workspace.dsl}; el MER queda
-en \ruta{docs/diagramas/}. & \texttt{bf6ee80} \\
+en \ruta{docs/diagramas/}. & \texttt{224d8d7} \\
 
 OBS-03 & Incoherencia de pila: el ADR decide PHP/Laravel/MySQL, pero el
 repositorio construye Spring Boot/Angular/PostgreSQL. & ADR-001 reescrito:
 evalúa las tres opciones y decide explícitamente Java 21 con Spring Boot
-3.2.5, coherente con el código. & \texttt{bf6ee80} \\
+3.2.5, coherente con el código. & \texttt{224d8d7} \\
 
 OBS-04 & \texttt{query.sql} con 0 claves foráneas y 88 columnas
 «(PK)/(FK)» literales; exportación cruda no funcional. & \ruta{db/schema.sql}
 declara 21 restricciones de integridad referencial reales. &
-\texttt{db77ce2} \\
+\texttt{6b76cc1} \\
 
 OBS-05 & Roles sin completar («Integrante 1/2/3»); wireframes con marca
 ajena; falta \texttt{.env.example}. & \ruta{CONTRIBUTORS.md} asigna roles
 CRediT por evidencia de \texttt{git log}; \ruta{.env.example} versionado. &
-\texttt{a8d6f18} \\
+\texttt{2ada472} \\
 
 OBS-06 & En el repositorio solo consta ADR-003; los diagramas aparecen en
 el informe como texto. & Diagramas versionados como archivos; el
 diccionario de datos completo se agrega en
-\ruta{docs/basedatos/DATA-DICTIONARY.md}. & \texttt{98bab0d} \\
+\ruta{docs/basedatos/DATA-DICTIONARY.md}. & \texttt{6480584} \\
 
 OBS-07 & \texttt{AuthController} solo expone \texttt{/login},
 \texttt{/me} y \texttt{/ping}: no hay registro, logout ni refresh.
 \texttt{RedisBlacklistService} existe pero no se invoca. & Seis
 \emph{endpoints} operativos; el logout invoca realmente la lista de
-revocación por \texttt{jti}. & \texttt{b907d10}, \texttt{bcb3642} \\
+revocación por \texttt{jti}. & \texttt{048fca5}, \texttt{c506309} \\
 
 OBS-08 & La migración \texttt{V1} está vacía (0 bytes) y \texttt{V2}
 depende de un esquema que ninguna migración crea; con
 \texttt{ddl-auto=validate} el arranque no es reproducible. & \texttt{V1}
 crea ambos esquemas y las tablas de identidad; el arranque desde clonación
-limpia se verificó. & \texttt{b907d10} \\
+limpia se verificó. & \texttt{048fca5} \\
 
 OBS-09 & La lista de revocación no está cableada a ningún
 \emph{endpoint} y no se aplica \texttt{@PreAuthorize}. & Ocho anotaciones
 \texttt{@PreAuthorize} activas; revocación verificada por prueba
-automatizada. & \texttt{fabf893}, \texttt{84de825} \\
+automatizada. & \texttt{a98008b}, \texttt{39e4718} \\
 
 OBS-10 & \texttt{AuthServiceTest} está vacío (0 bytes); la única prueba
 real es \texttt{contextLoads()}. No se cumple el mínimo de 5 pruebas. La
 colección Postman no está versionada. & 34 pruebas en 7 clases; cobertura
 real 68,1\,\%; \ruta{docs/postman/coleccion.json} versionada. &
-\texttt{1e798bc} \\
+\texttt{6a73cda} \\
 
 OBS-11 & \texttt{docker-compose.yml} está vacío (0 bytes); no hay
 orquestación verificable. & Cuatro servicios orquestados con
 \emph{healthchecks} e imágenes fijadas por digest; \texttt{make up} levanta
-todo. & \texttt{b907d10}, \texttt{17dc5df} \\
+todo. & \texttt{048fca5}, \texttt{f748032} \\
 
 OBS-12 & Varios contenidos del informe no se corresponden con lo presente
 en el repositorio (están vacíos o ausentes). & Cada requisito declara su
 estado real (implementado / modelado / planificado); esta entrega no afirma
-nada no verificable. & \texttt{98bab0d} \\
+nada no verificable. & \texttt{6480584} \\
 
 \bottomrule
 \end{longtable}
@@ -2208,8 +2208,8 @@ Ahora responde \texttt{400}.
 Dos piezas de evidencia adicionales, archivadas en
 \ruta{docs/mediciones/sec/}, complementan la verificación manual de los
 seis controles anteriores: el análisis estático se generó el 2026-08-14
-(commit \texttt{73d5114}) y el escaneo ZAP se regeneró el 2026-09-02
-(commit \texttt{0fc8b69}) tras apagar la interfaz de Swagger.
+(commit \texttt{8a078e7}) y el escaneo ZAP se regeneró el 2026-09-02
+(commit \texttt{d293731}) tras apagar la interfaz de Swagger.
 
 \textbf{Análisis estático de inyección SQL.} SpotBugs~4.8.6.4 con el
 complemento find-sec-bugs~1.13.0, restringido por un filtro de
@@ -2229,9 +2229,9 @@ práctica~\cite{rostamimazrae2023cicd}.
 
 \textbf{Escaneo OWASP ZAP baseline.} Modo pasivo contra
 \texttt{/api/docs} y \texttt{/}: \textbf{0 hallazgos, de cualquier
-severidad} (corrida del 2026-09-02, commit \texttt{0fc8b69}). No siempre
+severidad} (corrida del 2026-09-02, commit \texttt{d293731}). No siempre
 fue así, y vale contarlo: una corrida anterior (2026-08-14, commit
-\texttt{73d5114}) sí encontró una alerta de severidad \textbf{alta}
+\texttt{8a078e7}) sí encontró una alerta de severidad \textbf{alta}
 —\emph{Vulnerable JS Library}, sobre \texttt{DOMPurify 3.0.6} dentro de
 \texttt{swagger-ui-bundle.js}, una dependencia de terceros empaquetada
 por Springdoc/Swagger UI, no código propio—, alcanzable porque la
@@ -2410,7 +2410,7 @@ dejado en cero por ciento —\texttt{PartidoController},
 \texttt{PosicionController}, \texttt{AsistenciaSesionController},
 \texttt{ResumenAsistenciaController}— tienen ahora suite propia
 (los cinco que citaba la Entrega~1B ya se habían cubierto en
-\texttt{09c6edf}). Ningún controlador queda en cero.
+\texttt{94aeace}). Ningún controlador queda en cero.
 
 \subsection{Calidad web: Lighthouse (Bloque C.5 / A.1)}
 
@@ -3438,8 +3438,8 @@ Al preparar este anexo se consultó la API pública de GitHub Actions
 corridas más recientes— y se encontró que el hallazgo era más grave de
 lo que una primera revisión sugería: \texttt{main} no llevaba cuatro
 \emph{commits} en rojo, sino \textbf{63 corridas consecutivas}, desde
-el \emph{commit}~\texttt{cc891b1} (\#112, 2026-08-18T04:37Z) hasta
-\texttt{dfa5802} (\#174, 2026-09-02T15:56Z) —dos semanas completas—,
+el \emph{commit}~\texttt{accb446} (\#112, 2026-08-18T04:37Z) hasta
+\texttt{bee9995} (\#174, 2026-09-02T15:56Z) —dos semanas completas—,
 por el mismo motivo que documenta la actualización del 2026-09-02 en
 la sección~\ref{sec:ingenieria-requisitos} (cobertura de
 \emph{branches} bajo el umbral). No hay tres corridas verdes
@@ -3459,9 +3459,9 @@ comando, no una captura de pantalla que solo puede mirarse—.
 \toprule
 \textbf{\#} & \textbf{\emph{Commit}} & \textbf{Mensaje} & \textbf{Inicio (UTC)} \\
 \midrule
-175 & \texttt{a7ccb86} & \emph{test: cierra el gate de cobertura de branches (61\,\% $\to$ 70,06\,\%)} & 2026-09-02 16:32 \\
-176 & \texttt{43aa9e9} & \emph{docs(informe): actualizar cifras de cobertura tras cerrar el gate} & 2026-09-02 16:35 \\
-177 & \texttt{3ef00eb} & \emph{docs(trazabilidad): RNF-09 citaba el umbral de cobertura equivocado} & 2026-09-02 16:37 \\
+175 & \texttt{7865af9} & \emph{test: cierra el gate de cobertura de branches (61\,\% $\to$ 70,06\,\%)} & 2026-09-02 16:32 \\
+176 & \texttt{4718031} & \emph{docs(informe): actualizar cifras de cobertura tras cerrar el gate} & 2026-09-02 16:35 \\
+177 & \texttt{76e4e48} & \emph{docs(trazabilidad): RNF-09 citaba el umbral de cobertura equivocado} & 2026-09-02 16:37 \\
 \bottomrule
 \end{tabular}
 \end{table}
