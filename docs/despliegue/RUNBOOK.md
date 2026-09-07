@@ -52,6 +52,7 @@ fuera de esta lista:
 | `DB_PASSWORD` (o credencial de Supabase) | Panel de Supabase / variable de entorno | Rotar primero en el proveedor (Supabase → Database → Reset password, o el motor que corresponda), y solo después actualizar la variable de entorno del backend y reiniciar — en ese orden, para no dejar una ventana donde el backend tenga una contraseña que la base ya no reconoce. |
 | `GEMINI_API_KEY` | Google AI Studio / variable de entorno | Revocar la key en [ai.google.dev](https://ai.google.dev), generar una nueva, actualizar la variable. Si `IA_HABILITADO=false`, no hay urgencia — la funcionalidad ya degrada de forma segura sin ella (la evaluación se guarda igual, el comentario generado simplemente no aparece). |
 | `CONTRASENA_ADMIN` (usuario semilla `admin`) | `db/seed.sql`, hasheada con BCrypt | En producción, cambiar la contraseña del usuario `admin` real inmediatamente después del primer arranque (vía la propia aplicación, no editando el seed), o regenerar el hash BCrypt e inyectarlo por variable de entorno antes del primer seed si se automatiza. La contraseña publicada en el README (`sged2026`) es intencionalmente pública y **nunca** debe ser la vigente en un ambiente con datos reales. |
+| `MAIL_PASSWORD` (App Password de Gmail) | Cuenta de Google / variable de entorno del backend | Solo se usa con `MAIL_ENABLED=true` (correo de RF-37). Revocar en [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords), generar una nueva, actualizar la variable y reiniciar. Sin urgencia si `MAIL_ENABLED=false`: el sistema no envía correo, registra el enlace en la bitácora. Ver §6. |
 
 ## 4. Rotación de contenedores por actualizaciones de seguridad
 
@@ -81,3 +82,47 @@ Ver `BACKUP.md` para la estrategia completa. Resumen del procedimiento:
 5. Registrar la restauración (fecha, motivo, quién la ejecutó) — no existe
    todavía un lugar formal para ese registro; usar por ahora una entrada
    en `CHANGELOG.md` bajo una sección `### Operación`.
+
+## 6. Correo de recuperación de contraseña (RF-37 / RNF-15)
+
+El enlace de restablecimiento se entrega por correo **solo** si
+`MAIL_ENABLED=true`. Con el valor por defecto (`false`) el backend no envía
+nada y escribe el enlace en la bitácora (`LoggingPasswordResetMailer`), de
+modo que `make up` y la CI no necesitan credenciales de correo.
+
+**Obtener el App Password de Gmail**
+
+1. En la cuenta de Google que enviará los correos, activar la Verificación
+   en 2 pasos: <https://myaccount.google.com/signinoptions/two-step-verification>.
+2. Entrar a <https://myaccount.google.com/apppasswords> (no aparece en el
+   menú si la Verificación en 2 pasos no está activa; con cuentas
+   `@uteq.edu.ec` puede estar bloqueado por el administrador — usar una
+   cuenta `@gmail.com`).
+3. Crear una contraseña de aplicación llamada `SGED`. Son 16 letras;
+   copiarlas **sin espacios**.
+
+**Variables (backend)**
+
+| Variable | Valor |
+|---|---|
+| `MAIL_ENABLED` | `true` |
+| `MAIL_HOST` | `smtp.gmail.com` |
+| `MAIL_PORT` | `587` |
+| `MAIL_USERNAME` | el correo de esa cuenta Google |
+| `MAIL_PASSWORD` | las 16 letras del App Password (secreto) |
+| `MAIL_FROM` | normalmente el mismo correo |
+| `MAIL_RESET_URL_BASE` | base del enlace, p. ej. `https://sged-frontend-jofa.onrender.com/#/restablecer` |
+| `MAIL_RESET_TTL` | minutos de vigencia del enlace (por defecto `30`) |
+
+- **Local:** en `.env` de la raíz (está en `.gitignore`).
+- **Render:** en *Environment* del servicio `sged-backend`; marcar
+  `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` como *secret*
+  (`sync: false` ya está en `render.yaml`).
+
+**Rotación:** ver §3, fila `MAIL_PASSWORD`. Revocar el App Password no
+afecta nada más: solo deja de poder enviar correo hasta poner uno nuevo.
+
+**Comprobación:** con `MAIL_ENABLED=true`, `POST /api/auth/forgot` con el
+correo de un usuario real debe hacer llegar el mensaje; si el proveedor
+falla, la petición responde `202` igual y el error queda en el log
+(`PWRESET no se pudo enviar…`).

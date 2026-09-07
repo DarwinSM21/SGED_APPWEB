@@ -248,6 +248,62 @@
 						},
 						"description": ""
 					}
+				},
+				{
+					"name": "Forgot (202, mensaje generico exista o no la cuenta) [RF-37]",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/forgot",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"forgot"
+							]
+						},
+						"description": "Responde 202 con el mismo mensaje exista o no la cuenta (no enumera usuarios). Con mail.enabled=false el enlace queda en la bitacora del backend. 3 solicitudes/15 min por identificador y 10/hora por IP; la 4.a da 429.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"identificador\": \"admin\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
+				},
+				{
+					"name": "Reset (204, o 400 token invalido / 422 contrasena debil) [RF-37]",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/auth/reset",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"reset"
+							]
+						},
+						"description": "Toma el token del enlace (o de la bitacora en dev). 204 si todo bien; 400 si el token es invalido/expiro/ya se uso; 422 si la contrasena incumple RNF-14. Al completarse invalida las sesiones previas del usuario.",
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"token\": \"REEMPLAZAR_CON_EL_TOKEN_DEL_ENLACE\",\n  \"nuevaPassword\": \"claveNueva1\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					}
 				}
 			]
 		},

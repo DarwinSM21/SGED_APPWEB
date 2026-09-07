@@ -1,9 +1,9 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.2 (Entrega Final, etiqueta `v1.0.0` —
-revisado por última vez tras la reestructuración de paquetes
-`academico`/`deportivo`/`seguridad` del 2026-07-29)
+**Versión del documento:** 1.4 (Entrega Final, etiqueta `v1.0.0` —
+revisado por última vez el 2026-09-07 tras la revisión de requisitos
+contra ISO/IEC/IEEE 29148:2018)
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
 
@@ -223,6 +223,35 @@ disponibilidad que no requiera autenticación.*
 - **Método de verificación:** Prueba automatizada
 - **Origen:** `GET /api/auth/ping` — `AuthController.java:202`
 - **Verificación:** prueba `AuthServiceTest.pingRespondePong`.
+
+---
+
+**RF-37 — Restablecimiento de contraseña por enlace**
+*El sistema deberá permitir a un usuario restablecer su contraseña mediante
+un enlace de un solo uso, de vigencia limitada (30 minutos), enviado a su
+correo registrado, sin intervención del administrador, e invalidando las
+sesiones activas del usuario al completarse el restablecimiento.*
+
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada; Demostración
+- **Origen:** `POST /api/auth/forgot`, `POST /api/auth/reset` — `AuthController.java`;
+  `PasswordResetService`, `PasswordResetTokenStore` (token en Redis, sólo su
+  SHA-256), `SessionEpochService` (época de invalidación).
+- **Restricción de acceso:** ambos endpoints públicos; `/forgot` limitado a
+  3 solicitudes / 15 min por identificador y 10 / hora por IP
+  (`ResetRequestLimitService`).
+- **Verificación:** `/forgot` responde `202` idéntico exista o no la cuenta
+  (no revela enumeración de usuarios); `/reset` responde `204`, o `400` si el
+  token es inválido/expiró/ya se usó, o `422` si la contraseña incumple
+  RNF-14. Pruebas: `PasswordResetServiceTest` (9 casos),
+  `PasswordResetTokenStoreTest`, `SessionEpochServiceTest`,
+  `ResetRequestLimitServiceTest`, `AuthControllerTest`; frontend
+  `recuperar.component.spec.ts`, `restablecer.component.spec.ts`.
+- **Frontend:** pantallas `/recuperar` y `/restablecer`
+  (`frontend/src/app/auth/`), con enlace desde el inicio de sesión.
+- **Nota:** cierra el punto A22 de la revisión de requisitos contra
+  ISO/IEC/IEEE 29148:2018. El correo destino no está verificado (limitación
+  documentada en `docs/etica/ETHICS.md`).
 
 ---
 
@@ -1022,6 +1051,42 @@ fallido, incluyendo marca de tiempo, dirección IP de origen e identificador
 del sujeto, sin registrar nunca la contraseña.*
 Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
 
+**RNF-14 — Política de contraseñas**
+*El sistema deberá exigir contraseñas de al menos 8 caracteres, con al menos
+una letra y un dígito, distintas del nombre de usuario, y de un máximo de 72
+bytes; esta política deberá aplicarse de forma uniforme en el registro de
+usuarios, en la activación de acceso del estudiante, en el cambio
+administrativo de contraseña y en el restablecimiento por enlace (RF-37).*
+
+- **Método de verificación:** Prueba automatizada; Inspección
+- **Origen:** `PasswordPolicy.java` — única fuente de la regla; llamada por
+  `AuthService.register`, `UserAccountService`, `StudentAccessService` y
+  `PasswordResetService`. Incumplir la política devuelve `422` (`ApiException`).
+- **Verificación:** `PasswordPolicyTest` (longitud, letra, dígito, igualdad
+  con el usuario, límite de 72 bytes); `AuthServiceTest`,
+  `UserAccountControllerTest`, `PasswordResetServiceTest`.
+- **Nota:** cierra el punto A21 de la revisión contra 29148; sustituye el
+  antiguo `@Size(min = 6)` de los DTO.
+
+**RNF-15 — Correo saliente de recuperación**
+*El sistema deberá enviar el correo del enlace de restablecimiento (RF-37)
+mediante SMTP sobre STARTTLS a través de un proveedor autorizado (Gmail).
+Ante la indisponibilidad del proveedor, la solicitud de restablecimiento
+deberá seguir respondiendo de forma genérica y el fallo deberá quedar
+registrado. La configuración por defecto (`mail.enabled=false`) no envía
+correo y registra el enlace en la bitácora, de modo que el sistema funciona
+completo sin credenciales de correo (no rompe RNF-12).*
+
+- **Método de verificación:** Prueba automatizada; Demostración
+- **Origen:** `spring-boot-starter-mail`; `spring.mail.*` y `mail:` en
+  `application.yml`; `SmtpPasswordResetMailer` (`mail.enabled=true`) /
+  `LoggingPasswordResetMailer` (por defecto), seleccionados por
+  `@ConditionalOnProperty` igual que los proveedores de IA.
+- **Interfaz externa:** véase §4.5 (fila «SMTP saliente»).
+- **Verificación:** `SmtpPasswordResetMailerTest` (destinatario, asunto,
+  enlace; un fallo del proveedor no se propaga),
+  `LoggingPasswordResetMailerTest`.
+
 ### 4.3 Fiabilidad y mantenibilidad
 
 **RNF-09 — Cobertura de pruebas**
@@ -1104,7 +1169,8 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | Proveedor IA (LLM) | Generación de comentarios de alineación y reportes | HTTPS + JSON, proveedor configurable | `deportivo.ia.service.AiCommentaryService` | `docs/superpowers/specs/2026-08-25-ia-alineacion-design.md` |
 | Terminación TLS (nginx) | Descarga SSL/TLS, proxy reverso, rate-limit | TLS 1.2/1.3, HTTP/1.1, HSTS, CSP | `nginx/default.conf`, `docker-compose.yml` | Puerto externo 8443 → interno 8080 |
 | Base de datos PostgreSQL | Persistencia transaccional y vistas | PostgreSQL 16, `pgjdbc` | Flyway migrations `db/migration/` | Esquemas: `seguridad`, `academico`, `deportivo`, `inventario` |
-| Caché Redis 7 | Sesiones, revocación JWT, listas de acceso | Redis RESP3, TTL configurable | `RedisBlacklistService`, `CacheConfig` | `redis://redis:6379` |
+| Caché Redis 7 | Sesiones, revocación JWT, listas de acceso, token de reseteo | Redis RESP3, TTL configurable | `RedisBlacklistService`, `PasswordResetTokenStore`, `SessionEpochService` | `redis://redis:6379` |
+| SMTP saliente | Correo del enlace de restablecimiento de contraseña (RF-37 / RNF-15) | SMTP + STARTTLS (:587), cuerpo HTML | `SmtpPasswordResetMailer` (`mail.enabled=true`) | Gmail `smtp.gmail.com`; por defecto no se usa (`LoggingPasswordResetMailer`) |
 | Seed de datos | Datos base (roles, categorías, estados) | SQL idempotente | `db/seed.sql` | Roles: ADMINISTRADOR, ENTRENADOR, RECEPCIONISTA, REPRESENTANTE, ESTUDIANTE |
 
 ---
@@ -1178,8 +1244,8 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | 5.6 | Necesidades de los interesados | 2.2 | 5 actores, roles técnicos |
 | 5.7 | Restricciones | 2.3 | Tecnológicas, legales, éticas |
 | 5.8 | Suposiciones y dependencias | 2.3 | Infraestructura, proveedores, hardware |
-| 5.9 | Requisitos funcionales | 3.1–3.4 | RF-01 a RF-36 organizados por módulo |
-| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.4 | RNF-01 a RNF-13 por ISO 25010 |
+| 5.9 | Requisitos funcionales | 3.1–3.4 | RF-01 a RF-37 organizados por módulo |
+| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.4 | RNF-01 a RNF-15 por ISO 25010 |
 | 5.11 | Requisitos de interfaz | 4.5 | API REST, IA, TLS, BD, Redis, Seed |
 | 5.12 | Requisitos de verificación | 4.6, 4.7 | Máquinas de estado, matriz permisos |
 | 5.13 | Trazabilidad | 5 | Matriz CSV, bitácora observaciones |
@@ -1209,6 +1275,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.1 | 2026-07-15 | Entrega 1B / Tercera | Resuelve OBS-01 y OBS-12; se añaden módulos de catálogos, inventario y dominio deportivo. |
 | 1.2 | 2026-08-24 | Entrega Final (`v1.0.0`) | Reestructuración de paquetes `academico`/`deportivo`/`seguridad`; RF-35 e historial de asistencia; cierre de trazabilidad (matriz de 47 filas). |
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
+| 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 
 ## 7. Aprobación
 

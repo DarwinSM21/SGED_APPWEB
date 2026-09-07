@@ -258,6 +258,23 @@ evidencia está en `docs/mediciones/sec/a01-acceso-roto.txt`, que ahora
 comprueba recurso por recurso —incluida la búsqueda por cédula— y verifica
 también que las lecturas permitidas siguen respondiendo `200`.
 
+### H-09 — El restablecimiento de contraseña se envía a un correo no verificado
+
+El flujo de recuperación de contraseña (RF-37, agregado el 2026-09-07) envía
+el enlace de un solo uso al valor de `seguridad.personas.correo` del usuario.
+Ese correo lo registra el `ADMINISTRADOR` al crear la cuenta y **el sistema
+nunca ha comprobado que la dirección sea real ni que pertenezca al titular**.
+
+En la práctica el riesgo es acotado: quien ya controla el buzón de la
+víctima puede tomar su cuenta, pero ese mismo atacante ya tendría acceso a
+cualquier otro servicio de la persona atado a ese correo. Aun así se declara
+como limitación conocida. Mitigaciones ya presentes: el enlace es de un solo
+uso y vence en 30 minutos; la respuesta de `/forgot` es genérica y no revela
+si la cuenta existe; hay límite de solicitudes por identificador y por IP; y
+al completarse el cambio se invalidan todas las sesiones previas del usuario.
+Cerrar del todo este hallazgo exigiría un paso de verificación del correo
+(doble opt-in) en el alta de la persona, que hoy no existe.
+
 ---
 
 ## 5. Ética en el desarrollo del proyecto

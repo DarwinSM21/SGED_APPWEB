@@ -86,6 +86,30 @@ fallidos,
 
 ---
 
+### HU-15 · Recuperar el acceso si olvido mi contraseña ✅
+**Como** usuario del sistema,
+**quiero** poder restablecer mi contraseña por mí mismo con un enlace que
+llega a mi correo,
+**para** no depender de que un administrador me la cambie a mano cuando la
+olvido.
+
+> Cubre RF-37. Se apoya en la política de contraseñas RNF-14 y el correo
+> saliente RNF-15.
+
+**Criterios de aceptación**
+- **Dado** que escribo mi usuario o mi correo en la pantalla de
+  recuperación, **cuando** envío la solicitud, **entonces** el sistema
+  responde siempre con el mismo mensaje —exista o no la cuenta— y, si
+  existe, envía un enlace de un solo uso al correo registrado.
+- **Dado** que abro el enlace antes de que venza (30 min), **cuando** elijo
+  una contraseña que cumple la política, **entonces** queda guardada y mis
+  sesiones anteriores dejan de ser válidas.
+- **Dado** que el enlace expiró o ya se usó, **cuando** intento
+  restablecer, **entonces** el sistema me lo dice y me ofrece pedir uno
+  nuevo.
+
+---
+
 ## Épica 2 — Gestión de estudiantes
 
 ### HU-05 · Consultar el listado de estudiantes ✅
@@ -247,7 +271,7 @@ sufre una lesión,
 
 | Épica | Historias | ✅ | 🟡 | ⬜ |
 |---|---|---|---|---|
-| 1 — Acceso seguro | HU-01…HU-04 | 4 | 0 | 0 |
+| 1 — Acceso seguro | HU-01…HU-04, HU-15 | 5 | 0 | 0 |
 | 2 — Gestión de estudiantes | HU-05…HU-10 | 6 | 0 | 0 |
 | 3 — Operación deportiva | HU-10b…HU-14 | 1 | 3 | 1 |
 
@@ -255,4 +279,4 @@ No incluye HU dedicadas a los recursos nuevos RF-23…RF-26 (categorías,
 usuarios, personas, estados) — se documentan directamente en el SRS por
 haber aparecido como CRUD administrativo, no como una necesidad de un actor
 específico articulada previamente.
-| **Total** | **14** | **10** | **3** | **1** |
+| **Total** | **15** | **11** | **3** | **1** |

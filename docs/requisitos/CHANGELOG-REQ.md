@@ -1,6 +1,6 @@
 # Changelog de Requisitos — SGED ProFútbol
 
-**Propósito:** Registro cronológico de todo cambio (adición, modificación, eliminación) a los requisitos funcionales (RF-01 a RF-22) y no funcionales (RNF-01 a RNF-07) desde la Entrega 1A hasta la Tercera Entrega.
+**Propósito:** Registro cronológico de todo cambio (adición, modificación, eliminación) a los requisitos funcionales (RF-01 a RF-37) y no funcionales (RNF-01 a RNF-15) desde la Entrega 1A. Las entradas hasta 2026-07-29 cubren las Entregas 1A/1B/Tercera; a partir de 2026-09-07 se registran los cambios de la revisión contra ISO/IEC/IEEE 29148:2018.
 
 | Fecha | Autor | Requisito | Tipo de Cambio | Motivo | Commit |
 |---|---|---|---|---|---|
@@ -28,3 +28,6 @@
 | 2026-07-15 | Equipo | RF-08 a RF-15 | Modificación | Corrección de schema: columnas NOT NULL, tipos SMALLINT, FKs reales, seed data actualizada | `f8d604e` |
 | 2026-07-24 | Equipo | RF-14, RF-15 | Modificación | Procedimientos movidos a schema `academico` con JOIN correcto a `deportivo.categorias` | `f8d604e` |
 | 2026-07-29 | Equipo | RF-16 a RF-22 | Sin cambios | Pendientes de implementación en próximas entregas (modelados en BD, sin API REST ni UI) | — |
+| 2026-09-07 | Equipo | RNF-14 | Adición | Política de contraseñas unificada (mín. 8, con letra y dígito, distinta del usuario, ≤ 72 bytes) en `PasswordPolicy`; aplicada en registro, acceso de estudiante, cambio administrativo y restablecimiento. Sustituye el `@Size(min = 6)` de los DTO. Revisión 29148 punto A21 | `659cffd` |
+| 2026-09-07 | Equipo | RF-37 | Adición | Restablecimiento de contraseña por enlace de un solo uso (Redis, 30 min), sin intervención del administrador; invalida las sesiones previas. Endpoints `POST /api/auth/forgot` y `/reset`, pantallas `/recuperar` y `/restablecer`. Revisión 29148 punto A22 | `4430d1e`, `e87848f`, `58b5be1`, `82a70ab`, `7ec5a19` |
+| 2026-09-07 | Equipo | RNF-15 | Adición | Correo saliente del enlace por SMTP + STARTTLS (Gmail); deshabilitado por defecto (`mail.enabled=false` registra el enlace en la bitácora, no rompe RNF-12) | `78f1c28`, `37b203e` |

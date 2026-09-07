@@ -15,8 +15,10 @@ Actores: **Administrador** (`ADMINISTRADOR`), **Entrenador** (`ENTRENADOR`),
 graph LR
     ADMIN["👤 Administrador"]
     ENTR["👤 Entrenador"]
+    USR["👤 Usuario"]
 
     CU01["CU-01<br/>Iniciar sesión"]
+    CU16["CU-16<br/>Restablecer<br/>contraseña"]
     CU02["CU-02<br/>Cerrar sesión"]
     CU03["CU-03<br/>Registrar usuario"]
     CU04["CU-04<br/>Consultar estudiantes"]
@@ -40,6 +42,8 @@ graph LR
     ENTR --> CU02
     ENTR --> CU04
     ENTR --> CU08
+
+    USR --> CU16
 ```
 
 ---
@@ -280,6 +284,45 @@ arquitectónica (RD-02): la aplicación no recorre registros para contar.
   registros afectados; no es un error.
 - **3a. Fallo durante la operación.** La transacción se revierte por
   completo; ningún estudiante queda parcialmente modificado.
+
+---
+
+## CU-16 — Restablecer la contraseña por enlace
+
+| Campo | Valor |
+|---|---|
+| **Identificador** | CU-16 |
+| **Actor principal** | Usuario que olvidó su contraseña |
+| **Requisitos** | RF-37 (apoyo: RNF-14, RNF-15) |
+| **Precondición** | El usuario tiene una cuenta activa con un correo registrado. |
+| **Postcondición** | La contraseña queda cambiada y las sesiones anteriores del usuario dejan de ser válidas. |
+| **Endpoint** | `POST /api/auth/forgot`, `POST /api/auth/reset` |
+
+**Flujo principal**
+1. El actor escribe su usuario o su correo en la pantalla de recuperación.
+2. El sistema comprueba los límites de solicitudes (por identificador y por IP).
+3. El sistema localiza la cuenta activa, genera un token de un solo uso, lo
+   guarda en Redis (sólo su hash) con vigencia de 30 minutos e invalida
+   cualquier token anterior del mismo usuario.
+4. El sistema envía al correo registrado un enlace con el token.
+5. El sistema responde `202 Accepted` con un mensaje genérico.
+6. El actor abre el enlace, escribe la contraseña nueva dos veces y la envía.
+7. El sistema valida el token y la política de contraseñas (RNF-14), guarda
+   el nuevo hash, consume el token, marca la época de invalidación de
+   sesiones y responde `204 No Content`.
+
+**Flujos alternativos**
+- **3a. El identificador no corresponde a ninguna cuenta activa.** El sistema
+  no genera token ni envía correo, pero responde igual (paso 5): la respuesta
+  no revela si la cuenta existe.
+- **2a. Límite de solicitudes superado.** El sistema responde `429` sin
+  generar token.
+- **4a. El proveedor de correo falla.** El sistema registra el fallo y
+  responde igual (paso 5); el actor puede volver a solicitarlo.
+- **7a. Token inválido, expirado o ya usado.** El sistema responde `400` y la
+  pantalla ofrece solicitar un enlace nuevo.
+- **7b. La contraseña incumple la política.** El sistema responde `422` con
+  la regla incumplida; el token no se consume.
 
 ---
 
