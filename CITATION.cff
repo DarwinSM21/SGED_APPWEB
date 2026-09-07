@@ -3,11 +3,11 @@ message: "Si usás este software, por favor citalo con los siguientes metadatos.
 type: software
 title: "SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol"
 version: 1.0.0
-date-released: 2026-07-30
+date-released: 2026-09-07
 repository-code: "https://github.com/darcalleg/SGED_APPWEB"
 license: MIT
-# DOI del software (Zenodo).
-doi: 10.5281/zenodo.21713240
+# DOI del software (Zenodo, corte v1.0.0).
+doi: 10.5281/zenodo.22635766
 # DOI del dataset de mediciones (Zenodo, deposito separado, CC BY 4.0).
 identifiers:
   - type: doi
