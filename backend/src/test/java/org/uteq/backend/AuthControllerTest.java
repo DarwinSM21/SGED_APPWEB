@@ -16,8 +16,13 @@ import org.uteq.backend.seguridad.auth.controller.AuthController;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.dto.SessionResponse;
+import org.uteq.backend.common.exception.ApiException;
+import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.auth.security.JwtService;
+import org.uteq.backend.seguridad.auth.security.ResetRequestLimitService;
 import org.uteq.backend.seguridad.auth.service.AuthService;
+import org.uteq.backend.seguridad.auth.service.PasswordResetService;
+import org.springframework.http.HttpStatus;
 
 import java.time.LocalDate;
 import java.util.Optional;
@@ -25,6 +30,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,6 +46,8 @@ class AuthControllerTest {
             .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
     @Mock private AuthService authService;
+    @Mock private PasswordResetService passwordResetService;
+    @Mock private ResetRequestLimitService resetRequestLimitService;
     @Mock private JwtService jwtService;
 
     @InjectMocks private AuthController authController;
@@ -195,5 +203,71 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.username").value("admin@test.com"))
                 .andExpect(jsonPath("$.nombre").value("Admin SGED"))
                 .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
+    }
+
+    @Test
+    void forgotDevuelve202YMensajeGenerico() throws Exception {
+        mockMvc.perform(post("/api/auth/forgot")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identificador\":\"ana@test.com\"}"))
+                .andExpect(status().isAccepted())
+                .andExpect(jsonPath("$.mensaje").exists());
+
+        verify(passwordResetService).solicitar("ana@test.com");
+        verify(resetRequestLimitService).registrar("ana@test.com", "127.0.0.1");
+    }
+
+    @Test
+    void forgotConCuentaInexistenteTambienDa202() throws Exception {
+        // el servicio no lanza para identificador desconocido; el controlador responde igual
+        mockMvc.perform(post("/api/auth/forgot")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identificador\":\"nadie@test.com\"}"))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void forgotConLimiteExcedidoDa429() throws Exception {
+        doThrow(new TooManyRequestsException("demasiadas"))
+                .when(resetRequestLimitService).check(anyString(), anyString());
+
+        mockMvc.perform(post("/api/auth/forgot")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"identificador\":\"ana@test.com\"}"))
+                .andExpect(status().isTooManyRequests());
+
+        verify(passwordResetService, never()).solicitar(anyString());
+    }
+
+    @Test
+    void resetConTokenValidoDa204() throws Exception {
+        mockMvc.perform(post("/api/auth/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"tok\",\"nuevaPassword\":\"clave1234\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(passwordResetService).restablecer("tok", "clave1234");
+    }
+
+    @Test
+    void resetConTokenInvalidoDa400() throws Exception {
+        doThrow(new ApiException(HttpStatus.BAD_REQUEST, "enlace invalido"))
+                .when(passwordResetService).restablecer(anyString(), anyString());
+
+        mockMvc.perform(post("/api/auth/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"malo\",\"nuevaPassword\":\"clave1234\"}"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void resetConContrasenaDebilDa422() throws Exception {
+        doThrow(new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "contrasena debil"))
+                .when(passwordResetService).restablecer(anyString(), anyString());
+
+        mockMvc.perform(post("/api/auth/reset")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"tok\",\"nuevaPassword\":\"corta1\"}"))
+                .andExpect(status().isUnprocessableEntity());
     }
 }

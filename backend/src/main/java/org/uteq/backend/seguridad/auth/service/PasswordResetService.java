@@ -49,7 +49,7 @@ public class PasswordResetService {
     private final PasswordEncoder passwordEncoder;
     private final AuditService auditService;
 
-    @Value("${mail.reset-url-base}")
+    @Value("${mail.reset-url-base:https://localhost:8443/#/restablecer}")
     private String urlBase;
 
     @Value("${mail.reset-token-ttl-minutes:30}")
