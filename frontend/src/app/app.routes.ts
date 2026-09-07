@@ -5,6 +5,8 @@ import { AppShellComponent } from './shell/app-shell.component';
 
 export const routes: Routes = [
   { path: 'login', loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent) },
+  { path: 'recuperar', loadComponent: () => import('./auth/recuperar/recuperar.component').then(m => m.RecuperarComponent) },
+  { path: 'restablecer', loadComponent: () => import('./auth/restablecer/restablecer.component').then(m => m.RestablecerComponent) },
   {
     path: '', component: AppShellComponent, canActivate: [authGuard], children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },

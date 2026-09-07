@@ -60,4 +60,17 @@ export class AuthService {
       tap((user) => this.currentUser.set(user)),
     );
   }
+
+  /**
+   * Pide un enlace de restablecimiento (RF-37). El backend responde siempre
+   * 202, exista o no la cuenta, así que el resultado no revela nada.
+   */
+  solicitarRecuperacion(identificador: string) {
+    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/forgot`, { identificador });
+  }
+
+  /** Fija la contraseña nueva a partir del token del enlace (RF-37). */
+  restablecerPassword(token: string, nuevaPassword: string) {
+    return this.http.post<void>(`${this.apiUrl}/reset`, { token, nuevaPassword });
+  }
 }

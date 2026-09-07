@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../auth.service';
 import { homeRouteForRole } from '../home-route';
 import { PelotaAnimadaComponent } from '../pelota-animada.component';
@@ -10,7 +10,7 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, PelotaAnimadaComponent],
+  imports: [CommonModule, FormsModule, RouterLink, PelotaAnimadaComponent],
   template: `
     <div class="auth-shell">
       <aside class="auth-brand">
@@ -60,6 +60,12 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
         <form class="auth-card" (ngSubmit)="onSubmit()">
           <h2>Bienvenido de nuevo</h2>
           <p class="auth-card__subtitle">Inicia sesión con tu cuenta para continuar</p>
+
+          @if (contrasenaRestablecida) {
+            <div class="alert alert--success" role="status">
+              <span class="fallo-que">Tu contraseña se actualizó. Ya puedes iniciar sesión con la nueva.</span>
+            </div>
+          }
 
           <label class="field" for="username">
             <span class="field__label">Usuario</span>
@@ -113,6 +119,10 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
             }
           </button>
 
+          <p class="auth-card__subtitle" style="text-align:center;margin-top:1rem">
+            <a routerLink="/recuperar">¿Olvidaste tu contraseña?</a>
+          </p>
+
         </form>
       </main>
     </div>
@@ -121,6 +131,9 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
 export class LoginComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+
+  readonly contrasenaRestablecida =
+    inject(ActivatedRoute, { optional: true })?.snapshot.queryParamMap.get('restablecida') === '1';
 
   username = '';
   password = '';
