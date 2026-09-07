@@ -1,0 +1,42 @@
+{
+  "fuente": "GET https://api.github.com/repos/darcalleg/SGED_APPWEB/actions/runs (API publica, sin autenticacion)",
+  "capturado_utc": "2026-09-07T05:10:00Z",
+  "nota": "Este archivo documenta el historial de CI PROPIO de darcalleg/SGED_APPWEB, el repositorio al que se migro el trabajo el 2026-09-06/07. NO es una reconstruccion de las 63 corridas rojas de DarwinSM21/SGED_APPWEB (docs/mediciones/ci/runs-verdes.json): esa secuencia ocurrio en agosto/septiembre en la infraestructura de Actions de ese otro repositorio, y no puede replicarse retroactivamente en darcalleg porque este repositorio no existia entonces. Aqui se documenta el estado real de CI desde que darcalleg es el remoto principal.",
+  "run_numbers_ausentes": [9, 10],
+  "nota_run_numbers_ausentes": "La API no devuelve corridas con run_number 9 ni 10 pese a que la numeracion es consecutiva alrededor de ellas (8 y 11 si existen). Es consistente con un push que agrupo varios commits locales en un solo evento de push (GitHub Actions dispara una corrida por push, no por commit) o con una corrida eliminada manualmente; no afecta el conteo de exitos/fallas reportado abajo, que se basa en las 16 corridas que la API sí devuelve.",
+  "runs": [
+    {"run_number": 1,  "id": 34054080172, "head_sha": "3cecc37", "conclusion": "failure", "created_at": "2026-09-06T19:11:05Z", "message": "refactor(backend): rename metodos de seguridad.auth"},
+    {"run_number": 2,  "id": 34056618205, "head_sha": "c0595bc", "conclusion": "failure", "created_at": "2026-09-06T20:00:19Z", "message": "fix(despliegue): actualizar URLs de Render"},
+    {"run_number": 3,  "id": 34057028420, "head_sha": "6919f86", "conclusion": "failure", "created_at": "2026-09-06T20:07:56Z", "message": "docs(informe): recompilar PDF con URLs de Render"},
+    {"run_number": 4,  "id": 34062031554, "head_sha": "933efc4", "conclusion": "failure", "created_at": "2026-09-06T21:45:42Z", "message": "docs: completar los 14 roles CRediT y unificar correos"},
+    {"run_number": 5,  "id": 34064598051, "head_sha": "78aa2bc", "conclusion": "failure", "created_at": "2026-09-06T22:38:12Z", "message": "docs(ADR): agregar ADR-004 sobre estilo arquitectonico"},
+    {"run_number": 6,  "id": 34070234511, "head_sha": "b0561b9", "conclusion": "success", "created_at": "2026-09-07T00:34:26Z", "message": "fix(trazabilidad): actualizar matriz.csv tras rename"},
+    {"run_number": 7,  "id": 34070861664, "head_sha": "ae655f0", "conclusion": "success", "created_at": "2026-09-07T00:46:19Z", "message": "docs(informe): actualizar seccion CRediT y declaraciones"},
+    {"run_number": 8,  "id": 34072040965, "head_sha": "210f4c9", "conclusion": "success", "created_at": "2026-09-07T01:08:32Z", "message": "docs: cerrar inconsistencias mecanicas del Cap. 3"},
+    {"run_number": 11, "id": 34073180628, "head_sha": "ffba897", "conclusion": "success", "created_at": "2026-09-07T01:29:32Z", "message": "docs(observaciones): actualizar los hashes de OBS-01..13"},
+    {"run_number": 12, "id": 34073581563, "head_sha": "0f8a0ae", "conclusion": "success", "created_at": "2026-09-07T01:36:47Z", "message": "docs(observaciones): sacar la tabla de equivalencias del blockquote"},
+    {"run_number": 13, "id": 34074249774, "head_sha": "7a18d45", "conclusion": "success", "created_at": "2026-09-07T01:49:27Z", "message": "docs: actualizar hashes de DATA-PROVENANCE.md y del informe"},
+    {"run_number": 14, "id": 34082908273, "head_sha": "b1bdb76", "conclusion": "failure", "created_at": "2026-09-07T04:23:23Z", "message": "refactor(academico): renombrar estudiante -> student", "diagnostico": "Fallo en el step 'Validacion de trazabilidad': el rename dejo referencias a clases de prueba en espanol (EstudianteControllerTest, etc.) que ya no existian en docs/trazabilidad/matriz.csv. Corregido en la corrida siguiente."},
+    {"run_number": 15, "id": 34083535432, "head_sha": "e9c1b3e", "conclusion": "success", "created_at": "2026-09-07T04:33:20Z", "message": "fix(trazabilidad): actualizar matriz.csv tras el rename -- cierra la falla de la corrida #14"},
+    {"run_number": 16, "id": 34084427763, "head_sha": "bab5046", "conclusion": "success", "created_at": "2026-09-07T04:47:43Z", "message": "docs(bibliografia): agregar 9 DOI verificados"},
+    {"run_number": 17, "id": 34084900576, "head_sha": "0ee3fbf", "conclusion": "success", "created_at": "2026-09-07T04:55:39Z", "message": "docs(informe): reconciliar la nota de 'pendiente' del Bloque C"},
+    {"run_number": 18, "id": 34085011665, "head_sha": "a46f681", "conclusion": "success", "created_at": "2026-09-07T04:57:36Z", "message": "docs(readme): actualizar estado real de los DOI de Zenodo"}
+  ],
+  "resumen": {
+    "total_corridas": 16,
+    "exitosas": 10,
+    "fallidas": 6,
+    "causa_unica_de_las_6_fallas": "Todas las 6 corridas fallidas (1,2,3,4,5,14) fallan en el MISMO step: 'Validacion de trazabilidad'. No son 6 problemas distintos, es la misma categoria de defecto -- docs/trazabilidad/matriz.csv desactualizada tras un rename de identificadores -- disparandose dos veces por dos renames distintos.",
+    "fallidas_por_el_rename_de_inventario_y_estado": {
+      "run_numbers": [1, 2, 3, 4, 5],
+      "causa": "matriz.csv seguia citando rutas/identificadores en espanol del rename de academico.inventario y seguridad.estado, hecho antes de esta sesion",
+      "cerrada_por": "run_number 6 (commit b0561b9, fix(trazabilidad): actualizar matriz.csv tras el rename de inventario y estado a ingles)"
+    },
+    "fallida_por_el_rename_de_esta_sesion": {
+      "run_number": 14,
+      "causa": "matriz.csv seguia citando EstudianteControllerTest, EstudianteServiceTest y otras clases en espanol que el rename person/user/alert/payment/guardian/student de esta sesion ya habia reemplazado",
+      "cerrada_por": "run_number 15 (commit e9c1b3e, mismo commit descrito en el cuerpo de este informe)"
+    },
+    "head_actual": {"run_number": 18, "head_sha": "a46f681", "conclusion": "success"}
+  }
+}
