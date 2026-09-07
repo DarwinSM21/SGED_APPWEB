@@ -575,8 +575,24 @@ que ningún test de servicio con \emph{mocks} llegaba a disparar. Corrida
 de cierre con \texttt{mvn verify} en limpio: \textbf{84,66\,\% de
 líneas} (2\,639 de 3\,117) y \textbf{71,24\,\% de \emph{branches}} (664
 de 932), sobre 200 clases y \textbf{550 pruebas} en 74 clases; el margen
-sobre el umbral pasó de 0,06 a 1,24 puntos. \textbf{Esta es la cifra
-vigente en todo el documento} (sección~\ref{sec:cobertura}); las tres
+sobre el umbral pasó de 0,06 a 1,24 puntos.
+
+\textbf{Quinta actualización (2026-09-07).} Pendiente de la guía:
+\texttt{org.uteq.backend.reportes} y \texttt{org.uteq.backend.common.exception}
+estaban bajo el 70\,\% de líneas. Se añadieron \texttt{GlobalExceptionHandlerTest}
+(los diez \emph{handlers} de \texttt{GlobalExceptionHandler}, sin prueba
+propia hasta entonces) y \texttt{ProblemDetailsAuthHandlersTest} (los dos
+\emph{beans} que emiten los \texttt{ProblemDetail} de autenticación y
+acceso denegado), más casos nuevos de \texttt{ReportServiceTest}
+(asistencias, evaluaciones, pago de membresía, lesión de alta y recorte
+del título más allá de 5\,000 filas) y \texttt{ReportControllerTest} (los
+\emph{endpoints} \texttt{asistencias} y \texttt{evaluaciones}). Corrida
+regenerando \texttt{target/} desde el código vigente: \textbf{87,47\,\%
+de líneas} (2\,730 de 3\,121) y \textbf{72,10\,\% de \emph{branches}}
+(672 de 932), sobre 200 clases y \textbf{576 pruebas} en 76 clases, sin
+fallos; \texttt{reportes} subió a 93,8\,\% de líneas y
+\texttt{common.exception} a 100\,\%. \textbf{Esta es la cifra
+vigente en todo el documento} (sección~\ref{sec:cobertura}); las cuatro
 actualizaciones anteriores quedan como el registro cronológico de cómo
 se llegó a ella, no como cifras en disputa.
 \end{quote}
@@ -2453,21 +2469,30 @@ verifican no solo que el bloqueo ocurra, sino que un fallo posterior
 atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
 —según cómo se implemente— reiniciar el contador y evadir el límite.
 
-\textbf{Cifra de cierre (2026-09-03).} Esta es la única cifra de
+\textbf{Cifra de cierre (2026-09-07).} Esta es la única cifra de
 cobertura vigente en el documento, recalculable línea por línea desde
 \ruta{docs/mediciones/jacoco/jacoco.csv} con
 \texttt{./mvnw verify} —el comando que exige y hace cumplir el umbral,
 no solo \texttt{test}—:
-\textbf{84,66\,\% de cobertura de líneas} (2\,639 de 3\,117) y
-\textbf{71,24\,\% de \emph{branches}} (664 de 932), sobre 200 clases
-analizadas, con \textbf{550 pruebas} en 74 clases de prueba. Cumple el
+\textbf{87,47\,\% de cobertura de líneas} (2\,730 de 3\,121) y
+\textbf{72,10\,\% de \emph{branches}} (672 de 932), sobre 200 clases
+analizadas, con \textbf{576 pruebas} en 76 clases de prueba y ningún
+fallo. Cumple el
 \textbf{70\,\%} que exige \texttt{pom.xml} en líneas y en
 \emph{branches} —el umbral real del proyecto; una redacción anterior de
 este párrafo citaba 60\,\%, que nunca fue el valor configurado— con un
-margen de 1,24 puntos sobre el mínimo de \emph{branches}. El camino
+margen de 2,10 puntos sobre el mínimo de \emph{branches}. Esta corrida
+corresponde al pendiente de cobertura de la guía: se añadieron
+\texttt{GlobalExceptionHandlerTest}, \texttt{ProblemDetailsAuthHandlersTest}
+y casos nuevos de \texttt{ReportServiceTest}/\texttt{ReportControllerTest},
+que llevaron \texttt{org.uteq.backend.reportes} (90,00\,\% el
+\texttt{controller}, 94,03\,\% el \texttt{service}) y
+\texttt{org.uteq.backend.common.exception} (100,00\,\%) por encima del
+70\,\%. El camino
 hasta esta cifra —41,9\,\% tras la reestructuración, 61,16\,\% con
 \texttt{main} dos semanas en rojo, 70,06\,\% de cierre provisional el
- 2026-09-02— queda documentado como bitácora en la
+ 2026-09-02, 84,66\,\% del cierre anterior— queda documentado como
+bitácora en la
 sección~\ref{sec:estado-entrega}; ninguna de esas cifras intermedias
 describe el estado actual. El desglose por capa se resume en la
 Tabla~\ref{tab:cobertura-por-capa}.
@@ -2480,9 +2505,9 @@ Tabla~\ref{tab:cobertura-por-capa}.
 \toprule
 \textbf{Capa} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
 \midrule
-Servicios & 85,61\,\% (1886/2203) & 71,67\,\% (506/706) \\
-Controladores & 87,76\,\% (258/294) & 79,41\,\% (27/34) \\
-Otros (config., seguridad, DTO) & 78,15\,\% (447/572) & 64,46\,\% (107/166) \\
+Servicios & 87,11\,\% (1919/2203) & 72,80\,\% (514/706) \\
+Controladores & 88,44\,\% (260/294) & 79,41\,\% (27/34) \\
+Otros (config., seguridad, DTO) & 87,33\,\% (503/576) & 64,46\,\% (107/166) \\
 Entidades & \textbf{100\,\% (48/48)} & \textbf{92,31\,\% (24/26)} \\
 \bottomrule
 \end{tabular}
@@ -2508,12 +2533,12 @@ verdad—; recalculable con \texttt{python3} sobre el CSV citado.
 \textbf{Subdominio} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
 \midrule
 \endhead
-\texttt{raíz} & 96,2\,\% (51/53) & --- \\
+\texttt{raíz} & 96,4\,\% (54/56) & --- \\
 \texttt{academico.alert} & 100,0\,\% (52/52) & 100,0\,\% (24/24) \\
 \texttt{academico.guardian} & 86,6\,\% (284/328) & 85,4\,\% (41/48) \\
 \texttt{academico.payment} & 72,8\,\% (83/114) & 67,9\,\% (19/28) \\
 \texttt{academico.student} & 84,2\,\% (208/247) & 60,0\,\% (54/90) \\
-\texttt{common} & 63,1\,\% (183/290) & 56,0\,\% (56/100) \\
+\texttt{common} & 81,1\,\% (236/291) & 56,0\,\% (56/100) \\
 \texttt{deportivo.asistencia} & 97,1\,\% (169/174) & 93,9\,\% (62/66) \\
 \texttt{deportivo.categoria} & 95,4\,\% (62/65) & 80,0\,\% (8/10) \\
 \texttt{deportivo.entrenador} & 80,0\,\% (68/85) & 62,5\,\% (10/16) \\
@@ -2527,8 +2552,8 @@ verdad—; recalculable con \texttt{python3} sobre el CSV citado.
 \texttt{inventario.assignment} & 93,8\,\% (90/96) & 84,4\,\% (27/32) \\
 \texttt{inventario.item} & 93,8\,\% (60/64) & 83,3\,\% (10/12) \\
 \texttt{inventario.movement} & 93,3\,\% (42/45) & 100,0\,\% (4/4) \\
-\texttt{reportes} & 69,4\,\% (100/144) & 56,8\,\% (25/44) \\
-\texttt{seguridad.audit} & 95,7\,\% (90/94) & 82,0\,\% (41/50) \\
+\texttt{reportes} & 93,8\,\% (135/144) & 75,0\,\% (33/44) \\
+\texttt{seguridad.audit} & 96,8\,\% (91/94) & 82,0\,\% (41/50) \\
 \texttt{seguridad.auth} & 99,6\,\% (223/224) & 83,8\,\% (57/68) \\
 \texttt{seguridad.person} & 93,3\,\% (70/75) & 71,4\,\% (10/14) \\
 \texttt{seguridad.status} & 100,0\,\% (8/8) & --- \\
@@ -2536,9 +2561,12 @@ verdad—; recalculable con \texttt{python3} sobre el CSV citado.
 \bottomrule
 \end{longtable}
 
-El subdominio más bajo en líneas es \texttt{common} (63,1\,\%): agrupa
-\texttt{common.exception} (manejo de errores, muchas ramas de
-\emph{fallback} poco ejercitadas por los tests) y \texttt{common.ia}
+El subdominio más bajo en líneas es \texttt{deportivo.partido}
+(64,5\,\%): agrupa la planificación de encuentros y alineaciones, un
+subdominio con servicios grandes y poca cobertura de \emph{branches}
+respecto a su volumen. Le sigue \texttt{common} (81,1\,\%),
+que agrupa \texttt{common.exception} (manejo de errores, ahora al
+100\,\% tras los tests añadidos para este pendiente) y \texttt{common.ia}
 (el cliente de \emph{feedback} por IA, con rutas de reintento y
 proveedor alternativo). Ninguno de los 25 subdominios está en cero.
 
@@ -2800,7 +2828,7 @@ empírica~\cite{iso25010}.
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
-    pruebas.} Un 84,66\,\% indica qué proporción del código se ejecuta
+    pruebas.} Un 87,47\,\% indica qué proporción del código se ejecuta
     durante la suite, no que las aserciones sean pertinentes —el mismo
     desacople que documentan Imran~\emph{et al.} sobre pruebas de
     rendimiento en sistemas Java de código abierto: alcanzan una
@@ -3032,7 +3060,7 @@ funciones PL/pgSQL a procedimientos reales invocables con
 \texttt{@Procedure} (sección~\ref{sec:acceso-datos}) y fijación de
 imágenes por digest. En validación: las 57 pruebas que cerraron la
 primera regresión de cobertura (la suite siguió creciendo después, hasta
-las 550 actuales —sección~\ref{sec:cobertura}—), la corrección del defecto
+las 576 actuales —sección~\ref{sec:cobertura}—), la corrección del defecto
 por el que JaCoCo nunca había medido cobertura real, y las tres campañas
 de medición empírica (k6, OWASP, Lighthouse) junto con sus \emph{scripts}
 de análisis. En usabilidad: instrumento SUS, \emph{script} de cálculo
@@ -3288,8 +3316,8 @@ trabajo se resumen así:
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
     p95 de 9,91\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{84,66\,\%} de cobertura de líneas y
-    \textbf{71,24\,\%} de \emph{branches} frente al mínimo de 70\,\%
+    100/100, y \textbf{87,47\,\%} de cobertura de líneas y
+    \textbf{72,10\,\%} de \emph{branches} frente al mínimo de 70\,\%
     (sección~\ref{sec:cobertura}) — cifra que cayó dos veces por debajo
     del umbral a medida que el sistema creció (39,8\,\% tras la
     reestructuración de paquetes, 61,16\,\% tras agregar el módulo de

@@ -66,7 +66,7 @@ public class AuditAspect {
 <span class="fc" id="L66">            case &quot;CREAR&quot; -&gt; &quot;creó&quot;;</span>
 <span class="nc" id="L67">            case &quot;EDITAR&quot; -&gt; &quot;editó&quot;;</span>
 <span class="fc" id="L68">            case &quot;ELIMINAR&quot; -&gt; &quot;eliminó&quot;;</span>
-<span class="nc" id="L69">            default -&gt; auditado.accion().toLowerCase();</span>
+<span class="pc" id="L69">            default -&gt; auditado.accion().toLowerCase();</span>
         };
 <span class="pc bpc" id="L71" title="1 of 2 branches missed.">        return entidadId != null</span>
 <span class="fc" id="L72">                ? verbo + &quot; &quot; + auditado.entidad() + &quot; #&quot; + entidadId</span>

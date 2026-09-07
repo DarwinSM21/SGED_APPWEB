@@ -2,13 +2,15 @@
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 
 @SpringBootApplication
-<span class="fc" id="L7">public class BackendApplication {</span>
+@EnableCaching
+<span class="fc" id="L9">public class BackendApplication {</span>
 
 	public static void main(String[] args) {
-<span class="nc" id="L10">		SpringApplication.run(BackendApplication.class, args);</span>
-<span class="nc" id="L11">	}</span>
+<span class="nc" id="L12">		SpringApplication.run(BackendApplication.class, args);</span>
+<span class="nc" id="L13">	}</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

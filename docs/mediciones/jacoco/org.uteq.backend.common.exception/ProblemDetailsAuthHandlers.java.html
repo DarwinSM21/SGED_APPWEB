@@ -22,7 +22,7 @@ import java.time.Instant;
     @Bean
     public AuthenticationEntryPoint problemAuthEntryPoint() {
 <span class="fc" id="L24">        return (request, response, ex) -&gt;</span>
-<span class="nc" id="L25">                escribir(request, response, HttpStatus.UNAUTHORIZED,</span>
+<span class="fc" id="L25">                escribir(request, response, HttpStatus.UNAUTHORIZED,</span>
                         &quot;NoAutenticado&quot;,
                         &quot;Se requiere autenticación para acceder a este recurso&quot;);
     }
@@ -30,7 +30,7 @@ import java.time.Instant;
     @Bean
     public AccessDeniedHandler problemAccessDeniedHandler() {
 <span class="fc" id="L32">        return (request, response, ex) -&gt;</span>
-<span class="nc" id="L33">                escribir(request, response, HttpStatus.FORBIDDEN,</span>
+<span class="fc" id="L33">                escribir(request, response, HttpStatus.FORBIDDEN,</span>
                         &quot;AccesoDenegado&quot;,
                         &quot;No tiene permisos para acceder a este recurso&quot;);
     }
@@ -38,16 +38,16 @@ import java.time.Instant;
     private void escribir(HttpServletRequest request, HttpServletResponse response,
                           HttpStatus status, String tipo, String detalle)
             throws IOException {
-<span class="nc" id="L41">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detalle);</span>
-<span class="nc" id="L42">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
-<span class="nc" id="L43">        pd.setTitle(status.getReasonPhrase());</span>
-<span class="nc" id="L44">        pd.setInstance(URI.create(request.getRequestURI()));</span>
-<span class="nc" id="L45">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L41">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detalle);</span>
+<span class="fc" id="L42">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
+<span class="fc" id="L43">        pd.setTitle(status.getReasonPhrase());</span>
+<span class="fc" id="L44">        pd.setInstance(URI.create(request.getRequestURI()));</span>
+<span class="fc" id="L45">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
 
-<span class="nc" id="L47">        response.setStatus(status.value());</span>
-<span class="nc" id="L48">        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);</span>
-<span class="nc" id="L49">        response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
-<span class="nc" id="L50">        response.getWriter().write(MAPPER.writeValueAsString(pd));</span>
-<span class="nc" id="L51">    }</span>
+<span class="fc" id="L47">        response.setStatus(status.value());</span>
+<span class="fc" id="L48">        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);</span>
+<span class="fc" id="L49">        response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+<span class="fc" id="L50">        response.getWriter().write(MAPPER.writeValueAsString(pd));</span>
+<span class="fc" id="L51">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

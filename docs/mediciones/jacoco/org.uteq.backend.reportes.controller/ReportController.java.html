@@ -82,7 +82,7 @@ public class ReportController {
             @RequestParam(required = false) Long categoria,
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta) {
-<span class="nc" id="L85">        return pdf(&quot;asistencias.pdf&quot;, reportService.attendances(estudianteId, categoria, fechaDesde, fechaHasta));</span>
+<span class="fc" id="L85">        return pdf(&quot;asistencias.pdf&quot;, reportService.attendances(estudianteId, categoria, fechaDesde, fechaHasta));</span>
     }
 
     /**
@@ -103,7 +103,7 @@ public class ReportController {
             @RequestParam(required = false) Long categoria,
             @RequestParam(required = false) LocalDate fechaDesde,
             @RequestParam(required = false) LocalDate fechaHasta) {
-<span class="nc" id="L106">        return pdf(&quot;evaluaciones.pdf&quot;, reportService.evaluations(estudianteId, categoria, fechaDesde, fechaHasta));</span>
+<span class="fc" id="L106">        return pdf(&quot;evaluaciones.pdf&quot;, reportService.evaluations(estudianteId, categoria, fechaDesde, fechaHasta));</span>
     }
 
     /**

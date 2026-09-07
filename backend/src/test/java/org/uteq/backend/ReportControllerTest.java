@@ -73,4 +73,54 @@ class ReportControllerTest {
         mockMvc.perform(get("/api/reportes/lesiones"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("GET /api/reportes/asistencias reenvia los filtros y devuelve el PDF")
+    void attendancesReturnsPdf() throws Exception {
+        when(reportService.attendances(any(), any(), any(), any())).thenReturn("%PDF".getBytes());
+
+        mockMvc.perform(get("/api/reportes/asistencias")
+                        .param("estudianteId", "3")
+                        .param("categoria", "1")
+                        .param("fechaDesde", "2026-08-01")
+                        .param("fechaHasta", "2026-08-14"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("asistencias.pdf")));
+    }
+
+    @Test
+    @DisplayName("GET /api/reportes/asistencias sin resultados responde 404")
+    void attendancesNoResultsReturns404() throws Exception {
+        when(reportService.attendances(any(), any(), any(), any()))
+                .thenThrow(new ResourceNotFoundException("No hay datos para los filtros seleccionados"));
+
+        mockMvc.perform(get("/api/reportes/asistencias"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /api/reportes/evaluaciones reenvia los filtros y devuelve el PDF")
+    void evaluationsReturnsPdf() throws Exception {
+        when(reportService.evaluations(any(), any(), any(), any())).thenReturn("%PDF".getBytes());
+
+        mockMvc.perform(get("/api/reportes/evaluaciones")
+                        .param("estudianteId", "3")
+                        .param("categoria", "1"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Content-Disposition",
+                        org.hamcrest.Matchers.containsString("evaluaciones.pdf")));
+    }
+
+    @Test
+    @DisplayName("GET /api/reportes/evaluaciones sin resultados responde 404")
+    void evaluationsNoResultsReturns404() throws Exception {
+        when(reportService.evaluations(any(), any(), any(), any()))
+                .thenThrow(new ResourceNotFoundException("No hay datos para los filtros seleccionados"));
+
+        mockMvc.perform(get("/api/reportes/evaluaciones"))
+                .andExpect(status().isNotFound());
+    }
 }
