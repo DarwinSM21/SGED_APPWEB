@@ -22,8 +22,9 @@ up:
 	@echo "SGED operativo:"
 	@echo "  Frontend (HTTPS, recomendado): https://localhost:8443"
 	@echo "  Frontend (HTTP, sin cookie de sesion): http://localhost:4200"
-	@echo "  API      : http://localhost:8080/api"
-	@echo "  OpenAPI  : http://localhost:8080/api/docs"
+	@echo "  API        : http://localhost:8080/api"
+	@echo "  Swagger UI : http://localhost:8080/api/docs"
+	@echo "  OpenAPI JSON: http://localhost:8080/api/docs.json"
 	@echo "  Credenciales seed: admin / sged2026"
 	@echo "  Nota: el certificado TLS es autofirmado (desarrollo); el navegador va a advertir, es esperado."
 

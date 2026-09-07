@@ -44,7 +44,8 @@ intención, solo por evidencia — mismo criterio que ya aplica
       (`k6`, Lighthouse), CSV (`respuestas.csv`, `matriz.csv`), SQL plano,
       Markdown, LaTeX/BibTeX.
 - [x] La API usa un lenguaje formal y estándar de descripción: OpenAPI 3.0
-      (`/api/docs`, Swagger UI), no un formato ad-hoc.
+      (documento en `/api/docs.json`, Swagger UI en `/api/docs`), no un
+      formato ad-hoc.
 - [x] Vocabulario de metadatos reconocido: CRediT (`CONTRIBUTORS.md`), SemVer
       + Keep a Changelog (`VERSIONING.md`, `CHANGELOG.md`).
 - [ ] Los reportes de medición (JaCoCo, Lighthouse, k6) se archivan como

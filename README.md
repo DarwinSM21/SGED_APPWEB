@@ -23,7 +23,7 @@ apaga el backend tras 15 min sin tráfico; la primera petición tras ese lapso
 tarda ~1 min en responder mientras arranca en frío. Pasos de despliegue en
 [`docs/despliegue/render.md`](docs/despliegue/render.md).
 
-> Los sufijos `-r2rs` / `-2p05` los asignó Render porque los nombres
+> Los sufijos `-jofa` / `-5nh7` los asignó Render porque los nombres
 > `sged-frontend` / `sged-backend` ya estaban tomados globalmente en
 > `.onrender.com` por otro despliegue del equipo.
 
@@ -53,12 +53,17 @@ En menos de dos minutos:
 | Frontend (HTTPS, recomendado) | https://localhost:8443 |
 | Frontend (HTTP, sin cookie de sesion) | http://localhost:4200 |
 | API REST | http://localhost:8080/api |
-| OpenAPI 3.0 | http://localhost:8080/api/docs |
-| Swagger UI | http://localhost:8080/api/swagger-ui/index.html |
+| Swagger UI | http://localhost:8080/api/docs |
+| OpenAPI 3.0 (JSON) | http://localhost:8080/api/docs.json |
 
 El certificado TLS de `https://localhost:8443` es autofirmado (generado en
 build, solo para desarrollo/evaluacion) — el navegador va a mostrar una
 advertencia de certificado no confiable, es esperado.
+
+Swagger UI y el documento OpenAPI solo están expuestos en local. En el
+despliegue público se apagan con `SPRINGDOC_ENABLED=false` (`render.yaml`)
+para no publicar una interfaz interactiva sin autenticación (ver
+`docs/mediciones/sec/zap/REPORT.md`).
 
 **Credenciales semilla** (definidas en `db/seed.sql`):
 
