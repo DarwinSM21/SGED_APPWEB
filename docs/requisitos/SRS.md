@@ -85,8 +85,9 @@ SGED es un sistema cliente-servidor de tres capas:
 
 - **Frontend:** Angular (SPA), servido por nginx con terminación TLS en `:8443`.
 - **Backend:** API REST en Spring Boot 3.2 (Java 21), puerto `:8080`.
-- **Persistencia:** PostgreSQL 16 (esquemas `seguridad`, `academico` y
-  `deportivo`) y Redis 7 (caché y lista de revocación de tokens).
+- **Persistencia:** PostgreSQL 16 (esquemas `seguridad`, `academico`,
+  `deportivo` e `inventario`) y Redis 7 (caché y lista de revocación de
+  tokens).
 
 Orquestación reproducible vía Docker Compose con imágenes fijadas por digest
 SHA-256.
@@ -130,6 +131,7 @@ anotaciones `@PreAuthorize` del código.
 nuevas cuentas de usuario, asociándolas a una persona y a uno o más roles.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `POST /api/auth/registro` — `AuthController.java:63`
 - **Restricción de acceso:** `@PreAuthorize("hasRole('ADMINISTRADOR')")`
 - **Verificación:** un usuario no autenticado o sin rol ADMINISTRADOR deberá
@@ -146,6 +148,7 @@ cookie `HttpOnly`, `Secure` y `SameSite=Strict`, sin exponer el token en el
 cuerpo de la respuesta ni en almacenamiento accesible por JavaScript.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `POST /api/auth/login` — `AuthController.java:99`
 - **Verificación:** la respuesta deberá contener `Set-Cookie` con los tres
   atributos y no deberá contener el JWT en el cuerpo. Pruebas:
@@ -161,6 +164,7 @@ tiempo de vida igual al tiempo restante del token, de modo que un token
 robado antes del cierre de sesión no siga siendo aceptado.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `POST /api/auth/logout` — `AuthController.java:143`;
   `RedisBlacklistService.java`
 - **Verificación:** pruebas `RedisBlacklistServiceTest.revocar_guarda_el_jti_con_el_ttl_restante`,
@@ -175,6 +179,7 @@ robado antes del cierre de sesión no siga siendo aceptado.*
 refresco, sin exigir que el usuario vuelva a introducir sus credenciales.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `POST /api/auth/refresh` — `AuthController.java:164`
 - **Verificación:** prueba `JwtServiceTest.refresh_token_valido`.
 
@@ -186,6 +191,7 @@ en curso (nombre de usuario, nombre completo y rol) a partir de la cookie de
 sesión, y deberá responder `401` cuando no exista sesión válida.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Demostración; Prueba automatizada
 - **Origen:** `GET /api/auth/me` — `AuthController.java:181`
 - **Verificación:** con sesión válida deberá responder `200` con
   `{username, nombre, rol}`; sin sesión, `401`.
@@ -199,6 +205,7 @@ minutos, y el contador no deberá reiniciarse con cada nuevo fallo dentro de
 esa ventana.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Demostración; Prueba automatizada
 - **Origen:** `LoginAttemptService.java`; parámetros
   `LOGIN_MAX_INTENTOS=5`, `LOGIN_VENTANA_MINUTOS=15` (`application.yml`)
 - **Verificación:** el sexto intento deberá responder `429` con cuerpo
@@ -213,6 +220,7 @@ esa ventana.*
 disponibilidad que no requiera autenticación.*
 
 - **Prioridad:** Baja · **Estado:** ✅ Implementado · **MoSCoW:** Could
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `GET /api/auth/ping` — `AuthController.java:202`
 - **Verificación:** prueba `AuthServiceTest.pingRespondePong`.
 
@@ -228,11 +236,12 @@ paginada, indicando en la respuesta el número de página, el tamaño, el total
 de elementos y el total de páginas.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `GET /api/estudiantes` —
-  `academico/estudiante/controller/EstudianteController.java`
+  `academico/student/controller/StudentController.java`
 - **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`, `RECEPCIONISTA`
-- **Verificación:** pruebas `EstudianteControllerTest.listar_devuelve_pagina`,
-  `EstudianteServiceTest.listar_devuelve_pagina_envuelta`.
+- **Verificación:** pruebas `StudentControllerTest.listar_devuelve_pagina`,
+  `StudentServiceTest.listar_devuelve_pagina_envuelta`.
 
 ---
 
@@ -242,11 +251,12 @@ deberá responder `404` con cuerpo `ProblemDetail` cuando el identificador no
 corresponda a ningún registro.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `GET /api/estudiantes/{id}` —
-  `academico/estudiante/controller/EstudianteController.java`
-- **Verificación:** pruebas `EstudianteControllerTest.buscarPorId_existente`,
-  `EstudianteControllerTest.buscarPorId_inexistente_da_404`,
-  `EstudianteServiceTest.buscar_inexistente_lanza_404`.
+  `academico/student/controller/StudentController.java`
+- **Verificación:** pruebas `StudentControllerTest.buscarPorId_existente`,
+  `StudentControllerTest.buscarPorId_inexistente_da_404`,
+  `StudentServiceTest.buscarPorId_inexistente_lanza_404`.
 
 ---
 
@@ -257,14 +267,15 @@ existentes, con un código de estudiante único y fecha de ingreso, creando de
 forma transaccional el registro correspondiente.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `POST /api/estudiantes` —
-  `academico/estudiante/controller/EstudianteController.java`
+  `academico/student/controller/StudentController.java`
 - **Acceso:** `@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')")`
   (esta nota decía solo ADMINISTRADOR; corregido 2026-08-12 para reflejar
   el código real — RECEPCIONISTA siempre pudo registrar estudiantes).
 - **Verificación:** deberá responder `201` con el recurso creado. Pruebas:
-  `EstudianteControllerTest.crear_devuelve_201`,
-  `EstudianteServiceTest.crear_persiste_persona_y_estudiante`.
+  `StudentControllerTest.crear_devuelve_201`,
+  `StudentServiceTest.crear_nuevo_estudiante_exito`.
 - **Cambio respecto a la v1.0 de este documento:** el estudiante ya no se
   crea con nombre/apellido propios (esos viven en `Persona`, referenciada
   por `idPersona`); `EstudianteRequest` exige `idPersona`, `idCategoria`,
@@ -285,10 +296,11 @@ falta.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado — **contenido reescrito
   el 2026-07-30** · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `EstudianteRequest.idCategoria` (`@NotNull`);
   `deportivo.categorias` como catálogo referenciado.
 - **Verificación:** prueba
-  `EstudianteControllerTest.crear_con_categoria_invalida_da_422`
+  `StudentControllerTest.crear_con_datos_invalidos_da_422`
   (pendiente de re-ejecutar contra el nuevo DTO — ver nota de cobertura en
   RNF-09).
 
@@ -303,16 +315,21 @@ falta.*
 
 **RF-11b — Registro de peso y altura del estudiante** ⚠️ Implementado sin
 resolución ética
-*El sistema permite registrar opcionalmente el peso y la altura de un
+*El sistema deberá permitir registrar opcionalmente el peso y la altura de un
 estudiante al crearlo o actualizarlo, validando que sean valores positivos
 con hasta 3 dígitos enteros y 2 decimales.*
 
-- **Prioridad:** No priorizado formalmente — apareció en la
-  reestructuración de paquetes, no en un requisito previamente especificado.
-  · **MoSCoW:** Won't (esta entrega) — pausado por el hallazgo H-06, no por
-  olvido.
+- **Prioridad:** Media (condicionada a resolver el hallazgo H-06).
+  Apareció en la reestructuración de paquetes, no en un requisito
+  previamente especificado. · **MoSCoW:** Should (esta entrega) —
+- **Método de verificación:** Demostración
+  condicionado al hallazgo H-06, no por olvido.
 - **Origen:** `EstudianteRequest.peso`, `.altura`
   (`@DecimalMin`, `@Digits`); columnas `academico.estudiantes.peso/altura`.
+- **Estado (decisión 2026-09-07):** la funcionalidad queda **habilitada y
+  documentada como Implementado**, y su riesgo se rastrea como pendiente
+  abierto en `docs/etica/ETHICS.md` (H-06) hasta que se resuelva. Ver
+  bitácora de decisiones en `docs/observaciones/OBSERVACIONES.md`.
 - **Alerta:** este requisito se documenta pero **no se recomienda
   mantenerlo habilitado** sin resolver antes el hallazgo H-06 de
   `docs/etica/ETHICS.md` (dato de salud de un menor, sin finalidad ni base
@@ -328,9 +345,10 @@ los datos propios de un estudiante existente (categoría, estado, código,
 fecha de ingreso, peso y altura).*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `PUT /api/estudiantes/{id}` —
-  `academico/estudiante/controller/EstudianteController.java`
-- **Verificación:** prueba `EstudianteControllerTest.editar_actualiza_estudiante`.
+  `academico/student/controller/StudentController.java`
+- **Verificación:** prueba `StudentControllerTest.editar_actualiza_estudiante`.
 
 ---
 
@@ -340,12 +358,13 @@ no deberá eliminar físicamente el registro, con el fin de preservar el
 historial deportivo asociado.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Demostración; Prueba automatizada
 - **Origen:** `DELETE /api/estudiantes/{id}` —
-  `academico/estudiante/controller/EstudianteController.java`
+  `academico/student/controller/StudentController.java`
 - **Verificación:** deberá responder `204` y el registro deberá permanecer en
   la tabla con `activo = FALSE`. Pruebas:
-  `EstudianteControllerTest.eliminar_devuelve_204`,
-  `EstudianteServiceTest.eliminar_hace_baja_logica`.
+  `StudentControllerTest.eliminar_devuelve_204`,
+  `StudentServiceTest.eliminar_hace_baja_logica`.
 
 ---
 
@@ -356,13 +375,14 @@ motor de base de datos mediante un procedimiento almacenado versionado, no
 en la capa de aplicación.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `GET /api/estudiantes/conteo/categoria/{idCategoria}` —
-  `academico/estudiante/controller/EstudianteController.java`;
+  `academico/student/controller/StudentController.java`;
   `academico.sp_contar_estudiantes_activos(p_categoria INT)`
 - **Acceso:** `ADMINISTRADOR`, `ENTRENADOR`
 - **Verificación:** pruebas
-  `EstudianteControllerTest.contarActivos_delega_en_service`,
-  `EstudianteServiceTest.conteo_por_categoria_delega_en_funcion_sql`.
+  `StudentControllerTest.contarActivos_delega_en_service`,
+  `StudentServiceTest.conteo_por_categoria_delega_en_repositorio`.
 - **Justificación:** cumple RD-02 (agregación obligatoriamente en el motor).
 - **Cambio respecto a la v1.0:** la ruta y el parámetro cambiaron de
   `/conteo/{categoria}` (texto) a `/conteo/categoria/{idCategoria}`
@@ -378,12 +398,13 @@ el número de registros afectados; dicha operación deberá ejecutarse mediante
 un procedimiento almacenado versionado.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `POST /api/estudiantes/operaciones/desactivar-categoria` —
-  `academico/estudiante/controller/EstudianteController.java`;
+  `academico/student/controller/StudentController.java`;
   `academico.sp_desactivar_estudiantes_categoria(p_categoria INT)`
 - **Acceso:** `@PreAuthorize("hasRole('ADMINISTRADOR')")`
 - **Verificación:** prueba
-  `EstudianteControllerTest.desactivarCategoria_delega_en_service`.
+  `StudentControllerTest.desactivarCategoria_delega_en_service`.
 
 ---
 
@@ -400,6 +421,7 @@ categorías deportivas, cada una definida por un nombre y un rango de edad
 (mínima y máxima).*
 
 - **Prioridad:** Alta (bloquea RF-10/RF-11) · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `CategoriaController` (`/api/categorias`, 6 endpoints) —
   `deportivo/categoria/controller/CategoriaController.java`
 - **Verificación:** `CategoriaServiceTest` (9 pruebas: paginación, alta,
@@ -413,12 +435,13 @@ categorías deportivas, cada una definida por un nombre y un rango de edad
 alta hecha en `POST /api/auth/registro`) de forma independiente.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
-- **Origen:** `UsuarioController` (`/api/usuarios`, 5 endpoints) —
-  `seguridad/usuario/controller/UsuarioController.java`
-- **Verificación:** `UsuarioServiceTest` (paginación, username duplicado,
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `UserAccountController` (`/api/usuarios`, 5 endpoints) —
+  `seguridad/user/controller/UserAccountController.java`
+- **Verificación:** `UserAccountServiceTest` (paginación, username duplicado,
   alta con contraseña codificada, alta con rol asignado, rol inexistente
   da error, persona inexistente, baja lógica, edición de rol/usuario/
-  contraseña, coherencia rol↔ficha), `UsuarioControllerTest`
+  contraseña, coherencia rol↔ficha), `UserAccountControllerTest`
   (200/201/204/400/422).
 - **Cambio 2026-08-12:** `UsuarioRequest` agrega un campo `rol` opcional
   — si viene, se valida contra `seguridad.roles` y se asigna al crear
@@ -434,7 +457,7 @@ alta hecha en `POST /api/auth/registro`) de forma independiente.*
   activa de Estudiante/Entrenador/Representante, su cuenta solo admite
   el rol correspondiente; sin fichas activas admite cualquiera (lo que
   permite crear la cuenta ENTRENADOR antes de la ficha). La guarda
-  simétrica vive en `EstudianteService.crear`. Ver
+  simétrica vive en `StudentService.crear`. Ver
   `docs/superpowers/specs/2026-08-12-validaciones-rol-usuario-design.md`
   y `2026-08-12-coherencia-rol-y-vinculo-representante-design.md`.
 
@@ -446,11 +469,12 @@ alta hecha en `POST /api/auth/registro`) de forma independiente.*
 del rol que la persona tenga en el sistema.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
-- **Origen:** `PersonaController` (`/api/personas`, 6 endpoints) —
-  `seguridad/persona/controller/PersonaController.java`
-- **Verificación:** `PersonaServiceTest` (8 pruebas: paginación, búsqueda por
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `PersonController` (`/api/personas`, 6 endpoints) —
+  `seguridad/person/controller/PersonController.java`
+- **Verificación:** `PersonServiceTest` (8 pruebas: paginación, búsqueda por
   cédula, unicidad de cédula/correo al crear y al editar, baja lógica),
-  `PersonaControllerTest` (6 pruebas: 200/201/204/400/422).
+  `PersonControllerTest` (6 pruebas: 200/201/204/400/422).
 - **Frontend (2026-08-12):** `Persona` es la raíz de la que cuelgan
   `Usuario`/`Estudiante`/`Entrenador`/`Representante`; la pantalla
   `/personas` refleja esa jerarquía en vez de crear la Persona por
@@ -465,10 +489,11 @@ del rol que la persona tenga en el sistema.*
 usuarios y estudiantes.*
 
 - **Prioridad:** Baja · **Estado:** ✅ Implementado (solo lectura — 1 endpoint) · **MoSCoW:** Could
-- **Origen:** `EstadoGeneralController` —
-  `seguridad/estado/controller/EstadoGeneralController.java`
-- **Verificación:** `EstadoGeneralServiceTest` (2 pruebas),
-  `EstadoGeneralControllerTest` (1 prueba).
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `GeneralStatusController` —
+  `seguridad/status/controller/GeneralStatusController.java`
+- **Verificación:** `GeneralStatusServiceTest` (2 pruebas),
+  `GeneralStatusControllerTest` (1 prueba).
 
 ---
 
@@ -490,6 +515,7 @@ certificación, garantizando que una misma persona o cuenta no pueda
 registrarse dos veces como entrenador.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado (cambió de Modelado) · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `EntrenadorController` (`/api/entrenadores`, 5 endpoints) —
   `deportivo/entrenador/controller/EntrenadorController.java`
 - **Esquema:** `deportivo.entrenadores`, con `UNIQUE` sobre `id_persona` **e**
@@ -509,13 +535,16 @@ registrarse dos veces como entrenador.*
 
 ---
 
-**RF-17 — Horarios recurrentes de entrenamiento** ✅ Implementado (2026-08-13)
+**RF-17 — Horarios recurrentes de entrenamiento**
 *El sistema deberá permitir definir horarios semanales recurrentes por
 categoría y entrenador, y deberá impedir que la hora de fin sea anterior o
 igual a la hora de inicio.*
 
-- **Prioridad:** Alta · **MoSCoW:** Must — de él se generan las sesiones
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de él se generan las sesiones
+- **Método de verificación:** Demostración
   (RF-18).
+- **Origen:** `HorarioController` (`/api/horarios`, 4 endpoints) — `deportivo/horario/controller/HorarioController.java`
+- **Verificación:** `HorarioServiceTest`, `HorarioControllerTest`
 
 `POST/GET /api/horarios`, `DELETE /api/horarios/{id}` (baja lógica), todos
 `hasRole('ENTRENADOR')` y acotados al propio entrenador autenticado (404 si
@@ -526,13 +555,16 @@ antes, cada sesión —fuera una recurrente o una extra— se creaba a mano.
 
 ---
 
-**RF-18 — Sesiones de entrenamiento** ✅ Implementado (2026-08-13)
+**RF-18 — Sesiones de entrenamiento**
 *El sistema deberá registrar cada sesión de entrenamiento con su fecha,
 categoría, entrenador responsable y estado, admitiendo únicamente los
 estados PROGRAMADA, EN_CURSO, FINALIZADA y CANCELADA.*
 
-- **Prioridad:** Alta · **MoSCoW:** Must — de ella dependen asistencia
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de ella dependen asistencia
+- **Método de verificación:** Demostración
   (RF-19) e historial (RF-35).
+- **Origen:** `SesionController` (`/api/sesiones`, 4 endpoints) — `deportivo/sesion/controller/SesionController.java`
+- **Verificación:** `SesionServiceTest`, `SesionControllerTest`
 
 `POST /api/sesiones` (jornada extra, fuera del horario fijo), `GET
 /api/sesiones/hoy` y `/mias`. Estos dos últimos generan primero, de forma
@@ -545,7 +577,10 @@ si es una jornada extra).
 
 ---
 
-**RF-19 — Registro de asistencia** ✅ Implementado (dividido en RF-19a/RF-19b — ver nota)
+**RF-19 — Registro de asistencia**
+
+- **Origen:** `AsistenciaController` (`/api/asistencias`, 2 endpoints) — `deportivo/asistencia/controller/AsistenciaController.java`
+- **Verificación:** `AsistenciaServiceTest`, `AsistenciaControllerTest`
 
 > **Corrección (2026-09-07).** El enunciado original exigía "el marcaje por
 > RFID o manual" como si fueran una sola capacidad Must, cuando en realidad
@@ -554,22 +589,28 @@ si es una jornada extra).
 > con estado independiente, siguiendo la misma disciplina que ya se aplicó
 > en otras entradas de este documento.
 
-**RF-19a — Registro de asistencia por QR o manual** ✅ Implementado
+**RF-19a — Registro de asistencia por QR o manual**
 *El sistema deberá registrar la asistencia de cada estudiante a cada sesión
 mediante código QR (marcado por el propio estudiante) o lista manual
 (marcada por el entrenador), con estado PRESENTE, TARDE, AUSENTE o
 JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
 mismo estudiante en la misma sesión.*
 
-- **Prioridad:** Alta · **MoSCoW:** Must — precondición de notificaciones
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — precondición de notificaciones
+- **Método de verificación:** Demostración
   (RF-22) e historial (RF-35).
+- **Origen:** `AsistenciaController.marcarPorQr` (`PUT /api/asistencias/sesion/{id}`) — `deportivo/asistencia/controller/AsistenciaController.java`
+- **Verificación:** `AsistenciaServiceTest.marcarPorQr_registra_asistencia`
 
-**RF-19b — Registro de asistencia por RFID** ⬜ Planificado
+**RF-19b — Registro de asistencia por RFID**
 *El sistema deberá admitir el marcaje de asistencia mediante lector RFID
 como vía adicional a RF-19a.*
 
 - **Prioridad:** Baja · **MoSCoW:** Could — la escuela no dispone hoy de
-  lector físico; sin ese hardware no hay forma de verificar la capacidad
+- **Método de verificación:** Demostración
+  lector físico; sin ese hardware no hay forma de verificar la capacidad aunque se programe. El `CHECK` de `metodo` en el esquema ya admite el valor `'RFID'` (ver más abajo), así que activarla no exige migración, solo el lector y el endpoint.
+- **Origen:** `AsistenciaController` — endpoint RFID pendiente; esquema `deportivo.asistencias` admite `metodo='RFID'`
+- **Verificación:** Pendiente (requiere lector RFID físico) sin ese hardware no hay forma de verificar la capacidad
   aunque se programe. El `CHECK` de `metodo` en el esquema ya admite el
   valor `'RFID'` (ver más abajo), así que activarla no exige migración,
   solo el lector y el endpoint.
@@ -608,6 +649,7 @@ y evaluaciones duplicadas del mismo estudiante y criterio dentro de una
 misma evaluación.*
 
 - **Prioridad:** Media · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `EvaluacionDiariaController` (`GET /api/evaluaciones/sesion/{idSesion}`,
   `PUT /api/evaluaciones/sesion/{idSesion}/jugadores`,
   `POST /api/evaluaciones/sesion/{idSesion}/finalizar`) —
@@ -626,23 +668,29 @@ Esquema: `deportivo.evaluaciones_diarias`, `deportivo.criterios_evaluacion`,
 
 ---
 
-**RF-21 — Consulta de promedios de evaluación** 🟡 Modelado
+**RF-21 — Consulta de promedios de evaluación**
 *El sistema deberá calcular el promedio de puntajes por estudiante y
 evaluación en el motor de base de datos.*
 
 - **Prioridad:** Media · **MoSCoW:** Should — depende de RF-20, también
+- **Método de verificación:** Inspección
   solo esquema.
+- **Origen:** Vista `deportivo.v_promedio_evaluacion`; sin controlador que la exponga
+- **Verificación:** Inspección de esquema (vista `v_promedio_evaluacion` existe; sin endpoint)
 
 Esquema: vista `deportivo.v_promedio_evaluacion`.
 
 ---
 
-**RF-33 — Agenda de partidos** ✅ Implementado (2026-08-25)
+**RF-33 — Agenda de partidos**
 *El sistema deberá permitir al entrenador agendar un partido de una
 categoría y registrar su resultado después de jugado.*
 
-- **Prioridad:** Alta · **MoSCoW:** Must — base del dominio de partidos
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — base del dominio de partidos
+- **Método de verificación:** Demostración
   (RF-34).
+- **Origen:** `PartidoController` (`/api/partidos`, 4 endpoints) — `deportivo/partido/controller/PartidoController.java`
+- **Verificación:** `PartidoServiceTest`, `PartidoControllerTest`
 
 `deportivo.partidos` (`GET-POST-PUT-DELETE /api/partidos`). Los goles admiten
 nulo y no tienen valor por defecto: un partido recién agendado no va 0-0,
@@ -656,13 +704,16 @@ Solo se lleva el marcador propio. El sistema es de **una** academia:
 
 ---
 
-**RF-34 — Convocatoria y once del partido** ✅ Implementado (2026-08-25)
+**RF-34 — Convocatoria y once del partido**
 *El sistema deberá sugerir el once inicial de un partido a partir del
 rendimiento acumulado de las semanas previas, y deberá permitir al entrenador
 modificarlo y guardar la formación con la que efectivamente jugó.*
 
-- **Prioridad:** Alta · **MoSCoW:** Must — regla de negocio central del
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — regla de negocio central del
+- **Método de verificación:** Demostración
   módulo deportivo (tope de once titulares, exclusión por lesión).
+- **Origen:** `AlineacionController` (`/api/partidos/{id}/alineacion`, 3 endpoints) — `deportivo/partido/controller/AlineacionController.java`
+- **Verificación:** `AlineacionServiceTest`, `AlineacionControllerTest`
 
 `deportivo.alineaciones` + `deportivo.alineacion_jugador`
 (`GET-PUT-DELETE /api/partidos/{id}/alineacion`).
@@ -693,12 +744,15 @@ los que fueron a **ese** entrenamiento.
 
 ---
 
-**RF-35 — Historial de asistencia de una sesión** ✅ Implementado (2026-08-25)
+**RF-35 — Historial de asistencia de una sesión**
 *El sistema deberá mostrar, para una sesión ya ocurrida, quiénes asistieron y
 quiénes no.*
 
 - **Prioridad:** Media · **MoSCoW:** Should — reporte sobre datos que ya
+- **Método de verificación:** Demostración
   existen por RF-19.
+- **Origen:** `SesionController.historial` (`GET /api/sesiones/{id}/historial`) — `deportivo/sesion/controller/SesionController.java`
+- **Verificación:** `SesionControllerTest.historial_devuelve_estados_correctos`
 
 `GET /api/sesiones/{id}/historial`. Se parte del **plantel** de la categoría
 y no de las filas de asistencia: si nadie pasó lista, la tabla está vacía y
@@ -708,13 +762,16 @@ distinto de «no se registró la asistencia de nadie». Por eso existe el estado
 
 ---
 
-**RF-22 — Notificación a representantes** ✅ Implementado (2026-08-09)
+**RF-22 — Notificación a representantes**
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*
 
-- **Prioridad:** Media · **MoSCoW:** Should — depende de RF-19/RF-31;
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — depende de RF-19/RF-31;
+- **Método de verificación:** Demostración
   hoy solo en-app, no correo/SMS/push (sección Trabajo futuro del
   informe).
+- **Origen:** `NotificacionService` (creación automática al marcar asistencia/lesión); `GET /api/representante/notificaciones` — `academico/representante/controller/RepresentanteController.java`
+- **Verificación:** `NotificacionServiceTest.crear_al_marcar_asistencia`
 
 El rol REPRESENTANTE, el vínculo con sus representados y la tabla de
 consentimientos que este requisito exige como precondición (hallazgo H-04 de
@@ -752,7 +809,7 @@ esa dependencia.
 >
 > El módulo `deportivo.equipo` mencionado en la versión anterior de esta
 > nota ya no existe ni siquiera como paquete vacío — se eliminó del
-> código. Sigue **Planificado** (fila "Equipo" de la matriz de
+> código. Sigue **Planificado** (fila **RF-36** de la matriz de
 > trazabilidad): sin esquema ni endpoint, solo declarado.
 >
 > **Actualización 2026-08-12.** Al reconciliar la base de Supabase para
@@ -765,7 +822,8 @@ esa dependencia.
 > cualquier entorno — es la mitad de base de datos de la limpieza de
 > 2026-07-30 que en su momento solo tocó el código. Sigue sin
 > `EquipoController` ni API REST: el esquema existe, la funcionalidad
-> no. Estado: 🟡 solo esquema, no implementado.
+> no. Estado: 🟡 solo esquema, no implementado. Referencia de
+> trazabilidad: fila **RF-36** de la matriz de trazabilidad.
 
 ---
 
@@ -775,7 +833,8 @@ estudiante (descripción y fecha estimada de retorno opcional), impidiendo
 una segunda lesión activa simultánea del mismo estudiante, y deberá
 permitir darla de alta cuando el estudiante se recupera.*
 
-- **Prioridad:** Alta · **MoSCoW:** Must — condiciona la exclusión de
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — condiciona la exclusión de
+- **Método de verificación:** Demostración
   lesionados en RF-34 y es dato de salud sensible (ver ETHICS.md).
 
 Esquema: `deportivo.lesiones` (`LesionController`, `LesionService`); el
@@ -798,6 +857,7 @@ estadísticas de evaluación (promedio histórico por criterio, porcentaje
 de asistencia de los últimos 30 días e historial de lesiones propio).*
 
 - **Prioridad:** Media · **MoSCoW:** Should — transparencia hacia el
+- **Método de verificación:** Demostración
   estudiante, no bloquea ningún otro requisito.
 
 `MiEquipoController` (`GET /api/estudiante/mi-equipo`,
@@ -827,11 +887,12 @@ baja artículos de inventario (uniformes, balones, implementos u otro),
 cada uno con un stock mínimo configurable para alertas de reposición.*
 
 - **Prioridad:** Alta (bloquea RF-28/RF-29) · **Estado:** ✅ Implementado · **MoSCoW:** Must
-- **Origen:** `ArticuloController` (`/api/inventario/articulos`, 6
-  endpoints) — `inventario/articulo/controller/ArticuloController.java`
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `ItemController` (`/api/inventario/articulos`, 6
+  endpoints) — `inventario/item/controller/ItemController.java`
 - **Esquema:** `inventario.articulos`, con `CHECK` sobre `tipo` y
   `CHECK (stock_actual >= 0)`.
-- **Verificación:** `ArticuloServiceTest` (6 pruebas: alta con stock en
+- **Verificación:** `ItemServiceTest` (6 pruebas: alta con stock en
   cero, edición sin tocar el stock, baja lógica, paginación, stock bajo).
 
 ---
@@ -842,12 +903,13 @@ artículo, y deberá impedir cualquier salida que deje el stock por debajo
 de cero.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
-- **Origen:** `MovimientoStockController`
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `StockMovementController`
   (`/api/inventario/movimientos`, 3 endpoints) —
-  `inventario/movimiento/controller/MovimientoStockController.java`
+  `inventario/movement/controller/StockMovementController.java`
 - **Esquema:** `inventario.movimientos_stock`, con
   `CHECK (cantidad > 0)` y `CHECK` sobre `tipo_movimiento`.
-- **Verificación:** `MovimientoStockServiceTest` (4 pruebas: entrada,
+- **Verificación:** `StockMovementServiceTest` (4 pruebas: entrada,
   ajuste y salida ajustan el stock correctamente; salida que dejaría el
   stock negativo se rechaza sin persistir nada).
 
@@ -860,12 +922,13 @@ disponible, y deberá permitir marcar la devolución como DEVUELTO
 (repone el stock) o PERDIDO (no lo repone).*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
-- **Origen:** `AsignacionController` (`/api/inventario/asignaciones`, 5
-  endpoints) — `inventario/asignacion/controller/AsignacionController.java`
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `AssignmentController` (`/api/inventario/asignaciones`, 5
+  endpoints) — `inventario/assignment/controller/AssignmentController.java`
 - **Esquema:** `inventario.asignaciones`, con
   `CONSTRAINT chk_asignacion_destinatario` (exactamente un destinatario
   según `tipo_destinatario`) y `CHECK` sobre `estado`.
-- **Verificación:** `AsignacionServiceTest` (9 pruebas: asignación a
+- **Verificación:** `AssignmentServiceTest` (9 pruebas: asignación a
   estudiante y a entrenador, stock insuficiente, destinatario faltante,
   devolución que repone stock, pérdida que no lo repone, doble
   resolución, transición inválida a ASIGNADO, asignación inexistente).
@@ -878,11 +941,12 @@ datos, el total de artículos activos cuyo stock actual esté en o por
 debajo de su stock mínimo.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
 - **Origen:** `GET /api/inventario/articulos/stock-bajo` — combina el
   listado (JPA) con el conteo agregado del procedimiento almacenado
   `inventario.sp_reporte_stock_bajo` (ver
   `docs/basedatos/CATALOGO-SP.md`).
-- **Verificación:** `ArticuloServiceTest.stockBajo_combina_listado_y_total_del_procedimiento`.
+- **Verificación:** `ItemServiceTest.stockBajo_combina_listado_y_total_del_procedimiento`.
 
 ---
 
@@ -899,10 +963,15 @@ Los valores medidos provienen de la evidencia real versionada en
 percentil 95 inferior a 200 ms con caché caliente e inferior a 500 ms con
 caché fría, bajo una carga de 50 usuarios virtuales concurrentes.*
 
-- **Verificación:** 3 corridas independientes de k6 (50 VUs, 30 s).
-- **Resultado medido:** p95 promedio **14,18 ms** (IC 95 % ± 3,20), media
-  6,48 ms, throughput 404,57 RPS, **0 % de errores**. Cumple con amplio
-  margen. Evidencia: `docs/mediciones/perf/REPORT.md` y los tres
+- **Verificación:** 5 corridas independientes de k6 (50 VUs, 30 s) por
+  escenario (caché cálida y caché fría), reportando media, p90, p95 y p99.
+- **Resultado medido (corrida de 2026-09-07):** caché cálida p95 promedio
+  **19,94 ms** (IC 95 % ± 13,51), media 11,28 ms, throughput 386,09 RPS;
+  caché fría p95 promedio **38,20 ms** (IC 95 % ± 2,01), media 17,74 ms,
+  throughput 364,35 RPS; **0 % de errores** en ambas. El contraste
+  cálida/fría es significativo (Mann-Whitney, $p \approx 10^{-2483}$).
+  Ambos valores cumplen con amplio margen el umbral (< 200 ms cálida,
+  < 500 ms fría). Evidencia: `docs/mediciones/perf/REPORT.md` y los
   `k6-run*.json`.
 
 **RNF-02 — Caché de consultas frecuentes**
@@ -987,11 +1056,11 @@ igual o superior al 70 %, verificada automáticamente en la construcción.*
 - **Historial de esta cifra en la misma jornada**, para que quede trazable:
   primero se detectó una regresión real a 39,8 % (los 5 recursos nuevos de
   la reestructuración — Categoria, Entrenador, Usuario, Persona,
-  EstadoGeneral — no tenían ninguna prueba propia); se agregaron 57 pruebas
-  nuevas (`CategoriaServiceTest`, `CategoriaControllerTest`,
-  `EntrenadorServiceTest`, `EntrenadorControllerTest`, `UsuarioServiceTest`,
-  `UsuarioControllerTest`, `PersonaServiceTest`, `PersonaControllerTest`,
-  `EstadoGeneralServiceTest`, `EstadoGeneralControllerTest`) y la cobertura
+EstadoGeneral — no tenían ninguna prueba propia); se agregaron 57 pruebas
+   nuevas (`CategoriaServiceTest`, `CategoriaControllerTest`,
+   `EntrenadorServiceTest`, `EntrenadorControllerTest`, `UserAccountServiceTest`,
+   `UserAccountControllerTest`, `PersonServiceTest`, `PersonControllerTest`,
+   `GeneralStatusServiceTest`, `GeneralStatusControllerTest`) y la cobertura
   subió a 72,5 %.
 - Evidencia: `docs/mediciones/jacoco/` (reporte regenerado con la
   ejecución que incluye las 101 pruebas).
@@ -1024,6 +1093,100 @@ digest SHA-256 y no por etiqueta móvil, para garantizar que dos
 construcciones del mismo commit usen exactamente los mismos binarios.*
 Origen: `docker-compose.yml` (digests reales aplicados por
 `scripts/pin-digests.sh`).
+
+---
+
+### 4.5 Interfaces externas
+
+| Interfaz | Descripción | Protocolo / Formato | Responsable | Referencia en código |
+|---|---|---|---|---|
+| API REST SGED | Interfaz principal de la aplicación (frontend ↔ backend) | HTTPS + JSON (RFC 8259), OpenAPI 3.0 | `backend/src/main/java/.../controller/` | Swagger UI en `/swagger-ui.html` |
+| Proveedor IA (LLM) | Generación de comentarios de alineación y reportes | HTTPS + JSON, proveedor configurable | `deportivo.ia.service.AiCommentaryService` | `docs/superpowers/specs/2026-08-25-ia-alineacion-design.md` |
+| Terminación TLS (nginx) | Descarga SSL/TLS, proxy reverso, rate-limit | TLS 1.2/1.3, HTTP/1.1, HSTS, CSP | `nginx/default.conf`, `docker-compose.yml` | Puerto externo 8443 → interno 8080 |
+| Base de datos PostgreSQL | Persistencia transaccional y vistas | PostgreSQL 16, `pgjdbc` | Flyway migrations `db/migration/` | Esquemas: `seguridad`, `academico`, `deportivo`, `inventario` |
+| Caché Redis 7 | Sesiones, revocación JWT, listas de acceso | Redis RESP3, TTL configurable | `RedisBlacklistService`, `CacheConfig` | `redis://redis:6379` |
+| Seed de datos | Datos base (roles, categorías, estados) | SQL idempotente | `db/seed.sql` | Roles: ADMINISTRADOR, ENTRENADOR, RECEPCIONISTA, REPRESENTANTE, ESTUDIANTE |
+
+---
+
+### 4.6 Máquinas de estado del dominio
+
+| Entidad | Estados | Transiciones válidas | Disparador | Comentario |
+|---|---|---|---|---|
+| `deportivo.sesiones_entrenamiento.estado` | `PROGRAMADA` → `EN_CURSO` → `FINALIZADA` / `CANCELADA` | `PROGRAMADA`→`EN_CURSO` (inicio real), `EN_CURSO`→`FINALIZADA` (cierre), `PROGRAMADA`/`EN_CURSO`→`CANCELADA` (anulación) | `SesionController.iniciar`, `finalizar`, `cancelar` | `EN_CURSO`→`CANCELADA` no permitido; `FINALIZADA` es terminal |
+| `deportivo.asistencias.estado` | `PRESENTE`, `TARDE`, `AUSENTE`, `JUSTIFICADO`, `SIN_REGISTRO` | `SIN_REGISTRO`→cualquier otro (upsert idempotente); `PRESENTE`/`TARDE`/`JUSTIFICADO`↔️`AUSENTE` (corrección entrenador) | `AsistenciaController.marcarPorQr`, `upsert` manual | `SIN_REGISTRO` es estado inicial implícito (no almacenado); `hora_entrada` solo en QR |
+| `deportivo.partidos.estado` (calculado) | `PENDIENTE` (sin marcador) / `GANADO` / `EMPATADO` / `PERDIDO` | Automático según `marcador_local` / `marcador_visitante` al `PUT` | `PartidoController.actualizarResultado` | No se almacena: se deriva de los goles; `NULL` = no jugado |
+| `deportivo.alineaciones.estado` | `SUGERIDA` / `CONFIRMADA` | `SUGERIDA`→`CONFIRMADA` (entrenador guarda) | `AlineacionController.guardar` | Si ya existe `CONFIRMADA`, la sugerencia no sobrescribe |
+| `academico.estudiantes.activo` | `TRUE` (activo) / `FALSE` (baja lógica) | `TRUE`→`FALSE` (DELETE lógico); `FALSE`→`TRUE` (reactivación admin) | `EstudianteController.eliminar`, `reactivar` | Baja lógica preserva historial (FKs) |
+| `seguridad.usuarios.activo` | `TRUE` / `FALSE` | `TRUE`→`FALSE` (baja), `FALSE`→`TRUE` (reactivar) | `UserAccountController.reactivar` | Coherencia rol↔ficha: reactivar valida ficha activa |
+| `seguridad.tokens_revocados` (JTI) | `VIGENTE` / `REVOCADO` (TTL = resto de vida del token) | `VIGENTE`→`REVOCADO` (logout) | `AuthController.logout` | Redis TTL auto-expira; `REVOCADO` = denegado en filtro JWT |
+
+---
+
+### 4.7 Matriz de permisos por rol y operación
+
+| Controlador / Recurso | Endpoint | ADMINISTRADOR | ENTRENADOR | RECEPCIONISTA | REPRESENTANTE | ESTUDIANTE |
+|---|---|---|---|---|---|---|
+| `AuthController` | `POST /api/auth/registro` | ✅ |  | ✅ |  |  |
+| `AuthController` | `POST /api/auth/login` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `AuthController` | `POST /api/auth/logout` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `AuthController` | `POST /api/auth/refresh` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `AuthController` | `GET /api/auth/me` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `AuthController` | `GET /api/auth/ping` | Público | Público | Público | Público | Público |
+| `StudentController` | `GET /api/estudiantes` | ✅ | ✅ | ✅ |  |  |
+| `StudentController` | `GET /api/estudiantes/{id}` | ✅ | ✅ | ✅ |  |  |
+| `StudentController` | `POST /api/estudiantes` | ✅ |  | ✅ |  |  |
+| `StudentController` | `PUT /api/estudiantes/{id}` | ✅ |  | ✅ |  |  |
+| `StudentController` | `DELETE /api/estudiantes/{id}` | ✅ |  |  |  |  |
+| `StudentController` | `GET /api/estudiantes/conteo/categoria/{id}` | ✅ | ✅ |  |  |  |
+| `StudentController` | `POST /api/estudiantes/operaciones/desactivar-categoria` | ✅ |  |  |  |  |
+| `PersonaController` | `GET/POST/PUT/DELETE /api/personas` | ✅ |  | ✅ |  |  |
+| `UserAccountController` | `GET/POST/PUT/DELETE /api/usuarios` | ✅ |  |  |  |  |
+| `GeneralStatusController` | `GET /api/estados-generales` | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `CategoriaController` | `GET/POST/PUT/DELETE /api/categorias` | ✅ | ✅ |  |  |  |
+| `EntrenadorController` | `GET/POST/PUT/DELETE /api/entrenadores` | ✅ | ✅ |  |  |  |
+| `HorarioController` | `GET/POST/DELETE /api/horarios` |  | ✅ (propias) |  |  |  |
+| `SesionController` | `GET/POST /api/sesiones` | ✅ | ✅ (propias/hoy) | ✅ |  |  |
+| `SesionController` | `GET /api/sesiones/{id}/historial` | ✅ | ✅ | ✅ | ✅ |  |
+| `AsistenciaController` | `PUT /api/asistencias/sesion/{id}` (QR/manual) | ✅ | ✅ | ✅ |  | ✅ (QR propio) |
+| `AsistenciaController` | `GET /api/asistencias/sesion/{id}` | ✅ | ✅ | ✅ |  |  |
+| `EvaluacionDiariaController` | `GET/PUT/POST /api/evaluaciones/sesion/{id}` |  | ✅ (propias) |  |  |  |
+| `PartidoController` | `GET/POST/PUT/DELETE /api/partidos` | ✅ | ✅ (propias) |  |  |  |
+| `AlineacionController` | `GET/PUT/DELETE /api/partidos/{id}/alineacion` | ✅ | ✅ (propias) |  |  |  |
+| `LesionController` | `POST /api/lesiones` |  | ✅ (propias) |  |  |  |
+| `RepresentanteController` | `GET/POST/PUT/DELETE /api/representantes` | ✅ |  |  |  |  |
+| `RepresentanteController` | `GET /api/representante/notificaciones` |  |  |  | ✅ (propias) |  |
+| `ConsentController` | `POST/DELETE /api/consentimientos` | ✅ |  |  | ✅ (propios) |  |
+| `ItemController` | `GET/POST/PUT/DELETE /api/inventario/articulos` | ✅ |  | ✅ |  |  |
+| `ItemController` | `GET /api/inventario/articulos/stock-bajo` | ✅ |  | ✅ |  |  |
+| `StockMovementController` | `GET/POST /api/inventario/movimientos` | ✅ |  | ✅ |  |  |
+| `AssignmentController` | `GET/POST/PUT /api/inventario/asignaciones` | ✅ |  | ✅ |  |  |
+
+> **Nota:** "propias" = recurso propiedad del usuario autenticado (p. ej., horarios/sesiones/partidos del entrenador logueado). El control de acceso se aplica vía `@PreAuthorize` y filtros en service. Ver `SecurityConfig` y cada `@Controller`.
+
+---
+
+### 4.8 Correspondencia con ISO/IEC/IEEE 29148:2018 (Anexo C)
+
+| Cláusula 29148:2018 | Título | Sección SRS equivalente | Comentario |
+|---|---|---|---|
+| 5.1 | Propósito | 1.1 | Alcance del sistema SGED |
+| 5.2 | Alcance | 1.2 | Contexto escuela de fútbol formativo |
+| 5.3 | Definiciones y abreviaturas | 1.4 | Glosario de términos técnicos |
+| 5.4 | Referencias | 1.5 | Normas, ADRs, specs vinculados |
+| 5.5 | Visión general del producto | 2.1 | Arquitectura 3 capas, esquemas BD |
+| 5.6 | Necesidades de los interesados | 2.2 | 5 actores, roles técnicos |
+| 5.7 | Restricciones | 2.3 | Tecnológicas, legales, éticas |
+| 5.8 | Suposiciones y dependencias | 2.3 | Infraestructura, proveedores, hardware |
+| 5.9 | Requisitos funcionales | 3.1–3.4 | RF-01 a RF-36 organizados por módulo |
+| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.4 | RNF-01 a RNF-13 por ISO 25010 |
+| 5.11 | Requisitos de interfaz | 4.5 | API REST, IA, TLS, BD, Redis, Seed |
+| 5.12 | Requisitos de verificación | 4.6, 4.7 | Máquinas de estado, matriz permisos |
+| 5.13 | Trazabilidad | 5 | Matriz CSV, bitácora observaciones |
+| 5.14 | Gestión de cambios | 6 | Historial de versiones del documento |
+| 5.15 | Aprobación | 7 | Firmas y registro de entregas |
+
+> Esta tabla permite la auditoría de cumplimiento de la norma sin reordenar la estructura del documento. Cada cláusula 29148 se mapea a la sección SRS que la cubre.
 
 ---
 
