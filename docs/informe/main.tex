@@ -480,7 +480,10 @@ descartar esa hipótesis. Corregido el \ruta{.env} a la ``Opción 1''
 (local) que ya documenta \ruta{.env.example}, el sistema es reproducible
 de extremo a extremo tal como describe este capítulo. \textbf{Rendimiento}
 (5 corridas, 50~VU, 30~s): p95 promedio \textbf{9,91\,ms} (IC~95\,\%
-$\pm$0,25), muy por debajo del umbral de 200\,ms; una corrida de cinco
+$\pm$0,25) — medición de ese corte (2026-08-14), sin la caché de Redis
+aún activa; la cifra vigente del escenario actual, regenerado el
+2026-09-07, está en la sección~\ref{sec:rendimiento}: p95 \textbf{19,94\,ms}
+en caché cálida \emph{frente} a 38,20\,ms en fría—, muy por debajo del umbral de 200\,ms; una corrida de cinco
 tuvo una tasa de error de 0,01\,\% (2 de 15\,921 peticiones), las otras
 cuatro sin errores. \textbf{Seguridad OWASP:} los seis controles
 (A01, A02, A03, A05, A07, A09) evidenciados de nuevo con peticiones
@@ -3314,7 +3317,9 @@ trabajo se resumen así:
 
 \begin{enumerate}[leftmargin=*]
   \item El sistema cumple con holgura los umbrales cuantitativos exigidos:
-    p95 de 9,91\,ms frente a un límite de 200\,ms, 6 de 6 controles OWASP
+    p95 de 19,94\,ms en caché cálida (38,20\,ms en fría, un contraste
+    significativo con $p \approx 10^{-2483}$) frente a un límite de
+    200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
     100/100, y \textbf{87,47\,\%} de cobertura de líneas y
     \textbf{72,10\,\%} de \emph{branches} frente al mínimo de 70\,\%
