@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -102,6 +103,16 @@ public class JwtService {
      */
     public String extractJti(String token) {
         return parseToken(token).getPayload().getId();
+    }
+
+    /**
+     * Extrae el instante de emisión ({@code iat}) de un token.
+     *
+     * @param token token JWT ya firmado
+     * @return el momento en que se emitió el token
+     */
+    public Instant extractIssuedAt(String token) {
+        return parseToken(token).getPayload().getIssuedAt().toInstant();
     }
 
     /**

@@ -19,13 +19,16 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.uteq.backend.seguridad.auth.security.JwtAuthenticationFilter;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
+import org.uteq.backend.seguridad.auth.security.SessionEpochService;
 import org.uteq.backend.seguridad.auth.security.UserDetailsServiceImpl;
 
+import java.time.Instant;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -37,6 +40,7 @@ class JwtAuthenticationFilterTest {
     @Mock private JwtService jwtService;
     @Mock private UserDetailsServiceImpl userDetailsService;
     @Mock private RedisBlacklistService blacklistService;
+    @Mock private SessionEpochService sessionEpochService;
     @Mock private HttpServletRequest request;
     @Mock private HttpServletResponse response;
     @Mock private FilterChain filterChain;
@@ -45,7 +49,7 @@ class JwtAuthenticationFilterTest {
 
     @org.junit.jupiter.api.BeforeEach
     void setUp() {
-        filter = new JwtAuthenticationFilter(jwtService, userDetailsService, blacklistService);
+        filter = new JwtAuthenticationFilter(jwtService, userDetailsService, blacklistService, sessionEpochService);
         lenient().when(request.getDispatcherType()).thenReturn(DispatcherType.REQUEST);
     }
 
@@ -184,6 +188,21 @@ class JwtAuthenticationFilterTest {
         when(jwtService.extractUsername("token-revocado")).thenReturn("coach@sged.test");
         when(jwtService.extractJti("token-revocado")).thenReturn("jti-revocado");
         when(blacklistService.isRevoked("jti-revocado")).thenReturn(true);
+
+        filter.doFilter(request, response, filterChain);
+
+        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verify(userDetailsService, never()).loadUserByUsername(any());
+        verify(filterChain).doFilter(request, response);
+    }
+
+    @Test
+    @DisplayName("token emitido antes de un reseteo de contrasena: no autentica")
+    void tokenAnteriorAlReseteoNoAutentica() throws Exception {
+        when(request.getHeader("Authorization")).thenReturn("Bearer token-viejo");
+        when(jwtService.extractUsername("token-viejo")).thenReturn("coach@sged.test");
+        when(jwtService.extractIssuedAt("token-viejo")).thenReturn(Instant.now().minusSeconds(3600));
+        when(sessionEpochService.invalidadoPorReseteo(eq("coach@sged.test"), any())).thenReturn(true);
 
         filter.doFilter(request, response, filterChain);
 

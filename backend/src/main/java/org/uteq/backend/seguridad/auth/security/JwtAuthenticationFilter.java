@@ -26,6 +26,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final UserDetailsServiceImpl userDetailsService;
     private final RedisBlacklistService blacklistService;
+    private final SessionEpochService sessionEpochService;
 
     @Override
     protected void doFilterInternal(
@@ -47,6 +48,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 String jti = jwtService.extractJti(token);
 
                 if (jti != null && blacklistService.isRevoked(jti)) {
+                    filterChain.doFilter(request, response);
+                    return;
+                }
+
+                if (sessionEpochService.invalidadoPorReseteo(username, jwtService.extractIssuedAt(token))) {
                     filterChain.doFilter(request, response);
                     return;
                 }
