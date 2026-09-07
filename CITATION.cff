@@ -6,7 +6,7 @@ version: 1.0.0
 date-released: 2026-09-07
 repository-code: "https://github.com/DarwinSM21/SGED_APPWEB"
 license: MIT
-# DOI del software (Zenodo, corte v1.0.0).
+# DOI del software (Zenodo, corte v1.0.1).
 doi: 10.5281/zenodo.22635766
 # DOI del dataset de mediciones (Zenodo, deposito separado, CC BY 4.0).
 identifiers:
