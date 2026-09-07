@@ -1,6 +1,6 @@
 # SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
 
-[![CI](https://github.com/darcalleg/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/darcalleg/SGED_APPWEB/actions)
+[![CI](https://github.com/DarwinSM21/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinSM21/SGED_APPWEB/actions)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22635766.svg)](https://doi.org/10.5281/zenodo.22635766)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -39,7 +39,7 @@ tarda ~1 min en responder mientras arranca en frío. Pasos de despliegue en
 Requisitos: Docker + Docker Compose + GNU Make.
 
 ```bash
-git clone https://github.com/darcalleg/SGED_APPWEB.git
+git clone https://github.com/DarwinSM21/SGED_APPWEB.git
 cd SGED_APPWEB
 git checkout v1.0.0
 cp .env.example .env
@@ -139,7 +139,7 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
 * Video de demostración: PENDIENTE (enlace) — falta grabarlo y enlazarlo
-* DOI Zenodo del software: [`10.5281/zenodo.22635766`](https://doi.org/10.5281/zenodo.22635766) — corte `v1.0.0` de `darcalleg/SGED_APPWEB` (concept DOI: `10.5281/zenodo.21713239`; la versión `v0.9.0-rc` de `DarwinSM21/SGED_APPWEB` conserva su propio DOI `10.5281/zenodo.21713240`)
+* DOI Zenodo del software: [`10.5281/zenodo.22635766`](https://doi.org/10.5281/zenodo.22635766) — corte provisional, a reemplazar por la "New version" sobre `10.5281/zenodo.21713240` del corte `v1.0.0` de `DarwinSM21/SGED_APPWEB` (concept DOI: `10.5281/zenodo.21713239`)
 * DOI Zenodo del *dataset*: [`10.5281/zenodo.22422305`](https://doi.org/10.5281/zenodo.22422305) — publicado, versión 1.0.0, CC BY 4.0
 * Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
 

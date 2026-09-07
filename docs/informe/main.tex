@@ -103,7 +103,7 @@ Velez Lopez Ricardo Elias & ORCID: \url{https://orcid.org/0009-0005-9463-6847} \
 \end{tabular}\\[0.9cm]
 
 {\large\bfseries Repositorio:}\\[0.2cm]
-{\ttfamily\url{https://github.com/darcalleg/SGED_APPWEB}}\\[0.6cm]
+{\ttfamily\url{https://github.com/DarwinSM21/SGED_APPWEB}}\\[0.6cm]
 
 {\large\bfseries Despliegue público:}\\[0.2cm]
 {\ttfamily\small App: \url{https://sged-frontend-jofa.onrender.com}}\\[0.1cm]
@@ -2781,7 +2781,7 @@ que de otro modo quedan como conocimiento tácito del
 equipo~\cite{citogall2016docker} (Listado~\ref{lst:arranque-reproducible}):
 
 \begin{lstlisting}[language=bash,caption={Arranque reproducible},label={lst:arranque-reproducible}]
-git clone https://github.com/darcalleg/SGED_APPWEB.git
+git clone https://github.com/DarwinSM21/SGED_APPWEB.git
 cd SGED_APPWEB
 cp .env.example .env
 make up
@@ -3395,7 +3395,7 @@ duplicarse, junto con las declaraciones que todavía no tenían una
 sección propia.
 
 \textbf{Disponibilidad de código.} Repositorio público en
-\url{https://github.com/darcalleg/SGED_APPWEB}, etiqueta \texttt{v1.0.0},
+\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.0},
 DOI del software en
 Zenodo: \href{https://doi.org/10.5281/zenodo.22635766}{10.5281/zenodo.22635766}
 (concept DOI
@@ -3653,21 +3653,22 @@ comando, no una captura de pantalla que solo puede mirarse—.
 \end{tabular}
 \end{table}
 
-Las tres corridas son consecutivas en el historial de \texttt{main} y
-están archivadas con su URL de origen en
-\ruta{docs/mediciones/ci/runs-verdes.json}: ocurrieron en
-\texttt{DarwinSM21/SGED\_APPWEB}, el repositorio donde de hecho
-transcurrió esa ventana de dos semanas, y sus números de corrida
-pertenecen al historial de \emph{Actions} de ese repositorio
-específico, no del actual.
+Las tres corridas son consecutivas en el historial de \texttt{main} de
+este repositorio y están archivadas con su URL de origen en
+\ruta{docs/mediciones/ci/runs-verdes.json}.
 
-\textbf{Nota sobre la migración a \texttt{darcalleg/SGED\_APPWEB}
-(2026-09-06/07).} El repositorio principal cambió después de que
-ocurrió lo anterior; migrar el historial de \texttt{git} no traslada ni
-recrea retroactivamente las corridas de \emph{Actions} de otro
-repositorio. \texttt{darcalleg/SGED\_APPWEB} tiene su propio historial
-de CI, mucho más corto por ser nuevo: 16 corridas verificadas contra su
-API pública (\ruta{docs/mediciones/ci/runs-darcalleg.json}), 10 en
+\textbf{Nota sobre los repositorios (migración de 2026-09-06/07 y su
+reversión).} La ventana de dos semanas en la que transcurrieron esas 63
+corridas y las tres verdes posteriores discurrió por entero en
+\texttt{DarwinSM21/SGED\_APPWEB}, el repositorio canónico de este
+trabajo. El 2026-09-06/07 el historial se movió temporalmente a
+\texttt{darcalleg/SGED\_APPWEB} y volvió después a
+\texttt{DarwinSM21/SGED\_APPWEB}; migrar el historial de \texttt{git}
+no traslada ni recrea retroactivamente las corridas de \emph{Actions}
+de otro repositorio, por eso durante ese intervalo
+\texttt{darcalleg/SGED\_APPWEB} registró su propio historial de CI,
+mucho más corto por ser nuevo: 16 corridas verificadas contra su API
+pública (\ruta{docs/mediciones/ci/runs-darcalleg.json}), 10 en
 verde y 6 en rojo. Las 6 rojas comparten una sola causa —no seis
 defectos distintos—: el mismo \emph{step} de validación de
 trazabilidad, disparado dos veces por dos renombramientos de
@@ -3675,8 +3676,11 @@ identificadores distintos (\emph{inventario}/\emph{estado}, anterior a
 este trabajo, cerrado en la corrida \#6; y el de
 \emph{person}/\emph{user}/\emph{alert}/\emph{payment}/\emph{guardian}/
 \emph{student} de esta entrega, cerrado en la corrida \#15). La corrida
-más reciente al momento de escribir esto (\#18,
-\texttt{a46f681}) está en verde.
+más reciente de esa ventana (\#18, \texttt{a46f681}) está en verde; de
+regreso en el repositorio canónico, la evidencia de CI verificable
+vuelve a ser la historia de \emph{Actions} de
+\texttt{DarwinSM21/SGED\_APPWEB} registrada en
+\ruta{docs/mediciones/ci/runs-verdes.json}.
 
 \subsection*{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}
 \addcontentsline{toc}{subsection}{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}
