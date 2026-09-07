@@ -4,7 +4,7 @@ type: software
 title: "SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol"
 version: 1.0.0
 date-released: 2026-07-30
-repository-code: "https://github.com/DarwinSM21/SGED_APPWEB"
+repository-code: "https://github.com/darcalleg/SGED_APPWEB"
 license: MIT
 # DOI del software (Zenodo).
 doi: 10.5281/zenodo.21713240

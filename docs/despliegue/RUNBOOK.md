@@ -8,7 +8,7 @@ documenta en `DEPLOYMENT.md`, todavía pendiente de definir el proveedor.
 ## 1. Arranque ordenado
 
 ```bash
-git clone https://github.com/DarwinSM21/SGED_APPWEB.git
+git clone https://github.com/darcalleg/SGED_APPWEB.git
 cd SGED_APPWEB
 cp .env.example .env        # completar secretos reales, nunca committear .env
 make up

@@ -26,11 +26,11 @@ La muestra creció en dos tandas y conviene mirar qué se movió:
 | | n = 10 | n = 14 | n = 15 |
 |---|---|---|---|
 | Media | 68,25 | 68,57 | **69,33** |
-| Amplitud del IC 95 % | 27,4 pts | 20,3 pts | **19,1 pts** |
+| Amplitud del IC 95 % (t de Student) | 31,7 pts | 22,3 pts | **20,9 pts** |
 
 La media se movió 1,08 puntos en total mientras la muestra creció un 50 %. Lo
-que mejoró no fue el resultado sino la precisión: el intervalo se estrechó un
-30 %. Eso es lo esperable cuando la estimación inicial ya era estable, y es el
+que mejoró no fue el resultado sino la precisión: el intervalo se estrechó en
+torno a un tercio. Eso es lo esperable cuando la estimación inicial ya era estable, y es el
 argumento honesto para haber ampliado la muestra: no se buscaba subir la nota,
 se buscaba reducir la incertidumbre.
 
@@ -86,7 +86,7 @@ Afirmar lo contrario con estos n sería sobreinterpretar.
 
 ### Intervalo de confianza
 
-El IC 95 % abarca 19,1 puntos e incluye valores por debajo del umbral de 68.
+El IC 95 % abarca 20,9 puntos e incluye valores por debajo del umbral de 68.
 La estimación puntual es la mejor disponible, no un resultado concluyente.
 
 ### Sesgo de selección

@@ -103,7 +103,7 @@ Velez Lopez Ricardo Elias & ORCID: \url{https://orcid.org/0009-0005-9463-6847} \
 \end{tabular}\\[0.9cm]
 
 {\large\bfseries Repositorio:}\\[0.2cm]
-{\ttfamily\url{https://github.com/DarwinSM21/SGED_APPWEB}}\\[0.6cm]
+{\ttfamily\url{https://github.com/darcalleg/SGED_APPWEB}}\\[0.6cm]
 
 {\large\bfseries Despliegue público:}\\[0.2cm]
 {\ttfamily\small App: \url{https://sged-frontend-jofa.onrender.com}}\\[0.1cm]
@@ -1887,8 +1887,8 @@ los quince cuestionarios no evalúan exactamente el mismo artefacto. El
 efecto sobre el agregado fue pequeño y se documenta en
 \ruta{docs/mediciones/sus/INTERPRETACION.md}: la media se movió 1{,}08
 puntos (68{,}25 a 69{,}33) mientras el intervalo de confianza se
-estrechó un 30\,\%, lo que sugiere que la ampliación precisó la
-estimación sin desplazarla.
+estrechó en torno a un tercio, lo que sugiere que la ampliación precisó
+la estimación sin desplazarla.
 
 \textbf{Numeración.} Los identificadores van de ENC-01 a ENC-10 y de
 ENC-13 a ENC-17: no existen ENC-11 ni ENC-12. El salto se conserva tal
@@ -1903,12 +1903,16 @@ media, mediana, desviación típica e intervalo de confianza al 95\,\%
 para todas las métricas cuantitativas; percentiles p50, p90 y p95 para
 rendimiento. Se prefieren intervalos de confianza sobre valores~$p$ como
 forma primaria de reporte, siguiendo la recomendación del Bloque~C de la
-guía. \textbf{Pendiente declarado:} con solo tres corridas de k6
-archivadas (sección~\ref{sec:estado-entrega} señala que además están
-desactualizadas) no se calculó todavía un test inferencial entre
-caché fría y caché caliente ni su tamaño de efecto (por ejemplo Wilcoxon
-con \emph{Cliff's delta}); ambos quedan planificados para cuando se
-regeneren las cinco corridas independientes que exige el Bloque~A.1.
+guía. Las cinco corridas independientes de k6 que exige el Bloque~A.1
+están archivadas en \ruta{docs/mediciones/perf/} y agregadas con
+intervalo de confianza (sección~\ref{sec:discusion}, RQ1).
+\textbf{Pendiente declarado:} las cinco corridas miden el mismo
+escenario con caché caliente; quedan por hacer antes del cierre un
+escenario de caché fría y su contraste inferencial frente al de caché
+caliente con tamaño de efecto (Wilcoxon con \emph{Cliff's delta}), y la
+corrección por comparaciones múltiples en el desglose de usabilidad por
+perfil (sección~\ref{sec:sus}). El dato que gobierna RQ1 —la distancia
+de p95 al umbral de 200\,ms— ya está medido cinco veces.
 
 \subsection{Entorno de ejecución}
 \label{sec:entorno}
@@ -2511,9 +2515,9 @@ un código de participante y su perfil): 4 entrenadores, 4 estudiantes,
 La segunda tanda no se recolectó para mejorar el resultado sino para
 reducir la incertidumbre de la primera, y conviene juzgarla por eso: al
 pasar de 10 a 15 participantes la media se movió 1,08 puntos (68,25 a
-69,33) mientras la amplitud del intervalo de confianza cayó un 30\,\%
-(27,4 a 19,1 puntos). La estimación ya era estable; lo que faltaba era
-precisión.
+69,33) mientras la amplitud del intervalo de confianza cayó en torno a
+un tercio (31,7 a 20,9 puntos, calculada con la $t$ de Student). La
+estimación ya era estable; lo que faltaba era precisión.
 
 \begin{table}[htbp]
 \centering
@@ -2598,7 +2602,7 @@ que de otro modo quedan como conocimiento tácito del
 equipo~\cite{citogall2016docker} (Listado~\ref{lst:arranque-reproducible}):
 
 \begin{lstlisting}[language=bash,caption={Arranque reproducible},label={lst:arranque-reproducible}]
-git clone https://github.com/DarwinSM21/SGED_APPWEB.git
+git clone https://github.com/darcalleg/SGED_APPWEB.git
 cd SGED_APPWEB
 cp .env.example .env
 make up
@@ -3047,10 +3051,10 @@ bimodal en vez de exponerlo. La implicación práctica es directa: el
 esfuerzo de mejora de interfaz debería priorizar el flujo administrativo y
 el futuro módulo de representantes, no el promedio general del sistema.
 Con los quince participantes que exige la Entrega Final la media es
-69{,}33 (IC~95\,\%~59{,}77--78{,}89), y la ampliación de diez a quince
+69{,}33 (IC~95\,\%~58{,}87--79{,}79), y la ampliación de diez a quince
 resultó informativa por una razón que conviene explicitar: la media se
 movió apenas 1{,}08 puntos mientras el intervalo de confianza se estrechó
-un 30\,\%. Es decir, los cinco cuestionarios adicionales precisaron la
+en torno a un tercio. Es decir, los cinco cuestionarios adicionales precisaron la
 estimación en lugar de desplazarla, lo que refuerza el patrón bimodal en
 vez de diluirlo. Aun así, con tres o cuatro participantes por rol la
 desagregación sigue siendo indicativa y no una estimación poblacional.
@@ -3206,7 +3210,7 @@ duplicarse, junto con las declaraciones que todavía no tenían una
 sección propia.
 
 \textbf{Disponibilidad de código.} Repositorio público en
-\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.0},
+\url{https://github.com/darcalleg/SGED_APPWEB}, etiqueta \texttt{v1.0.0},
 DOI del software en
 Zenodo: \href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240}.
 
@@ -3464,7 +3468,7 @@ comando, no una captura de pantalla que solo puede mirarse—.
 
 Las tres corridas son consecutivas en el historial de \texttt{main} y
 verificables en vivo en
-\url{https://github.com/DarwinSM21/SGED_APPWEB/actions}.
+\url{https://github.com/darcalleg/SGED_APPWEB/actions}.
 
 \subsection*{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}
 \addcontentsline{toc}{subsection}{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}

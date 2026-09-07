@@ -5,7 +5,7 @@
 revisado por última vez tras la reestructuración de paquetes
 `academico`/`deportivo`/`seguridad` del 2026-07-29)
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
-**Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
+**Repositorio:** https://github.com/darcalleg/SGED_APPWEB
 
 > **Nota de redacción (resuelve OBS-01, Entrega 1A).** El docente observó que
 > los requisitos funcionales estaban redactados como títulos ("Registro de
