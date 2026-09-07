@@ -2,7 +2,7 @@
 
 A continuación se presenta la tabla de seguimiento para el control y resolución de las observaciones emitidas por el docente en las entregas 1A, 1B y 3 correspondientes al proyecto **SGED / ProFútbol**.
 
-> El **Capítulo 3 de la Guía de desarrollo ("Plan de correcciones")** consolida y renumera las observaciones de la Entrega Final como diez tareas 3.1–3.10, cada una con su criterio de aceptación. El estado verificado tarea por tarea está en la sección [Capítulo 3 — Plan de correcciones: estado verificado](#capítulo-3--plan-de-correcciones-estado-verificado-2026-09-06) al final de este documento. Correspondencia con la tabla de abajo: 3.2 ↔ OBS-14, 3.3 ↔ OBS-15, 3.4 ↔ OBS-16, 3.5 ↔ OBS-17, 3.7 ↔ OBS-19.
+> El **Capítulo 3 de la Guía de desarrollo ("Plan de correcciones")** consolida y renumera las observaciones de la Entrega Final como diez tareas 3.1–3.10, cada una con su criterio de aceptación. El estado verificado tarea por tarea está en la sección [Estado verificado del Plan de correcciones](#estado-verificado-del-plan-de-correcciones-capítulo-3) al final de este documento. Correspondencia con la tabla de abajo: 3.2 ↔ OBS-14, 3.3 ↔ OBS-15, 3.4 ↔ OBS-16, 3.5 ↔ OBS-17, 3.7 ↔ OBS-19.
 
 | Código Único | Fuente | Criterio de Rúbrica | Texto de la Observación del Docente | Decisión del Equipo | Hash del Commit |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -27,51 +27,11 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 ---
 
-## Capítulo 3 — Plan de correcciones: estado verificado (2026-09-06)
+## Estado verificado del Plan de correcciones (Capítulo 3)
 
 Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contra el estado de `main` (HEAD `210f4c9`). **7 cumplidas, 3 parciales** — las tres parciales dependen de acciones del equipo (colocar un tag, correr mediciones nuevas, obtener la firma del docente), no de más cambios de documentación.
 
-> **Nota sobre los hashes.** En sept-2026 se reescribió el historial para pasar todos los *commits* a cuentas institucionales `@uteq.edu.ec` (repo canónico `github.com/darcalleg/SGED_APPWEB`). La reescritura re-hasheó **todos** los commits. **Todas las filas OBS-01…OBS-19 y esta sección están actualizadas** a los hashes vigentes en `main` (verificados con `git merge-base --is-ancestor`). Equivalencias aplicadas (pre → post), agrupadas por observación:
->
-> | pre-reescritura | vigente en `main` | qué es |
-> |---|---|---|
-> | `98bab0d` | `6480584` | SRS + historias + casos de uso + trazabilidad + ética + diccionario (OBS-01, 06, 12) |
-> | `8662a03` | `ff88ad8` | estructura Entrega 1A: C4, MER, ADR-001, schema, PDF (OBS-02, 04, 05) |
-> | `bf6ee80` | `224d8d7` | corregir estructura Entrega 1A (OBS-02, 03, 04, 08) |
-> | `db77ce2` | `6b76cc1` | renombrar `database/` → `db/` (OBS-04) |
-> | `a8d6f18` | `2ada472` | LICENSE, CITATION.cff, CONTRIBUTORS, CHANGELOG, VERSIONING (OBS-05) |
-> | `e01cb57` | `eba9e76` | migrar a `application.yml` + `.env.example` (OBS-05) |
-> | `d81f4e8` | `052117d` | documentación ADR + observaciones (OBS-06) |
-> | `41f6157` | `dd3b7d5` | reponer ADR-003 (OBS-06) |
-> | `fabf893` | `a98008b` | exponer /registro, /logout, /refresh + `@PreAuthorize` (OBS-07, 09, 17) |
-> | `84de825` | `39e4718` | registro/logout con blacklist Redis + JTI (OBS-07, 09, 17) |
-> | `bcb3642` | `c506309` | JWT en cookie `HttpOnly` + proteger /registro (OBS-07, 09, 13) |
-> | `b907d10` | `048fca5` | completar V1 SQL, docker-compose, Dockerfile, AuthServiceTest (OBS-08, 11) |
-> | `1e798bc` | `6a73cda` | tests EstudianteController / LoginAttempt / RedisBlacklist (OBS-10) |
-> | `50f8b13` | `b0d346b` | AuthServiceTest + EstudianteServiceTest con Mockito + H2 (OBS-10) |
-> | `a2c3d53` | `a67d630` | fix `argLine` de surefire que pisaba el javaagent de JaCoCo (OBS-10) |
-> | `83d8a65` | `de9c3c5` | colección Postman versionada (OBS-10) |
-> | `17dc5df` | `f748032` | pin de postgres/redis por digest SHA-256 (OBS-11) |
-> | `767ad92` | `67a0d6e` | TLS en `:8443` vía nginx (OBS-11) |
-> | `3788fcd` | `6a24cc3` | informe de la Tercera Entrega en LaTeX (OBS-12) |
-> | `e9e5ba7` | `0a0da5c` | reestructuración de paquetes (OBS-13) |
-> | `ad2fec0` | `f41e3c5` | merge que introdujo la regresión del token en el cuerpo (OBS-13) |
-> | `62183d8` | `c335d78` | fix definitivo de esa regresión (OBS-13) |
-> | `24bbfda` | `58ec5ec` | borrado de comentarios (OBS-14) |
-> | `a1979f9` | `81b7cc1` | restauración + Javadoc (OBS-14) |
-> | `4ef1269` | `3297ec0` | fix del validador de trazabilidad (OBS-16) |
-> | `ccb7aea` / `71c1ed0` | `d29af1c` / `b4b76f4` | autotest del validador + CI (OBS-16) |
-> | `5d2a64b` / `a21c868` | `d23c7e8` | cubrir 4 controladores + entidades (OBS-15) |
-> | `d421099` | `5f93453` | tests `@PrePersist`/`@PreUpdate` (OBS-15) |
-> | `3788afd` | `f1e936a` | fix test de fechas (OBS-15) |
-> | `6414fdb` | `ecbc8a5` | unificar cobertura en el informe (OBS-15) |
-> | `09c6edf` | `94aeace` | hallazgos de evaluación de calidad (OBS-15) |
-> | `0fc8b69` | `d293731` | SUS t-Student + procedencia + CORS/ZAP (OBS-17, OBS-19) |
-> | `0c9e3ba` | `da2b29a` | sustituir hashes de procedencia (OBS-17) |
-> | `73d5114` | `8a078e7` | corrida de mediciones del 14-ago (OBS-15, OBS-17) |
-> | `6656ab9` | `c892660` | `render.yaml` + Supabase (OBS-19) |
-> | `c91180c` | `dee863c` | URLs reales de Render (OBS-19) |
-> | `a68e513` | `3f50739` | declarar URLs públicas (OBS-19) |
+**Nota sobre los hashes.** En sept-2026 se reescribió el historial para pasar todos los *commits* a cuentas institucionales `@uteq.edu.ec` (repo canónico `github.com/darcalleg/SGED_APPWEB`). La reescritura re-hasheó **todos** los commits. **Todas las filas OBS-01…OBS-19 y esta sección están actualizadas** a los hashes vigentes en `main` (verificados con `git merge-base --is-ancestor`). La tabla de equivalencias pre → post está [al final de esta sección](#equivalencias-de-hashes-pre--post).
 
 | Tarea | Criterio de aceptación (resumen) | Estado | Evidencia verificada · commits en `main` |
 | :--- | :--- | :--- | :--- |
@@ -91,3 +51,45 @@ Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contr
 1. **3.6** — `git tag` sobre el commit que se va a defender (plan: `v1.0.1`, dejando `v1.0.0` como lo entregado el 24-ago); actualizar `\texttt{v1.0.0}` en portada/carátula/`main.tex`, README, `VERSIONING.md`, `CHANGELOG.md`.
 2. **3.9** — añadir un escenario de caché fría al k6 (`k6/listado-estudiantes.js` solo mide caliente), correr 5 corridas, y reportar Wilcoxon + Cliff's delta entre frío y caliente, más una corrección por comparaciones múltiples en el desglose SUS por perfil.
 3. **3.10** — obtener la firma del Dr. Guerrero en el §7 del SRS y regenerar `SRS.pdf` / `SRS-v1.0.0.pdf` (no hay build script; lo regenera el equipo con su toolchain).
+
+### Equivalencias de hashes (pre → post)
+
+| pre-reescritura | vigente en `main` | qué es |
+|---|---|---|
+| `98bab0d` | `6480584` | SRS + historias + casos de uso + trazabilidad + ética + diccionario (OBS-01, 06, 12) |
+| `8662a03` | `ff88ad8` | estructura Entrega 1A: C4, MER, ADR-001, schema, PDF (OBS-02, 04, 05) |
+| `bf6ee80` | `224d8d7` | corregir estructura Entrega 1A (OBS-02, 03, 04, 08) |
+| `db77ce2` | `6b76cc1` | renombrar `database/` → `db/` (OBS-04) |
+| `a8d6f18` | `2ada472` | LICENSE, CITATION.cff, CONTRIBUTORS, CHANGELOG, VERSIONING (OBS-05) |
+| `e01cb57` | `eba9e76` | migrar a `application.yml` + `.env.example` (OBS-05) |
+| `d81f4e8` | `052117d` | documentación ADR + observaciones (OBS-06) |
+| `41f6157` | `dd3b7d5` | reponer ADR-003 (OBS-06) |
+| `fabf893` | `a98008b` | exponer /registro, /logout, /refresh + `@PreAuthorize` (OBS-07, 09, 17) |
+| `84de825` | `39e4718` | registro/logout con blacklist Redis + JTI (OBS-07, 09, 17) |
+| `bcb3642` | `c506309` | JWT en cookie `HttpOnly` + proteger /registro (OBS-07, 09, 13) |
+| `b907d10` | `048fca5` | completar V1 SQL, docker-compose, Dockerfile, AuthServiceTest (OBS-08, 11) |
+| `1e798bc` | `6a73cda` | tests EstudianteController / LoginAttempt / RedisBlacklist (OBS-10) |
+| `50f8b13` | `b0d346b` | AuthServiceTest + EstudianteServiceTest con Mockito + H2 (OBS-10) |
+| `a2c3d53` | `a67d630` | fix `argLine` de surefire que pisaba el javaagent de JaCoCo (OBS-10) |
+| `83d8a65` | `de9c3c5` | colección Postman versionada (OBS-10) |
+| `17dc5df` | `f748032` | pin de postgres/redis por digest SHA-256 (OBS-11) |
+| `767ad92` | `67a0d6e` | TLS en `:8443` vía nginx (OBS-11) |
+| `3788fcd` | `6a24cc3` | informe de la Tercera Entrega en LaTeX (OBS-12) |
+| `e9e5ba7` | `0a0da5c` | reestructuración de paquetes (OBS-13) |
+| `ad2fec0` | `f41e3c5` | merge que introdujo la regresión del token en el cuerpo (OBS-13) |
+| `62183d8` | `c335d78` | fix definitivo de esa regresión (OBS-13) |
+| `24bbfda` | `58ec5ec` | borrado de comentarios (OBS-14) |
+| `a1979f9` | `81b7cc1` | restauración + Javadoc (OBS-14) |
+| `4ef1269` | `3297ec0` | fix del validador de trazabilidad (OBS-16) |
+| `ccb7aea` / `71c1ed0` | `d29af1c` / `b4b76f4` | autotest del validador + CI (OBS-16) |
+| `5d2a64b` / `a21c868` | `d23c7e8` | cubrir 4 controladores + entidades (OBS-15) |
+| `d421099` | `5f93453` | tests `@PrePersist`/`@PreUpdate` (OBS-15) |
+| `3788afd` | `f1e936a` | fix test de fechas (OBS-15) |
+| `6414fdb` | `ecbc8a5` | unificar cobertura en el informe (OBS-15) |
+| `09c6edf` | `94aeace` | hallazgos de evaluación de calidad (OBS-15) |
+| `0fc8b69` | `d293731` | SUS t-Student + procedencia + CORS/ZAP (OBS-17, OBS-19) |
+| `0c9e3ba` | `da2b29a` | sustituir hashes de procedencia (OBS-17) |
+| `73d5114` | `8a078e7` | corrida de mediciones del 14-ago (OBS-15, OBS-17) |
+| `6656ab9` | `c892660` | `render.yaml` + Supabase (OBS-19) |
+| `c91180c` | `dee863c` | URLs reales de Render (OBS-19) |
+| `a68e513` | `3f50739` | declarar URLs públicas (OBS-19) |
