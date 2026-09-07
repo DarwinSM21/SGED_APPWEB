@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.uteq.backend.academico.student.dto.EnableAccessRequest;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -31,6 +32,7 @@ public class StudentAccessService {
     private final RoleRepository rolRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordPolicy passwordPolicy;
 
     /**
      * Guarda simétrica a {@code UserAccountService.validarRolCoherente}: si la
@@ -69,6 +71,7 @@ public class StudentAccessService {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
         }
+        passwordPolicy.validar(request.password(), request.username());
 
         Role rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
                 .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));

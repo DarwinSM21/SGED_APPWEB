@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -15,6 +16,7 @@ import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -50,6 +52,8 @@ class UserAccountServiceTest {
     private RoleRepository rolRepository;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Spy
+    private PasswordPolicy passwordPolicy = new PasswordPolicy();
     @Mock
     private EntrenadorRepository entrenadorRepository;
     @Mock

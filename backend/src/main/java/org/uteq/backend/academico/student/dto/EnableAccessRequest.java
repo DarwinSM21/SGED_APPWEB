@@ -6,5 +6,6 @@ import jakarta.validation.constraints.Size;
 
 public record EnableAccessRequest(
         @NotBlank @Email @Size(max = 50) String username,
-        @NotBlank @Size(min = 6) String password
+        // La complejidad la valida PasswordPolicy (RNF-14) en StudentAccessService.
+        @NotBlank String password
 ) {}

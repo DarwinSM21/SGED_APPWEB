@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.student.dto.EnableAccessRequest;
 import org.uteq.backend.academico.student.service.StudentAccessService;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -33,6 +35,7 @@ class StudentAccessServiceTest {
     @Mock private RoleRepository rolRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Spy private PasswordPolicy passwordPolicy = new PasswordPolicy();
 
     @InjectMocks private StudentAccessService service;
 

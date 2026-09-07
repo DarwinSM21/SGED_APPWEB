@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.audit.service.AuditService;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.dto.SessionResponse;
@@ -54,6 +55,7 @@ public class AuthService {
     private final RoleRepository rolRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordPolicy passwordPolicy;
     private final AuditService auditoriaService;
 
     /**
@@ -79,6 +81,8 @@ public class AuthService {
      * @return la sesión del usuario recién creado, o {@link Optional#empty()}
      *         si el {@code username}, la cédula o el correo ya están en uso
      *         (el controlador lo traduce a {@code 409 Conflict})
+     * @throws org.uteq.backend.common.exception.ApiException {@code 422} si la
+     *                                  contraseña no cumple la política (RNF-14)
      * @throws IllegalArgumentException si {@code request.rol()} no existe en
      *                                  el catálogo de roles
      * @throws IllegalStateException    si falta el catálogo
@@ -86,6 +90,8 @@ public class AuthService {
      */
     @Transactional
     public Optional<SessionResponse> register(RegisterRequest request) {
+        passwordPolicy.validar(request.password(), request.username());
+
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
                 || personaRepository.existsByCedulaAndActivoTrue(request.cedula())
                 || personaRepository.existsByCorreo(request.correo())) {

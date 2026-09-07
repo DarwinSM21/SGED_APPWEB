@@ -7,6 +7,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+// La complejidad de la contraseña la valida PasswordPolicy (RNF-14) en
+// AuthService.register, no una anotación de tamaño: la regla es una sola y
+// vive en un único lugar.
 
 import java.time.LocalDate;
 
@@ -17,6 +20,6 @@ public record RegisterRequest(
         @NotBlank @Email @Size(max = 200) String correo,
         @NotNull @Past @JsonFormat(pattern = "yyyy-MM-dd") LocalDate fechaNacimiento,
         @NotBlank @Email @Size(max = 50) String username,
-        @NotBlank @Size(min = 6) String password,
+        @NotBlank String password,
         @NotBlank(message = "El rol es obligatorio") String rol
 ) {}

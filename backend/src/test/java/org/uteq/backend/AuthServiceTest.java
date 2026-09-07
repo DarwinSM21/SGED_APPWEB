@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,10 +16,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.uteq.backend.common.exception.ApiException;
 import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.auth.dto.SessionResponse;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
@@ -59,6 +62,7 @@ class AuthServiceTest {
     @Mock private RoleRepository rolRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private PasswordEncoder passwordEncoder;
+    @Spy private PasswordPolicy passwordPolicy = new PasswordPolicy();
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private AuditService auditoriaService;
 
@@ -156,7 +160,7 @@ class AuthServiceTest {
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "test@test.com",
-                LocalDate.of(2000, 1, 1), "test@test.com", "test123", "ENTRENADOR");
+                LocalDate.of(2000, 1, 1), "test@test.com", "clave1234", "ENTRENADOR");
 
         assertThat(authService.register(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
@@ -169,7 +173,7 @@ class AuthServiceTest {
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "cedula.dup.correo@test.com",
-                LocalDate.of(2000, 1, 1), "cedula.dup@test.com", "test123", "ENTRENADOR");
+                LocalDate.of(2000, 1, 1), "cedula.dup@test.com", "clave1234", "ENTRENADOR");
 
         assertThat(authService.register(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
@@ -183,7 +187,7 @@ class AuthServiceTest {
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345681", "correo.dup.persona@test.com",
-                LocalDate.of(2000, 1, 1), "correo.dup@test.com", "test123", "ENTRENADOR");
+                LocalDate.of(2000, 1, 1), "correo.dup@test.com", "clave1234", "ENTRENADOR");
 
         assertThat(authService.register(registerRequest)).isEmpty();
         verify(personaRepository, never()).save(any());
@@ -236,6 +240,17 @@ class AuthServiceTest {
     }
 
     @Test
+    void registrarConContrasenaDebilLanza422() {
+        RegisterRequest registerRequest = new RegisterRequest(
+                "Test", "User", "0912345679", "debil.persona@test.com",
+                LocalDate.of(2000, 1, 1), "debil@test.com", "corta1", "ENTRENADOR");
+
+        assertThatThrownBy(() -> authService.register(registerRequest))
+                .isInstanceOf(ApiException.class);
+        verify(personaRepository, never()).save(any());
+    }
+
+    @Test
     void registrarSinCatalogoEstadoGeneralLanzaIllegalStateException() {
         when(usuarioRepository.existsByUsernameIgnoreCase("sinestado@test.com")).thenReturn(false);
         when(personaRepository.existsByCedulaAndActivoTrue("0912345682")).thenReturn(false);
@@ -251,7 +266,7 @@ class AuthServiceTest {
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345682", "sinestado.persona@test.com",
-                LocalDate.of(2000, 1, 1), "sinestado@test.com", "test123", "ENTRENADOR");
+                LocalDate.of(2000, 1, 1), "sinestado@test.com", "clave1234", "ENTRENADOR");
 
         assertThatThrownBy(() -> authService.register(registerRequest))
                 .isInstanceOf(IllegalStateException.class);

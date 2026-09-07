@@ -9,9 +9,11 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.uteq.backend.common.exception.ApiException;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.user.controller.UserAccountController;
@@ -96,8 +98,12 @@ class UserAccountControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/usuarios - contrasena corta da 422")
-    void crear_con_contrasena_corta_da_422() throws Exception {
+    @DisplayName("POST /api/usuarios - contrasena que incumple la politica da 422")
+    void crear_con_contrasena_debil_da_422() throws Exception {
+        when(usuarioService.create(any(UserAccountRequest.class)))
+                .thenThrow(new ApiException(HttpStatus.UNPROCESSABLE_ENTITY,
+                        "La contraseña debe tener al menos 8 caracteres."));
+
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"idPersona\":1,\"idEstadoGeneral\":1,\"username\":\"abcd\",\"password\":\"12\"}"))

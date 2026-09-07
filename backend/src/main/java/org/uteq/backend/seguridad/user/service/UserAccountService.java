@@ -15,6 +15,7 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
 import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -46,6 +47,7 @@ public class UserAccountService {
     private final GeneralStatusRepository estadoGeneralRepository;
     private final RoleRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordPolicy passwordPolicy;
     private final EntrenadorRepository entrenadorRepository;
     private final GuardianRepository representanteRepository;
     private final StudentRepository estudianteRepository;
@@ -113,6 +115,7 @@ public class UserAccountService {
         if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("La contraseña es obligatoria");
         }
+        passwordPolicy.validar(request.password(), request.username());
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("El nombre de usuario ya se encuentra registrado");
         }
@@ -245,6 +248,7 @@ public class UserAccountService {
     // su complejidad ciclomática. "password en blanco" significa "no cambiarla".
     private void actualizarPasswordSiCorresponde(UserAccount usuario, String nuevaPassword) {
         if (nuevaPassword != null && !nuevaPassword.isBlank()) {
+            passwordPolicy.validar(nuevaPassword, usuario.getUsername());
             usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
         }
     }
