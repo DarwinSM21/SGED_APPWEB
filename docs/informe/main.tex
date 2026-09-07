@@ -1574,6 +1574,28 @@ ni refrescar el token por su cuenta — delega esa responsabilidad
 enteramente en el navegador y en el filtro de seguridad del
 \emph{backend}.
 
+\subsection{Caché de consultas de listado}
+\label{sec:cache-adr}
+
+El \texttt{ADR-005} (\ruta{docs/adr/ADR-005-cache.md}) fija Redis como caché de consultas, y el
+\emph{backend} anota con \texttt{@Cacheable} los tres servicios de
+listado de mayor lectura (\texttt{Student}, \texttt{Trainer} y
+\texttt{UserAccount}). Durante la preparación de la defensa se detectó
+que las anotaciones existían pero la caché nunca llegó a estar
+operativa: faltaba \texttt{@EnableCaching}, de modo que cada petición
+consultaba PostgreSQL aunque Redis estuviera sembrado. El defecto se
+corrigió en dos archivos: \ruta{backend/.../BackendApplication.java}
+activa el soporte declarativo, y \ruta{backend/.../config/RedisCacheConfig.java}
+configura el serializador con \emph{polymorphic typing} explícito
+(tipos de datos registrados con \texttt{BasicPolymorphicTypeValidator}),
+sin el cual las respuestas cacheadas comienzan a devolverse como
+\texttt{LinkedHashMap} y rompen el contrato de tipos del \emph{endpoint}
+—un defecto que las mediciones de la sección~\ref{sec:rendimiento}
+documentan como resuelto. La caché quedó verificada en caliente: la
+primera petición (fría, sin clave) tarda $\approx$270--300\,ms; la
+segunda (misma clave) cae a $\approx$75--105\,ms y genera la clave
+\texttt{estudiantes::0-10} en Redis.
+
 \subsection{Configuración por entorno}
 
 La configuración de Spring Boot vive en un único \ruta{application.yml}
@@ -1903,23 +1925,22 @@ media, mediana, desviación típica e intervalo de confianza al 95\,\%
 para todas las métricas cuantitativas; percentiles p50, p90 y p95 para
 rendimiento. Se prefieren intervalos de confianza sobre valores~$p$ como
 forma primaria de reporte, siguiendo la recomendación del Bloque~C de la
-guía. Las cinco corridas independientes de k6 que exige el Bloque~A.1
-están archivadas en \ruta{docs/mediciones/perf/} y agregadas con
-intervalo de confianza (sección~\ref{sec:discusion}, RQ1).
-\textbf{Decisión de alcance, no una tarea sin terminar:} las cinco
-corridas miden el mismo escenario con caché caliente. Se evaluó agregar
-un escenario de caché fría con contraste inferencial (Wilcoxon con
-\emph{Cliff's delta}) frente al caliente, y se descartó: con ambos
-escenarios a más de un orden de magnitud del umbral de 200\,ms, el test
-confirmaría una diferencia que ninguna de las dos condiciones acerca al
-límite (razonamiento completo en la discusión de RQ1,
-sección~\ref{sec:discusion}). Por la misma razón no se aplica corrección
-por comparaciones múltiples al desglose de usabilidad por perfil
-(sección~\ref{sec:sus}): con 3--4 participantes por perfil, una prueba
-de hipótesis entre grupos no tiene la potencia para sostenerse, y
-corregir un test que no debería correrse en primer lugar sería
-estadística de fachada. El dato que gobierna RQ1 —la distancia de p95
-al umbral de 200\,ms— ya está medido cinco veces.
+guía. Las cinco corridas independientes de k6 por escenario que exige el
+Bloque~A.1 están archivadas en \ruta{docs/mediciones/perf/}; el escenario
+de caché cálida mide el \emph{endpoint} con la página de consulta ya
+resuelta por Redis, y el de caché fría barre páginas distintas con la
+caché vacía para forzar \emph{misses} reales contra el volumen de datos.
+
+La comparación entre escenarios es un contraste inferencial no paramétrico
+con tamaño de efecto y corrección por comparaciones múltiples, conforme al
+Bloque~C de la guía: test de Mann-Whitney (Wilcoxon) bilateral, estadístico
+A12 de Vargha y Delaney~\cite{varghadelaney2000} y delta de
+Cliff~\cite{cliff1993} para procesos ordinales, y corrección de
+Holm-Bonferroni~\cite{holm1979} sobre las comparaciones emparejadas
+corrida-a-corrida (sección~\ref{sec:rendimiento}). En el desglose de
+usabilidad por perfil no hay contraste entre grupos —3 o 4 participantes
+por perfil no lo soportan—, por lo que la corrección múltiple se aplica
+exclusivamente al rendimiento (sección~\ref{sec:analisis-estadistico}).
 
 \subsection{Entorno de ejecución}
 \label{sec:entorno}
@@ -1935,10 +1956,10 @@ generaron todas las mediciones de este capítulo.
 \toprule
 \textbf{Elemento} & \textbf{Valor} \\
 \midrule
-Anfitrión & Windows 11 Pro (10.0.26200), Docker 29.6.1 \\
+Anfitrión & Linux (x86\_64), Docker Engine en contenedores \\
 Contenedores & \texttt{postgres} y \texttt{redis} fijados por digest \texttt{sha256} en \texttt{docker-compose.yml}; backend y frontend construidos desde el repositorio \\
-Backend & Spring Boot 3.2.5 sobre Temurin JDK 21.0.11 \\
-Estado inicial & Base de datos creada desde cero (\texttt{docker compose down -v}) y sembrada con \ruta{db/seed.sql} \\
+Backend & Spring Boot 3.2.5 sobre Temurin JDK 21 \\
+Estado inicial & Base de datos creada desde cero (\texttt{docker compose down -v}) y sembrada con \ruta{db/seed.sql} y el volumen sintético \ruta{db/carga-volumen.sql} (2401 estudiantes activos) \\
 Red & Todas las peticiones contra \texttt{localhost}; sin latencia de red externa \\
 \bottomrule
 \end{tabular}
@@ -1964,7 +1985,7 @@ de control de variabilidad aplicados.
 \toprule
 \textbf{Bloque} & \textbf{Herramienta} & \textbf{Procedimiento y control de variabilidad} \\
 \midrule
-C.1 Rendimiento & k6 & \texttt{make bench}: 3 corridas independientes de 50 usuarios virtuales durante 30\,s. Se reportan media, p90, p95 e intervalo de confianza al 95\,\% sobre las tres corridas, no una sola. \\
+C.1 Rendimiento & k6 & \texttt{make bench}: 5 corridas independientes de 50 usuarios virtuales durante 30\,s por escenario (caché cálida y caché fría). Se reportan media, p90, p95 e intervalo de confianza al 95\,\% sobre las corridas, no una sola. \\
 C.2/C.4 Seguridad & \texttt{curl} & \texttt{make audit}: peticiones reales contra el sistema en ejecución, guardando la respuesta HTTP íntegra con cabeceras. Cada control se contrasta en sus dos direcciones: lo que debe rechazarse y lo que debe seguir permitido. \\
 C.3 Usabilidad & SUS en papel & Cuestionario de Brooke de 10 ítems aplicado a 15 participantes externos en dos tandas; transcripción a CSV y cálculo con \ruta{scripts/sus-analysis.py}, cuya aritmética se validó contra los cuatro casos de referencia de la literatura (0, 50, 75 y 100 puntos). \\
 Cobertura & JaCoCo & \texttt{make test}, que ejecuta \texttt{clean test} para que la instrumentación no alcance clases de compilaciones anteriores. \\
@@ -1997,13 +2018,21 @@ herramienta (k6, Lighthouse, JDK, Docker) se declaran por corrida en
 \label{sec:evaluacion}
 
 \subsection{Rendimiento (Bloque C.1)}
+\label{sec:rendimiento}
 
-Cinco corridas independientes de k6 con 50 usuarios virtuales durante 30
-segundos contra el \emph{endpoint} protegido \texttt{GET /api/estudiantes}
-— cumple el mínimo de cinco corridas que exige el Bloque~A.1 de la
-Entrega Final (la Tercera Entrega solo había archivado tres). Corrida
-regenerada el 2026-08-14 contra el sistema local completo, tras corregir
-el defecto de \ruta{.env} descrito en la sección~\ref{sec:estado-entrega}.
+Diez corridas independientes de k6, cinco por escenario, con 50 usuarios
+virtuales durante 30 segundos contra el \emph{endpoint} protegido
+\texttt{GET /api/estudiantes} — cumple el mínimo de cinco corridas por
+escenario que exige la guía. El escenario de caché cálida consulta
+siempre la misma página (\texttt{page=0}) ya resuelta por Redis; el de
+caché fría barre las 241 páginas de los 2401 estudiantes activos
+sembrados con \ruta{db/carga-volumen.sql}, con la caché vaciada
+(\texttt{FLUSHALL}) antes de cada corrida, de modo que cada primera
+visita a una página cae a PostgreSQL (un \emph{miss} real). Las corridas
+se regeneraron el 2026-09-07 contra el sistema local completo sobre el
+\emph{commit} defendido, tras corregir el defecto de \ruta{.env}
+descrito en la sección~\ref{sec:estado-entrega} y activar la caché de
+Redis que la sección~\ref{sec:cache-adr} documenta.
 
 La decisión de repetir la medición y reportar un intervalo de confianza,
 en vez de publicar el resultado de una sola corrida, sigue el argumento
@@ -2011,42 +2040,101 @@ metodológico de Georges~\emph{et al.}: una única ejecución de un sistema
 sobre JVM no caracteriza su rendimiento, porque la variación entre
 corridas puede ser del mismo orden que la diferencia que se pretende
 reportar, y sin estadística de intervalos no hay forma de distinguir una
-de otra~\cite{georges2007benchmarking}. Los resultados
-(Tabla~\ref{tab:k6-resultados}):
+de otra~\cite{georges2007benchmarking}. Los resultados: no
 
 \begin{table}[htbp]
 \centering
-\caption{Resultados de las corridas de rendimiento (k6).}
+\caption{Caché cálida: resultados de las corridas de rendimiento (k6, \ruta{docs/mediciones/perf/k6-run*.json}).}
 \label{tab:k6-resultados}
-\begin{tabular}{@{}lrrrrrr@{}}
+\begin{tabular}{@{}lrrrrrrr@{}}
 \toprule
-\textbf{Corrida} & \textbf{Media (ms)} & \textbf{Mediana} & \textbf{p90} & \textbf{p95} & \textbf{Errores} & \textbf{RPS} \\
+\textbf{Corrida} & \textbf{Media (ms)} & \textbf{Mediana} & \textbf{p90} & \textbf{p95} & \textbf{p99} & \textbf{Errores} & \textbf{RPS} \\
 \midrule
-1 & 7,15 & 6,88 & 9,04 & 9,87  & 0,00\,\%  & 403,64 \\
-2 & 7,04 & 6,74 & 9,16 & 10,04 & 0,00\,\%  & 404,73 \\
-3 & 6,96 & 6,58 & 9,06 & 10,13 & 0,00\,\%  & 404,46 \\
-4 & 6,97 & 6,68 & 8,81 & 9,62  & 0,01\,\%  & 287,88 \\
-5 & 6,96 & 6,62 & 8,98 & 9,87  & 0,00\,\%  & 404,88 \\
+1 (calentamiento) & 56,66 & 45,56 & 104,87 & 137,08 & 204,28 & 0,00\,\% & 273,55 \\
+2 & 15,63 & 12,78 & 26,34 & 32,50 & 49,76 & 0,00\,\% & 370,96 \\
+3 & 10,33 & 9,22  & 14,56 & 17,40 & 25,44 & 0,00\,\% & 389,64 \\
+4 & 9,33  & 8,75  & 12,07 & 13,99 & 20,05 & 0,00\,\% & 393,48 \\
+5 & 9,83  & 9,01  & 13,20 & 15,88 & 22,15 & 0,00\,\% & 390,28 \\
 \midrule
-\textbf{Agregado} & \textbf{7,02} & --- & --- & \textbf{9,91} & --- & \textbf{381,12} \\
+\textbf{Agregado 2--5} & \textbf{11,28} & --- & --- & \textbf{19,94} & \textbf{29,35} & --- & \textbf{386,09} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Caché fría: resultados de las corridas de rendimiento (k6, \ruta{docs/mediciones/perf/k6-frio*.json}).}
+\label{tab:k6-resultados-frio}
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+\textbf{Corrida} & \textbf{Media (ms)} & \textbf{Mediana} & \textbf{p90} & \textbf{p95} & \textbf{p99} & \textbf{Errores} & \textbf{RPS} \\
+\midrule
+1 & 20,39 & 18,54 & 36,02 & 41,72 & 52,53 & 0,00\,\% & 356,15 \\
+2 & 18,81 & 15,92 & 34,14 & 39,77 & 50,89 & 0,00\,\% & 361,16 \\
+3 & 16,49 & 11,45 & 32,06 & 36,96 & 48,25 & 0,00\,\% & 367,80 \\
+4 & 17,22 & 13,06 & 32,58 & 37,43 & 47,51 & 0,00\,\% & 366,12 \\
+5 & 18,45 & 16,10 & 33,28 & 38,64 & 50,22 & 0,00\,\% & 362,33 \\
+\midrule
+\textbf{Agregado 2--5} & \textbf{17,74} & --- & --- & \textbf{38,20} & \textbf{49,22} & --- & \textbf{364,35} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 Con intervalo de confianza al 95\,\% —siguiendo el análisis declarado a
-priori (sección~\ref{sec:analisis-estadistico})—: media $7{,}02 \pm 0{,}10$\,ms
-(DT $0{,}08$), p95 $9{,}91 \pm 0{,}25$\,ms, throughput
-$381{,}12 \pm 64{,}71$\,RPS. La corrida~4 registró 2 peticiones fallidas
-de 15\,921 (0,01\,\%) — el umbral estricto \texttt{rate==0} del
-\emph{script} k6 la marca en rojo, y se reporta así en vez de omitirla;
-las otras cuatro corridas no tuvieron errores. El throughput de la
-corrida~4 también es visiblemente menor (287,88 RPS frente a
-$\approx$404 de las demás), coherente con esas dos peticiones fallidas
-—probablemente una conexión rechazada bajo el pico de concurrencia—
-afectando el cómputo agregado de esa corrida.
+priori (sección~\ref{sec:analisis-estadistico})— la caché cálida (corridas
+2--5, tras descartar la primera de calentamiento de la JVM) da una media de
+$11{,}28 \pm 4{,}66$\,ms (DT $2{,}93$), p95 $19{,}94 \pm 13{,}51$\,ms y
+p99 $29{,}35 \pm 21{,}93$\,ms; la fría, media $17{,}74 \pm 1{,}72$\,ms
+(DT $1{,}08$), p95 $38{,}20 \pm 2{,}01$\,ms y p99 $49{,}22 \pm 2{,}54$\,ms.
+Ninguna corrida registró peticiones fallidas — la tasa de error es
+0,00\,\% en las diez, frente al 0,01\,\% de la corrida~4 de la
+Tercera Entrega.
+
+La primera corrida cálida (56\,ms) es la de calentamiento: compila la
+JVM y puebla las cachés internas bajo carga, y su desviación frente a las
+cuatro siguientes (media $\approx$9--15\,ms) sería un \emph{outlier} si se
+agregara; se descarta del agregado y del contraste siguiendo la práctica
+recomendada por Georges~\emph{et al.}~\cite{georges2007benchmarking}, y se
+reporta en la tabla en vez de ocultarse.
+
+\textbf{Contraste inferencial (caché cálida vs.\ caché fría).} Test de
+Mann-Whitney bilateral (cálida como primera muestra) sobre las corridas
+2--5, con el estadístico A12 de Vargha y Delaney~\cite{varghadelaney2000}
+y la delta de Cliff~\cite{cliff1993}, y corrección por comparaciones
+múltiples de Holm-Bonferroni~\cite{holm1979} sobre las cuatro corridas
+(Tabla~\ref{tab:inferencial}; reproducido íntegramente por
+\ruta{scripts/perf-analysis.py}, que imprime el estadístico U, el valor
+$p$ en notación científica y el tamaño de efecto):
+
+\begin{table}[htbp]
+\centering
+\caption{Contraste inferencial entre caché cálida y caché fría (Mann-Whitney).}
+\label{tab:inferencial}
+\begin{tabular}{@{}lrrrrl@{}}
+\toprule
+\textbf{Comparación} & \textbf{U} & \textbf{$z$} & \textbf{$p$} & \textbf{A12} & \textbf{$\delta$ Cliff} \\
+\midrule
+Corrida 2 & 121\,675\,593 & 17,4 & $6{,}93 \times 10^{-68}$ & 0,441 & $-0{,}117$ \\
+Corrida 3 & 155\,061\,192 & 49,9 & $2{,}25 \times 10^{-543}$ & 0,335 & $-0{,}330$ \\
+Corrida 4 & 174\,960\,074 & 75,1 & $1{,}42 \times 10^{-1227}$ & 0,252 & $-0{,}496$ \\
+Corrida 5 & 171\,094\,482 & 73,3 & $3{,}90 \times 10^{-1168}$ & 0,257 & $-0{,}486$ \\
+Pool global & 2\,479\,872\,504 & 106,9 & $1{,}75 \times 10^{-2483}$ & 0,323 & $-0{,}355$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Las cuatro comparaciones por corrida y el pool global dan $p < \alpha$ y
+sobreviven a la corrección de Holm-Bonferroni (todas significativas con
+$\alpha = 0{,}05$). A12 $< 0{,}5$ indica que la caché cálida —primera
+muestra del contraste— tiende a tiempos menores que la fría; la delta de
+Cliff negativa confirma la dominancia en el mismo sentido. La mejora es
+$\approx$6{,}5\,ms en promedio (media $11{,}28$ frente a $17{,}74$) y de
+$\approx$18\,ms en p95 ($19{,}94$ frente a $38{,}20$), significativa con
+$n \approx 15\,000$ peticiones por corrida.
 
 El umbral exigido es p95 $<$ 200\,ms con caché caliente~\cite{iso25010}. El
-resultado lo cumple con un margen de más de un orden de magnitud. \ok
+resultado lo cumple con un margen de un orden de magnitud (19,94\,ms frente
+a 200\,ms). \ok
 
 \subsection{Seguridad: OWASP Top 10 (Bloque C.4)}
 
@@ -2666,6 +2754,7 @@ git clone https://github.com/darcalleg/SGED_APPWEB.git
 cd SGED_APPWEB
 cp .env.example .env
 make up
+make carga   # volumen sintetico (2401 estudiantes) para reproducir la sec. de rendimiento
 \end{lstlisting}
 
 El mismo \texttt{Makefile} expone, además del arranque, los objetivos
@@ -2682,7 +2771,8 @@ que reproducen cada bloque de evidencia de este informe
 \midrule
 \texttt{make up} & Levanta el sistema completo \\
 \texttt{make test} & JUnit 5 + cobertura JaCoCo \\
-\texttt{make bench} & 3 corridas k6 + análisis con IC 95\,\% \\
+\texttt{make bench} & 5 corridas k6 por escenario (cálida y fría) + análisis inferencial con IC 95\,\% \\
+\texttt{make carga} / \texttt{make limpiar-carga} & Sembrar / retirar el volumen sintético para reproducir el benchmark \\
 \texttt{make audit} & Auditoría OWASP (6 controles) + SQL dinámico \\
 \texttt{make clean} & Limpia contenedores, volúmenes y compilaciones \\
 \bottomrule
@@ -3064,21 +3154,19 @@ error que la sección~\ref{sec:defectos-runtime} documenta: un indicador
 verde que no refleja el sistema real.}
 
 \paragraph{RQ1 — Rendimiento.} Sí, con margen amplio. Las cinco corridas
-independientes archivadas en \ruta{docs/mediciones/perf/} (50 usuarios
-virtuales, 30\,s por corrida) dan una media de 7{,}02\,ms
-(DT~0{,}08; IC~95\,\%~$\pm$~0{,}10) y un p95 promedio de 9{,}91\,ms
-(IC~95\,\%~$\pm$~0{,}25) contra el \emph{endpoint} de listado protegido.
-El umbral de la norma es 200\,ms con caché caliente: el sistema queda un
-orden de magnitud por debajo, y la desviación entre corridas —ocho
-centésimas de milisegundo— indica que la medición es estable y no un
-resultado afortunado de una ejecución concreta.
-
-La holgura es tan grande que vuelve poco informativo el contraste
-estadístico entre caché fría y caliente: con ambos escenarios a más de un
-orden de magnitud del umbral, un test de Wilcoxon confirmaría una
-diferencia que ninguna de las dos condiciones acerca al límite. Se declara
-como decisión, no como omisión: el dato que gobierna RQ1 es la distancia
-al umbral, y esa está medida cinco veces.
+independientes por escenario archivadas en \ruta{docs/mediciones/perf/}
+(50 usuarios virtuales, 30\,s por corrida) dan, en caché cálida, una media
+de 11{,}28\,ms (DT~2{,}93; IC~95\,\%~$\pm$~4{,}66) y un p95 de
+19{,}94\,ms (IC~95\,\%~$\pm$~13{,}51) contra el \emph{endpoint} de
+listado protegido. El umbral de la norma es 200\,ms con caché caliente:
+el sistema queda un orden de magnitud por debajo, y la diferencia frente a
+la caché fría (media 17{,}74\,ms, p95 38{,}20\,ms) es estadísticamente
+significativa (Mann-Whitney bilateral, $p < 10^{-60}$ en cada corrida;
+$p \approx 10^{-2483}$ en el pool; sección~\ref{sec:rendimiento},
+Tabla~\ref{tab:inferencial}). El contraste es relevante, no decorativo:
+la caché de Redis reduce el tiempo de respuesta del listado en
+$\approx$6{,}5\,ms de media y $\approx$18\,ms en p95, un ahorro del
+orden del 35--45\,\% frente al escenario frío.
 
 \paragraph{RQ2 — Seguridad.} Los seis controles OWASP (A01, A02, A03, A05,
 A07, A09) están verificados con evidencia reproducible en

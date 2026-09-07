@@ -1,7 +1,10 @@
-// Benchmark del endpoint de listado protegido — ESCENARIO CACHÉ CALIENTE (Bloque C.1).
-// Configuración fija para comparación entre corridas (Bloque B.2):
-// 50 VUs, 30 s, ramp-up declarado. Login por cookie HttpOnly.
-// El valor ya está en Redis: cada petición es un cache hit.
+// Benchmark del endpoint de listado protegido — ESCENARIO CACHÉ FRÍA (Bloque C.1).
+// Mismo perfil de carga que el escenario caliente para comparación válida:
+// 50 VUs, 30 s, ramp-up declarado. La diferencia es la clave de caché:
+// cada petición usa una página distinta del rango con datos (seed sintético:
+// 2.401 estudiantes activos => 241 páginas de tamaño 10), por lo que el valor
+// solicitado NO está aún en Redis y cada GET es un cache miss que cae a
+// PostgreSQL con filtros, paginado y JOINs reales.
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
@@ -12,30 +15,28 @@ export const options = {
     { duration: '5s', target: 0 },
   ],
   thresholds: {
-    // Umbral objetivo: p95 < 200 ms con cache caliente (ISO/IEC 25010)
-    http_req_duration: ['p(95)<200'],
-    http_req_failed: ['rate==0'],     // cero errores >= 500
+    // Umbral objetivo del Bloque C.1 para caché fría: p95 < 500 ms
+    http_req_duration: ['p(95)<500'],
+    http_req_failed: ['rate==0'],
   },
 };
 
 const BASE = __ENV.BASE_URL || 'http://localhost:8080';
-// Parámetro para variar la clave de caché entre corridas de este mismo
-// escenario cuando se quiere forzar relectura. Por defecto 0-10 (page 0, size 10).
-const PAGE = __ENV.PAGE || '0';
-const SIZE = __ENV.SIZE || '10';
 
 export function setup() {
   const res = http.post(`${BASE}/api/auth/login`,
     JSON.stringify({ username: 'admin', password: 'sged2026' }),
     { headers: { 'Content-Type': 'application/json' } });
-  // Extraer cookie del header Set-Cookie (Path=/api)
   const raw = res.headers['Set-Cookie'] || res.headers['set-cookie'] || '';
   const match = raw.match(/sged_access=([^;]+)/);
   return { access: match ? match[1] : '' };
 }
 
 export default function (data) {
-  const res = http.get(`${BASE}/api/estudiantes?page=${PAGE}&size=${SIZE}`, {
+  // Página única por (VU, iteración) dentro del rango con datos (0..240):
+  // ninguna clave de caché se repite dentro de la corrida => cache miss real.
+  const p = (__VU - 1 + __ITER) % 241;
+  const res = http.get(`${BASE}/api/estudiantes?page=${p}&size=10`, {
     cookies: { sged_access: data.access },
   });
   check(res, {

@@ -27,6 +27,11 @@ server_log.txt
 __pycache__/
 *.pyc
 
+# k6: salida NDJSON cruda por petición (decenas de MB por corrida). El
+# resumen JSON (k6-run*.json / k6-frio*.json) y las muestras extraídas
+# (*.samples.json) SÍ se versionan; el crudo completo no, por tamaño.
+docs/mediciones/perf/*.raw.json
+
 # LaTeX (docs/informe/) - binarios generados; las fuentes .tex/.bib SI se versionan
 docs/informe/*.aux
 docs/informe/*.log

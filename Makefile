@@ -41,12 +41,24 @@ test:
 	cd backend && ./mvnw -B clean test
 	@echo "Reporte JaCoCo: backend/target/site/jacoco/index.html"
 
-## Benchmark k6: 5 corridas independientes, 50 VUs, 30s (Bloque A.1, Entrega Final)
+## Benchmark k6: 5 corridas por escenario (caché cálida y fría), 50 VUs, 30s
+## (Bloque A.1 / 4.3). Ejecuta los scripts versionados en k6/ contra el
+## sistema en marcha; las corridas frías preceden cada iteración con una
+## limpieza de la caché para forzar misses reales.
 bench:
 	mkdir -p docs/mediciones/perf
 	for i in 1 2 3 4 5; do \
-	  k6 run k6/listado-estudiantes.js \
-	    --summary-export docs/mediciones/perf/k6-run$$i.json ; \
+	  docker run --rm --user root --network host \
+	    -v "$(CURDIR)/k6:/scripts" -v "$(CURDIR)/docs/mediciones/perf:/out" \
+	    grafana/k6 run /scripts/listado-estudiantes.js \
+	    --summary-export /out/k6-run$$i.json ; \
+	done
+	for i in 1 2 3 4 5; do \
+	  docker exec sged_redis redis-cli FLUSHALL >/dev/null ; \
+	  docker run --rm --user root --network host \
+	    -v "$(CURDIR)/k6:/scripts" -v "$(CURDIR)/docs/mediciones/perf:/out" \
+	    grafana/k6 run /scripts/listado-estudiantes-frio.js \
+	    --summary-export /out/k6-frio$$i.json ; \
 	done
 	python3 scripts/perf-analysis.py
 
