@@ -184,31 +184,30 @@ ZAP & \emph{Zed Attack Proxy} (OWASP) \\
 \label{sec:resumen-es}
 
 \textbf{Contexto y problema.} La escuela de fútbol formativo ProFútbol
-gestionaba manualmente la matrícula de estudiantes menores de edad,
-la asistencia, los pagos y el inventario deportivo, sin trazabilidad
-verificable ni control de acceso a datos sensibles. \textbf{Objetivo.}
-Este trabajo desarrolla y evalúa SGED, un sistema web que cubre esos
-cuatro dominios bajo una estrategia híbrida de acceso a datos (ORM y
-procedimientos almacenados parametrizados) y un proceso de ingeniería
-de requisitos conforme a ISO/IEC/IEEE~29148:2018. \textbf{Métodos.} Se
-siguió \emph{Design Science Research} (Peffers~\emph{et al.}) sobre una
-arquitectura C4 (Spring~Boot, Angular, PostgreSQL, Redis, Docker
-Compose), con autenticación JWT en cookie \texttt{HttpOnly}. La
-evaluación combina pruebas de carga (k6), auditoría de los seis
-controles OWASP~Top~10, cobertura de pruebas (JaCoCo), calidad web
-(Lighthouse) y usabilidad (\emph{System Usability Scale}, $N=15$), con
-datos crudos reproducibles. \textbf{Resultados principales.} El sistema
-cumple los umbrales de rendimiento (p95 bajo 200\,ms), los seis
-controles OWASP y la cobertura exigida; el proceso de medición
-detectó y corrigió tres instrumentos con lecturas engañosas, incluida
-una exposición real de datos de menores de edad (hallazgo H-08,
-corregido). La usabilidad agregada cruza apenas el umbral aceptable,
-pero esconde un patrón bimodal por rol de usuario.
+gestionaba manualmente la matrícula de menores de edad, la asistencia,
+los pagos y el inventario, sin trazabilidad verificable ni control de
+acceso a datos sensibles. \textbf{Objetivo.} Este trabajo desarrolla y
+evalúa SGED, un sistema web que cubre esos cuatro dominios bajo una
+estrategia híbrida de acceso a datos (ORM y procedimientos almacenados
+parametrizados) y un proceso de ingeniería de requisitos conforme a
+ISO/IEC/IEEE~29148:2018. \textbf{Métodos.} Se siguió \emph{Design
+Science Research} (Peffers~\emph{et al.}) sobre una arquitectura C4
+(Spring~Boot, Angular, PostgreSQL, Redis, Docker Compose), con
+autenticación JWT en cookie \texttt{HttpOnly}. La evaluación combina
+pruebas de carga (k6), auditoría de los seis controles OWASP~Top~10,
+cobertura de pruebas (JaCoCo), calidad web (Lighthouse) y usabilidad
+(\emph{System Usability Scale}, $N=15$), con datos crudos
+reproducibles. \textbf{Resultados principales.} El sistema cumple los
+umbrales de rendimiento (p95 bajo 200\,ms), los seis controles OWASP y
+la cobertura exigida; el proceso de medición detectó y corrigió tres
+instrumentos defectuosos, incluida una exposición real de datos de
+menores de edad (H-08, corregido). La usabilidad agregada cruza apenas
+el umbral, pero esconde un patrón bimodal por rol de usuario.
 \textbf{Conclusiones.} La estrategia híbrida de acceso a datos es
-sostenible sin sacrificar seguridad, y reportar instrumentos
+sostenible sin sacrificar seguridad, y reportar los instrumentos
 defectuosos —no solo sus resultados— es un aporte metodológico. Queda
-abierto el patrón bimodal de usabilidad y la exposición pública del
-dominio deportivo restante.
+abierto el patrón bimodal y la exposición pública del dominio deportivo
+restante.
 
 \textbf{Palabras clave:} sistemas de gestión escolar deportiva;
 ingeniería de requisitos; validación empírica de software; seguridad de
@@ -555,7 +554,7 @@ completo (sin ninguna prueba previa), el segundo proveedor de IA con el
 mismo patrón de degradación limpia que ya cubría al primero,
 \texttt{historial()} de \texttt{SesionEntrenamientoService} (el método
 con más \emph{branches} del servicio y sin ninguna prueba), y las ramas
-de reactivación y unidad de medida en blanco de \texttt{Articulo} y
+de reactivación y unidad de medida en blanco de \texttt{Item} y
 \texttt{Representante}. Resultado verificado con \texttt{mvn verify}
 completo, en limpio: \textbf{514 pruebas, 0 fallos}; agregada,
 82,87\,\% de líneas y 70,06\,\% de \emph{branches} de esa corrida
@@ -2844,26 +2843,26 @@ cobertura como líneas de autoría inflaría la medida sin reflejar trabajo
 
 \begin{table}[htbp]
 \centering
-\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log}).}
+\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log} sobre \texttt{main}, medido el 2026-09-06). La misma medición está en \ruta{CONTRIBUTORS.md}.}
 \label{tab:credit-cifras}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 \textbf{Integrante} & \textbf{\emph{Commits}} & \textbf{Líneas escritas} & \textbf{Archivos} \\
 \midrule
-Pallo Pinto Alejandro Daniel & 187 & 52\,016 & 556 \\
-Arcalle Grefa Darwin Orlando & 49 & 29\,720 & 488 \\
-Velez Lopez Ricardo Elias & 31 & 4\,458 & 105 \\
+Pallo Pinto Alejandro Daniel & 211 & 69\,850 & 1\,662 \\
+Arcalle Grefa Darwin Orlando & 58 & 45\,743 & 730 \\
+Velez Lopez Ricardo Elias & 41 & 6\,093 & 126 \\
 \midrule
-\textbf{Total en \texttt{main}} & \textbf{267} & \textbf{86\,194} & --- \\
+\textbf{Total en \texttt{main}} & \textbf{310} & \textbf{121\,686} & \textbf{2\,518} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \subsection{Roles por integrante}
 
-\textbf{Pallo Pinto Alejandro Daniel} — \emph{Software}, \emph{Validación},
-\emph{Curación de datos}, \emph{Redacción (borrador original)},
-\emph{Visualización}.
+\textbf{Pallo Pinto Alejandro Daniel} — \emph{Software}, \emph{Análisis
+formal}, \emph{Validación}, \emph{Curación de datos}, \emph{Redacción
+(borrador original)}, \emph{Visualización}.
 
 Responsable de la totalidad del eje de verificación que define esta
 entrega. En seguridad: migración del JWT de \texttt{localStorage} a cookie
@@ -2875,7 +2874,7 @@ funciones PL/pgSQL a procedimientos reales invocables con
 \texttt{@Procedure} (sección~\ref{sec:acceso-datos}) y fijación de
 imágenes por digest. En validación: las 57 pruebas que cerraron la
 primera regresión de cobertura (la suite siguió creciendo después, hasta
-las 479 actuales —sección~\ref{sec:cobertura}—), la corrección del defecto
+las 550 actuales —sección~\ref{sec:cobertura}—), la corrección del defecto
 por el que JaCoCo nunca había medido cobertura real, y las tres campañas
 de medición empírica (k6, OWASP, Lighthouse) junto con sus \emph{scripts}
 de análisis. En usabilidad: instrumento SUS, \emph{script} de cálculo
@@ -2885,7 +2884,8 @@ de las diez encuestas. En redacción: este informe y el corpus documental
 diccionario de datos, gobernanza del repositorio).
 
 \textbf{Arcalle Grefa Darwin Orlando} — \emph{Conceptualización},
-\emph{Software}, \emph{Administración del proyecto}.
+\emph{Software}, \emph{Investigación}, \emph{Administración del proyecto},
+\emph{Supervisión}.
 
 Estructura inicial del repositorio y del modelo de datos
 (\texttt{DataBase/}), trabajo sobre el \emph{frontend} Angular
@@ -2893,16 +2893,58 @@ Estructura inicial del repositorio y del modelo de datos
 administración del repositorio remoto, del que es propietario.
 Participación en la reestructuración en dominios
 \texttt{academico}/\texttt{deportivo}/\texttt{seguridad} descrita en la
-sección~\ref{sec:reestructuracion}.
+sección~\ref{sec:reestructuracion}. Relevamiento de requisitos con la
+escuela ProFútbol y recolección de evidencia empírica (\emph{Investigación}),
+y coordinación del equipo, calendario y entregas a lo largo de las cuatro
+fases (\emph{Administración del proyecto} y \emph{Supervisión}).
 
 \textbf{Velez Lopez Ricardo Elias} — \emph{Conceptualización},
-\emph{Software}, \emph{Metodología}.
+\emph{Software}, \emph{Validación}, \emph{Metodología}, \emph{Recursos},
+\emph{Redacción (revisión y edición)}.
 
 Arranque del \emph{frontend} Angular y del módulo de autenticación, CRUD
 inicial de \texttt{Estudiante}, y aportes a \ruta{docs/requisitos/} y
 \ruta{docs/observaciones/}. Autor principal de la reestructuración en tres
 dominios y de los cinco recursos CRUD nuevos, que es el cambio estructural
-sobre el que se apoya esta entrega.
+sobre el que se apoya esta entrega. Definición del proceso de
+investigación (DSR) y del protocolo de medición (\emph{Metodología}),
+configuración del entorno de despliegue en Render y de los contenedores
+Docker (\emph{Recursos}), y revisión de la documentación y su consistencia
+con el código (\emph{Redacción: revisión y edición}).
+
+\subsection{Cobertura de los catorce roles CRediT}
+
+La taxonomía CRediT define catorce roles. Trece quedan cubiertos por el
+equipo; \emph{Adquisición de fondos} no aplica a un Proyecto Fin de Curso
+sin financiamiento externo (Tabla~\ref{tab:credit-cobertura}). La misma
+tabla está en \ruta{CONTRIBUTORS.md}.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Cobertura de los catorce roles de la taxonomía CRediT.}
+\label{tab:credit-cobertura}
+\begin{tabular}{@{}p{3.2cm}p{2.6cm}p{8.0cm}@{}}
+\toprule
+\textbf{Rol CRediT} & \textbf{Integrante(s)} & \textbf{Cobertura} \\
+\midrule
+Conceptualización & Ricardo, Darwin & Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. \\
+Curación de datos & Alejandro & Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. \\
+Análisis formal & Alejandro & Análisis estadístico de los datos de rendimiento y usabilidad (intervalos de confianza, distribución \emph{t}). \\
+Adquisición de fondos & --- & No aplica (proyecto académico sin financiación externa). \\
+Investigación & Darwin & Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. \\
+Metodología & Ricardo & Proceso de investigación (DSR) y protocolo de medición. \\
+Administración del proyecto & Darwin & Administración del proyecto, calendario y gestión de entregas. \\
+Recursos & Ricardo & Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. \\
+Software & Alejandro, Ricardo, Darwin & Implementación de backend (Spring~Boot), \emph{frontend} (Angular) y procedimientos almacenados. \\
+Supervisión & Darwin & Coordinación del equipo y seguimiento del repositorio. \\
+Validación & Alejandro, Ricardo & Cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. \\
+Visualización & Alejandro & Diagramas C4 y de arquitectura del sistema. \\
+Redacción (borrador original) & Alejandro & Redacción del informe, del SRS y de la documentación técnica. \\
+Redacción (revisión y edición) & Ricardo & Revisión y corrección de la documentación y su consistencia con el código. \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{Dos advertencias sobre la medida}
 
@@ -2912,23 +2954,20 @@ control de acceso pesa más que dos mil líneas de documentación. La tabla
 se incluye porque el criterio de evaluación exige autoría verificable, no
 para establecer una jerarquía entre integrantes.
 
-\textbf{Dos \emph{commits} figuran bajo la cuenta \texttt{DannaN24}}
-(\texttt{dninasuntar@uteq.edu.ec}), del 2026-06-29, y son trabajo de
-\textbf{Pallo Pinto Alejandro Daniel}: esa era la sesión configurada en el
-equipo de la universidad que utilizó ese día. Ya quedaba insinuado en el
-propio historial (\emph{commit} \texttt{a456255}, del mismo día). Están
-sumados a su fila en la tabla anterior. No se reescribió el historial de
-\texttt{git} —hacerlo sobre ramas ya compartidas con el equipo habría
-roto sus copias locales—; la aclaración se hace por escrito aquí y en
-\ruta{CONTRIBUTORS.md}, que es el mecanismo apropiado para una corrección
-de autoría a posteriori.
-
-Adicionalmente, varios \emph{commits} de Ricardo y Darwin usan correos
-personales en vez del institucional, y la cuenta de Ricardo aparece con
-dos identidades (\texttt{ricardoforever@outlook.es} y
-\texttt{ricardo@email.com}). Las cifras de la tabla las consolidan como
-una sola persona. Se recomienda unificar \texttt{git config user.email}
-antes de la Entrega Final.
+\textbf{La identidad de \texttt{git} quedó unificada en correos
+institucionales.} Al preparar el repositorio para la Entrega Final se
+reorganizó el historial para que todos los \emph{commits} de \texttt{main}
+quedaran atribuidos a los tres correos \texttt{@uteq.edu.ec} del equipo
+(\texttt{dpallop}, \texttt{rvelezl3}, \texttt{darcalleg}). El estado
+anterior mezclaba correos personales (\texttt{outlook.es},
+\texttt{gmail.com}), un tipeo (\texttt{uteq.edue.ec}) y dos \emph{commits}
+del 2026-06-29 que —por la sesión configurada en un equipo de la
+universidad— figuraban bajo la cuenta \texttt{DannaN24}, siendo trabajo de
+\textbf{Pallo Pinto Alejandro Daniel} y ya sumados a su fila en la tabla
+anterior. Ninguno de esos correos aparece ya en \texttt{git log}: solo la
+atribución de autoría cambió, no el contenido de ningún archivo. La
+comprobación se repite listando los autores de \texttt{main} con
+\texttt{git log}; el detalle está en \ruta{CONTRIBUTORS.md}.
 
 % ============================================================
 \section{Trazabilidad y honestidad académica}
@@ -2938,13 +2977,13 @@ historia de usuario, su caso de uso, su \emph{endpoint}, el archivo que lo
 implementa, la prueba JUnit que lo cubre y la evidencia empírica
 correspondiente.
 
-El historial de \texttt{git} evidencia la autoría de cada integrante. Se
-documenta en \ruta{CONTRIBUTORS.md} que dos \emph{commits} figuran bajo una
-cuenta distinta por haber sido realizados desde un equipo de la universidad
-con otra sesión configurada; la aclaración se hace por escrito en lugar de
-reescribir el historial ya compartido. El mismo archivo declara
-explícitamente el uso de herramientas de asistencia por inteligencia
-artificial, siguiendo la guía de transparencia del SWEBOK
+El historial de \texttt{git} evidencia la autoría de cada integrante. Al
+preparar la Entrega Final se reorganizó ese historial para unificar la
+identidad de cada autor en su correo institucional \texttt{@uteq.edu.ec}
+—sin alterar el contenido de ningún archivo—, y \ruta{CONTRIBUTORS.md}
+documenta el estado anterior y cómo verificar el resultado. El mismo
+archivo declara explícitamente el uso de herramientas de asistencia por
+inteligencia artificial, siguiendo la guía de transparencia del SWEBOK
 v4.0~\cite{swebok2024}.
 
 % ============================================================
@@ -3199,25 +3238,25 @@ declarados sin omisiones en \ruta{docs/etica/ETHICS.md} y en la sección
 de Consideraciones éticas de este documento.
 
 \textbf{Contribuciones de autores (CRediT).} De los catorce roles de la
-taxonomía CRediT, ocho están efectivamente asignados a algún integrante
-—\emph{Conceptualización}, \emph{Metodología}, \emph{Software},
-\emph{Validación}, \emph{Curación de datos}, \emph{Redacción (borrador
-original)}, \emph{Visualización} y \emph{Administración del
-proyecto}—; los seis restantes (\emph{Análisis formal},
-\emph{Investigación}, \emph{Recursos}, \emph{Redacción (revisión y
-edición)}, \emph{Supervisión}, \emph{Adquisición de fondos}) no
-aplican a un Proyecto Fin de Curso sin financiamiento externo ni
-supervisión formal más allá de la docente-directora, y no se fuerzan
-para completar el conteo. El detalle por integrante, con evidencia
-cuantitativa derivada del historial de \texttt{git} y no
-autodeclarada, está en la sección~\ref{sec:credit} y en
-\ruta{CONTRIBUTORS.md}.
+taxonomía CRediT, trece quedan cubiertos por el equipo; el único que no
+aplica es \emph{Adquisición de fondos}, al ser un Proyecto Fin de Curso
+sin financiamiento externo. El reparto —\emph{Conceptualización}
+(Ricardo, Darwin), \emph{Curación de datos}, \emph{Análisis formal},
+\emph{Visualización} y \emph{Redacción (borrador original)} (Alejandro),
+\emph{Investigación}, \emph{Administración del proyecto} y
+\emph{Supervisión} (Darwin), \emph{Metodología}, \emph{Recursos} y
+\emph{Redacción (revisión y edición)} (Ricardo), \emph{Validación}
+(Alejandro, Ricardo) y \emph{Software} (los tres)— se deriva de la
+evidencia del historial de \texttt{git}, no es autodeclarado. El detalle
+por integrante y la tabla de cobertura rol por rol están en la
+sección~\ref{sec:credit} y en \ruta{CONTRIBUTORS.md}.
 
 \textbf{Conflictos de interés.} El equipo declara la ausencia de
 conflictos de interés: ningún integrante tiene relación contractual,
 financiera o personal con la escuela ProFútbol ni con ningún proveedor
-mencionado en este documento (Fly.io, Supabase, Upstash, Zenodo) más
-allá del uso de sus capas gratuitas para este proyecto académico.
+mencionado en este documento (Render, Supabase, GitHub, Google/Gemini y
+Zenodo) más allá del uso de sus capas gratuitas para este proyecto
+académico.
 
 \textbf{Financiamiento.} Este trabajo no recibió financiamiento externo.
 Es un Proyecto Fin de Curso de la asignatura Aplicaciones Web,
