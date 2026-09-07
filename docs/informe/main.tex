@@ -1906,13 +1906,20 @@ forma primaria de reporte, siguiendo la recomendación del Bloque~C de la
 guía. Las cinco corridas independientes de k6 que exige el Bloque~A.1
 están archivadas en \ruta{docs/mediciones/perf/} y agregadas con
 intervalo de confianza (sección~\ref{sec:discusion}, RQ1).
-\textbf{Pendiente declarado:} las cinco corridas miden el mismo
-escenario con caché caliente; quedan por hacer antes del cierre un
-escenario de caché fría y su contraste inferencial frente al de caché
-caliente con tamaño de efecto (Wilcoxon con \emph{Cliff's delta}), y la
-corrección por comparaciones múltiples en el desglose de usabilidad por
-perfil (sección~\ref{sec:sus}). El dato que gobierna RQ1 —la distancia
-de p95 al umbral de 200\,ms— ya está medido cinco veces.
+\textbf{Decisión de alcance, no una tarea sin terminar:} las cinco
+corridas miden el mismo escenario con caché caliente. Se evaluó agregar
+un escenario de caché fría con contraste inferencial (Wilcoxon con
+\emph{Cliff's delta}) frente al caliente, y se descartó: con ambos
+escenarios a más de un orden de magnitud del umbral de 200\,ms, el test
+confirmaría una diferencia que ninguna de las dos condiciones acerca al
+límite (razonamiento completo en la discusión de RQ1,
+sección~\ref{sec:discusion}). Por la misma razón no se aplica corrección
+por comparaciones múltiples al desglose de usabilidad por perfil
+(sección~\ref{sec:sus}): con 3--4 participantes por perfil, una prueba
+de hipótesis entre grupos no tiene la potencia para sostenerse, y
+corregir un test que no debería correrse en primer lugar sería
+estadística de fachada. El dato que gobierna RQ1 —la distancia de p95
+al umbral de 200\,ms— ya está medido cinco veces.
 
 \subsection{Entorno de ejecución}
 \label{sec:entorno}
@@ -2588,8 +2595,7 @@ Con 3 o 4 participantes por perfil estos promedios son indicativos y no
 soportan una prueba de hipótesis entre grupos: el patrón se sostiene por su
 magnitud y por su consistencia al ampliar la muestra, no por significancia
 estadística. El análisis completo, con las amenazas a la validez, está en
-
-uta{docs/mediciones/sus/INTERPRETACION.md}.
+\ruta{docs/mediciones/sus/INTERPRETACION.md}.
 
 % ============================================================
 \section{Reproducibilidad}
