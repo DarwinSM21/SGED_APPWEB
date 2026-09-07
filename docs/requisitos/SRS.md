@@ -545,16 +545,36 @@ si es una jornada extra).
 
 ---
 
-**RF-19 — Registro de asistencia** 🟢 Implementado (parcial: QR y manual; RFID no)
-*El sistema deberá registrar la asistencia de cada estudiante a cada sesión,
-admitiendo el marcaje por RFID o manual, con estado PRESENTE, TARDE, AUSENTE
-o JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
+**RF-19 — Registro de asistencia** ✅ Implementado (dividido en RF-19a/RF-19b — ver nota)
+
+> **Corrección (2026-09-07).** El enunciado original exigía "el marcaje por
+> RFID o manual" como si fueran una sola capacidad Must, cuando en realidad
+> una vía está implementada y la otra no — un Must parcialmente cumplido no
+> deja ver, sin leer la prosa, qué parte falta. Se divide en dos requisitos
+> con estado independiente, siguiendo la misma disciplina que ya se aplicó
+> en otras entradas de este documento.
+
+**RF-19a — Registro de asistencia por QR o manual** ✅ Implementado
+*El sistema deberá registrar la asistencia de cada estudiante a cada sesión
+mediante código QR (marcado por el propio estudiante) o lista manual
+(marcada por el entrenador), con estado PRESENTE, TARDE, AUSENTE o
+JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
 mismo estudiante en la misma sesión.*
 
 - **Prioridad:** Alta · **MoSCoW:** Must — precondición de notificaciones
   (RF-22) e historial (RF-35).
 
-Esquema: `deportivo.asistencias`, con
+**RF-19b — Registro de asistencia por RFID** ⬜ Planificado
+*El sistema deberá admitir el marcaje de asistencia mediante lector RFID
+como vía adicional a RF-19a.*
+
+- **Prioridad:** Baja · **MoSCoW:** Could — la escuela no dispone hoy de
+  lector físico; sin ese hardware no hay forma de verificar la capacidad
+  aunque se programe. El `CHECK` de `metodo` en el esquema ya admite el
+  valor `'RFID'` (ver más abajo), así que activarla no exige migración,
+  solo el lector y el endpoint.
+
+Esquema (común a ambos): `deportivo.asistencias`, con
 `UNIQUE (id_sesion, id_estudiante)` y `CHECK` sobre `metodo` y `estado`.
 
 Dos vías de marcaje, y la distinción entre ambas se conserva en el dato:
@@ -571,9 +591,7 @@ escrito como si el chico hubiera llegado dos horas tarde a una sesión a la que
 llegó puntual. Así la columna significa algo preciso: si hay hora, la midió el
 QR; si no la hay, es palabra del entrenador.
 
-El marcaje **RFID sigue sin implementar**: exige un lector físico del que la
-escuela no dispone. El `CHECK` de `metodo` ya admite el valor `'RFID'`, de modo
-que incorporarlo no requiere migración de esquema.
+RFID es RF-19b, arriba: sin lector físico, sin implementar.
 
 Endpoints: `GET /api/asistencias/sesion/{id}` (nómina completa de la categoría,
 no solo quienes ya marcaron) y `PUT /api/asistencias/sesion/{id}` (upsert
@@ -582,19 +600,29 @@ consultar pero no editar: nadie pudo asistir todavía.
 
 ---
 
-**RF-20 — Evaluación diaria del desempeño** 🟡 Modelado
+**RF-20 — Evaluación diaria del desempeño** ✅ Implementado (corregido 2026-09-07 — ver nota)
 *El sistema deberá permitir al entrenador evaluar a cada estudiante por
 criterios configurables (técnica, condición física, táctica y actitud),
 registrando la posición jugada ese día, y deberá impedir puntajes negativos
 y evaluaciones duplicadas del mismo estudiante y criterio dentro de una
 misma evaluación.*
 
-- **Prioridad:** Media · **MoSCoW:** Should — solo esquema, sin
-  `endpoint` todavía.
+- **Prioridad:** Media · **MoSCoW:** Should
+- **Origen:** `EvaluacionDiariaController` (`GET /api/evaluaciones/sesion/{idSesion}`,
+  `PUT /api/evaluaciones/sesion/{idSesion}/jugadores`,
+  `POST /api/evaluaciones/sesion/{idSesion}/finalizar`) —
+  `deportivo/evaluacion/controller/EvaluacionDiariaController.java`
+- **Verificación:** `EvaluacionDiariaServiceTest`, `EvaluacionDiariaControllerTest`.
 
 Esquema: `deportivo.evaluaciones_diarias`, `deportivo.criterios_evaluacion`,
 `deportivo.detalle_evaluacion`, con `CHECK (puntaje >= 0)` y
 `UNIQUE (id_evaluacion, id_estudiante, id_criterio)`.
+
+> **Corrección (2026-09-07).** Esta entrada declaraba "solo esquema, sin
+> endpoint todavía" — ya no es cierto: el controlador con sus 3 rutas existe
+> desde antes de esta revisión. El estado no se había actualizado cuando se
+> implementó. RF-21, en cambio, sigue correctamente en Modelado: existe la
+> vista `deportivo.v_promedio_evaluacion` pero ningún controlador la expone.
 
 ---
 
@@ -709,15 +737,23 @@ esa dependencia.
 > justamente a quien apunta esta notificación. Ver
 > `docs/superpowers/specs/2026-08-12-coherencia-rol-y-vinculo-representante-design.md`.
 
-> **Precisión sobre "sin esquema" (2026-07-30).** Existe un paquete
-> `academico.representante` en el código (`RepresentanteController` y sus
-> DTOs), pero **todos sus archivos están vacíos** (0 bytes) — es una
-> carpeta reservada para la Entrega Final, no una implementación parcial.
-> Lo mismo aplica a `deportivo.equipo` (`EquipoController` es una clase
-> vacía de 5 líneas). Ninguno de los dos tiene tabla en `db/schema.sql`.
-> Se documenta para que no se confunda "el paquete existe" con
-> "está implementado" — exactamente el tipo de brecha que OBS-12 pidió
-> dejar de repetir.
+> **Corrección (2026-09-07).** Esta nota decía que el paquete
+> `academico.representante` estaba vacío (0 bytes) — ya no es cierto, y no
+> lo era desde antes de esta revisión: quedó desactualizada cuando el
+> paquete se llenó. Hoy (renombrado a `academico.guardian` en el rename al
+> inglés de esta entrega) tiene DTOs, repositorios, servicios y entidades
+> con contenido real, y tres controladores con rutas propias:
+> `GuardianController` (`/api/representantes`, 9 rutas: CRUD, reactivación,
+> vincular/desvincular estudiante), `GuardianReportController`
+> (`/api/representante`, 7 rutas: informe del representado, comentario,
+> notificaciones) y `ConsentController` (`/api/consentimientos`, 3 rutas:
+> alta, revocación, consulta — ver A2 más abajo). Ver también RF-24/RF-25
+> para la gestión de representantes como recurso propio.
+>
+> El módulo `deportivo.equipo` mencionado en la versión anterior de esta
+> nota ya no existe ni siquiera como paquete vacío — se eliminó del
+> código. Sigue **Planificado** (fila "Equipo" de la matriz de
+> trazabilidad): sin esquema ni endpoint, solo declarado.
 >
 > **Actualización 2026-08-12.** Al reconciliar la base de Supabase para
 > el módulo Inventario se descubrió que sí existía, creado a mano y
@@ -920,11 +956,26 @@ Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
 ### 4.3 Fiabilidad y mantenibilidad
 
 **RNF-09 — Cobertura de pruebas**
-*El sistema deberá mantener una cobertura de instrucciones igual o superior
-al 60 %, verificada automáticamente en la construcción.*
+*El sistema deberá mantener una cobertura de líneas y de ramas (*branches*)
+igual o superior al 70 %, verificada automáticamente en la construcción.*
+
+> **Corrección (2026-09-07).** El enunciado y la cifra de abajo citaban
+> 60 % de instrucciones — ese nunca fue el valor configurado en `pom.xml`
+> (que exige 70 % en `LINE` y en `BRANCH`, sin excepciones de paquete) y la
+> cifra estaba fechada 2026-07-30, mucho antes del estado actual del
+> código. Cifra vigente, regenerada el 2026-09-07 tras el rename de
+> identificadores de esta entrega (`./mvnw clean verify`): **84,63 % de
+> líneas (2638/3117) y 71,24 % de branches (664/932), 550 pruebas en 74
+> clases, 200 clases analizadas — CUMPLE el 70 % en ambas métricas.**
+> Desglose por subdominio en `docs/informe/main.tex`
+> (Tabla `tab:cobertura-por-paquete`, 25 filas) y dato crudo en
+> `docs/mediciones/jacoco/jacoco.csv`. La bitácora original de esta
+> jornada (72,5 % el 2026-07-30) se conserva abajo sin alterar, como
+> registro histórico de cómo se llegó hasta acá — no como cifra vigente.
 
 - **Medido el 2026-07-30 con construcción limpia (`./mvnw clean test`):
-  72,5 % (2507 instrucciones cubiertas de 3457) — CUMPLE el umbral de 60 %.**
+  72,5 % (2507 instrucciones cubiertas de 3457) — cifra histórica, no
+  vigente (ver corrección arriba).**
 - 102 pruebas en 17 clases, **todas pasan** (0 fallos, 0 errores).
 - **Por qué "construcción limpia" aparece explícito aquí:** la primera
   medición de esta jornada se hizo con `./mvnw test` sobre un `target/`
