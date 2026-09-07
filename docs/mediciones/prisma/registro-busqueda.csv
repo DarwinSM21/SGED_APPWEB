@@ -1,0 +1,7 @@
+eje,busqueda_num,cadena_de_busqueda,ventana_temporal,motor,resultado_crudo_archivado
+"Sistemas de gestion escolar o deportiva basados en web",1,"(school OR sport* OR club) AND (management OR information) AND (system OR platform)",2016-2026,"motor de busqueda web general (sin acceso de suscripcion a IEEE Xplore/ACM DL/Scopus/ScienceDirect/Springer Link)","no"
+"Autenticacion JWT y su seguridad",2,"(JWT OR ""JSON Web Token"") AND (security OR vulnerabilit* OR cookie OR storage)",2016-2026,"motor de busqueda web general","no"
+"Acceso a datos hibrido ORM/procedimientos almacenados",3,"(ORM OR ""object-relational mapping"") AND (""stored procedure*"") AND (performance OR maintenance OR security)",2016-2026,"motor de busqueda web general","no"
+"Evaluacion empirica de seguridad con OWASP",4,"(OWASP) AND (empirical OR evaluation OR ""case study"")",2016-2026,"motor de busqueda web general","no"
+"Usabilidad (SUS) en sistemas administrativos o educativos",5,"(SUS OR ""system usability scale"") AND (school OR educational OR administrative)",2016-2026,"motor de busqueda web general","no"
+"Ingenieria de requisitos en cursos capstone",6,"(capstone OR ""final year project"") AND (""requirements engineering"" OR ""software engineering education"")",2016-2026,"motor de busqueda web general","no"
