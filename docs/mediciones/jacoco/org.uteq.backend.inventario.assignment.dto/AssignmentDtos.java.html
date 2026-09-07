@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssignmentDtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.assignment.dto</a> &gt; <span class="el_source">AssignmentDtos.java</span></div><h1>AssignmentDtos.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.assignment.dto;
+
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import org.uteq.backend.inventario.assignment.entity.Assignment.AssignmentStatus;
+import org.uteq.backend.inventario.assignment.entity.Assignment.RecipientType;
+
+import java.time.Instant;
+import java.time.LocalDate;
+
+public final class AssignmentDtos {
+    private AssignmentDtos() {}
+
+<span class="fc" id="L15">    public record AssignmentRequest(</span>
+            @NotNull(message = &quot;El artículo es obligatorio&quot;)
+            Long idArticulo,
+            @NotNull(message = &quot;La cantidad es obligatoria&quot;)
+            @Min(value = 1, message = &quot;La cantidad debe ser mayor a cero&quot;)
+            Integer cantidad,
+            @NotNull(message = &quot;El tipo de destinatario es obligatorio&quot;)
+            RecipientType tipoDestinatario,
+            Long idEstudiante,
+            Long idEntrenador,
+            LocalDate fechaDevolucionEsperada,
+            @Size(max = 255, message = &quot;Las observaciones no pueden superar los 255 caracteres&quot;)
+            String observaciones
+    ) {}
+
+<span class="fc" id="L30">    public record ReturnRequest(</span>
+            @NotNull(message = &quot;El estado de devolución es obligatorio&quot;)
+            AssignmentStatus estado,
+            @Size(max = 255, message = &quot;Las observaciones no pueden superar los 255 caracteres&quot;)
+            String observaciones
+    ) {}
+
+<span class="fc" id="L37">    public record AssignmentResponse(</span>
+            Long idAsignacion,
+            Long idArticulo,
+            String articulo,
+            Integer cantidad,
+            RecipientType tipoDestinatario,
+            Long idEstudiante,
+            String estudiante,
+            Long idEntrenador,
+            String entrenador,
+            LocalDate fechaAsignacion,
+            LocalDate fechaDevolucionEsperada,
+            LocalDate fechaDevolucionReal,
+            AssignmentStatus estado,
+            String registradoPor,
+            String observaciones,
+            Instant createdAt
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

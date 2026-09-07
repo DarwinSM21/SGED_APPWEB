@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EvaluacionDiariaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.service</a> &gt; <span class="el_source">EvaluacionDiariaService.java</span></div><h1>EvaluacionDiariaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EvaluacionDiariaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.service</a> &gt; <span class="el_source">EvaluacionDiariaService.java</span></div><h1>EvaluacionDiariaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.evaluacion.dto.EvaluacionDtos.*;
@@ -13,7 +13,7 @@ import org.uteq.backend.deportivo.evaluacion.entity.*;
 import org.uteq.backend.deportivo.evaluacion.repository.*;
 import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
 import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
 import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
 
@@ -45,7 +45,7 @@ public class EvaluacionDiariaService {
     private final SesionEntrenamientoRepository sesionRepository;
     private final LesionRepository lesionRepository;
     private final PosicionRepository posicionRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
 
     /**
      * Abre la pantalla de evaluación de una sesión. Si todavía no existe la
@@ -57,12 +57,12 @@ public class EvaluacionDiariaService {
      * @param idSesion identificador de la sesión
      * @return criterios activos, jugadores evaluables con su precarga y el
      *         estado de la evaluación
-     * @throws RecursoNoEncontradoException si la sesión no existe
+     * @throws ResourceNotFoundException si la sesión no existe
      */
     @Transactional
     public EvaluacionSesionResponse abrir(Long idSesion) {
 <span class="fc" id="L64">        SesionEntrenamiento sesion = sesionRepository.findById(idSesion)</span>
-<span class="fc" id="L65">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;No existe la sesion &quot; + idSesion));</span>
+<span class="fc" id="L65">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No existe la sesion &quot; + idSesion));</span>
 
 <span class="fc" id="L67">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
 <span class="pc" id="L68">                .orElseGet(() -&gt; evaluacionRepository.save(EvaluacionDiaria.builder()</span>
@@ -85,11 +85,11 @@ public class EvaluacionDiariaService {
 <span class="fc" id="L85">            asistenciaPorEstudiante.put(asistencia.getEstudiante().getIdEstudiante(), asistencia);</span>
 <span class="fc" id="L86">        }</span>
 
-<span class="fc" id="L88">        List&lt;Estudiante&gt; estudiantesCategoria = estudianteRepository</span>
+<span class="fc" id="L88">        List&lt;Student&gt; estudiantesCategoria = estudianteRepository</span>
 <span class="fc" id="L89">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(sesion.getCategoria().getIdCategoria());</span>
 
 <span class="fc" id="L91">        List&lt;JugadorEvaluableResponse&gt; jugadores = new ArrayList&lt;&gt;();</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (Estudiante estudiante : estudiantesCategoria) {</span>
+<span class="fc bfc" id="L92" title="All 2 branches covered.">        for (Student estudiante : estudiantesCategoria) {</span>
 <span class="fc" id="L93">            jugadores.add(construirJugador(</span>
 <span class="fc" id="L94">                    estudiante, asistenciaPorEstudiante.get(estudiante.getIdEstudiante()),</span>
                     evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
@@ -108,7 +108,7 @@ public class EvaluacionDiariaService {
 <span class="fc" id="L108">                evaluacion.getObservacionGeneral());</span>
     }
 
-    private JugadorEvaluableResponse construirJugador(Estudiante estudiante, Asistencia asistencia,
+    private JugadorEvaluableResponse construirJugador(Student estudiante, Asistencia asistencia,
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
                                                       Map&lt;Long, Long&gt; lesionActivaPorEstudiante) {
@@ -178,19 +178,19 @@ public class EvaluacionDiariaService {
      * @param idSesion identificador de la sesión
      * @param request  posición jugada ({@code null} = quitarla) y puntajes
      *                 por criterio
-     * @throws RecursoNoEncontradoException si la sesión no tiene evaluación
+     * @throws ResourceNotFoundException si la sesión no tiene evaluación
      *                                      abierta o la posición no existe
      * @throws IllegalArgumentException     si la evaluación ya fue
      *                                      finalizada, el estudiante no tiene
      *                                      asistencia habilitante, o un
      *                                      puntaje supera su máximo
      */
-    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p1.idEstudiante&quot;,
+    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p1.idEstudiante&quot;,
             descripcionSpel = &quot;'editó estadísticas de estudiante #' + #p1.idEstudiante&quot;)
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
 <span class="fc" id="L192">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
-<span class="pc" id="L193">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="pc" id="L193">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
                         &quot;La sesion &quot; + idSesion + &quot; no tiene evaluacion abierta&quot;));
 
 <span class="fc bfc" id="L196" title="All 2 branches covered.">        if (evaluacion.estaFinalizada()) {</span>
@@ -226,7 +226,7 @@ public class EvaluacionDiariaService {
         // explícita de &quot;quitar la posición&quot;, no &quot;no tocar nada&quot;.
 <span class="pc bpc" id="L227" title="1 of 2 branches missed.">        if (request.idPosicionJugada() != null) {</span>
 <span class="nc" id="L228">            ee.setPosicionJugada(posicionRepository.findById(request.idPosicionJugada())</span>
-<span class="nc" id="L229">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="nc" id="L229">                    .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
 <span class="nc" id="L230">                            &quot;No existe la posicion &quot; + request.idPosicionJugada())));</span>
         } else {
 <span class="fc" id="L232">            ee.setPosicionJugada(null);</span>
@@ -279,16 +279,16 @@ public class EvaluacionDiariaService {
      * @param idSesion           identificador de la sesión
      * @param observacionGeneral observación general de la sesión; puede ser
      *                           {@code null}
-     * @throws RecursoNoEncontradoException si la sesión no tiene evaluación
+     * @throws ResourceNotFoundException si la sesión no tiene evaluación
      *                                      abierta
      * @throws IllegalArgumentException     si ya estaba finalizada
      */
-    @Auditado(accion = &quot;EDITAR&quot;, entidad = &quot;EvaluacionDiaria&quot;, idSpel = &quot;#p0&quot;,
+    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;EvaluacionDiaria&quot;, idSpel = &quot;#p0&quot;,
             descripcionSpel = &quot;'finalizó la evaluación de la sesión #' + #p0&quot;)
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
 <span class="fc" id="L290">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
-<span class="pc" id="L291">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="pc" id="L291">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
                         &quot;La sesion &quot; + idSesion + &quot; no tiene evaluacion abierta&quot;));
 
 <span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (evaluacion.estaFinalizada()) {</span>

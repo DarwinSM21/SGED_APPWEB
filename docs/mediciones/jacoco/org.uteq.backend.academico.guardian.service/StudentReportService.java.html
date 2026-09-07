@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentReportService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.guardian.service</a> &gt; <span class="el_source">StudentReportService.java</span></div><h1>StudentReportService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.guardian.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.academico.guardian.dto.ReportDtos.*;
+import org.uteq.backend.academico.guardian.entity.Guardian;
+import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianRepository;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
+import org.uteq.backend.common.ia.AIFeedbackGenerator;
+import org.uteq.backend.common.ia.AnonymousPlayerProfile;
+import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
+import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
+import org.uteq.backend.deportivo.lesion.entity.Lesion;
+import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Lectura de informes para el representante o el estudiante autenticado.
+ *
+ * &lt;p&gt;Recibe {@code username} como parámetro plano en vez de leer el contexto
+ * de seguridad aquí: el principal se resuelve siempre en el controlador, así
+ * este servicio se prueba con un {@code String} cualquiera sin simular
+ * contexto.
+ *
+ * &lt;p&gt;El chequeo de pertenencia (vínculo activo representante-estudiante) es
+ * lo único que autoriza esta lectura, y responde {@code 404} uniforme tanto
+ * si el estudiante no existe como si no es un representado suyo: distinguir
+ * los casos confirmaría que un id ajeno corresponde a un estudiante real.
+ */
+@Service
+@RequiredArgsConstructor
+public class StudentReportService {
+    private final GuardianRepository representanteRepository;
+    private final GuardianStudentRepository vinculoRepository;
+    private final StudentRepository estudianteRepository;
+    private final LesionRepository lesionRepository;
+    private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+    private final AsistenciaRepository asistenciaRepository;
+    private final AIFeedbackGenerator generadorFeedback;
+
+    /**
+     * Lista de estudiantes a cargo del representante dueño de la cuenta.
+     *
+     * @param username nombre de usuario del representante autenticado
+     * @return el resumen de cada representado
+     * @throws ResourceNotFoundException si la cuenta no tiene un
+     *                                      representante asociado
+     */
+    @Transactional(readOnly = true)
+    public List&lt;StudentSummaryResponse&gt; myStudents(String username) {
+<span class="fc" id="L62">        Guardian representante = representanteDe(username);</span>
+<span class="fc" id="L63">        return vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(representante.getIdRepresentante())</span>
+<span class="fc" id="L64">                .stream()</span>
+<span class="fc" id="L65">                .map(v -&gt; {</span>
+<span class="fc" id="L66">                    Student e = v.getEstudiante();</span>
+<span class="fc" id="L67">                    return new StudentSummaryResponse(</span>
+<span class="fc" id="L68">                            e.getIdEstudiante(),</span>
+<span class="fc" id="L69">                            e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
+<span class="fc" id="L70">                            e.getCategoria().getNombre());</span>
+                })
+<span class="fc" id="L72">                .toList();</span>
+    }
+
+    /**
+     * Informe de evaluación de un representado del representante autenticado.
+     *
+     * @param username     nombre de usuario del representante
+     * @param idEstudiante identificador del estudiante
+     * @return el informe (promedios por criterio, lesiones, % de asistencia)
+     * @throws ResourceNotFoundException si la cuenta no tiene representante
+     *                                      asociado, o el estudiante no
+     *                                      existe o no es representado suyo
+     */
+    @Transactional(readOnly = true)
+    public StudentReportResponse reportFor(String username, Long idEstudiante) {
+<span class="fc" id="L87">        Guardian representante = representanteDe(username);</span>
+
+<span class="fc" id="L89">        boolean esSuyo = vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(</span>
+<span class="fc" id="L90">                representante.getIdRepresentante(), idEstudiante);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (!esSuyo) {</span>
+<span class="fc" id="L92">            throw new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
+        }
+
+<span class="fc" id="L95">        Student estudiante = vinculoRepository</span>
+<span class="fc" id="L96">                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(representante.getIdRepresentante(), idEstudiante)</span>
+<span class="pc" id="L97">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante))</span>
+<span class="fc" id="L98">                .getEstudiante();</span>
+
+<span class="fc" id="L100">        return construirInforme(estudiante);</span>
+    }
+
+    /**
+     * Informe del propio estudiante autenticado: mismas piezas que
+     * {@link #reportFor}, pero sin chequeo de vínculo —la única autorización
+     * que hace falta es &quot;es su propia cuenta&quot;—.
+     *
+     * @param username nombre de usuario del estudiante autenticado
+     * @return el informe del estudiante
+     * @throws ResourceNotFoundException si la cuenta no tiene un estudiante
+     *                                      asociado
+     */
+    @Transactional(readOnly = true)
+    public StudentReportResponse myReport(String username) {
+<span class="fc" id="L115">        Student estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L116">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
+<span class="fc" id="L117">        return construirInforme(estudiante);</span>
+    }
+
+    /**
+     * El informe de un representado puesto en palabras por un servicio
+     * externo. Se apoya en {@link #reportFor} en lugar de repetir el chequeo
+     * de pertenencia: si cambia la regla de quién ve a quién, un segundo
+     * chequeo copiado aquí quedaría desactualizado sin que nadie lo note.
+     *
+     * @param username     nombre de usuario del representante
+     * @param idEstudiante identificador del estudiante
+     * @return el comentario generado, o un texto por defecto si aún no hay
+     *         evaluaciones
+     * @throws ResourceNotFoundException si el estudiante no es representado
+     *                                      del representante
+     */
+    @Transactional(readOnly = true)
+    public ReportCommentResponse commentFor(String username, Long idEstudiante) {
+<span class="fc" id="L135">        StudentReportResponse informe = reportFor(username, idEstudiante);</span>
+<span class="fc" id="L136">        return comentarSobre(informe);</span>
+    }
+
+    /**
+     * Lo mismo que {@link #commentFor}, para el estudiante que consulta su
+     * propio informe.
+     *
+     * @param username nombre de usuario del estudiante autenticado
+     * @return el comentario generado, o un texto por defecto si aún no hay
+     *         evaluaciones
+     * @throws ResourceNotFoundException si la cuenta no tiene un estudiante
+     *                                      asociado
+     */
+    @Transactional(readOnly = true)
+    public ReportCommentResponse myComment(String username) {
+<span class="nc" id="L151">        return comentarSobre(myReport(username));</span>
+    }
+
+    // Arma el perfil seudonimizado y pide el texto. Al modelo va un
+    // AnonymousPlayerProfile, que no tiene nombre, cédula, correo ni fecha de
+    // nacimiento: solo salen del sistema promedios, categoría y cuántos
+    // entrenamientos asistió. El titular de estos datos es un menor.
+    private ReportCommentResponse comentarSobre(StudentReportResponse informe) {
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (informe.promediosPorCriterio().isEmpty()) {</span>
+<span class="fc" id="L160">            return new ReportCommentResponse(null, false,</span>
+                    &quot;Todavía no hay evaluaciones registradas para comentar&quot;);
+        }
+
+<span class="fc" id="L164">        Map&lt;String, Double&gt; promedios = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">        for (CriterionAverageResponse c : informe.promediosPorCriterio()) {</span>
+<span class="fc" id="L166">            promedios.put(c.criterio(), c.promedio());</span>
+<span class="fc" id="L167">        }</span>
+
+<span class="fc" id="L169">        boolean lesionado = informe.historialLesiones().stream()</span>
+<span class="fc" id="L170">                .anyMatch(InjurySummaryResponse::activa);</span>
+
+<span class="fc" id="L172">        LocalDate hoy = LocalDate.now(Zones.ECUADOR);</span>
+<span class="fc" id="L173">        long asistencias = asistenciaRepository</span>
+<span class="fc" id="L174">                .contarAsistenciasDesde(informe.idEstudiante(), hoy.minusDays(30));</span>
+
+<span class="fc" id="L176">        var perfil = new AnonymousPlayerProfile(</span>
+                &quot;Jugador&quot;,
+<span class="fc" id="L178">                informe.categoria(),</span>
+                null,
+                promedios,
+<span class="fc" id="L181">                Map.of(),</span>
+<span class="fc" id="L182">                (int) asistencias,</span>
+                lesionado);
+
+<span class="fc" id="L185">        var resultado = generadorFeedback.generatePlayerComment(perfil);</span>
+<span class="fc" id="L186">        return new ReportCommentResponse(</span>
+<span class="fc" id="L187">                resultado.text(), resultado.isAvailable(), resultado.reason());</span>
+    }
+
+    private StudentReportResponse construirInforme(Student estudiante) {
+<span class="fc" id="L191">        Long idEstudiante = estudiante.getIdEstudiante();</span>
+
+<span class="fc" id="L193">        List&lt;CriterionAverageResponse&gt; promedios = evaluacionEstudianteRepository</span>
+<span class="fc" id="L194">                .promedioHistoricoPorCriterio(idEstudiante).stream()</span>
+<span class="fc" id="L195">                .map(fila -&gt; new CriterionAverageResponse(</span>
+                        (String) fila[0],
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">                        fila[1] == null ? 0.0 : ((Number) fila[1]).doubleValue()))</span>
+<span class="fc" id="L198">                .toList();</span>
+
+<span class="fc" id="L200">        List&lt;InjurySummaryResponse&gt; lesiones = lesionRepository</span>
+<span class="fc" id="L201">                .findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, Pageable.unpaged())</span>
+<span class="fc" id="L202">                .getContent().stream()</span>
+<span class="fc" id="L203">                .map(this::aLesionResumen)</span>
+<span class="fc" id="L204">                .toList();</span>
+
+<span class="fc" id="L206">        LocalDate hoy = LocalDate.now(Zones.ECUADOR);</span>
+<span class="fc" id="L207">        BigDecimal porcentajeAsistencia = asistenciaRepository</span>
+<span class="fc" id="L208">                .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);</span>
+
+<span class="fc" id="L210">        return new StudentReportResponse(</span>
+                idEstudiante,
+<span class="fc" id="L212">                estudiante.getPersona().getNombre() + &quot; &quot; + estudiante.getPersona().getApellido(),</span>
+<span class="fc" id="L213">                estudiante.getCategoria().getNombre(),</span>
+                promedios,
+                lesiones,
+                porcentajeAsistencia);
+    }
+
+    private Guardian representanteDe(String username) {
+<span class="fc" id="L220">        return representanteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L221">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un representante asociado a esta cuenta&quot;));</span>
+    }
+
+    private InjurySummaryResponse aLesionResumen(Lesion l) {
+<span class="fc" id="L225">        return new InjurySummaryResponse(</span>
+<span class="fc" id="L226">                l.getIdLesion(), l.getDescripcion(), l.getFechaLesion(),</span>
+<span class="fc" id="L227">                l.getFechaEstimadaRetorno(), l.getFechaAlta(), l.estaActiva());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeminiFeedbackService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.ia</a> &gt; <span class="el_source">GeminiFeedbackService.java</span></div><h1>GeminiFeedbackService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.ia;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>GeminiFeedbackService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.common.ia</a> &gt; <span class="el_source">GeminiFeedbackService.java</span></div><h1>GeminiFeedbackService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.common.ia;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
@@ -14,10 +14,17 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Genera comentarios de evaluación en lenguaje natural usando la API de Google
+ * Gemini. Expuesto como {@code AIFeedbackGenerator} y activo solo cuando la
+ * propiedad {@code ia.proveedor=gemini}. Si no hay clave configurada
+ * ({@code ia.gemini.habilitado=false}) o el servicio externo falla, devuelve
+ * un {@code FeedbackResult} &quot;no disponible&quot; en lugar de romper la petición.
+ */
 @Service
 @ConditionalOnProperty(name = &quot;ia.proveedor&quot;, havingValue = &quot;gemini&quot;, matchIfMissing = true)
-public class GeminiFeedbackService implements GeneradorFeedbackIA {
-<span class="fc" id="L20">    private static final Logger log = LoggerFactory.getLogger(GeminiFeedbackService.class);</span>
+public class GeminiFeedbackService implements AIFeedbackGenerator {
+<span class="fc" id="L27">    private static final Logger log = LoggerFactory.getLogger(GeminiFeedbackService.class);</span>
     private static final String BASE_URL = &quot;https://generativelanguage.googleapis.com/v1beta&quot;;
 
     private final RestClient restClient;
@@ -26,138 +33,163 @@ public class GeminiFeedbackService implements GeneradorFeedbackIA {
     private final boolean habilitado;
     private final int reintentos;
 
+    /**
+     * Configura el cliente HTTP contra Gemini y registra si el generador queda
+     * habilitado (requiere clave no vacía y {@code ia.gemini.habilitado=true}).
+     *
+     * @param apiKey          clave de la API de Gemini
+     * @param modelo          identificador del modelo a usar (p. ej.
+     *                        {@code gemini-2.0-flash})
+     * @param habilitado      si debe intentar generar texto
+     * @param timeoutSegundos tiempo máximo de conexión y lectura, en segundos
+     * @param reintentos      reintentos ante fallos transitorios (mínimo 0)
+     */
     public GeminiFeedbackService(
             @Value(&quot;${ia.gemini.api-key:}&quot;) String apiKey,
             @Value(&quot;${ia.gemini.modelo:gemini-2.0-flash}&quot;) String modelo,
             @Value(&quot;${ia.gemini.habilitado:false}&quot;) boolean habilitado,
             @Value(&quot;${ia.gemini.timeout-segundos:8}&quot;) int timeoutSegundos,
-<span class="fc" id="L34">            @Value(&quot;${ia.gemini.reintentos:2}&quot;) int reintentos) {</span>
-<span class="fc" id="L35">        this.apiKey = apiKey;</span>
-<span class="fc" id="L36">        this.modelo = modelo;</span>
-<span class="pc bpc" id="L37" title="1 of 6 branches missed.">        this.habilitado = habilitado &amp;&amp; apiKey != null &amp;&amp; !apiKey.isBlank();</span>
-<span class="fc" id="L38">        this.reintentos = Math.max(0, reintentos);</span>
+<span class="fc" id="L52">            @Value(&quot;${ia.gemini.reintentos:2}&quot;) int reintentos) {</span>
+<span class="fc" id="L53">        this.apiKey = apiKey;</span>
+<span class="fc" id="L54">        this.modelo = modelo;</span>
+<span class="pc bpc" id="L55" title="1 of 6 branches missed.">        this.habilitado = habilitado &amp;&amp; apiKey != null &amp;&amp; !apiKey.isBlank();</span>
+<span class="fc" id="L56">        this.reintentos = Math.max(0, reintentos);</span>
 
-<span class="fc" id="L40">        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();</span>
+<span class="fc" id="L58">        var factory = new org.springframework.http.client.SimpleClientHttpRequestFactory();</span>
 
-<span class="fc" id="L42">        factory.setConnectTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());</span>
-<span class="fc" id="L43">        factory.setReadTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());</span>
+<span class="fc" id="L60">        factory.setConnectTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());</span>
+<span class="fc" id="L61">        factory.setReadTimeout((int) Duration.ofSeconds(timeoutSegundos).toMillis());</span>
 
-<span class="fc" id="L45">        this.restClient = RestClient.builder()</span>
-<span class="fc" id="L46">                .baseUrl(BASE_URL)</span>
-<span class="fc" id="L47">                .requestFactory(factory)</span>
-<span class="fc" id="L48">                .build();</span>
+<span class="fc" id="L63">        this.restClient = RestClient.builder()</span>
+<span class="fc" id="L64">                .baseUrl(BASE_URL)</span>
+<span class="fc" id="L65">                .requestFactory(factory)</span>
+<span class="fc" id="L66">                .build();</span>
 
-<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (!this.habilitado) {</span>
-<span class="fc" id="L51">            log.info(&quot;Feedback con IA deshabilitado: no hay clave de Gemini configurada &quot;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        if (!this.habilitado) {</span>
+<span class="fc" id="L69">            log.info(&quot;Feedback con IA deshabilitado: no hay clave de Gemini configurada &quot;</span>
                     + &quot;o ia.gemini.habilitado=false. El sistema funciona sin comentarios generados.&quot;);
         }
-<span class="fc" id="L54">    }</span>
+<span class="fc" id="L72">    }</span>
 
     @Override
-    public boolean estaDisponible() {
-<span class="fc" id="L58">        return habilitado;</span>
+    public boolean isAvailable() {
+<span class="fc" id="L76">        return habilitado;</span>
     }
 
+    /**
+     * Genera el comentario de evaluación de un jugador anónimo.
+     *
+     * @param profile datos anonimizados del jugador a evaluar
+     * @return resultado con el texto generado o {@code unavailable} si el
+     *         servicio está deshabilitado o falla
+     */
     @Override
-    public ResultadoFeedback generarComentarioJugador(PerfilJugadorAnonimo perfil) {
-<span class="fc bfc" id="L63" title="All 2 branches covered.">        if (!habilitado) {</span>
-<span class="fc" id="L64">            return ResultadoFeedback.noDisponible(&quot;Generacion de texto deshabilitada&quot;);</span>
+    public FeedbackResult generatePlayerComment(AnonymousPlayerProfile profile) {
+<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (!habilitado) {</span>
+<span class="fc" id="L89">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
         }
-<span class="fc" id="L66">        return invocar(PromptsFeedback.deJugador(perfil));</span>
+<span class="fc" id="L91">        return invocar(PromptsFeedback.deJugador(profile));</span>
     }
 
+    /**
+     * Genera el comentario de evaluación de una alineación completa.
+     *
+     * @param lineup lista de perfiles anónimos que forman la plantilla
+     * @return resultado con el texto generado o {@code unavailable} si el
+     *         servicio está deshabilitado, la alineación está vacía o falla
+     */
     @Override
-    public ResultadoFeedback generarComentarioPlantilla(List&lt;PerfilJugadorAnonimo&gt; alineacion) {
-<span class="pc bpc" id="L71" title="1 of 2 branches missed.">        if (!habilitado) {</span>
-<span class="nc" id="L72">            return ResultadoFeedback.noDisponible(&quot;Generacion de texto deshabilitada&quot;);</span>
+    public FeedbackResult generateLineupComment(List&lt;AnonymousPlayerProfile&gt; lineup) {
+<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (!habilitado) {</span>
+<span class="nc" id="L104">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
         }
-<span class="pc bpc" id="L74" title="2 of 4 branches missed.">        if (alineacion == null || alineacion.isEmpty()) {</span>
-<span class="fc" id="L75">            return ResultadoFeedback.noDisponible(&quot;La alineacion esta vacia&quot;);</span>
+<span class="pc bpc" id="L106" title="2 of 4 branches missed.">        if (lineup == null || lineup.isEmpty()) {</span>
+<span class="fc" id="L107">            return FeedbackResult.unavailable(&quot;La alineacion esta vacia&quot;);</span>
         }
-<span class="nc" id="L77">        return invocar(PromptsFeedback.dePlantilla(alineacion));</span>
+<span class="nc" id="L109">        return invocar(PromptsFeedback.dePlantilla(lineup));</span>
     }
 
-    private ResultadoFeedback invocar(String prompt) {
-<span class="fc" id="L81">        Exception ultimoFallo = null;</span>
+    private FeedbackResult invocar(String prompt) {
+<span class="fc" id="L113">        Exception ultimoFallo = null;</span>
 
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        for (int intento = 0; intento &lt;= reintentos; intento++) {</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        for (int intento = 0; intento &lt;= reintentos; intento++) {</span>
             try {
-<span class="nc" id="L85">                return intentarUnaVez(prompt);</span>
+<span class="nc" id="L117">                return intentarUnaVez(prompt);</span>
 
-<span class="fc" id="L87">            } catch (HttpClientErrorException e) {</span>
-<span class="fc" id="L88">                log.warn(&quot;Gemini rechazo la peticion: {}&quot;, e.getStatusCode());</span>
-<span class="fc" id="L89">                return ResultadoFeedback.noDisponible(motivoDeRechazo(e));</span>
+<span class="fc" id="L119">            } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L120">                log.warn(&quot;Gemini rechazo la peticion: {}&quot;, e.getStatusCode());</span>
+<span class="fc" id="L121">                return FeedbackResult.unavailable(motivoDeRechazo(e));</span>
 
-<span class="nc" id="L91">            } catch (Exception e) {</span>
-<span class="nc" id="L92">                ultimoFallo = e;</span>
+<span class="nc" id="L123">            } catch (Exception e) {</span>
+<span class="nc" id="L124">                ultimoFallo = e;</span>
 
-<span class="nc" id="L94">                log.warn(&quot;Fallo transitorio de Gemini (intento {} de {}): {}&quot;,</span>
-<span class="nc" id="L95">                        intento + 1, reintentos + 1, e.getClass().getSimpleName());</span>
-<span class="nc bnc" id="L96" title="All 2 branches missed.">                if (intento &lt; reintentos) {</span>
-<span class="nc" id="L97">                    esperarAntesDeReintentar(intento);</span>
+<span class="nc" id="L126">                log.warn(&quot;Fallo transitorio de Gemini (intento {} de {}): {}&quot;,</span>
+<span class="nc" id="L127">                        intento + 1, reintentos + 1, e.getClass().getSimpleName());</span>
+<span class="nc bnc" id="L128" title="All 2 branches missed.">                if (intento &lt; reintentos) {</span>
+<span class="nc" id="L129">                    esperarAntesDeReintentar(intento);</span>
                 }
             }
         }
 
-<span class="nc" id="L102">        log.warn(&quot;No se pudo generar feedback con IA tras {} intento(s): {}&quot;,</span>
-<span class="nc bnc" id="L103" title="All 2 branches missed.">                reintentos + 1, ultimoFallo == null ? &quot;sin detalle&quot; : ultimoFallo.getClass().getSimpleName());</span>
-<span class="nc" id="L104">        return ResultadoFeedback.noDisponible(&quot;El servicio de generacion no respondio&quot;);</span>
+<span class="nc" id="L134">        log.warn(&quot;No se pudo generar feedback con IA tras {} intento(s): {}&quot;,</span>
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                reintentos + 1, ultimoFallo == null ? &quot;sin detalle&quot; : ultimoFallo.getClass().getSimpleName());</span>
+<span class="nc" id="L136">        return FeedbackResult.unavailable(&quot;El servicio de generacion no respondio&quot;);</span>
     }
 
     private String motivoDeRechazo(HttpClientErrorException e) {
-<span class="fc" id="L108">        int codigo = e.getStatusCode().value();</span>
-<span class="pc bpc" id="L109" title="1 of 2 branches missed.">        if (codigo == 429) {</span>
-<span class="nc" id="L110">            return &quot;Se agoto la cuota diaria del servicio de IA; se restablece manana&quot;;</span>
+<span class="fc" id="L140">        int codigo = e.getStatusCode().value();</span>
+<span class="pc bpc" id="L141" title="1 of 2 branches missed.">        if (codigo == 429) {</span>
+<span class="nc" id="L142">            return &quot;Se agoto la cuota diaria del servicio de IA; se restablece manana&quot;;</span>
         }
-<span class="pc bpc" id="L112" title="2 of 4 branches missed.">        if (codigo == 401 || codigo == 403) {</span>
-<span class="nc" id="L113">            return &quot;La clave del servicio de IA no es valida o no tiene permisos&quot;;</span>
+<span class="pc bpc" id="L144" title="2 of 4 branches missed.">        if (codigo == 401 || codigo == 403) {</span>
+<span class="nc" id="L145">            return &quot;La clave del servicio de IA no es valida o no tiene permisos&quot;;</span>
         }
-<span class="fc" id="L115">        return &quot;El servicio de IA rechazo la peticion (codigo &quot; + codigo + &quot;)&quot;;</span>
+<span class="fc" id="L147">        return &quot;El servicio de IA rechazo la peticion (codigo &quot; + codigo + &quot;)&quot;;</span>
     }
 
-    private ResultadoFeedback intentarUnaVez(String prompt) {
-<span class="fc" id="L119">        var cuerpo = Map.of(</span>
-<span class="fc" id="L120">                &quot;systemInstruction&quot;, Map.of(</span>
-<span class="fc" id="L121">                        &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, PromptsFeedback.INSTRUCCION_SISTEMA))),</span>
-<span class="fc" id="L122">                &quot;contents&quot;, List.of(Map.of(</span>
-<span class="fc" id="L123">                        &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, prompt)))),</span>
-<span class="fc" id="L124">                &quot;generationConfig&quot;, Map.of(</span>
-<span class="fc" id="L125">                        &quot;temperature&quot;, 0.4,</span>
-<span class="fc" id="L126">                        &quot;maxOutputTokens&quot;, 2048));</span>
+    private FeedbackResult intentarUnaVez(String prompt) {
+<span class="fc" id="L151">        var cuerpo = Map.of(</span>
+<span class="fc" id="L152">                &quot;systemInstruction&quot;, Map.of(</span>
+<span class="fc" id="L153">                        &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, PromptsFeedback.INSTRUCCION_SISTEMA))),</span>
+<span class="fc" id="L154">                &quot;contents&quot;, List.of(Map.of(</span>
+<span class="fc" id="L155">                        &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, prompt)))),</span>
+<span class="fc" id="L156">                &quot;generationConfig&quot;, Map.of(</span>
+<span class="fc" id="L157">                        &quot;temperature&quot;, 0.4,</span>
+<span class="fc" id="L158">                        &quot;maxOutputTokens&quot;, 2048));</span>
 
-<span class="fc" id="L128">        JsonNode respuesta = restClient.post()</span>
-<span class="fc" id="L129">                .uri(&quot;/models/{modelo}:generateContent&quot;, modelo)</span>
-<span class="fc" id="L130">                .header(&quot;x-goog-api-key&quot;, apiKey)</span>
-<span class="fc" id="L131">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L132">                .body(cuerpo)</span>
-<span class="fc" id="L133">                .retrieve()</span>
-<span class="nc" id="L134">                .body(JsonNode.class);</span>
+<span class="fc" id="L160">        JsonNode respuesta = restClient.post()</span>
+<span class="fc" id="L161">                .uri(&quot;/models/{modelo}:generateContent&quot;, modelo)</span>
+<span class="fc" id="L162">                .header(&quot;x-goog-api-key&quot;, apiKey)</span>
+<span class="fc" id="L163">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L164">                .body(cuerpo)</span>
+<span class="fc" id="L165">                .retrieve()</span>
+<span class="nc" id="L166">                .body(JsonNode.class);</span>
 
-<span class="nc" id="L136">        String texto = extraerTexto(respuesta);</span>
-<span class="nc bnc" id="L137" title="All 4 branches missed.">        if (texto == null || texto.isBlank()) {</span>
-<span class="nc" id="L138">            log.warn(&quot;Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)&quot;);</span>
-<span class="nc" id="L139">            return ResultadoFeedback.noDisponible(&quot;El modelo no devolvio texto&quot;);</span>
+<span class="nc" id="L168">        String texto = extraerTexto(respuesta);</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">        if (texto == null || texto.isBlank()) {</span>
+<span class="nc" id="L170">            log.warn(&quot;Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)&quot;);</span>
+<span class="nc" id="L171">            return FeedbackResult.unavailable(&quot;El modelo no devolvio texto&quot;);</span>
         }
-<span class="nc" id="L141">        return ResultadoFeedback.ok(texto.trim());</span>
+<span class="nc" id="L173">        return FeedbackResult.ok(texto.trim());</span>
     }
 
     private void esperarAntesDeReintentar(int intento) {
         try {
-<span class="nc" id="L146">            Thread.sleep(400L * (intento + 1));</span>
-<span class="nc" id="L147">        } catch (InterruptedException e) {</span>
-<span class="nc" id="L148">            Thread.currentThread().interrupt();</span>
-<span class="nc" id="L149">        }</span>
-<span class="nc" id="L150">    }</span>
+<span class="nc" id="L178">            Thread.sleep(400L * (intento + 1));</span>
+<span class="nc" id="L179">        } catch (InterruptedException e) {</span>
+<span class="nc" id="L180">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L181">        }</span>
+<span class="nc" id="L182">    }</span>
 
     private String extraerTexto(JsonNode respuesta) {
-<span class="nc bnc" id="L153" title="All 2 branches missed.">        if (respuesta == null) {</span>
-<span class="nc" id="L154">            return null;</span>
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (respuesta == null) {</span>
+<span class="nc" id="L186">            return null;</span>
         }
-<span class="nc" id="L156">        JsonNode parts = respuesta.path(&quot;candidates&quot;).path(0).path(&quot;content&quot;).path(&quot;parts&quot;);</span>
-<span class="nc bnc" id="L157" title="All 4 branches missed.">        if (!parts.isArray() || parts.isEmpty()) {</span>
-<span class="nc" id="L158">            return null;</span>
+<span class="nc" id="L188">        JsonNode parts = respuesta.path(&quot;candidates&quot;).path(0).path(&quot;content&quot;).path(&quot;parts&quot;);</span>
+<span class="nc bnc" id="L189" title="All 4 branches missed.">        if (!parts.isArray() || parts.isEmpty()) {</span>
+<span class="nc" id="L190">            return null;</span>
         }
-<span class="nc" id="L160">        return parts.get(0).path(&quot;text&quot;).asText(null);</span>
+<span class="nc" id="L192">        return parts.get(0).path(&quot;text&quot;).asText(null);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

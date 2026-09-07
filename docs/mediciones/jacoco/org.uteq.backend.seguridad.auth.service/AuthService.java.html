@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.service</a> &gt; <span class="el_source">AuthService.java</span></div><h1>AuthService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.service;
 
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -13,21 +13,21 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.TooManyRequestsException;
-import org.uteq.backend.seguridad.auditoria.service.AuditoriaService;
+import org.uteq.backend.seguridad.audit.service.AuditService;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
-import org.uteq.backend.seguridad.auth.dto.SesionResponse;
+import org.uteq.backend.seguridad.auth.dto.SessionResponse;
 import org.uteq.backend.seguridad.auth.security.JwtService;
 import org.uteq.backend.seguridad.auth.security.LoginAttemptService;
 import org.uteq.backend.seguridad.auth.security.RedisBlacklistService;
-import org.uteq.backend.seguridad.estado.entity.EstadoGeneral;
-import org.uteq.backend.seguridad.estado.repository.EstadoGeneralRepository;
-import org.uteq.backend.seguridad.persona.entity.Persona;
-import org.uteq.backend.seguridad.persona.repository.PersonaRepository;
-import org.uteq.backend.seguridad.rol.entity.Rol;
-import org.uteq.backend.seguridad.rol.repository.RolRepository;
-import org.uteq.backend.seguridad.usuario.entity.Usuario;
-import org.uteq.backend.seguridad.usuario.repository.UsuarioRepository;
+import org.uteq.backend.seguridad.status.entity.GeneralStatus;
+import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
+import org.uteq.backend.seguridad.role.entity.Role;
+import org.uteq.backend.seguridad.role.repository.RoleRepository;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.Optional;
 import java.util.Set;
@@ -49,12 +49,12 @@ public class AuthService {
     private final JwtService jwtService;
     private final RedisBlacklistService blacklistService;
     private final LoginAttemptService loginAttemptService;
-    private final UsuarioRepository usuarioRepository;
-    private final PersonaRepository personaRepository;
-    private final RolRepository rolRepository;
-    private final EstadoGeneralRepository estadoGeneralRepository;
+    private final UserAccountRepository usuarioRepository;
+    private final PersonRepository personaRepository;
+    private final RoleRepository rolRepository;
+    private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
-    private final AuditoriaService auditoriaService;
+    private final AuditService auditoriaService;
 
     /**
      * Resultado de un inicio de sesión correcto: los dos tokens que el
@@ -63,12 +63,12 @@ public class AuthService {
      *
      * @param accessToken  JWT de acceso, de vida corta
      * @param refreshToken JWT de refresco, de vida larga
-     * @param sesion       datos no sensibles de la sesión (nunca el token)
+     * @param session      datos no sensibles de la sesión (nunca el token)
      */
-<span class="fc" id="L68">    public record LoginResult(String accessToken, String refreshToken, SesionResponse sesion) {}</span>
+<span class="fc" id="L68">    public record LoginResult(String accessToken, String refreshToken, SessionResponse session) {}</span>
 
     /**
-     * Da de alta una {@link Persona} y su {@link Usuario} en una sola
+     * Da de alta una {@link Person} y su {@link UserAccount} en una sola
      * transacción. El campo {@code rol} es obligatorio ({@code @NotBlank} en
      * {@link RegisterRequest}): no hay un rol genérico por defecto. Quien
      * llama ya es {@code ADMINISTRADOR}, así que puede pedir cualquier rol
@@ -85,17 +85,17 @@ public class AuthService {
      *                                  {@code seguridad.estados_general}
      */
     @Transactional
-    public Optional&lt;SesionResponse&gt; registrar(RegisterRequest request) {
+    public Optional&lt;SessionResponse&gt; register(RegisterRequest request) {
 <span class="fc bfc" id="L89" title="All 2 branches covered.">        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())</span>
 <span class="fc bfc" id="L90" title="All 2 branches covered.">                || personaRepository.existsByCedulaAndActivoTrue(request.cedula())</span>
 <span class="fc bfc" id="L91" title="All 2 branches covered.">                || personaRepository.existsByCorreo(request.correo())) {</span>
 <span class="fc" id="L92">            return Optional.empty();</span>
         }
 
-<span class="fc" id="L95">        Rol rol = rolRepository.findByNombre(request.rol())</span>
+<span class="fc" id="L95">        Role rol = rolRepository.findByNombre(request.rol())</span>
 <span class="fc" id="L96">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + request.rol()));</span>
 
-<span class="fc" id="L98">        Persona persona = Persona.builder()</span>
+<span class="fc" id="L98">        Person persona = Person.builder()</span>
 <span class="fc" id="L99">                .nombre(request.nombre())</span>
 <span class="fc" id="L100">                .apellido(request.apellido())</span>
 <span class="fc" id="L101">                .cedula(request.cedula())</span>
@@ -107,11 +107,11 @@ public class AuthService {
 
         // id_estado_general es NOT NULL: sin esto el alta también falla en base
         // de datos aunque la persona ya se haya podido insertar.
-<span class="fc" id="L110">        EstadoGeneral estadoActivo = estadoGeneralRepository.findById(1L)</span>
+<span class="fc" id="L110">        GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)</span>
 <span class="fc" id="L111">                .orElseThrow(() -&gt; new IllegalStateException(</span>
                         &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
 
-<span class="fc" id="L114">        Usuario usuario = Usuario.builder()</span>
+<span class="fc" id="L114">        UserAccount usuario = UserAccount.builder()</span>
 <span class="fc" id="L115">                .persona(persona)</span>
 <span class="fc" id="L116">                .estadoGeneral(estadoActivo)</span>
 <span class="fc" id="L117">                .username(request.username())</span>
@@ -122,7 +122,7 @@ public class AuthService {
 <span class="fc" id="L122">        usuario = usuarioRepository.save(usuario);</span>
 
 <span class="fc" id="L124">        String nombreCompleto = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
-<span class="fc" id="L125">        return Optional.of(SesionResponse.builder()</span>
+<span class="fc" id="L125">        return Optional.of(SessionResponse.builder()</span>
 <span class="fc" id="L126">                .username(usuario.getUsername())</span>
 <span class="fc" id="L127">                .nombre(nombreCompleto)</span>
 <span class="fc" id="L128">                .rol(rol.getNombre())</span>
@@ -146,7 +146,7 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public LoginResult login(LoginRequest request, String ip) {
-<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (loginAttemptService.estaBloqueada(ip)) {</span>
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (loginAttemptService.isBlocked(ip)) {</span>
 <span class="fc" id="L150">            throw new TooManyRequestsException(</span>
                     &quot;Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.&quot;);
         }
@@ -156,19 +156,19 @@ public class AuthService {
 <span class="fc" id="L156">            auth = authenticationManager.authenticate(</span>
 <span class="fc" id="L157">                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));</span>
 <span class="fc" id="L158">        } catch (BadCredentialsException e) {</span>
-<span class="fc" id="L159">            loginAttemptService.registrarFallo(ip);</span>
+<span class="fc" id="L159">            loginAttemptService.recordFailure(ip);</span>
 <span class="fc" id="L160">            AUTH_AUDIT_LOG.warn(&quot;AUTH_LOGIN_FAIL ip={} sub={}&quot;, ip, request.username());</span>
-<span class="fc" id="L161">            auditoriaService.registrarConIdentidad(request.username(), null,</span>
+<span class="fc" id="L161">            auditoriaService.recordEventWithIdentity(request.username(), null,</span>
                     &quot;LOGIN_FALLIDO&quot;, &quot;Usuario&quot;, null, &quot;intento de inicio de sesión fallido&quot;);
 <span class="fc" id="L163">            throw e;</span>
 <span class="fc" id="L164">        }</span>
 
-<span class="fc" id="L166">        loginAttemptService.registrarExito(ip);</span>
+<span class="fc" id="L166">        loginAttemptService.recordSuccess(ip);</span>
 
 <span class="fc" id="L168">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
 <span class="fc" id="L169">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
 <span class="fc" id="L170">        AUTH_AUDIT_LOG.info(&quot;AUTH_LOGIN_OK ip={} sub={}&quot;, ip, userDetails.getUsername());</span>
-<span class="fc" id="L171">        auditoriaService.registrarConIdentidad(userDetails.getUsername(), rol,</span>
+<span class="fc" id="L171">        auditoriaService.recordEventWithIdentity(userDetails.getUsername(), rol,</span>
                 &quot;LOGIN&quot;, &quot;Usuario&quot;, null, &quot;inició sesión&quot;);
 
 <span class="fc" id="L174">        String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);</span>
@@ -178,13 +178,13 @@ public class AuthService {
 <span class="fc" id="L178">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
 <span class="fc" id="L179">                .orElse(userDetails.getUsername());</span>
 
-<span class="fc" id="L181">        SesionResponse sesion = SesionResponse.builder()</span>
+<span class="fc" id="L181">        SessionResponse session = SessionResponse.builder()</span>
 <span class="fc" id="L182">                .username(userDetails.getUsername())</span>
 <span class="fc" id="L183">                .nombre(nombre)</span>
 <span class="fc" id="L184">                .rol(rol)</span>
 <span class="fc" id="L185">                .build();</span>
 
-<span class="fc" id="L187">        return new LoginResult(accessToken, refreshToken, sesion);</span>
+<span class="fc" id="L187">        return new LoginResult(accessToken, refreshToken, session);</span>
     }
 
     /**
@@ -201,14 +201,14 @@ public class AuthService {
             try {
 <span class="fc" id="L202">                String jti = jwtService.extractJti(accessToken);</span>
 <span class="pc bpc" id="L203" title="1 of 2 branches missed.">                if (jti != null) {</span>
-<span class="fc" id="L204">                    blacklistService.revocar(jti, jwtService.getExpirationMs());</span>
+<span class="fc" id="L204">                    blacklistService.revoke(jti, jwtService.getExpirationMs());</span>
                 }
 <span class="fc" id="L206">            } catch (Exception e) {</span>
                 // Token ya inválido: nada que revocar.
 <span class="fc" id="L208">            }</span>
         }
 
-<span class="fc" id="L211">        auditoriaService.registrar(&quot;LOGOUT&quot;, &quot;Usuario&quot;, null, &quot;cerró sesión&quot;);</span>
+<span class="fc" id="L211">        auditoriaService.recordEvent(&quot;LOGOUT&quot;, &quot;Usuario&quot;, null, &quot;cerró sesión&quot;);</span>
 <span class="fc" id="L212">        SecurityContextHolder.clearContext();</span>
 <span class="fc" id="L213">    }</span>
 
@@ -221,7 +221,7 @@ public class AuthService {
      *         refresh token falta o no es válido (el controlador lo traduce a
      *         {@code 401})
      */
-    public Optional&lt;String&gt; refrescar(String refreshToken) {
+    public Optional&lt;String&gt; refresh(String refreshToken) {
 <span class="pc bpc" id="L225" title="1 of 4 branches missed.">        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {</span>
 <span class="fc" id="L226">            return Optional.empty();</span>
         }
@@ -239,7 +239,7 @@ public class AuthService {
      *         sesión autenticada en el contexto
      */
     @Transactional(readOnly = true)
-    public Optional&lt;SesionResponse&gt; obtenerSesionActual() {
+    public Optional&lt;SessionResponse&gt; getCurrentSession() {
 <span class="fc" id="L243">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
 <span class="pc bpc" id="L244" title="2 of 6 branches missed.">        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails userDetails)) {</span>
 <span class="fc" id="L245">            return Optional.empty();</span>
@@ -251,7 +251,7 @@ public class AuthService {
 <span class="fc" id="L251">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
 <span class="fc" id="L252">                .orElse(userDetails.getUsername());</span>
 
-<span class="fc" id="L254">        return Optional.of(SesionResponse.builder()</span>
+<span class="fc" id="L254">        return Optional.of(SessionResponse.builder()</span>
 <span class="fc" id="L255">                .username(userDetails.getUsername())</span>
 <span class="fc" id="L256">                .nombre(nombre)</span>
 <span class="fc" id="L257">                .rol(rol)</span>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EvaluacionDiariaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.controller</a> &gt; <span class="el_source">EvaluacionDiariaController.java</span></div><h1>EvaluacionDiariaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EvaluacionDiariaController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.evaluacion.controller</a> &gt; <span class="el_source">EvaluacionDiariaController.java</span></div><h1>EvaluacionDiariaController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.evaluacion.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class EvaluacionDiariaController {
      *
      * @param idSesion identificador de la sesión
      * @return {@code 200 OK} con criterios, jugadores evaluables y estado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no existe ({@code 404})
      */
     @GetMapping(&quot;/sesion/{idSesion}&quot;)
@@ -42,7 +42,7 @@ public class EvaluacionDiariaController {
      * @param request  posición jugada y puntajes por criterio; validado con
      *                 {@code @Valid}
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no tiene evaluación abierta o la posición no
      *         existe ({@code 404})
      * @throws IllegalArgumentException si la evaluación ya fue finalizada, el
@@ -63,7 +63,7 @@ public class EvaluacionDiariaController {
      * @param idSesion           identificador de la sesión
      * @param observacionGeneral observación general de la sesión (opcional)
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la sesión no tiene evaluación abierta ({@code 404})
      * @throws IllegalArgumentException si la evaluación ya estaba finalizada
      *         ({@code 422})

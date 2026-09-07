@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RedisBlacklistService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">RedisBlacklistService.java</span></div><h1>RedisBlacklistService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RedisBlacklistService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">RedisBlacklistService.java</span></div><h1>RedisBlacklistService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -6,6 +6,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 
+/**
+ * Lista negra de tokens JWT revocados usando Redis, indexada por el
+ * {@code jti} de cada token. Permite invalidar un token antes de que expire
+ * (p. ej. al cerrar sesión o rotar la contraseña).
+ */
 @Service
 @RequiredArgsConstructor
 public class RedisBlacklistService {
@@ -13,19 +18,39 @@ public class RedisBlacklistService {
 
     private final StringRedisTemplate redis;
 
-    public void agregar(String jti, long ttlMs) {
-<span class="fc" id="L17">        redis.opsForValue().set(PREFIX + jti, &quot;revoked&quot;, Duration.ofMillis(ttlMs));</span>
-<span class="fc" id="L18">    }</span>
+    /**
+     * Añade el {@code jti} de un token a la lista negra, con una vigencia
+     * limitada al tiempo de vida restante del token.
+     *
+     * @param jti    identificador único del token a revocar
+     * @param ttlMs  vigencia de la revocación, en milisegundos
+     */
+    public void add(String jti, long ttlMs) {
+<span class="fc" id="L29">        redis.opsForValue().set(PREFIX + jti, &quot;revoked&quot;, Duration.ofMillis(ttlMs));</span>
+<span class="fc" id="L30">    }</span>
 
-    public boolean estaRevocado(String jti) {
-<span class="fc" id="L21">        return Boolean.TRUE.equals(redis.hasKey(PREFIX + jti));</span>
+    /**
+     * Comprueba si el {@code jti} de un token está revocado.
+     *
+     * @param jti identificador único del token a comprobar
+     * @return {@code true} si el token está en la lista negra
+     */
+    public boolean isRevoked(String jti) {
+<span class="fc" id="L39">        return Boolean.TRUE.equals(redis.hasKey(PREFIX + jti));</span>
     }
 
-    public void revocar(String jti, long tiempoRestanteMs) {
-<span class="fc bfc" id="L25" title="All 2 branches covered.">        if (tiempoRestanteMs &gt; 0) {</span>
-<span class="fc" id="L26">            redis.opsForValue().set(PREFIX + jti, &quot;revoked&quot;,</span>
-<span class="fc" id="L27">                    Duration.ofMillis(tiempoRestanteMs));</span>
+    /**
+     * Revoca un token si aún le queda tiempo de vida; si ya expiró, no hace
+     * nada.
+     *
+     * @param jti                identificador único del token a revocar
+     * @param tiempoRestanteMs   milisegundos de vida que le quedan al token
+     */
+    public void revoke(String jti, long tiempoRestanteMs) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (tiempoRestanteMs &gt; 0) {</span>
+<span class="fc" id="L51">            redis.opsForValue().set(PREFIX + jti, &quot;revoked&quot;,</span>
+<span class="fc" id="L52">                    Duration.ofMillis(tiempoRestanteMs));</span>
         }
-<span class="fc" id="L29">    }</span>
+<span class="fc" id="L54">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,12 +1,12 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlineacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.partido.service</a> &gt; <span class="el_source">AlineacionService.java</span></div><h1>AlineacionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.partido.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlineacionService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.partido.service</a> &gt; <span class="el_source">AlineacionService.java</span></div><h1>AlineacionService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.partido.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.academico.estudiante.entity.Estudiante;
-import org.uteq.backend.academico.estudiante.repository.EstudianteRepository;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
 import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
 import org.uteq.backend.deportivo.evaluacion.repository.AlineacionRepository;
@@ -41,7 +41,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AlineacionService {
     private final AlineacionRepository alineacionRepository;
-    private final EstudianteRepository estudianteRepository;
+    private final StudentRepository estudianteRepository;
     private final PosicionRepository posicionRepository;
     private final LesionRepository lesionRepository;
     private final ConvocatoriaService convocatoriaService;
@@ -57,7 +57,7 @@ public class AlineacionService {
      * @param idPartido identificador del partido
      * @return el once, con la bandera {@code guardada} y los jugadores
      *         disponibles para cambios
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      */
     @Transactional(readOnly = true)
     public AlineacionResponse ver(Long idPartido) {
@@ -75,7 +75,7 @@ public class AlineacionService {
      * @param idPartido identificador del partido
      * @param request   jugadores, su puesto, valoración y observación
      * @return el once guardado
-     * @throws RecursoNoEncontradoException si el partido, un estudiante o una
+     * @throws ResourceNotFoundException si el partido, un estudiante o una
      *                                      posición no existen
      * @throws IllegalArgumentException     si el partido está cerrado, un
      *                                      jugador aparece dos veces, no es
@@ -102,8 +102,8 @@ public class AlineacionService {
 <span class="fc" id="L102">                throw new IllegalArgumentException(&quot;Un jugador no puede estar dos veces en la alineación&quot;);</span>
             }
 
-<span class="fc" id="L105">            Estudiante estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())</span>
-<span class="pc" id="L106">                    .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="fc" id="L105">            Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())</span>
+<span class="pc" id="L106">                    .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
 <span class="nc" id="L107">                            &quot;Estudiante no encontrado o inactivo: &quot; + j.idEstudiante()));</span>
 <span class="fc" id="L108">            String nombre = ConvocatoriaService.nombreDe(estudiante);</span>
 
@@ -122,7 +122,7 @@ public class AlineacionService {
 <span class="fc" id="L122">            Posicion posicion = null;</span>
 <span class="fc bfc" id="L123" title="All 2 branches covered.">            if (j.idPosicion() != null) {</span>
 <span class="fc" id="L124">                posicion = posicionRepository.findById(j.idPosicion())</span>
-<span class="pc" id="L125">                        .orElseThrow(() -&gt; new RecursoNoEncontradoException(</span>
+<span class="pc" id="L125">                        .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
 <span class="nc" id="L126">                                &quot;Posicion no encontrada: &quot; + j.idPosicion()));</span>
 <span class="pc bpc" id="L127" title="1 of 4 branches missed.">                if (esTitular &amp;&amp; puestoOcupado.put(j.idPosicion(), j.idEstudiante()) != null) {</span>
 <span class="fc" id="L128">                    throw new IllegalArgumentException(</span>
@@ -168,7 +168,7 @@ public class AlineacionService {
      *
      * @param idPartido identificador del partido
      * @return la sugerencia recalculada
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido está cerrado
      */
     @Transactional
@@ -184,7 +184,7 @@ public class AlineacionService {
      * @param idPartido identificador del partido
      * @return el comentario generado, o un texto por defecto si no hay
      *         alineación
-     * @throws RecursoNoEncontradoException si el partido no existe
+     * @throws ResourceNotFoundException si el partido no existe
      */
     @Transactional(readOnly = true)
     public FeedbackAlineacionResponse feedback(Long idPartido) {
@@ -194,7 +194,7 @@ public class AlineacionService {
         }
 <span class="nc" id="L195">        var resultado = convocatoriaService.comentar(actual.titulares(), actual.categoria());</span>
 <span class="nc" id="L196">        return new FeedbackAlineacionResponse(</span>
-<span class="nc" id="L197">                resultado.texto(), resultado.disponible(), resultado.motivo());</span>
+<span class="nc" id="L197">                resultado.text(), resultado.isAvailable(), resultado.reason());</span>
     }
 
     private AlineacionResponse desdeGuardada(Convocatoria c, Alineacion a) {
@@ -206,7 +206,7 @@ public class AlineacionService {
 <span class="nc" id="L206">        Set&lt;Long&gt; yaEstan = new HashSet&lt;&gt;();</span>
 
 <span class="nc bnc" id="L208" title="All 2 branches missed.">        for (AlineacionJugador j : a.getJugadores()) {</span>
-<span class="nc" id="L209">            Estudiante e = j.getEstudiante();</span>
+<span class="nc" id="L209">            Student e = j.getEstudiante();</span>
 <span class="nc" id="L210">            yaEstan.add(e.getIdEstudiante());</span>
 <span class="nc" id="L211">            boolean titular = Boolean.TRUE.equals(j.getTitular());</span>
 <span class="nc bnc" id="L212" title="All 2 branches missed.">            Long idPosicion = j.getPosicion() == null ? null : j.getPosicion().getIdPosicion();</span>

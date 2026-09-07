@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntrenadorController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.entrenador.controller</a> &gt; <span class="el_source">EntrenadorController.java</span></div><h1>EntrenadorController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.entrenador.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EntrenadorController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.entrenador.controller</a> &gt; <span class="el_source">EntrenadorController.java</span></div><h1>EntrenadorController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.entrenador.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class EntrenadorController {
      *
      * @param id identificador del entrenador
      * @return {@code 200 OK} con el entrenador
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @GetMapping(&quot;/{id}&quot;)
@@ -59,7 +59,7 @@ public class EntrenadorController {
      * @param request persona, usuario, especialidad y datos profesionales;
      *                validado con {@code @Valid}
      * @return {@code 201 Created} con el entrenador registrado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la persona, el usuario o la especialidad no existen
      *         ({@code 404})
      * @throws IllegalArgumentException si la persona o el usuario ya están
@@ -78,7 +78,7 @@ public class EntrenadorController {
      * @param id      identificador del entrenador a editar
      * @param request datos nuevos; validado con {@code @Valid}
      * @return {@code 200 OK} con el entrenador actualizado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si el entrenador o la especialidad no existen ({@code 404})
      */
     @PutMapping(&quot;/{id}&quot;)
@@ -94,7 +94,7 @@ public class EntrenadorController {
      *
      * @param id identificador del entrenador
      * @return {@code 200 OK} con el entrenador reactivado
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      * @throws IllegalArgumentException si ya está activo ({@code 422})
      */
@@ -109,7 +109,7 @@ public class EntrenadorController {
      *
      * @param id identificador del entrenador
      * @return {@code 204 No Content}
-     * @throws org.uteq.backend.common.exception.RecursoNoEncontradoException
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})
      */
     @DeleteMapping(&quot;/{id}&quot;)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.controller;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -51,8 +51,8 @@ public class AuthController {
      */
     @PostMapping(&quot;/registro&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
-    public ResponseEntity&lt;SesionResponse&gt; registro(@Valid @RequestBody RegisterRequest request) {
-<span class="fc" id="L55">        return authService.registrar(request)</span>
+    public ResponseEntity&lt;SessionResponse&gt; register(@Valid @RequestBody RegisterRequest request) {
+<span class="fc" id="L55">        return authService.register(request)</span>
 <span class="pc" id="L56">                .map(sesion -&gt; ResponseEntity.status(HttpStatus.CREATED).body(sesion))</span>
 <span class="fc" id="L57">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.CONFLICT).build());</span>
     }
@@ -71,7 +71,7 @@ public class AuthController {
      *         si las credenciales son incorrectas
      */
     @PostMapping(&quot;/login&quot;)
-    public ResponseEntity&lt;SesionResponse&gt; login(
+    public ResponseEntity&lt;SessionResponse&gt; login(
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
@@ -81,7 +81,7 @@ public class AuthController {
         // repite en el cuerpo, que sería legible por cualquier fetch del
         // frontend y anularía la protección que declaran ADR-002 y ADR-008.
 <span class="fc" id="L83">        setAuthCookies(httpResponse, resultado.accessToken(), resultado.refreshToken());</span>
-<span class="fc" id="L84">        return ResponseEntity.ok(resultado.sesion());</span>
+<span class="fc" id="L84">        return ResponseEntity.ok(resultado.session());</span>
     }
 
     /**
@@ -114,7 +114,7 @@ public class AuthController {
     public ResponseEntity&lt;Void&gt; refresh(
             @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
-<span class="fc" id="L117">        return authService.refrescar(refreshToken)</span>
+<span class="fc" id="L117">        return authService.refresh(refreshToken)</span>
 <span class="fc" id="L118">                .map(nuevoAccessToken -&gt; {</span>
 <span class="fc" id="L119">                    setAccessCookie(httpResponse, nuevoAccessToken);</span>
 <span class="fc" id="L120">                    return ResponseEntity.noContent().&lt;Void&gt;build();</span>
@@ -129,8 +129,8 @@ public class AuthController {
      *         autenticada
      */
     @GetMapping(&quot;/me&quot;)
-    public ResponseEntity&lt;SesionResponse&gt; me() {
-<span class="fc" id="L133">        return authService.obtenerSesionActual()</span>
+    public ResponseEntity&lt;SessionResponse&gt; me() {
+<span class="fc" id="L133">        return authService.getCurrentSession()</span>
 <span class="fc" id="L134">                .map(ResponseEntity::ok)</span>
 <span class="fc" id="L135">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());</span>
     }

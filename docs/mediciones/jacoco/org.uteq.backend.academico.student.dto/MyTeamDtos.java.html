@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MyTeamDtos.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.student.dto</a> &gt; <span class="el_source">MyTeamDtos.java</span></div><h1>MyTeamDtos.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.student.dto;
+
+import java.util.List;
+
+public final class MyTeamDtos {
+    private MyTeamDtos() {}
+
+<span class="fc" id="L8">    public record CategoryDetailResponse(</span>
+            String nombre,
+            Integer edadMin,
+            Integer edadMax,
+            String descripcion
+    ) {}
+
+<span class="fc" id="L15">    public record PositionResponse(String nombre, String abreviatura) {}</span>
+
+<span class="fc" id="L17">    public record AssignedCoachResponse(String nombre, String especialidad) {}</span>
+
+<span class="fc" id="L19">    public record TeammateResponse(Long idEstudiante, String nombre, String posicion) {}</span>
+
+<span class="fc" id="L21">    public record MyTeamResponse(</span>
+            CategoryDetailResponse categoria,
+            PositionResponse posicion,
+            AssignedCoachResponse entrenador,
+            List&lt;TeammateResponse&gt; companeros
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

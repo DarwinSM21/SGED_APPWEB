@@ -1,18 +1,18 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.service</a> &gt; <span class="el_source">CategoriaService.java</span></div><h1>CategoriaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoriaService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.categoria.service</a> &gt; <span class="el_source">CategoriaService.java</span></div><h1>CategoriaService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.categoria.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaRequest;
 import org.uteq.backend.deportivo.categoria.dto.CategoriaResponse;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
 import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
 
 import java.util.List;
-import org.uteq.backend.seguridad.auditoria.aop.Auditado;
+import org.uteq.backend.seguridad.audit.aop.Audited;
 
 /**
  * Lógica de negocio del catálogo de categorías (grupos etarios). El nombre
@@ -54,12 +54,12 @@ public class CategoriaService {
      *
      * @param id identificador de la categoría
      * @return la categoría encontrada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public CategoriaResponse buscarPorId(Long id) {
 <span class="fc" id="L61">        Categoria c = categoriaRepository.findById(id)</span>
-<span class="fc" id="L62">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L62">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
 <span class="fc" id="L63">        return toResponse(c);</span>
     }
 
@@ -97,7 +97,7 @@ public class CategoriaService {
      * @param id      identificador de la categoría a editar
      * @param request datos nuevos
      * @return la categoría actualizada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el nombre pertenece a otra
      *                                      categoría o el rango es inválido
      */
@@ -111,7 +111,7 @@ public class CategoriaService {
 <span class="fc" id="L111">        validarEdades(request.edadMin(), request.edadMax());</span>
 
 <span class="fc" id="L113">        Categoria categoria = categoriaRepository.findById(id)</span>
-<span class="pc" id="L114">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="pc" id="L114">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
 
 <span class="fc" id="L116">        categoria.setNombre(nombre);</span>
 <span class="fc" id="L117">        categoria.setEdadMin(request.edadMin());</span>
@@ -129,12 +129,12 @@ public class CategoriaService {
      *
      * @param id identificador de la categoría
      * @return la categoría reactivada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional
     public CategoriaResponse reactivar(Long id) {
 <span class="fc" id="L136">        Categoria categoria = categoriaRepository.findById(id)</span>
-<span class="pc" id="L137">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="pc" id="L137">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
 <span class="fc" id="L138">        categoria.setActivo(true);</span>
 <span class="fc" id="L139">        return toResponse(categoriaRepository.save(categoria));</span>
     }
@@ -143,14 +143,14 @@ public class CategoriaService {
      * Baja lógica de una categoría ({@code activo = false}).
      *
      * @param id identificador de la categoría
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
-    @Auditado(accion = &quot;ELIMINAR&quot;, entidad = &quot;Categoria&quot;, idSpel = &quot;#p0&quot;,
+    @Audited(accion = &quot;ELIMINAR&quot;, entidad = &quot;Categoria&quot;, idSpel = &quot;#p0&quot;,
             descripcionSpel = &quot;'desactivo la categoria #' + #p0&quot;)
     @Transactional
     public void eliminar(Long id) {
 <span class="fc" id="L152">        Categoria categoria = categoriaRepository.findById(id)</span>
-<span class="pc" id="L153">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
+<span class="pc" id="L153">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada con ID: &quot; + id));</span>
 <span class="fc" id="L154">        categoria.setActivo(false);</span>
 <span class="fc" id="L155">        categoriaRepository.save(categoria);</span>
 <span class="fc" id="L156">    }</span>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">JwtService.java</span></div><h1>JwtService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>JwtService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">JwtService.java</span></div><h1>JwtService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
 
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -10,8 +10,13 @@ import javax.crypto.SecretKey;
 import java.util.Date;
 import java.util.UUID;
 
+/**
+ * Emisión y validación de tokens JWT (acceso y refresco). Cada token lleva un
+ * {@code jti} único, firma HMAC derivada de {@code security.jwt.secret}, y
+ * reclamos de rol, tipo, emisor y audiencia configurados por propiedades.
+ */
 @Service
-<span class="fc" id="L14">public class JwtService {</span>
+<span class="fc" id="L19">public class JwtService {</span>
     @Value(&quot;${security.jwt.secret}&quot;)
     private String secret;
 
@@ -27,72 +32,124 @@ import java.util.UUID;
     @Value(&quot;${security.jwt.audience:sged-frontend}&quot;)
     private String audience;
 
+    /**
+     * Genera un token de acceso (tipo {@code access}) con la vigencia de
+     * {@code security.jwt.expiration-ms}.
+     *
+     * @param username nombre de usuario (sujeto del token)
+     * @param rol      rol del usuario, guardado como reclamo
+     * @return token JWT firmado
+     */
     public String generateToken(String username, String rol) {
-<span class="fc" id="L31">        return buildToken(username, rol, expirationMs, &quot;access&quot;);</span>
+<span class="fc" id="L44">        return buildToken(username, rol, expirationMs, &quot;access&quot;);</span>
     }
 
+    /**
+     * Genera un token de refresco (tipo {@code refresh}) con la vigencia de
+     * {@code security.jwt.refresh-expiration-ms}.
+     *
+     * @param username nombre de usuario (sujeto del token)
+     * @param rol      rol del usuario, guardado como reclamo
+     * @return token JWT firmado
+     */
     public String generateRefreshToken(String username, String rol) {
-<span class="fc" id="L35">        return buildToken(username, rol, refreshExpirationMs, &quot;refresh&quot;);</span>
+<span class="fc" id="L56">        return buildToken(username, rol, refreshExpirationMs, &quot;refresh&quot;);</span>
     }
 
+    /**
+     * Comprueba si un token es válido: firma y emisor correctos, audiencia
+     * esperada y expiración no vencida.
+     *
+     * @param token token JWT a examinar
+     * @return {@code true} si es válido; {@code false} si es inválido, mal
+     *         formado o está expirado
+     */
     public boolean isTokenValid(String token) {
         try {
-<span class="fc" id="L40">            Claims claims = parseToken(token).getPayload();</span>
-<span class="fc" id="L41">            java.util.Set&lt;String&gt; aud = claims.getAudience();</span>
-<span class="pc bpc" id="L42" title="2 of 6 branches missed.">            return aud != null &amp;&amp; aud.contains(audience) &amp;&amp; !claims.getExpiration().before(new Date());</span>
-<span class="fc" id="L43">        } catch (JwtException | IllegalArgumentException e) {</span>
-<span class="fc" id="L44">            return false;</span>
+<span class="fc" id="L69">            Claims claims = parseToken(token).getPayload();</span>
+<span class="fc" id="L70">            java.util.Set&lt;String&gt; aud = claims.getAudience();</span>
+<span class="pc bpc" id="L71" title="2 of 6 branches missed.">            return aud != null &amp;&amp; aud.contains(audience) &amp;&amp; !claims.getExpiration().before(new Date());</span>
+<span class="fc" id="L72">        } catch (JwtException | IllegalArgumentException e) {</span>
+<span class="fc" id="L73">            return false;</span>
         }
     }
 
+    /**
+     * Extrae el nombre de usuario (sujeto) de un token.
+     *
+     * @param token token JWT ya firmado
+     * @return el sujeto del token
+     */
     public String extractUsername(String token) {
-<span class="fc" id="L49">        return parseToken(token).getPayload().getSubject();</span>
+<span class="fc" id="L84">        return parseToken(token).getPayload().getSubject();</span>
     }
 
+    /**
+     * Extrae el rol del usuario guardado como reclamo del token.
+     *
+     * @param token token JWT ya firmado
+     * @return el valor del reclamo {@code rol}
+     */
     public String extractRol(String token) {
-<span class="fc" id="L53">        return parseToken(token).getPayload().get(&quot;rol&quot;, String.class);</span>
+<span class="fc" id="L94">        return parseToken(token).getPayload().get(&quot;rol&quot;, String.class);</span>
     }
 
+    /**
+     * Extrae el identificador único del token.
+     *
+     * @param token token JWT ya firmado
+     * @return el valor del reclamo {@code jti}
+     */
     public String extractJti(String token) {
-<span class="fc" id="L57">        return parseToken(token).getPayload().getId();</span>
+<span class="fc" id="L104">        return parseToken(token).getPayload().getId();</span>
     }
 
+    /**
+     * Vigencia de los tokens de acceso, en milisegundos.
+     *
+     * @return {@code security.jwt.expiration-ms}
+     */
     public long getExpirationMs() {
-<span class="fc" id="L61">        return expirationMs;</span>
+<span class="fc" id="L113">        return expirationMs;</span>
     }
 
+    /**
+     * Vigencia de los tokens de refresco, en milisegundos.
+     *
+     * @return {@code security.jwt.refresh-expiration-ms}
+     */
     public long getRefreshExpirationMs() {
-<span class="fc" id="L65">        return refreshExpirationMs;</span>
+<span class="fc" id="L122">        return refreshExpirationMs;</span>
     }
 
     private String buildToken(String username, String rol, long ttl, String tokenType) {
-<span class="fc" id="L69">        Date now = new Date();</span>
-<span class="fc" id="L70">        return Jwts.builder()</span>
-<span class="fc" id="L71">                .id(UUID.randomUUID().toString())</span>
-<span class="fc" id="L72">                .subject(username)</span>
-<span class="fc" id="L73">                .claim(&quot;rol&quot;, rol)</span>
-<span class="fc" id="L74">                .claim(&quot;type&quot;, tokenType)</span>
-<span class="fc" id="L75">                .issuer(issuer)</span>
-<span class="fc" id="L76">                .audience().add(audience).and()</span>
-<span class="fc" id="L77">                .issuedAt(now)</span>
-<span class="fc" id="L78">                .notBefore(now)</span>
-<span class="fc" id="L79">                .expiration(new Date(now.getTime() + ttl))</span>
-<span class="fc" id="L80">                .signWith(getSigningKey())</span>
-<span class="fc" id="L81">                .compact();</span>
+<span class="fc" id="L126">        Date now = new Date();</span>
+<span class="fc" id="L127">        return Jwts.builder()</span>
+<span class="fc" id="L128">                .id(UUID.randomUUID().toString())</span>
+<span class="fc" id="L129">                .subject(username)</span>
+<span class="fc" id="L130">                .claim(&quot;rol&quot;, rol)</span>
+<span class="fc" id="L131">                .claim(&quot;type&quot;, tokenType)</span>
+<span class="fc" id="L132">                .issuer(issuer)</span>
+<span class="fc" id="L133">                .audience().add(audience).and()</span>
+<span class="fc" id="L134">                .issuedAt(now)</span>
+<span class="fc" id="L135">                .notBefore(now)</span>
+<span class="fc" id="L136">                .expiration(new Date(now.getTime() + ttl))</span>
+<span class="fc" id="L137">                .signWith(getSigningKey())</span>
+<span class="fc" id="L138">                .compact();</span>
     }
 
     private Jws&lt;Claims&gt; parseToken(String token) {
-<span class="fc" id="L85">        return Jwts.parser()</span>
-<span class="fc" id="L86">                .verifyWith(getSigningKey())</span>
-<span class="fc" id="L87">                .requireIssuer(issuer)</span>
-<span class="fc" id="L88">                .build()</span>
-<span class="fc" id="L89">                .parseSignedClaims(token);</span>
+<span class="fc" id="L142">        return Jwts.parser()</span>
+<span class="fc" id="L143">                .verifyWith(getSigningKey())</span>
+<span class="fc" id="L144">                .requireIssuer(issuer)</span>
+<span class="fc" id="L145">                .build()</span>
+<span class="fc" id="L146">                .parseSignedClaims(token);</span>
     }
 
     private SecretKey getSigningKey() {
-<span class="fc" id="L93">        byte[] keyBytes = Decoders.BASE64.decode(</span>
-<span class="fc" id="L94">                java.util.Base64.getEncoder().encodeToString(secret.getBytes()));</span>
-<span class="fc" id="L95">        return Keys.hmacShaKeyFor(keyBytes);</span>
+<span class="fc" id="L150">        byte[] keyBytes = Decoders.BASE64.decode(</span>
+<span class="fc" id="L151">                java.util.Base64.getEncoder().encodeToString(secret.getBytes()));</span>
+<span class="fc" id="L152">        return Keys.hmacShaKeyFor(keyBytes);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

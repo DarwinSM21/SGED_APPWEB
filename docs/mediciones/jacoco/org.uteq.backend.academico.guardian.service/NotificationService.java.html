@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NotificationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.guardian.service</a> &gt; <span class="el_source">NotificationService.java</span></div><h1>NotificationService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.guardian.service;
+
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.guardian.dto.NotificationDtos.NotificationResponse;
+import org.uteq.backend.academico.guardian.entity.Notification;
+import org.uteq.backend.academico.guardian.entity.Notification.Type;
+import org.uteq.backend.academico.guardian.entity.Guardian;
+import org.uteq.backend.academico.guardian.repository.NotificationRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
+import org.uteq.backend.academico.guardian.repository.GuardianRepository;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
+
+import java.util.List;
+import org.uteq.backend.academico.guardian.entity.Consent;
+import org.uteq.backend.academico.guardian.repository.ConsentRepository;
+
+/**
+ * RF-22: notifica a los representantes de un estudiante cuando marca
+ * asistencia o se le registra una lesión. Notificación en-app únicamente
+ * (fila en {@code academico.notificaciones}, sin correo ni SMS): el proyecto
+ * no tiene infraestructura de envío externo.
+ *
+ * &lt;p&gt;Si el estudiante no tiene ningún representante vinculado, no pasa nada.
+ * Este efecto nunca debe poder tumbar el flujo principal (marcar asistencia,
+ * registrar lesión): falla en silencio para esa parte, no propaga la
+ * excepción. Cada notificación requiere además un consentimiento vigente del
+ * representante con el alcance correspondiente (hallazgo H-04).
+ */
+@Service
+@RequiredArgsConstructor
+public class NotificationService {
+<span class="fc" id="L37">    private static final Logger log = LoggerFactory.getLogger(NotificationService.class);</span>
+
+    private final NotificationRepository notificacionRepository;
+    private final GuardianStudentRepository vinculoRepository;
+    private final GuardianRepository representanteRepository;
+    private final ConsentRepository consentimientoRepository;
+
+    /**
+     * Crea una notificación de asistencia para cada representante autorizado
+     * del estudiante. No lanza: un fallo se registra y se traga.
+     *
+     * @param estudiante       estudiante que marcó asistencia
+     * @param estadoAsistencia estado marcado ({@code &quot;TARDE&quot;} o presente)
+     */
+    @Transactional
+    public void notifyAttendance(Student estudiante, String estadoAsistencia) {
+<span class="fc" id="L53">        sinTumbarElFlujoPrincipal(&quot;asistencia&quot;, () -&gt; {</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            String estado = &quot;TARDE&quot;.equals(estadoAsistencia) ? &quot;con tardanza&quot; : &quot;a tiempo&quot;;</span>
+<span class="fc" id="L55">            crearParaCadaRepresentante(estudiante, Type.ASISTENCIA,</span>
+                    Consent.ALCANCE_NOTIFICACIONES_ASISTENCIA,
+<span class="fc" id="L57">                    nombreCompleto(estudiante) + &quot; marcó asistencia hoy (&quot; + estado + &quot;).&quot;);</span>
+<span class="fc" id="L58">        });</span>
+<span class="fc" id="L59">    }</span>
+
+    /**
+     * Crea una notificación de lesión para cada representante autorizado del
+     * estudiante. No lanza: un fallo se registra y se traga.
+     *
+     * @param estudiante        estudiante lesionado
+     * @param descripcionLesion descripción de la lesión registrada
+     */
+    @Transactional
+    public void notifyInjury(Student estudiante, String descripcionLesion) {
+<span class="fc" id="L70">        sinTumbarElFlujoPrincipal(&quot;lesion&quot;, () -&gt;</span>
+<span class="fc" id="L71">                crearParaCadaRepresentante(estudiante, Type.LESION,</span>
+                        Consent.ALCANCE_NOTIFICACIONES_LESION,
+<span class="fc" id="L73">                        &quot;Se registró una lesión para &quot; + nombreCompleto(estudiante) + &quot;: &quot; + descripcionLesion));</span>
+<span class="fc" id="L74">    }</span>
+
+    /**
+     * Ejecuta el efecto de notificación sin dejar que su fallo se propague.
+     *
+     * &lt;p&gt;La captura tiene que estar &lt;b&gt;aquí dentro&lt;/b&gt; y no en quien llama:
+     * estos métodos son {@code @Transactional} y se invocan desde
+     * {@code AsistenciaService} / {@code LesionService}, ya dentro de una
+     * transacción. Si la excepción saliera, el proxy de Spring marcaría la
+     * transacción como {@code rollback-only} y el {@code try/catch} del
+     * llamador no serviría —al confirmar saltaría
+     * {@code UnexpectedRollbackException} y se perdería la asistencia ya
+     * marcada—.
+     *
+     * &lt;p&gt;Límite conocido: cubre fallos de nivel de aplicación. Un fallo de
+     * nivel de base (violación de FK) aborta la transacción en PostgreSQL y
+     * ya no hay captura en Java que lo rescate; aislarlo del todo exigiría
+     * {@code REQUIRES_NEW} o un evento {@code AFTER_COMMIT}, anotado como
+     * trabajo futuro.
+     *
+     * @param contexto etiqueta para el log ({@code &quot;asistencia&quot;} /
+     *                 {@code &quot;lesion&quot;})
+     * @param efecto   el efecto de notificación a ejecutar
+     */
+    private void sinTumbarElFlujoPrincipal(String contexto, Runnable efecto) {
+        try {
+<span class="fc" id="L100">            efecto.run();</span>
+<span class="fc" id="L101">        } catch (RuntimeException e) {</span>
+<span class="fc" id="L102">            log.warn(&quot;No se pudo notificar a los representantes ({}): {}. &quot;</span>
+                            + &quot;El registro principal se conserva.&quot;,
+<span class="fc" id="L104">                    contexto, e.getClass().getSimpleName());</span>
+<span class="fc" id="L105">        }</span>
+<span class="fc" id="L106">    }</span>
+
+    /**
+     * Notificaciones del representante autenticado, más recientes primero.
+     *
+     * @param username nombre de usuario del representante
+     * @return la lista de notificaciones
+     * @throws ResourceNotFoundException si la cuenta no tiene un
+     *                                      representante asociado
+     */
+    @Transactional(readOnly = true)
+    public List&lt;NotificationResponse&gt; myNotifications(String username) {
+<span class="nc" id="L118">        Guardian representante = representanteDe(username);</span>
+<span class="nc" id="L119">        return notificacionRepository</span>
+<span class="nc" id="L120">                .findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(representante.getIdRepresentante())</span>
+<span class="nc" id="L121">                .stream().map(this::aResponse).toList();</span>
+    }
+
+    /**
+     * Número de notificaciones sin leer del representante autenticado.
+     *
+     * @param username nombre de usuario del representante
+     * @return el conteo de no leídas
+     * @throws ResourceNotFoundException si la cuenta no tiene un
+     *                                      representante asociado
+     */
+    @Transactional(readOnly = true)
+    public long unreadCount(String username) {
+<span class="nc" id="L134">        Guardian representante = representanteDe(username);</span>
+<span class="nc" id="L135">        return notificacionRepository.countByRepresentante_IdRepresentanteAndLeidaFalse(representante.getIdRepresentante());</span>
+    }
+
+    /**
+     * Marca una notificación del representante autenticado como leída.
+     * Responde {@code 404} uniforme si no existe o no es suya (mismo criterio
+     * IDOR del resto del módulo).
+     *
+     * @param username       nombre de usuario del representante
+     * @param idNotificacion identificador de la notificación
+     * @throws ResourceNotFoundException si la notificación no existe o no
+     *                                      pertenece al representante
+     */
+    @Transactional
+    public void markRead(String username, Long idNotificacion) {
+<span class="nc" id="L150">        Guardian representante = representanteDe(username);</span>
+<span class="nc" id="L151">        Notification notificacion = notificacionRepository</span>
+<span class="nc" id="L152">                .findByIdNotificacionAndRepresentante_IdRepresentante(idNotificacion, representante.getIdRepresentante())</span>
+<span class="nc" id="L153">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Notificación no encontrada con id: &quot; + idNotificacion));</span>
+<span class="nc" id="L154">        notificacion.setLeida(true);</span>
+<span class="nc" id="L155">        notificacionRepository.save(notificacion);</span>
+<span class="nc" id="L156">    }</span>
+
+    private void crearParaCadaRepresentante(Student estudiante, Type tipo,
+                                            String alcanceRequerido, String mensaje) {
+<span class="fc" id="L160">        List&lt;Guardian&gt; representantes = vinculoRepository</span>
+<span class="fc" id="L161">                .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())</span>
+<span class="fc" id="L162">                .stream().map(v -&gt; v.getRepresentante()).toList();</span>
+
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        for (Guardian representante : representantes) {</span>
+<span class="fc bfc" id="L165" title="All 2 branches covered.">            if (!autorizo(representante, estudiante, alcanceRequerido)) {</span>
+<span class="fc" id="L166">                log.info(&quot;No se notifica al representante {} sobre el estudiante {}: &quot;</span>
+                                + &quot;no hay consentimiento vigente para {}&quot;,
+<span class="fc" id="L168">                        representante.getIdRepresentante(), estudiante.getIdEstudiante(), alcanceRequerido);</span>
+<span class="fc" id="L169">                continue;</span>
+            }
+<span class="fc" id="L171">            notificacionRepository.save(Notification.builder()</span>
+<span class="fc" id="L172">                    .representante(representante)</span>
+<span class="fc" id="L173">                    .estudiante(estudiante)</span>
+<span class="fc" id="L174">                    .tipo(tipo)</span>
+<span class="fc" id="L175">                    .mensaje(mensaje)</span>
+<span class="fc" id="L176">                    .leida(false)</span>
+<span class="fc" id="L177">                    .build());</span>
+<span class="fc" id="L178">        }</span>
+<span class="fc" id="L179">    }</span>
+
+    private boolean autorizo(Guardian representante, Student estudiante, String alcance) {
+<span class="fc" id="L182">        Long idR = representante.getIdRepresentante();</span>
+<span class="fc" id="L183">        Long idE = estudiante.getIdEstudiante();</span>
+<span class="fc bfc" id="L184" title="All 2 branches covered.">        return vigente(idR, idE, alcance)</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                || vigente(idR, idE, Consent.ALCANCE_NOTIFICACIONES);</span>
+    }
+
+    private boolean vigente(Long idRepresentante, Long idEstudiante, String alcance) {
+<span class="fc" id="L189">        return consentimientoRepository</span>
+<span class="fc" id="L190">                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(</span>
+                        idRepresentante, idEstudiante, alcance)
+<span class="fc" id="L192">                .isPresent();</span>
+    }
+
+    private Guardian representanteDe(String username) {
+<span class="nc" id="L196">        return representanteRepository.findByUsuario_Username(username)</span>
+<span class="nc" id="L197">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un representante asociado a esta cuenta&quot;));</span>
+    }
+
+    private String nombreCompleto(Student e) {
+<span class="fc" id="L201">        var p = e.getPersona();</span>
+<span class="fc" id="L202">        return p.getNombre() + &quot; &quot; + p.getApellido();</span>
+    }
+
+    private NotificationResponse aResponse(Notification n) {
+<span class="nc" id="L206">        var persona = n.getEstudiante().getPersona();</span>
+<span class="nc" id="L207">        return new NotificationResponse(</span>
+<span class="nc" id="L208">                n.getIdNotificacion(),</span>
+<span class="nc" id="L209">                n.getEstudiante().getIdEstudiante(),</span>
+<span class="nc" id="L210">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="nc" id="L211">                n.getTipo(),</span>
+<span class="nc" id="L212">                n.getMensaje(),</span>
+<span class="nc" id="L213">                n.getLeida(),</span>
+<span class="nc" id="L214">                n.getCreatedAt());</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

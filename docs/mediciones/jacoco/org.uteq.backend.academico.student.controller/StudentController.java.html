@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>StudentController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.academico.student.controller</a> &gt; <span class="el_source">StudentController.java</span></div><h1>StudentController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.academico.student.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.academico.student.dto.UpdatePositionRequest;
+import org.uteq.backend.academico.student.dto.StudentPageResponse;
+import org.uteq.backend.academico.student.dto.StudentRequest;
+import org.uteq.backend.academico.student.dto.StudentResponse;
+import org.uteq.backend.academico.student.dto.EnableAccessRequest;
+import org.uteq.backend.academico.student.service.StudentService;
+
+/**
+ * CRUD de {@code Student} con paginación y baja lógica, más operaciones
+ * de conjunto por categoría (conteo, desactivación) y la habilitación del
+ * acceso propio del estudiante. Los endpoints de escritura quedan
+ * restringidos a {@code ADMINISTRADOR} / {@code RECEPCIONISTA} vía
+ * {@code @PreAuthorize}; la lectura la comparte también {@code ENTRENADOR}.
+ */
+@RestController
+@RequestMapping(&quot;/api/estudiantes&quot;)
+@RequiredArgsConstructor
+public class StudentController {
+    private final StudentService estudianteService;
+
+    /**
+     * Lista paginada de estudiantes activos.
+     *
+     * @param page número de página (desde 0)
+     * @param size tamaño de página
+     * @param sort par {@code campo[,asc|desc]}; por defecto
+     *             {@code idEstudiante,asc}
+     * @return {@code 200 OK} con la página solicitada
+     */
+    @GetMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;StudentPageResponse&lt;StudentResponse&gt;&gt; list(
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size,
+            @RequestParam(defaultValue = &quot;idEstudiante,asc&quot;) String[] sort) {
+<span class="fc" id="L46">        String campo = sort[0];</span>
+<span class="pc bpc" id="L47" title="2 of 4 branches missed.">        Sort.Direction dir = sort.length &gt; 1 &amp;&amp; &quot;desc&quot;.equalsIgnoreCase(sort[1])</span>
+<span class="pc" id="L48">                ? Sort.Direction.DESC : Sort.Direction.ASC;</span>
+<span class="fc" id="L49">        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));</span>
+
+<span class="fc" id="L51">        return ResponseEntity.ok(estudianteService.list(pageRequest));</span>
+    }
+
+    /**
+     * Busca un estudiante por su identificador.
+     *
+     * @param id identificador del estudiante
+     * @return {@code 200 OK} con el estudiante
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si no existe ({@code 404})
+     */
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;StudentResponse&gt; findById(@PathVariable Long id) {
+<span class="fc" id="L65">        return ResponseEntity.ok(estudianteService.findById(id));</span>
+    }
+
+    /**
+     * Registra un estudiante sobre una persona ya existente; si la persona
+     * tenía una ficha inactiva, la reactiva.
+     *
+     * @param request datos del estudiante; validado con {@code @Valid}
+     * @return {@code 201 Created} con el estudiante registrado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si la persona, la categoría o el estado referidos no existen
+     * @throws IllegalArgumentException si la persona ya tiene ficha activa o
+     *         el código de estudiante está en uso ({@code 422})
+     */
+    @PostMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;StudentResponse&gt; create(
+            @Valid @RequestBody StudentRequest request) {
+<span class="fc" id="L83">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="fc" id="L84">                .body(estudianteService.create(request));</span>
+    }
+
+    /**
+     * Actualiza la ficha completa de un estudiante.
+     *
+     * @param id      identificador del estudiante a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con el estudiante actualizado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si el estudiante o alguna referencia no existen ({@code 404})
+     * @throws IllegalArgumentException si el código nuevo pertenece a otro
+     *         estudiante ({@code 422})
+     */
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;StudentResponse&gt; update(
+            @PathVariable Long id,
+            @Valid @RequestBody StudentRequest request) {
+<span class="fc" id="L103">        return ResponseEntity.ok(estudianteService.update(id, request));</span>
+    }
+
+    /**
+     * Actualiza solo la posición nominal, no el resto de la ficha: a
+     * diferencia de {@link #update}, esto también lo puede usar
+     * {@code ENTRENADOR} desde evaluación diaria.
+     *
+     * @param id      identificador del estudiante
+     * @param request cuerpo con {@code idPosicion} ({@code null} para quitarla)
+     * @return {@code 200 OK} con el estudiante actualizado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si el estudiante o la posición no existen ({@code 404})
+     */
+    @PutMapping(&quot;/{id}/posicion&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;StudentResponse&gt; updatePosition(
+            @PathVariable Long id, @RequestBody UpdatePositionRequest request) {
+<span class="nc" id="L121">        return ResponseEntity.ok(estudianteService.updatePosition(id, request.idPosicion()));</span>
+    }
+
+    /**
+     * Baja lógica de un estudiante ({@code activo = false}).
+     *
+     * @param id identificador del estudiante
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si no existe ({@code 404})
+     */
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;Void&gt; delete(@PathVariable Long id) {
+<span class="fc" id="L135">        estudianteService.delete(id);</span>
+<span class="fc" id="L136">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Cuenta los estudiantes activos de una categoría mediante procedimiento
+     * almacenado.
+     *
+     * @param idCategoria identificador de la categoría
+     * @return {@code 200 OK} con el conteo
+     */
+    @GetMapping(&quot;/conteo/categoria/{idCategoria}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;Long&gt; countActive(@PathVariable Long idCategoria) {
+<span class="fc" id="L149">        return ResponseEntity.ok(estudianteService.countActiveByCategory(idCategoria));</span>
+    }
+
+    /**
+     * Desactiva en bloque a todos los estudiantes activos de una categoría,
+     * mediante procedimiento almacenado.
+     *
+     * @param idCategoria identificador de la categoría (cuerpo de la petición)
+     * @return {@code 200 OK} sin cuerpo
+     */
+    @PostMapping(&quot;/operaciones/desactivar-categoria&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;Void&gt; deactivateByCategory(@RequestBody Long idCategoria) {
+<span class="fc" id="L162">        estudianteService.deactivateByCategory(idCategoria);</span>
+<span class="fc" id="L163">        return ResponseEntity.ok().build();</span>
+    }
+
+    /**
+     * Reactiva un estudiante dado de baja.
+     *
+     * @param id identificador del estudiante
+     * @return {@code 200 OK} con el estudiante reactivado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si ya está activo ({@code 422})
+     */
+    @PostMapping(&quot;/{id}/reactivar&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;StudentResponse&gt; reactivate(@PathVariable Long id) {
+<span class="nc" id="L178">        return ResponseEntity.ok(estudianteService.reactivate(id));</span>
+    }
+
+    /**
+     * Propone el siguiente {@code codigo_estudiante} del año. No lo reserva:
+     * el alta sigue validando unicidad.
+     *
+     * @param anio año para el que se genera el código
+     * @return {@code 200 OK} con el código propuesto
+     */
+    @GetMapping(&quot;/operaciones/siguiente-codigo&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;String&gt; nextCode(@RequestParam int anio) {
+<span class="nc" id="L191">        return ResponseEntity.ok(estudianteService.generateNextCode(anio));</span>
+    }
+
+    /**
+     * Contacto rápido del representante del estudiante, para un entrenador
+     * ante una emergencia o lesión.
+     *
+     * @param id identificador del estudiante
+     * @return {@code 200 OK} con el texto del contacto
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si el estudiante no existe ({@code 404})
+     */
+    @GetMapping(&quot;/{id}/contacto-emergencia&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')&quot;)
+    public ResponseEntity&lt;String&gt; emergencyContact(@PathVariable Long id) {
+<span class="nc" id="L206">        return ResponseEntity.ok(estudianteService.emergencyContact(id));</span>
+    }
+
+    /**
+     * Habilita el acceso propio de un estudiante que ya existe (rol
+     * {@code ESTUDIANTE}), para que pueda marcar su asistencia por QR. No
+     * crea una persona nueva: usa la que el estudiante ya tiene.
+     *
+     * @param id      identificador del estudiante
+     * @param request credenciales de la cuenta a crear; validado con
+     *                {@code @Valid}
+     * @return {@code 201 Created} con el estudiante y su acceso habilitado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si el estudiante no existe ({@code 404})
+     * @throws IllegalArgumentException si el {@code username} ya existe o la
+     *         persona tiene una cuenta de otro rol ({@code 422})
+     */
+    @PostMapping(&quot;/{id}/acceso&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;StudentResponse&gt; enableAccess(
+            @PathVariable Long id, @Valid @RequestBody EnableAccessRequest request) {
+<span class="nc" id="L227">        return ResponseEntity.status(HttpStatus.CREATED)</span>
+<span class="nc" id="L228">                .body(estudianteService.enableAccess(id, request));</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

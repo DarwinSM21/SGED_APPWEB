@@ -2400,6 +2400,60 @@ Entidades & \textbf{100\,\% (48/48)} & \textbf{92,31\,\% (24/26)} \\
 \end{tabular}
 \end{table}
 
+El desglose por capa agrega 200 clases en 4 filas; para auditar un
+subdominio concreto, la Tabla~\ref{tab:cobertura-por-paquete} desagrega
+los 87 paquetes reales de \ruta{docs/mediciones/jacoco/jacoco.csv} en
+sus 25 grupos \emph{dominio.subdominio} (uniendo \texttt{controller},
+\texttt{dto}, \texttt{service}, \texttt{entity}, etc. de un mismo
+subdominio en una fila; sin agrupar habría 87 filas, más de las que esta
+página puede mostrar con utilidad). Generada por el mismo script que
+produjo la cifra agregada de arriba —no hay una segunda fuente de
+verdad—; recalculable con \texttt{python3} sobre el CSV citado.
+
+\begin{longtable}{@{}lrr@{}}
+\caption{Cobertura por subdominio (agregando controller/dto/service/entity/etc.), recalculada desde \ruta{jacoco.csv}.\label{tab:cobertura-por-paquete}}\\
+\toprule
+\textbf{Subdominio} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Subdominio} & \textbf{Líneas} & \textbf{\emph{Branches}} \\
+\midrule
+\endhead
+\texttt{raíz} & 96,2\,\% (51/53) & --- \\
+\texttt{academico.alert} & 100,0\,\% (52/52) & 100,0\,\% (24/24) \\
+\texttt{academico.guardian} & 86,6\,\% (284/328) & 85,4\,\% (41/48) \\
+\texttt{academico.payment} & 72,8\,\% (83/114) & 67,9\,\% (19/28) \\
+\texttt{academico.student} & 84,2\,\% (208/247) & 60,0\,\% (54/90) \\
+\texttt{common} & 63,1\,\% (183/290) & 56,0\,\% (56/100) \\
+\texttt{deportivo.asistencia} & 97,1\,\% (169/174) & 93,9\,\% (62/66) \\
+\texttt{deportivo.categoria} & 95,4\,\% (62/65) & 80,0\,\% (8/10) \\
+\texttt{deportivo.entrenador} & 80,0\,\% (68/85) & 62,5\,\% (10/16) \\
+\texttt{deportivo.especialidad} & 92,5\,\% (37/40) & 66,7\,\% (4/6) \\
+\texttt{deportivo.evaluacion} & 79,9\,\% (123/154) & 53,8\,\% (28/52) \\
+\texttt{deportivo.horario} & 94,8\,\% (109/115) & 92,3\,\% (24/26) \\
+\texttt{deportivo.lesion} & 100,0\,\% (63/63) & 85,0\,\% (17/20) \\
+\texttt{deportivo.partido} & 64,5\,\% (196/304) & 54,5\,\% (61/112) \\
+\texttt{deportivo.posicion} & 100,0\,\% (5/5) & --- \\
+\texttt{deportivo.sesion} & 95,2\,\% (119/125) & 84,8\,\% (39/46) \\
+\texttt{inventario.assignment} & 93,8\,\% (90/96) & 84,4\,\% (27/32) \\
+\texttt{inventario.item} & 93,8\,\% (60/64) & 83,3\,\% (10/12) \\
+\texttt{inventario.movement} & 93,3\,\% (42/45) & 100,0\,\% (4/4) \\
+\texttt{reportes} & 69,4\,\% (100/144) & 56,8\,\% (25/44) \\
+\texttt{seguridad.audit} & 95,7\,\% (90/94) & 82,0\,\% (41/50) \\
+\texttt{seguridad.auth} & 99,6\,\% (223/224) & 83,8\,\% (57/68) \\
+\texttt{seguridad.person} & 93,3\,\% (70/75) & 71,4\,\% (10/14) \\
+\texttt{seguridad.status} & 100,0\,\% (8/8) & --- \\
+\texttt{seguridad.user} & 93,5\,\% (143/153) & 67,2\,\% (43/64) \\
+\bottomrule
+\end{longtable}
+
+El subdominio más bajo en líneas es \texttt{common} (63,1\,\%): agrupa
+\texttt{common.exception} (manejo de errores, muchas ramas de
+\emph{fallback} poco ejercitadas por los tests) y \texttt{common.ia}
+(el cliente de \emph{feedback} por IA, con rutas de reintento y
+proveedor alternativo). Ninguno de los 25 subdominios está en cero.
+
 Una redacción anterior de este párrafo atribuía el bajo porcentaje de la
 capa de entidades (entonces 27,08\,\%) a que JaCoCo contaba los
 \emph{getters}/\emph{setters} generados por Lombok. Eso era incorrecto:
@@ -3473,8 +3527,29 @@ comando, no una captura de pantalla que solo puede mirarse—.
 \end{table}
 
 Las tres corridas son consecutivas en el historial de \texttt{main} y
-verificables en vivo en
-\url{https://github.com/darcalleg/SGED_APPWEB/actions}.
+están archivadas con su URL de origen en
+\ruta{docs/mediciones/ci/runs-verdes.json}: ocurrieron en
+\texttt{DarwinSM21/SGED\_APPWEB}, el repositorio donde de hecho
+transcurrió esa ventana de dos semanas, y sus números de corrida
+pertenecen al historial de \emph{Actions} de ese repositorio
+específico, no del actual.
+
+\textbf{Nota sobre la migración a \texttt{darcalleg/SGED\_APPWEB}
+(2026-09-06/07).} El repositorio principal cambió después de que
+ocurrió lo anterior; migrar el historial de \texttt{git} no traslada ni
+recrea retroactivamente las corridas de \emph{Actions} de otro
+repositorio. \texttt{darcalleg/SGED\_APPWEB} tiene su propio historial
+de CI, mucho más corto por ser nuevo: 16 corridas verificadas contra su
+API pública (\ruta{docs/mediciones/ci/runs-darcalleg.json}), 10 en
+verde y 6 en rojo. Las 6 rojas comparten una sola causa —no seis
+defectos distintos—: el mismo \emph{step} de validación de
+trazabilidad, disparado dos veces por dos renombramientos de
+identificadores distintos (\emph{inventario}/\emph{estado}, anterior a
+este trabajo, cerrado en la corrida \#6; y el de
+\emph{person}/\emph{user}/\emph{alert}/\emph{payment}/\emph{guardian}/
+\emph{student} de esta entrega, cerrado en la corrida \#15). La corrida
+más reciente al momento de escribir esto (\#18,
+\texttt{a46f681}) está en verde.
 
 \subsection*{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}
 \addcontentsline{toc}{subsection}{Anexo E --- Checklist del estándar empírico (Ralph et al., 2021)}

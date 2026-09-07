@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AssignmentService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.inventario.assignment.service</a> &gt; <span class="el_source">AssignmentService.java</span></div><h1>AssignmentService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.inventario.assignment.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
+import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.inventario.item.entity.Item;
+import org.uteq.backend.inventario.item.repository.ItemRepository;
+import org.uteq.backend.inventario.assignment.dto.AssignmentDtos.*;
+import org.uteq.backend.inventario.assignment.entity.Assignment;
+import org.uteq.backend.inventario.assignment.entity.Assignment.AssignmentStatus;
+import org.uteq.backend.inventario.assignment.entity.Assignment.RecipientType;
+import org.uteq.backend.inventario.assignment.repository.AssignmentRepository;
+import org.uteq.backend.seguridad.audit.aop.Audited;
+import org.uteq.backend.seguridad.user.entity.UserAccount;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
+
+import java.time.LocalDate;
+
+/**
+ * Entrega y devolución de artículos a estudiantes o entrenadores. Crear
+ * resta stock (mismo chequeo de no-negativo que un movimiento de salida);
+ * devolver con estado {@code DEVUELTO} lo repone, {@code PERDIDO} no.
+ */
+@Service
+@RequiredArgsConstructor
+public class AssignmentService {
+    private final AssignmentRepository asignacionRepository;
+    private final ItemRepository articuloRepository;
+    private final StudentRepository estudianteRepository;
+    private final EntrenadorRepository entrenadorRepository;
+    private final UserAccountRepository usuarioRepository;
+
+    /**
+     * Lista paginada de asignaciones, de la más reciente a la más antigua.
+     *
+     * @param pageable paginación
+     * @return la página, mapeada a {@link AssignmentResponse}
+     */
+    @Transactional(readOnly = true)
+    public Page&lt;AssignmentResponse&gt; listPaged(Pageable pageable) {
+<span class="nc" id="L49">        return asignacionRepository.findAllByOrderByFechaAsignacionDesc(pageable).map(this::toResponse);</span>
+    }
+
+    /**
+     * Asignaciones de un estudiante.
+     *
+     * @param idEstudiante identificador del estudiante
+     * @param pageable     paginación
+     * @return la página de asignaciones del estudiante
+     */
+    @Transactional(readOnly = true)
+    public Page&lt;AssignmentResponse&gt; listByStudent(Long idEstudiante, Pageable pageable) {
+<span class="nc" id="L61">        return asignacionRepository.findByEstudiante_IdEstudianteOrderByFechaAsignacionDesc(idEstudiante, pageable)</span>
+<span class="nc" id="L62">                .map(this::toResponse);</span>
+    }
+
+    /**
+     * Asignaciones de un entrenador.
+     *
+     * @param idEntrenador identificador del entrenador
+     * @param pageable     paginación
+     * @return la página de asignaciones del entrenador
+     */
+    @Transactional(readOnly = true)
+    public Page&lt;AssignmentResponse&gt; listByCoach(Long idEntrenador, Pageable pageable) {
+<span class="nc" id="L74">        return asignacionRepository.findByEntrenador_IdEntrenadorOrderByFechaAsignacionDesc(idEntrenador, pageable)</span>
+<span class="nc" id="L75">                .map(this::toResponse);</span>
+    }
+
+    /**
+     * Registra una asignación y descuenta la cantidad del stock del artículo.
+     *
+     * @param request             artículo, cantidad, destinatario (exactamente
+     *                            estudiante &lt;em&gt;o&lt;/em&gt; entrenador) y fecha
+     *                            esperada de devolución
+     * @param usernameRegistrador usuario que registra la asignación
+     * @return la asignación creada
+     * @throws ResourceNotFoundException si el artículo o el destinatario
+     *                                      no existen
+     * @throws IllegalArgumentException     si el destinatario está mal
+     *                                      especificado o no hay stock
+     *                                      suficiente
+     */
+    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Asignacion&quot;, idSpel = &quot;#result.idAsignacion&quot;,
+            descripcionSpel = &quot;'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)&quot;)
+    @Transactional
+    public AssignmentResponse create(AssignmentRequest request, String usernameRegistrador) {
+<span class="fc" id="L96">        validateRecipient(request.tipoDestinatario(), request.idEstudiante(), request.idEntrenador());</span>
+
+<span class="fc" id="L98">        Item articulo = findItem(request.idArticulo());</span>
+<span class="fc" id="L99">        int nuevoStock = articulo.getStockActual() - request.cantidad();</span>
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (nuevoStock &lt; 0) {</span>
+<span class="fc" id="L101">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L102">                    &quot;Stock insuficiente: hay &quot; + articulo.getStockActual() + &quot; unidades de \&quot;&quot;</span>
+<span class="fc" id="L103">                            + articulo.getNombre() + &quot;\&quot; y se intentan asignar &quot; + request.cantidad());</span>
+        }
+<span class="fc" id="L105">        articulo.setStockActual(nuevoStock);</span>
+<span class="fc" id="L106">        articuloRepository.save(articulo);</span>
+
+<span class="fc" id="L108">        UserAccount registrador = findUser(usernameRegistrador);</span>
+
+<span class="fc" id="L110">        Assignment.AssignmentBuilder builder = Assignment.builder()</span>
+<span class="fc" id="L111">                .articulo(articulo)</span>
+<span class="fc" id="L112">                .cantidad(request.cantidad())</span>
+<span class="fc" id="L113">                .tipoDestinatario(request.tipoDestinatario())</span>
+<span class="fc" id="L114">                .fechaAsignacion(LocalDate.now(Zones.ECUADOR))</span>
+<span class="fc" id="L115">                .fechaDevolucionEsperada(request.fechaDevolucionEsperada())</span>
+<span class="fc" id="L116">                .estado(AssignmentStatus.ASIGNADO)</span>
+<span class="fc" id="L117">                .registradoPor(registrador)</span>
+<span class="fc" id="L118">                .observaciones(request.observaciones());</span>
+
+<span class="fc bfc" id="L120" title="All 2 branches covered.">        if (request.tipoDestinatario() == RecipientType.ESTUDIANTE) {</span>
+<span class="fc" id="L121">            builder.estudiante(findStudent(request.idEstudiante()));</span>
+        } else {
+<span class="fc" id="L123">            builder.entrenador(findCoach(request.idEntrenador()));</span>
+        }
+
+<span class="fc" id="L126">        return toResponse(asignacionRepository.save(builder.build()));</span>
+    }
+
+    /**
+     * Resuelve una asignación como {@code DEVUELTO} (repone stock) o
+     * {@code PERDIDO} (no repone).
+     *
+     * @param id      identificador de la asignación
+     * @param request estado de la devolución y observaciones
+     * @return la asignación actualizada
+     * @throws ResourceNotFoundException si la asignación no existe
+     * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
+     *                                      la asignación ya estaba resuelta
+     */
+    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Asignacion&quot;, idSpel = &quot;#result.idAsignacion&quot;,
+            descripcionSpel = &quot;'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'&quot;)
+    @Transactional
+    public AssignmentResponse registerReturn(Long id, ReturnRequest request) {
+<span class="fc bfc" id="L144" title="All 2 branches covered.">        if (request.estado() == AssignmentStatus.ASIGNADO) {</span>
+<span class="fc" id="L145">            throw new IllegalArgumentException(&quot;El estado de devolución debe ser DEVUELTO o PERDIDO&quot;);</span>
+        }
+
+<span class="fc" id="L148">        Assignment asignacion = asignacionRepository.findById(id)</span>
+<span class="fc" id="L149">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Asignación no encontrada con ID: &quot; + id));</span>
+
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (asignacion.getEstado() != AssignmentStatus.ASIGNADO) {</span>
+<span class="fc" id="L152">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L153">                    &quot;La asignación #&quot; + id + &quot; ya fue resuelta como &quot; + asignacion.getEstado());</span>
+        }
+
+<span class="fc bfc" id="L156" title="All 2 branches covered.">        if (request.estado() == AssignmentStatus.DEVUELTO) {</span>
+<span class="fc" id="L157">            Item articulo = asignacion.getArticulo();</span>
+<span class="fc" id="L158">            articulo.setStockActual(articulo.getStockActual() + asignacion.getCantidad());</span>
+<span class="fc" id="L159">            articuloRepository.save(articulo);</span>
+        }
+
+<span class="fc" id="L162">        asignacion.setEstado(request.estado());</span>
+<span class="fc" id="L163">        asignacion.setFechaDevolucionReal(LocalDate.now(Zones.ECUADOR));</span>
+<span class="pc bpc" id="L164" title="2 of 4 branches missed.">        if (request.observaciones() != null &amp;&amp; !request.observaciones().isBlank()) {</span>
+<span class="fc" id="L165">            asignacion.setObservaciones(request.observaciones());</span>
+        }
+
+<span class="fc" id="L168">        return toResponse(asignacionRepository.save(asignacion));</span>
+    }
+
+    private void validateRecipient(RecipientType tipo, Long idEstudiante, Long idEntrenador) {
+<span class="fc bfc" id="L172" title="All 2 branches covered.">        boolean esEstudiante = tipo == RecipientType.ESTUDIANTE;</span>
+<span class="pc bpc" id="L173" title="1 of 6 branches missed.">        if (esEstudiante &amp;&amp; (idEstudiante == null || idEntrenador != null)) {</span>
+<span class="fc" id="L174">            throw new IllegalArgumentException(</span>
+                    &quot;Para tipoDestinatario ESTUDIANTE se requiere idEstudiante y no idEntrenador&quot;);
+        }
+<span class="pc bpc" id="L177" title="2 of 6 branches missed.">        if (!esEstudiante &amp;&amp; (idEntrenador == null || idEstudiante != null)) {</span>
+<span class="nc" id="L178">            throw new IllegalArgumentException(</span>
+                    &quot;Para tipoDestinatario ENTRENADOR se requiere idEntrenador y no idEstudiante&quot;);
+        }
+<span class="fc" id="L181">    }</span>
+
+    private Item findItem(Long id) {
+<span class="fc" id="L184">        return articuloRepository.findById(id)</span>
+<span class="pc" id="L185">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Artículo no encontrado con ID: &quot; + id));</span>
+    }
+
+    private Student findStudent(Long id) {
+<span class="fc" id="L189">        return estudianteRepository.findById(id)</span>
+<span class="pc" id="L190">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con ID: &quot; + id));</span>
+    }
+
+    private Entrenador findCoach(Long id) {
+<span class="fc" id="L194">        return entrenadorRepository.findById(id)</span>
+<span class="pc" id="L195">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Entrenador no encontrado con ID: &quot; + id));</span>
+    }
+
+    private UserAccount findUser(String username) {
+<span class="fc" id="L199">        return usuarioRepository.findByUsername(username)</span>
+<span class="pc" id="L200">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Usuario autenticado no encontrado: &quot; + username));</span>
+    }
+
+    private AssignmentResponse toResponse(Assignment a) {
+<span class="fc" id="L204">        var registrador = a.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L205">        String nombreEstudiante = null;</span>
+<span class="fc" id="L206">        Long idEstudiante = null;</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (a.getEstudiante() != null) {</span>
+<span class="fc" id="L208">            idEstudiante = a.getEstudiante().getIdEstudiante();</span>
+<span class="fc" id="L209">            var p = a.getEstudiante().getPersona();</span>
+<span class="fc" id="L210">            nombreEstudiante = p.getNombre() + &quot; &quot; + p.getApellido();</span>
+        }
+<span class="fc" id="L212">        String nombreEntrenador = null;</span>
+<span class="fc" id="L213">        Long idEntrenador = null;</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (a.getEntrenador() != null) {</span>
+<span class="fc" id="L215">            idEntrenador = a.getEntrenador().getIdEntrenador();</span>
+<span class="fc" id="L216">            var p = a.getEntrenador().getPersona();</span>
+<span class="fc" id="L217">            nombreEntrenador = p.getNombre() + &quot; &quot; + p.getApellido();</span>
+        }
+
+<span class="fc" id="L220">        return new AssignmentResponse(</span>
+<span class="fc" id="L221">                a.getIdAsignacion(),</span>
+<span class="fc" id="L222">                a.getArticulo().getIdArticulo(),</span>
+<span class="fc" id="L223">                a.getArticulo().getNombre(),</span>
+<span class="fc" id="L224">                a.getCantidad(),</span>
+<span class="fc" id="L225">                a.getTipoDestinatario(),</span>
+                idEstudiante,
+                nombreEstudiante,
+                idEntrenador,
+                nombreEntrenador,
+<span class="fc" id="L230">                a.getFechaAsignacion(),</span>
+<span class="fc" id="L231">                a.getFechaDevolucionEsperada(),</span>
+<span class="fc" id="L232">                a.getFechaDevolucionReal(),</span>
+<span class="fc" id="L233">                a.getEstado(),</span>
+<span class="fc" id="L234">                registrador.getNombre() + &quot; &quot; + registrador.getApellido(),</span>
+<span class="fc" id="L235">                a.getObservaciones(),</span>
+<span class="fc" id="L236">                a.getCreatedAt()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

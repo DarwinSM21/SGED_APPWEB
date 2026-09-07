@@ -1,11 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EspecialidadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.especialidad.service</a> &gt; <span class="el_source">EspecialidadService.java</span></div><h1>EspecialidadService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.especialidad.service;
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EspecialidadService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.especialidad.service</a> &gt; <span class="el_source">EspecialidadService.java</span></div><h1>EspecialidadService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.especialidad.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.uteq.backend.common.exception.RecursoNoEncontradoException;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadRequest;
 import org.uteq.backend.deportivo.especialidad.dto.EspecialidadResponse;
 import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
@@ -52,12 +52,12 @@ public class EspecialidadService {
      *
      * @param id identificador de la especialidad
      * @return la especialidad encontrada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional(readOnly = true)
     public EspecialidadResponse buscarPorId(Long id) {
 <span class="fc" id="L59">        Especialidad especialidad = especialidadRepository.findById(id)</span>
-<span class="pc" id="L60">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
+<span class="pc" id="L60">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
 <span class="nc" id="L61">        return toResponse(especialidad);</span>
     }
 
@@ -88,14 +88,14 @@ public class EspecialidadService {
      * @param id      identificador de la especialidad a editar
      * @param request datos nuevos
      * @return la especialidad actualizada
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el nombre nuevo pertenece a
      *                                      otra especialidad
      */
     @Transactional
     public EspecialidadResponse editar(Long id, EspecialidadRequest request) {
 <span class="fc" id="L97">        Especialidad especialidad = especialidadRepository.findById(id)</span>
-<span class="pc" id="L98">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
+<span class="pc" id="L98">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
 
 <span class="pc bpc" id="L100" title="1 of 2 branches missed.">        if (!especialidad.getNombre().equalsIgnoreCase(request.nombre())</span>
 <span class="pc bpc" id="L101" title="1 of 2 branches missed.">                &amp;&amp; especialidadRepository.existsByNombreIgnoreCase(request.nombre())) {</span>
@@ -111,12 +111,12 @@ public class EspecialidadService {
      * Baja lógica de una especialidad ({@code activo = false}).
      *
      * @param id identificador de la especialidad
-     * @throws RecursoNoEncontradoException si no existe
+     * @throws ResourceNotFoundException si no existe
      */
     @Transactional
     public void eliminar(Long id) {
 <span class="fc" id="L118">        Especialidad especialidad = especialidadRepository.findById(id)</span>
-<span class="pc" id="L119">                .orElseThrow(() -&gt; new RecursoNoEncontradoException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
+<span class="pc" id="L119">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Especialidad no encontrada con ID: &quot; + id));</span>
 <span class="fc" id="L120">        especialidad.setActivo(false);</span>
 <span class="fc" id="L121">        especialidadRepository.save(especialidad);</span>
 <span class="fc" id="L122">    }</span>
