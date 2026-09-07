@@ -123,6 +123,28 @@ services:
       - key: IA_HABILITADO
         value: "false"
 
+      # Correo del enlace de recuperación de contraseña (RF-37 / RNF-15).
+      # Con MAIL_ENABLED=false el backend no envía nada y registra el enlace
+      # en la bitácora; para el despliegue real se pone "true" y se cargan
+      # MAIL_USERNAME / MAIL_PASSWORD / MAIL_FROM como secretos en el panel
+      # (Gmail: contraseña de aplicación, ver docs/despliegue/RUNBOOK.md).
+      - key: MAIL_ENABLED
+        value: "false"
+      - key: MAIL_HOST
+        value: "smtp.gmail.com"
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: MAIL_RESET_URL_BASE
+        value: "https://sged-frontend-jofa.onrender.com/#/restablecer"
+      - key: MAIL_RESET_TTL
+        value: "30"
+
   # ----------------------------------------------------------------
   # Redis (caché de Spring y tokens de QR)
   # ----------------------------------------------------------------

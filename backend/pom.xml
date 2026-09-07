@@ -47,6 +47,15 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-aop</artifactId>
 		</dependency>
+		<!-- Correo saliente: solo el enlace de recuperacion de contrasena
+		     (RF-37). Sin proveedor configurado (MAIL_ENABLED=false, el
+		     valor por defecto) el sistema no envia nada y registra el
+		     enlace en la bitacora; ver application.yml y el spec
+		     docs/superpowers/specs/2026-09-07-recuperacion-contrasena-design.md -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
+		</dependency>
 
 		<!-- PDF (reportes y exportacion de datos del usuario) -->
 		<dependency>

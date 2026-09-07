@@ -51,6 +51,23 @@ spring:
       ssl:
         enabled: ${REDIS_SSL:false}
 
+  # SMTP para el enlace de recuperacion de contrasena (RF-37). Solo se usa
+  # cuando mail.enabled=true (ver bloque `mail:` abajo). Vacio por defecto:
+  # sin proveedor, el sistema no envia correo y registra el enlace en la
+  # bitacora (LoggingPasswordResetMailer), asi `make up` y la CI funcionan
+  # sin ninguna credencial.
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.connectiontimeout: 10000
+      mail.smtp.timeout: 10000
+      mail.smtp.writetimeout: 10000
+
 # Generacion de texto con modelo de lenguaje (modulo Entrenador).
 # Deshabilitada por defecto: el sistema debe funcionar completo sin ella.
 # Solo se envian datos seudonimizados (ver AnonymousPlayerProfile).
@@ -90,6 +107,19 @@ ia:
     # y el 503 -que vuelve en ~2,4s- sigue teniendo su segunda oportunidad.
     timeout-segundos: ${IA_TIMEOUT_SEGUNDOS:10}
     reintentos: ${IA_REINTENTOS:1}
+
+# Correo de recuperacion de contrasena (RF-37 / RNF-15).
+# Deshabilitado por defecto: el sistema funciona completo sin correo -la
+# solicitud responde igual y el enlace queda en la bitacora- (misma
+# filosofia que el bloque `ia:`). Con enabled=true se envia por SMTP
+# (spring.mail.* arriba) a traves del proveedor autorizado.
+mail:
+  enabled: ${MAIL_ENABLED:false}
+  from: ${MAIL_FROM:no-reply@sged.local}
+  # Base del enlace que recibe el usuario; se le agrega ?token=... . Apunta
+  # al frontend (ruta con hash de Angular).
+  reset-url-base: ${MAIL_RESET_URL_BASE:https://localhost:8443/#/restablecer}
+  reset-token-ttl-minutes: ${MAIL_RESET_TTL:30}
 
 asistencia:
   qr:
