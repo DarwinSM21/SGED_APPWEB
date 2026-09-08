@@ -77,3 +77,56 @@ estricto y pasan en las seis corridas.
 Ver `mobile-run1.report.html` para el desglose completo de First
 Contentful Paint, Largest Contentful Paint, Total Blocking Time y
 Cumulative Layout Shift.
+
+---
+
+# Medición pública en despliegue real — 2026-09-08 (opción A, CI)
+
+- **Fecha:** 2026-09-08
+- **Herramienta:** Lighthouse v13.4.1 (API de Node), Chrome *headless*
+  reutilizado vía `chrome-launcher` + `puppeteer-core`
+- **URL medida:** `https://sged-frontend-jofa.onrender.com` (despliegue
+  público de Render) — las doce evidencias tienen `requestedUrl` y
+  `finalUrl` en esa URL pública (nada terminó redirigida a `/login`)
+- **Sesión:** autenticación real — `POST /api/auth/login` contra el
+  proxy del propio frontend; la cookie `sged_access` (HttpOnly,
+  `Path=/api`, SameSite=Strict) se inyecta por CDP
+  (`Network.setCookie`) en el Chrome compartido y `disableStorageReset:
+  true` la conserva entre corridas; sin esto, `authGuard` redirigiría a
+  `/login` y se mediría la pantalla de inicio
+- **Corridas:** 2 perfiles (móvil 412×823 DPR 1.75 y escritorio 1350×940,
+  ambos `throttlingMethod: simulate`) × 2 rutas autenticadas
+  (`/dashboard`, `/inventario`) × 3 = **12 LHR completos**
+  (`public-*.report.json`, 430–597 KB cada uno)
+- **Reproducibilidad:** `scripts/lighthouse-ci.mjs` + `.github/workflows/lighthouse.yml`
+  (GitHub Actions), credenciales por secrets; no depende del entorno local
+
+## Resultados por perfil y ruta (medias de 3 corridas)
+
+### Perfil móvil
+
+| Ruta | Rendimiento | Accesibilidad | Buenas prácticas | SEO | Estado |
+|---|---|---|---|---|---|
+| `/dashboard` | **99,3** | 91,0 | 100 | 63 | ✅ cumple (acces. 91 ≥ 90) |
+| `/inventario` | **99,7** | 100 | 100 | 63 | ✅ cumple |
+
+### Perfil escritorio
+
+| Ruta | Rendimiento | Accesibilidad | Buenas prácticas | SEO | Estado |
+|---|---|---|---|---|---|
+| `/dashboard` | **80,0** | 91,0 | 100 | 63 | ✅ cumple (rend. justo en el umbral) |
+| `/inventario` | **99,3** | 95,0 | 100 | 63 | ✅ cumple |
+
+Umbrales del Bloque A.1: rendimiento ≥ 80, accesibilidad ≥ 90, buenas
+prácticas ≥ 90. SEO relajado a *warn* (63) por `is-crawlable` — ver nota
+más arriba. Variación mínima por pareja (Lantern determinista); la
+escritorio/`/dashboard` quedó en 80,0 en las tres corridas.
+
+Diferencias observables frente a la medición local de 2026-08-14, sin
+cambios de código: se miden dos rutas autenticadas en vez de la portada,
+con la red/CPU del despliegue real (TLS, CDN Cloudflare, backend en
+Render) — por eso el rendimiento varía por ruta (80–100) en lugar de un
+82/99 plano. La accesibilidad mínima es 91 (`/dashboard`, contraste de
+los *cards* de resumen) frente a los 100 de otras parejas. Los seis LHR
+locales se conservan como referencia temporal; la evidencia vigente del
+Bloque C.5/A.1 es esta suite pública.

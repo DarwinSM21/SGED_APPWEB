@@ -2598,7 +2598,9 @@ Seis corridas independientes, tres por perfil (Lighthouse v13.4.1),
 regeneradas el 2026-08-14 contra \texttt{https://localhost:8443}
 —cumple el mínimo de tres corridas por perfil (móvil y escritorio) que
 exige el Bloque~A.1; la Tercera Entrega solo había cubierto el perfil
-móvil— (Tabla~\ref{tab:lighthouse}):
+móvil— (Tabla~\ref{tab:lighthouse}). Además, en la
+sección~\ref{sec:lighthouse-public} se amplía con una segunda medición:
+contra la URL pública de producción y con sesión autenticada real:
 
 \begin{table}[htbp]
 \centering
@@ -2667,6 +2669,67 @@ configuración, y se mantuvieron como bloqueantes las auditorías SEO que sí
 aplican a una aplicación interna (\texttt{meta-description},
 \texttt{document-title}, \texttt{html-has-lang}, \texttt{viewport}), todas
 ellas en 1,0. \ok
+
+\subsubsection{Medición pública en el despliegue real (2026-09-08)}
+\label{sec:lighthouse-public}
+
+La medición anterior se hacía contra \texttt{localhost:8443}, sin sesión
+y con una sola ruta; además, el \texttt{requestedUrl} apuntaba al
+entorno local, lo que no satisfacía el criterio de la observación 4.5
+del protocolo de medición. Para cerrarlo, esta revisión mide el
+despliegue público en Render (\texttt{https://sged-frontend-jofa.onrender.com})
+con sesión iniciada de verdad y sobre dos rutas autenticadas, y la
+herramienta queda versionada en el repositorio y ejecutable de forma
+reproducible en GitHub Actions:
+
+\begin{itemize}
+  \item \ruta{scripts/lighthouse-ci.mjs}: inicia sesión real
+  (\texttt{POST /api/auth/login} contra el \emph{proxy} del propio
+  \emph{frontend}), inyecta la cookie \texttt{sged\_access} por CDP
+  (\texttt{Network.setCookie}) y ejecuta Lighthouse reutilizando ese
+  Chrome, con \texttt{disableStorageReset} para que la sesión persista
+  entre corridas. Sin esto, \texttt{authGuard} redirigiría a
+  \texttt{/login} y se mediría la pantalla de inicio en vez de la
+  página real.
+  \item \ruta{.github/workflows/lighthouse.yml}: ejecuta el script en
+  GitHub Actions (Chrome preinstalado en el runner) con las
+  credenciales provistas por \emph{secrets} (\texttt{LH\_USER},
+  \texttt{LH\_PASS}) y sube las doce evidencias como artefacto.
+\end{itemize}
+
+Las doce corridas cubren dos perfiles $\times$ dos rutas autenticadas
+(\texttt{/dashboard} e \texttt{/inventario}), tres por pareja
+(Tabla~\ref{tab:lighthouse-public}); los doce LHR crudos quedan
+archivados como \texttt{docs/mediciones/lighthouse/public-*.report.json},
+todos con \texttt{requestedUrl} y \texttt{finalUrl} en la URL pública
+(la sesión funciona: ninguna terminó redirigida a \texttt{/login}).
+
+\begin{table}[htbp]
+\centering
+\caption{Resultados de Lighthouse en el despliegue público, por perfil y ruta (medias de 3 corridas; Lighthouse v13.4.1).}
+\label{tab:lighthouse-public}
+\begin{tabular}{@{}llrrrr@{}}
+\toprule
+\textbf{Perfil} & \textbf{Ruta} & \textbf{Rend.} & \textbf{Acces.} & \textbf{Buenas prác.} & \textbf{SEO} \\
+\midrule
+Móvil & \texttt{/dashboard}  & 99,3 & 91,0 & 100 & 63 \\
+Móvil & \texttt{/inventario} & 99,7 & 100 & 100 & 63 \\
+Escritorio & \texttt{/dashboard}  & 80,0 & 91,0 & 100 & 63 \\
+Escritorio & \texttt{/inventario} & 99,3 & 95,0 & 100 & 63 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Todas las parejas superan los umbrales (rendimiento $\geq$ 80,
+accesibilidad $\geq$ 90, buenas prácticas $\geq$ 90); el SEO de 63 es
+la penalización deliberada de \texttt{is-crawlable} explicada en la
+sección~\ref{sec:seo}. La escritorio/\texttt{/dashboard} queda exactamente en
+el umbral de rendimiento (80,0) en las tres corridas, y la
+accesibilidad mínima es 91 (en \texttt{/dashboard}, frente a 100 en
+\texttt{/inventario} móvil) — ambas superan el umbral y se reportan sin
+promediarlas para no ocultar la variación por ruta. Los seis LHR de la
+medición local de 2026-08-14 se conservan como referencia temporal; la
+evidencia vigente para el Bloque C.5 es esta suite pública.
 
 \subsection{Usabilidad: SUS (Bloque C.3)}
 \label{sec:sus}

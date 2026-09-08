@@ -1,0 +1,60 @@
+name: lighthouse
+
+# Auditoría Lighthouse repetible contra la URL pública de producción
+# (Bloque C.5 / A.1 - calidade web): sesión autenticada real + 2 rutas +
+# 2 perfiles (móvil y escritorio) + 3 corridas por par perfil x ruta.
+#
+# Requiere dos secrets en el repositorio (Settings > Secrets and variables >
+# Actions): LH_USER (usuario de prueba) y LH_PASS (contraseña). No se
+# versiona ninguna credencial.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'scripts/lighthouse-ci.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/lighthouse.yml'
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Verificar secrets configurados
+        shell: bash
+        run: |
+          if [ -z "$LH_USER" ] || [ -z "$LH_PASS" ]; then
+            echo "::error::Faltan los secrets LH_USER y LH_PASS en el repositorio."
+            echo "Crear en Settings > Secrets and variables > Actions (ver README)."
+            exit 1
+          fi
+        env:
+          LH_USER: ${{ secrets.LH_USER }}
+          LH_PASS: ${{ secrets.LH_PASS }}
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependencias de medición
+        run: npm ci
+
+      - name: Ejecutar auditoría pública con sesión autenticada
+        run: node scripts/lighthouse-ci.mjs
+        env:
+          LH_USER: ${{ secrets.LH_USER }}
+          LH_PASS: ${{ secrets.LH_PASS }}
+
+      - name: Subir evidencias (12 LHR JSON + resumen)
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-public-${{ github.sha }}
+          path: docs/mediciones/lighthouse
+          if-no-files-found: error

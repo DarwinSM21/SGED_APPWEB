@@ -1,0 +1,14 @@
+{
+  "name": "sged-appweb-tooling",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Herramientas de medición reproducibles del monorepo SGED (Lighthouse público en CI — Bloque C.5 / A.1)",
+  "engines": {
+    "node": ">=18.18"
+  },
+  "devDependencies": {
+    "chrome-launcher": "^1.1.2",
+    "lighthouse": "^13.4.1",
+    "puppeteer-core": "^24.4.0"
+  }
+}

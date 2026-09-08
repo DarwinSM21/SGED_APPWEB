@@ -1,0 +1,127 @@
+{
+  "baseUrl": "https://sged-frontend-jofa.onrender.com",
+  "fecha": "2026-09-08T04:31:49.041Z",
+  "rutas": [
+    "/dashboard",
+    "/inventario"
+  ],
+  "corridas": 3,
+  "porPerfil": {
+    "mobile": {
+      "/dashboard": {
+        "corridas": [
+          {
+            "performance": 98,
+            "accessibility": 91,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 100,
+            "accessibility": 91,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 100,
+            "accessibility": 91,
+            "best-practices": 100,
+            "seo": 63
+          }
+        ],
+        "media": {
+          "performance": 99.33333333333333,
+          "accessibility": 91,
+          "best-practices": 100,
+          "seo": 63
+        }
+      },
+      "/inventario": {
+        "corridas": [
+          {
+            "performance": 99,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 100,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 63
+          }
+        ],
+        "media": {
+          "performance": 99.66666666666667,
+          "accessibility": 100,
+          "best-practices": 100,
+          "seo": 63
+        }
+      }
+    },
+    "desktop": {
+      "/dashboard": {
+        "corridas": [
+          {
+            "performance": 80,
+            "accessibility": 91,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 80,
+            "accessibility": 91,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 80,
+            "accessibility": 91,
+            "best-practices": 100,
+            "seo": 63
+          }
+        ],
+        "media": {
+          "performance": 80,
+          "accessibility": 91,
+          "best-practices": 100,
+          "seo": 63
+        }
+      },
+      "/inventario": {
+        "corridas": [
+          {
+            "performance": 99,
+            "accessibility": 95,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 99,
+            "accessibility": 95,
+            "best-practices": 100,
+            "seo": 63
+          },
+          {
+            "performance": 100,
+            "accessibility": 95,
+            "best-practices": 100,
+            "seo": 63
+          }
+        ],
+        "media": {
+          "performance": 99.33333333333333,
+          "accessibility": 95,
+          "best-practices": 100,
+          "seo": 63
+        }
+      }
+    }
+  }
+}
