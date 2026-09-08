@@ -2860,13 +2860,13 @@ empírica~\cite{iso25010}.
 \begin{itemize}[leftmargin=*]
   \item \textbf{Las mediciones de rendimiento se tomaron en la misma
     máquina que ejecuta el sistema}, sin latencia de red real. Los
-    14,18\,ms de p95 son un límite inferior optimista: en un despliegue con
-    red de por medio la cifra sería mayor, aunque el margen frente al
-    umbral de 200\,ms es amplio.
-  \item \textbf{Tres corridas son pocas} para caracterizar una
-    distribución. Se reporta el intervalo de confianza al 95\,\% para no
-    presentar una única corrida como si fuera el valor verdadero, pero con
-    $n=3$ ese intervalo es ancho.
+    19,94\,ms de p95 en caché cálida (38,20\,ms en fría) son un límite
+    inferior optimista: en un despliegue con red de por medio la cifra
+    sería mayor, aunque el margen frente al umbral de 200\,ms es amplio.
+  \item \textbf{Cinco corridas por escenario son pocas} para caracterizar
+    una distribución. Se reporta el intervalo de confianza al 95\,\% para
+    no presentar una única corrida como si fuera el valor verdadero, pero
+    con $n=5$ ese intervalo es ancho.
   \item \textbf{La base de datos de las mediciones contiene datos
     sembrados, no un volumen de producción.} El rendimiento de las
     consultas paginadas sobre un catálogo pequeño no anticipa el
