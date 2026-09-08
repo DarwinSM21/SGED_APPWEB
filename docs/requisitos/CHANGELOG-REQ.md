@@ -1,6 +1,6 @@
 # Changelog de Requisitos — SGED ProFútbol
 
-**Propósito:** Registro cronológico de todo cambio (adición, modificación, eliminación) a los requisitos funcionales (RF-01 a RF-37) y no funcionales (RNF-01 a RNF-15) desde la Entrega 1A. Las entradas hasta 2026-07-29 cubren las Entregas 1A/1B/Tercera; a partir de 2026-09-07 se registran los cambios de la revisión contra ISO/IEC/IEEE 29148:2018.
+**Propósito:** Registro cronológico de todo cambio (adición, modificación, eliminación) a los requisitos funcionales (RF-01 a RF-48) y no funcionales (RNF-01 a RNF-24) desde la Entrega 1A. Las entradas hasta 2026-07-29 cubren las Entregas 1A/1B/Tercera; a partir de 2026-09-07 se registran los cambios de la revisión contra ISO/IEC/IEEE 29148:2018.
 
 | Fecha | Autor | Requisito | Tipo de Cambio | Motivo | Commit |
 |---|---|---|---|---|---|
@@ -31,3 +31,5 @@
 | 2026-09-07 | Equipo | RNF-14 | Adición | Política de contraseñas unificada (mín. 8, con letra y dígito, distinta del usuario, ≤ 72 bytes) en `PasswordPolicy`; aplicada en registro, acceso de estudiante, cambio administrativo y restablecimiento. Sustituye el `@Size(min = 6)` de los DTO. Revisión 29148 punto A21 | `659cffd` |
 | 2026-09-07 | Equipo | RF-37 | Adición | Restablecimiento de contraseña por enlace de un solo uso (Redis, 30 min), sin intervención del administrador; invalida las sesiones previas. Endpoints `POST /api/auth/forgot` y `/reset`, pantallas `/recuperar` y `/restablecer`. Revisión 29148 punto A22 | `4430d1e`, `e87848f`, `58b5be1`, `82a70ab`, `7ec5a19` |
 | 2026-09-07 | Equipo | RNF-15 | Adición | Correo saliente del enlace por SMTP + STARTTLS (Gmail); deshabilitado por defecto (`mail.enabled=false` registra el enlace en la bitácora, no rompe RNF-12) | `78f1c28`, `37b203e` |
+| 2026-09-07 | Equipo | RF-38 a RF-48 | Adición | Especificación de 11 capacidades ya construidas sin requisito (SRS §3.5): pagos, consentimiento del representante, informes al representante, gestión de representantes, consulta de auditoría, reportes en PDF, exportación de datos propios, alertas, catálogos de especialidad/posición, resumen/autoconsulta de asistencia, observaciones de texto libre. Revisión 29148 puntos A1–A11 | — (código previo; solo documentación) |
+| 2026-09-07 | Equipo | RNF-16 a RNF-24 | Adición | 9 requisitos de calidad que faltaban: frontera de datos al proveedor de LLM, protección de datos de menores, usabilidad SUS (§4.9), accesibilidad WCAG/Lighthouse (§4.9), quality gate de SonarQube, certificado TLS de producción, conservación y supresión de datos, comportamiento ante caída de Redis, respaldo y recuperación. Revisión 29148 puntos A12–A20 | — (evidencia previa; solo documentación) |

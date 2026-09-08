@@ -1,7 +1,7 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.4 (Entrega Final, etiqueta `v1.0.0` —
+**Versión del documento:** 1.5 (Entrega Final, etiqueta `v1.0.0` —
 revisado por última vez el 2026-09-07 tras la revisión de requisitos
 contra ISO/IEC/IEEE 29148:2018)
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
@@ -27,16 +27,24 @@ desarrollo y al docente evaluador del Proyecto Fin de Curso.
 
 ### 1.2 Alcance
 
-SGED cubre cuatro dominios:
+SGED cubre cinco dominios:
 
-1. **Seguridad y acceso** — personas, usuarios, roles y autenticación.
+1. **Seguridad y acceso** — personas, usuarios, roles, autenticación y
+   restablecimiento de contraseña (RF-01 a RF-07, RF-37; auditoría RF-42).
 2. **Gestión académica/administrativa** — registro y mantenimiento de
-   estudiantes y sus categorías.
-3. **Dominio deportivo** — entrenadores, horarios, sesiones de
-   entrenamiento, asistencia y evaluación diaria del desempeño.
+   estudiantes y sus categorías; **cobro de membresías y pagos diarios**
+   (RF-38); **consentimiento y gestión de representantes legales** (RF-39,
+   RF-41) e informes al representante (RF-40); reportes en PDF (RF-43) y
+   exportación de los datos propios (RF-44).
+3. **Dominio deportivo** — entrenadores y su catálogo de especialidades
+   (RF-46), horarios, sesiones de entrenamiento, asistencia y su resumen
+   (RF-47), evaluación diaria del desempeño y partidos.
 4. **Inventario** — catálogo de artículos deportivos (uniformes, balones,
    implementos), control de stock por movimientos y asignación de
    artículos a estudiantes o entrenadores (RF-27 a RF-30, ver ADR-003).
+5. **Soporte y observabilidad** — alertas operativas (RF-45), bitácora de
+   auditoría y generación de comentarios con modelo de lenguaje sobre datos
+   seudonimizados (RNF-16).
 
 ### 1.3 Estado de implementación (declaración de honestidad)
 
@@ -979,6 +987,193 @@ debajo de su stock mínimo.*
 
 ---
 
+### 3.5 Módulo administrativo, de pagos y de representantes (nuevo en esta revisión)
+
+> **Cierra los puntos A1–A11 de la revisión contra 29148.** El backend tiene
+> controladores completos —con prueba— para pagos, consentimientos, informes
+> al representante, auditoría, reportes y catálogos que ninguna línea del SRS
+> describía. Cada uno se especifica aquí como requisito. Igual que en §3.2b,
+> los recursos puramente administrativos (catálogos, gestión de
+> representantes como recurso) se documentan directamente por haber aparecido
+> como CRUD y no como una necesidad de actor articulada antes; las
+> capacidades con implicación de dinero o de datos sensibles llevan su
+> historia de usuario (HU-16, HU-17).
+
+---
+
+**RF-38 — Gestión de pagos**
+*El sistema deberá permitir registrar el cobro de una membresía o de un pago
+diario a un estudiante, anular un pago dejando constancia de la anulación, y
+consultar los pagos de un estudiante y los ingresos agregados del mes y del
+histórico.*
+
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `PaymentController` (`/api/pagos`, 6 rutas: `POST /membresia`,
+  `POST /diario`, `POST /{idPago}/anular`, `GET /estudiante/{idEstudiante}`,
+  `GET /ingresos-mes`, `GET /ingresos-historico`).
+- **Restricción de acceso:** `hasAnyRole('ADMINISTRADOR','RECEPCIONISTA')` en
+  las 6 rutas. La anulación queda registrada por auditoría (`@Audited`).
+- **Verificación:** `PaymentServiceTest`, `PaymentControllerTest`.
+- **Esquema:** `academico.pagos`, con la anulación como cambio de estado, no
+  como borrado (`V20__anulacion_de_pagos.sql`).
+
+---
+
+**RF-39 — Registro y revocación del consentimiento del representante**
+*El sistema deberá permitir a un usuario ADMINISTRADOR registrar el
+consentimiento informado del representante legal de un estudiante, revocarlo
+dejando fecha de revocación, y consultar el estado de consentimiento de un
+estudiante.*
+
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — es
+  la precondición del hallazgo **H-04** de `docs/etica/ETHICS.md` y de las
+  notificaciones a representantes (RF-22).
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `ConsentController` (`/api/consentimientos`, 3 rutas: alta,
+  `POST /{id}/revocar`, `GET /estudiante/{idEstudiante}`), `hasRole('ADMINISTRADOR')`.
+- **Verificación:** `ConsentServiceTest`, `ConsentControllerTest`.
+
+---
+
+**RF-40 — Informes y notificaciones al representante**
+*El sistema deberá permitir a un usuario REPRESENTANTE consultar la lista de
+sus representados, ver el informe de rendimiento de cada uno y comentar sobre
+ese informe, y listar y marcar como leídas sus notificaciones en la
+aplicación.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should —
+  extiende RF-22, que solo cubría la creación de la notificación.
+- **Método de verificación:** Prueba automatizada; Demostración
+- **Origen:** `GuardianReportController` (`/api/representante`, 6 rutas:
+  `GET /estudiantes`, `GET /estudiantes/{id}/informe`,
+  `POST /estudiantes/{id}/informe/comentario`, `GET /notificaciones`,
+  `GET /notificaciones/no-leidas`, `POST /notificaciones/{id}/leida`),
+  `hasRole('REPRESENTANTE')`.
+- **Verificación:** `GuardianReportControllerTest`, `NotificationServiceTest`,
+  `StudentReportServiceTest`.
+
+---
+
+**RF-41 — Gestión de representantes como recurso**
+*El sistema deberá permitir administrar los representantes legales (alta,
+consulta, edición, baja lógica, reactivación) y vincular o desvincular
+representantes de estudiantes indicando la relación y el contacto principal.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `GuardianController` (`/api/representantes`, 9 rutas). Alta,
+  consulta y vinculación abiertas a `ADMINISTRADOR` y `RECEPCIONISTA`;
+  edición, baja, reactivación y desvinculación exclusivas de `ADMINISTRADOR`.
+- **Verificación:** `GuardianServiceTest`, `GuardianControllerTest`.
+
+---
+
+**RF-42 — Consulta de la bitácora de auditoría**
+*El sistema deberá permitir a un usuario ADMINISTRADOR consultar de forma
+paginada los eventos de auditoría registrados.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should —
+  RNF-08 obliga a **registrar** los eventos; poder consultarlos es una
+  capacidad distinta, con su propio control de acceso.
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `GET /api/admin/auditorias` — `AuditController`,
+  `hasRole('ADMINISTRADOR')`.
+- **Verificación:** `AuditControllerTest`, `AuditServiceTest`.
+
+---
+
+**RF-43 — Reportes del sistema en PDF**
+*El sistema deberá generar reportes en PDF de fichas de estudiantes, pagos,
+asistencias, evaluaciones y lesiones.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `ReportController` (`/api/reportes`, 5 rutas: `/estudiantes-fichas`,
+  `/pagos`, `/asistencias`, `/evaluaciones`, `/lesiones`), cada una devuelve
+  `application/pdf`.
+- **Restricción de acceso:** fichas y pagos → `ADMINISTRADOR`, `RECEPCIONISTA`;
+  asistencias, evaluaciones y lesiones → `ADMINISTRADOR`, `ENTRENADOR`.
+  Ningún rol sin relación con el dato puede generarlo.
+- **Verificación:** `ReportControllerTest`, `ReportServiceTest`,
+  `ReportPdfServiceTest`.
+- **Nota:** estos reportes exportan datos de salud (lesiones, evaluaciones) y
+  financieros (pagos) de menores; su control de acceso se declara aquí de
+  forma explícita (antes no figuraba en el SRS).
+
+---
+
+**RF-44 — Exportación de los datos propios**
+*El sistema deberá permitir a cualquier usuario autenticado descargar en PDF
+los datos personales que el sistema guarda sobre él.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — es,
+  en la práctica, el derecho de acceso del titular sobre sus datos.
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `GET /api/usuarios/me/datos-pdf` — `PerfilController`.
+- **Verificación:** `PerfilControllerTest`.
+
+---
+
+**RF-45 — Alertas del sistema**
+*El sistema deberá presentar un panel de alertas operativas (estudiantes en
+riesgo, stock bajo y equivalentes) a los roles de gestión.*
+
+- **Prioridad:** Baja · **Estado:** ✅ Implementado · **MoSCoW:** Could
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `GET /api/alertas` — `AlertController`,
+  `hasAnyRole('ADMINISTRADOR','RECEPCIONISTA')`.
+- **Verificación:** `AlertServiceTest`, `AlertControllerTest`.
+
+---
+
+**RF-46 — Catálogos de especialidades y de posiciones**
+*El sistema deberá permitir administrar el catálogo de especialidades de
+entrenador (CRUD, reservado a ADMINISTRADOR) y consultar el catálogo de
+posiciones activas.*
+
+- **Prioridad:** Media (bloquea RF-16 y RF-34) · **Estado:** ✅ Implementado ·
+  **MoSCoW:** Should
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `EspecialidadController` (`/api/especialidades`, 6 rutas; CRUD
+  `hasRole('ADMINISTRADOR')`, `GET /activas` abierto a los tres roles de
+  gestión) y `PosicionController` (`GET /api/posiciones/activas`).
+- **Verificación:** `EspecialidadServiceTest`, `EspecialidadControllerTest`,
+  `PosicionControllerTest`.
+
+---
+
+**RF-47 — Resumen y autoconsulta de asistencia**
+*El sistema deberá permitir a los roles de gestión consultar el mapa de
+asistencia de una categoría, y a un estudiante autenticado consultar su
+propia asistencia.*
+
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should —
+  reporte sobre datos que ya existen por RF-19a.
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `GET /api/asistencias/mapa` — `ResumenAsistenciaController`
+  (`ADMINISTRADOR`, `ENTRENADOR`); `GET /api/estudiante/mi-asistencia` —
+  `MiAsistenciaController` (`ESTUDIANTE`).
+- **Verificación:** `ResumenAsistenciaControllerTest`, `MiAsistenciaControllerTest`.
+
+---
+
+**RF-48 — Observaciones de texto libre del entrenador** ⚠️ Implementado, dato de riesgo alto
+*El sistema permite registrar observaciones cualitativas en texto libre sobre
+un estudiante (`deportivo.observaciones_estudiante`).*
+
+- **Prioridad:** No priorizado formalmente · **Estado:** ✅ Implementado ·
+  **MoSCoW:** Won't (esta entrega) — pausado por el hallazgo **H-02** de
+  `docs/etica/ETHICS.md` (texto libre sin control de contenido sobre un
+  menor), no por olvido.
+- **Método de verificación:** Inspección
+- **Origen:** entidad `deportivo.observaciones_estudiante` y su servicio; se
+  alimenta desde la evaluación diaria (RF-20).
+- **Alerta:** no se recomienda habilitarlo sin resolver antes H-02
+  (moderación / política de contenido) y RNF-17.
+
+---
+
 ## 4. Requisitos no funcionales
 
 Clasificados según las características de calidad de ISO/IEC 25010:2011.
@@ -1087,6 +1282,95 @@ completo sin credenciales de correo (no rompe RNF-12).*
   enlace; un fallo del proveedor no se propaga),
   `LoggingPasswordResetMailerTest`.
 
+**RNF-16 — Frontera de datos hacia el proveedor de modelo de lenguaje**
+*El sistema no deberá enviar al proveedor externo de modelo de lenguaje
+ningún dato que identifique a un menor. El texto generado (comentario de
+alineación y de evaluación) deberá construirse a partir de un perfil
+seudonimizado que contenga únicamente una referencia anónima, la categoría,
+la posición, los puntajes de evaluación, las asistencias del último mes y una
+bandera de lesión. Ante un fallo o una respuesta 503 del proveedor, la
+funcionalidad de dominio (guardar la evaluación, la alineación) deberá
+completarse igual y el comentario simplemente no aparecerá. Deberán
+declararse el proveedor y el modelo autorizados; la integración está
+deshabilitada por defecto (`IA_HABILITADO=false`).*
+
+- **Método de verificación:** Prueba automatizada; Inspección
+- **Origen:** paquete `common.ia` — `AnonymousPlayerProfile` (record con
+  exactamente esos campos), `AIFeedbackGenerator` (interfaz),
+  `GeminiFeedbackService` / `OpenAiFeedbackService` seleccionados por
+  `ia.proveedor`; `docs/superpowers/specs/2026-08-25-ia-alineacion-design.md`.
+- **Verificación:** `GeminiFeedbackServiceTest`, `OpenAiFeedbackServiceTest`,
+  `PromptsFeedbackTest` (el prompt no contiene nombre, cédula ni correo);
+  degradación segura ante 503 probada en esos mismos tests.
+- **Nota:** hoy este diseño solo existe en el código; este RNF lo convierte
+  en obligación — una refactorización futura que empiece a enviar nombres lo
+  incumple. Cierra el punto A12 de la revisión.
+
+**RNF-17 — Protección de datos personales de menores**
+*El sistema deberá tratar los datos personales de estudiantes menores según
+los principios declarados en `docs/etica/ETHICS.md` (minimización, limitación
+de la finalidad, confidencialidad). Los hallazgos abiertos H-01 (cédula en
+claro), H-02 (texto libre sin control), H-03 (sin mecanismo de supresión),
+H-04/H-07 (consentimiento del representante), H-06 (peso y altura sin base
+legal) y H-09 (correo de reseteo no verificado) deberán tener, cada uno, un
+criterio de cierre verificable y una fecha objetivo.*
+
+- **Método de verificación:** Inspección
+- **Origen:** `docs/etica/ETHICS.md` (inventario de datos y hallazgos),
+  `docs/mediciones/sec/a01-acceso-roto.txt` (control de acceso por recurso).
+- **Verificación:** revisión del cierre de cada hallazgo contra su criterio;
+  `a01-acceso-roto.txt` comprueba recurso por recurso, incluida la búsqueda
+  por cédula.
+- **Nota:** RF-11b y RF-48 dependen de este RNF. Cierra el punto A13.
+
+**RNF-21 — Certificado y configuración TLS de producción**
+*En producción el sistema deberá servirse sobre HTTPS con un certificado
+emitido por una autoridad reconocida (no autofirmado), con TLS 1.2 o
+superior, HSTS y redirección de HTTP a HTTPS. El estado actual —certificado
+autofirmado en el entorno de laboratorio— deberá declararse explícitamente
+(hallazgo H-05).*
+
+- **Método de verificación:** Demostración; Inspección
+- **Origen:** `nginx/default.conf`, `docker-compose.yml` (`:8443`);
+  `docs/mediciones/sec/a02-tls.txt`; hallazgo H-05 de `ETHICS.md`.
+- **Verificación:** `a02-tls.txt` reporta la versión de TLS negociada;
+  inspección del emisor del certificado en el despliegue real.
+- **Nota:** complementa RNF-04, que solo exigía la versión del protocolo.
+  Cierra el punto A17.
+
+**RNF-22 — Conservación y supresión de datos**
+*El sistema deberá declarar, por categoría de dato, el plazo de conservación
+y el procedimiento de supresión una vez cumplido ese plazo o atendida una
+solicitud del titular. Mientras el mecanismo de supresión no exista (hallazgo
+H-03), la baja lógica —que preserva el historial— no deberá presentarse como
+un borrado.*
+
+- **Método de verificación:** Inspección
+- **Origen:** `docs/etica/ETHICS.md` §3.4; `docs/despliegue/BACKUP.md`
+  (retención de respaldos: 30 días).
+- **Verificación:** inspección de la tabla de plazos frente al inventario de
+  datos de `ETHICS.md`.
+- **Nota:** cierra el punto A18; su implementación cierra H-03.
+
+**RNF-23 — Comportamiento ante indisponibilidad de Redis**
+*El sistema deberá comportarse de forma segura si Redis no está disponible:
+un token de acceso no podrá considerarse válido si no puede comprobarse
+contra la lista de revocación, de modo que una caída de Redis deniega el
+acceso a los recursos protegidos (`401`) en vez de aceptar tokens que
+podrían estar revocados. La caché de listados (RNF-02) deberá degradarse a
+consulta directa a la base, no a error.*
+
+- **Método de verificación:** Análisis; Demostración
+- **Origen:** `JwtAuthenticationFilter` (envuelve la comprobación en
+  `try/catch`; ante excepción no autentica y la petición continúa sin
+  sesión), `RedisBlacklistService`, `SessionEpochService`.
+- **Verificación:** análisis del flujo del filtro; prueba manual apagando el
+  contenedor `sged_redis`.
+- **Nota:** hoy el filtro **falla cerrado** para la autenticación (lo
+  correcto), pero la caché de listados **no** tiene un `CacheErrorHandler`
+  que la degrade a la base — esa parte queda como trabajo pendiente que este
+  RNF hace explícito. Cierra el punto A19.
+
 ### 4.3 Fiabilidad y mantenibilidad
 
 **RNF-09 — Cobertura de pruebas**
@@ -1141,6 +1425,33 @@ Origen: `GlobalExceptionHandler.java`, `ProblemDetailsAuthHandlers.java`.
 migración Flyway versionada e incremental; no deberá modificarse el esquema
 de forma manual ni automática por el ORM en tiempo de arranque.*
 Origen: `V1` a `V6`; `ddl-auto: validate`.
+
+**RNF-20 — Calidad estática del código**
+*La construcción deberá superar el quality gate de SonarQube configurado
+para el proyecto; una condición incumplida deberá fallar la construcción en
+CI.*
+
+- **Método de verificación:** Prueba automatizada; Inspección
+- **Origen:** `docs/mediciones/sonarqube/` (`quality-gate.json`,
+  `measures.json`, `issues.json`); paso de análisis en `.github/workflows/`.
+- **Verificación:** `quality-gate.json` → `"status":"OK"`,
+  `"caycStatus":"compliant"`.
+- **Nota:** complementa RNF-09 (cobertura) y el análisis de SpotBugs. Cierra
+  el punto A16.
+
+**RNF-24 — Respaldo y recuperación de la base de datos**
+*El sistema deberá contar con un respaldo diario de la base de datos
+completa, retención mínima de 30 días, un procedimiento de restauración
+documentado y verificado, y un objetivo de tiempo de recuperación (RTO)
+medido, no estimado.*
+
+- **Método de verificación:** Demostración; Inspección
+- **Origen:** `docs/despliegue/BACKUP.md` (frecuencia, retención,
+  procedimiento `pg_dump -F c` / `pg_restore`), `docs/despliegue/RUNBOOK.md`
+  §5 (restauración).
+- **Verificación:** ejecución real del procedimiento de `BACKUP.md` con
+  cronómetro para fijar el RTO; hoy el RTO figura como pendiente de medir.
+- **Nota:** cierra el punto A20.
 
 ### 4.4 Portabilidad
 
@@ -1244,8 +1555,8 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | 5.6 | Necesidades de los interesados | 2.2 | 5 actores, roles técnicos |
 | 5.7 | Restricciones | 2.3 | Tecnológicas, legales, éticas |
 | 5.8 | Suposiciones y dependencias | 2.3 | Infraestructura, proveedores, hardware |
-| 5.9 | Requisitos funcionales | 3.1–3.4 | RF-01 a RF-37 organizados por módulo |
-| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.4 | RNF-01 a RNF-15 por ISO 25010 |
+| 5.9 | Requisitos funcionales | 3.1–3.5 | RF-01 a RF-48 organizados por módulo |
+| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.9 | RNF-01 a RNF-24 por ISO 25010 (incluye usabilidad y accesibilidad en §4.9) |
 | 5.11 | Requisitos de interfaz | 4.5 | API REST, IA, TLS, BD, Redis, Seed |
 | 5.12 | Requisitos de verificación | 4.6, 4.7 | Máquinas de estado, matriz permisos |
 | 5.13 | Trazabilidad | 5 | Matriz CSV, bitácora observaciones |
@@ -1253,6 +1564,43 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | 5.15 | Aprobación | 7 | Firmas y registro de entregas |
 
 > Esta tabla permite la auditoría de cumplimiento de la norma sin reordenar la estructura del documento. Cada cláusula 29148 se mapea a la sección SRS que la cubre.
+
+---
+
+### 4.9 Usabilidad y accesibilidad
+
+**RNF-18 — Usabilidad medible (SUS)**
+*El sistema deberá alcanzar una media igual o superior a 68 en la escala
+System Usability Scale (SUS), medida sobre una muestra de al menos 10
+participantes externos al equipo de desarrollo.*
+
+- **Método de verificación:** Análisis (encuesta estructurada)
+- **Origen:** `docs/mediciones/sus/` — `INSTRUMENTO-SUS.md`, `respuestas.csv`,
+  `REPORT.md` (regenerado por `scripts/sus-analysis.py`),
+  `INTERPRETACION.md`.
+- **Resultado medido (2026-08-18, n = 15):** media SUS **69,33** (IC 95 %
+  58,87–79,79 con t de Student; DT 18,89; mediana 70,00), grado C
+  («Aceptable»). La estimación puntual cruza el umbral por 1,33 puntos; el
+  intervalo de confianza todavía incluye valores por debajo de 68, de modo
+  que la afirmación defendible es "la mejor estimación está por encima del
+  umbral", no "el sistema lo supera con holgura".
+- **Nota:** cierra el punto A14 — el umbral existía en la medición pero no en
+  la especificación.
+
+**RNF-19 — Accesibilidad**
+*Las páginas del frontend deberán obtener una puntuación de accesibilidad
+igual o superior a 90 en Lighthouse, tomando WCAG 2.1 nivel AA como marco de
+referencia.*
+
+- **Método de verificación:** Prueba automatizada (auditoría Lighthouse)
+- **Origen:** `docs/mediciones/lighthouse/` — `REPORT.md` y los `*.report.json`
+  de escritorio y móvil.
+- **Resultado medido:** accesibilidad **100/100** en las tres corridas, tanto
+  en escritorio como en móvil (umbral ≥ 90). *SEO 63 y rendimiento por debajo
+  del umbral se documentan aparte en ese informe y no forman parte de este
+  RNF.*
+- **Nota:** cierra el punto A15; especialmente relevante porque la aplicación
+  la usan representantes y estudiantes menores de edad.
 
 ---
 
@@ -1276,6 +1624,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.2 | 2026-08-24 | Entrega Final (`v1.0.0`) | Reestructuración de paquetes `academico`/`deportivo`/`seguridad`; RF-35 e historial de asistencia; cierre de trazabilidad (matriz de 47 filas). |
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
+| 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
 
 ## 7. Aprobación
 

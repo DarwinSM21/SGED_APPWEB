@@ -220,6 +220,40 @@ operación,
 
 ---
 
+### HU-16 · Cobrar la membresía o el pago del día ✅
+**Como** recepcionista,
+**quiero** registrar el cobro de una membresía o de un pago diario de un
+estudiante y poder anular un cobro equivocado,
+**para** llevar el control del dinero que entra sin planillas aparte.
+
+> Cubre RF-38.
+
+**Criterios de aceptación**
+- **Dado** que registro un pago, **cuando** se guarda, **entonces** queda
+  asociado al estudiante y suma a los ingresos del mes.
+- **Dado** que anulo un pago, **cuando** confirmo, **entonces** el pago pasa
+  a estado anulado —no se borra— y la anulación queda en la auditoría.
+- **Dado** que consulto los ingresos, **cuando** pido el del mes o el
+  histórico, **entonces** obtengo el total agregado, no la lista de pagos.
+
+---
+
+### HU-17 · Llevarme una copia de mis datos ✅
+**Como** usuario del sistema (o representante de un menor),
+**quiero** descargar en PDF los datos personales que el sistema guarda sobre
+mí,
+**para** saber qué se tiene registrado y tener una copia.
+
+> Cubre RF-44. Es, en la práctica, el derecho de acceso del titular.
+
+**Criterios de aceptación**
+- **Dado** que estoy autenticado, **cuando** pido la descarga, **entonces**
+  recibo un PDF con mis datos personales.
+- **Dado** que no tengo sesión, **cuando** intento la descarga, **entonces**
+  el sistema responde `401`.
+
+---
+
 ## Épica 3 — Operación deportiva
 
 > **Actualizado 2026-07-30:** HU-10b (entrenadores) pasó a ✅ con la
@@ -272,11 +306,15 @@ sufre una lesión,
 | Épica | Historias | ✅ | 🟡 | ⬜ |
 |---|---|---|---|---|
 | 1 — Acceso seguro | HU-01…HU-04, HU-15 | 5 | 0 | 0 |
-| 2 — Gestión de estudiantes | HU-05…HU-10 | 6 | 0 | 0 |
+| 2 — Gestión de estudiantes y administración | HU-05…HU-10, HU-16, HU-17 | 8 | 0 | 0 |
 | 3 — Operación deportiva | HU-10b…HU-14 | 1 | 3 | 1 |
 
-No incluye HU dedicadas a los recursos nuevos RF-23…RF-26 (categorías,
-usuarios, personas, estados) — se documentan directamente en el SRS por
-haber aparecido como CRUD administrativo, no como una necesidad de un actor
-específico articulada previamente.
-| **Total** | **15** | **11** | **3** | **1** |
+No incluye HU dedicadas a los recursos administrativos RF-23…RF-26
+(categorías, usuarios, personas, estados) ni RF-39…RF-43, RF-45…RF-48
+(consentimiento, informes al representante, auditoría, reportes, catálogos,
+alertas, resumen de asistencia, observaciones) — se documentan directamente
+en el SRS §3.2b y §3.5 por haber aparecido como CRUD administrativo o
+reportes, no como una necesidad de un actor articulada previamente. Las
+capacidades con implicación de dinero o de datos propios del titular sí
+llevan historia (HU-16, HU-17).
+| **Total** | **17** | **13** | **3** | **1** |
