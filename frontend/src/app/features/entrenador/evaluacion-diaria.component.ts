@@ -87,8 +87,15 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
                     <div class="form-lesion">
                       <label class="campo-lesion">
                         <span>Descripción</span>
-                        <textarea rows="2" placeholder="¿Qué le pasó?"
+                        <textarea rows="2" placeholder="¿Qué le pasó?" [maxlength]="MAX_DESCRIPCION_LESION"
                                   [ngModel]="descripcionLesion()" (ngModelChange)="descripcionLesion.set($event)"></textarea>
+                        <small class="guia-texto-libre">
+                          Anotá solo lo relacionado con la lesión (parte del cuerpo, cómo ocurrió,
+                          si necesita reposo). Evitá juicios de valor sobre el estudiante, datos de
+                          salud no verificados y comentarios sobre terceros. Es información sobre un
+                          menor y la ven el cuerpo técnico y la coordinación.
+                          <span class="contador">{{ descripcionLesion().length }}/{{ MAX_DESCRIPCION_LESION }}</span>
+                        </small>
                       </label>
                       <label class="campo-lesion">
                         <span>Fecha estimada de retorno (opcional)</span>
@@ -231,6 +238,11 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
       padding: .6rem .7rem; font-size: .85rem; font-family: inherit;
       background: var(--color-surface); color: var(--color-text); resize: vertical;
     }
+    .guia-texto-libre {
+      font-weight: 400; font-size: .72rem; line-height: 1.4;
+      color: var(--color-text-faint); display: block;
+    }
+    .guia-texto-libre .contador { display: block; margin-top: .2rem; font-variant-numeric: tabular-nums; }
     .acciones-lesion { display: flex; gap: .5rem; }
     .lesion-activa { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
     .criterio { display: block; margin-top: .9rem; }
@@ -272,6 +284,9 @@ export class EvaluacionDiariaComponent implements OnInit {
   readonly guardandoPosicion = signal<number | null>(null);
   readonly errorPosicion = signal<string | null>(null);
   readonly expandidos = signal<Set<number>>(new Set());
+
+  /** RNF-25 / hallazgo H-02: tope del texto libre sobre un menor (coincide con el @Size del backend). */
+  readonly MAX_DESCRIPCION_LESION = 1000;
 
   readonly formularioLesionAbierto = signal<number | null>(null);
   readonly descripcionLesion = signal('');
@@ -409,6 +424,10 @@ export class EvaluacionDiariaComponent implements OnInit {
     const descripcion = this.descripcionLesion().trim();
     if (!descripcion) {
       this.errorLesion.set('Describí qué le pasó antes de guardar.');
+      return;
+    }
+    if (descripcion.length > this.MAX_DESCRIPCION_LESION) {
+      this.errorLesion.set('La descripción no puede superar ' + this.MAX_DESCRIPCION_LESION + ' caracteres.');
       return;
     }
     this.errorLesion.set('');

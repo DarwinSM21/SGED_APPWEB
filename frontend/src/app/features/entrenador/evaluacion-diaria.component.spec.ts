@@ -138,6 +138,16 @@ describe('EvaluacionDiariaComponent', () => {
     expect(component.errorLesion()).toBe('Describí qué le pasó antes de guardar.');
   });
 
+  it('RNF-25: guardar una lesión con descripción demasiado larga no llama al backend', async () => {
+    await crearComponente();
+
+    component.descripcionLesion.set('x'.repeat(component.MAX_DESCRIPCION_LESION + 1));
+    component.guardarLesion(component.sesion()!.jugadores[0]);
+
+    expect(servicioMock.registrarLesion).not.toHaveBeenCalled();
+    expect(component.errorLesion()).toContain(String(component.MAX_DESCRIPCION_LESION));
+  });
+
   it('guardar una lesión válida marca al jugador como lesionado', async () => {
     await crearComponente();
     servicioMock.registrarLesion.mockReturnValue(of({

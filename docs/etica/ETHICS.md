@@ -4,9 +4,9 @@
 **Versión:** 1.3 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
-cierran **H-04** (RF-51, compuerta de consentimiento), la **decisión M7** de
-**H-06** (peso y altura, con base legal y lectura restringida por rol) y la
-parte de servidor de **H-02** (tope de longitud del texto libre))
+cierran **H-02** (RNF-25: topes de longitud, control de acceso y guía de
+redacción), **H-04** (RF-51, compuerta de consentimiento) y la **decisión M7**
+de **H-06** (peso y altura, con base legal y lectura restringida por rol))
 
 ---
 
@@ -123,7 +123,7 @@ producción real.
 condición de cierre. El cifrado de columna queda fuera del alcance de esa
 entrega (recomendación de despliegue real).
 
-### H-02 — Las observaciones de texto libre no tienen control de contenido (servidor cerrado el 2026-09-08; falta la guía en la UI)
+### H-02 — Las observaciones de texto libre no tienen control de contenido (resuelto el 2026-09-08 — RNF-25)
 
 `deportivo.observaciones_estudiante.texto` es `TEXT` libre sobre un menor,
 sin límite de longitud ni guía para el entrenador. Un campo así puede
@@ -131,14 +131,14 @@ terminar conteniendo juicios de valor, datos de salud o comentarios
 inapropiados.
 **Mitigación propuesta:** guía de redacción para entrenadores, límite de
 longitud, y visibilidad restringida al entrenador y a la coordinación.
-**Requisito de cierre:** **RNF-25** (SRS §4.3). **Parte de servidor cerrada el
-2026-09-08:** tope de longitud en la capa de aplicación
-(`EvaluacionDiariaService.finalizar`, `@Size` de la descripción de lesión) y a
+**Requisito de cierre:** **RNF-25** (SRS §4.3). **Resuelto el 2026-09-08:**
+tope de longitud en la capa de aplicación (`EvaluacionDiariaService.finalizar`,
+`@Size` de la descripción de lesión y de la observación de asistencia) y a
 nivel de motor (`V25__limite_texto_libre_menores.sql`, `CHECK char_length` en
-`evaluaciones_diarias`, `observaciones_estudiante` y `lesiones`); la lectura ya
-está restringida a ADMINISTRADOR/ENTRENADOR por `@PreAuthorize`. **Queda** la
-guía de redacción en la interfaz de captura (frontend); hasta entonces RF-48
-sigue en MoSCoW Won't.
+`evaluaciones_diarias`, `observaciones_estudiante` y `lesiones`); lectura
+restringida a ADMINISTRADOR/ENTRENADOR por `@PreAuthorize`; y **guía de
+redacción** en el formulario de lesión de la pantalla de evaluación diaria
+(qué no escribir, con contador y `maxlength`). RF-48 sale de MoSCoW Won't.
 
 ### H-03 — No existe mecanismo de supresión de datos
 

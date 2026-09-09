@@ -1161,18 +1161,16 @@ propia asistencia.*
 un estudiante (`deportivo.observaciones_estudiante`).*
 
 - **Prioridad:** No priorizado formalmente · **Estado:** ✅ Implementado ·
-  **MoSCoW:** Won't (esta entrega) — pausado por el hallazgo **H-02** de
-  `docs/etica/ETHICS.md` (texto libre sin control de contenido sobre un
-  menor), no por olvido.
+  **MoSCoW:** Could — el bloqueo ético (**H-02**) quedó **resuelto por RNF-25**
+  (tope de longitud a nivel de servidor y de motor, control de acceso y guía de
+  redacción). Ya no está en Won't.
 - **Método de verificación:** Inspección
-- **Origen:** entidad `deportivo.observaciones_estudiante` y su servicio; se
-  alimenta desde la evaluación diaria (RF-20).
-- **Alerta:** no se recomienda habilitarlo para captura libre sin la guía de
-  redacción en la interfaz (última condición pendiente de RNF-25).
-- **Decisión (M7, 2026-09-08):** se conserva como **Implementado** — no se
-  retira el código. **RNF-25** ya aplica el tope de longitud (servidor y
-  motor) y el control de acceso; falta solo la guía de redacción en la UI,
-  y hasta entonces RF-48 sigue en MoSCoW Won't.
+- **Origen:** entidad `deportivo.observaciones_estudiante` (tabla + trigger de
+  `V4`). No tiene aún controlador ni servicio JPA propio; el texto libre que el
+  entrenador escribe hoy va por la descripción de lesión y la observación
+  general de la evaluación, ambos cubiertos por RNF-25.
+- **Nota:** si en el futuro se le da un endpoint, hereda los controles de
+  RNF-25 (el `CHECK` de longitud de motor ya está aplicado sobre esa tabla).
 
 ---
 
@@ -1431,7 +1429,7 @@ cierre y fecha objetivo:*
 | Hallazgo | Requisito que lo cierra | Estado |
 |---|---|---|
 | H-01 — cédula en claro y sin validación | **RF-49** | ⬜ Planificado |
-| H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Servidor (2026-09-08); falta la guía en la UI |
+| H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Resuelto (2026-09-08) |
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ⬜ Planificado |
 | H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
 | H-05 — certificado TLS autofirmado | **RNF-21** | ⬜ Planificado (producción) |
@@ -1635,32 +1633,33 @@ aplicado en el servidor y a nivel de motor, y su lectura deberá estar
 restringida a los roles del cuerpo técnico y de coordinación
 (ADMINISTRADOR / ENTRENADOR), nunca a RECEPCIONISTA, REPRESENTANTE ni ESTUDIANTE.*
 
-- **Estado:** ✅ Implementado (2026-09-08) — *(queda como condición la guía de
-  redacción en la interfaz de captura)*
+- **Estado:** ✅ Implementado (2026-09-08)
 - **Método de verificación:** Inspección; Test
 - **Origen y controles:**
-  - **Límite de longitud en el servidor:** la descripción de lesión ya llevaba
-    `@Size(max = 1000)` (`RegistrarLesionRequest`); se añadió una guarda de
-    2000 caracteres en `EvaluacionDiariaService.finalizar` para la observación
-    general.
+  - **Límite de longitud en el servidor:** `@Size(max = 1000)` en la descripción
+    de lesión (`RegistrarLesionRequest`); `@Size(max = 255)` en la observación de
+    asistencia (`PasarListaDtos.MarcaAsistencia`); guarda de 2000 caracteres en
+    `EvaluacionDiariaService.finalizar` para la observación general.
   - **Límite a nivel de motor** (defensa en profundidad y cobertura de
     `observaciones_estudiante`, que aún no tiene código JPA): migración
     `V25__limite_texto_libre_menores.sql` con `CHECK (char_length(...) <= 2000)`
     en `deportivo.evaluaciones_diarias.observacion_general` y
     `deportivo.observaciones_estudiante.texto`, y `<= 1000` en
-    `deportivo.lesiones.descripcion`.
-  - **Control de acceso:** `EvaluacionDiariaController` está
-    `@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")`; `LesionController`
-    está reservado a `ENTRENADOR`. Ningún otro rol accede.
+    `deportivo.lesiones.descripcion` (la observación de asistencia ya es
+    `VARCHAR(255)`).
+  - **Control de acceso:** `EvaluacionDiariaController` y las vías de asistencia
+    están `@PreAuthorize` a `ADMINISTRADOR`/`ENTRENADOR`; `LesionController` a
+    `ENTRENADOR`. Ningún otro rol accede al texto.
+  - **Guía de redacción en la interfaz:** el punto de captura de texto libre que
+    existe hoy —el formulario de lesión de la pantalla de evaluación diaria—
+    muestra una guía (`evaluacion-diaria.component`): "anotá solo lo relacionado
+    con la lesión, evitá juicios de valor, datos de salud no verificados y
+    comentarios sobre terceros", con contador de caracteres y `maxlength`.
 - **Verificación:** `EvaluacionDiariaServiceTest.observacionGeneralConTopeDeLongitud`
   (rechaza 2001 caracteres); `LesionControllerTest` cubre el `@Size` de la
-  descripción; inspección de los `@PreAuthorize`.
-- **Condición pendiente:** la **guía de redacción** en el componente de
-  evaluación diaria del frontend (Angular) — texto de ayuda que oriente al
-  entrenador sobre qué no escribir. Es cambio de interfaz; hasta entonces
-  **RF-48** permanece en MoSCoW Won't.
-- **Nota:** responde al punto A2 de la revisión de septiembre; cierra la parte
-  de servidor de **H-02**.
+  descripción; `evaluacion-diaria.component.spec` (`RNF-25: … descripción
+  demasiado larga no llama al backend`); inspección de los `@PreAuthorize`.
+- **Nota:** responde al punto A2 de la revisión de septiembre; cierra **H-02**.
 
 ### 4.4 Portabilidad
 
@@ -1840,7 +1839,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** parte de servidor (guarda de longitud en `EvaluacionDiariaService.finalizar` + `CHECK` de longitud en `V25__limite_texto_libre_menores.sql`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado. RF-49 sigue Planificado (bloqueante: normalizar las cédulas ficticias de seed/pruebas al dígito verificador). |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. RF-49 sigue Planificado (bloqueante: normalizar las cédulas ficticias de seed/pruebas al dígito verificador); RF-50 (SP de anonimización) queda para después. |
 
 ## 7. Aprobación
 
