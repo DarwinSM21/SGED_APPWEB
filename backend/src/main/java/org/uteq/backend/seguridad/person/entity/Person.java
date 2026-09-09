@@ -26,7 +26,10 @@ public class Person {
     @Column(name = "apellido", nullable = false, length = 100)
     private String apellido;
 
-    @Column(name = "cedula", nullable = false, unique = true, length = 10)
+    // RF-49 / H-01: opcional. La unicidad, cuando hay valor, la impone el
+    // índice único parcial de V26 (no una constraint de columna, que en
+    // PostgreSQL permitiría varias filas con el mismo valor sólo si es NULL).
+    @Column(name = "cedula", length = 10)
     private String cedula;
 
     @Column(name = "correo", nullable = false, unique = true, length = 200)

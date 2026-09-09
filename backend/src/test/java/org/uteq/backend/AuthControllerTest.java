@@ -90,7 +90,7 @@ class AuthControllerTest {
         when(authService.register(any(RegisterRequest.class))).thenReturn(Optional.empty());
 
         RegisterRequest registerRequest = new RegisterRequest(
-                "Test", "User", "0912345678", "test@test.com",
+                "Test", "User", "0912345675", "test@test.com",
                 LocalDate.of(2000, 1, 1), "test@test.com", "test123", "ENTRENADOR");
 
         mockMvc.perform(post("/api/auth/registro")
@@ -117,7 +117,7 @@ class AuthControllerTest {
     @Test
     void registroSinRolDa422() throws Exception {
         String cuerpoSinRol = """
-                {"nombre":"Test","apellido":"User","cedula":"0912345678",
+                {"nombre":"Test","apellido":"User","cedula":"0912345675",
                  "correo":"sinrol@test.com","fechaNacimiento":"2000-01-01",
                  "username":"sinrol@test.com","password":"password123"}
                 """;

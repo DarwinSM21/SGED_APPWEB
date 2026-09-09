@@ -146,15 +146,17 @@ public class PersonService {
     // Al crear valida contra personas activas; al editar usa las consultas
     // JPQL que excluyen la fila idActual (existsAnotherPersonWith...).
     private void validateUniqueCedulaAndEmail(String cedula, String correo, Long idActual) {
+        // RF-49 / H-01: la cédula es opcional; solo se comprueba unicidad si viene.
+        boolean tieneCedula = cedula != null && !cedula.isBlank();
         if (idActual == null) {
-            if (personaRepository.existsByCedulaAndActivoTrue(cedula)) {
+            if (tieneCedula && personaRepository.existsByCedulaAndActivoTrue(cedula)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }
             if (personaRepository.existsByCorreo(correo)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
             }
         } else {
-            if (personaRepository.existsAnotherPersonWithCedula(cedula, idActual)) {
+            if (tieneCedula && personaRepository.existsAnotherPersonWithCedula(cedula, idActual)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }
             if (personaRepository.existsAnotherPersonWithEmail(correo, idActual)) {

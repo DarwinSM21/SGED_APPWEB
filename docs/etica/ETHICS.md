@@ -4,7 +4,8 @@
 **Versión:** 1.3 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
-cierran **H-02** (RNF-25: topes de longitud, control de acceso y guía de
+cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
+parcial), **H-02** (RNF-25: topes de longitud, control de acceso y guía de
 redacción), **H-04** (RF-51, compuerta de consentimiento) y la **decisión M7**
 de **H-06** (peso y altura, con base legal y lectura restringida por rol))
 
@@ -111,7 +112,7 @@ actualmente **no** tiene un mecanismo para satisfacerlo. Ver hallazgo H-03.
 
 Se documentan como riesgos reconocidos, no se ocultan.
 
-### H-01 — La cédula se almacena en claro y sin validación
+### H-01 — La cédula se almacena en claro y sin validación (resuelto el 2026-09-08 — RF-49)
 
 `seguridad.personas.cedula` es `VARCHAR(10)` sin restricción de unicidad,
 sin validación de dígito verificador y sin cifrado en reposo. Para un
@@ -119,9 +120,16 @@ identificador nacional de un menor, esto es más permisivo de lo deseable.
 **Mitigación propuesta:** hacer el campo opcional, validar el formato
 ecuatoriano y evaluar cifrado a nivel de columna si se despliega en
 producción real.
-**Requisito de cierre:** **RF-49** (SRS §3.6) — con criterio verificable y
-condición de cierre. El cifrado de columna queda fuera del alcance de esa
-entrega (recomendación de despliegue real).
+**Requisito de cierre:** **RF-49** (SRS §3.6). **Resuelto el 2026-09-08:**
+la cédula pasó a ser opcional (sin `@NotBlank`), la anotación `@Cedula`
+(`common.validation.CedulaValidator`) valida el dígito verificador ecuatoriano
+cuando se proporciona, y la migración `V26__cedula_opcional_y_unica.sql` quita
+el `NOT NULL` y crea un índice único parcial `WHERE cedula IS NOT NULL`
+(`CedulaValidatorTest`, `PersonControllerTest`, `PersonServiceTest`). Las
+cédulas ficticias de `db/seed.sql` se cargan por SQL directo, no pasan por la
+validación, y siguen sirviendo como identificadores internos. El cifrado de
+columna queda fuera del alcance de esta entrega (recomendación de despliegue
+real con datos reales).
 
 ### H-02 — Las observaciones de texto libre no tienen control de contenido (resuelto el 2026-09-08 — RNF-25)
 

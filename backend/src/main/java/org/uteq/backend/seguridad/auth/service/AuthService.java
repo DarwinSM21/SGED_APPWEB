@@ -92,8 +92,11 @@ public class AuthService {
     public Optional<SessionResponse> register(RegisterRequest request) {
         passwordPolicy.validar(request.password(), request.username());
 
+        // RF-49 / H-01: la cédula es opcional; solo cuenta como colisión si viene.
+        boolean cedulaDuplicada = request.cedula() != null && !request.cedula().isBlank()
+                && personaRepository.existsByCedulaAndActivoTrue(request.cedula());
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
-                || personaRepository.existsByCedulaAndActivoTrue(request.cedula())
+                || cedulaDuplicada
                 || personaRepository.existsByCorreo(request.correo())) {
             return Optional.empty();
         }

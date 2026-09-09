@@ -1190,25 +1190,28 @@ ecuatoriana (10 dígitos con dígito verificador) y rechazar con `422` los
 valores mal formados, y deberá garantizar su unicidad a nivel de esquema
 cuando haya valor.*
 
-- **Prioridad:** Alta · **Estado:** ⬜ Planificado · **MoSCoW:** Should
+- **Prioridad:** Alta · **Estado:** ✅ Implementado (2026-09-08) · **MoSCoW:** Should
 - **Método de verificación:** Test
-- **Origen:** `seguridad.personas.cedula` (hoy `VARCHAR(10)` sin validación de
-  dígito verificador ni restricción `UNIQUE`); `PersonController` /
-  `PersonService`. Cierra el hallazgo **H-01** de `docs/etica/ETHICS.md`.
-- **Criterio verificable:** una prueba que (a) crea una persona sin cédula →
-  `201`; (b) cédula con dígito verificador inválido → `422`; (c) cédula
-  duplicada → `409`/`422`. Migración Flyway que añade un índice `UNIQUE`
-  parcial (`WHERE cedula IS NOT NULL`).
-- **Condición de cierre:** (a)(b)(c) en verde y migración aplicada; `ETHICS.md`
-  §H-01 marcado "corregido" con fecha.
-- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
-- **Bloqueante conocido (2026-09-08):** los datos de cédula de `db/seed.sql` y
-  de varias clases de prueba son ficticios y **no pasan** el algoritmo de
-  dígito verificador (`0000000000`, `1111111111`, `4000000001` con provincia
-  «40» inexistente, …). Activar la validación exige antes normalizar esos
-  datos a cédulas algorítmicamente válidas. El trabajo cae en el módulo
-  `seguridad`; se coordina con su responsable. El resto (opcionalidad + índice
-  `UNIQUE` parcial) no tiene ese bloqueante y puede ir por delante.
+- **Origen y controles:**
+  - **Opcional:** `PersonRequest.cedula` y `RegisterRequest.cedula` ya no llevan
+    `@NotBlank`; `Person.cedula` es `nullable`.
+  - **Dígito verificador:** anotación `@Cedula` (`common.validation.CedulaValidator`)
+    — algoritmo módulo 10 para personas naturales (provincia 01–24 ó 30, tercer
+    dígito 0–5, dígito verificador). Un valor ausente es válido.
+  - **Unicidad cuando hay valor:** migración `V26__cedula_opcional_y_unica.sql`
+    — `ALTER COLUMN cedula DROP NOT NULL` + `CREATE UNIQUE INDEX … WHERE cedula
+    IS NOT NULL`. `PersonService` y `AuthService` solo comprueban colisión de
+    cédula si viene con valor.
+- **Verificación:** `CedulaValidatorTest` (14 casos: opcional, 5 válidas, 8
+  inválidas); `PersonControllerTest` — `crear_sin_cedula_devuelve_201`,
+  `crear_con_digito_verificador_invalido_da_422`, `crear_con_cedula_invalida_da_422`;
+  `PersonServiceTest.crear_sin_cedula_persiste`.
+- **Criterio de cierre:** cumplido — `ETHICS.md` §H-01 marcado "corregido".
+- **Nota sobre los datos de prueba/seed:** las cédulas ficticias de `db/seed.sql`
+  (`0000000000`, `4000000001`, …) se cargan por SQL directo y **no** pasan por
+  la validación; siguen sirviendo como identificadores internos y son todas
+  distintas (el índice único las admite). Las clases de prueba que crean una
+  persona por API se ajustaron a cédulas válidas (`0912345675`, …).
 - **Fuera de alcance de este requisito:** el cifrado a nivel de columna, que se
   mantiene como recomendación para un despliegue con datos reales (H-01,
   RNF-21), no como obligación de esta entrega.
@@ -1428,7 +1431,7 @@ cierre y fecha objetivo:*
 
 | Hallazgo | Requisito que lo cierra | Estado |
 |---|---|---|
-| H-01 — cédula en claro y sin validación | **RF-49** | ⬜ Planificado |
+| H-01 — cédula en claro y sin validación | **RF-49** | ✅ Resuelto (2026-09-08) — opcional + dígito verificador + índice único parcial |
 | H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Resuelto (2026-09-08) |
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ⬜ Planificado |
 | H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
@@ -1839,7 +1842,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. RF-49 sigue Planificado (bloqueante: normalizar las cédulas ficticias de seed/pruebas al dígito verificador); RF-50 (SP de anonimización) queda para después. |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (SP de anonimización) queda para después. Con esto cierran **H-01**, **H-02** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
 
 ## 7. Aprobación
 

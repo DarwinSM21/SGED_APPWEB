@@ -51,7 +51,7 @@ class PersonControllerTest {
     }
 
     private PersonResponse respuesta() {
-        return new PersonResponse(1L, "Maria", "Lopez", "1234567890", "maria@sged.test",
+        return new PersonResponse(1L, "Maria", "Lopez", "0912345675", "maria@sged.test",
                 "0999999999", null, LocalDate.of(2012, 5, 10), true, Instant.now());
     }
 
@@ -77,11 +77,11 @@ class PersonControllerTest {
     @Test
     @DisplayName("GET /api/personas/cedula/{cedula} - devuelve la persona")
     void buscarPorCedula_devuelve_200() throws Exception {
-        when(personaService.findByCedula("1234567890")).thenReturn(respuesta());
+        when(personaService.findByCedula("0912345675")).thenReturn(respuesta());
 
-        mockMvc.perform(get("/api/personas/cedula/1234567890"))
+        mockMvc.perform(get("/api/personas/cedula/0912345675"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cedula").value("1234567890"));
+                .andExpect(jsonPath("$.cedula").value("0912345675"));
     }
 
     @Test
@@ -91,7 +91,7 @@ class PersonControllerTest {
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"1234567890\",\"correo\":\"maria@sged.test\",\"telefono\":\"0999999999\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"0912345675\",\"correo\":\"maria@sged.test\",\"telefono\":\"0999999999\",\"fechaNacimiento\":\"2012-05-10\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.nombre").value("Maria"));
     }
@@ -106,14 +106,34 @@ class PersonControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/personas - cedula duplicada da 400")
-    void crear_con_cedula_duplicada_da_400() throws Exception {
-        when(personaService.create(any(PersonRequest.class)))
-                .thenThrow(new IllegalArgumentException("Ya existe una persona registrada con la cédula: 1234567890"));
+    @DisplayName("RF-49 - cedula con digito verificador incorrecto da 422")
+    void crear_con_digito_verificador_invalido_da_422() throws Exception {
+        mockMvc.perform(post("/api/personas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"0912345678\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    @DisplayName("RF-49 - crear una persona sin cedula devuelve 201 (la cedula es opcional)")
+    void crear_sin_cedula_devuelve_201() throws Exception {
+        when(personaService.create(any(PersonRequest.class))).thenReturn(respuesta());
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"1234567890\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("POST /api/personas - cedula duplicada da 400")
+    void crear_con_cedula_duplicada_da_400() throws Exception {
+        when(personaService.create(any(PersonRequest.class)))
+                .thenThrow(new IllegalArgumentException("Ya existe una persona registrada con la cédula: 0912345675"));
+
+        mockMvc.perform(post("/api/personas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"0912345675\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
                 .andExpect(status().isBadRequest());
     }
 

@@ -123,6 +123,22 @@ class PersonServiceTest {
     }
 
     @Test
+    @DisplayName("RF-49 - crear sin cedula no consulta unicidad de cedula y persiste")
+    void crear_sin_cedula_persiste() {
+        when(personaRepository.existsByCorreo("sincedula@sged.test")).thenReturn(false);
+        when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
+            Person p = inv.getArgument(0);
+            p.setIdPersona(9L);
+            return p;
+        });
+
+        PersonResponse resultado = personaService.create(requestValido(null, "sincedula@sged.test"));
+
+        assertThat(resultado.idPersona()).isEqualTo(9L);
+        verify(personaRepository, never()).existsByCedulaAndActivoTrue(any());
+    }
+
+    @Test
     @DisplayName("editar excluye a la propia persona al validar unicidad")
     void editar_actualiza_persona_existente() {
         Person existente = persona();
