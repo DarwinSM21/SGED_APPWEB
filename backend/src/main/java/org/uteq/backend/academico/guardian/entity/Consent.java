@@ -20,6 +20,16 @@ public class Consent {
     public static final String ALCANCE_NOTIFICACIONES_ASISTENCIA = "NOTIFICACIONES_ASISTENCIA";
     public static final String ALCANCE_NOTIFICACIONES_LESION = "NOTIFICACIONES_LESION";
 
+    /**
+     * Alcance para el tratamiento de {@code peso} y {@code altura} del
+     * estudiante (RF-11b / hallazgo H-06 de {@code docs/etica/ETHICS.md}):
+     * datos físico-deportivos, separado del consentimiento general de
+     * inscripción. El {@code ADMINISTRADOR} lo registra por el mismo endpoint
+     * de RF-39 ({@code POST /api/consentimientos} con este {@code alcance})
+     * cuando el representante autoriza el seguimiento físico-deportivo.
+     */
+    public static final String ALCANCE_DATOS_FISICO_DEPORTIVOS = "DATOS_FISICO_DEPORTIVOS";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_consentimiento")

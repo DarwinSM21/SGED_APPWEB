@@ -370,7 +370,10 @@ las condiciones declaradas más abajo.*
     (Ecuador, tratamiento de datos de niñas, niños y adolescentes), con
     **alcance específico "datos físico-deportivos"**, separado del
     consentimiento general de inscripción. Se registra por el mismo mecanismo
-    de RF-39 y queda sujeto a la compuerta de RF-51 para cualquier uso
+    de RF-39 — `POST /api/consentimientos` con
+    `alcance = "DATOS_FISICO_DEPORTIVOS"` (constante
+    `Consent.ALCANCE_DATOS_FISICO_DEPORTIVOS`), revocable y consultable por las
+    mismas rutas — y queda sujeto a la compuerta de RF-51 para cualquier uso
     proactivo.
   - **Responsables del tratamiento:** la lectura de `peso`/`altura` se
     restringe a `ADMINISTRADOR` y `ENTRENADOR` — **aplicado el 2026-09-08**:
@@ -382,11 +385,16 @@ las condiciones declaradas más abajo.*
     (RNF-22); se suprimen por RF-50 a solicitud del representante.
   - El campo es y sigue siendo **opcional**: la ficha se puede crear y operar
     sin ellos.
-- **Nota:** cierra el hallazgo **H-06** de `docs/etica/ETHICS.md`. La
-  restricción de lectura por rol ya está aplicada (ver arriba); queda como
-  condición pendiente el registro del consentimiento de alcance
-  físico-deportivo por representante (RF-39 / RF-51), que es tarea de datos, no
-  de código.
+- **Nota:** cierra el hallazgo **H-06** de `docs/etica/ETHICS.md`. Sus dos
+  condiciones están cubiertas: (1) la restricción de lectura por rol está
+  aplicada en `StudentController` (2026-09-08); (2) el consentimiento de
+  alcance físico-deportivo tiene un valor de alcance propio y se registra por
+  las rutas de RF-39 — es una acción del ADMINISTRADOR cuando el representante
+  autoriza, no requiere lógica nueva (el envío proactivo sí queda bajo la
+  compuerta de RF-51). El sistema no fuerza esa autorización como precondición
+  de guardar el dato: peso/altura siguen siendo opcionales y su tratamiento se
+  ampara en la base legal declarada; forzar la compuerta en el alta se deja
+  como endurecimiento posterior, no como obligación de esta entrega.
 
 ---
 
@@ -1456,9 +1464,9 @@ cierre y fecha objetivo:*
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ✅ Resuelto (2026-09-08) — SP `sp_anonimizar_estudiante` (`V27`) + endpoint `POST /api/estudiantes/{id}/anonimizar` auditado |
 | H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
 | H-05 — certificado TLS autofirmado | **RNF-21** | ✅ Resuelto (2026-09-09) — despliegue en Render con certificado de *Google Trust Services*, HTTP→HTTPS y HSTS; autofirmado solo en el laboratorio |
-| H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR | ✅ Decidido y aplicado (queda registrar el consentimiento de alcance) |
+| H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR; consentimiento de alcance `DATOS_FISICO_DEPORTIVOS` por las rutas de RF-39 | ✅ Resuelto (2026-09-09) — ambas condiciones cerradas |
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
-| H-09 — correo de reseteo no verificado | limitación documentada de **RF-37**; cierre pleno (doble opt-in) = trabajo futuro con fecha objetivo | ⬜ Trabajo futuro |
+| H-09 — correo de reseteo no verificado | limitación documentada de **RF-37** (riesgo acotado, con mitigaciones: enlace de un solo uso, 30 min, respuesta genérica, rate limit, invalidación de sesiones). **Fuera del alcance de la Entrega Final** — el cierre pleno (doble opt-in en el alta) es una feature del tamaño de RF-37 y no figura en la revisión A2 del docente | ⬜ Trabajo posterior a la entrega |
 
 - **Método de verificación:** Inspección
 - **Origen:** `docs/etica/ETHICS.md` (inventario de datos y hallazgos),

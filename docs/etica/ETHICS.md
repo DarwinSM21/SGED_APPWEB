@@ -1,16 +1,20 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.5 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.6 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
 cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
 parcial), **H-02** (RNF-25: topes de longitud, control de acceso y guía de
 redacción), **H-03** (RF-50: procedimiento de anonimización `sp_anonimizar_estudiante`
-+ endpoint auditado), **H-04** (RF-51, compuerta de consentimiento) y la
-**decisión M7** de **H-06** (peso y altura, con base legal y lectura restringida
-por rol); 2026-09-09: **H-05** (certificado TLS) resuelto con el despliegue en
-Render — certificado de una autoridad reconocida)
++ endpoint auditado), **H-04** (RF-51, compuerta de consentimiento);
+2026-09-09: **H-05** (certificado TLS) resuelto con el despliegue en Render
+—certificado de una autoridad reconocida—, **H-06** (peso y altura) resuelto
+—base legal documentada, lectura restringida por rol y alcance de
+consentimiento `DATOS_FISICO_DEPORTIVOS` propio—, y **H-09** (correo no
+verificado) delimitado explícitamente como trabajo posterior a la entrega.
+Hallazgos aún abiertos: **H-07** (plantilla de consentimiento del
+representante) y **H-09** (trabajo futuro))
 
 ---
 
@@ -259,7 +263,7 @@ con redirección de HTTP a HTTPS y HSTS. El certificado autofirmado queda
 **Requisito de cierre:** **RNF-21** (SRS). El endurecimiento TLS del laboratorio
 (nginx) sigue como recomendación, no como obligación de esta entrega.
 
-### H-06 — Peso y altura se agregaron sin base legal documentada (decidido el 2026-09-08 — punto M7)
+### H-06 — Peso y altura se agregaron sin base legal documentada (resuelto — decisión M7 del 2026-09-08, condiciones cerradas el 2026-09-09)
 
 `academico.estudiantes.peso` y `.altura` son datos de salud de un menor.
 Ninguna base legal para tratarlos (finalidad concreta, quién los usa, cuánto
@@ -299,9 +303,20 @@ listado). Se documenta:
   representante.
 - **Opcionalidad:** el campo es opcional; la ficha opera sin él.
 
-Este hallazgo pasa a **decidido**; quedan como trabajo pendiente las dos
-condiciones (restricción de lectura por rol y consentimiento de alcance
-físico-deportivo). Especificado en el SRS §RF-11b.
+Este hallazgo queda **resuelto**. Las dos condiciones están cerradas:
+(1) la lectura de `peso`/`altura` se restringe a `ADMINISTRADOR` y
+`ENTRENADOR` en `StudentController` (`StudentResponse.withoutPhysicalData()`
+para `RECEPCIONISTA`), con prueba
+`StudentControllerTest.datos_fisicos_solo_para_administrador_y_entrenador`
+(2026-09-08); (2) el consentimiento de alcance físico-deportivo tiene un valor
+propio, `Consent.ALCANCE_DATOS_FISICO_DEPORTIVOS` (`"DATOS_FISICO_DEPORTIVOS"`),
+que el `ADMINISTRADOR` registra por las rutas de RF-39
+(`POST /api/consentimientos`) cuando el representante lo autoriza; el uso
+proactivo de esos datos queda además bajo la compuerta de RF-51. El sistema no
+impone esa autorización como precondición técnica de guardar el dato —peso y
+altura siguen siendo opcionales y su tratamiento se ampara en la base legal
+declarada aquí—; forzar la compuerta en el alta se deja como endurecimiento
+posterior. Especificado en el SRS §RF-11b.
 
 ### H-07 — La plantilla de consentimiento cubre a los evaluadores del SUS, no a los representantes de los menores
 
@@ -311,9 +326,13 @@ bien construido para adultos que participan en la encuesta de usabilidad
 Son dos cosas distintas: uno es el consentimiento de un adulto para
 evaluar el sistema; el otro es el consentimiento de un representante para
 que los datos de **su hijo o hija menor de edad** sean tratados por el
-sistema en producción. H-04 sigue abierto y ahora es más urgente por H-06:
-cuantos más datos sensibles trate el sistema, más pesa no tener resuelto el
-consentimiento de quien sí puede otorgarlo legalmente.
+sistema en producción. El **mecanismo** de ese consentimiento ya existe
+(H-04 resuelto: entidad `Consent`, rutas de RF-39, compuerta de RF-51, y un
+alcance propio para los datos físico-deportivos de H-06). Lo que queda
+abierto en H-07 es el **documento**: una plantilla de consentimiento
+informado dirigida al representante legal —finalidad, datos tratados, base
+legal, derechos LOPDP, revocación— equivalente a la del estudio SUS pero
+para el tratamiento en producción. Es trabajo de redacción, no de código.
 
 ### H-08 — Los datos personales quedaron accesibles a cualquier cuenta autenticada (corregido el 2026-07-30)
 
@@ -351,7 +370,7 @@ evidencia está en `docs/mediciones/sec/a01-acceso-roto.txt`, que ahora
 comprueba recurso por recurso —incluida la búsqueda por cédula— y verifica
 también que las lecturas permitidas siguen respondiendo `200`.
 
-### H-09 — El restablecimiento de contraseña se envía a un correo no verificado
+### H-09 — El restablecimiento de contraseña se envía a un correo no verificado (limitación documentada — trabajo posterior a la entrega)
 
 El flujo de recuperación de contraseña (RF-37, agregado el 2026-09-07) envía
 el enlace de un solo uso al valor de `seguridad.personas.correo` del usuario.
@@ -365,8 +384,17 @@ como limitación conocida. Mitigaciones ya presentes: el enlace es de un solo
 uso y vence en 30 minutos; la respuesta de `/forgot` es genérica y no revela
 si la cuenta existe; hay límite de solicitudes por identificador y por IP; y
 al completarse el cambio se invalidan todas las sesiones previas del usuario.
-Cerrar del todo este hallazgo exigiría un paso de verificación del correo
-(doble opt-in) en el alta de la persona, que hoy no existe.
+
+**Alcance.** Cerrar del todo este hallazgo exige un paso de verificación del
+correo (doble opt-in) en el alta de la persona: una columna
+`correo_verificado`, un token de confirmación con su propio almacén y ventana
+de vigencia, una pantalla de confirmación y que RF-37 solo envíe a
+direcciones verificadas — una funcionalidad del tamaño de RF-37 completo.
+**Queda fuera del alcance de la Entrega Final:** no figura en la lista de la
+revisión A2 del docente (cédula, texto libre, supresión, consentimiento), el
+riesgo residual está acotado y mitigado, y añadirla a días de la defensa sería
+ampliar el alcance sin necesidad. Se planifica como **trabajo posterior a la
+entrega**, con las mitigaciones actuales vigentes mientras tanto.
 
 ---
 
