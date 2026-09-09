@@ -167,3 +167,13 @@ management:
   endpoint:
     health:
       show-details: always
+  health:
+    # El check de correo hace un handshake SMTP real contra spring.mail.host en
+    # CADA llamada a /actuator/health. El envio de correo es opcional (mail.enabled
+    # =false por defecto; si falla, RF-37 degrada y registra el enlace en la
+    # bitacora), asi que un SMTP inalcanzable NO debe marcar la app como DOWN.
+    # En Render (plan gratuito) el egress SMTP esta bloqueado: con este check
+    # activo, /actuator/health responde 503 y el health check del deploy se queda
+    # en "Timed out". La reachability real del SMTP se vigila aparte, no aqui.
+    mail:
+      enabled: false
