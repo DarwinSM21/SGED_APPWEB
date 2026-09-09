@@ -357,9 +357,8 @@ con hasta 3 dígitos enteros y 2 decimales.*
 
 - **Prioridad:** Media (condicionada a resolver el hallazgo H-06).
   Apareció en la reestructuración de paquetes, no en un requisito
-  previamente especificado. · **MoSCoW:** Should (esta entrega) —
+  previamente especificado. · **MoSCoW:** Should (esta entrega) —condicionado al hallazgo H-06, no por olvido.
 - **Método de verificación:** Demostración
-  condicionado al hallazgo H-06, no por olvido.
 - **Origen:** `EstudianteRequest.peso`, `.altura`
   (`@DecimalMin`, `@Digits`); columnas `academico.estudiantes.peso/altura`.
 - **Estado (decisión 2026-09-07):** la funcionalidad queda **habilitada y
@@ -575,9 +574,8 @@ registrarse dos veces como entrenador.*
 categoría y entrenador, y deberá impedir que la hora de fin sea anterior o
 igual a la hora de inicio.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de él se generan las sesiones
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de él se generan las sesiones (RF-18).
 - **Método de verificación:** Demostración
-  (RF-18).
 - **Origen:** `HorarioController` (`/api/horarios`, 4 endpoints) — `deportivo/horario/controller/HorarioController.java`
 - **Verificación:** `HorarioServiceTest`, `HorarioControllerTest`
 
@@ -595,9 +593,8 @@ antes, cada sesión —fuera una recurrente o una extra— se creaba a mano.
 categoría, entrenador responsable y estado, admitiendo únicamente los
 estados PROGRAMADA, EN_CURSO, FINALIZADA y CANCELADA.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de ella dependen asistencia
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de ella dependen asistencia (RF-19) e historial (RF-35).
 - **Método de verificación:** Demostración
-  (RF-19) e historial (RF-35).
 - **Origen:** `SesionEntrenamientoController` (`/api/sesiones`, 4 endpoints)
 - **Verificación:** `SesionEntrenamientoServiceTest`, `SesionEntrenamientoControllerTest`
 
@@ -628,9 +625,8 @@ mediante código QR (marcado por el propio estudiante) o lista manual
 JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
 mismo estudiante en la misma sesión.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — precondición de notificaciones
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — precondición de notificaciones (RF-22) e historial (RF-35).
 - **Método de verificación:** Demostración
-  (RF-22) e historial (RF-35).
 - **Origen:** `AsistenciaQrController` (`POST /api/asistencias/qr/marcar`) · `AsistenciaSesionController.pasarLista` (`PUT /api/asistencias/sesion/{id}`)
 - **Verificación:** `AsistenciaServiceTest.marcarPorQr_marca_presente_dentro_de_tolerancia`
 
@@ -638,9 +634,8 @@ mismo estudiante en la misma sesión.*
 *El sistema deberá admitir el marcaje de asistencia mediante lector RFID
 como vía adicional a RF-19a.*
 
-- **Prioridad:** Baja · **Estado:** ⬜ Planificado · **MoSCoW:** Could — la escuela no dispone hoy de
+- **Prioridad:** Baja · **Estado:** ⬜ Planificado · **MoSCoW:** Could — la escuela no dispone hoy de lector físico; sin ese hardware no hay forma de verificar la capacidad aunque se programe. El `CHECK` de `metodo` en el esquema ya admite el valor `'RFID'` (ver más abajo), así que activarla no exige migración, solo el lector y el endpoint.
 - **Método de verificación:** Demostración
-  lector físico; sin ese hardware no hay forma de verificar la capacidad aunque se programe. El `CHECK` de `metodo` en el esquema ya admite el valor `'RFID'` (ver más abajo), así que activarla no exige migración, solo el lector y el endpoint.
 - **Origen:** endpoint RFID pendiente (sin controlador aún); el esquema `deportivo.asistencias` admite `metodo='RFID'`
 - **Verificación:** Pendiente (requiere lector RFID físico) sin ese hardware no hay forma de verificar la capacidad
   aunque se programe. El `CHECK` de `metodo` en el esquema ya admite el
@@ -703,9 +698,8 @@ Esquema: `deportivo.evaluaciones_diarias`, `deportivo.criterios_evaluacion`,
 *El sistema deberá calcular el promedio de puntajes por estudiante y
 evaluación en el motor de base de datos.*
 
-- **Prioridad:** Media · **Estado:** 🟡 Modelado · **MoSCoW:** Should — depende de RF-20, también
+- **Prioridad:** Media · **Estado:** 🟡 Modelado · **MoSCoW:** Should — depende de RF-20, también solo esquema.
 - **Método de verificación:** Inspección
-  solo esquema.
 - **Origen:** Vista `deportivo.v_promedio_evaluacion`; sin controlador que la exponga
 - **Verificación:** Inspección de esquema (vista `v_promedio_evaluacion` existe; sin endpoint)
 
@@ -717,9 +711,8 @@ Esquema: vista `deportivo.v_promedio_evaluacion`.
 *El sistema deberá permitir al entrenador agendar un partido de una
 categoría y registrar su resultado después de jugado.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — base del dominio de partidos
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — base del dominio de partidos (RF-34).
 - **Método de verificación:** Demostración
-  (RF-34).
 - **Origen:** `PartidoController` (`/api/partidos`, 4 endpoints) — `deportivo/partido/controller/PartidoController.java`
 - **Verificación:** `PartidoServiceTest`, `PartidoControllerTest`
 
@@ -740,9 +733,8 @@ Solo se lleva el marcador propio. El sistema es de **una** academia:
 rendimiento acumulado de las semanas previas, y deberá permitir al entrenador
 modificarlo y guardar la formación con la que efectivamente jugó.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — regla de negocio central del
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — regla de negocio central del módulo deportivo (tope de once titulares, exclusión por lesión).
 - **Método de verificación:** Demostración
-  módulo deportivo (tope de once titulares, exclusión por lesión).
 - **Origen:** `PartidoController` (`GET/PUT/DELETE /api/partidos/{id}/alineacion`, junto a la agenda de partidos)
 - **Verificación:** `AlineacionServiceTest`, `PartidoControllerTest`
 
@@ -779,9 +771,8 @@ los que fueron a **ese** entrenamiento.
 *El sistema deberá mostrar, para una sesión ya ocurrida, quiénes asistieron y
 quiénes no.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — reporte sobre datos que ya
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — reporte sobre datos que ya existen por RF-19.
 - **Método de verificación:** Demostración
-  existen por RF-19.
 - **Origen:** `SesionEntrenamientoController.historial` (`GET /api/sesiones/{id}/historial`)
 - **Verificación:** `SesionEntrenamientoServiceTest.historialCuentaCadaEstadoPorSeparado`
 
@@ -797,9 +788,8 @@ distinto de «no se registró la asistencia de nadie». Por eso existe el estado
 *El sistema deberá notificar al representante legal cuando su representado
 marque asistencia o registre una lesión.*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — depende de RF-19/RF-31;
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — depende de RF-19/RF-31; hoy solo en-app, no correo/SMS/push (sección Trabajo futuro del
 - **Método de verificación:** Demostración
-  hoy solo en-app, no correo/SMS/push (sección Trabajo futuro del
   informe).
 - **Origen:** `NotificationService` (creación automática al marcar asistencia/lesión); `GuardianReportController` (`GET /api/representante/notificaciones`)
 - **Verificación:** `NotificationServiceTest.con_consentimiento_se_notifica`
@@ -864,9 +854,8 @@ estudiante (descripción y fecha estimada de retorno opcional), impidiendo
 una segunda lesión activa simultánea del mismo estudiante, y deberá
 permitir darla de alta cuando el estudiante se recupera.*
 
-- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — condiciona la exclusión de
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — condiciona la exclusión de lesionados en RF-34 y es dato de salud sensible (ver ETHICS.md).
 - **Método de verificación:** Demostración
-  lesionados en RF-34 y es dato de salud sensible (ver ETHICS.md).
 
 Esquema: `deportivo.lesiones` (`LesionController`, `LesionService`); el
 backend ya existía de una revisión anterior, pero sin frontend que lo
@@ -887,9 +876,8 @@ datos de contacto ni promedios — son menores de edad) y sus propias
 estadísticas de evaluación (promedio histórico por criterio, porcentaje
 de asistencia de los últimos 30 días e historial de lesiones propio).*
 
-- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — transparencia hacia el
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — transparencia hacia el estudiante, no bloquea ningún otro requisito.
 - **Método de verificación:** Demostración
-  estudiante, no bloquea ningún otro requisito.
 
 `MyTeamController` (`GET /api/estudiante/mi-equipo`,
 `GET /api/estudiante/mi-informe`), solo rol ESTUDIANTE. Las estadísticas
