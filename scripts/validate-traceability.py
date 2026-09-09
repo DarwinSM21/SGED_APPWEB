@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Valida docs/trazabilidad/matriz.csv contra el SRS y el código.
 
-Comprobaciones de la revision M1-M9 de la Entrega Final:
+Comprobaciones de la revision M1-M9 y A1-A4 de la Entrega Final:
   1. Toda fila tiene exactamente el mismo numero de columnas que la cabecera
      (quiebra si un campo con comas no esta entrecomillado).
   2. Todo requisito tiene historia de usuario, caso de uso o prueba asociada.
@@ -13,8 +13,12 @@ Comprobaciones de la revision M1-M9 de la Entrega Final:
   5. Los ids de requisito del SRS y de la matriz coinciden en ambas
      direcciones (los encabezados de agrupacion sin declaracion - unicamente
      RF-19 - no son requisitos y quedan fuera).
+  6. Toda ruta de archivo citada en el SRS (lineas fuera de tablas) y en las
+     columnas archivo_implementacion / evidencia_empirica de la matriz
+     existe en el repositorio (A1).
 
-Uso: python3 scripts/validate-traceability.py [ruta/a/matriz.csv]
+Uso: python3 scripts/validate-traceability.py [ruta/a/matriz.csv] [ruta/al/SRS.md]
+     (el segundo argumento es para el autotest con un SRS temporal)
 """
 import csv
 import os
@@ -22,7 +26,7 @@ import re
 import sys
 
 MATRIZ = sys.argv[1] if len(sys.argv) > 1 else "docs/trazabilidad/matriz.csv"
-SRS = "docs/requisitos/SRS.md"
+SRS = sys.argv[2] if len(sys.argv) > 2 else "docs/requisitos/SRS.md"
 TEST_ROOT = "backend/src/test"
 VOC_ESTADO = {"Implementado", "Modelado", "Planificado"}
 
@@ -58,6 +62,24 @@ def has_metodo(clase, metodo):
 REF_RE = re.compile(
     r"[A-Z][A-Za-z0-9]*Tests?\.[A-Za-z0-9_]+|[A-Z][A-Za-z0-9]*Tests?\b"
 )
+
+PATH_RE = re.compile(
+    r"\b(?:docs|backend|scripts|frontend|deploy|db|nginx)/[A-Za-z0-9_.-]+(?:/"
+    r"[A-Za-z0-9_.-]+)*"
+)
+
+
+def check_paths(texto, donde):
+    for m in PATH_RE.finditer(texto):
+        t = m.group(0).rstrip(".,;:)")
+        if "..." in t:  # comodines de los propios autores (".../controller/")
+            continue
+        if "AAAA" in t or "YYYY" in t:  # plantilla de evidencia futura
+            # (p. ej. docs/mediciones/backup/restauracion-AAAA-MM-DD.md, la
+            # condicion de cierre de RNF-24; aun no existe y no debe existir)
+            continue
+        if not os.path.exists(t):
+            viol("%s cita la ruta %s pero no existe en el repositorio." % (donde, t))
 
 
 def check_refs(text, donde):
@@ -97,6 +119,8 @@ for row in rows[1:]:
     if estado not in VOC_ESTADO:
         viol("%s: estado '%s' no pertenece al vocabulario %s." % (req, estado, sorted(VOC_ESTADO)))
     check_refs(row[7], "la matriz")
+    check_paths(row[6], "la matriz (%s, archivo_implementacion)" % req)
+    check_paths(row[8], "la matriz (%s, evidencia_empirica)" % req)
 
 # --- SRS: referencias de Verificacion y paridad de ids --------------------
 srs_ids = set()
@@ -118,6 +142,11 @@ if os.path.isfile(SRS):
             if l.startswith("- **Verificación:**") or l.startswith("**Verificación:**"):
                 verif_by_req.setdefault(rid, []).append(l)
     srs_lines = lines
+
+for i, l in enumerate(srs_lines, 1):
+    if l.strip().startswith(("|", "#", ">")):
+        continue
+    check_paths(l, "el SRS (línea %d)" % i)
 
 for rid, lines2 in verif_by_req.items():
     check_refs(" | ".join(lines2), "el SRS (%s)" % rid)

@@ -3,11 +3,11 @@
 # Toda la logica vive en scripts/validate-traceability.py (parsing CSV real,
 # con campos entrecomillados). Este envoltorio conserva la interfaz anterior:
 #
-#   bash scripts/validate-traceability.sh [ruta/al/matriz.csv]
+#   bash scripts/validate-traceability.sh [ruta/al/matriz.csv] [ruta/al/SRS.md]
 #
-# (la ruta opcional existe para el autotest scripts/test-validate-traceability.sh)
+# (las rutas opcionales existen para el autotest scripts/test-validate-traceability.sh)
 set -euo pipefail
 
 PY="$(command -v python3 >/dev/null 2>&1 && echo python3 || echo python)"
 
-exec "$PY" "$(dirname "$0")/validate-traceability.py" "${1:-docs/trazabilidad/matriz.csv}"
+exec "$PY" "$(dirname "$0")/validate-traceability.py" "${1:-docs/trazabilidad/matriz.csv}" "${2:-docs/requisitos/SRS.md}"

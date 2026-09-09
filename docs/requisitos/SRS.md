@@ -1389,7 +1389,7 @@ deshabilitada por defecto (`IA_HABILITADO=false`).*
 - **Origen:** paquete `common.ia` — `AnonymousPlayerProfile` (record con
   exactamente esos campos), `AIFeedbackGenerator` (interfaz),
   `GeminiFeedbackService` / `OpenAiFeedbackService` seleccionados por
-  `ia.proveedor`; `docs/superpowers/specs/2026-08-25-ia-alineacion-design.md`.
+  `ia.proveedor`.
 - **Verificación:** `GeminiFeedbackServiceTest`, `OpenAiFeedbackServiceTest`,
   `PromptsFeedbackTest` (el prompt no contiene nombre, cédula ni correo);
   degradación segura ante 503 probada en esos mismos tests.
@@ -1433,7 +1433,7 @@ autofirmado en el entorno de laboratorio— deberá declararse explícitamente
 (hallazgo H-05).*
 
 - **Método de verificación:** Demostración; Inspección
-- **Origen:** `nginx/default.conf`, `docker-compose.yml` (`:8443`);
+- **Origen:** `frontend/nginx.conf`, `docker-compose.yml` (`:8443`);
   `docs/mediciones/sec/a02-tls.txt`; hallazgo H-05 de `ETHICS.md`.
 - **Verificación:** `a02-tls.txt` reporta la versión de TLS negociada;
   inspección del emisor del certificado en el despliegue real.
@@ -1471,7 +1471,7 @@ denegar el acceso a los recursos protegidos (`401`) en vez de aceptar tokens
 que podrían estar revocados.*
 
 - **Estado:** ✅ Implementado
-- **Método de verificación:** Análisis; Prueba automatizada
+- **Método de verificación:** Análisis; Test
 - **Origen:** `JwtAuthenticationFilter` (envuelve la comprobación en
   `try/catch`; ante excepción no autentica y la petición continúa sin
   sesión), `RedisBlacklistService`, `SessionEpochService`.
@@ -1486,7 +1486,7 @@ degradarse a consulta directa a la base de datos mediante un
 endpoints de listado ni impedir la lectura.*
 
 - **Estado:** ⬜ Planificado
-- **Método de verificación:** Prueba automatizada
+- **Método de verificación:** Test
 - **Origen:** `RedisCacheConfig` (hoy sin `CacheErrorHandler`).
 - **Verificación:** prueba de integración con el contenedor `sged_redis`
   detenido que comprueba que `GET /api/estudiantes` responde `200` con datos
@@ -1496,7 +1496,7 @@ endpoints de listado ni impedir la lectura.*
   `RedisCacheConfig` y la prueba anterior pasa en verde.
 - **Condición de cierre:** cumplido el criterio, la nota de RNF-23 deja de
   citar "la caché de listados sin degradación queda pendiente".
-- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+- **Fecha objetivo:** **2026-09-15** (antes de la defensa oral).
 
 ### 4.3 Fiabilidad y mantenibilidad
 
@@ -1655,8 +1655,8 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | Interfaz | Descripción | Protocolo / Formato | Responsable | Referencia en código |
 |---|---|---|---|---|
 | API REST SGED | Interfaz principal de la aplicación (frontend ↔ backend) | HTTPS + JSON (RFC 8259), OpenAPI 3.0 | `backend/src/main/java/.../controller/` | Swagger UI en `/swagger-ui.html` |
-| Proveedor IA (LLM) | Generación de comentarios de alineación y reportes | HTTPS + JSON, proveedor configurable | `deportivo.ia.service.AiCommentaryService` | `docs/superpowers/specs/2026-08-25-ia-alineacion-design.md` |
-| Terminación TLS (nginx) | Descarga SSL/TLS, proxy reverso, rate-limit | TLS 1.2/1.3, HTTP/1.1, HSTS, CSP | `nginx/default.conf`, `docker-compose.yml` | Puerto externo 8443 → interno 8080 |
+| Proveedor IA (LLM) | Generación de comentarios de alineación y reportes | HTTPS + JSON, proveedor configurable | `deportivo.ia.service.AiCommentaryService` | paquete `common.ia` (RNF-16) |
+| Terminación TLS (nginx) | Descarga SSL/TLS, proxy reverso, rate-limit | TLS 1.2/1.3, HTTP/1.1, HSTS, CSP | `frontend/nginx.conf`, `docker-compose.yml` | Puerto externo 8443 → interno 8080 |
 | Base de datos PostgreSQL | Persistencia transaccional y vistas | PostgreSQL 16, `pgjdbc` | Flyway migrations `db/migration/` | Esquemas: `seguridad`, `academico`, `deportivo`, `inventario` |
 | Caché Redis 7 | Sesiones, revocación JWT, listas de acceso, token de reseteo | Redis RESP3, TTL configurable | `RedisBlacklistService`, `PasswordResetTokenStore`, `SessionEpochService` | `redis://redis:6379` |
 | SMTP saliente | Correo del enlace de restablecimiento de contraseña (RF-37 / RNF-15) | SMTP + STARTTLS (:587), cuerpo HTML | `SmtpPasswordResetMailer` (`mail.enabled=true`) | Gmail `smtp.gmail.com`; por defecto no se usa (`LoggingPasswordResetMailer`) |
@@ -1803,7 +1803,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). |
 
 ## 7. Aprobación
 

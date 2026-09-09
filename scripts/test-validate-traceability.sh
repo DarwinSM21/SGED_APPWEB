@@ -72,4 +72,16 @@ if ! printf '%s\n' "$salida4" | grep -q "estado 'Medido 2026-08-18' no pertenece
   fallo "no se detecto el estado fuera del vocabulario. Salida: $salida4"
 fi
 
-echo "OK: el validador falla-cerrado ante fila sin trazabilidad (codigo $codigo), referencia inexistente (codigo $codigo2), columnas mal contadas (codigo $codigo3) y estado fuera del vocabulario (codigo $codigo4)."
+# Caso F: cita de ruta inexistente en el SRS (A1) -> VIOLACIÓN.
+cp "docs/requisitos/SRS.md" "$TMP/badruta.md"
+printf -- '- **Origen:** `docs/ruta/falsa/NOEXISTE.md`\n' >> "$TMP/badruta.md"
+salida5="$(bash "$VALIDADOR" "$TMP/ok.csv" "$TMP/badruta.md" 2>&1)"; codigo5=$?
+
+if [ "$codigo5" -eq 0 ]; then
+  fallo "una cita de ruta inexistente deberia dar exit != 0; dio 0"
+fi
+if ! printf '%s\n' "$salida5" | grep -q 'docs/ruta/falsa/NOEXISTE.md'; then
+  fallo "no se detecto la ruta inexistente citada en el SRS. Salida: $salida5"
+fi
+
+echo "OK: el validador falla-cerrado ante fila sin trazabilidad (codigo $codigo), referencia inexistente (codigo $codigo2), columnas mal contadas (codigo $codigo3), estado fuera del vocabulario (codigo $codigo4) y ruta inexistente citada en el SRS (codigo $codigo5)."
