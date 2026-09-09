@@ -22,4 +22,17 @@ public record StudentResponse(
         String abreviaturaPosicion,
         Boolean activo,
         Instant createdAt
-) {}
+) {
+    /**
+     * RF-11b / hallazgo H-06: {@code peso} y {@code altura} son datos de salud
+     * de un menor y su lectura se restringe a {@code ADMINISTRADOR} y
+     * {@code ENTRENADOR} (cuerpo técnico). Esta copia los omite para el resto
+     * de roles con acceso a la ficha ({@code RECEPCIONISTA}).
+     */
+    public StudentResponse withoutPhysicalData() {
+        return new StudentResponse(idEstudiante, idPersona, idCategoria, idEstadoGeneral,
+                nombrePersona, apellidoPersona, nombreCategoria, nombreEstadoGeneral,
+                codigoEstudiante, fechaIngreso, null, null, idPosicion, nombrePosicion,
+                abreviaturaPosicion, activo, createdAt);
+    }
+}

@@ -273,6 +273,9 @@ public class EvaluacionDiariaService {
         }
     }
 
+    /** RNF-25 / hallazgo H-02: tope de longitud del texto libre sobre un menor. */
+    static final int MAX_OBSERVACION_GENERAL = 2000;
+
     /**
      * Cierra la evaluación. A partir de aquí no admite cambios.
      *
@@ -281,12 +284,18 @@ public class EvaluacionDiariaService {
      *                           {@code null}
      * @throws ResourceNotFoundException si la sesión no tiene evaluación
      *                                      abierta
-     * @throws IllegalArgumentException     si ya estaba finalizada
+     * @throws IllegalArgumentException     si ya estaba finalizada o si la
+     *                                      observación supera el tope
      */
     @Audited(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
             descripcionSpel = "'finalizó la evaluación de la sesión #' + #p0")
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
+        if (observacionGeneral != null && observacionGeneral.length() > MAX_OBSERVACION_GENERAL) {
+            throw new IllegalArgumentException(
+                    "La observación general no puede superar " + MAX_OBSERVACION_GENERAL + " caracteres");
+        }
+
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "La sesion " + idSesion + " no tiene evaluacion abierta"));

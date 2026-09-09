@@ -5,7 +5,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -16,8 +21,23 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 
 import java.time.Duration;
 
+/**
+ * Configuración de la caché Redis (RNF-02) y su comportamiento ante fallos
+ * (RNF-23b).
+ *
+ * <p>Implementa {@link CachingConfigurer} para registrar un
+ * {@link CacheErrorHandler} que <b>degrada, no rompe</b>: si Redis no está
+ * disponible, un {@code GET} cacheado (por ejemplo {@code GET /api/estudiantes})
+ * no debe devolver {@code 5xx} —debe caer a la consulta directa a la base—.
+ * El handler traga la excepción de lectura/escritura de caché y la registra;
+ * Spring entonces ejecuta el método anotado como si fuera un fallo de caché,
+ * que es exactamente la consulta a la base. Las caídas de Redis para la
+ * autenticación siguen fallando cerradas (RNF-23a), eso vive en
+ * {@code JwtAuthenticationFilter} y no lo toca este handler.
+ */
 @Configuration
-public class RedisCacheConfig {
+public class RedisCacheConfig implements CachingConfigurer {
+    private static final Logger log = LoggerFactory.getLogger(RedisCacheConfig.class);
     public static final String CACHE_STUDENTS = "estudiantes";
     public static final String CACHE_COACHES = "entrenadores";
     public static final String CACHE_USERS = "usuarios";
@@ -75,5 +95,40 @@ public class RedisCacheConfig {
                 .withCacheConfiguration(CACHE_COACHES, configEntrenadores)
                 .withCacheConfiguration(CACHE_USERS, configUsuarios)
                 .build();
+    }
+
+    /**
+     * RNF-23b: ante un fallo de Redis, la caché se degrada a consulta directa
+     * a la base en vez de propagar el error. Cada método registra el fallo una
+     * vez (nivel WARN) y no relanza; Spring continúa como si fuera un fallo de
+     * caché normal —invoca el método y consulta la base—.
+     */
+    @Override
+    public CacheErrorHandler errorHandler() {
+        return new CacheErrorHandler() {
+            @Override
+            public void handleCacheGetError(RuntimeException ex, Cache cache, Object key) {
+                log.warn("Caché no disponible al leer '{}' (clave {}): se consulta la base. Causa: {}",
+                        cache.getName(), key, ex.getClass().getSimpleName());
+            }
+
+            @Override
+            public void handleCachePutError(RuntimeException ex, Cache cache, Object key, Object value) {
+                log.warn("Caché no disponible al escribir '{}' (clave {}): el resultado no se cachea. Causa: {}",
+                        cache.getName(), key, ex.getClass().getSimpleName());
+            }
+
+            @Override
+            public void handleCacheEvictError(RuntimeException ex, Cache cache, Object key) {
+                log.warn("Caché no disponible al invalidar '{}' (clave {}). Causa: {}",
+                        cache.getName(), key, ex.getClass().getSimpleName());
+            }
+
+            @Override
+            public void handleCacheClearError(RuntimeException ex, Cache cache) {
+                log.warn("Caché no disponible al limpiar '{}'. Causa: {}",
+                        cache.getName(), ex.getClass().getSimpleName());
+            }
+        };
     }
 }

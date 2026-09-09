@@ -7,7 +7,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import org.uteq.backend.academico.student.dto.UpdatePositionRequest;
 import org.uteq.backend.academico.student.dto.StudentPageResponse;
 import org.uteq.backend.academico.student.dto.StudentRequest;
@@ -42,13 +46,15 @@ public class StudentController {
     public ResponseEntity<StudentPageResponse<StudentResponse>> list(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "idEstudiante,asc") String[] sort) {
+            @RequestParam(defaultValue = "idEstudiante,asc") String[] sort,
+            Authentication auth) {
         String campo = sort[0];
         Sort.Direction dir = sort.length > 1 && "desc".equalsIgnoreCase(sort[1])
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));
 
-        return ResponseEntity.ok(estudianteService.list(pageRequest));
+        StudentPageResponse<StudentResponse> pagina = estudianteService.list(pageRequest);
+        return ResponseEntity.ok(filtrarDatosFisicos(pagina, auth));
     }
 
     /**
@@ -61,8 +67,33 @@ public class StudentController {
      */
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
-    public ResponseEntity<StudentResponse> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(estudianteService.findById(id));
+    public ResponseEntity<StudentResponse> findById(@PathVariable Long id, Authentication auth) {
+        StudentResponse est = estudianteService.findById(id);
+        return ResponseEntity.ok(puedeVerDatosFisicos(auth) ? est : est.withoutPhysicalData());
+    }
+
+    /**
+     * RF-11b / hallazgo H-06: {@code peso} y {@code altura} (datos de salud de
+     * un menor) solo los ven {@code ADMINISTRADOR} y {@code ENTRENADOR}. Para
+     * {@code RECEPCIONISTA} se devuelven nulos.
+     */
+    private boolean puedeVerDatosFisicos(Authentication auth) {
+        if (auth == null) return false;
+        for (GrantedAuthority a : auth.getAuthorities()) {
+            String rol = a.getAuthority();
+            if ("ROLE_ADMINISTRADOR".equals(rol) || "ROLE_ENTRENADOR".equals(rol)) return true;
+        }
+        return false;
+    }
+
+    private StudentPageResponse<StudentResponse> filtrarDatosFisicos(
+            StudentPageResponse<StudentResponse> pagina, Authentication auth) {
+        if (puedeVerDatosFisicos(auth)) return pagina;
+        List<StudentResponse> filtrado = pagina.content().stream()
+                .map(StudentResponse::withoutPhysicalData)
+                .toList();
+        return new StudentPageResponse<>(filtrado, pagina.page(), pagina.size(),
+                pagina.totalElements(), pagina.totalPages());
     }
 
     /**

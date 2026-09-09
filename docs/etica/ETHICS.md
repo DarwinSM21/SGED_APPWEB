@@ -1,9 +1,12 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.2 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.3 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
-enlaza su requisito de cierre en el SRS, punto A2 de la revisión 29148)
+enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
+cierran **H-04** (RF-51, compuerta de consentimiento), la **decisión M7** de
+**H-06** (peso y altura, con base legal y lectura restringida por rol) y la
+parte de servidor de **H-02** (tope de longitud del texto libre))
 
 ---
 
@@ -120,7 +123,7 @@ producción real.
 condición de cierre. El cifrado de columna queda fuera del alcance de esa
 entrega (recomendación de despliegue real).
 
-### H-02 — Las observaciones de texto libre no tienen control de contenido
+### H-02 — Las observaciones de texto libre no tienen control de contenido (servidor cerrado el 2026-09-08; falta la guía en la UI)
 
 `deportivo.observaciones_estudiante.texto` es `TEXT` libre sobre un menor,
 sin límite de longitud ni guía para el entrenador. Un campo así puede
@@ -128,8 +131,14 @@ terminar conteniendo juicios de valor, datos de salud o comentarios
 inapropiados.
 **Mitigación propuesta:** guía de redacción para entrenadores, límite de
 longitud, y visibilidad restringida al entrenador y a la coordinación.
-**Requisito de cierre:** **RNF-25** (SRS §4.3). Mientras no se cumpla, RF-48
-permanece en MoSCoW Won't.
+**Requisito de cierre:** **RNF-25** (SRS §4.3). **Parte de servidor cerrada el
+2026-09-08:** tope de longitud en la capa de aplicación
+(`EvaluacionDiariaService.finalizar`, `@Size` de la descripción de lesión) y a
+nivel de motor (`V25__limite_texto_libre_menores.sql`, `CHECK char_length` en
+`evaluaciones_diarias`, `observaciones_estudiante` y `lesiones`); la lectura ya
+está restringida a ADMINISTRADOR/ENTRENADOR por `@PreAuthorize`. **Queda** la
+guía de redacción en la interfaz de captura (frontend); hasta entonces RF-48
+sigue en MoSCoW Won't.
 
 ### H-03 — No existe mecanismo de supresión de datos
 
@@ -140,7 +149,7 @@ foráneas y las estadísticas agregadas), invocable solo por
 **Requisito de cierre:** **RF-50** (SRS §3.6), que implementa también el
 mecanismo que exige RNF-22.
 
-### H-04 — El consentimiento del representante no está modelado (resuelto parcialmente el 2026-08-03)
+### H-04 — El consentimiento del representante no está modelado (resuelto el 2026-09-08; ver RF-51)
 
 El sistema no registra si el representante legal autorizó el tratamiento de
 los datos del menor, ni la fecha de esa autorización. RF-22 (notificaciones
@@ -189,14 +198,19 @@ Verificado contra la base real: otorgar, rechazo del segundo consentimiento
 vigente con el mismo alcance, revocar, y volver a otorgar conservando la fila
 revocada con su fecha.
 
-Lo que **sigue abierto** es lo mismo que antes: el envío real de
-notificaciones (RF-22 propiamente dicho). El hallazgo se mantiene parcial por
-esa razón, no por la ausencia de la interfaz.
+El riesgo concreto que este hallazgo señalaba —el **envío proactivo sin
+consentimiento**— queda cerrado por RF-51 (ver abajo). Los canales de envío
+externo (correo/SMS/push) siguen siendo trabajo futuro; cuando se construyan,
+pasan por la misma compuerta de consentimiento.
 
-**Requisitos de cierre:** **RF-39** (registrar/revocar el consentimiento, ya
-implementado) y **RF-51** (SRS §3.6): el sistema no debe crear ni enviar una
-notificación al representante sin consentimiento vigente para ese alcance. Con
-RF-51 cerrado, este hallazgo pasa de "parcial" a "resuelto".
+**Requisitos de cierre:** **RF-39** (registrar/revocar el consentimiento) y
+**RF-51** (SRS §3.6): el sistema no crea ni envía una notificación al
+representante sin consentimiento vigente para ese alcance. **Resuelto:**
+`NotificationService.crearParaCadaRepresentante` consulta
+`academico.consentimientos` (por alcance, filtrando `revocado_en IS NULL`)
+antes de insertar; sin consentimiento registra el motivo y no crea la fila
+(`NotificationServiceTest`: casos con/sin consentimiento y aislamiento de
+alcance, en verde). Este hallazgo pasa de "parcial" a **resuelto** (2026-09-08).
 
 ### H-05 — Certificado TLS autofirmado
 

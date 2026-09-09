@@ -193,6 +193,16 @@ class EvaluacionDiariaServiceTest {
     }
 
     @Test
+    @DisplayName("RNF-25/H-02 - la observacion general no puede superar 2000 caracteres")
+    void observacionGeneralConTopeDeLongitud() {
+        String largo = "x".repeat(2001);
+
+        assertThrows(IllegalArgumentException.class, () -> servicio.finalizar(ID_SESION, largo));
+        verify(evaluacionRepository, never()).findBySesionIdSesion(any());
+        verify(evaluacionRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("Abrir una sesion inexistente da 404, no crea nada")
     void sesionInexistente() {
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.empty());

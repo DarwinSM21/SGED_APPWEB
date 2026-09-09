@@ -117,6 +117,27 @@ class StudentControllerTest {
     }
 
     @Test
+    @DisplayName("RF-11b/H-06 - RECEPCIONISTA no ve peso/altura; ENTRENADOR sí")
+    void datos_fisicos_solo_para_administrador_y_entrenador() throws Exception {
+        when(estudianteService.findById(1L)).thenReturn(crearEstudianteResponse());
+
+        var entrenador = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "coach", "x", java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ENTRENADOR")));
+        mockMvc.perform(get("/api/estudiantes/1").principal(entrenador))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.peso").value(60.50))
+                .andExpect(jsonPath("$.altura").value(1.70));
+
+        var recepcion = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
+                "front", "x", java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_RECEPCIONISTA")));
+        mockMvc.perform(get("/api/estudiantes/1").principal(recepcion))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.codigoEstudiante").value("EST-001"))
+                .andExpect(jsonPath("$.peso").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.altura").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    @Test
     @DisplayName("GET /api/estudiantes/{id} - Devuelve 404 cuando no existe")
     void buscarPorId_inexistente_da_404() throws Exception {
         when(estudianteService.findById(99L))

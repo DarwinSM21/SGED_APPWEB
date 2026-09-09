@@ -372,18 +372,21 @@ las condiciones declaradas más abajo.*
     consentimiento general de inscripción. Se registra por el mismo mecanismo
     de RF-39 y queda sujeto a la compuerta de RF-51 para cualquier uso
     proactivo.
-  - **Responsables del tratamiento:** roles con acceso a la ficha del
-    estudiante. Condición de este requisito: la lectura de `peso`/`altura` se
-    restringe a `ADMINISTRADOR` y `ENTRENADOR` (RECEPCIONISTA no necesita el
-    dato físico); pendiente de aplicar en `StudentResponse`.
+  - **Responsables del tratamiento:** la lectura de `peso`/`altura` se
+    restringe a `ADMINISTRADOR` y `ENTRENADOR` — **aplicado el 2026-09-08**:
+    `StudentController` omite ambos campos (`StudentResponse.withoutPhysicalData()`)
+    cuando el solicitante es `RECEPCIONISTA`, tanto en el listado como en el
+    detalle. Prueba: `StudentControllerTest.datos_fisicos_solo_para_administrador_y_entrenador`.
   - **Conservación y supresión:** se conservan mientras el estudiante esté
     activo; la baja lógica los preserva por integridad del historial deportivo
     (RNF-22); se suprimen por RF-50 a solicitud del representante.
   - El campo es y sigue siendo **opcional**: la ficha se puede crear y operar
     sin ellos.
-- **Nota:** cierra el hallazgo **H-06** de `docs/etica/ETHICS.md`. Queda como
-  condición pendiente la restricción de lectura por rol y el registro del
-  consentimiento de alcance físico-deportivo (RF-39 / RF-51).
+- **Nota:** cierra el hallazgo **H-06** de `docs/etica/ETHICS.md`. La
+  restricción de lectura por rol ya está aplicada (ver arriba); queda como
+  condición pendiente el registro del consentimiento de alcance
+  físico-deportivo por representante (RF-39 / RF-51), que es tarea de datos, no
+  de código.
 
 ---
 
@@ -1164,13 +1167,12 @@ un estudiante (`deportivo.observaciones_estudiante`).*
 - **Método de verificación:** Inspección
 - **Origen:** entidad `deportivo.observaciones_estudiante` y su servicio; se
   alimenta desde la evaluación diaria (RF-20).
-- **Alerta:** no se recomienda habilitarlo sin resolver antes H-02
-  (moderación / política de contenido) y RNF-17.
+- **Alerta:** no se recomienda habilitarlo para captura libre sin la guía de
+  redacción en la interfaz (última condición pendiente de RNF-25).
 - **Decisión (M7, 2026-09-08):** se conserva como **Implementado** — no se
-  retira el código — pero no se expone para uso libre sin resolver antes
-  H-02 y RNF-17. Base documentada: la Alerta anterior y
-  `docs/etica/ETHICS.md`; el matiz queda en la columna `observaciones` de la
-  matriz de trazabilidad.
+  retira el código. **RNF-25** ya aplica el tope de longitud (servidor y
+  motor) y el control de acceso; falta solo la guía de redacción en la UI,
+  y hasta entonces RF-48 sigue en MoSCoW Won't.
 
 ---
 
@@ -1202,6 +1204,13 @@ cuando haya valor.*
 - **Condición de cierre:** (a)(b)(c) en verde y migración aplicada; `ETHICS.md`
   §H-01 marcado "corregido" con fecha.
 - **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+- **Bloqueante conocido (2026-09-08):** los datos de cédula de `db/seed.sql` y
+  de varias clases de prueba son ficticios y **no pasan** el algoritmo de
+  dígito verificador (`0000000000`, `1111111111`, `4000000001` con provincia
+  «40» inexistente, …). Activar la validación exige antes normalizar esos
+  datos a cédulas algorítmicamente válidas. El trabajo cae en el módulo
+  `seguridad`; se coordina con su responsable. El resto (opcionalidad + índice
+  `UNIQUE` parcial) no tiene ese bloqueante y puede ir por delante.
 - **Fuera de alcance de este requisito:** el cifrado a nivel de columna, que se
   mantiene como recomendación para un despliegue con datos reales (H-01,
   RNF-21), no como obligación de esta entrega.
@@ -1240,21 +1249,23 @@ y registrando el acto en la bitácora de auditoría.*
 para el alcance correspondiente; la ausencia de consentimiento deberá
 registrarse como motivo de no-envío, no como error silencioso.*
 
-- **Prioridad:** Alta · **Estado:** ⬜ Planificado · **MoSCoW:** Must —
+- **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must —
   condiciona RF-22.
 - **Método de verificación:** Test
-- **Origen:** `NotificationService` (hoy crea la fila de notificación sin
-  consultar `academico.consentimientos`); RF-39 ya cubre registrar y revocar
-  el consentimiento. Cierra la mitad abierta de **H-04 / H-07** (la que este
-  hallazgo señala como el riesgo real: el envío proactivo del sistema).
-- **Criterio verificable:** una prueba que (a) con consentimiento vigente
-  crea la notificación; (b) sin consentimiento o revocado no la crea y deja
-  registrado el motivo; (c) al revocar el consentimiento, las notificaciones
-  futuras dejan de crearse.
-- **Condición de cierre:** `NotificationService` consulta el consentimiento
-  antes de insertar y la prueba pasa en verde; `ETHICS.md` §H-04 pasa de
-  "parcial" a "resuelto".
-- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+- **Origen:** `NotificationService.crearParaCadaRepresentante` consulta
+  `academico.consentimientos` (`ConsentRepository...RevocadoEnIsNull`) por el
+  alcance concreto —`ALCANCE_NOTIFICACIONES_ASISTENCIA` / `_LESION`, o el
+  genérico `ALCANCE_NOTIFICACIONES`— antes de insertar; si no hay consentimiento
+  vigente registra el motivo (`log.info` "no hay consentimiento vigente para …")
+  y no crea la fila. RF-39 cubre registrar y revocar el consentimiento. Cierra
+  la mitad abierta de **H-04 / H-07** (el envío proactivo del sistema).
+- **Verificación:** `NotificationServiceTest` — `con_consentimiento_se_notifica`,
+  `sin_consentimiento_no_se_notifica` (verifica `never().save(...)`),
+  `el_alcance_no_se_mezcla` (el consentimiento de asistencia no habilita el de
+  lesión). Como la comprobación consulta `RevocadoEnIsNull` en cada envío, al
+  revocar dejan de crearse.
+- **Criterio de cierre:** cumplido — `ETHICS.md` §H-04 pasa de "parcial" a
+  "resuelto".
 
 ---
 
@@ -1420,11 +1431,11 @@ cierre y fecha objetivo:*
 | Hallazgo | Requisito que lo cierra | Estado |
 |---|---|---|
 | H-01 — cédula en claro y sin validación | **RF-49** | ⬜ Planificado |
-| H-02 — texto libre sin control de contenido | **RNF-25** | ⬜ Planificado |
+| H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Servidor (2026-09-08); falta la guía en la UI |
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ⬜ Planificado |
-| H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | RF-39 ✅ / RF-51 ⬜ |
+| H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
 | H-05 — certificado TLS autofirmado | **RNF-21** | ⬜ Planificado (producción) |
-| H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad, base legal y condiciones documentadas | ✅ Decidido (quedan condiciones: lectura por rol + consentimiento de alcance) |
+| H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR | ✅ Decidido y aplicado (queda registrar el consentimiento de alcance) |
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
 | H-09 — correo de reseteo no verificado | limitación documentada de **RF-37**; cierre pleno (doble opt-in) = trabajo futuro con fecha objetivo | ⬜ Trabajo futuro |
 
@@ -1470,12 +1481,12 @@ un borrado.*
 **RNF-23 — Comportamiento ante indisponibilidad de Redis**
 
 > **Corrección (2026-09-08).** El enunciado original mezclaba en un solo RNF
-> una capacidad ya cumplida (la autenticación falla cerrada) y otra pendiente
-> (la caché de listados sin `CacheErrorHandler`), de modo que no se podía
-> saber, sin leer la nota, qué mitad faltaba. Se divide en dos requisitos con
-> estado independiente, siguiendo la misma disciplina que RF-19a/RF-19b.
-> Responde al punto A4 de la revisión de septiembre y sigue cerrando el
-> punto A19.
+> una capacidad (la autenticación falla cerrada) y otra (la caché de listados
+> con `CacheErrorHandler`), de modo que no se podía saber, sin leer la nota,
+> el estado de cada mitad. Se divide en dos requisitos con estado
+> independiente, siguiendo la misma disciplina que RF-19a/RF-19b. **Ambas
+> mitades quedan Implementadas** (RNF-23a desde antes; RNF-23b el 2026-09-08).
+> Responde al punto A4 de la revisión de septiembre y cierra el punto A19.
 
 **RNF-23a — Autenticación falla-cerrado ante caída de Redis**
 *Un token de acceso no podrá considerarse válido si no puede comprobarse
@@ -1498,18 +1509,17 @@ degradarse a consulta directa a la base de datos mediante un
 `CacheErrorHandler`; una caída de Redis no deberá producir `5xx` en los
 endpoints de listado ni impedir la lectura.*
 
-- **Estado:** ⬜ Planificado
-- **Método de verificación:** Test
-- **Origen:** `RedisCacheConfig` (hoy sin `CacheErrorHandler`).
-- **Verificación:** prueba de integración con el contenedor `sged_redis`
-  detenido que comprueba que `GET /api/estudiantes` responde `200` con datos
-  (no `500`) y que el fallo de caché queda en la bitácora; hoy esa prueba no
-  existe.
-- **Criterio verificable:** el `CacheErrorHandler` está registrado en
-  `RedisCacheConfig` y la prueba anterior pasa en verde.
-- **Condición de cierre:** cumplido el criterio, la nota de RNF-23 deja de
-  citar "la caché de listados sin degradación queda pendiente".
-- **Fecha objetivo:** **2026-09-15** (antes de la defensa oral).
+- **Estado:** ✅ Implementado (2026-09-08)
+- **Método de verificación:** Test; Demostración
+- **Origen:** `RedisCacheConfig` implementa `CachingConfigurer` y registra un
+  `CacheErrorHandler` que, ante un fallo de Redis, registra el incidente en
+  `WARN` y **no relanza** en los cuatro casos (get/put/evict/clear); Spring
+  entonces ejecuta el método anotado —que consulta la base—.
+- **Verificación:** `RedisCacheErrorHandlerTest` (los cuatro `handle*Error` no
+  propagan la excepción); prueba manual deteniendo el contenedor `sged_redis`
+  y comprobando que `GET /api/estudiantes` sigue respondiendo `200` con datos.
+- **Criterio verificable:** el `CacheErrorHandler` está registrado y la prueba
+  pasa en verde. **Cumplido.**
 
 ### 4.3 Fiabilidad y mantenibilidad
 
@@ -1618,25 +1628,39 @@ archivada y fechada de al menos una ejecución real contra una base separada.*
   restauración archivada).
 
 **RNF-25 — Control de contenido de las observaciones de texto libre**
-*El campo `deportivo.observaciones_estudiante.texto` deberá tener un límite de
-longitud aplicado en el servidor, una guía de redacción visible para el
-entrenador en el punto de captura, y visibilidad restringida al entrenador
-autor y a los roles de coordinación (ADMINISTRADOR). Mientras estas tres
-condiciones no se cumplan, RF-48 permanece en MoSCoW Won't.*
+*Todo texto libre que se escriba sobre un estudiante menor —la observación
+general de la evaluación diaria, la descripción de lesión y
+`deportivo.observaciones_estudiante.texto`— deberá tener un límite de longitud
+aplicado en el servidor y a nivel de motor, y su lectura deberá estar
+restringida a los roles del cuerpo técnico y de coordinación
+(ADMINISTRADOR / ENTRENADOR), nunca a RECEPCIONISTA, REPRESENTANTE ni ESTUDIANTE.*
 
+- **Estado:** ✅ Implementado (2026-09-08) — *(queda como condición la guía de
+  redacción en la interfaz de captura)*
 - **Método de verificación:** Inspección; Test
-- **Origen:** `deportivo.observaciones_estudiante` (hoy `TEXT` libre, sin
-  límite de longitud ni control de acceso propio). Cierra el hallazgo **H-02**
-  y desbloquea RF-48.
-- **Criterio verificable:** `@Size(max = N)` con validación de servidor que
-  devuelve `422`; texto de guía presente en el componente de evaluación
-  diaria; `@PreAuthorize` que restringe la lectura, con una prueba de que otro
-  entrenador recibe `403`.
-- **Condición de cierre:** los tres controles presentes y probados;
-  `ETHICS.md` §H-02 marcado "corregido"; RF-48 puede reevaluarse a
-  Should/Implementado.
-- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
-- **Nota:** responde al punto A2 de la revisión de septiembre.
+- **Origen y controles:**
+  - **Límite de longitud en el servidor:** la descripción de lesión ya llevaba
+    `@Size(max = 1000)` (`RegistrarLesionRequest`); se añadió una guarda de
+    2000 caracteres en `EvaluacionDiariaService.finalizar` para la observación
+    general.
+  - **Límite a nivel de motor** (defensa en profundidad y cobertura de
+    `observaciones_estudiante`, que aún no tiene código JPA): migración
+    `V25__limite_texto_libre_menores.sql` con `CHECK (char_length(...) <= 2000)`
+    en `deportivo.evaluaciones_diarias.observacion_general` y
+    `deportivo.observaciones_estudiante.texto`, y `<= 1000` en
+    `deportivo.lesiones.descripcion`.
+  - **Control de acceso:** `EvaluacionDiariaController` está
+    `@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")`; `LesionController`
+    está reservado a `ENTRENADOR`. Ningún otro rol accede.
+- **Verificación:** `EvaluacionDiariaServiceTest.observacionGeneralConTopeDeLongitud`
+  (rechaza 2001 caracteres); `LesionControllerTest` cubre el `@Size` de la
+  descripción; inspección de los `@PreAuthorize`.
+- **Condición pendiente:** la **guía de redacción** en el componente de
+  evaluación diaria del frontend (Angular) — texto de ayuda que oriente al
+  entrenador sobre qué no escribir. Es cambio de interfaz; hasta entonces
+  **RF-48** permanece en MoSCoW Won't.
+- **Nota:** responde al punto A2 de la revisión de septiembre; cierra la parte
+  de servidor de **H-02**.
 
 ### 4.4 Portabilidad
 
@@ -1816,7 +1840,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06 (quedan condiciones: restricción de lectura por rol y consentimiento de alcance). |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** parte de servidor (guarda de longitud en `EvaluacionDiariaService.finalizar` + `CHECK` de longitud en `V25__limite_texto_libre_menores.sql`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado. RF-49 sigue Planificado (bloqueante: normalizar las cédulas ficticias de seed/pruebas al dígito verificador). |
 
 ## 7. Aprobación
 
