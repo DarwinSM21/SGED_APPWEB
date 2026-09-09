@@ -142,11 +142,10 @@ Compilación y pruebas unitarias afectadas en verde (11 clases backend + 15 fron
 `CedulaValidatorTest`, `RedisCacheErrorHandlerTest`, `StudentControllerTest`,
 `PersonControllerTest`, `AuthControllerTest`, `EvaluacionDiariaServiceTest`, …).
 
-**Implementación — todavía pendiente:**
-
-| Item | Qué falta | Fecha objetivo |
-| :--- | :--- | :--- |
-| **H-07** | plantilla de consentimiento informado dirigida al representante legal para el tratamiento en producción (redacción, no código) | por fijar |
+**Implementación — todo cerrado.** El último pendiente de código/documentación,
+la plantilla de consentimiento del representante (**H-07**), se añadió el
+2026-09-09 en `docs/etica/consentimiento/representante.md`. Queda únicamente la
+**firma presencial del Dr. Guerrero** en el §7 del SRS (tarea del docente).
 
 El razonamiento completo está en `docs/requisitos/borrador-adiciones-A1-A4.md`.
 

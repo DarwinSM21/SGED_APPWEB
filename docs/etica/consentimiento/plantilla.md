@@ -1,5 +1,10 @@
 # Consentimiento informado — Evaluación de usabilidad (SUS)
 
+> Este es el consentimiento de la **evaluación de usabilidad**, dirigido a los
+> adultos que prueban el sistema. El consentimiento que firma el
+> **representante legal de un menor** para el tratamiento de sus datos en
+> producción está en [`representante.md`](representante.md).
+
 **Título del estudio:** Evaluación de usabilidad del Sistema de Gestión para
 la Escuela Deportiva ProFútbol (SGED)
 

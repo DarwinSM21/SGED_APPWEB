@@ -1,7 +1,7 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.6 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.7 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
 cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
@@ -11,10 +11,12 @@ redacción), **H-03** (RF-50: procedimiento de anonimización `sp_anonimizar_est
 2026-09-09: **H-05** (certificado TLS) resuelto con el despliegue en Render
 —certificado de una autoridad reconocida—, **H-06** (peso y altura) resuelto
 —base legal documentada, lectura restringida por rol y alcance de
-consentimiento `DATOS_FISICO_DEPORTIVOS` propio—, y **H-09** (correo no
-verificado) delimitado explícitamente como trabajo posterior a la entrega.
-Hallazgos aún abiertos: **H-07** (plantilla de consentimiento del
-representante) y **H-09** (trabajo futuro))
+consentimiento `DATOS_FISICO_DEPORTIVOS` propio—, **H-07** (plantilla de
+consentimiento) resuelto —nuevo `consentimiento/representante.md` para el
+representante legal—, y **H-09** (correo no verificado) delimitado
+explícitamente como trabajo posterior a la entrega.
+**Todos los hallazgos (H-01…H-08) están cerrados; H-09 queda como trabajo
+futuro documentado.**)
 
 ---
 
@@ -318,7 +320,7 @@ altura siguen siendo opcionales y su tratamiento se ampara en la base legal
 declarada aquí—; forzar la compuerta en el alta se deja como endurecimiento
 posterior. Especificado en el SRS §RF-11b.
 
-### H-07 — La plantilla de consentimiento cubre a los evaluadores del SUS, no a los representantes de los menores
+### H-07 — La plantilla de consentimiento cubre a los evaluadores del SUS, no a los representantes de los menores (resuelto el 2026-09-09)
 
 `docs/etica/consentimiento/plantilla.md` es un consentimiento informado
 bien construido para adultos que participan en la encuesta de usabilidad
@@ -326,13 +328,23 @@ bien construido para adultos que participan en la encuesta de usabilidad
 Son dos cosas distintas: uno es el consentimiento de un adulto para
 evaluar el sistema; el otro es el consentimiento de un representante para
 que los datos de **su hijo o hija menor de edad** sean tratados por el
-sistema en producción. El **mecanismo** de ese consentimiento ya existe
+sistema en producción. El **mecanismo** de ese consentimiento ya existía
 (H-04 resuelto: entidad `Consent`, rutas de RF-39, compuerta de RF-51, y un
-alcance propio para los datos físico-deportivos de H-06). Lo que queda
-abierto en H-07 es el **documento**: una plantilla de consentimiento
-informado dirigida al representante legal —finalidad, datos tratados, base
-legal, derechos LOPDP, revocación— equivalente a la del estudio SUS pero
-para el tratamiento en producción. Es trabajo de redacción, no de código.
+alcance propio para los datos físico-deportivos de H-06).
+
+**Resuelto el 2026-09-09:** se añadió el **documento** que faltaba —
+[`docs/etica/consentimiento/representante.md`](consentimiento/representante.md):
+consentimiento informado dirigido al representante legal, con la base legal
+(LOPDP, Constitución Art. 66.19, Código de la Niñez), el inventario de datos
+tratados y su finalidad, los límites de uso (no cesión a terceros, no rankings
+públicos, no decisiones automatizadas), **autorizaciones separadas y
+revocables** mapeadas a los alcances de `Consent`
+(`INFORMES`, `NOTIFICACIONES_ASISTENCIA`, `NOTIFICACIONES_LESION`,
+`DATOS_FISICO_DEPORTIVOS`, cesión puntual), la política de conservación y
+anonimización (RNF-22 / RF-50), y los derechos LOPDP del representante
+(acceso vía RF-44, rectificación, supresión, revocación, oposición). El
+original firmado se archiva fuera del repositorio; en el sistema solo quedan
+las autorizaciones estructuradas de `academico.consentimientos`.
 
 ### H-08 — Los datos personales quedaron accesibles a cualquier cuenta autenticada (corregido el 2026-07-30)
 

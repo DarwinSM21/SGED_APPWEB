@@ -1287,7 +1287,10 @@ registrarse como motivo de no-envío, no como error silencioso.*
   genérico `ALCANCE_NOTIFICACIONES`— antes de insertar; si no hay consentimiento
   vigente registra el motivo (`log.info` "no hay consentimiento vigente para …")
   y no crea la fila. RF-39 cubre registrar y revocar el consentimiento. Cierra
-  la mitad abierta de **H-04 / H-07** (el envío proactivo del sistema).
+  la mitad abierta de **H-04** (el envío proactivo del sistema); el documento
+  de consentimiento del representante —**H-07**— vive en
+  `docs/etica/consentimiento/representante.md` y mapea sus autorizaciones a
+  estos mismos alcances.
 - **Verificación:** `NotificationServiceTest` — `con_consentimiento_se_notifica`,
   `sin_consentimiento_no_se_notifica` (verifica `never().save(...)`),
   `el_alcance_no_se_mezcla` (el consentimiento de asistencia no habilita el de
@@ -1462,7 +1465,7 @@ cierre y fecha objetivo:*
 | H-01 — cédula en claro y sin validación | **RF-49** | ✅ Resuelto (2026-09-08) — opcional + dígito verificador + índice único parcial |
 | H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Resuelto (2026-09-08) |
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ✅ Resuelto (2026-09-08) — SP `sp_anonimizar_estudiante` (`V27`) + endpoint `POST /api/estudiantes/{id}/anonimizar` auditado |
-| H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
+| H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) + plantilla `docs/etica/consentimiento/representante.md` | ✅ H-04 (2026-09-08); ✅ H-07 (2026-09-09, plantilla del representante añadida) |
 | H-05 — certificado TLS autofirmado | **RNF-21** | ✅ Resuelto (2026-09-09) — despliegue en Render con certificado de *Google Trust Services*, HTTP→HTTPS y HSTS; autofirmado solo en el laboratorio |
 | H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR; consentimiento de alcance `DATOS_FISICO_DEPORTIVOS` por las rutas de RF-39 | ✅ Resuelto (2026-09-09) — ambas condiciones cerradas |
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
