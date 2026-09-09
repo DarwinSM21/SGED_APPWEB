@@ -4,6 +4,54 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 > El **Capítulo 3 de la Guía de desarrollo ("Plan de correcciones")** consolida y renumera las observaciones de la Entrega Final como diez tareas 3.1–3.10, cada una con su criterio de aceptación. El estado verificado tarea por tarea está en la sección [Estado verificado del Plan de correcciones](#estado-verificado-del-plan-de-correcciones-capítulo-3) al final de este documento. Correspondencia con la tabla de abajo: 3.2 ↔ OBS-14, 3.3 ↔ OBS-15, 3.4 ↔ OBS-16, 3.5 ↔ OBS-17, 3.7 ↔ OBS-19.
 
+---
+
+## Estado final (2026-09-09)
+
+`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`, HEAD **`eca162c`**. CI en verde.
+
+**Cerrado — no queda nada de código ni de documentación:**
+
+| Bloque | Estado |
+| :--- | :--- |
+| Entregas 1A / 1B / 3 — **OBS-01 … OBS-19** | ✅ todas aplicadas |
+| Plan de correcciones Cap. 3 — **tareas 3.1 … 3.9** | ✅ cumplidas |
+| Revisión ISO/IEC/IEEE 29148 — **M1–M9, A1–A4** | ✅ especificadas y verificadas |
+| Implementación de lo `Planificado` de A2/A4 — **RF-49, RF-50, RF-51, RNF-25, RNF-23a/b, RF-11b** | ✅ en código, con pruebas |
+| Hallazgos de `ETHICS.md` — **H-01 … H-08** | ✅ cerrados (`ETHICS.md` v1.7) |
+| **RNF-24** (respaldo y recuperación) | ✅ restauración cronometrada real archivada + PITR declarado (plan Free) |
+| Protocolo de medición Cap. 4 — **4.2, 4.3, 4.5, 4.7** | ✅ cumplen |
+
+**Único pendiente de TODO el plan — tarea del docente, no del equipo:**
+
+> La **firma presencial del Dr. Gleiston Guerrero** en la fila del docente evaluador de la tabla §7 "Aprobación" del SRS (hoy en blanco). Al firmarla: regenerar `docs/requisitos/SRS.pdf` con `npx --yes md-to-pdf docs/requisitos/SRS.md`. `SRS-v1.0.0.pdf` no se toca (es la foto de la etiqueta `v1.0.0`).
+
+**Limitaciones declaradas (no bloquean la entrega, quedan como trabajo futuro):**
+
+- **H-09** — el correo de recuperación de contraseña no está verificado (doble opt-in). Riesgo acotado y mitigado; feature del tamaño de RF-37, fuera del alcance de esta entrega.
+- **4.4** — el escaneo ZAP es baseline pasivo sin sesión (0 hallazgos); un pentest activo autenticado queda pendiente si el docente lo exige.
+- **4.6** — conviene un último barrido `git cat-file -t` de procedencia tras los commits de esta semana.
+
+**Commits de la ronda final (2026-09-08 → 09), autoría `darcalleg`, sin coautoría, CI verde:**
+
+| Commit | Qué cierra |
+| :--- | :--- |
+| `87cdfd0` · `ceb784d` | RNF-23b, RNF-25 (servidor), RF-11b lectura por rol, RF-51 |
+| `7642cbd` · `1fe9e0b` | RNF-25 completo (guía de redacción en la UI) → **H-02** |
+| `b64ec68` · `e85d620` | **RF-49** (cédula opcional + dígito verificador + `V26`) → **H-01** |
+| `b1bb658` | **RF-50** (`sp_anonimizar_estudiante` `V27` + endpoint auditado) → **H-03** |
+| `390c238` | verificación de `V27` sobre PostgreSQL 16 (evidencia) |
+| `8bb05b7` | `render.md` — cómo aplicar migraciones incrementales en Supabase |
+| `8f896c0` | fix del deploy en Render (health check de correo rompía el arranque) |
+| `d0efed6` | **H-05** — TLS de producción con certificado de CA reconocida (Render) |
+| `acff8e5` | **H-06** cerrado (alcance de consentimiento físico-deportivo) + **H-09** delimitado |
+| `0ef58c3` | **RNF-24** — restauración cronometrada verificada + PITR (plan Free) |
+| `eca162c` | **H-07** — plantilla de consentimiento del representante legal |
+
+Aplicado además en la Supabase de producción (SQL Editor, 2026-09-09): migraciones **V25, V26, V27** (verificadas 1/1/1).
+
+---
+
 | Código Único | Fuente | Criterio de Rúbrica | Texto de la Observación del Docente | Decisión del Equipo | Hash del Commit |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | OBS-01 | Entrega 1A | D2 Conformidad redacción | La descripción de cada RF es un título ('Registro de estudiantes', etc.); NO usa 'El sistema deberá...'. No conforme (9.4.2). | Aplicada — SRS.md redactado con "El sistema deberá..." en los 22 RF | `6480584` |
@@ -29,7 +77,7 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 ## Estado verificado del Plan de correcciones (Capítulo 3)
 
-Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contra el estado de `main` (revisado 2026-09-08, HEAD `5227637`). **9 cumplidas, 1 parcial** — la parcial (3.10): firma presencial del Dr. Guerrero y **regenerar los PDF del SRS**, que quedaron atrás respecto de la fuente (el SRS va por v1.6 con §3.6, RF-19a/b y RNF-23a/b; los PDF publicados son de `6ae8f13`).
+Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contra el estado de `main` (revisado 2026-09-09, HEAD `eca162c`). **9 cumplidas, 1 parcial** — la parcial (3.10): solo falta la **firma presencial del Dr. Guerrero** en el §7 del SRS. `docs/requisitos/SRS.pdf` ya está regenerado y al día (incluye §3.6, RF-19a/b, RNF-23a/b, RNF-24 reforzado, §3.6 con RF-49/50/51, RNF-25); `SRS-v1.0.0.pdf` se conserva como foto de la etiqueta.
 
 **Nota sobre los hashes.** En sept-2026 se reescribió el historial para pasar todos los *commits* a cuentas institucionales `@uteq.edu.ec`. El 2026-09-06/07 el trabajo se mudó de `DarwinSM21/SGED_APPWEB` a `darcalleg/SGED_APPWEB` y **después se revirtió**: el repositorio canónico vigente vuelve a ser `github.com/DarwinSM21/SGED_APPWEB`. La reescritura re-hasheó **todos** los commits. **Todas las filas OBS-01…OBS-19 y esta sección están actualizadas** a los hashes vigentes en `main` (verificados con `git merge-base --is-ancestor`), independientemente del repositorio donde se aloje el historial. La tabla de equivalencias pre → post está [al final de esta sección](#equivalencias-de-hashes-pre--post).
 
@@ -44,11 +92,11 @@ Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contr
 | **3.7** Desplegar el backend + cerrar CORS (= OBS-19) | Las direcciones declaradas responden; el CORS enumera dominios concretos. | ✅ **Cumple** | Frontend `sged-frontend-jofa.onrender.com` → 200; backend `sged-backend-5nh7.onrender.com/actuator/health` → `UP` (db + redis) tras arranque en frío (~2 min, plan free — advertido en el README). Ambas URLs en README + portada + carátula. `render.yaml`: `CORS_ALLOWED_ORIGIN_PATTERNS=https://sged-frontend-jofa.onrender.com` (concreto); `.env.example` sin `*`. · `c892660`, `dee863c`, `3f50739`, `c0595bc` |
 | **3.8** Completar el documento | Existen anexos y la tabla del modelo de calidad; ninguna etiqueta huérfana; los dos resúmenes en 200–250 palabras. | ✅ **Cumple** | Anexos A–G (§B.17). Tabla del modelo de calidad **en el informe**: `tab:iso25010`, 14 escenarios ISO/IEC 25010 con característica/subcaracterística/estrategia/evidencia (ya no solo en archivo externo). Los 6 `lstlisting` con `caption`+`label` + `\lstlistoflistings`. **0 etiquetas huérfanas** (78 `\label`, todas referenciadas; compilación sin refs sin resolver). 4 figuras referenciadas. Resumen **231** / abstract **213** palabras de cuerpo (rango 200–250). · `ce17e34`, `9a8963a`, `bee9995`, `79b23e2`, `ae655f0` |
 | **3.9** Completar el análisis y los metadatos | El documento reporta test, tamaño de efecto y corrección múltiple; el IC de usabilidad usa la distribución correcta; los tres identificadores figuran en la portada. | ✅ **Cumple** | ✅ IC de usabilidad con **t de Student, 14 gl** (`t = 2,145`; 69,33 ± 10,46; 58,87–79,79) — `scripts/sus-analysis.py` rechaza 1,96 para n pequeño; narrativa e `INTERPRETACION.md` unificados a la t (`d293731`, `210f4c9`). ✅ **ORCID de los tres** en la portada y `CITATION.cff` (`8cef37d`, `fc3a402`, `7f285a9`). ✅ **14 roles CRediT** con conteos reales de `git log` (211/58/41), informe = `CONTRIBUTORS.md` (`933efc4`, `8f1cfcb`, `ae655f0`). ✅ Dataset de mediciones con **DOI propio** (Zenodo `10.5281/zenodo.22422305`) y **CC BY 4.0** (`7f285a9`, `5b1e3cc`). ✅ **Caché fría vs. cálida**: 5 corridas × 2 escenarios (50 VU, 30 s); **Mann-Whitney/Wilcoxon** bilateral, **delta de Cliff**, **corrección Holm-Bonferroni** — §3 del informe y `docs/mediciones/perf/REPORT.md`. |
-| **3.10** Firmar el documento de requisitos | El SRS publicado lleva la aprobación firmada y declara la priorización explícita por requisito. | 🟡 **Parcial** | ✅ Bloque §7 "Aprobación" en `SRS.md` con las **3 firmas del equipo** (imágenes, 2026-09-04) (`5f9cb7e`, `1e1d478`, `e7aa548`). ✅ `MoSCoW:` explícito en cada RF (SRS v1.3+, `b4593ff`, `2fdbb8c`); campo **Método de verificación** en los 73 (M9). **Falta:** (1) la **firma presencial del Dr. Guerrero** ([`SRS.md:1819`](../requisitos/SRS.md), fila del docente evaluador en blanco); (2) **regenerar `docs/requisitos/SRS.pdf` y `SRS-v1.0.0.pdf`** — están en `6ae8f13` (7-sep), sin M1–M9, §3.6, RF-19a/b, RNF-23a/b ni el RNF-24 reforzado; la fuente ya va por v1.6. |
+| **3.10** Firmar el documento de requisitos | El SRS publicado lleva la aprobación firmada y declara la priorización explícita por requisito. | 🟡 **Parcial** | ✅ Bloque §7 "Aprobación" en `SRS.md` con las **3 firmas del equipo** (imágenes, 2026-09-04) (`5f9cb7e`, `1e1d478`, `e7aa548`). ✅ `MoSCoW:` explícito en cada RF (SRS v1.3+, `b4593ff`, `2fdbb8c`); campo **Método de verificación** en los 73 (M9). ✅ `docs/requisitos/SRS.pdf` regenerado y al día (última regeneración `eca162c`; incluye M1–M9, §3.6, RF-19a/b, RNF-23a/b, RNF-24 reforzado). **Falta solo:** la **firma presencial del Dr. Guerrero** (fila del docente evaluador en blanco, tabla §7 de [`SRS.md`](../requisitos/SRS.md)); al firmarla se regenera `SRS.pdf` una vez más. `SRS-v1.0.0.pdf` se conserva sin tocar (foto de la etiqueta `v1.0.0`). |
 
 ### Pendiente del equipo (no de documentación)
 
-1. **3.10** — obtener la firma del Dr. Guerrero en el §7 del SRS y regenerar `SRS.pdf` / `SRS-v1.0.0.pdf` (no hay build script; lo regenera el equipo con su toolchain).
+1. **3.10** — obtener la firma del Dr. Guerrero en el §7 del SRS. Después: regenerar `docs/requisitos/SRS.pdf` con `npx --yes md-to-pdf docs/requisitos/SRS.md` (única acción restante). `SRS-v1.0.0.pdf` no se regenera: es la foto de la etiqueta `v1.0.0`.
 
 ### Equivalencias de hashes (pre → post)
 
@@ -113,7 +161,7 @@ y se integraron sobre el trabajo de Ricardo.
 | Punto | Qué pedía (resumen) | Estado | Evidencia · commits en `main` |
 | :--- | :--- | :--- | :--- |
 | **A1** | Comprobaciones nuevas en el validador de trazabilidad: nº exacto de columnas por fila, vocabulario cerrado en `estado`, paridad de identificadores SRS ↔ matriz, y existencia en disco de rutas y clases de prueba citadas. | ✅ **Cumple** | `e6db415` + `5227637`: `scripts/validate-traceability.py` comprueba (1) toda fila con el mismo nº de columnas que la cabecera —parseando comillas—, (2) `estado ∈ {Implementado, Modelado, Planificado}`, (3) toda clase `*Test` citada en matriz y SRS existe y `Clase.metodo` resuelve, (4) los ids RF-\*/RNF-\* del SRS y de la matriz coinciden en ambas direcciones, (5) **toda ruta de archivo citada en el SRS y en la matriz existe en disco** (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`). `scripts/test-validate-traceability.sh` con 6 casos; ambos en CI. |
-| **A2** | Convertir los hallazgos abiertos de `ETHICS.md` (cédula en claro, texto libre sin control, ausencia de mecanismo de supresión, consentimiento del representante) en requisitos con criterio verificable y condición de cierre, igual que RF-37. | ✅ **Cumple** (especificación) | `f265b84`: nueva **§3.6 del SRS** — **RF-49** (H-01, cédula opcional y validada: dígito verificador → `422`, `UNIQUE` parcial), **RF-50** (H-03, `sp_anonimizar_estudiante` + `POST /api/estudiantes/{id}/anonimizar` auditado; implementa también RNF-22), **RF-51** (H-04/H-07, el envío de notificaciones exige consentimiento vigente; RF-39 ya lo registra/revoca), **RNF-25** (H-02, `@Size` + guía + `@PreAuthorize` del texto libre; desbloquea RF-48). **RNF-17** reescrito como paraguas con tabla hallazgo → requisito. `matriz.csv`: 4 filas nuevas. `ETHICS.md` `1.1 → 1.3`. **Implementación (2026-09-08):** RF-51 (ya estaba), **RNF-25 completo**, **RF-49** (cédula opcional + `@Cedula` + `V26` índice único parcial), RF-11b/H-06 y **RF-50** (SP `sp_anonimizar_estudiante` `V27` + `POST /api/estudiantes/{id}/anonimizar` auditado) → ✅ Implementado (cierran **H-01, H-02, H-03, H-04**, y **RF-48** sale de Won't). Fuera de la lista literal de A2: **H-09** (doble opt-in del correo) queda como limitación documentada de RF-37. |
+| **A2** | Convertir los hallazgos abiertos de `ETHICS.md` (cédula en claro, texto libre sin control, ausencia de mecanismo de supresión, consentimiento del representante) en requisitos con criterio verificable y condición de cierre, igual que RF-37. | ✅ **Cumple** (especificación) | `f265b84`: nueva **§3.6 del SRS** — **RF-49** (H-01, cédula opcional y validada: dígito verificador → `422`, `UNIQUE` parcial), **RF-50** (H-03, `sp_anonimizar_estudiante` + `POST /api/estudiantes/{id}/anonimizar` auditado; implementa también RNF-22), **RF-51** (H-04/H-07, el envío de notificaciones exige consentimiento vigente; RF-39 ya lo registra/revoca), **RNF-25** (H-02, `@Size` + guía + `@PreAuthorize` del texto libre; desbloquea RF-48). **RNF-17** reescrito como paraguas con tabla hallazgo → requisito. `matriz.csv`: 4 filas nuevas. `ETHICS.md` `1.1 → 1.3`. **Implementación (2026-09-08/09):** RF-51 (ya estaba), **RNF-25 completo**, **RF-49** (cédula opcional + `@Cedula` + `V26`), **RF-50** (SP `sp_anonimizar_estudiante` `V27` + endpoint auditado, verificado sobre PostgreSQL), RF-11b/H-06 → ✅ Implementado. Y en documentación de ética: **H-05** (TLS de producción, Render), **H-06** (alcance de consentimiento físico-deportivo), **H-07** (plantilla `consentimiento/representante.md`). **Con esto los hallazgos H-01…H-08 quedan cerrados** y **RF-48** sale de Won't. Fuera de la lista literal de A2: **H-09** (doble opt-in del correo) queda como limitación documentada de RF-37, trabajo posterior a la entrega. |
 | **A3** | Requisito de respaldo y recuperación con frecuencia, retención y objetivos de recuperación; declarar la recuperación punto-en-el-tiempo. | ✅ **Cumple** | `f484390`: **RNF-24** reforzado — (a) respaldo diario `pg_dump -F c`, retención 30 días, **destino privado externo** al repositorio; (b) **PITR de Supabase** declarada; (c) **RPO ≤ 24 h** + RTO medido; (d) procedimiento verificado con **evidencia archivada y fechada**. **Ejecutado el 2026-09-09:** restauración real del respaldo de producción contra un `postgres:17` separado, 0 errores, **RTO cronometrado** (`pg_restore` ≈ 1 s; recuperación completa 3–5 min), verificado esquema + 12 SP + conteos + flujo de lectura (login ADMINISTRADOR + `sp_contar_estudiantes_activos`). Evidencia: [`docs/mediciones/backup/restauracion-2026-09-09.md`](../mediciones/backup/restauracion-2026-09-09.md). PITR declarado: el plan **Free** de Supabase no ofrece PITR ni respaldos gestionados → el `pg_dump` diario es la única copia. **Cerrado.** |
 | **A4** | La mitad pendiente de RNF-23 (comportamiento de la caché ante caída de Redis) necesita su propio criterio y su fecha. | ✅ **Cumple** | `f484390` + `5227637`: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado — ✅ Implementado, `JwtAuthenticationFilterTest`) y **RNF-23b** (degradación de la caché de listados vía `CacheErrorHandler`). `matriz.csv`: 2 filas. **RNF-23b implementado el 2026-09-08** (`RedisCacheConfig implements CachingConfigurer` + `CacheErrorHandler`; `RedisCacheErrorHandlerTest`) → **ambas mitades ✅ Implementado**. |
 
@@ -142,10 +190,21 @@ Compilación y pruebas unitarias afectadas en verde (11 clases backend + 15 fron
 `CedulaValidatorTest`, `RedisCacheErrorHandlerTest`, `StudentControllerTest`,
 `PersonControllerTest`, `AuthControllerTest`, `EvaluacionDiariaServiceTest`, …).
 
-**Implementación — todo cerrado.** El último pendiente de código/documentación,
-la plantilla de consentimiento del representante (**H-07**), se añadió el
-2026-09-09 en `docs/etica/consentimiento/representante.md`. Queda únicamente la
-**firma presencial del Dr. Guerrero** en el §7 del SRS (tarea del docente).
+**Cierre de la ronda (2026-09-09):**
+
+- **RF-50** desplegado y verificado: migraciones **V25/V26/V27** aplicadas a la
+  Supabase de producción (verificadas 1/1/1); el backend de Render se redeplegó
+  tras arreglar un fallo de arranque no relacionado (`MailHealthIndicator` daba
+  `/actuator/health` = 503 en Render → `management.health.mail.enabled: false`).
+- **H-05** (TLS de producción) cerrado con el certificado de CA de Render.
+- **H-06** cerrado con el alcance de consentimiento `DATOS_FISICO_DEPORTIVOS`.
+- **RNF-24** cerrado con una restauración cronometrada real archivada.
+- **H-07** cerrado con `docs/etica/consentimiento/representante.md`.
+
+Con esto **no queda nada de código ni de documentación**. Ver la sección
+[Estado final](#estado-final-2026-09-09) al principio del documento. El único
+pendiente de todo el plan es la **firma presencial del Dr. Guerrero** en el §7
+del SRS (tarea del docente).
 
 El razonamiento completo está en `docs/requisitos/borrador-adiciones-A1-A4.md`.
 
@@ -154,7 +213,7 @@ El razonamiento completo está en `docs/requisitos/borrador-adiciones-A1-A4.md`.
 ## Estado verificado del Protocolo de medición (Capítulo 4)
 
 Verificación de las tareas del Capítulo 4 de la Guía ("Protocolo de medición",
-§§4.1–4.7) contra el estado de `main` (2026-09-08, HEAD `5227637`). **5 de 6
+§§4.1–4.7) contra el estado de `main` (2026-09-09, HEAD `eca162c`). **5 de 6
 cumplen; 4.4 queda como limitación de alcance declarada.**
 
 | Tarea | Criterio (resumen) | Estado | Evidencia verificada · `main` |
