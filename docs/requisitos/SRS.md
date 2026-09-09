@@ -1250,11 +1250,14 @@ y registrando el acto en la bitácora de auditoría.*
 - **Verificación:** `StudentServiceTest.anonimizar_delega_en_sp` y
   `anonimizar_estudiante_inexistente_lanza_404`;
   `StudentControllerTest.anonimizar_devuelve_204` y
-  `anonimizar_estudiante_inexistente_da_404`. La comprobación a nivel de motor
-  (campos neutros + FKs/conteos que siguen resolviendo) se hace por
-  demostración sobre el despliegue con Flyway, ya que las pruebas unitarias
-  corren sobre H2 sin el procedimiento (mismo criterio que el resto de SP del
-  módulo, verificados con repo simulado).
+  `anonimizar_estudiante_inexistente_da_404`. Las pruebas unitarias corren
+  sobre H2 sin el procedimiento (mismo criterio que el resto de SP del módulo,
+  verificados con repo simulado); la comprobación a nivel de motor —`V27`
+  aplica limpio sobre `db/schema.sql` + `V25` + `V26`, campos identificativos
+  neutros, texto libre suprimido, cuenta desactivada, ficha en baja lógica y
+  **FKs/conteos de asistencia, evaluación y lesión intactos**, idempotente,
+  excepción para id inexistente— se hizo sobre PostgreSQL 16 el 2026-09-08:
+  transcripción en `docs/mediciones/db/v27-anonimizacion.txt`.
 - **Condición de cierre:** cumplida — endpoint, procedimiento y pruebas en
   verde; `ETHICS.md` §3.4 y §H-03 actualizados; RNF-22 ya no dice que el
   mecanismo de supresión no exista.

@@ -1,0 +1,93 @@
+# Evidencia RF-50 / H-03 — migración V27 y procedimiento de anonimización
+# Fecha: 2026-09-08 | Commit: b1bb658 | Motor: PostgreSQL 16 (imagen oficial postgres:16, Docker)
+#
+# Qué se verifica:
+#   1. La migración V27__sp_anonimizar_estudiante.sql aplica sin error sobre el
+#      esquema de producción (db/schema.sql + V25 + V26).
+#   2. El procedimiento academico.sp_anonimizar_estudiante deja los datos
+#      identificativos en valores neutros, borra el texto libre sobre el menor,
+#      anonimiza y desactiva la cuenta de acceso y da de baja lógica la ficha,
+#      SIN borrar ninguna fila (FKs y agregados intactos).
+#   3. Es idempotente y lanza excepción para un id inexistente.
+#
+# Nota de alcance: el job de CI corre sobre H2 con Flyway deshabilitado, así que
+# NO ejecuta V27; y la cadena Flyway no construye desde cero (falla en V6, que
+# usa academico.estudiantes sin crearlo). El despliegue real parte de
+# db/schema.sql + baseline de Flyway y aplica las migraciones nuevas encima —
+# que es lo que reproduce esta verificación.
+
+== Aplicación de migraciones (exit 0 en las tres) ==
+$ psql < db/schema.sql
+$ psql < backend/src/main/resources/db/migration/V25__limite_texto_libre_menores.sql   -> exit 0
+$ psql < backend/src/main/resources/db/migration/V26__cedula_opcional_y_unica.sql       -> exit 0
+$ psql < backend/src/main/resources/db/migration/V27__sp_anonimizar_estudiante.sql      -> exit 0
+
+== Firma del procedimiento ==
+         proname          |                pg_get_function_arguments
+--------------------------+---------------------------------------------------------
+ sp_anonimizar_estudiante | IN p_id_estudiante bigint, OUT campos_afectados integer
+
+== Fixture ==
+estado_general(ACTIVO), categoria(SUB-12), persona Juan Perez + usuario juan.perez,
+persona/usuario del entrenador, entrenador, estudiante EST-2026-0001 (activo),
+sesión de ayer, 1 asistencia PRESENTE, 1 evaluación FINALIZADA,
+1 observación de texto libre, 1 lesión con descripción clínica.
+
+== ANTES ==
+ nombre | apellido |   cedula   |         correo         |  telefono  | fecha_nacimiento
+--------+----------+------------+------------------------+------------+------------------
+ Juan   | Perez    | 0912345675 | juan.perez@example.com | 0991112223 | 2014-05-01
+
+  username  | activo
+------------+--------
+ juan.perez | t
+
+== CALL academico.sp_anonimizar_estudiante(1, NULL) ==
+ campos_afectados
+------------------
+                5
+
+== DESPUES ==
+   nombre    |   apellido    | cedula |          correo          | telefono | fecha_nacimiento
+-------------+---------------+--------+--------------------------+----------+------------------
+ ANONIMIZADO | ESTUDIANTE #1 |        | anon+1@anonimizado.local |          | 1900-01-01
+
+ username | activo
+----------+--------
+ anon_1   | f
+
+ texto (observaciones_estudiante)
+---------------------------------------
+ [texto suprimido por anonimizacion]
+
+ descripcion (lesiones)
+---------------------------------------
+ [texto suprimido por anonimizacion]
+
+ estudiante_activo
+-------------------
+ f
+
+== FKs / agregados intactos (ninguna fila borrada) ==
+ asistencias | observaciones | lesiones | evaluaciones
+-------------+---------------+----------+--------------
+           1 |             1 |        1 |            1
+
+== Idempotencia (segunda llamada, sin error) ==
+ campos_afectados
+------------------
+                4
+ nombre      | correo
+-------------+--------------------------
+ ANONIMIZADO | anon+1@anonimizado.local
+
+== Estudiante inexistente ==
+$ CALL academico.sp_anonimizar_estudiante(999, NULL);
+ERROR:  No existe un estudiante con id 999
+CONTEXT:  PL/pgSQL function academico.sp_anonimizar_estudiante(bigint) line 15 at RAISE
+
+== Resultado ==
+V27 aplica limpio y el procedimiento cumple el criterio verificable de RF-50:
+(a) campos identificativos en valores neutros; (b) FKs y conteos de
+asistencia/evaluación siguen resolviendo; (c) la operación queda auditada por
+@Audited(accion = "ANONIMIZAR") en StudentService.anonymize.
