@@ -1372,23 +1372,48 @@ un borrado.*
 - **Nota:** cierra el punto A18; su implementación cierra H-03.
 
 **RNF-23 — Comportamiento ante indisponibilidad de Redis**
-*El sistema deberá comportarse de forma segura si Redis no está disponible:
-un token de acceso no podrá considerarse válido si no puede comprobarse
-contra la lista de revocación, de modo que una caída de Redis deniega el
-acceso a los recursos protegidos (`401`) en vez de aceptar tokens que
-podrían estar revocados. La caché de listados (RNF-02) deberá degradarse a
-consulta directa a la base, no a error.*
 
-- **Método de verificación:** Análisis; Demostración
+> **Corrección (2026-09-08).** El enunciado original mezclaba en un solo RNF
+> una capacidad ya cumplida (la autenticación falla cerrada) y otra pendiente
+> (la caché de listados sin `CacheErrorHandler`), de modo que no se podía
+> saber, sin leer la nota, qué mitad faltaba. Se divide en dos requisitos con
+> estado independiente, siguiendo la misma disciplina que RF-19a/RF-19b.
+> Responde al punto A4 de la revisión de septiembre y sigue cerrando el
+> punto A19.
+
+**RNF-23a — Autenticación falla-cerrado ante caída de Redis**
+*Un token de acceso no podrá considerarse válido si no puede comprobarse
+contra la lista de revocación y la época de sesión; una caída de Redis deberá
+denegar el acceso a los recursos protegidos (`401`) en vez de aceptar tokens
+que podrían estar revocados.*
+
+- **Estado:** ✅ Implementado
+- **Método de verificación:** Análisis; Prueba automatizada
 - **Origen:** `JwtAuthenticationFilter` (envuelve la comprobación en
   `try/catch`; ante excepción no autentica y la petición continúa sin
   sesión), `RedisBlacklistService`, `SessionEpochService`.
-- **Verificación:** análisis del flujo del filtro; prueba manual apagando el
-  contenedor `sged_redis`.
-- **Nota:** hoy el filtro **falla cerrado** para la autenticación (lo
-  correcto), pero la caché de listados **no** tiene un `CacheErrorHandler`
-  que la degrade a la base — esa parte queda como trabajo pendiente que este
-  RNF hace explícito. Cierra el punto A19.
+- **Verificación:** análisis del flujo del filtro; `JwtAuthenticationFilterTest`;
+  prueba manual deteniendo el contenedor `sged_redis` (un recurso protegido
+  responde `401`, no `500`).
+
+**RNF-23b — Degradación de la caché de listados ante caída de Redis**
+*Ante la indisponibilidad de Redis, la caché de listados (RNF-02) deberá
+degradarse a consulta directa a la base de datos mediante un
+`CacheErrorHandler`; una caída de Redis no deberá producir `5xx` en los
+endpoints de listado ni impedir la lectura.*
+
+- **Estado:** ⬜ Planificado
+- **Método de verificación:** Prueba automatizada
+- **Origen:** `RedisCacheConfig` (hoy sin `CacheErrorHandler`).
+- **Verificación:** prueba de integración con el contenedor `sged_redis`
+  detenido que comprueba que `GET /api/estudiantes` responde `200` con datos
+  (no `500`) y que el fallo de caché queda en la bitácora; hoy esa prueba no
+  existe.
+- **Criterio verificable:** el `CacheErrorHandler` está registrado en
+  `RedisCacheConfig` y la prueba anterior pasa en verde.
+- **Condición de cierre:** cumplido el criterio, la nota de RNF-23 deja de
+  citar "la caché de listados sin degradación queda pendiente".
+- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
 
 ### 4.3 Fiabilidad y mantenibilidad
 
@@ -1467,18 +1492,34 @@ CI.*
   el punto A16.
 
 **RNF-24 — Respaldo y recuperación de la base de datos**
-*El sistema deberá contar con un respaldo diario de la base de datos
-completa, retención mínima de 30 días, un procedimiento de restauración
-documentado y verificado, y un objetivo de tiempo de recuperación (RTO)
-medido, no estimado.*
+*El sistema deberá contar con: (a) un respaldo diario de la base de datos
+completa (`pg_dump -F c`), automatizado, con retención mínima de 30 días y
+destino en un almacenamiento privado externo al repositorio y —cuando el plan
+contratado lo permita— externo también al proveedor de base de datos;
+(b) la recuperación punto-en-el-tiempo (PITR) del proveedor gestionado
+(Supabase) declarada explícitamente con su ventana de retención real según el
+plan vigente; (c) un objetivo de punto de recuperación (RPO) igual o inferior
+a 24 horas y un objetivo de tiempo de recuperación (RTO) medido, no estimado;
+(d) un procedimiento de restauración documentado y verificado con evidencia
+archivada y fechada de al menos una ejecución real contra una base separada.*
 
 - **Método de verificación:** Demostración; Inspección
-- **Origen:** `docs/despliegue/BACKUP.md` (frecuencia, retención,
+- **Origen:** `docs/despliegue/BACKUP.md` (frecuencia, retención, destino,
   procedimiento `pg_dump -F c` / `pg_restore`), `docs/despliegue/RUNBOOK.md`
   §5 (restauración).
-- **Verificación:** ejecución real del procedimiento de `BACKUP.md` con
-  cronómetro para fijar el RTO; hoy el RTO figura como pendiente de medir.
-- **Nota:** cierra el punto A20.
+- **Criterio verificable:** `BACKUP.md` fija el destino de almacenamiento, el
+  RPO y la retención del PITR del proveedor; existe
+  `docs/mediciones/backup/restauracion-AAAA-MM-DD.md` con el log de una
+  restauración real y el tiempo cronometrado; el RTO y el RPO figuran en la
+  matriz de trazabilidad con fecha.
+- **Condición de cierre:** el archivo de evidencia de restauración existe y el
+  RTO consta como medido (no "pendiente de medir"); `BACKUP.md` deja de decir
+  que el destino "todavía no está fijado".
+- **Fecha objetivo:** antes de la defensa oral (semana 17), plazo que
+  `docs/despliegue/BACKUP.md` ya fija para la ventana de retención obligatoria.
+- **Nota:** cierra el punto A20 y responde al punto A3 de la revisión de
+  septiembre (RPO explícito, PITR declarado, destino fijado, evidencia de
+  restauración archivada).
 
 ### 4.4 Portabilidad
 
@@ -1658,7 +1699,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. |
 
 ## 7. Aprobación
 
