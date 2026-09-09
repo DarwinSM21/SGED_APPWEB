@@ -353,24 +353,37 @@ falta.*
 **RF-11b — Registro de peso y altura del estudiante**
 *El sistema deberá permitir registrar opcionalmente el peso y la altura de un
 estudiante al crearlo o actualizarlo, validando que sean valores positivos
-con hasta 3 dígitos enteros y 2 decimales.*
+con hasta 3 dígitos enteros y 2 decimales, y tratándolos con la base legal y
+las condiciones declaradas más abajo.*
 
-- **Prioridad:** Media (condicionada a resolver el hallazgo H-06).
-  Apareció en la reestructuración de paquetes, no en un requisito
-  previamente especificado. · **MoSCoW:** Should (esta entrega) —condicionado al hallazgo H-06, no por olvido.
-- **Método de verificación:** Demostración
-- **Origen:** `EstudianteRequest.peso`, `.altura`
-  (`@DecimalMin`, `@Digits`); columnas `academico.estudiantes.peso/altura`.
-- **Estado (decisión 2026-09-07):** la funcionalidad queda **habilitada y
-  documentada como Implementado**, y su riesgo se rastrea como pendiente
-  abierto en `docs/etica/ETHICS.md` (H-06) hasta que se resuelva. Ver
-  bitácora de decisiones en `docs/observaciones/OBSERVACIONES.md`.
-- **Alerta:** este requisito se documenta pero **no se recomienda
-  mantenerlo habilitado** sin resolver antes el hallazgo H-06 de
-  `docs/etica/ETHICS.md` (dato de salud de un menor, sin finalidad ni base
-  legal documentada). Ningún caso de uso ni historia de usuario de este
-  documento describía esta funcionalidad antes de que apareciera en el
-  código.
+- **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
+- **Método de verificación:** Demostración; Inspección
+- **Origen:** `StudentRequest.peso`, `.altura` (`@DecimalMin`, `@Digits`,
+  opcionales); persistidos en `academico.estudiantes.peso/altura` (migración
+  `V7`); devueltos en `StudentResponse`.
+- **Decisión M7 (2026-09-08) — se conserva con base legal documentada:**
+  - **Finalidad concreta:** seguimiento físico-deportivo del estudiante por el
+    cuerpo técnico de la escuela (control del desarrollo físico apropiado a su
+    categoría y edad, apoyo a la dosificación de carga en el entrenamiento).
+    No se usan para ranking, selección ni decisiones automatizadas.
+  - **Base legal:** consentimiento del representante legal conforme a la LOPDP
+    (Ecuador, tratamiento de datos de niñas, niños y adolescentes), con
+    **alcance específico "datos físico-deportivos"**, separado del
+    consentimiento general de inscripción. Se registra por el mismo mecanismo
+    de RF-39 y queda sujeto a la compuerta de RF-51 para cualquier uso
+    proactivo.
+  - **Responsables del tratamiento:** roles con acceso a la ficha del
+    estudiante. Condición de este requisito: la lectura de `peso`/`altura` se
+    restringe a `ADMINISTRADOR` y `ENTRENADOR` (RECEPCIONISTA no necesita el
+    dato físico); pendiente de aplicar en `StudentResponse`.
+  - **Conservación y supresión:** se conservan mientras el estudiante esté
+    activo; la baja lógica los preserva por integridad del historial deportivo
+    (RNF-22); se suprimen por RF-50 a solicitud del representante.
+  - El campo es y sigue siendo **opcional**: la ficha se puede crear y operar
+    sin ellos.
+- **Nota:** cierra el hallazgo **H-06** de `docs/etica/ETHICS.md`. Queda como
+  condición pendiente la restricción de lectura por rol y el registro del
+  consentimiento de alcance físico-deportivo (RF-39 / RF-51).
 
 ---
 
@@ -1411,7 +1424,7 @@ cierre y fecha objetivo:*
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ⬜ Planificado |
 | H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | RF-39 ✅ / RF-51 ⬜ |
 | H-05 — certificado TLS autofirmado | **RNF-21** | ⬜ Planificado (producción) |
-| H-06 — peso y altura sin base legal | decisión de **RF-11b** (retirar o documentar base legal) — punto M7 | pendiente de decisión |
+| H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad, base legal y condiciones documentadas | ✅ Decidido (quedan condiciones: lectura por rol + consentimiento de alcance) |
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
 | H-09 — correo de reseteo no verificado | limitación documentada de **RF-37**; cierre pleno (doble opt-in) = trabajo futuro con fecha objetivo | ⬜ Trabajo futuro |
 
@@ -1803,7 +1816,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06 (quedan condiciones: restricción de lectura por rol y consentimiento de alcance). |
 
 ## 7. Aprobación
 

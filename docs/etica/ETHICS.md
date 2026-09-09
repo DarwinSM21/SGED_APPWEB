@@ -205,7 +205,7 @@ desarrollo y evaluación pero **no** para producción con datos reales de
 menores. Un despliegue real exige certificado emitido por una autoridad
 reconocida.
 
-### H-06 — Peso y altura se agregaron sin base legal documentada
+### H-06 — Peso y altura se agregaron sin base legal documentada (decidido el 2026-09-08 — punto M7)
 
 `academico.estudiantes.peso` y `.altura` son datos de salud de un menor.
 Ninguna base legal para tratarlos (finalidad concreta, quién los usa, cuánto
@@ -222,6 +222,32 @@ representante, separado del consentimiento general de inscripción), o (b)
 si no hay una funcionalidad concreta que los use en esta entrega, se
 recomienda no exponerlos todavía por API y reconsiderar si deben persistir
 en el esquema.
+
+**Decisión M7 (2026-09-08) — opción (a): se conservan con base legal
+documentada.** Verificado que `peso`/`altura` sí están cableados de punta a
+punta: `StudentRequest` (escritura validada, opcional) → `Student` entity /
+`academico.estudiantes` (V7) → `StudentResponse` (lectura en el detalle y el
+listado). Se documenta:
+
+- **Finalidad:** seguimiento físico-deportivo del estudiante por el cuerpo
+  técnico (desarrollo físico apropiado a su categoría/edad, dosificación de
+  carga en el entrenamiento). No se usan para ranking, selección ni decisiones
+  automatizadas.
+- **Base legal:** consentimiento del representante legal conforme a la LOPDP
+  (Ecuador, datos de NNA), con **alcance específico "datos físico-deportivos"**
+  separado del consentimiento general de inscripción — registrado por el
+  mecanismo de RF-39 y sujeto a la compuerta de RF-51.
+- **Responsables:** roles con acceso a la ficha. **Condición:** la lectura de
+  `peso`/`altura` se restringe a `ADMINISTRADOR` y `ENTRENADOR` — RECEPCIONISTA
+  no necesita el dato (pendiente de aplicar en `StudentResponse`).
+- **Conservación / supresión:** mientras el estudiante esté activo; la baja
+  lógica los preserva (RNF-22); se suprimen por RF-50 a solicitud del
+  representante.
+- **Opcionalidad:** el campo es opcional; la ficha opera sin él.
+
+Este hallazgo pasa a **decidido**; quedan como trabajo pendiente las dos
+condiciones (restricción de lectura por rol y consentimiento de alcance
+físico-deportivo). Especificado en el SRS §RF-11b.
 
 ### H-07 — La plantilla de consentimiento cubre a los evaluadores del SUS, no a los representantes de los menores
 
