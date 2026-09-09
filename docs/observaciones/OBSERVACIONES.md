@@ -91,3 +91,37 @@ Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contr
 | `6656ab9` | `c892660` | `render.yaml` + Supabase (OBS-19) |
 | `c91180c` | `dee863c` | URLs reales de Render (OBS-19) |
 | `a68e513` | `3f50739` | declarar URLs públicas (OBS-19) |
+
+---
+
+## Revisión "SRS SGED vs ISO/IEC/IEEE 29148:2018" (septiembre 2026)
+
+Revisión adicional del docente sobre el SRS y la matriz de trazabilidad, hecha
+sobre el commit `1e9d2db`. Nueve puntos **M** (modificar) y cuatro **A**
+(agregar). Reparto: Ricardo tomó los **M**; los **A** se prepararon en paralelo.
+
+### Puntos M — modificar
+
+| Punto | Qué pedía (resumen) | Estado | Evidencia · commits en `main` |
+| :--- | :--- | :--- | :--- |
+| **M1–M9** | Matriz mal formada (RF-38/RF-43 con comas sin comillas), vocabulario de estado reabierto, rutas y clases de prueba renombradas, RF-19 sin dividir en la matriz, cabecera con etiqueta vieja, RF-48 en un estado que no es estado, plantilla del módulo deportivo sin unificar, campo "Método de verificación" sin vocabulario cerrado. | ✅ **Cumple** | `e6db415`: `matriz.csv` a **11 columnas** (nueva `observaciones`), RF-38/RF-43 entrecomillados, **RF-19 → RF-19a/RF-19b**, estados solo `{Implementado, Modelado, Planificado}`, fila huérfana **RF-36 retirada**, citas de controladores y clases `*Test` al día con el código en inglés, **Método de verificación** con vocabulario `{Test, Demostración, Análisis, Inspección}` en los 73 requisitos, plantilla uniforme del módulo deportivo, decisión **RF-48 (M7)** documentada (se conserva como Implementado, no se expone sin resolver H-02/RNF-17), cabecera del SRS a `1.6` / `v1.0.2`. Validador reescrito en `scripts/validate-traceability.py`. |
+
+> **M7 — peso y altura (RF-11b, hallazgo H-06):** decisión aún abierta —
+> retirar `peso`/`altura` o documentar finalidad y base legal. Rastreado en
+> `docs/etica/ETHICS.md` §H-06 y en la tabla de RNF-17. Pendiente del equipo.
+
+### Puntos A — agregar
+
+| Punto | Qué pedía (resumen) | Estado | Evidencia · commits en `main` |
+| :--- | :--- | :--- | :--- |
+| **A1** | Comprobaciones nuevas en el validador de trazabilidad, como requisito de proceso: nº exacto de columnas por fila, vocabulario cerrado en `estado`, paridad de identificadores SRS ↔ matriz, y existencia en disco de rutas y clases de prueba citadas. | ✅ **Cumple** | `e6db415`: `scripts/validate-traceability.py` comprueba (1) toda fila con el mismo nº de columnas que la cabecera —parseando comillas—, (2) `estado ∈ {Implementado, Modelado, Planificado}`, (3) toda clase `*Test` citada en matriz y SRS existe y `Clase.metodo` resuelve, (4) los ids RF-\*/RNF-\* del SRS y de la matriz coinciden en ambas direcciones. `scripts/test-validate-traceability.sh` ampliado; ambos en CI. |
+| **A2** | Convertir los hallazgos abiertos de `ETHICS.md` (cédula en claro, texto libre sin control, ausencia de mecanismo de supresión, consentimiento del representante) en requisitos con criterio verificable y condición de cierre, igual que RF-37. | ✅ **Cumple** (especificación) | `f265b84`: nueva **§3.6 del SRS** — **RF-49** (H-01, cédula opcional y validada: dígito verificador → `422`, `UNIQUE` parcial), **RF-50** (H-03, `sp_anonimizar_estudiante` + `POST /api/estudiantes/{id}/anonimizar` auditado; implementa también RNF-22), **RF-51** (H-04/H-07, el envío de notificaciones exige consentimiento vigente; RF-39 ya lo registra/revoca), **RNF-25** (H-02, `@Size` + guía + `@PreAuthorize` del texto libre; desbloquea RF-48). **RNF-17** reescrito como paraguas con tabla hallazgo → requisito. `matriz.csv`: 4 filas nuevas. `ETHICS.md` `1.1 → 1.2` con línea "Requisito de cierre" en H-01/H-02/H-03/H-04. **Pendiente: la implementación** de esos cuatro requisitos (código; cada uno con fecha objetivo por fijar). Fuera de la lista literal de A2: **H-09** (doble opt-in del correo) queda como limitación documentada de RF-37; **H-06** es la decisión M7. |
+| **A3** | Requisito de respaldo y recuperación con frecuencia, retención y objetivos de recuperación; declarar la recuperación punto-en-el-tiempo. | ✅ **Cumple** (especificación) | `f484390`: **RNF-24** reforzado — enunciado (a) respaldo diario `pg_dump -F c`, retención 30 días, **destino privado externo** al repositorio y al proveedor; (b) **PITR de Supabase** declarada con su retención real; (c) **RPO ≤ 24 h** + RTO medido; (d) procedimiento verificado con **evidencia archivada y fechada**. Con criterio y condición de cierre. **Pendiente:** ejecutar la restauración de prueba cronometrada y archivar su evidencia (tarea de despliegue). |
+| **A4** | La mitad pendiente de RNF-23 (comportamiento de la caché ante caída de Redis) necesita su propio criterio y su fecha. | ✅ **Cumple** | `f484390`: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado ante caída de Redis — ✅ Implementado, `JwtAuthenticationFilterTest`) y **RNF-23b** (degradación de la caché de listados vía `CacheErrorHandler` — ⬜ Planificado, con criterio verificable, condición de cierre y fecha objetivo). `matriz.csv`: 2 filas (`RNF-23` sin sufijo eliminada). **Pendiente:** implementar el `CacheErrorHandler` y su prueba de integración con Redis detenido. |
+
+**Resumen:** M1–M9 y A1 resueltos por Ricardo en `e6db415`; A2 en `f265b84`;
+A3 y A4 en `f484390`. Los cuatro puntos A quedan **especificados**; lo que
+resta es **implementar** lo que quedó `Planificado` (RF-49, RF-50, RF-51,
+RNF-25, RNF-23b) y archivar la evidencia de restauración de RNF-24, cada uno
+con su fecha objetivo por fijar, además de la decisión de M7 sobre RF-11b.
+El razonamiento completo está en `docs/requisitos/borrador-adiciones-A1-A4.md`.
