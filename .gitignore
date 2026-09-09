@@ -47,3 +47,7 @@ docs/informe/p2.log
 docs/informe/p3.log
 docs/informe/bib.log
 .env.bak
+
+# Respaldos de base de datos (contienen datos personales de menores) — nunca al repo. Ver docs/despliegue/BACKUP.md
+*.dump
+sged_prod_*.dump

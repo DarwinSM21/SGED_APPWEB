@@ -1658,8 +1658,18 @@ archivada y fechada de al menos una ejecución real contra una base separada.*
 - **Condición de cierre:** el archivo de evidencia de restauración existe y el
   RTO consta como medido (no "pendiente de medir"); `BACKUP.md` deja de decir
   que el destino "todavía no está fijado".
-- **Fecha objetivo:** antes de la defensa oral (semana 17), plazo que
-  `docs/despliegue/BACKUP.md` ya fija para la ventana de retención obligatoria.
+- **Estado (2026-09-09):** ✅ cumplido. (a) destino fijado (almacenamiento
+  privado del equipo, fuera del repo; `pg_dump -F c` diario acotado a los 4
+  esquemas de la app); (b) **PITR declarado**: el plan **Free de Supabase no
+  ofrece PITR ni respaldos gestionados**, por lo que el `pg_dump` diario es la
+  única copia y el punto de recuperación es siempre el de ese dump; (c)
+  **RPO ≤ 24 h** (cadencia del `pg_dump`) y **RTO medido** — `pg_restore`
+  ≈ 1 s, recuperación completa 3–5 min; (d) **evidencia archivada y fechada**:
+  [`docs/mediciones/backup/restauracion-2026-09-09.md`](../mediciones/backup/restauracion-2026-09-09.md)
+  — restauración real del respaldo de producción contra un `postgres:17`
+  separado, 0 errores, con verificación de esquema, los 12 procedimientos
+  almacenados, conteos de filas y un flujo de lectura (login del ADMINISTRADOR
+  + listado por `sp_contar_estudiantes_activos`).
 - **Nota:** cierra el punto A20 y responde al punto A3 de la revisión de
   septiembre (RPO explícito, PITR declarado, destino fijado, evidencia de
   restauración archivada).

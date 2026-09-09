@@ -8,29 +8,31 @@ desempeño. Perder esos datos sin respaldo no es solo un incidente técnico.
 
 ## Frecuencia y destino
 
-- **Frecuencia:** respaldo diario de la base de datos completa (`pg_dump`),
-  automatizado.
-- **Destino:** todavía no está fijado un destino de almacenamiento externo
-  al proveedor de base de datos — depende de la decisión de proveedor que
-  se registra en `DEPLOYMENT.md` (pendiente). En cuanto se elija:
-  - Si la base de datos es Supabase (ver `.env.example`, opción activa
-    hoy): Supabase incluye respaldos administrados según el plan
-    contratado — **verificar explícitamente qué retención da el plan
-    vigente antes de asumir que basta**, porque el nivel gratuito
-    históricamente no incluye retención de 30 días. Se recomienda además
-    un `pg_dump` propio independiente del proveedor, para no depender
-    únicamente de una política de terceros que puede cambiar.
-  - El destino del `pg_dump` propio no debe ser el repositorio público
-    (los dumps contienen datos personales, aunque sean de prueba) — un
-    almacenamiento privado (bucket privado, Drive institucional con acceso
-    restringido) es el patrón que ya usa el proyecto para los
-    consentimientos SUS firmados (`docs/etica/ETHICS.md`, sección de
-    consentimientos).
-- **Comando de referencia** (ejecutar contra `DB_URL` del entorno,
-  ajustando si el proveedor final no es Supabase):
+- **Frecuencia:** respaldo diario de la base de datos completa (`pg_dump -F c`),
+  ejecutado por el equipo.
+- **Base de datos:** PostgreSQL 17 gestionado en **Supabase** (no Render — ver
+  `docs/despliegue/render.md`).
+- **Respaldo gestionado por el proveedor:** el proyecto está en el **plan
+  Free de Supabase**, que **no incluye respaldos diarios gestionados ni PITR**
+  (son funciones de los planes de pago). Por eso el `pg_dump` propio de abajo
+  no es un complemento sino la **única** copia de seguridad; su cadencia
+  diaria y su retención son las que determinan el RPO.
+- **`pg_dump` propio, independiente del proveedor:** un dump diario en formato
+  custom (`pg_dump -F c`), para no depender solo de una política de terceros
+  que puede cambiar. Se toma por el **Session Pooler de Supabase (puerto
+  5432)**, restringido a los esquemas de la aplicación:
   ```bash
-  pg_dump "$DB_URL" -F c -f "respaldo_$(date +%F).dump"
+  pg_dump "$SUPA_DB" -F c --no-owner --no-privileges \
+    -n seguridad -n academico -n deportivo -n inventario \
+    -f "sged_prod_$(date +%F).dump"
   ```
+- **Destino del `pg_dump` propio:** almacenamiento privado del equipo
+  **fuera del repositorio** — carpeta compartida de acceso restringido
+  (Drive institucional del equipo), el mismo patrón que ya usa el proyecto
+  para los consentimientos SUS firmados. **Nunca** el repositorio público:
+  los dumps contienen datos personales de menores aunque hoy sean de prueba.
+  El archivo local de trabajo del equipo (`~/sged-backups/`) queda cubierto
+  por `.gitignore` (`sged_prod_*.dump`).
 
 ## Retención
 
@@ -39,6 +41,32 @@ posteriores a la fecha de la defensa oral** (semana 17). Fuera de esa
 ventana obligatoria, se recomienda una retención más liviana (por ejemplo
 7 diarios + 4 semanales) para no acumular indefinidamente datos de
 menores en múltiples copias sin necesidad.
+
+## Objetivos de recuperación (RPO / RTO)
+
+- **RPO (Recovery Point Objective) ≤ 24 h.** El `pg_dump` propio se ejecuta a
+  diario, así que la pérdida máxima ante un incidente que inutilice la base es
+  de un día de operación. Si el PITR del plan de Supabase está disponible (ver
+  abajo), el RPO efectivo baja al orden de minutos dentro de su ventana.
+- **RTO (Recovery Time Objective) — medido, no estimado.** El `pg_restore` del
+  respaldo actual tarda **≈ 1 s** sobre una base recién aprovisionada
+  (medición del 2026-09-09, `docs/mediciones/backup/restauracion-2026-09-09.md`).
+  La recuperación completa del servicio —aprovisionar una base nueva +
+  restaurar + reapuntar el backend + verificar— está dominada por el
+  aprovisionamiento y es del orden de **3–5 min**. Ambos valores deben
+  volver a medirse cuando el volumen de datos crezca.
+
+## Recuperación punto-en-el-tiempo (PITR) de Supabase
+
+**El plan Free contratado no ofrece PITR** (Project Settings → Database →
+Backups lo confirma: PITR es un complemento de pago sobre los planes Pro y
+superiores, con ventanas de 7 días o más). Por tanto:
+
+- No hay recuperación a un instante arbitrario: el punto de recuperación es
+  siempre el del último `pg_dump` diario.
+- El **RPO efectivo es ≤ 24 h**, dado por la cadencia del `pg_dump`.
+- Si el proyecto migrara a un plan con PITR, esta sección debe actualizarse
+  con la ventana de retención real y el RPO bajaría al orden de minutos.
 
 ## Procedimiento de restauración
 
@@ -53,13 +81,19 @@ menores en múltiples copias sin necesidad.
 
 ## Prueba periódica de restauración
 
-**Todavía no hay evidencia archivada de una restauración de prueba
-ejecutada.** Esto es un pendiente real, no un procedimiento ya cumplido —
-se declara así en vez de darlo por hecho. Antes de la Entrega Final:
+**Evidencia archivada:**
+[`docs/mediciones/backup/restauracion-2026-09-09.md`](../mediciones/backup/restauracion-2026-09-09.md)
+— restauración completa del respaldo de producción del 2026-09-09 contra una
+base separada (contenedor `postgres:17` efímero), sin errores, con el `RTO`
+cronometrado (≈ 1 s el `pg_restore`) y verificación del esquema, los 12
+procedimientos almacenados, los conteos de filas y un flujo de lectura de la
+aplicación (login del `ADMINISTRADOR` + listado por `sp_contar_estudiantes_activos`).
 
-1. Ejecutar una restauración completa contra una base de datos separada
-   (nunca sobre la de producción).
-2. Cronometrar cuánto tarda — determina el objetivo de tiempo de
-   recuperación (RTO) real, no uno estimado de memoria.
-3. Archivar la evidencia (log de la restauración, capturas, tiempo
-   medido) en `docs/mediciones/` o en este mismo archivo, con fecha.
+La prueba se repite:
+
+1. Contra una base de datos **separada** (nunca la de producción).
+2. **Cronometrando** cada ejecución para mantener el RTO al día.
+3. Archivando la evidencia con fecha en `docs/mediciones/backup/`.
+
+Cadencia recomendada: en cada cambio de esquema (migración nueva) y, como
+mínimo, una vez antes de cada entrega o defensa.
