@@ -1,19 +1,20 @@
 # Borrador — Parte 3 de la revisión 29148 (A1–A4)
 
-> **Estado (2026-09-08, tras `e6db415`):**
+> **Estado — cerrado el 2026-09-08. `origin/main` = `fa688c2`.**
 >
-> - **A1** — **hecho por Ricardo** en `e6db415` (M1–M9): validador reescrito
->   en `scripts/validate-traceability.py` con las mismas cuatro comprobaciones
->   (nº exacto de columnas, vocabulario de estado, existencia de clases `*Test`
->   en matriz y SRS, paridad de ids SRS↔matriz). El borrador en bash que se
->   había preparado aquí quedó **superado y descartado**.
-> - **A3 y A4** — **aplicados** al `SRS.md` y a `matriz.csv` sobre el trabajo
->   de Ricardo: RNF-24 reforzado; RNF-23 dividido en RNF-23a/RNF-23b, con sus
->   dos filas en la matriz de 11 columnas. `python3 scripts/validate-traceability.py`
->   → exit 0.
-> - **A2** — sigue como borrador; **no** incorporado (Ricardo no lo tocó).
+> | Punto | Estado | Commit |
+> |---|---|---|
+> | **A1** validador de trazabilidad | ✅ hecho por Ricardo (M1–M9) | `e6db415` |
+> | **A2** hallazgos ETHICS.md → requisitos (§3.6) | ✅ aplicado | `f265b84` |
+> | **A3** RNF-24 reforzado | ✅ aplicado | `f484390` |
+> | **A4** RNF-23 → RNF-23a/RNF-23b | ✅ aplicado | `f484390` |
+> | Seguimiento en `docs/observaciones/OBSERVACIONES.md` | ✅ | `fa688c2` |
 >
-> Repo: `origin/main` = `e6db415` (Ricardo, M1–M9 + Lighthouse público).
+> Los cuatro puntos A quedan **especificados**. `python3 scripts/validate-traceability.py`
+> → exit 0. El borrador del validador en bash que se había preparado aquí quedó
+> **superado** por el de Ricardo (`scripts/validate-traceability.py`) y se
+> descartó. Lo que resta es **implementar** lo que quedó `Planificado` — ver
+> "Estado" al final.
 
 ---
 
@@ -40,7 +41,7 @@ archivos reales y pasa en verde.
 
 ---
 
-## A2 — Datos personales de menores: de hallazgo a requisito con criterio de cierre  ✅ aplicado
+## A2 — Datos personales de menores: de hallazgo a requisito con criterio de cierre  ✅ aplicado (`f265b84`)
 
 > Aplicado 2026-09-08 en `SRS.md` (nueva **§3.6** con RF-49/RF-50/RF-51,
 > RNF-25 en §4.3, **RNF-17** reescrito como paraguas con tabla hallazgo→requisito),
@@ -154,7 +155,12 @@ condiciones no se cumplan, RF-48 permanece en estado Won't.*
 
 ---
 
-### RNF-26 — Verificación del correo del titular (doble opt-in)  *(cierra H-09)*
+### RNF-26 — Verificación del correo del titular (doble opt-in)  *(cierra H-09)* — ❌ NO adoptado
+
+> H-09 no está en la lista literal de A2. En `f265b84` NO se creó este
+> requisito: H-09 queda como limitación documentada de RF-37 en el paraguas
+> RNF-17, con el doble opt-in marcado como "trabajo futuro con fecha objetivo".
+> Este texto se conserva como propuesta lista si el equipo decide formalizarlo.
 
 *El sistema deberá disponer de un mecanismo de verificación del correo de
 `seguridad.personas.correo` (envío de enlace de confirmación y marca
@@ -188,18 +194,17 @@ inventado. Esto lo coordina el equipo (Ricardo, pila M).
 
 ---
 
-### Cambio propuesto a RNF-17 (paraguas)
+### RNF-17 reescrito como paraguas — ✅ aplicado (`f265b84`)
 
-> *El sistema deberá cerrar los hallazgos de protección de datos de menores de
-> `docs/etica/ETHICS.md` mediante los requisitos **RF-49** (H-01), **RF-50**
-> (H-03), **RF-51** (H-04/H-07), **RNF-25** (H-02) y **RNF-26** (H-09). Cada
-> uno tiene criterio verificable, condición de cierre y fecha objetivo. H-05
-> (certificado TLS) se cierra por **RNF-21**; H-06 (peso y altura) requiere una
-> decisión de retirada o de base legal documentada (ver RF-11b).*
+La versión final en el SRS enlaza cada hallazgo con su requisito en una tabla:
+H-01 → **RF-49**, H-02 → **RNF-25**, H-03 → **RF-50**, H-04/H-07 → **RF-39** +
+**RF-51**, H-05 → **RNF-21**, H-06 → decisión de **RF-11b** (M7), H-08 →
+corregido (2026-07-30), H-09 → limitación documentada de **RF-37** + trabajo
+futuro. RNF-26 (doble opt-in) no entró — ver arriba.
 
 ---
 
-## A3 — Respaldo y recuperación: reforzar RNF-24  ✅ aplicado
+## A3 — Respaldo y recuperación: reforzar RNF-24  ✅ aplicado (`f484390`)
 
 > Aplicado en `SRS.md` (RNF-24) y `matriz.csv` sobre `e6db415`. Lo de abajo es
 > el razonamiento; el texto final está en el SRS.
@@ -241,7 +246,7 @@ dice explícitamente que no existe).
 
 ---
 
-## A4 — Indisponibilidad de Redis: la mitad pendiente de RNF-23  ✅ aplicado
+## A4 — Indisponibilidad de Redis: la mitad pendiente de RNF-23  ✅ aplicado (`f484390`)
 
 > Aplicado en `SRS.md` (RNF-23 → RNF-23a/RNF-23b) y `matriz.csv` (dos filas
 > nuevas, 11 columnas) sobre `e6db415`. Lo de abajo es el razonamiento.
@@ -286,18 +291,27 @@ la comprobación 5 del validador cubre que no se vuelva a desincronizar.
 
 ---
 
-## Estado
+## Estado — commits finales
 
-- **A1** ✅ hecho por Ricardo (`e6db415`, validador Python).
-- **A2** ✅ aplicado (§3.6: RF-49/50/51, RNF-25, RNF-17 paraguas; ETHICS.md).
-- **A3** ✅ aplicado (RNF-24 en SRS + matriz).
-- **A4** ✅ aplicado (RNF-23a/RNF-23b en SRS + matriz).
+| Punto | Commit en `main` | Archivos |
+|---|---|---|
+| **A1** validador Python | `e6db415` (Ricardo) | `scripts/validate-traceability.py`, `test-validate-traceability.sh` |
+| **A2** §3.6 + RNF-17 paraguas | `f265b84` | `SRS.md`, `matriz.csv`, `ETHICS.md`, este borrador |
+| **A3** RNF-24 reforzado | `f484390` | `SRS.md`, `matriz.csv` |
+| **A4** RNF-23a/RNF-23b | `f484390` | `SRS.md`, `matriz.csv` |
+| Seguimiento | `fa688c2` | `docs/observaciones/OBSERVACIONES.md` |
+
+`origin/main` = `fa688c2`. `python3 scripts/validate-traceability.py` → exit 0.
 
 Los cuatro puntos A quedan **especificados**. Falta la **implementación** de lo
-que quedó Planificado, que es trabajo de código, no de requisitos:
-RF-49 (validación de cédula + migración), RF-50 (SP de anonimización +
-endpoint), RF-51 (compuerta de consentimiento en `NotificationService`),
-RNF-25 (`@Size` + guía + `@PreAuthorize` del texto libre), RNF-23b
-(`CacheErrorHandler`), y la evidencia de una restauración real cronometrada
-de RNF-24. Cada uno con su fecha objetivo por fijar. Depende también de la
-decisión de M7 sobre peso/altura (RF-11b / H-06).
+que quedó `Planificado`, que es trabajo de código, no de requisitos:
+
+- **RF-49** — validación de cédula (dígito verificador) + migración `UNIQUE` parcial.
+- **RF-50** — `sp_anonimizar_estudiante` + `POST /api/estudiantes/{id}/anonimizar` auditado.
+- **RF-51** — compuerta de consentimiento en `NotificationService` antes de crear la notificación.
+- **RNF-25** — `@Size` + validación `422` + guía en la UI + `@PreAuthorize` del texto libre.
+- **RNF-23b** — `CacheErrorHandler` en `RedisCacheConfig` + prueba de integración con Redis detenido.
+- **RNF-24** — ejecutar la restauración de prueba cronometrada y archivar `docs/mediciones/backup/restauracion-AAAA-MM-DD.md`.
+
+Cada uno con su fecha objetivo por fijar. Depende también de la decisión de
+**M7** sobre peso/altura (RF-11b / H-06), que es de la pila de Ricardo.
