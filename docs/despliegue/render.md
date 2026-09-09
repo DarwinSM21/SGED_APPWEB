@@ -103,6 +103,62 @@ Comprueba que quedó:
 psql "$SUPA_DB" -c "SELECT count(*) FROM information_schema.tables WHERE table_schema IN ('seguridad','academico','deportivo','inventario');"
 ```
 
+## Paso 3b — Migraciones incrementales posteriores a `schema.sql`
+
+`db/schema.sql` es una **foto** del esquema hasta cierto punto de la historia. Las
+migraciones de Flyway que vinieron después **no están en esa foto** y, como
+`render.yaml` deja `FLYWAY_ENABLED=false`, **nadie las aplica en el deploy**: hay
+que correrlas a mano, una vez, en orden, por el puerto **5432** (mismo `$SUPA_DB`
+del paso 3).
+
+> Si no se aplican, el backend arranca igual —`ddl-auto: validate` solo valida
+> tablas de entidades, no procedimientos ni constraints— pero las funciones que
+> dependen de ellas fallan en caliente. Ejemplo: sin `V27`,
+> `POST /api/estudiantes/{id}/anonimizar` (RF-50) devuelve `500` con
+> *"procedure academico.sp_anonimizar_estudiante does not exist"*.
+
+**Regla:** toda migración `V2x`/`V3x` cuyo efecto no esté ya en `schema.sql` se
+aplica con `psql "$SUPA_DB" -f <ruta>` en orden ascendente. `V23`
+(`roles_de_base_de_datos`) se **omite** en Supabase (gestiona sus propios roles).
+
+Pendientes a fecha 2026-09-08 (esquema base + estas tres = lo que espera el
+código en `main`):
+
+```bash
+# 1. Pre-check ANTES de V26: el índice único parcial de cédula falla si ya hay
+#    duplicados. Si esto devuelve filas, hay que limpiarlas primero.
+psql "$SUPA_DB" -c "SELECT cedula, COUNT(*) FROM seguridad.personas WHERE cedula IS NOT NULL GROUP BY cedula HAVING COUNT(*) > 1;"
+
+# 2. Aplicar en orden
+psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V25__limite_texto_libre_menores.sql
+psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V26__cedula_opcional_y_unica.sql
+psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V27__sp_anonimizar_estudiante.sql
+```
+
+Idempotencia: `V26` y `V27` se pueden re-ejecutar sin daño (`IF [NOT] EXISTS`,
+`CREATE OR REPLACE`). **`V25` no**: su `ALTER TABLE ... ADD CONSTRAINT` aborta si
+la constraint ya existe — si hay que reintentar, quita antes las tres
+`ck_*_longitud` o salta `V25`.
+
+Verifica que quedaron:
+
+```bash
+psql "$SUPA_DB" -c "
+  SELECT 'V25 ck_lesion_descripcion_longitud' AS objeto, count(*) FROM pg_constraint  WHERE conname='ck_lesion_descripcion_longitud'
+  UNION ALL SELECT 'V26 ux_personas_cedula_no_nula',        count(*) FROM pg_indexes  WHERE indexname='ux_personas_cedula_no_nula'
+  UNION ALL SELECT 'V27 sp_anonimizar_estudiante',          count(*) FROM pg_proc     WHERE proname='sp_anonimizar_estudiante';"
+```
+
+Las tres filas deben dar `1`. Después, reinicia el backend en Render (**Manual
+Deploy → Clear build cache & deploy** no hace falta; con **Restart service**
+basta) para que tome el esquema nuevo, y prueba el endpoint afectado.
+
+> **Mejora pendiente (no bloqueante):** fijar `spring.flyway.baselineVersion` en
+> la última versión ya contenida en `schema.sql` y volver a poner
+> `FLYWAY_ENABLED=true`. Como las migraciones `V25+` sí son consistentes contra
+> una base creada por `schema.sql`, Flyway podría aplicarlas y llevar el
+> historial. Requiere probar el arranque una vez antes de confiarlo al deploy.
+
 ## Paso 4 — Ajustar las URLs si Render puso sufijo
 
 Los nombres `sged-backend` / `sged-frontend` son globales en `.onrender.com`.
