@@ -1,7 +1,7 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.4 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.5 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
 cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
@@ -9,7 +9,8 @@ parcial), **H-02** (RNF-25: topes de longitud, control de acceso y guía de
 redacción), **H-03** (RF-50: procedimiento de anonimización `sp_anonimizar_estudiante`
 + endpoint auditado), **H-04** (RF-51, compuerta de consentimiento) y la
 **decisión M7** de **H-06** (peso y altura, con base legal y lectura restringida
-por rol))
+por rol); 2026-09-09: **H-05** (certificado TLS) resuelto con el despliegue en
+Render — certificado de una autoridad reconocida)
 
 ---
 
@@ -90,7 +91,7 @@ Controles ya implementados y verificados empíricamente:
 
 | Control | Implementación | Evidencia |
 |---|---|---|
-| Cifrado en tránsito | TLS 1.3 (nginx `:8443`) | `docs/mediciones/sec/a02-tls.txt` |
+| Cifrado en tránsito | Laboratorio: TLS 1.3 (nginx `:8443`, autofirmado). Producción (Render): TLS con certificado de *Google Trust Services*, HTTP→HTTPS y HSTS (H-05 resuelto) | `docs/mediciones/sec/a02-tls.txt`; `docs/despliegue/render.md` |
 | Contraseñas no reversibles | BCrypt coste 12 | `db/seed.sql`, `SecurityConfig.java` |
 | Credencial no accesible por scripts | JWT en cookie `HttpOnly`, `Secure`, `SameSite=Strict` | `AuthController.java` |
 | Revocación efectiva de sesión | Lista negra de `jti` en Redis | `RedisBlacklistService.java` |
@@ -243,12 +244,20 @@ antes de insertar; sin consentimiento registra el motivo y no crea la fila
 (`NotificationServiceTest`: casos con/sin consentimiento y aislamiento de
 alcance, en verde). Este hallazgo pasa de "parcial" a **resuelto** (2026-09-08).
 
-### H-05 — Certificado TLS autofirmado
+### H-05 — Certificado TLS autofirmado (resuelto el 2026-09-09 — despliegue en Render)
 
-El despliegue actual usa un certificado autofirmado, adecuado para
-desarrollo y evaluación pero **no** para producción con datos reales de
-menores. Un despliegue real exige certificado emitido por una autoridad
-reconocida.
+El entorno de laboratorio (nginx `:8443` de `docker-compose`) usa un
+certificado autofirmado, adecuado para desarrollo y evaluación pero **no**
+para producción con datos reales de menores.
+
+**Resuelto el 2026-09-09:** el despliegue público está en Render
+(`docs/despliegue/render.md`), que termina TLS con un certificado emitido por
+una **autoridad reconocida** — *Google Trust Services* (verificado sobre
+`https://sged-frontend-jofa.onrender.com` y `https://sged-backend-5nh7.onrender.com`),
+con redirección de HTTP a HTTPS y HSTS. El certificado autofirmado queda
+únicamente en el entorno local de laboratorio, donde no hay datos reales.
+**Requisito de cierre:** **RNF-21** (SRS). El endurecimiento TLS del laboratorio
+(nginx) sigue como recomendación, no como obligación de esta entrega.
 
 ### H-06 — Peso y altura se agregaron sin base legal documentada (decidido el 2026-09-08 — punto M7)
 

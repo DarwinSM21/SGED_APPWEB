@@ -1455,7 +1455,7 @@ cierre y fecha objetivo:*
 | H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Resuelto (2026-09-08) |
 | H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ✅ Resuelto (2026-09-08) — SP `sp_anonimizar_estudiante` (`V27`) + endpoint `POST /api/estudiantes/{id}/anonimizar` auditado |
 | H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
-| H-05 — certificado TLS autofirmado | **RNF-21** | ⬜ Planificado (producción) |
+| H-05 — certificado TLS autofirmado | **RNF-21** | ✅ Resuelto (2026-09-09) — despliegue en Render con certificado de *Google Trust Services*, HTTP→HTTPS y HSTS; autofirmado solo en el laboratorio |
 | H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR | ✅ Decidido y aplicado (queda registrar el consentimiento de alcance) |
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
 | H-09 — correo de reseteo no verificado | limitación documentada de **RF-37**; cierre pleno (doble opt-in) = trabajo futuro con fecha objetivo | ⬜ Trabajo futuro |
@@ -1482,8 +1482,14 @@ autofirmado en el entorno de laboratorio— deberá declararse explícitamente
   `docs/mediciones/sec/a02-tls.txt`; hallazgo H-05 de `ETHICS.md`.
 - **Verificación:** `a02-tls.txt` reporta la versión de TLS negociada;
   inspección del emisor del certificado en el despliegue real.
+- **Estado (2026-09-09):** ✅ cumplido en producción. El despliegue público en
+  Render (`docs/despliegue/render.md`) sirve HTTPS con certificado emitido por
+  *Google Trust Services* (autoridad reconocida), con redirección de HTTP a
+  HTTPS y HSTS, verificado sobre `sged-frontend-jofa.onrender.com` y
+  `sged-backend-5nh7.onrender.com`. El certificado autofirmado queda declarado
+  como propio del entorno de laboratorio (nginx `:8443`), sin datos reales.
 - **Nota:** complementa RNF-04, que solo exigía la versión del protocolo.
-  Cierra el punto A17.
+  Cierra el punto A17 y el hallazgo **H-05**.
 
 **RNF-22 — Conservación y supresión de datos**
 *El sistema deberá declarar, por categoría de dato, el plazo de conservación
