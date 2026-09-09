@@ -40,7 +40,19 @@ archivos reales y pasa en verde.
 
 ---
 
-## A2 — Datos personales de menores: de hallazgo a requisito con criterio de cierre
+## A2 — Datos personales de menores: de hallazgo a requisito con criterio de cierre  ✅ aplicado
+
+> Aplicado 2026-09-08 en `SRS.md` (nueva **§3.6** con RF-49/RF-50/RF-51,
+> RNF-25 en §4.3, **RNF-17** reescrito como paraguas con tabla hallazgo→requisito),
+> `matriz.csv` (4 filas nuevas) y `ETHICS.md` (línea "Requisito de cierre" en
+> H-01/H-02/H-03/H-04, versión → 1.2). `python3 scripts/validate-traceability.py`
+> → exit 0. Lo de abajo es el razonamiento; el texto final está en el SRS.
+>
+> **Diferencias con este borrador:** H-09 (doble opt-in del correo) NO se
+> convirtió en requisito nuevo — no está en la lista de A2 (cédula, texto
+> libre, supresión, consentimiento) — sino que queda como limitación
+> documentada de RF-37 en el paraguas RNF-17, con cierre pleno marcado como
+> trabajo futuro. Ver aviso al usuario.
 
 **Problema (cita del docente):** «RNF-16 menciona la seudonimización … pero los
 hallazgos abiertos de ETHICS.md —cédula en claro, texto libre sin control,
@@ -277,11 +289,15 @@ la comprobación 5 del validador cubre que no se vuelva a desincronizar.
 ## Estado
 
 - **A1** ✅ hecho por Ricardo (`e6db415`, validador Python).
+- **A2** ✅ aplicado (§3.6: RF-49/50/51, RNF-25, RNF-17 paraguas; ETHICS.md).
 - **A3** ✅ aplicado (RNF-24 en SRS + matriz).
 - **A4** ✅ aplicado (RNF-23a/RNF-23b en SRS + matriz).
-- **A2** ⬜ pendiente — es el más grande: 5 requisitos nuevos, varios con
-  código detrás (SP de anonimización, gateo de consentimiento, verificación
-  de correo). Coordinar con la decisión de M7 sobre peso/altura antes de
-  incorporarlo. Falta también, dentro de A3, la evidencia de una restauración
-  real cronometrada (tarea de despliegue) y, dentro de A4, implementar el
-  `CacheErrorHandler` y su prueba.
+
+Los cuatro puntos A quedan **especificados**. Falta la **implementación** de lo
+que quedó Planificado, que es trabajo de código, no de requisitos:
+RF-49 (validación de cédula + migración), RF-50 (SP de anonimización +
+endpoint), RF-51 (compuerta de consentimiento en `NotificationService`),
+RNF-25 (`@Size` + guía + `@PreAuthorize` del texto libre), RNF-23b
+(`CacheErrorHandler`), y la evidencia de una restauración real cronometrada
+de RNF-24. Cada uno con su fecha objetivo por fijar. Depende también de la
+decisión de M7 sobre peso/altura (RF-11b / H-06).

@@ -1,8 +1,9 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.1 (Tercera Entrega — revisado tras la reestructuración de
-paquetes `academico`/`deportivo`/`seguridad`)
+**Versión:** 1.2 (Entrega Final — revisado tras la reestructuración de
+paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
+enlaza su requisito de cierre en el SRS, punto A2 de la revisión 29148)
 
 ---
 
@@ -115,6 +116,9 @@ identificador nacional de un menor, esto es más permisivo de lo deseable.
 **Mitigación propuesta:** hacer el campo opcional, validar el formato
 ecuatoriano y evaluar cifrado a nivel de columna si se despliega en
 producción real.
+**Requisito de cierre:** **RF-49** (SRS §3.6) — con criterio verificable y
+condición de cierre. El cifrado de columna queda fuera del alcance de esa
+entrega (recomendación de despliegue real).
 
 ### H-02 — Las observaciones de texto libre no tienen control de contenido
 
@@ -124,6 +128,8 @@ terminar conteniendo juicios de valor, datos de salud o comentarios
 inapropiados.
 **Mitigación propuesta:** guía de redacción para entrenadores, límite de
 longitud, y visibilidad restringida al entrenador y a la coordinación.
+**Requisito de cierre:** **RNF-25** (SRS §4.3). Mientras no se cumpla, RF-48
+permanece en MoSCoW Won't.
 
 ### H-03 — No existe mecanismo de supresión de datos
 
@@ -131,6 +137,8 @@ Ver §3.4. **Mitigación propuesta:** procedimiento almacenado de anonimización
 (sustituir datos identificativos por valores neutros conservando las claves
 foráneas y las estadísticas agregadas), invocable solo por
 `ADMINISTRADOR` y registrado en auditoría.
+**Requisito de cierre:** **RF-50** (SRS §3.6), que implementa también el
+mecanismo que exige RNF-22.
 
 ### H-04 — El consentimiento del representante no está modelado (resuelto parcialmente el 2026-08-03)
 
@@ -184,6 +192,11 @@ revocada con su fecha.
 Lo que **sigue abierto** es lo mismo que antes: el envío real de
 notificaciones (RF-22 propiamente dicho). El hallazgo se mantiene parcial por
 esa razón, no por la ausencia de la interfaz.
+
+**Requisitos de cierre:** **RF-39** (registrar/revocar el consentimiento, ya
+implementado) y **RF-51** (SRS §3.6): el sistema no debe crear ni enviar una
+notificación al representante sin consentimiento vigente para ese alcance. Con
+RF-51 cerrado, este hallazgo pasa de "parcial" a "resuelto".
 
 ### H-05 — Certificado TLS autofirmado
 

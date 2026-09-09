@@ -1173,6 +1173,90 @@ un estudiante (`deportivo.observaciones_estudiante`).*
 
 ---
 
+### 3.6 Cierre de hallazgos de protección de datos de menores (nuevo en esta revisión)
+
+> **Responde al punto A2 de la revisión de septiembre.** Cada hallazgo abierto
+> de `docs/etica/ETHICS.md` se convierte aquí en un requisito con criterio
+> verificable y condición de cierre, en vez de quedar solo como riesgo
+> declarado. RNF-17 es el paraguas que los enlaza.
+
+---
+
+**RF-49 — Cédula opcional y validada**
+*El sistema deberá tratar la cédula (`seguridad.personas.cedula`) como dato
+opcional; cuando se proporcione, deberá validar el formato de cédula
+ecuatoriana (10 dígitos con dígito verificador) y rechazar con `422` los
+valores mal formados, y deberá garantizar su unicidad a nivel de esquema
+cuando haya valor.*
+
+- **Prioridad:** Alta · **Estado:** ⬜ Planificado · **MoSCoW:** Should
+- **Método de verificación:** Test
+- **Origen:** `seguridad.personas.cedula` (hoy `VARCHAR(10)` sin validación de
+  dígito verificador ni restricción `UNIQUE`); `PersonController` /
+  `PersonService`. Cierra el hallazgo **H-01** de `docs/etica/ETHICS.md`.
+- **Criterio verificable:** una prueba que (a) crea una persona sin cédula →
+  `201`; (b) cédula con dígito verificador inválido → `422`; (c) cédula
+  duplicada → `409`/`422`. Migración Flyway que añade un índice `UNIQUE`
+  parcial (`WHERE cedula IS NOT NULL`).
+- **Condición de cierre:** (a)(b)(c) en verde y migración aplicada; `ETHICS.md`
+  §H-01 marcado "corregido" con fecha.
+- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+- **Fuera de alcance de este requisito:** el cifrado a nivel de columna, que se
+  mantiene como recomendación para un despliegue con datos reales (H-01,
+  RNF-21), no como obligación de esta entrega.
+
+---
+
+**RF-50 — Supresión / anonimización de los datos del titular**
+*El sistema deberá ofrecer a un usuario ADMINISTRADOR una operación que, ante
+una solicitud de supresión del representante legal, anonimice los datos
+identificativos de un estudiante (nombre, apellido, cédula, correo, teléfono,
+fecha de nacimiento y observaciones de texto libre) sustituyéndolos por
+valores neutros, conservando las claves foráneas y las estadísticas agregadas,
+y registrando el acto en la bitácora de auditoría.*
+
+- **Prioridad:** Media · **Estado:** ⬜ Planificado · **MoSCoW:** Should
+- **Método de verificación:** Test; Demostración
+- **Origen:** hoy no existe. Se propone un procedimiento almacenado versionado
+  `academico.sp_anonimizar_estudiante(p_id INT)` (cumple RD-02) invocado por
+  `POST /api/estudiantes/{id}/anonimizar`, restringido a ADMINISTRADOR y
+  auditado (`@Audited`). Cierra el hallazgo **H-03** e implementa el mecanismo
+  que RNF-22 exige.
+- **Criterio verificable:** una prueba que, tras la operación, comprueba que
+  (a) los campos identificativos quedan en valores neutros; (b) las claves
+  foráneas y los conteos de asistencia/evaluación siguen resolviendo;
+  (c) queda un evento en la bitácora de auditoría.
+- **Condición de cierre:** endpoint, procedimiento y prueba en verde;
+  `ETHICS.md` §3.4 y §H-03 actualizados; RNF-22 deja de decir que "el
+  mecanismo de supresión no existe".
+- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+
+---
+
+**RF-51 — Consentimiento vigente como precondición del envío de notificaciones**
+*El sistema no deberá crear ni enviar una notificación al representante
+(RF-22 / RF-40) si no existe un consentimiento vigente de ese representante
+para el alcance correspondiente; la ausencia de consentimiento deberá
+registrarse como motivo de no-envío, no como error silencioso.*
+
+- **Prioridad:** Alta · **Estado:** ⬜ Planificado · **MoSCoW:** Must —
+  condiciona RF-22.
+- **Método de verificación:** Test
+- **Origen:** `NotificationService` (hoy crea la fila de notificación sin
+  consultar `academico.consentimientos`); RF-39 ya cubre registrar y revocar
+  el consentimiento. Cierra la mitad abierta de **H-04 / H-07** (la que este
+  hallazgo señala como el riesgo real: el envío proactivo del sistema).
+- **Criterio verificable:** una prueba que (a) con consentimiento vigente
+  crea la notificación; (b) sin consentimiento o revocado no la crea y deja
+  registrado el motivo; (c) al revocar el consentimiento, las notificaciones
+  futuras dejan de crearse.
+- **Condición de cierre:** `NotificationService` consulta el consentimiento
+  antes de insertar y la prueba pasa en verde; `ETHICS.md` §H-04 pasa de
+  "parcial" a "resuelto".
+- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+
+---
+
 ## 4. Requisitos no funcionales
 
 Clasificados según las características de calidad de ISO/IEC 25010:2011.
@@ -1328,19 +1412,30 @@ deshabilitada por defecto (`IA_HABILITADO=false`).*
 **RNF-17 — Protección de datos personales de menores**
 *El sistema deberá tratar los datos personales de estudiantes menores según
 los principios declarados en `docs/etica/ETHICS.md` (minimización, limitación
-de la finalidad, confidencialidad). Los hallazgos abiertos H-01 (cédula en
-claro), H-02 (texto libre sin control), H-03 (sin mecanismo de supresión),
-H-04/H-07 (consentimiento del representante), H-06 (peso y altura sin base
-legal) y H-09 (correo de reseteo no verificado) deberán tener, cada uno, un
-criterio de cierre verificable y una fecha objetivo.*
+de la finalidad, confidencialidad), y deberá cerrar cada hallazgo abierto de
+ese documento mediante un requisito con criterio verificable, condición de
+cierre y fecha objetivo:*
+
+| Hallazgo | Requisito que lo cierra | Estado |
+|---|---|---|
+| H-01 — cédula en claro y sin validación | **RF-49** | ⬜ Planificado |
+| H-02 — texto libre sin control de contenido | **RNF-25** | ⬜ Planificado |
+| H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ⬜ Planificado |
+| H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | RF-39 ✅ / RF-51 ⬜ |
+| H-05 — certificado TLS autofirmado | **RNF-21** | ⬜ Planificado (producción) |
+| H-06 — peso y altura sin base legal | decisión de **RF-11b** (retirar o documentar base legal) — punto M7 | pendiente de decisión |
+| H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
+| H-09 — correo de reseteo no verificado | limitación documentada de **RF-37**; cierre pleno (doble opt-in) = trabajo futuro con fecha objetivo | ⬜ Trabajo futuro |
 
 - **Método de verificación:** Inspección
 - **Origen:** `docs/etica/ETHICS.md` (inventario de datos y hallazgos),
   `docs/mediciones/sec/a01-acceso-roto.txt` (control de acceso por recurso).
-- **Verificación:** revisión del cierre de cada hallazgo contra su criterio;
-  `a01-acceso-roto.txt` comprueba recurso por recurso, incluida la búsqueda
-  por cédula.
-- **Nota:** RF-11b y RF-48 dependen de este RNF. Cierra el punto A13.
+- **Verificación:** revisión del cierre de cada hallazgo contra el criterio de
+  su requisito; `a01-acceso-roto.txt` comprueba recurso por recurso, incluida
+  la búsqueda por cédula.
+- **Nota:** RF-11b y RF-48 dependen de este RNF. Cierra el punto A13 y responde
+  al punto A2 de la revisión de septiembre (los hallazgos dejan de ser solo
+  riesgos declarados y pasan a tener requisito que obliga a cerrarlos).
 
 **RNF-21 — Certificado y configuración TLS de producción**
 *En producción el sistema deberá servirse sobre HTTPS con un certificado
@@ -1521,6 +1616,27 @@ archivada y fechada de al menos una ejecución real contra una base separada.*
   septiembre (RPO explícito, PITR declarado, destino fijado, evidencia de
   restauración archivada).
 
+**RNF-25 — Control de contenido de las observaciones de texto libre**
+*El campo `deportivo.observaciones_estudiante.texto` deberá tener un límite de
+longitud aplicado en el servidor, una guía de redacción visible para el
+entrenador en el punto de captura, y visibilidad restringida al entrenador
+autor y a los roles de coordinación (ADMINISTRADOR). Mientras estas tres
+condiciones no se cumplan, RF-48 permanece en MoSCoW Won't.*
+
+- **Método de verificación:** Inspección; Test
+- **Origen:** `deportivo.observaciones_estudiante` (hoy `TEXT` libre, sin
+  límite de longitud ni control de acceso propio). Cierra el hallazgo **H-02**
+  y desbloquea RF-48.
+- **Criterio verificable:** `@Size(max = N)` con validación de servidor que
+  devuelve `422`; texto de guía presente en el componente de evaluación
+  diaria; `@PreAuthorize` que restringe la lectura, con una prueba de que otro
+  entrenador recibe `403`.
+- **Condición de cierre:** los tres controles presentes y probados;
+  `ETHICS.md` §H-02 marcado "corregido"; RF-48 puede reevaluarse a
+  Should/Implementado.
+- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+- **Nota:** responde al punto A2 de la revisión de septiembre.
+
 ### 4.4 Portabilidad
 
 **RNF-12 — Reproducibilidad en un solo comando**
@@ -1629,8 +1745,8 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | 5.6 | Necesidades de los interesados | 2.2 | 5 actores, roles técnicos |
 | 5.7 | Restricciones | 2.3 | Tecnológicas, legales, éticas |
 | 5.8 | Suposiciones y dependencias | 2.3 | Infraestructura, proveedores, hardware |
-| 5.9 | Requisitos funcionales | 3.1–3.5 | RF-01 a RF-48 organizados por módulo |
-| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.9 | RNF-01 a RNF-24 por ISO 25010 (incluye usabilidad y accesibilidad en §4.9) |
+| 5.9 | Requisitos funcionales | 3.1–3.6 | RF-01 a RF-51 organizados por módulo (§3.6: cierre de hallazgos de datos de menores) |
+| 5.10 | Requisitos de calidad (no funcionales) | 4.1–4.9 | RNF-01 a RNF-25 por ISO 25010 (incluye usabilidad y accesibilidad en §4.9) |
 | 5.11 | Requisitos de interfaz | 4.5 | API REST, IA, TLS, BD, Redis, Seed |
 | 5.12 | Requisitos de verificación | 4.6, 4.7 | Máquinas de estado, matriz permisos |
 | 5.13 | Trazabilidad | 5 | Matriz CSV, bitácora observaciones |
@@ -1699,7 +1815,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. |
 
 ## 7. Aprobación
 
