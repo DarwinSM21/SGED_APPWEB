@@ -51,6 +51,19 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     @Procedure(procedureName = "academico.sp_generar_codigo_estudiante")
         String generateNextCode(@Param("p_anio") Integer anio);
 
+    /**
+     * RF-50 / hallazgo H-03: anonimiza los datos identificativos de la persona
+     * del estudiante y borra el texto libre escrito sobre el menor,
+     * conservando las claves foráneas y las estadísticas agregadas. Delega en
+     * el procedimiento almacenado versionado {@code sp_anonimizar_estudiante}
+     * (migración {@code V27}).
+     *
+     * @param idEstudiante identificador del estudiante a anonimizar
+     * @return número de filas tocadas por el procedimiento
+     */
+    @Procedure(procedureName = "academico.sp_anonimizar_estudiante")
+        Integer anonymizeStudent(@Param("p_id_estudiante") Long idEstudiante);
+
     @Query("""
            SELECT e FROM Student e
            WHERE (:idCategoria IS NULL OR e.categoria.idCategoria = :idCategoria)

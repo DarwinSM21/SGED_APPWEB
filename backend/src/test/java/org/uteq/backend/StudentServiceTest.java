@@ -282,6 +282,26 @@ class StudentServiceTest {
     }
 
     @Test
+    @DisplayName("anonimizar - RF-50: delega en el SP de anonimización con el id del estudiante")
+    void anonimizar_delega_en_sp() {
+        when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
+        when(estudianteRepository.anonymizeStudent(1L)).thenReturn(4);
+
+        service.anonymize(1L);
+
+        verify(estudianteRepository).anonymizeStudent(1L);
+    }
+
+    @Test
+    @DisplayName("anonimizar - RF-50: lanza ResourceNotFoundException si el estudiante no existe")
+    void anonimizar_estudiante_inexistente_lanza_404() {
+        when(estudianteRepository.findById(99L)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.anonymize(99L));
+        verify(estudianteRepository, never()).anonymizeStudent(any());
+    }
+
+    @Test
     @DisplayName("contactoDeEmergencia - Delega al SP via @Procedure cuando el estudiante existe")
     void contactoDeEmergencia_delega_en_sp() {
         when(estudianteRepository.existsById(1L)).thenReturn(true);

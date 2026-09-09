@@ -381,6 +381,31 @@ public class StudentService {
     }
 
     /**
+     * RF-50 / hallazgo H-03: anonimiza los datos del titular a solicitud del
+     * representante legal. Delega en el procedimiento almacenado versionado
+     * {@code academico.sp_anonimizar_estudiante} (migración {@code V27}), que
+     * sustituye los datos identificativos de la persona por valores neutros,
+     * borra el texto libre escrito sobre el menor y da de baja lógica la
+     * ficha, conservando las claves foráneas y las estadísticas agregadas
+     * (asistencia, evaluaciones, pagos). El acto queda en la bitácora de
+     * auditoría ({@code @Audited}) e implementa el mecanismo de supresión que
+     * RNF-22 exige.
+     *
+     * @param id identificador del estudiante a anonimizar
+     * @throws ResourceNotFoundException si el estudiante no existe
+     */
+    @Audited(accion = "ANONIMIZAR", entidad = "Estudiante", idSpel = "#p0",
+            descripcionSpel = "'anonimizó los datos personales del estudiante #' + #p0 + ' a solicitud del representante legal (RF-50 / derecho de supresión)'")
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
+    @Transactional
+    public void anonymize(Long id) {
+        Student estudiante = estudianteRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Estudiante no encontrado con id: " + id));
+        estudianteRepository.anonymizeStudent(estudiante.getIdEstudiante());
+    }
+
+    /**
      * Cuenta los estudiantes activos de una categoría (procedimiento
      * almacenado).
      *

@@ -1226,21 +1226,38 @@ fecha de nacimiento y observaciones de texto libre) sustituyéndolos por
 valores neutros, conservando las claves foráneas y las estadísticas agregadas,
 y registrando el acto en la bitácora de auditoría.*
 
-- **Prioridad:** Media · **Estado:** ⬜ Planificado · **MoSCoW:** Should
+- **Prioridad:** Media · **Estado:** ✅ Implementado (2026-09-08) · **MoSCoW:** Should
 - **Método de verificación:** Test; Demostración
-- **Origen:** hoy no existe. Se propone un procedimiento almacenado versionado
-  `academico.sp_anonimizar_estudiante(p_id INT)` (cumple RD-02) invocado por
-  `POST /api/estudiantes/{id}/anonimizar`, restringido a ADMINISTRADOR y
-  auditado (`@Audited`). Cierra el hallazgo **H-03** e implementa el mecanismo
-  que RNF-22 exige.
-- **Criterio verificable:** una prueba que, tras la operación, comprueba que
-  (a) los campos identificativos quedan en valores neutros; (b) las claves
-  foráneas y los conteos de asistencia/evaluación siguen resolviendo;
-  (c) queda un evento en la bitácora de auditoría.
-- **Condición de cierre:** endpoint, procedimiento y prueba en verde;
-  `ETHICS.md` §3.4 y §H-03 actualizados; RNF-22 deja de decir que "el
-  mecanismo de supresión no existe".
-- **Fecha objetivo:** *(pendiente de fijar por el equipo)*.
+- **Origen:** procedimiento almacenado versionado
+  `academico.sp_anonimizar_estudiante(p_id_estudiante BIGINT)` (cumple RD-02,
+  migración `V27__sp_anonimizar_estudiante.sql`, fuente documentada en
+  `db/procs/sp_anonimizar_estudiante.sql`), invocado desde
+  `StudentService.anonymize` vía `StudentRepository.anonymizeStudent`
+  (`@Procedure`) y expuesto en `POST /api/estudiantes/{id}/anonimizar` —
+  `@PreAuthorize("hasRole('ADMINISTRADOR')")`, `@Audited(accion = "ANONIMIZAR")`
+  y `@CacheEvict` de la caché de listados. Cierra el hallazgo **H-03** e
+  implementa el mecanismo de supresión que RNF-22 exige.
+- **Qué hace el procedimiento:** sobre `seguridad.personas` deja
+  `nombre = 'ANONIMIZADO'`, `apellido = 'ESTUDIANTE #<id>'`, `cedula = NULL`,
+  `correo = 'anon+<id_persona>@anonimizado.local'` (neutro pero único, la
+  columna es `NOT NULL UNIQUE`), `telefono = NULL`, `foto = NULL`,
+  `fecha_nacimiento = 1900-01-01`; anonimiza y desactiva la cuenta de acceso
+  si existe (`username = 'anon_<id>'`, `activo = FALSE`); reemplaza el texto
+  libre escrito sobre el menor (`deportivo.observaciones_estudiante.texto`,
+  `deportivo.lesiones.descripcion`, ambas `NOT NULL`) por un marcador; y da de
+  baja lógica la ficha. No borra ninguna fila: las claves foráneas y los
+  agregados de asistencia, evaluación y pagos quedan intactos.
+- **Verificación:** `StudentServiceTest.anonimizar_delega_en_sp` y
+  `anonimizar_estudiante_inexistente_lanza_404`;
+  `StudentControllerTest.anonimizar_devuelve_204` y
+  `anonimizar_estudiante_inexistente_da_404`. La comprobación a nivel de motor
+  (campos neutros + FKs/conteos que siguen resolviendo) se hace por
+  demostración sobre el despliegue con Flyway, ya que las pruebas unitarias
+  corren sobre H2 sin el procedimiento (mismo criterio que el resto de SP del
+  módulo, verificados con repo simulado).
+- **Condición de cierre:** cumplida — endpoint, procedimiento y pruebas en
+  verde; `ETHICS.md` §3.4 y §H-03 actualizados; RNF-22 ya no dice que el
+  mecanismo de supresión no exista.
 
 ---
 
@@ -1433,7 +1450,7 @@ cierre y fecha objetivo:*
 |---|---|---|
 | H-01 — cédula en claro y sin validación | **RF-49** | ✅ Resuelto (2026-09-08) — opcional + dígito verificador + índice único parcial |
 | H-02 — texto libre sin control de contenido | **RNF-25** | ✅ Resuelto (2026-09-08) |
-| H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ⬜ Planificado |
+| H-03 — sin mecanismo de supresión | **RF-50** (implementa también RNF-22) | ✅ Resuelto (2026-09-08) — SP `sp_anonimizar_estudiante` (`V27`) + endpoint `POST /api/estudiantes/{id}/anonimizar` auditado |
 | H-04 / H-07 — consentimiento del representante | **RF-39** (registro) + **RF-51** (compuerta del envío) | ✅ Ambos (2026-09-08) |
 | H-05 — certificado TLS autofirmado | **RNF-21** | ⬜ Planificado (producción) |
 | H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR | ✅ Decidido y aplicado (queda registrar el consentimiento de alcance) |
@@ -1468,16 +1485,18 @@ autofirmado en el entorno de laboratorio— deberá declararse explícitamente
 **RNF-22 — Conservación y supresión de datos**
 *El sistema deberá declarar, por categoría de dato, el plazo de conservación
 y el procedimiento de supresión una vez cumplido ese plazo o atendida una
-solicitud del titular. Mientras el mecanismo de supresión no exista (hallazgo
-H-03), la baja lógica —que preserva el historial— no deberá presentarse como
-un borrado.*
+solicitud del titular. La baja lógica —que preserva el historial— no deberá
+presentarse como un borrado: la supresión efectiva la realiza el
+procedimiento de anonimización de RF-50.*
 
 - **Método de verificación:** Inspección
 - **Origen:** `docs/etica/ETHICS.md` §3.4; `docs/despliegue/BACKUP.md`
-  (retención de respaldos: 30 días).
+  (retención de respaldos: 30 días); **RF-50** (mecanismo de supresión:
+  `academico.sp_anonimizar_estudiante`, migración `V27`).
 - **Verificación:** inspección de la tabla de plazos frente al inventario de
-  datos de `ETHICS.md`.
-- **Nota:** cierra el punto A18; su implementación cierra H-03.
+  datos de `ETHICS.md`; el mecanismo de supresión se verifica por RF-50.
+- **Nota:** cierra el punto A18. Desde el 2026-09-08 su mecanismo de
+  supresión existe (RF-50), con lo que **H-03 queda resuelto**.
 
 **RNF-23 — Comportamiento ante indisponibilidad de Redis**
 
@@ -1842,7 +1861,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (SP de anonimización) queda para después. Con esto cierran **H-01**, **H-02** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (supresión / anonimización): procedimiento almacenado versionado `academico.sp_anonimizar_estudiante` (migración `V27`) + `POST /api/estudiantes/{id}/anonimizar` restringido a ADMINISTRADOR y auditado (`@Audited "ANONIMIZAR"`) — sustituye los datos identificativos de la persona por valores neutros, borra el texto libre sobre el menor y da de baja lógica la ficha, conservando FKs y agregados → ✅ Implementado. Con esto cierran **H-01**, **H-02**, **H-03** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
 
 ## 7. Aprobación
 

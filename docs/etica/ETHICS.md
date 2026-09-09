@@ -1,13 +1,15 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.3 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.4 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
 cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
 parcial), **H-02** (RNF-25: topes de longitud, control de acceso y guía de
-redacción), **H-04** (RF-51, compuerta de consentimiento) y la **decisión M7**
-de **H-06** (peso y altura, con base legal y lectura restringida por rol))
+redacción), **H-03** (RF-50: procedimiento de anonimización `sp_anonimizar_estudiante`
++ endpoint auditado), **H-04** (RF-51, compuerta de consentimiento) y la
+**decisión M7** de **H-06** (peso y altura, con base legal y lectura restringida
+por rol))
 
 ---
 
@@ -102,9 +104,17 @@ Controles ya implementados y verificados empíricamente:
 El sistema aplica **baja lógica**, no borrado físico (`activo = FALSE`), para
 preservar la integridad referencial del historial deportivo. Esto es una
 decisión técnica correcta, pero tiene una consecuencia ética que hay que
-nombrar: **la baja lógica no es un borrado**. Si un representante ejerciera
-el derecho a la supresión de los datos de su representado, el sistema
-actualmente **no** tiene un mecanismo para satisfacerlo. Ver hallazgo H-03.
+nombrar: **la baja lógica no es un borrado**. Para el caso en que un
+representante ejerza el derecho a la supresión de los datos de su
+representado, el sistema ofrece desde el 2026-09-08 (**RF-50**) una operación
+de **anonimización**: `POST /api/estudiantes/{id}/anonimizar` (solo
+ADMINISTRADOR, auditada) invoca el procedimiento almacenado
+`academico.sp_anonimizar_estudiante` (migración `V27`), que sustituye los
+datos identificativos de la persona (nombre, apellido, cédula, correo,
+teléfono, foto, fecha de nacimiento) por valores neutros, borra el texto
+libre escrito sobre el menor, anonimiza y desactiva la cuenta de acceso y da
+de baja lógica la ficha — conservando las claves foráneas y las estadísticas
+agregadas (asistencia, evaluaciones, pagos). Ver hallazgo H-03 (resuelto).
 
 ---
 
@@ -148,14 +158,27 @@ restringida a ADMINISTRADOR/ENTRENADOR por `@PreAuthorize`; y **guía de
 redacción** en el formulario de lesión de la pantalla de evaluación diaria
 (qué no escribir, con contador y `maxlength`). RF-48 sale de MoSCoW Won't.
 
-### H-03 — No existe mecanismo de supresión de datos
+### H-03 — No existe mecanismo de supresión de datos (resuelto el 2026-09-08 — RF-50)
 
 Ver §3.4. **Mitigación propuesta:** procedimiento almacenado de anonimización
 (sustituir datos identificativos por valores neutros conservando las claves
 foráneas y las estadísticas agregadas), invocable solo por
 `ADMINISTRADOR` y registrado en auditoría.
 **Requisito de cierre:** **RF-50** (SRS §3.6), que implementa también el
-mecanismo que exige RNF-22.
+mecanismo que exige RNF-22. **Resuelto el 2026-09-08:** procedimiento
+almacenado versionado `academico.sp_anonimizar_estudiante`
+(`V27__sp_anonimizar_estudiante.sql`, fuente en
+`db/procs/sp_anonimizar_estudiante.sql`), invocado desde
+`StudentService.anonymize` y expuesto en `POST /api/estudiantes/{id}/anonimizar`
+— restringido a `ADMINISTRADOR`, anotado `@Audited(accion = "ANONIMIZAR")` y con
+`@CacheEvict` de la caché de listados. Sustituye nombre, apellido, cédula,
+correo, teléfono, foto y fecha de nacimiento por valores neutros; anonimiza y
+desactiva la cuenta de acceso; reemplaza el texto libre sobre el menor
+(`observaciones_estudiante.texto`, `lesiones.descripcion`) por un marcador; y
+da de baja lógica la ficha. No borra ninguna fila: FKs y agregados intactos.
+Pruebas: `StudentServiceTest` (`anonimizar_delega_en_sp`,
+`anonimizar_estudiante_inexistente_lanza_404`), `StudentControllerTest`
+(`anonimizar_devuelve_204`, `anonimizar_estudiante_inexistente_da_404`).
 
 ### H-04 — El consentimiento del representante no está modelado (resuelto el 2026-09-08; ver RF-51)
 

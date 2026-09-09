@@ -3021,8 +3021,9 @@ de minimización que no coincide con el esquema no protege a nadie.
 \ruta{docs/etica/ETHICS.md} documenta nueve hallazgos, en lugar de afirmar
 que todo está resuelto: la cédula se almacena sin validación ni cifrado
 (H-01); las observaciones del entrenador son texto libre sin control sobre
-un menor (H-02); no existe mecanismo de supresión de datos —la baja lógica
-preserva el historial pero no es un borrado— (H-03); el consentimiento del
+un menor (H-02); la baja lógica preserva el historial pero no es un borrado,
+por lo que hacía falta un mecanismo de supresión efectivo —resuelto el
+2026-09-08 con el procedimiento de anonimización de RF-50— (H-03); el consentimiento del
 representante no está modelado, lo que bloquea el módulo de notificaciones
 (H-04); el certificado TLS es autofirmado, adecuado para evaluación pero no
 para producción (H-05); peso y altura se agregaron sin base legal
@@ -3349,14 +3350,16 @@ y \ruta{VERSIONING.md} ya declaran abiertos.
     propósito hasta no tener un mecanismo de consentimiento explícito y
     fechado, distinto del consentimiento general de matrícula (hallazgo
     H-04, resuelto parcialmente el 2026-08-03).
-  \item \textbf{Mecanismo de supresión de datos.} El sistema aplica baja
-    lógica, no borrado físico, por integridad referencial del historial
-    deportivo. Si un representante ejerciera el derecho de supresión, hoy
-    no hay un procedimiento que lo satisfaga. Se propone un procedimiento
-    almacenado de anonimización — sustituir datos identificativos por
-    valores neutros conservando claves foráneas y estadísticas agregadas,
-    invocable solo por \texttt{ADMINISTRADOR} y registrado en auditoría
-    (hallazgo H-03).
+  \item \textbf{Mecanismo de supresión de datos (resuelto el 2026-09-08).}
+    El sistema aplica baja lógica, no borrado físico, por integridad
+    referencial del historial deportivo. Para atender el derecho de
+    supresión del representante se añadió el procedimiento almacenado
+    versionado \texttt{academico.sp\_anonimizar\_estudiante} (migración
+    \texttt{V27}), invocado por \texttt{POST /api/estudiantes/\{id\}/anonimizar}
+    — solo \texttt{ADMINISTRADOR}, auditado —: sustituye los datos
+    identificativos por valores neutros y borra el texto libre sobre el
+    menor, conservando claves foráneas y estadísticas agregadas
+    (hallazgo H-03, requisito RF-50).
   \item \textbf{Base legal documentada para peso y altura.} Estos dos
     campos son datos de salud de un menor sin finalidad de uso
     verificada, en el esquema pero sin ningún \emph{endpoint} de escritura

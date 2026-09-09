@@ -197,6 +197,27 @@ class StudentControllerTest {
     }
 
     @Test
+    @DisplayName("POST /api/estudiantes/{id}/anonimizar - RF-50: delega en service y devuelve 204")
+    void anonimizar_devuelve_204() throws Exception {
+        doNothing().when(estudianteService).anonymize(1L);
+
+        mockMvc.perform(post("/api/estudiantes/1/anonimizar"))
+                .andExpect(status().isNoContent());
+
+        org.mockito.Mockito.verify(estudianteService).anonymize(1L);
+    }
+
+    @Test
+    @DisplayName("POST /api/estudiantes/{id}/anonimizar - RF-50: 404 si el estudiante no existe")
+    void anonimizar_estudiante_inexistente_da_404() throws Exception {
+        org.mockito.Mockito.doThrow(new ResourceNotFoundException("Estudiante no encontrado con id: 99"))
+                .when(estudianteService).anonymize(99L);
+
+        mockMvc.perform(post("/api/estudiantes/99/anonimizar"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("GET /api/estudiantes/conteo/categoria/{idCategoria} - Devuelve conteo de activos")
     void contarActivos_delega_en_service() throws Exception {
         when(estudianteService.countActiveByCategory(2L)).thenReturn(5L);

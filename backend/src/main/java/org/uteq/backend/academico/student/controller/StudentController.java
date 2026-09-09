@@ -258,4 +258,24 @@ public class StudentController {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(estudianteService.enableAccess(id, request));
     }
+
+    /**
+     * RF-50 / hallazgo H-03: anonimiza los datos del titular ante una
+     * solicitud de supresión del representante legal. Sustituye los datos
+     * identificativos de la persona por valores neutros y borra el texto
+     * libre escrito sobre el menor, conservando las claves foráneas y las
+     * estadísticas agregadas. Solo {@code ADMINISTRADOR}; el acto queda
+     * registrado en la bitácora de auditoría.
+     *
+     * @param id identificador del estudiante a anonimizar
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si el estudiante no existe ({@code 404})
+     */
+    @PostMapping("/{id}/anonimizar")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<Void> anonymize(@PathVariable Long id) {
+        estudianteService.anonymize(id);
+        return ResponseEntity.noContent().build();
+    }
 }

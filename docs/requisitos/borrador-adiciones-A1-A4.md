@@ -303,15 +303,15 @@ la comprobación 5 del validador cubre que no se vuelva a desincronizar.
 
 `origin/main` = `fa688c2`. `python3 scripts/validate-traceability.py` → exit 0.
 
-Los cuatro puntos A quedan **especificados**. Falta la **implementación** de lo
-que quedó `Planificado`, que es trabajo de código, no de requisitos:
+Los cuatro puntos A quedan **especificados**. Implementación (2026-09-08):
 
-- **RF-49** — validación de cédula (dígito verificador) + migración `UNIQUE` parcial.
-- **RF-50** — `sp_anonimizar_estudiante` + `POST /api/estudiantes/{id}/anonimizar` auditado.
-- **RF-51** — compuerta de consentimiento en `NotificationService` antes de crear la notificación.
-- **RNF-25** — `@Size` + validación `422` + guía en la UI + `@PreAuthorize` del texto libre.
-- **RNF-23b** — `CacheErrorHandler` en `RedisCacheConfig` + prueba de integración con Redis detenido.
-- **RNF-24** — ejecutar la restauración de prueba cronometrada y archivar `docs/mediciones/backup/restauracion-AAAA-MM-DD.md`.
+- **RF-49** — ✅ hecho: `@Cedula` (dígito verificador) + `V26` índice `UNIQUE` parcial.
+- **RF-50** — ✅ hecho: `sp_anonimizar_estudiante` (`V27`) + `POST /api/estudiantes/{id}/anonimizar` auditado (`StudentService.anonymize`).
+- **RF-51** — ✅ ya estaba: compuerta de consentimiento en `NotificationService` antes de crear la notificación.
+- **RNF-25** — ✅ hecho: topes de longitud servidor + motor (`V25`), `@PreAuthorize` y guía de redacción en la UI de lesión.
+- **RNF-23b** — ✅ hecho: `CacheErrorHandler` en `RedisCacheConfig` (`RedisCacheErrorHandlerTest`).
+- **RNF-24** — pendiente: ejecutar la restauración de prueba cronometrada y archivar `docs/mediciones/backup/restauracion-AAAA-MM-DD.md` (tarea de despliegue).
 
-Cada uno con su fecha objetivo por fijar. Depende también de la decisión de
-**M7** sobre peso/altura (RF-11b / H-06), que es de la pila de Ricardo.
+Con esto cierran **H-01, H-02, H-03 y H-04**. La decisión de **M7** sobre
+peso/altura (RF-11b / H-06) quedó resuelta el 2026-09-08 (se conservan con base
+legal; lectura restringida por rol aplicada).
