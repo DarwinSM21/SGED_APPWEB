@@ -26,7 +26,7 @@ import java.util.Base64;
  * que se le cambia el correo: deja {@code correo_verificado = false} (lo hacen
  * los servicios que editan la persona) y hace llegar un enlace de un solo uso.
  * {@link #confirm} consume el token y marca el correo como verificado. Hasta
- * entonces, {@link PasswordResetService#solicitar} no envía el enlace de
+ * entonces, {@link PasswordResetService#request} no envía el enlace de
  * restablecimiento a esa dirección.
  */
 @Service
