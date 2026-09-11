@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -106,6 +107,22 @@ public class GlobalExceptionHandler {
                 HttpStatus.NOT_FOUND, "El servidor no reconoce esta operacion");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/RutaDesconocida"));
         pd.setTitle("Not Found");
+        pd.setProperty("timestamp", Instant.now().toString());
+        return pd;
+    }
+
+    // Hallazgo del escaneo ZAP autenticado (4.4): una ruta existente pedida
+    // con un metodo HTTP que no soporta (p. ej. GET a /api/auth/login, que
+    // solo acepta POST) caia en el catch-all de abajo y devolvia 500. No
+    // filtraba nada (el cuerpo ya era el ProblemDetail generico, sin traza),
+    // pero un metodo no soportado es un 405, no un error del servidor.
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMetodoNoSoportado(HttpRequestMethodNotSupportedException ex) {
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "El metodo " + ex.getMethod() + " no esta soportado en esta ruta");
+        pd.setType(URI.create("https://sged.uteq.edu.ec/errores/MetodoNoSoportado"));
+        pd.setTitle("Method Not Allowed");
         pd.setProperty("timestamp", Instant.now().toString());
         return pd;
     }

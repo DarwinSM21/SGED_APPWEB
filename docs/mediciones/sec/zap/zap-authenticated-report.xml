@@ -1,0 +1,342 @@
+<?xml version="1.0"?>
+<OWASPZAPReport programName="ZAP" version="2.17.0" generated="Fri, 11 Sept 2026 02:28:42" created="2026-09-11T02:28:42.001634881Z">
+	
+		<site name="https://host.docker.internal:8080" host="host.docker.internal" port="8080" ssl="true">
+			<alerts>
+				
+			</alerts>
+		</site>
+	
+	
+		<site name="http://host.docker.internal:8080" host="host.docker.internal" port="8080" ssl="false">
+			<alerts>
+				
+					<alertitem>
+						<pluginid>10106</pluginid>
+						<alertRef>10106</alertRef>
+						<alert>HTTP Only Site</alert>
+						<name>HTTP Only Site</name>
+						<riskcode>2</riskcode>
+						<confidence>2</confidence>
+						<riskdesc>Medium (Medium)</riskdesc>
+						<confidencedesc>Medium</confidencedesc>
+						<desc>&lt;p&gt;The site is only served under HTTP and not HTTPS.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/</uri>
+									<nodeName>https://host.docker.internal:8080/</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence></evidence>
+									<otherinfo>Failed to connect.
+ZAP attempted to connect via: https://host.docker.internal:8080/</otherinfo>
+								</instance>
+							
+						</instances>
+						<count>1</count>
+						<systemic>false</systemic>
+						<solution>&lt;p&gt;Configure your web or application server to use SSL (https).&lt;/p&gt;</solution>
+						<otherinfo>&lt;p&gt;Failed to connect.&lt;/p&gt;&lt;p&gt;ZAP attempted to connect via: https://host.docker.internal:8080/&lt;/p&gt;</otherinfo>
+						<reference>&lt;p&gt;https://cheatsheetseries.owasp.org/cheatsheets/Transport_Layer_Protection_Cheat_Sheet.html&lt;/p&gt;&lt;p&gt;https://letsencrypt.org/&lt;/p&gt;</reference>
+						<cweid>311</cweid>
+						<wascid>4</wascid>
+						<sourceid>718</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>40042</pluginid>
+						<alertRef>40042</alertRef>
+						<alert>Spring Actuator Information Leak</alert>
+						<name>Spring Actuator Information Leak</name>
+						<riskcode>2</riskcode>
+						<confidence>2</confidence>
+						<riskdesc>Medium (Medium)</riskdesc>
+						<confidencedesc>Medium</confidencedesc>
+						<desc>&lt;p&gt;Spring Actuator for Health is enabled and may reveal sensitive information about this application. Spring Actuators can be used for real monitoring purposes, but should be used with caution as to not expose too much information about the application or the infrastructure running it.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/actuator/health</uri>
+									<nodeName>http://host.docker.internal:8080/actuator/health</nodeName>
+									<method>GET</method>
+									<param></param>
+									<attack></attack>
+									<evidence>{&quot;status&quot;:&quot;UP&quot;,&quot;components&quot;:{&quot;db&quot;:{&quot;status&quot;:&quot;UP&quot;,&quot;details&quot;:{&quot;database&quot;:&quot;PostgreSQL&quot;,&quot;validationQuery</evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+						</instances>
+						<count>1</count>
+						<systemic>false</systemic>
+						<solution>&lt;p&gt;Disable the Health Actuators and other actuators, or restrict them to administrative users.&lt;/p&gt;</solution>
+						<otherinfo></otherinfo>
+						<reference>&lt;p&gt;https://docs.spring.io/spring-boot/api/rest/actuator/index.html#overview&lt;/p&gt;</reference>
+						<cweid>215</cweid>
+						<wascid>13</wascid>
+						<sourceid>720</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>10111</pluginid>
+						<alertRef>10111</alertRef>
+						<alert>Authentication Request Identified</alert>
+						<name>Authentication Request Identified</name>
+						<riskcode>0</riskcode>
+						<confidence>1</confidence>
+						<riskdesc>Informational (Low)</riskdesc>
+						<confidencedesc>Low</confidencedesc>
+						<desc>&lt;p&gt;The given request has been identified as an authentication request. The &apos;Other Info&apos; field contains a set of key=value lines which identify any relevant fields. If the request is in a context which has an Authentication Method set to &quot;Auto-Detect&quot; then this rule will change the authentication to match the request identified.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/auth/registro</uri>
+									<nodeName>http://host.docker.internal:8080/api/auth/registro ()({nombre,apellido,cedula,correo,fechaNacimiento,username,password,rol})</nodeName>
+									<method>POST</method>
+									<param>username</param>
+									<attack></attack>
+									<evidence>password</evidence>
+									<otherinfo>userParam=username
+userValue=John Doe
+passwordParam=password</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/estudiantes/10/acceso</uri>
+									<nodeName>http://host.docker.internal:8080/api/estudiantes/10/acceso ()({username,password})</nodeName>
+									<method>POST</method>
+									<param>username</param>
+									<attack></attack>
+									<evidence>password</evidence>
+									<otherinfo>userParam=username
+userValue=John Doe
+passwordParam=password</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/usuarios</uri>
+									<nodeName>http://host.docker.internal:8080/api/usuarios ()({idPersona,idEstadoGeneral,username,password,rol})</nodeName>
+									<method>POST</method>
+									<param>username</param>
+									<attack></attack>
+									<evidence>password</evidence>
+									<otherinfo>userParam=username
+userValue=John Doe
+passwordParam=password</otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/auth/login</uri>
+									<nodeName>http://host.docker.internal:8080/api/auth/login ()({username,password})</nodeName>
+									<method>POST</method>
+									<param>username</param>
+									<attack></attack>
+									<evidence>password</evidence>
+									<otherinfo>userParam=username
+userValue=John Doe
+passwordParam=password</otherinfo>
+								</instance>
+							
+						</instances>
+						<count>4</count>
+						<systemic>false</systemic>
+						<solution>&lt;p&gt;This is an informational alert rather than a vulnerability and so there is nothing to fix.&lt;/p&gt;</solution>
+						<otherinfo>&lt;p&gt;userParam=username&lt;/p&gt;&lt;p&gt;userValue=John Doe&lt;/p&gt;&lt;p&gt;passwordParam=password&lt;/p&gt;</otherinfo>
+						<reference>&lt;p&gt;https://www.zaproxy.org/docs/desktop/addons/authentication-helper/auth-req-id/&lt;/p&gt;</reference>
+						<cweid>-1</cweid>
+						<wascid>-1</wascid>
+						<sourceid>128</sourceid>
+					</alertitem>
+				
+				
+					<alertitem>
+						<pluginid>10104</pluginid>
+						<alertRef>10104</alertRef>
+						<alert>User Agent Fuzzer</alert>
+						<name>User Agent Fuzzer</name>
+						<riskcode>0</riskcode>
+						<confidence>2</confidence>
+						<riskdesc>Informational (Medium)</riskdesc>
+						<confidencedesc>Medium</confidencedesc>
+						<desc>&lt;p&gt;Check for differences in response based on fuzzed User Agent (eg. mobile sites, access as a Search Engine Crawler). Compares the response statuscode and the hashcode of the response body with the original response.&lt;/p&gt;</desc>
+						<instances>
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/especialidades/10</uri>
+									<nodeName>http://host.docker.internal:8080/api/especialidades/10</nodeName>
+									<method>DELETE</method>
+									<param>Header User-Agent</param>
+									<attack>Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)</attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/</uri>
+									<nodeName>http://host.docker.internal:8080/</nodeName>
+									<method>GET</method>
+									<param>Header User-Agent</param>
+									<attack>Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)</attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+							
+								<instance>
+									<uri>http://host.docker.internal:8080/api/entrenadores</uri>
+									<nodeName>http://host.docker.internal:8080/api/entrenadores ()({idPersona,idUsuario,idEspecialidad,experienciaAnios,certificacion})</nodeName>
+									<method>POST</method>
+									<param>Header User-Agent</param>
+									<attack>Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)</attack>
+									<evidence></evidence>
+									<otherinfo></otherinfo>
+								</instance>
+							
+						</instances>
+						<count>3</count>
+						<systemic>true</systemic>
+						<solution></solution>
+						<otherinfo></otherinfo>
+						<reference>&lt;p&gt;https://owasp.org/wstg&lt;/p&gt;</reference>
+						<cweid>0</cweid>
+						<wascid>0</wascid>
+						<sourceid>741</sourceid>
+					</alertitem>
+				
+			</alerts>
+		</site>
+	
+	
+		<insights>
+			
+				<insight>
+					<level>Low</level>
+					<reason>Warning</reason>
+					<site></site>
+					<key>insight.log.error</key>
+					<description>ZAP errors logged - see the zap.log file for details</description>
+					<statistic>2</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Low</level>
+					<reason>Warning</reason>
+					<site></site>
+					<key>insight.log.warn</key>
+					<description>ZAP warnings logged - see the zap.log file for details</description>
+					<statistic>30</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Low</level>
+					<reason>Exceeded High</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.code.4xx</key>
+					<description>Percentage of responses with status code 4xx</description>
+					<statistic>99</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.code.2xx</key>
+					<description>Percentage of responses with status code 2xx</description>
+					<statistic>1</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.ctype.application/problem+json</key>
+					<description>Percentage of endpoints with content type application/problem+json</description>
+					<statistic>97</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.DELETE</key>
+					<description>Percentage of endpoints with method DELETE</description>
+					<statistic>5</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.GET</key>
+					<description>Percentage of endpoints with method GET</description>
+					<statistic>67</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.POST</key>
+					<description>Percentage of endpoints with method POST</description>
+					<statistic>19</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.PUT</key>
+					<description>Percentage of endpoints with method PUT</description>
+					<statistic>6</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>http://host.docker.internal:8080</site>
+					<key>insight.endpoint.total</key>
+					<description>Count of total endpoints</description>
+					<statistic>218</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>https://host.docker.internal:8080</site>
+					<key>insight.endpoint.method.GET</key>
+					<description>Percentage of endpoints with method GET</description>
+					<statistic>100</statistic>
+				</insight>
+			
+			
+				<insight>
+					<level>Info</level>
+					<reason>Informational</reason>
+					<site>https://host.docker.internal:8080</site>
+					<key>insight.endpoint.total</key>
+					<description>Count of total endpoints</description>
+					<statistic>1</statistic>
+				</insight>
+			
+		</insights>
+	
+	
+	
+</OWASPZAPReport>

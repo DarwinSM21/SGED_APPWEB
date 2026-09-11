@@ -11,6 +11,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -95,6 +96,17 @@ class GlobalExceptionHandlerTest {
                 new NoResourceFoundException(HttpMethod.GET, "/api/no-existe"));
 
         assertThat(pd.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
+    }
+
+    @Test
+    @DisplayName("HttpRequestMethodNotSupportedException produce 405, no 500 (hallazgo del escaneo ZAP autenticado)")
+    void metodoNoSoportado() {
+        ProblemDetail pd = handler.handleMetodoNoSoportado(
+                new HttpRequestMethodNotSupportedException("GET"));
+
+        assertThat(pd.getStatus()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED.value());
+        assertThat(pd.getTitle()).isEqualTo("Method Not Allowed");
+        assertThat(pd.getDetail()).contains("GET");
     }
 
     @Test

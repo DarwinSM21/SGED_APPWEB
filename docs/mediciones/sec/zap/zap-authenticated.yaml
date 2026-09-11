@@ -1,0 +1,85 @@
+env:
+  contexts:
+  - name: authenticated
+    urls:
+    - http://host.docker.internal:8080/
+    includePaths:
+    - ^http://host\.docker\.internal:8080/api/.*
+    excludePaths:
+    # No matar la sesion a mitad del escaneo.
+    - ^http://host\.docker\.internal:8080/api/auth/logout.*
+    # RF-50: destructivo (anonimiza al titular) — se prueba aparte, no en
+    # un active scan que lo golpearia decenas de veces.
+    - ^http://host\.docker\.internal:8080/api/estudiantes/\d+/anonimizar.*
+  parameters:
+    failOnError: true
+    progressToStdout: true
+jobs:
+# RNF-06/H-04 del ADR-002: la API es stateless por JWT en cookie HttpOnly,
+# no por sesion de formulario — no hay login que ZAP pueda automatizar por
+# HTML. Se inyecta la cookie de una sesion real (POST /api/auth/login
+# contra la cuenta semilla admin) en cada peticion via el addon replacer,
+# mismo principio que scripts/lighthouse-ci.mjs usa para Lighthouse.
+- type: replacer
+  parameters: {}
+  rules:
+  - description: cookie de sesion admin (login real previo al escaneo)
+    matchType: REQ_HEADER
+    matchString: Cookie
+    matchRegex: false
+    replacementString: "Cookie: sged_access=__ZAP_SESSION_TOKEN__"
+    initiators: []
+    url: ''
+# Enumera las 102 rutas/136 operaciones desde el OpenAPI real en vez de
+# depender del spider HTML (la API no tiene enlaces que seguir).
+- type: openapi
+  parameters:
+    apiUrl: http://host.docker.internal:8080/api/docs.json
+    targetUrl: http://host.docker.internal:8080/
+    context: authenticated
+- type: passiveScan-config
+  parameters:
+    enableTags: false
+    maxAlertsPerRule: 10
+- type: spider
+  parameters:
+    context: authenticated
+    url: http://host.docker.internal:8080/
+    maxDuration: 2
+- type: passiveScan-wait
+  parameters:
+    maxDuration: 0
+# Escaneo activo real (SQLi, XSS, etc.) contra las rutas autenticadas —
+# lo que 4.4 pedia y el baseline pasivo no cubria. Acotado a 12 min para
+# que el corte sea reproducible en CI si se agrega despues; documentado
+# como decision de alcance (102 rutas x Default Policy completa tardaria
+# mucho mas).
+- type: activeScan
+  parameters:
+    context: authenticated
+    policy: Default Policy
+    maxScanDurationInMins: 12
+- type: outputSummary
+  parameters:
+    format: Long
+    summaryFile: /home/zap/zap_out_authenticated.json
+  rules: []
+- type: report
+  parameters:
+    reportDescription: 'Escaneo activo autenticado (RNF-06/4.4) — sesion real de admin via /api/auth/login, cookie inyectada con el addon replacer, rutas enumeradas desde /api/docs.json (102 rutas / 136 operaciones), excluyendo /api/auth/logout y la anonimizacion RF-50. Entorno local (make up), nunca contra el despliegue publico.'
+    reportDir: /zap/wrk/
+    reportFile: zap-authenticated-report.html
+    reportTitle: SGED — Escaneo ZAP autenticado (RNF-06 / 4.4)
+    template: traditional-html
+- type: report
+  parameters:
+    reportDir: /zap/wrk/
+    reportFile: zap-authenticated-report.xml
+    reportTitle: SGED — Escaneo ZAP autenticado (RNF-06 / 4.4)
+    template: traditional-xml
+- type: report
+  parameters:
+    reportDir: /zap/wrk/
+    reportFile: zap-authenticated-report.json
+    reportTitle: SGED — Escaneo ZAP autenticado (RNF-06 / 4.4)
+    template: traditional-json

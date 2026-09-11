@@ -8,7 +8,7 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 ## Estado final (2026-09-11)
 
-`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`, HEAD **`0982340`**. CI en verde. Corte defendido: etiqueta **`v1.0.3`** (apunta al mismo commit).
+`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`. CI en verde. Corte defendido: etiqueta **`v1.0.3`** (apunta al mismo commit que `main`).
 
 > **Revisión del SRS v1.6 del docente (M1–M3), 2026-09-10 — cerrada.** Ver la sección [Revisión SRS v1.6 — M1/M2/M3](#revisión-srs-v16--m1m2m3-2026-09-10) al final. M1: etiqueta movida al cierre real (`v1.0.3`). M2: §1.3 del SRS explica el vocabulario de estados. M3: `RNF-26` convierte el hallazgo **H-09** en requisito **e implementado** (doble opt-in del correo: `V28`, token de un solo uso, `POST /api/auth/confirmar-correo`, compuerta en `/forgot`); RF-48 gana "Condición de cierre"; `ETHICS.md` v1.9 — **H-01…H-09 cerrados**.
 >
@@ -27,15 +27,16 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 | **RNF-26** (doble opt-in del correo, cierra H-09) | ✅ implementado (2026-09-10) y verificado en producción |
 | Revisión SRS v1.6 del docente — **M1, M2, M3** | ✅ cerradas (etiqueta `v1.0.3`, §1.3 explica el vocabulario de estados, RNF-26 implementado) |
 | Corrección de despliegue — sufijos de Render huérfanos en `render.yaml` | ✅ corregido y verificado end-to-end (login real + creación de persona en producción) |
-| Protocolo de medición Cap. 4 — **4.2, 4.3, 4.5, 4.7** | ✅ cumplen |
+| Protocolo de medición Cap. 4 — **4.2, 4.3, 4.5, 4.6, 4.7** | ✅ cumplen |
+| **4.4** — ZAP autenticado con *active scan* (local) | ✅ cerrado (2026-09-11); corrigió un defecto real (`500`→`405`) |
 
 **Único pendiente de TODO el plan — tarea del docente, no del equipo:**
 
 > La **firma presencial del Dr. Gleiston Guerrero** en la fila del docente evaluador de la tabla §7 "Aprobación" del SRS (hoy en blanco). Al firmarla: regenerar `docs/requisitos/SRS.pdf` con `npx --yes md-to-pdf docs/requisitos/SRS.md`. `SRS-v1.0.0.pdf` no se toca (es la foto de la etiqueta `v1.0.0`).
 
-**Limitaciones declaradas (no bloquean la entrega, quedan como trabajo futuro):**
+**Limitaciones declaradas (no bloquean la entrega, quedan como trabajo futuro):** ninguna.
 
-- **4.4** — el escaneo ZAP es baseline pasivo sin sesión (0 hallazgos); un pentest activo autenticado queda pendiente si el docente lo exige.
+**4.4 — ZAP autenticado con *active scan*, cerrado 2026-09-11.** Escaneo contra el entorno local (nunca producción — un *active scan* ataca de verdad), 135 rutas desde el OpenAPI real, sesión de admin inyectada por el *addon* `replacer`. Encontró y se corrigió un defecto real: `GET` a rutas `POST`-only (`/login`, `/forgot`, `/confirmar-correo`) daba `500` en vez de `405` (`GlobalExceptionHandler` sin handler de `HttpRequestMethodNotSupportedException`). Segunda corrida: 0 hallazgos Alto/Medio atribuibles a código propio. Ver `docs/mediciones/sec/zap/REPORT.md`.
 
 **4.6 — barrido de procedencia repetido, 2026-09-11 (cerrado).** 194 tokens hex candidatos de 7–40 caracteres en `DATA-PROVENANCE.md`, `main.tex`, `OBSERVACIONES.md`, `CHANGELOG-REQ.md`, `matriz.csv`, `SRS.md`, `ETHICS.md`, `CHANGELOG.md` y `VERSIONING.md` comprobados con `git cat-file -t` contra el estado vigente de `main` (incluida la ronda M1-M3/RNF-26/deploy). 4 no resuelven, los 4 ya documentados como falsos positivos intencionales: el hash fantasma histórico `35188d4` citado como ejemplo del defecto original (no como evidencia vigente), el commit de *build* de k6 upstream `00a9a1b7f5` (no es de este repo), los objetos inválidos `688c4be`/`90c6c57` citados como el texto original de OBS-09 antes de corregirse a `a98008b`/`39e4718`, y el color CSS `23c3002f` de un reporte de Lighthouse. Ningún hash nuevo roto.
 
@@ -220,21 +221,19 @@ El razonamiento completo está en `docs/requisitos/borrador-adiciones-A1-A4.md`.
 ## Estado verificado del Protocolo de medición (Capítulo 4)
 
 Verificación de las tareas del Capítulo 4 de la Guía ("Protocolo de medición",
-§§4.1–4.7) contra el estado de `main` (2026-09-09, HEAD `eca162c`). **5 de 6
-cumplen; 4.4 queda como limitación de alcance declarada.**
+§§4.1–4.7) contra el estado de `main` (2026-09-11, HEAD `1671174`). **6 de 6
+cumplen — sin pendientes.**
 
 | Tarea | Criterio (resumen) | Estado | Evidencia verificada · `main` |
 | :--- | :--- | :--- | :--- |
 | **4.2** Cobertura de pruebas | CSV + XML versionados, cifra recalculable, umbral configurado y hecho cumplir en CI. | ✅ **Cumple** | `docs/mediciones/jacoco/jacoco.csv` + `jacoco.xml` versionados. **84,66 % líneas / 71,24 % branches** (2639/3117 · 664/932), recalculable. `backend/pom.xml` fija `<minimum>0.70</minimum>` en `LINE` y `BRANCH` y falla la construcción si no se cumple (paso de CI `mvn verify`). *Menor: el desglose del informe es por subdominio, no por paquete.* |
 | **4.3** Rendimiento (k6) | Más de un escenario, percentiles altos (p95/p99), test inferencial no paramétrico, tamaño de efecto y corrección por comparaciones múltiples. | ✅ **Cumple** | `docs/mediciones/perf/REPORT.md`: **2 escenarios** (caché cálida y caché fría), 5 corridas × 50 VUs × 30 s cada uno; se reportan media, p90, **p95 y p99**; contraste **Mann-Whitney / Wilcoxon** bilateral, **δ de Cliff** (tamaño de efecto) y **corrección de Holm-Bonferroni** sobre las cuatro comparaciones. 0 % de errores. Regenerable con `scripts/perf-analysis.py`. (Misma evidencia que cierra 3.9.) |
-| **4.4** Seguridad (OWASP ZAP) | Escaneo con sesión autenticada y cobertura de rutas protegidas. | ⚠️ **Limitación declarada** | `docs/mediciones/sec/zap/`: escaneo **baseline pasivo** (`zap.yaml`, sin ataques activos) contra `http://localhost:8080/` y `/api/docs`, **sin sesión autenticada**. Resultado: **0 hallazgos** de cualquier severidad tras apagar Swagger en el ambiente público (la alerta alta previa era DOMPurify 3.0.6 empaquetado por Springdoc, no código propio). El informe lo declara explícitamente como "escaneo automatizado de rutina, no un pentest completo". El análisis estático de inyección SQL (SpotBugs + find-sec-bugs, filtro solo-SQL) **sí** corre autenticado sobre el código y está versionado (`backend/target/spotbugsXml.xml`, paso de CI). **Pendiente si el docente exige escaneo activo/autenticado:** correr ZAP con la cookie de sesión contra las rutas protegidas. |
+| **4.4** Seguridad (OWASP ZAP) | Escaneo con sesión autenticada y cobertura de rutas protegidas. | ✅ **Cumple** | `docs/mediciones/sec/zap/`: además del baseline pasivo (arriba), un segundo plan **`zap-authenticated.yaml`** hace `POST /api/auth/login` real contra la cuenta semilla, inyecta la cookie de sesión con el *addon* `replacer` en cada petición, enumera **135 rutas** desde el OpenAPI real (`/api/docs.json`) y corre **active scan** (`Default Policy`, 12 min) contra ellas — contra el entorno **local**, nunca producción. Encontró un defecto real: `GET` a rutas `POST`-only devolvía `500` en vez de `405` (sin fuga de traza, pero incorrecto); corregido en `GlobalExceptionHandler` y verificado con una segunda corrida — **0 hallazgos Alto/Medio de código propio** (quedan dos advertencias Media aceptadas por diseño: escaneo directo a `:8080` sin la capa TLS, y `/actuator/health` público — exigido por OBS-19/3.7). El análisis estático de inyección SQL (SpotBugs + find-sec-bugs) sigue corriendo aparte en CI. |
 | **4.5** Accesibilidad / calidad web (Lighthouse) | Auditoría sobre el despliegue público, con sesión, varias rutas y varias corridas. | ✅ **Cumple** | `39d031a`: `scripts/lighthouse-ci.mjs` hace login real (`POST /api/auth/login`, cookie `sged_access` vía CDP) y audita **2 perfiles (escritorio/móvil) × 2 rutas autenticadas × 3 corridas = 12 informes** contra `https://sged-frontend-jofa.onrender.com`. Evidencias `public-*.report.json` (Lighthouse 13.4.1) + `public-summary.json` versionadas; `REPORT.md`, `DATA-PROVENANCE.md` y el informe actualizados. Workflow `.github/workflows/lighthouse.yml` con secrets `LH_USER`/`LH_PASS`. Accesibilidad 100/100. |
 | **4.6** Procedencia de datos y metadatos de medición | Todo hash y ordinal citado en la documentación de evidencia resuelve; los artefactos referencian el repositorio canónico. | ✅ **Cumple** | Barrido repetido 2026-09-11: 194 tokens hex candidatos en 9 archivos de evidencia comprobados con `git cat-file -t` contra `main` vigente (`0982340`, incluida la ronda M1-M3/RNF-26/deploy). Los 4 que no resuelven son falsos positivos ya documentados (hash fantasma histórico, commit de *build* de k6 upstream, objetos inválidos citados como texto original de OBS-09, color CSS de Lighthouse) — ninguno se cita como evidencia vigente. El repositorio canónico (`DarwinSM21/SGED_APPWEB`) no volvió a migrar desde la última revisión, así que los ordinales de `tab:ci-corridas`/Anexo D siguen siendo del mismo repositorio que los generó. |
 | **4.7** Publicación del dataset y del software | Dataset con DOI propio y licencia; software con identificador; declaraciones de datos y de código en el informe. | ✅ **Cumple** | Dataset de mediciones en Zenodo **DOI `10.5281/zenodo.22422305`**, tipo *Dataset*, **CC BY 4.0**, 3 autores = repo. Software en Zenodo (`10.5281/zenodo.21713240`, MIT). Declaraciones de disponibilidad de datos y de código en `docs/informe/main.tex`. |
 
-### Pendiente del Capítulo 4
-
-1. **4.4** — decidir con el docente si el escaneo pasivo basta; si no, correr ZAP autenticado contra las rutas protegidas y versionar la evidencia.
+**Capítulo 4 completo: 4.2 … 4.7, sin pendientes.**
 
 ---
 
