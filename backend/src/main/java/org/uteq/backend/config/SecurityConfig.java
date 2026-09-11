@@ -24,6 +24,11 @@ import org.uteq.backend.seguridad.auth.security.JwtAuthenticationFilter;
 
 import java.util.List;
 
+/**
+ * Cadena de filtros de seguridad de la API: sesiones sin estado (JWT),
+ * autorización por ruta y por rol (RNF-06), cabeceras de seguridad (RNF-05)
+ * y CORS restringido a orígenes exactos (punto 16 de la Entrega Final).
+ */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -35,6 +40,12 @@ public class SecurityConfig {
     private List<String> corsAllowedOriginPatterns;
     private final ProblemDetailsAuthHandlers problemHandlers;
 
+    /**
+     * @param http constructor de configuración HTTP inyectado por Spring Security
+     * @return la cadena de filtros configurada: CORS, sin CSRF (API sin estado),
+     *         sin sesión de servidor, rutas públicas explícitas y el resto autenticado
+     * @throws Exception si Spring Security no puede construir la cadena de filtros
+     */
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -62,6 +73,10 @@ public class SecurityConfig {
                 .build();
     }
 
+    /**
+     * @return la configuración CORS: orígenes exactos (sin comodín de dominio),
+     *         métodos y cabeceras explícitos, y credenciales habilitadas
+     */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
@@ -77,11 +92,19 @@ public class SecurityConfig {
         return source;
     }
 
+    /**
+     * @return el codificador de contraseñas BCrypt con factor de coste 12 (RNF-03)
+     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 
+    /**
+     * @param config configuración de autenticación de Spring Security
+     * @return el gestor de autenticación por defecto, usado por el flujo de login
+     * @throws Exception si Spring Security no puede resolver el gestor de autenticación
+     */
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration config) throws Exception {

@@ -5,14 +5,24 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Marca un método de servicio cuyo resultado hay que registrar en la
+ * bitácora de auditoría. Lo intercepta {@link AuditAspect}, que resuelve las
+ * expresiones SpEL declaradas aquí una vez que el método ya se ejecutó.
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
 public @interface Audited {
+
+    /** Verbo de la acción registrada (ej. {@code "CREAR"}, {@code "EDITAR"}, {@code "ELIMINAR"}). */
     String accion();
 
+    /** Nombre de la entidad de dominio afectada (ej. {@code "Estudiante"}). */
     String entidad();
 
+    /** Expresión SpEL que resuelve el identificador de la entidad afectada; vacío si no aplica. */
     String idSpel() default "";
 
+    /** Expresión SpEL que arma la descripción legible del acto; vacío si no aplica. */
     String descripcionSpel() default "";
 }

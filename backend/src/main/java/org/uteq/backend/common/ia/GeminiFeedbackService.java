@@ -71,6 +71,9 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         }
     }
 
+    /**
+     * @return {@code true} si el proveedor Gemini está habilitado y tiene clave configurada
+     */
     @Override
     public boolean isAvailable() {
         return habilitado;

@@ -34,6 +34,10 @@ public class SmtpEmailVerificationMailer implements EmailVerificationMailer {
     @Value("${mail.verify-token-ttl-hours:48}")
     private int horasVigencia;
 
+    /**
+     * @param correo correo destinatario del enlace de confirmación
+     * @param url enlace de confirmación de un solo uso
+     */
     @Override
     public void enviarConfirmacion(String correo, String url) {
         try {

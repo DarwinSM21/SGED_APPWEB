@@ -18,6 +18,16 @@ import java.util.List;
 public class UserDetailsServiceImpl implements UserDetailsService {
     private final UserAccountRepository usuarioRepository;
 
+    /**
+     * Resuelve una cuenta activa por nombre de usuario (sin distinguir
+     * mayúsculas/minúsculas) y la adapta al {@link UserDetails} que Spring
+     * Security usa para autenticar, con un {@code ROLE_} por cada rol de la
+     * cuenta.
+     *
+     * @param username nombre de usuario a autenticar
+     * @return los datos de autenticación de esa cuenta
+     * @throws UsernameNotFoundException si no existe una cuenta activa con ese nombre de usuario
+     */
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

@@ -26,9 +26,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({FIELD, PARAMETER, RECORD_COMPONENT})
 @Retention(RUNTIME)
 public @interface Cedula {
+
+    /** Mensaje de error cuando la cédula proporcionada no es válida. */
     String message() default "La cédula ecuatoriana no es válida (dígito verificador incorrecto o provincia fuera de rango)";
 
+    /** Grupos de validación de Bean Validation; sin uso propio en este proyecto. */
     Class<?>[] groups() default {};
 
+    /** Metadatos de carga útil de Bean Validation; sin uso propio en este proyecto. */
     Class<? extends Payload>[] payload() default {};
 }

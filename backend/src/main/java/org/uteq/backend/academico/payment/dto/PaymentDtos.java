@@ -44,6 +44,9 @@ public final class PaymentDtos {
             String anuladoPor,
             String motivoAnulacion
     ) {
+        /**
+         * @return {@code true} si el pago no fue anulado
+         */
         public boolean vigente() {
             return anuladoEn == null;
         }

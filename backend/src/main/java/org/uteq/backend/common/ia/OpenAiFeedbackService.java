@@ -71,6 +71,9 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         }
     }
 
+    /**
+     * @return {@code true} si el proveedor compatible con OpenAI está habilitado y tiene clave configurada
+     */
     @Override
     public boolean isAvailable() {
         return habilitado;

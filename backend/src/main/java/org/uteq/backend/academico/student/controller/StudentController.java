@@ -61,6 +61,8 @@ public class StudentController {
      * Busca un estudiante por su identificador.
      *
      * @param id identificador del estudiante
+     * @param auth sesión autenticada; determina si el peso y la altura se
+     *             incluyen en la respuesta (RF-11b: {@code RECEPCIONISTA} no los ve)
      * @return {@code 200 OK} con el estudiante
      * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})

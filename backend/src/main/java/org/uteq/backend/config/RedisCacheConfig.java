@@ -51,6 +51,11 @@ public class RedisCacheConfig implements CachingConfigurer {
     @Value("${cache.usuarios.ttl-seconds:60}")
     private long ttlUsuariosSeconds;
 
+    /**
+     * @param factory conexión a Redis inyectada por Spring
+     * @return el gestor de caché con una configuración de TTL y serialización
+     *         propia para cada caché ({@code estudiantes}, {@code entrenadores}, {@code usuarios})
+     */
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         /*
@@ -106,24 +111,44 @@ public class RedisCacheConfig implements CachingConfigurer {
     @Override
     public CacheErrorHandler errorHandler() {
         return new CacheErrorHandler() {
+            /**
+             * @param ex excepción lanzada por Redis al leer
+             * @param cache caché afectada
+             * @param key clave que se intentaba leer
+             */
             @Override
             public void handleCacheGetError(RuntimeException ex, Cache cache, Object key) {
                 log.warn("Caché no disponible al leer '{}' (clave {}): se consulta la base. Causa: {}",
                         cache.getName(), key, ex.getClass().getSimpleName());
             }
 
+            /**
+             * @param ex excepción lanzada por Redis al escribir
+             * @param cache caché afectada
+             * @param key clave que se intentaba escribir
+             * @param value valor que se intentaba cachear
+             */
             @Override
             public void handleCachePutError(RuntimeException ex, Cache cache, Object key, Object value) {
                 log.warn("Caché no disponible al escribir '{}' (clave {}): el resultado no se cachea. Causa: {}",
                         cache.getName(), key, ex.getClass().getSimpleName());
             }
 
+            /**
+             * @param ex excepción lanzada por Redis al invalidar
+             * @param cache caché afectada
+             * @param key clave que se intentaba invalidar
+             */
             @Override
             public void handleCacheEvictError(RuntimeException ex, Cache cache, Object key) {
                 log.warn("Caché no disponible al invalidar '{}' (clave {}). Causa: {}",
                         cache.getName(), key, ex.getClass().getSimpleName());
             }
 
+            /**
+             * @param ex excepción lanzada por Redis al limpiar
+             * @param cache caché afectada
+             */
             @Override
             public void handleCacheClearError(RuntimeException ex, Cache cache) {
                 log.warn("Caché no disponible al limpiar '{}'. Causa: {}",

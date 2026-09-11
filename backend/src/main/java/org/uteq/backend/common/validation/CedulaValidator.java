@@ -12,6 +12,11 @@ public class CedulaValidator implements ConstraintValidator<Cedula, String> {
 
     private static final int[] COEFICIENTES = {2, 1, 2, 1, 2, 1, 2, 1, 2};
 
+    /**
+     * @param valor cédula a validar; {@code null} o en blanco se considera válido (es opcional)
+     * @param context contexto de validación de Bean Validation, sin uso en esta implementación
+     * @return {@code true} si el valor está ausente o es una cédula ecuatoriana válida
+     */
     @Override
     public boolean isValid(String valor, ConstraintValidatorContext context) {
         if (valor == null || valor.isBlank()) {

@@ -22,6 +22,18 @@ public class AuditAspect {
 
     private final AuditService auditoriaService;
 
+    /**
+     * Envuelve cualquier método anotado con {@link Audited}: lo deja ejecutar
+     * primero y, si termina sin lanzar, resuelve las expresiones SpEL de
+     * {@code idSpel}/{@code descripcionSpel} contra el resultado y los
+     * argumentos ({@code #result}, {@code #p0}, {@code #p1}, ...) y registra
+     * el acto en la bitácora de auditoría.
+     *
+     * @param pjp punto de unión del método interceptado
+     * @param auditado datos de la anotación {@link Audited} (acción, entidad, expresiones)
+     * @return el resultado del método interceptado, sin modificar
+     * @throws Throwable la excepción que haya lanzado el método interceptado, propagada tal cual
+     */
     @Around("@annotation(auditado)")
     public Object audit(ProceedingJoinPoint pjp, Audited auditado) throws Throwable {
         Object resultado = pjp.proceed();

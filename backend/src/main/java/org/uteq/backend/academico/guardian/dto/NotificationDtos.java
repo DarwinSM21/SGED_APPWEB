@@ -18,5 +18,8 @@ public final class NotificationDtos {
             Instant creadaEn
     ) {}
 
+    /**
+     * @param noLeidas cantidad de notificaciones sin leer del representante
+     */
     public record UnreadCountResponse(long noLeidas) {}
 }

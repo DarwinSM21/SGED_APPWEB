@@ -58,6 +58,9 @@ public class Payment {
     @Column(name = "motivo_anulacion", length = 255)
     private String motivoAnulacion;
 
+    /**
+     * @return {@code true} si el pago no fue anulado
+     */
     public boolean isActive() {
         return anuladoEn == null;
     }

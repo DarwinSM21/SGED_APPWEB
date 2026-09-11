@@ -17,6 +17,10 @@ public class LoggingEmailVerificationMailer implements EmailVerificationMailer {
 
     private static final Logger log = LoggerFactory.getLogger(LoggingEmailVerificationMailer.class);
 
+    /**
+     * @param correo correo destinatario, solo para el mensaje de log
+     * @param url enlace de confirmación, escrito en el log en vez de enviarse
+     */
     @Override
     public void enviarConfirmacion(String correo, String url) {
         log.warn("EMAILVERIFY (mail.enabled=false) enlace de confirmación para {}: {}", correo, url);

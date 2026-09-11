@@ -19,10 +19,21 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Traduce cada excepción no atrapada por el código de negocio a una
+ * respuesta {@code ProblemDetail} (RFC 9457), sin exponer trazas de pila
+ * ni detalles internos (RNF-10). Cada manejador fija el {@code type}, el
+ * {@code title} y una marca de tiempo; el manejador general además deja
+ * registro en el log del servidor, nunca en la respuesta.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
+    /**
+     * @param ex excepción de negocio lanzada por el código de la aplicación
+     * @return el detalle del problema con el estado HTTP que declara la excepción
+     */
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException ex) {
         String tipo = ex.getClass().getSimpleName();
@@ -31,6 +42,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción con los errores de validación de Bean Validation ({@code @Valid})
+     * @return {@code 422} con la lista de errores campo por campo
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         List<String> errores = ex.getBindingResult().getFieldErrors().stream()
@@ -46,6 +61,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada por Spring Security ante usuario/contraseña inválidos
+     * @return {@code 401} genérico (no distingue usuario inexistente de contraseña incorrecta)
+     */
     @ExceptionHandler(BadCredentialsException.class)
     public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -56,6 +75,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada cuando el rol autenticado no tiene permiso sobre el recurso
+     * @return {@code 403} (RNF-06: la comprobación siempre ocurre del lado del servidor)
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -66,6 +89,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada cuando el cuerpo de la petición falta o no es JSON válido
+     * @return {@code 400}
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleCuerpoIlegible(HttpMessageNotReadableException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -77,6 +104,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada cuando falta un parámetro de consulta obligatorio
+     * @return {@code 400} con el nombre del parámetro faltante en {@code parametro}
+     */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ProblemDetail handleParametroFaltante(MissingServletRequestParameterException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -89,6 +120,11 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada cuando un parámetro no puede convertirse al tipo esperado
+     *           (ej. texto no numérico en un identificador)
+     * @return {@code 400} con el nombre del parámetro inválido en {@code parametro}
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -101,6 +137,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada cuando la ruta pedida no existe en la aplicación
+     * @return {@code 404} genérico
+     */
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleRutaDesconocida(NoResourceFoundException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -116,6 +156,11 @@ public class GlobalExceptionHandler {
     // solo acepta POST) caia en el catch-all de abajo y devolvia 500. No
     // filtraba nada (el cuerpo ya era el ProblemDetail generico, sin traza),
     // pero un metodo no soportado es un 405, no un error del servidor.
+    /**
+     * @param ex excepción lanzada cuando la ruta existe pero no admite el método HTTP usado
+     *           (ej. {@code GET} a un endpoint que solo acepta {@code POST})
+     * @return {@code 405}, con el método rechazado en el mensaje
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ProblemDetail handleMetodoNoSoportado(HttpRequestMethodNotSupportedException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
@@ -127,6 +172,15 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * Manejador de último recurso: cualquier excepción no cubierta por los
+     * manejadores anteriores llega acá. Registra el detalle en el log del
+     * servidor y devuelve un mensaje genérico, para no filtrar información
+     * interna en la respuesta.
+     *
+     * @param ex excepción no controlada
+     * @return {@code 500} genérico
+     */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
         log.error("Error no controlado", ex);
@@ -138,6 +192,10 @@ public class GlobalExceptionHandler {
         return pd;
     }
 
+    /**
+     * @param ex excepción lanzada por una regla de negocio incumplida en la capa de servicio
+     * @return {@code 400} con el mensaje de la excepción como detalle
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(

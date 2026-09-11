@@ -28,6 +28,8 @@ public record StudentResponse(
      * de un menor y su lectura se restringe a {@code ADMINISTRADOR} y
      * {@code ENTRENADOR} (cuerpo técnico). Esta copia los omite para el resto
      * de roles con acceso a la ficha ({@code RECEPCIONISTA}).
+     *
+     * @return una copia de esta respuesta con {@code peso} y {@code altura} en {@code null}
      */
     public StudentResponse withoutPhysicalData() {
         return new StudentResponse(idEstudiante, idPersona, idCategoria, idEstadoGeneral,

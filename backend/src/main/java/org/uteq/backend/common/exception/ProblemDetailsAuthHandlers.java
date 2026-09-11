@@ -15,10 +15,19 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 
+/**
+ * Da forma {@code ProblemDetail} (RFC 9457) a los dos rechazos que Spring
+ * Security resuelve antes de llegar a un controlador —sin sesión válida o
+ * sin permiso—, que de otro modo saldrían con el cuerpo por defecto del
+ * framework en vez del formato de error uniforme del resto de la API.
+ */
 @Configuration
 public class ProblemDetailsAuthHandlers {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    /**
+     * @return el manejador que responde {@code 401} cuando la petición no trae una sesión válida
+     */
     @Bean
     public AuthenticationEntryPoint problemAuthEntryPoint() {
         return (request, response, ex) ->
@@ -27,6 +36,9 @@ public class ProblemDetailsAuthHandlers {
                         "Se requiere autenticación para acceder a este recurso");
     }
 
+    /**
+     * @return el manejador que responde {@code 403} cuando el rol autenticado no tiene permiso sobre el recurso
+     */
     @Bean
     public AccessDeniedHandler problemAccessDeniedHandler() {
         return (request, response, ex) ->

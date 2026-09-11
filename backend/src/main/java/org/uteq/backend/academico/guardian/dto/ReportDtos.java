@@ -13,6 +13,10 @@ public final class ReportDtos {
             String categoria
     ) {}
 
+    /**
+     * @param criterio nombre del criterio de evaluación
+     * @param promedio promedio de ese criterio en el período del reporte, o {@code null} sin evaluaciones
+     */
     public record CriterionAverageResponse(String criterio, Double promedio) {}
 
     public record InjurySummaryResponse(

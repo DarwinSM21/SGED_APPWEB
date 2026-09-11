@@ -36,6 +36,10 @@ public class SmtpPasswordResetMailer implements PasswordResetMailer {
     @Value("${mail.reset-token-ttl-minutes:30}")
     private int minutosVigencia;
 
+    /**
+     * @param correo correo destinatario del enlace de restablecimiento
+     * @param url enlace de restablecimiento de un solo uso
+     */
     @Override
     public void enviarEnlace(String correo, String url) {
         try {

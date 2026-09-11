@@ -60,6 +60,9 @@ public class Consent {
     @JoinColumn(name = "revocado_por_id_usuario")
     private UserAccount revocadoPor;
 
+    /**
+     * @return {@code true} si el consentimiento no fue revocado
+     */
     @Transient
     public boolean isActive() {
         return revocadoEn == null;
