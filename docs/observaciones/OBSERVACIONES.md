@@ -210,7 +210,7 @@ Compilación y pruebas unitarias afectadas en verde (11 clases backend + 15 fron
 - **H-07** cerrado con `docs/etica/consentimiento/representante.md`.
 
 Con esto **no queda nada de código ni de documentación**. Ver la sección
-[Estado final](#estado-final-2026-09-09) al principio del documento. El único
+[Estado final](#estado-final-2026-09-11) al principio del documento. El único
 pendiente de todo el plan es la **firma presencial del Dr. Guerrero** en el §7
 del SRS (tarea del docente).
 
