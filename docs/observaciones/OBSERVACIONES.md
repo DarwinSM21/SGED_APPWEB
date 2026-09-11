@@ -11,6 +11,8 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 `main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`. CI en verde. Corte defendido: etiqueta **`v1.0.3`**.
 
 > **Revisión del SRS v1.6 del docente (M1–M3), 2026-09-10 — cerrada.** Ver la sección [Revisión SRS v1.6 — M1/M2/M3](#revisión-srs-v16--m1m2m3-2026-09-10) al final. M1: etiqueta movida al cierre real (`v1.0.3`). M2: §1.3 del SRS explica el vocabulario de estados. M3: `RNF-26` convierte el hallazgo **H-09** en requisito **e implementado** (doble opt-in del correo: `V28`, token de un solo uso, `POST /api/auth/confirmar-correo`, compuerta en `/forgot`); RF-48 gana "Condición de cierre"; `ETHICS.md` v1.9 — **H-01…H-09 cerrados**.
+>
+> **Corrección de despliegue, 2026-09-11.** `render.yaml` traía grabado un sufijo de backend viejo (`sged-backend-5nh7`, un servicio sin desplegar desde antes de RF-37) en la regla de reescritura `/api/*` del frontend estático — el sitio público (`sged-frontend-jofa.onrender.com`) llevaba semanas proxiando la API a ese backend desactualizado, así que ninguna funcionalidad de RF-37 en adelante (RF-37, RF-49, RF-50, RNF-26…) era alcanzable desde el frontend público aunque el backend real (`sged-backend-2p05.onrender.com`) sí las tuviera desplegadas. Corregido (`29e6bfc`) y verificado: `sged-backend-2p05.onrender.com/api/auth/forgot` → `202`; `.../confirmar-correo` con token inválido → `400`. URLs actualizadas en `README.md`, `render.md`, `ETHICS.md`, `SRS.md`, carátula e informe.
 
 **Cerrado — no queda nada de código ni de documentación:**
 

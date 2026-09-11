@@ -172,7 +172,7 @@ Los nombres `sged-backend` / `sged-frontend` son globales en `.onrender.com`.
 Si ya están tomados (otro despliegue del equipo), Render agrega un sufijo
 aleatorio distinto por servicio. En el despliegue actual quedaron:
 
-- backend  → `https://sged-backend-5nh7.onrender.com`
+- backend  → `https://sged-backend-2p05.onrender.com`
 - frontend → `https://sged-frontend-jofa.onrender.com`
 
 `render.yaml` ya apunta a esas dos (regla `/api/*` del frontend y
@@ -186,7 +186,7 @@ porque las llamadas a la API se cuelgan contra el nombre viejo.
 Primero que el backend viva:
 
 ```bash
-curl -s https://sged-backend-5nh7.onrender.com/actuator/health
+curl -s https://sged-backend-2p05.onrender.com/actuator/health
 ```
 
 Debe responder `{"status":"UP",...}`. La primera petición puede tardar
