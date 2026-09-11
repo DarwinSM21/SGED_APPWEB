@@ -12,13 +12,20 @@ descrito en prosa dentro de los flujos de `docs/requisitos/casos-uso.md`.
 Se documentan los tres flujos que sugiere R-01 por ser, además, los tres
 puntos de mayor complejidad medida del sistema (Tabla 14 del informe):
 autenticación con JWT en cookie `HttpOnly` (CU-01), alta de estudiante
-(`EstudianteService::crear`) y registro de asistencia por código QR
-(`QrAsistenciaService`).
+(`StudentService::create`) y registro de asistencia por código QR
+(`QrAsistenciaService`, dominio `deportivo`).
 
 Cada diagrama refleja el código tal como quedó después del plan de
 corrección de este mismo informe (`AuthController`/`AuthService`
-divididos por R-03; `EstudianteAccesoService` extraído por R-06), no un
-estado anterior.
+divididos por R-03; `StudentAccessService` extraído por R-06), no un
+estado anterior. **Excepción:** el flujo 3 usa nombres de clase en
+inglés (`AttendanceQrController`, `QrAttendanceService`,
+`AttendanceService`, `TrainingSessionRepository`,
+`MarkAttendanceComponent`) que todavía no existen en el código —
+`deportivo` sigue en español ahí — porque este diagrama, igual que
+`docs/diagramas/diagrama-clases.md`, traduce ese dominio solo a nivel de
+documentación, adelantándose al renombrado de código pendiente de
+reparto con el equipo.
 
 ---
 
@@ -31,47 +38,47 @@ ADR-008).
 
 ```mermaid
 sequenceDiagram
-    actor U as Usuario
+    actor U as User
     participant LC as LoginComponent
     participant AC as AuthController
     participant AS as AuthService
     participant LAS as LoginAttemptService
     participant AM as AuthenticationManager
-    participant AUD as AuditoriaService
+    participant AUD as AuditService
     participant JWT as JwtService
 
-    U->>LC: usuario + contraseña
+    U->>LC: username + password
     LC->>AC: POST /api/auth/login
     AC->>AS: login(request, ip)
-    AS->>LAS: estaBloqueada(ip)
+    AS->>LAS: isBlocked(ip)
 
-    alt IP bloqueada (>=5 fallos en 15 min)
+    alt IP blocked (>=5 failures in 15 min)
         LAS-->>AS: true
         AS-->>AC: TooManyRequestsException
         AC-->>LC: 429 Too Many Requests
-        LC-->>U: "Demasiados intentos. Intenta más tarde"
-    else IP no bloqueada
+        LC-->>U: "Too many attempts. Try again later"
+    else IP not blocked
         LAS-->>AS: false
         AS->>AM: authenticate(username, password)
 
-        alt credenciales inválidas
+        alt invalid credentials
             AM-->>AS: BadCredentialsException
-            AS->>LAS: registrarFallo(ip)
-            AS->>AUD: registrarConIdentidad(LOGIN_FALLIDO)
+            AS->>LAS: recordFailure(ip)
+            AS->>AUD: recordEventWithIdentity(LOGIN_FAILED)
             AS-->>AC: BadCredentialsException
             AC-->>LC: 401 Unauthorized
-            LC-->>U: "Usuario o contraseña incorrectos"
-        else credenciales válidas
-            AM-->>AS: Authentication (UserDetails + rol)
-            AS->>LAS: registrarExito(ip)
-            AS->>AUD: registrarConIdentidad(LOGIN)
-            AS->>JWT: generateToken(username, rol)
+            LC-->>U: "Incorrect username or password"
+        else valid credentials
+            AM-->>AS: Authentication (UserDetails + role)
+            AS->>LAS: recordSuccess(ip)
+            AS->>AUD: recordEventWithIdentity(LOGIN)
+            AS->>JWT: generateToken(username, role)
             JWT-->>AS: accessToken
-            AS->>JWT: generateRefreshToken(username, rol)
+            AS->>JWT: generateRefreshToken(username, role)
             JWT-->>AS: refreshToken
-            AS-->>AC: LoginResult(accessToken, refreshToken, sesion)
+            AS-->>AC: LoginResult(accessToken, refreshToken, session)
             AC->>AC: setAuthCookies() — Set-Cookie sged_access + sged_refresh (HttpOnly, Secure, SameSite=Strict)
-            AC-->>LC: 200 OK { username, nombre, rol } (sin token en el cuerpo)
+            AC-->>LC: 200 OK { username, nombre, rol } (no token in the body)
             LC->>LC: router.navigate(homeRouteForRole(rol))
         end
     end
@@ -79,10 +86,10 @@ sequenceDiagram
 
 ---
 
-## 2. Alta de estudiante (`EstudianteService::crear`)
+## 2. Alta de estudiante (`StudentService::create`)
 
-`crear()` da de alta o reactiva la **ficha** de estudiante sobre una
-`Persona` que ya existe; no crea la cuenta de acceso. Habilitar el
+`create()` da de alta o reactiva la **ficha** de estudiante sobre una
+`Person` que ya existe; no crea la cuenta de acceso. Habilitar el
 acceso propio (para que el estudiante marque su QR) es un paso aparte,
 `POST /api/estudiantes/{id}/acceso`, mostrado al final como
 continuación — así es como lo usa la pantalla de Personas del
@@ -92,67 +99,67 @@ solo si se pide).
 
 ```mermaid
 sequenceDiagram
-    actor A as Administrador/Recepcionista
-    participant EC as EstudianteController
-    participant ES as EstudianteService
-    participant EAS as EstudianteAccesoService
-    participant UR as UsuarioRepository
-    participant ER as EstudianteRepository
-    participant PR as PersonaRepository
-    participant CR as CategoriaRepository
+    actor A as Administrator/Receptionist
+    participant EC as StudentController
+    participant ES as StudentService
+    participant EAS as StudentAccessService
+    participant UR as UserAccountRepository
+    participant ER as StudentRepository
+    participant PR as PersonRepository
+    participant CR as CategoryRepository
 
     A->>EC: POST /api/estudiantes {idPersona, idCategoria, codigoEstudiante, ...}
-    EC->>ES: crear(request)
-    ES->>EAS: validarCoherenciaConFichaEstudiante(idPersona)
+    EC->>ES: create(request)
+    ES->>EAS: validateConsistencyWithStudentRecord(idPersona)
     EAS->>UR: findByPersona_IdPersonaAndActivoTrue(idPersona)
 
-    alt la persona tiene cuenta activa con otro rol
-        UR-->>EAS: Usuario (rol != ESTUDIANTE)
+    alt the person has an active account with another role
+        UR-->>EAS: UserAccount (role != ESTUDIANTE)
         EAS-->>ES: IllegalArgumentException
         ES-->>EC: IllegalArgumentException
         EC-->>A: 400 Bad Request
-    else sin cuenta, o cuenta ya de rol ESTUDIANTE
-        UR-->>EAS: Optional.empty() / Usuario(ESTUDIANTE)
-        EAS-->>ES: (continúa)
+    else no account, or account already has role ESTUDIANTE
+        UR-->>EAS: Optional.empty() / UserAccount(ESTUDIANTE)
+        EAS-->>ES: (continues)
         ES->>ER: findByPersona_IdPersona(idPersona)
 
-        alt ya existe una ficha ACTIVA
-            ER-->>ES: Estudiante(activo=true)
-            ES-->>EC: IllegalArgumentException("ya cuenta con una ficha activa")
+        alt an ACTIVE record already exists
+            ER-->>ES: Student(active=true)
+            ES-->>EC: IllegalArgumentException("already has an active record")
             EC-->>A: 400 Bad Request
-        else existe una ficha INACTIVA (baja lógica previa)
-            ER-->>ES: Estudiante(activo=false)
+        else an INACTIVE record exists (previous soft delete)
+            ER-->>ES: Student(active=false)
             ES->>CR: findById(idCategoria)
-            CR-->>ES: Categoria
-            ES->>ER: save(estudiante reactivado: categoria, código, activo=true)
-            ER-->>ES: Estudiante
-            ES-->>EC: EstudianteResponse
+            CR-->>ES: Category
+            ES->>ER: save(reactivated student: category, code, active=true)
+            ER-->>ES: Student
+            ES-->>EC: StudentResponse
             EC-->>A: 201 Created
-        else nunca tuvo ficha
+        else never had a record
             ES->>ER: existsByCodigoEstudiante(codigo)
             ER-->>ES: false
             ES->>PR: findById(idPersona)
-            PR-->>ES: Persona
+            PR-->>ES: Person
             ES->>CR: findById(idCategoria)
-            CR-->>ES: Categoria
-            ES->>ER: save(Estudiante nuevo)
-            ER-->>ES: Estudiante
-            ES-->>EC: EstudianteResponse
+            CR-->>ES: Category
+            ES->>ER: save(new Student)
+            ER-->>ES: Student
+            ES-->>EC: StudentResponse
             EC-->>A: 201 Created
         end
     end
 
-    Note over A,EC: Continuación opcional, en otra petición:<br/>habilitar el acceso propio del estudiante
+    Note over A,EC: Optional continuation, in another request:<br/>enable the student's own access
     A->>EC: POST /api/estudiantes/{id}/acceso {username, password}
-    EC->>ES: habilitarAcceso(id, request)
-    ES->>EAS: crearCuentaDeEstudiante(persona, request)
+    EC->>ES: enableAccess(id, request)
+    ES->>EAS: createStudentAccount(person, request)
     EAS->>UR: existsByUsername(username)
     UR-->>EAS: false
-    EAS->>UR: save(Usuario nuevo, rol=ESTUDIANTE, password hasheada)
-    UR-->>EAS: Usuario
-    EAS-->>ES: Usuario
-    ES->>ER: save(estudiante.usuario = Usuario)
-    ES-->>EC: EstudianteResponse
+    EAS->>UR: save(new UserAccount, role=ESTUDIANTE, hashed password)
+    UR-->>EAS: UserAccount
+    EAS-->>ES: UserAccount
+    ES->>ER: save(student.userAccount = UserAccount)
+    ES-->>EC: StudentResponse
     EC-->>A: 201 Created
 ```
 
@@ -168,64 +175,64 @@ un identificador opaco con vencimiento corto en Redis (ver
 
 ```mermaid
 sequenceDiagram
-    actor R as Recepcionista
-    participant Pantalla as Pantalla QR (recepción)
-    participant AQC as AsistenciaQrController
-    participant QRS as QrAsistenciaService
+    actor R as Receptionist
+    participant Pantalla as QR Screen (reception)
+    participant AQC as AttendanceQrController
+    participant QRS as QrAttendanceService
     participant Redis as Redis
-    actor E as Estudiante
-    participant MAC as MarcarAsistenciaComponent
-    participant AS as AsistenciaService
-    participant ER as EstudianteRepository
-    participant SR as SesionRepository
-    participant NS as NotificacionService
+    actor E as Student
+    participant MAC as MarkAttendanceComponent
+    participant AS as AttendanceService
+    participant ER as StudentRepository
+    participant SR as TrainingSessionRepository
+    participant NS as NotificationService
 
-    R->>Pantalla: abre QR de la sesión
-    loop cada pocos segundos (rotación)
+    R->>Pantalla: opens the session's QR
+    loop every few seconds (rotation)
         Pantalla->>AQC: POST /asistencias/qr/sesion/{idSesion}/token
-        AQC->>QRS: emitir(idSesion)
+        AQC->>QRS: issue(idSesion)
         QRS->>Redis: SET qr:asistencia:{token} = idSesion (TTL 60s)
         QRS-->>AQC: TokenQr(token, ttl)
         AQC-->>Pantalla: 200 OK
-        Pantalla->>Pantalla: pinta el QR con el token nuevo
+        Pantalla->>Pantalla: renders the QR with the new token
     end
 
-    E->>MAC: enfoca el QR con la cámara
-    MAC->>MAC: jsQR decodifica el token (100% en el cliente)
+    E->>MAC: scans the QR with the camera
+    MAC->>MAC: jsQR decodes the token (100% client-side)
     MAC->>AQC: POST /asistencias/qr/marcar {token}
-    AQC->>QRS: canjear(token)
+    AQC->>QRS: redeem(token)
     QRS->>Redis: GETDEL qr:asistencia:{token}
 
-    alt token no existe o ya vencido/usado
+    alt token does not exist or already expired/used
         Redis-->>QRS: null
         QRS-->>AQC: Optional.empty()
         AQC-->>MAC: 410 Gone
-        MAC-->>E: "Ese código ya expiró o ya se usó"
-    else token vigente
+        MAC-->>E: "That code already expired or was already used"
+    else token still valid
         Redis-->>QRS: idSesion
         QRS-->>AQC: Optional(idSesion)
-        AQC->>AS: marcarPorQr(username, idSesion)
+        AQC->>AS: checkInByQr(username, idSesion)
         AS->>ER: findByUsuario_Username(username)
-        ER-->>AS: Estudiante
+        ER-->>AS: Student
 
-        alt ya marcó asistencia en esta sesión
+        alt already checked in for this session
             AS-->>AQC: IllegalArgumentException
             AQC-->>MAC: 400 Bad Request
-            MAC-->>E: "Ya marcaste tu asistencia en esta sesión"
-        else categoría de la sesión no coincide con la del estudiante
+            MAC-->>E: "You already checked in for this session"
+        else the session's category does not match the student's
             AS-->>AQC: IllegalArgumentException
             AQC-->>MAC: 400 Bad Request
-            MAC-->>E: (mensaje genérico de fallo)
-        else válido
+            MAC-->>E: (generic failure message)
+        else valid
             AS->>SR: findById(idSesion)
-            SR-->>AS: SesionEntrenamiento
-            AS->>AS: calcularEstado(horaInicio, ahora) → PRESENTE | TARDE
-            AS->>AS: save(Asistencia)
-            AS->>NS: notificarAsistencia(estudiante, estado)
-            NS-->>AS: (atrapa sus propios errores: si falla notificar, la asistencia ya quedó guardada)
-            AS-->>AQC: Asistencia
+            SR-->>AS: TrainingSession
+            AS->>AS: calculateStatus(startTime, now) → PRESENTE | TARDE
+            AS->>AS: save(Attendance)
+            AS->>NS: notifyAttendance(student, status)
+            NS-->>AS: (catches its own errors: if notifying fails, attendance was already saved)
+            AS-->>AQC: Attendance
             AQC-->>MAC: 201 Created { estado }
-            MAC-->>E: "¡Presente!" / "Marcado como tarde"
+            MAC-->>E: "Present!" / "Marked as late"
         end
     end
 ```

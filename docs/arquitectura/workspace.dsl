@@ -45,9 +45,9 @@ workspace "SGED - ProFútbol" "Management System for the ProFútbol Youth Footba
 
                 # --- Security domain ---
                 authController = component "AuthController" "Endpoints /api/auth: login, register, logout, refresh, me." "Spring MVC REST Controller"
-                usuarioController = component "UsuarioController" "CRUD for user accounts (/api/usuarios), with pagination and soft delete." "Spring MVC REST Controller"
-                personaController = component "PersonaController" "CRUD for personal data (/api/personas); uniqueness of ID number and email." "Spring MVC REST Controller"
-                estadoGeneralController = component "EstadoGeneralController" "Read-only catalog of administrative statuses (/api/estados_generales)." "Spring MVC REST Controller"
+                usuarioController = component "UserAccountController" "CRUD for user accounts (/api/usuarios), with pagination and soft delete." "Spring MVC REST Controller"
+                personaController = component "PersonController" "CRUD for personal data (/api/personas); uniqueness of ID number and email." "Spring MVC REST Controller"
+                estadoGeneralController = component "GeneralStatusController" "Read-only catalog of administrative statuses (/api/estados_generales)." "Spring MVC REST Controller"
 
                 jwtAuthFilter = component "JwtAuthenticationFilter" "Filter that validates the JWT from the cookie on every request and populates the security context." "Spring Security Filter"
                 jwtService = component "JwtService" "Issuance and validation of JWT tokens (jjwt 0.12), with iss/aud/nbf claims." "Service"
@@ -56,24 +56,24 @@ workspace "SGED - ProFútbol" "Management System for the ProFútbol Youth Footba
                 userDetailsService = component "UserDetailsServiceImpl" "Loads user/roles for Spring Security." "Service"
                 securityConfig = component "SecurityConfig" "Filter chain, CORS, BCrypt(12), stateless policy, explicit CSP." "Spring Security Configuration"
 
-                usuarioService = component "UsuarioService" "Account business rules: creation with encoded password, username uniqueness, soft delete." "Service"
-                personaService = component "PersonaService" "Person business rules: ID number/email uniqueness on create and edit." "Service"
-                estadoGeneralService = component "EstadoGeneralService" "Status catalog lookup." "Service"
+                usuarioService = component "UserAccountService" "Account business rules: creation with encoded password, username uniqueness, soft delete." "Service"
+                personaService = component "PersonService" "Person business rules: ID number/email uniqueness on create and edit." "Service"
+                estadoGeneralService = component "GeneralStatusService" "Status catalog lookup." "Service"
 
                 # --- Academic domain ---
-                estudianteController = component "EstudianteController" "CRUD for students (/api/estudiantes) with pagination, soft delete and per-category operations." "Spring MVC REST Controller"
-                estudianteService = component "EstudianteService" "Student business rules: create, edit, soft delete, count and deactivate by category." "Service"
+                estudianteController = component "StudentController" "CRUD for students (/api/estudiantes) with pagination, soft delete and per-category operations." "Spring MVC REST Controller"
+                estudianteService = component "StudentService" "Student business rules: create, edit, soft delete, count and deactivate by category." "Service"
 
                 # --- Sports domain ---
-                categoriaController = component "CategoriaController" "CRUD for the category catalog (/api/categorias), with age-range validation." "Spring MVC REST Controller"
-                entrenadorController = component "EntrenadorController" "CRUD for coaches (/api/entrenadores), linked to a person and a user account." "Spring MVC REST Controller"
-                categoriaService = component "CategoriaService" "Category catalog business rules." "Service"
-                entrenadorService = component "EntrenadorService" "Coach business rules: uniqueness of the linked person and user account." "Service"
+                categoriaController = component "CategoryController" "CRUD for the category catalog (/api/categorias), with age-range validation." "Spring MVC REST Controller"
+                entrenadorController = component "CoachController" "CRUD for coaches (/api/entrenadores), linked to a person and a user account." "Spring MVC REST Controller"
+                categoriaService = component "CategoryService" "Category catalog business rules." "Service"
+                entrenadorService = component "CoachService" "Coach business rules: uniqueness of the linked person and user account." "Service"
 
                 # --- Persistence ---
-                seguridadRepository = component "UsuarioRepository / PersonaRepository / RolRepository / EstadoGeneralRepository" "Data access for the security domain via Spring Data JPA." "JPA Repository"
-                estudianteRepository = component "EstudianteRepository" "Data access for students via Spring Data JPA; invokes stored procedures with @Procedure." "JPA Repository"
-                deportivoRepository = component "CategoriaRepository / EntrenadorRepository" "Data access for the sports domain via Spring Data JPA." "JPA Repository"
+                seguridadRepository = component "UserAccountRepository / PersonRepository / RoleRepository / GeneralStatusRepository" "Data access for the security domain via Spring Data JPA." "JPA Repository"
+                estudianteRepository = component "StudentRepository" "Data access for students via Spring Data JPA; invokes stored procedures with @Procedure." "JPA Repository"
+                deportivoRepository = component "CategoryRepository / CoachRepository" "Data access for the sports domain via Spring Data JPA." "JPA Repository"
 
                 # --- Cross-cutting ---
                 globalExceptionHandler = component "GlobalExceptionHandler / ProblemDetailsAuthHandlers" "Translates exceptions into RFC 7807 (Problem Details) responses; @Valid returns 422." "Cross-cutting Component"

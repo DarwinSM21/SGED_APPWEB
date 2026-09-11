@@ -12,21 +12,33 @@ componentes de despliegue (controlador/servicio/repositorio como bloques),
 no la estructura estática con atributos, operaciones y multiplicidades que
 pide esta vista.
 
+**Nota sobre `deportivo`:** los nombres de clase y atributo de ese
+dominio (`Coach`, `Category`, `TrainingSession`, `Attendance`,
+`DailyEvaluation`, `StudentEvaluation`) están traducidos al inglés en
+este diagrama por completitud documental, pero el código Java real de
+`deportivo` todavía usa los nombres en español (`Entrenador`, `Categoria`,
+`SesionEntrenamiento`, `Asistencia`, `EvaluacionDiaria`,
+`EvaluacionEstudiante`) — ese renombrado de código es un trabajo aparte,
+pendiente de reparto con el equipo. Este diagrama refleja el diseño
+objetivo, no necesariamente el estado exacto del código a la fecha.
+
 ## Alcance
 
 Cubre los agregados mínimos de los cuatro dominios que pide la guía:
-**Persona, Usuario y Rol** (seguridad); **Estudiante, Representante y
-Pago** (académico); **Entrenador, Categoria, SesionEntrenamiento,
-Asistencia y EvaluacionDiaria** (deportivo); **Articulo, MovimientoStock y
-Asignacion** (inventario). Se agregan **RepresentanteEstudiante** (la
-clase de asociación real entre Representante y Estudiante — sin ella la
-relación \*-a-\* no se puede dibujar con fidelidad) y
-**EvaluacionEstudiante** (el detalle por jugador dentro de una
-EvaluacionDiaria).
+**Person, UserAccount y Role** (seguridad); **Student, Guardian y
+Payment** (académico); **Coach, Category, TrainingSession,
+Attendance y DailyEvaluation** (deportivo — nombres traducidos solo en
+este diagrama; el código Java de `deportivo` sigue en español, pendiente
+de reparto con el equipo); **Item,
+StockMovement y Assignment** (inventario). Se agregan
+**GuardianStudent** (la clase de asociación real entre Guardian y
+Student — sin ella la relación \*-a-\* no se puede dibujar con fidelidad)
+y **StudentEvaluation** (el detalle por jugador dentro de una
+DailyEvaluation).
 
-Quedan fuera, a propósito, los catálogos de apoyo (`EstadoGeneral`,
-`Posicion`, `Especialidad`, `Horario`, `Lesion`, `Auditoria`,
-`Consentimiento`, `Notificacion`, `CriterioEvaluacion`,
+Quedan fuera, a propósito, los catálogos de apoyo (`GeneralStatus`,
+`Posicion`, `Especialidad`, `Horario`, `Lesion`, `AuditLog`,
+`Consent`, `Notification`, `CriterioEvaluacion`,
 `DetalleEvaluacion`): añadirlos no cambia la estructura del dominio y
 harían el diagrama ilegible. Están documentados en
 `docs/basedatos/DATA-DICTIONARY.md`.
@@ -35,8 +47,10 @@ Las clases son entidades JPA: cada atributo privado ya tiene su
 getter/setter público generado por Lombok (`@Getter @Setter`), así que
 listarlos uno a uno no aportaría información — no se muestran. Las únicas
 operaciones que se listan son las dos que sí tienen comportamiento propio
-más allá de acceso a datos: `Asistencia.habilitaEvaluacion()` y
-`EvaluacionDiaria.estaFinalizada()`.
+más allá de acceso a datos: `Attendance.enablesEvaluation()` y
+`DailyEvaluation.isFinished()` (en el código real, todavía
+`Asistencia.habilitaEvaluacion()` / `EvaluacionDiaria.estaFinalizada()`
+hasta que se traduzca `deportivo`).
 
 ## Diagrama
 
@@ -44,199 +58,201 @@ más allá de acceso a datos: `Asistencia.habilitaEvaluacion()` y
 classDiagram
     direction LR
 
-    %% ===== Dominio: seguridad =====
-    class Persona {
-        -Long idPersona
-        -String nombre
-        -String apellido
-        -String cedula
-        -String correo
-        -String telefono
-        -LocalDate fechaNacimiento
-        -Boolean activo
+    %% ===== Domain: seguridad =====
+    class Person {
+        -Long id
+        -String name
+        -String lastName
+        -String nationalId
+        -String email
+        -String phone
+        -LocalDate birthDate
+        -Boolean active
     }
 
-    class Usuario {
-        -Long idUsuario
+    class UserAccount {
+        -Long id
         -String username
         -String passwordHash
-        -OffsetDateTime ultimoAcceso
-        -Boolean activo
+        -OffsetDateTime lastAccess
+        -Boolean active
     }
 
-    class Rol {
-        -Long idRol
-        -String nombre
-        -String descripcion
+    class Role {
+        -Long id
+        -String name
+        -String description
     }
 
-    %% ===== Dominio: academico =====
-    class Estudiante {
-        -Long idEstudiante
-        -String codigoEstudiante
-        -LocalDate fechaIngreso
-        -BigDecimal peso
-        -BigDecimal altura
-        -Boolean activo
+    %% ===== Domain: academico =====
+    class Student {
+        -Long id
+        -String studentCode
+        -LocalDate enrollmentDate
+        -BigDecimal weight
+        -BigDecimal height
+        -Boolean active
     }
 
-    class Representante {
-        -Long idRepresentante
-        -String parentesco
-        -String telefonoContacto
-        -Boolean activo
+    class Guardian {
+        -Long id
+        -String relationship
+        -String contactPhone
+        -Boolean active
     }
 
-    class RepresentanteEstudiante {
-        -Long idRepresentanteEstudiante
-        -String relacion
-        -Boolean contactoPrincipal
-        -Boolean activo
+    class GuardianStudent {
+        -Long id
+        -String relationship
+        -Boolean primaryContact
+        -Boolean active
     }
 
-    class Pago {
-        -Long idPago
-        -TipoPago tipo
-        -Short anio
-        -Short mes
-        -BigDecimal monto
-        -LocalDate fechaPago
+    class Payment {
+        -Long id
+        -PaymentType type
+        -Short year
+        -Short month
+        -BigDecimal amount
+        -LocalDate paymentDate
     }
 
-    %% ===== Dominio: deportivo =====
-    class Entrenador {
-        -Long idEntrenador
-        -Short experienciaAnios
-        -String certificacion
-        -Boolean activo
+    %% ===== Domain: deportivo =====
+    class Coach {
+        -Long id
+        -Short yearsOfExperience
+        -String certification
+        -Boolean active
     }
 
-    class Categoria {
-        -Long idCategoria
-        -String nombre
-        -Short edadMin
-        -Short edadMax
-        -Boolean activo
+    class Category {
+        -Long id
+        -String name
+        -Short minAge
+        -Short maxAge
+        -Boolean active
     }
 
-    class SesionEntrenamiento {
-        -Long idSesion
-        -LocalDate fecha
-        -LocalTime horaInicio
-        -LocalTime horaFin
-        -String campo
-        -String estado
+    class TrainingSession {
+        -Long id
+        -LocalDate date
+        -LocalTime startTime
+        -LocalTime endTime
+        -String field
+        -String status
     }
 
-    class Asistencia {
-        -Long idAsistencia
-        -LocalTime horaEntrada
-        -String metodo
-        -String estado
-        -String observacion
-        +boolean habilitaEvaluacion()
+    class Attendance {
+        -Long id
+        -LocalTime checkInTime
+        -String method
+        -String status
+        -String notes
+        +boolean enablesEvaluation()
     }
 
-    class EvaluacionDiaria {
-        -Long idEvaluacion
-        -LocalDate fecha
-        -String observacionGeneral
-        -String estado
-        +boolean estaFinalizada()
+    class DailyEvaluation {
+        -Long id
+        -LocalDate date
+        -String generalNotes
+        -String status
+        +boolean isFinished()
     }
 
-    class EvaluacionEstudiante {
-        -Long idEvaluacionEstudiante
+    class StudentEvaluation {
+        -Long id
     }
 
-    %% ===== Dominio: inventario =====
-    class Articulo {
-        -Long idArticulo
-        -String nombre
-        -TipoArticulo tipo
-        -String talla
-        -Integer stockActual
-        -Integer stockMinimo
-        -String unidadMedida
-        -Boolean activo
+    %% ===== Domain: inventario =====
+    class Item {
+        -Long id
+        -String name
+        -ItemType type
+        -String size
+        -Integer currentStock
+        -Integer minimumStock
+        -String unitOfMeasure
+        -Boolean active
     }
 
-    class MovimientoStock {
-        -Long idMovimiento
-        -TipoMovimiento tipoMovimiento
-        -Integer cantidad
-        -String motivo
-        -Instant fechaMovimiento
+    class StockMovement {
+        -Long id
+        -MovementType movementType
+        -Integer quantity
+        -String reason
+        -Instant movementDate
     }
 
-    class Asignacion {
-        -Long idAsignacion
-        -Integer cantidad
-        -TipoDestinatario tipoDestinatario
-        -LocalDate fechaAsignacion
-        -LocalDate fechaDevolucionEsperada
-        -LocalDate fechaDevolucionReal
-        -EstadoAsignacion estado
-        -String observaciones
+    class Assignment {
+        -Long id
+        -Integer quantity
+        -RecipientType recipientType
+        -LocalDate assignmentDate
+        -LocalDate expectedReturnDate
+        -LocalDate actualReturnDate
+        -AssignmentStatus status
+        -String notes
     }
 
-    %% ===== Relaciones: seguridad =====
-    Persona "1" -- "0..1" Usuario : tiene cuenta
-    Usuario "*" -- "*" Rol : usuario_rol
+    %% ===== Relationships: seguridad =====
+    Person "1" -- "0..1" UserAccount : has account
+    UserAccount "*" -- "*" Role : has role
 
-    %% ===== Relaciones: academico =====
-    Persona "1" -- "0..1" Estudiante : es
-    Categoria "1" -- "0..*" Estudiante : agrupa
-    Estudiante "1" -- "0..1" Usuario : accede como
-    Estudiante "1" -- "0..*" Pago : genera
-    Usuario "1" -- "0..*" Pago : registra
+    %% ===== Relationships: academico =====
+    Person "1" -- "0..1" Student : is
+    Category "1" -- "0..*" Student : groups
+    Student "1" -- "0..1" UserAccount : logs in as
+    Student "1" -- "0..*" Payment : generates
+    UserAccount "1" -- "0..*" Payment : registers
 
-    Persona "1" -- "1" Representante : es
-    Usuario "1" -- "1" Representante : accede como
-    Representante "1" -- "0..*" RepresentanteEstudiante : vincula
-    Estudiante "1" -- "0..*" RepresentanteEstudiante : es representado en
+    Person "1" -- "1" Guardian : is
+    UserAccount "1" -- "1" Guardian : logs in as
+    Guardian "1" -- "0..*" GuardianStudent : links
+    Student "1" -- "0..*" GuardianStudent : is represented in
 
-    %% ===== Relaciones: deportivo =====
-    Persona "1" -- "1" Entrenador : es
-    Usuario "1" -- "1" Entrenador : accede como
-    Entrenador "1" -- "0..*" SesionEntrenamiento : dirige
-    Categoria "1" -- "0..*" SesionEntrenamiento : convoca
+    %% ===== Domain: deportivo =====
+    Person "1" -- "1" Coach : is
+    UserAccount "1" -- "1" Coach : logs in as
+    Coach "1" -- "0..*" TrainingSession : leads
+    Category "1" -- "0..*" TrainingSession : schedules
 
-    SesionEntrenamiento "1" -- "0..*" Asistencia : registra
-    Estudiante "1" -- "0..*" Asistencia : marca
+    TrainingSession "1" -- "0..*" Attendance : logs
+    Student "1" -- "0..*" Attendance : checks in
 
-    SesionEntrenamiento "1" -- "0..1" EvaluacionDiaria : tiene
-    Entrenador "1" -- "0..*" EvaluacionDiaria : califica
-    EvaluacionDiaria "1" *-- "0..*" EvaluacionEstudiante : contiene
-    Estudiante "1" -- "0..*" EvaluacionEstudiante : es calificado en
-    Categoria "1" -- "0..*" EvaluacionEstudiante : categoriaDia
+    TrainingSession "1" -- "0..1" DailyEvaluation : has
+    Coach "1" -- "0..*" DailyEvaluation : evaluates
+    DailyEvaluation "1" *-- "0..*" StudentEvaluation : contains
+    Student "1" -- "0..*" StudentEvaluation : is evaluated in
+    Category "1" -- "0..*" StudentEvaluation : categoryOfDay
 
-    %% ===== Relaciones: inventario =====
-    Articulo "1" -- "0..*" MovimientoStock : mueve stock
-    Usuario "1" -- "0..*" MovimientoStock : registra
-    Articulo "1" -- "0..*" Asignacion : se asigna
-    Estudiante "0..1" -- "0..*" Asignacion : recibe
-    Entrenador "0..1" -- "0..*" Asignacion : recibe
-    Usuario "1" -- "0..*" Asignacion : registra
+    %% ===== Relationships: inventario =====
+    Item "1" -- "0..*" StockMovement : moves stock
+    UserAccount "1" -- "0..*" StockMovement : registers
+    Item "1" -- "0..*" Assignment : is assigned
+    Student "0..1" -- "0..*" Assignment : receives
+    Coach "0..1" -- "0..*" Assignment : receives
+    UserAccount "1" -- "0..*" Assignment : registers
 ```
 
 ## Notas de fidelidad
 
-- **Enumeraciones.** `Pago.tipo` (`MEMBRESIA`/`DIARIO`), `Articulo.tipo`
+- **Enumeraciones.** `Payment.type` (`MEMBRESIA`/`DIARIO`), `Item.type`
   (`UNIFORME`/`BALON`/`IMPLEMENTO`/`OTRO`),
-  `MovimientoStock.tipoMovimiento` (`ENTRADA`/`SALIDA`/`AJUSTE`),
-  `Asignacion.tipoDestinatario` (`ESTUDIANTE`/`ENTRENADOR`) y
-  `Asignacion.estado` (`ASIGNADO`/`DEVUELTO`/`PERDIDO`) son enums Java
-  (`@Enumerated(EnumType.STRING)`), no texto libre.
-- **`Persona`–`Usuario` y `Persona`–`Estudiante` son `0..1` por regla de
+  `StockMovement.movementType` (`ENTRADA`/`SALIDA`/`AJUSTE`),
+  `Assignment.recipientType` (`ESTUDIANTE`/`ENTRENADOR`) y
+  `Assignment.status` (`ASIGNADO`/`DEVUELTO`/`PERDIDO`) son enums Java
+  (`@Enumerated(EnumType.STRING)`), no texto libre. Los valores del enum
+  no se tradujeron junto con el resto del código.
+- **`Person`–`UserAccount` y `Person`–`Student` son `0..1` por regla de
   negocio, no por restricción de base de datos.** El código JPA declara
   ambas relaciones como `@ManyToOne` simple, sin `unique = true`; es
-  `UsuarioService`/`EstudianteService` quien impide en tiempo de ejecución
-  que una persona tenga más de una cuenta o ficha de estudiante activa a
-  la vez (ver `validarRolCoherente`, `validarCoherenciaConFichaEstudiante`).
-  Distinto de `Entrenador`/`Representante`, donde el `1..1` con Persona y
-  Usuario sí lo impone la columna `unique = true` de la migración.
-- **`Asignacion` es XOR, no una relación libre con ambas puntas.** Exactamente
-  una de `estudiante`/`entrenador` va poblada según `tipoDestinatario`; la
+  `UserAccountService`/`StudentAccessService` quien impide en tiempo de
+  ejecución que una persona tenga más de una cuenta o ficha de estudiante
+  activa a la vez (ver `UserAccountService.validateRoleCoherent`,
+  `StudentAccessService.validateConsistencyWithStudentRecord`).
+  Distinto de `Coach`/`Guardian`, donde el `1..1` con Person y
+  UserAccount sí lo impone la columna `unique = true` de la migración.
+- **`Assignment` es XOR, no una relación libre con ambas puntas.** Exactamente
+  una de `student`/`coach` va poblada según `recipientType`; la
   base de datos lo exige con un `CHECK` (migración V15), no el modelo de
   objetos.
