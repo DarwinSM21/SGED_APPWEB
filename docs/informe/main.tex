@@ -2356,10 +2356,44 @@ controla con la variable \texttt{SPRINGDOC\_ENABLED} —activa en
 desarrollo local, apagada en el ambiente público declarado en
 \texttt{render.yaml}—, y el escaneo se repitió contra esa configuración.
 Reporte completo, de las dos corridas, en
-\ruta{docs/mediciones/sec/zap/}. \textbf{Alcance declarado:} este
-escaneo cubrió el \emph{backend}; una corrida equivalente contra el
-\emph{frontend} Angular queda pendiente, junto con la puesta en
-producción (Bloque~A.4).
+\ruta{docs/mediciones/sec/zap/}.
+
+\textbf{Escaneo OWASP ZAP autenticado con \emph{active scan}
+(2026-09-11, commit \texttt{60cb908}).} El baseline anterior era pasivo
+y sin sesión: solo escuchaba tráfico, sin atacar y sin credenciales. Esta
+segunda corrida, contra el entorno local (nunca el despliegue público
+—un \emph{active scan} manda cargas de ataque reales y no debe correr
+contra datos de producción—), cierra esa brecha: un
+\emph{login} real (\texttt{POST /api/auth/login} contra la cuenta
+semilla) captura la cookie de sesión y el complemento \emph{replacer} la
+inyecta en cada petición del plan de automatización
+(\ruta{docs/mediciones/sec/zap/zap-authenticated.yaml}); las
+\textbf{135 rutas} se enumeran desde el documento OpenAPI real
+(\texttt{/api/docs.json}) en vez de un rastreador HTML, apropiado para
+una API sin enlaces que seguir; el \emph{active scan} (política por
+defecto, 12 minutos de presupuesto) ataca esas rutas autenticadas.
+
+El escaneo encontró algo que el modo pasivo nunca hubiera visto:
+\texttt{GET} a rutas que solo aceptan \texttt{POST}
+(\texttt{/api/auth/login}, \texttt{/forgot}, \texttt{/confirmar-correo})
+devolvía \textbf{500} en vez de \textbf{405}, porque el manejador global
+de excepciones no tenía un caso específico para un método HTTP no
+soportado y la petición caía en el mismo manejador genérico que los
+errores de verdad. El cuerpo de la respuesta ya era el objeto de error
+genérico de siempre, sin traza de pila ni ruta de archivo —no había fuga
+real de información, aunque dos reglas de ZAP lo señalaron por
+coincidencia textual de la cadena "Internal Server Error"—, pero el
+código de estado sí era incorrecto. Corregido y verificado con una
+segunda corrida: \textbf{cero hallazgos de severidad alta o media
+atribuibles a código propio}. Quedan dos advertencias de severidad media
+aceptadas por diseño, no defectos: el escaneo contra el contenedor del
+\emph{backend} sin pasar por la capa de cifrado en tránsito (que es una
+capa aparte, verificada en la sección~\ref{sec:a01-falso-correcto}), y la
+exposición pública de \texttt{/actuator/health} —exigida explícitamente
+por la observación del docente sobre el despliegue público, que pide
+comprobar que ese punto de salud responde con el estado de la base de
+datos y de la caché—. Reportes en
+\ruta{docs/mediciones/sec/zap/zap-authenticated-report.\{html,json,xml\}}.
 
 \textbf{Calidad de código: SonarQube.} Complementario a SpotBugs
 —que audita específicamente inyección SQL con un filtro restringido—,
@@ -3291,7 +3325,9 @@ escaneo con OWASP~ZAP en modo \emph{baseline}
 configuración que lo genera) cierra con \textbf{cero hallazgos, de
 cualquier severidad}, tras apagar en el ambiente público la interfaz de
 Swagger UI que originalmente exponía una dependencia de terceros
-desactualizada. El análisis
+desactualizada; una segunda corrida con sesión autenticada y
+\emph{active scan} (sección~\ref{sec:zap-spotbugs}) confirma cero
+hallazgos de inyección también bajo ataque activo. El análisis
 estático (\ruta{docs/mediciones/sec/static-analysis/}) no reporta
 ocurrencias de la regla
 \texttt{SQL\_NONCONSTANT\_STRING\_PASSED\_TO\_EXECUTE}, que es la
