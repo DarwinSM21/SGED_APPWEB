@@ -6,9 +6,9 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 ---
 
-## Estado final (2026-09-10)
+## Estado final (2026-09-11)
 
-`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`. CI en verde. Corte defendido: etiqueta **`v1.0.3`**.
+`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`, HEAD **`0982340`**. CI en verde. Corte defendido: etiqueta **`v1.0.3`** (apunta al mismo commit).
 
 > **Revisión del SRS v1.6 del docente (M1–M3), 2026-09-10 — cerrada.** Ver la sección [Revisión SRS v1.6 — M1/M2/M3](#revisión-srs-v16--m1m2m3-2026-09-10) al final. M1: etiqueta movida al cierre real (`v1.0.3`). M2: §1.3 del SRS explica el vocabulario de estados. M3: `RNF-26` convierte el hallazgo **H-09** en requisito **e implementado** (doble opt-in del correo: `V28`, token de un solo uso, `POST /api/auth/confirmar-correo`, compuerta en `/forgot`); RF-48 gana "Condición de cierre"; `ETHICS.md` v1.9 — **H-01…H-09 cerrados**.
 >
@@ -22,8 +22,11 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 | Plan de correcciones Cap. 3 — **tareas 3.1 … 3.9** | ✅ cumplidas |
 | Revisión ISO/IEC/IEEE 29148 — **M1–M9, A1–A4** | ✅ especificadas y verificadas |
 | Implementación de lo `Planificado` de A2/A4 — **RF-49, RF-50, RF-51, RNF-25, RNF-23a/b, RF-11b** | ✅ en código, con pruebas |
-| Hallazgos de `ETHICS.md` — **H-01 … H-08** | ✅ cerrados (`ETHICS.md` v1.7) |
+| Hallazgos de `ETHICS.md` — **H-01 … H-09** | ✅ cerrados (`ETHICS.md` v1.9) |
 | **RNF-24** (respaldo y recuperación) | ✅ restauración cronometrada real archivada + PITR declarado (plan Free) |
+| **RNF-26** (doble opt-in del correo, cierra H-09) | ✅ implementado (2026-09-10) y verificado en producción |
+| Revisión SRS v1.6 del docente — **M1, M2, M3** | ✅ cerradas (etiqueta `v1.0.3`, §1.3 explica el vocabulario de estados, RNF-26 implementado) |
+| Corrección de despliegue — sufijos de Render huérfanos en `render.yaml` | ✅ corregido y verificado end-to-end (login real + creación de persona en producción) |
 | Protocolo de medición Cap. 4 — **4.2, 4.3, 4.5, 4.7** | ✅ cumplen |
 
 **Único pendiente de TODO el plan — tarea del docente, no del equipo:**
@@ -32,9 +35,9 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 **Limitaciones declaradas (no bloquean la entrega, quedan como trabajo futuro):**
 
-- **H-09** — el correo de recuperación de contraseña no está verificado (doble opt-in). Riesgo acotado y mitigado; feature del tamaño de RF-37, fuera del alcance de esta entrega.
 - **4.4** — el escaneo ZAP es baseline pasivo sin sesión (0 hallazgos); un pentest activo autenticado queda pendiente si el docente lo exige.
-- **4.6** — conviene un último barrido `git cat-file -t` de procedencia tras los commits de esta semana.
+
+**4.6 — barrido de procedencia repetido, 2026-09-11 (cerrado).** 194 tokens hex candidatos de 7–40 caracteres en `DATA-PROVENANCE.md`, `main.tex`, `OBSERVACIONES.md`, `CHANGELOG-REQ.md`, `matriz.csv`, `SRS.md`, `ETHICS.md`, `CHANGELOG.md` y `VERSIONING.md` comprobados con `git cat-file -t` contra el estado vigente de `main` (incluida la ronda M1-M3/RNF-26/deploy). 4 no resuelven, los 4 ya documentados como falsos positivos intencionales: el hash fantasma histórico `35188d4` citado como ejemplo del defecto original (no como evidencia vigente), el commit de *build* de k6 upstream `00a9a1b7f5` (no es de este repo), los objetos inválidos `688c4be`/`90c6c57` citados como el texto original de OBS-09 antes de corregirse a `a98008b`/`39e4718`, y el color CSS `23c3002f` de un reporte de Lighthouse. Ningún hash nuevo roto.
 
 **Commits de la ronda final (2026-09-08 → 09), autoría `darcalleg`, sin coautoría, CI verde:**
 
@@ -226,13 +229,12 @@ cumplen; 4.4 queda como limitación de alcance declarada.**
 | **4.3** Rendimiento (k6) | Más de un escenario, percentiles altos (p95/p99), test inferencial no paramétrico, tamaño de efecto y corrección por comparaciones múltiples. | ✅ **Cumple** | `docs/mediciones/perf/REPORT.md`: **2 escenarios** (caché cálida y caché fría), 5 corridas × 50 VUs × 30 s cada uno; se reportan media, p90, **p95 y p99**; contraste **Mann-Whitney / Wilcoxon** bilateral, **δ de Cliff** (tamaño de efecto) y **corrección de Holm-Bonferroni** sobre las cuatro comparaciones. 0 % de errores. Regenerable con `scripts/perf-analysis.py`. (Misma evidencia que cierra 3.9.) |
 | **4.4** Seguridad (OWASP ZAP) | Escaneo con sesión autenticada y cobertura de rutas protegidas. | ⚠️ **Limitación declarada** | `docs/mediciones/sec/zap/`: escaneo **baseline pasivo** (`zap.yaml`, sin ataques activos) contra `http://localhost:8080/` y `/api/docs`, **sin sesión autenticada**. Resultado: **0 hallazgos** de cualquier severidad tras apagar Swagger en el ambiente público (la alerta alta previa era DOMPurify 3.0.6 empaquetado por Springdoc, no código propio). El informe lo declara explícitamente como "escaneo automatizado de rutina, no un pentest completo". El análisis estático de inyección SQL (SpotBugs + find-sec-bugs, filtro solo-SQL) **sí** corre autenticado sobre el código y está versionado (`backend/target/spotbugsXml.xml`, paso de CI). **Pendiente si el docente exige escaneo activo/autenticado:** correr ZAP con la cookie de sesión contra las rutas protegidas. |
 | **4.5** Accesibilidad / calidad web (Lighthouse) | Auditoría sobre el despliegue público, con sesión, varias rutas y varias corridas. | ✅ **Cumple** | `39d031a`: `scripts/lighthouse-ci.mjs` hace login real (`POST /api/auth/login`, cookie `sged_access` vía CDP) y audita **2 perfiles (escritorio/móvil) × 2 rutas autenticadas × 3 corridas = 12 informes** contra `https://sged-frontend-jofa.onrender.com`. Evidencias `public-*.report.json` (Lighthouse 13.4.1) + `public-summary.json` versionadas; `REPORT.md`, `DATA-PROVENANCE.md` y el informe actualizados. Workflow `.github/workflows/lighthouse.yml` con secrets `LH_USER`/`LH_PASS`. Accesibilidad 100/100. |
-| **4.6** Procedencia de datos y metadatos de medición | Todo hash y ordinal citado en la documentación de evidencia resuelve; los artefactos referencian el repositorio canónico. | ⚠️ **Conviene un último barrido** | Barridos previos (`da2b29a`, `d293731` y el de 2026-09-07) dejaron `DATA-PROVENANCE.md` y `main.tex` con hashes vigentes; el repositorio canónico volvió a ser `DarwinSM21/SGED_APPWEB`, así que las referencias a los Actions de ese repo (`docs/mediciones/ci/runs-verdes.json`, Anexo D) ya son correctas. **Pendiente:** repetir `git cat-file -t` sobre los hashes citados tras los commits de esta semana (`e6db415`…`5227637`) y revisar los ordinales de `tab:ci-corridas` / "corridas rojas" del informe. |
+| **4.6** Procedencia de datos y metadatos de medición | Todo hash y ordinal citado en la documentación de evidencia resuelve; los artefactos referencian el repositorio canónico. | ✅ **Cumple** | Barrido repetido 2026-09-11: 194 tokens hex candidatos en 9 archivos de evidencia comprobados con `git cat-file -t` contra `main` vigente (`0982340`, incluida la ronda M1-M3/RNF-26/deploy). Los 4 que no resuelven son falsos positivos ya documentados (hash fantasma histórico, commit de *build* de k6 upstream, objetos inválidos citados como texto original de OBS-09, color CSS de Lighthouse) — ninguno se cita como evidencia vigente. El repositorio canónico (`DarwinSM21/SGED_APPWEB`) no volvió a migrar desde la última revisión, así que los ordinales de `tab:ci-corridas`/Anexo D siguen siendo del mismo repositorio que los generó. |
 | **4.7** Publicación del dataset y del software | Dataset con DOI propio y licencia; software con identificador; declaraciones de datos y de código en el informe. | ✅ **Cumple** | Dataset de mediciones en Zenodo **DOI `10.5281/zenodo.22422305`**, tipo *Dataset*, **CC BY 4.0**, 3 autores = repo. Software en Zenodo (`10.5281/zenodo.21713240`, MIT). Declaraciones de disponibilidad de datos y de código en `docs/informe/main.tex`. |
 
 ### Pendiente del Capítulo 4
 
 1. **4.4** — decidir con el docente si el escaneo pasivo basta; si no, correr ZAP autenticado contra las rutas protegidas y versionar la evidencia.
-2. **4.6** — último barrido de procedencia (`git cat-file -t`) contra `main` y revisión de los ordinales de corridas de CI en el informe.
 
 ---
 
