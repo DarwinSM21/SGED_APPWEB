@@ -22,10 +22,10 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * parcial de la migración {@code V26}.
  */
 @Documented
-@Constraint(validatedBy = CedulaValidator.class)
+@Constraint(validatedBy = NationalIdValidator.class)
 @Target({FIELD, PARAMETER, RECORD_COMPONENT})
 @Retention(RUNTIME)
-public @interface Cedula {
+public @interface NationalId {
 
     /** Mensaje de error cuando la cédula proporcionada no es válida. */
     String message() default "La cédula ecuatoriana no es válida (dígito verificador incorrecto o provincia fuera de rango)";

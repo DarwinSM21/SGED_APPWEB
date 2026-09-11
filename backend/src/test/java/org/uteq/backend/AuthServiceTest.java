@@ -170,7 +170,7 @@ class AuthServiceTest {
     @Test
     void registrarConCedulaDuplicadaDevuelveVacio() {
         when(usuarioRepository.existsByUsernameIgnoreCase("cedula.dup@test.com")).thenReturn(false);
-        when(personaRepository.existsByCedulaAndActivoTrue("0912345678")).thenReturn(true);
+        when(personaRepository.existsByNationalIdAndActiveTrue("0912345678")).thenReturn(true);
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345678", "cedula.dup.correo@test.com",
@@ -183,7 +183,7 @@ class AuthServiceTest {
     @Test
     void registrarConCorreoDuplicadoDevuelveVacio() {
         when(usuarioRepository.existsByUsernameIgnoreCase("correo.dup@test.com")).thenReturn(false);
-        when(personaRepository.existsByCedulaAndActivoTrue("0912345681")).thenReturn(false);
+        when(personaRepository.existsByNationalIdAndActiveTrue("0912345681")).thenReturn(false);
         when(personaRepository.existsByCorreo("correo.dup.persona@test.com")).thenReturn(true);
 
         RegisterRequest registerRequest = new RegisterRequest(
@@ -254,7 +254,7 @@ class AuthServiceTest {
     @Test
     void registrarSinCatalogoEstadoGeneralLanzaIllegalStateException() {
         when(usuarioRepository.existsByUsernameIgnoreCase("sinestado@test.com")).thenReturn(false);
-        when(personaRepository.existsByCedulaAndActivoTrue("0912345682")).thenReturn(false);
+        when(personaRepository.existsByNationalIdAndActiveTrue("0912345682")).thenReturn(false);
         when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(i -> {
             Person p = i.getArgument(0);

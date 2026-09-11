@@ -95,7 +95,7 @@ public class AuthService {
 
         // RF-49 / H-01: la cédula es opcional; solo cuenta como colisión si viene.
         boolean cedulaDuplicada = request.cedula() != null && !request.cedula().isBlank()
-                && personaRepository.existsByCedulaAndActivoTrue(request.cedula());
+                && personaRepository.existsByNationalIdAndActiveTrue(request.cedula());
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
                 || cedulaDuplicada
                 || personaRepository.existsByCorreo(request.correo())) {

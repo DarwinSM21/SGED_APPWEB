@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
-import org.uteq.backend.common.validation.Cedula;
+import org.uteq.backend.common.validation.NationalId;
 
 import java.time.LocalDate;
 
@@ -19,7 +19,7 @@ public record PersonRequest(
         @Size(max = 100, message = "El apellido no puede superar los 100 caracteres")
         String apellido,
 
-        @Cedula
+        @NationalId
         String cedula,
 
         @NotBlank(message = "El correo es obligatorio")

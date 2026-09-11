@@ -79,9 +79,9 @@ class PersonServiceTest {
     @Test
     @DisplayName("buscarPorCedula devuelve la persona activa correspondiente")
     void buscarPorCedula_existente() {
-        when(personaRepository.findByCedulaAndActivoTrue("1234567890")).thenReturn(Optional.of(persona()));
+        when(personaRepository.findByNationalIdAndActiveTrue("1234567890")).thenReturn(Optional.of(persona()));
 
-        PersonResponse resultado = personaService.findByCedula("1234567890");
+        PersonResponse resultado = personaService.findByNationalId("1234567890");
 
         assertThat(resultado.cedula()).isEqualTo("1234567890");
     }
@@ -89,7 +89,7 @@ class PersonServiceTest {
     @Test
     @DisplayName("crear rechaza cedula duplicada")
     void crear_cedula_duplicada_lanza_excepcion() {
-        when(personaRepository.existsByCedulaAndActivoTrue("1234567890")).thenReturn(true);
+        when(personaRepository.existsByNationalIdAndActiveTrue("1234567890")).thenReturn(true);
 
         assertThatThrownBy(() -> personaService.create(requestValido("1234567890", "nueva@sged.test")))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -101,7 +101,7 @@ class PersonServiceTest {
     @Test
     @DisplayName("crear rechaza correo duplicado")
     void crear_correo_duplicado_lanza_excepcion() {
-        when(personaRepository.existsByCedulaAndActivoTrue("0000000000")).thenReturn(false);
+        when(personaRepository.existsByNationalIdAndActiveTrue("0000000000")).thenReturn(false);
         when(personaRepository.existsByCorreo("maria@sged.test")).thenReturn(true);
 
         assertThatThrownBy(() -> personaService.create(requestValido("0000000000", "maria@sged.test")))
@@ -112,7 +112,7 @@ class PersonServiceTest {
     @Test
     @DisplayName("crear persiste la persona cuando cedula y correo son unicos")
     void crear_persiste_persona_valida() {
-        when(personaRepository.existsByCedulaAndActivoTrue("0000000000")).thenReturn(false);
+        when(personaRepository.existsByNationalIdAndActiveTrue("0000000000")).thenReturn(false);
         when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
@@ -139,7 +139,7 @@ class PersonServiceTest {
         PersonResponse resultado = personaService.create(requestValido(null, "sincedula@sged.test"));
 
         assertThat(resultado.idPersona()).isEqualTo(9L);
-        verify(personaRepository, never()).existsByCedulaAndActivoTrue(any());
+        verify(personaRepository, never()).existsByNationalIdAndActiveTrue(any());
     }
 
     @Test
@@ -147,7 +147,7 @@ class PersonServiceTest {
     void editar_actualiza_persona_existente() {
         Person existente = persona();
         when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
-        when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
+        when(personaRepository.existsAnotherPersonWithNationalId("1234567890", 1L)).thenReturn(false);
         when(personaRepository.existsAnotherPersonWithEmail("maria2@sged.test", 1L)).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -159,7 +159,7 @@ class PersonServiceTest {
     @Test
     @DisplayName("RNF-26 - crear deja el correo sin verificar y dispara el doble opt-in")
     void crear_dispara_confirmacion_de_correo() {
-        when(personaRepository.existsByCedulaAndActivoTrue("0000000000")).thenReturn(false);
+        when(personaRepository.existsByNationalIdAndActiveTrue("0000000000")).thenReturn(false);
         when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
@@ -180,7 +180,7 @@ class PersonServiceTest {
         Person existente = persona();
         existente.setEmailVerified(true);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
-        when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
+        when(personaRepository.existsAnotherPersonWithNationalId("1234567890", 1L)).thenReturn(false);
         when(personaRepository.existsAnotherPersonWithEmail("maria@sged.test", 1L)).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -196,7 +196,7 @@ class PersonServiceTest {
         Person existente = persona();
         existente.setEmailVerified(true);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
-        when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
+        when(personaRepository.existsAnotherPersonWithNationalId("1234567890", 1L)).thenReturn(false);
         when(personaRepository.existsAnotherPersonWithEmail("otro@sged.test", 1L)).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> inv.getArgument(0));
 

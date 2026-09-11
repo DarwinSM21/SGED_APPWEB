@@ -1241,14 +1241,14 @@ cuando haya valor.*
 - **Origen y controles:**
   - **Opcional:** `PersonRequest.cedula` y `RegisterRequest.cedula` ya no llevan
     `@NotBlank`; `Person.cedula` es `nullable`.
-  - **Dígito verificador:** anotación `@Cedula` (`common.validation.CedulaValidator`)
+  - **Dígito verificador:** anotación `@NationalId` (`common.validation.NationalIdValidator`)
     — algoritmo módulo 10 para personas naturales (provincia 01–24 ó 30, tercer
     dígito 0–5, dígito verificador). Un valor ausente es válido.
   - **Unicidad cuando hay valor:** migración `V26__cedula_opcional_y_unica.sql`
     — `ALTER COLUMN cedula DROP NOT NULL` + `CREATE UNIQUE INDEX … WHERE cedula
     IS NOT NULL`. `PersonService` y `AuthService` solo comprueban colisión de
     cédula si viene con valor.
-- **Verificación:** `CedulaValidatorTest` (14 casos: opcional, 5 válidas, 8
+- **Verificación:** `NationalIdValidatorTest` (14 casos: opcional, 5 válidas, 8
   inválidas); `PersonControllerTest` — `crear_sin_cedula_devuelve_201`,
   `crear_con_digito_verificador_invalido_da_422`, `crear_con_cedula_invalida_da_422`;
   `PersonServiceTest.crear_sin_cedula_persiste`.

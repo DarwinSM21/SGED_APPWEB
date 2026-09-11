@@ -4,7 +4,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.uteq.backend.common.validation.CedulaValidator;
+import org.uteq.backend.common.validation.NationalIdValidator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,9 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * RF-49 / hallazgo H-01: la cédula es opcional; cuando viene, debe pasar el
  * dígito verificador ecuatoriano.
  */
-class CedulaValidatorTest {
+class NationalIdValidatorTest {
 
-    private final CedulaValidator validator = new CedulaValidator();
+    private final NationalIdValidator validator = new NationalIdValidator();
 
     @Test
     @DisplayName("ausente o en blanco es válido (la cédula es opcional)")

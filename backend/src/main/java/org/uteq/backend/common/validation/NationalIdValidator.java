@@ -8,7 +8,7 @@ import jakarta.validation.ConstraintValidatorContext;
  * para personas naturales). Un valor ausente o en blanco es válido: la cédula
  * es opcional (RF-49 / H-01).
  */
-public class CedulaValidator implements ConstraintValidator<Cedula, String> {
+public class NationalIdValidator implements ConstraintValidator<NationalId, String> {
 
     private static final int[] COEFICIENTES = {2, 1, 2, 1, 2, 1, 2, 1, 2};
 

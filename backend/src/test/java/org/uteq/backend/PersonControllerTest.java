@@ -77,7 +77,7 @@ class PersonControllerTest {
     @Test
     @DisplayName("GET /api/personas/cedula/{cedula} - devuelve la persona")
     void buscarPorCedula_devuelve_200() throws Exception {
-        when(personaService.findByCedula("0912345675")).thenReturn(respuesta());
+        when(personaService.findByNationalId("0912345675")).thenReturn(respuesta());
 
         mockMvc.perform(get("/api/personas/cedula/0912345675"))
                 .andExpect(status().isOk())

@@ -26,7 +26,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @return la persona activa con esa cédula, si existe
      */
     @Query("SELECT p FROM Person p WHERE p.nationalId = :cedula AND p.active = true")
-    Optional<Person> findByCedulaAndActivoTrue(@Param("cedula") String cedula);
+    Optional<Person> findByNationalIdAndActiveTrue(@Param("cedula") String cedula);
 
     /**
      * @param idPersona identificador de la persona
@@ -47,7 +47,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @return {@code true} si existe una persona activa con esa cédula
      */
     @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.nationalId = :cedula AND p.active = true")
-    boolean existsByCedulaAndActivoTrue(@Param("cedula") String cedula);
+    boolean existsByNationalIdAndActiveTrue(@Param("cedula") String cedula);
 
     /**
      * @param correo correo electrónico a comprobar
@@ -65,7 +65,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @return {@code true} si otra persona activa ya usa esa cédula
      */
     @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.nationalId = :cedula AND p.active = true AND p.id != :idPersona")
-    boolean existsAnotherPersonWithCedula(@Param("cedula") String cedula, @Param("idPersona") Long idPersona);
+    boolean existsAnotherPersonWithNationalId(@Param("cedula") String cedula, @Param("idPersona") Long idPersona);
 
     /**
      * Comprueba unicidad de correo excluyendo a la propia persona, para
