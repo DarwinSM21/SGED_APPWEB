@@ -184,7 +184,7 @@ services:
       # actualizar esta linea y CORS_ALLOWED_ORIGIN_PATTERNS de arriba.
       - type: rewrite
         source: /api/*
-        destination: https://sged-backend-5nh7.onrender.com/api/*
+        destination: https://sged-backend-2p05.onrender.com/api/*
 
       # Enrutado del lado del cliente: cualquier ruta desconocida devuelve
       # index.html. Render no aplica reglas si existe un fichero en esa ruta,
