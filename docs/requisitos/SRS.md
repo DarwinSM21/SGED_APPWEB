@@ -1349,6 +1349,7 @@ Los valores medidos provienen de la evidencia real versionada en
 percentil 95 inferior a 200 ms con caché caliente e inferior a 500 ms con
 caché fría, bajo una carga de 50 usuarios virtuales concurrentes.*
 
+- **MoSCoW:** Must — SLA de rendimiento exigido explícitamente por la guía de evaluación (RNF-01).
 - **Método de verificación:** Test
 - **Verificación:** 5 corridas independientes de k6 (50 VUs, 30 s) por
   escenario (caché cálida y caché fría), reportando media, p90, p95 y p99.
@@ -1362,10 +1363,11 @@ caché fría, bajo una carga de 50 usuarios virtuales concurrentes.*
   `k6-run*.json`.
 
 **RNF-02 — Caché de consultas frecuentes**
-*El sistema deberá cachear las consultas de listado de estudiantes con un
+*El sistema deberá cachéar las consultas de listado de estudiantes con un
 tiempo de vida de 60 segundos, y la caché no deberá corromper la
 deserialización de tipos temporales.*
 
+- **MoSCoW:** Should — optimiza RNF-01 pero el sistema responde (más lento) sin caché.
 - **Método de verificación:** Test
 - **Origen:** `RedisCacheConfig.java`; `CACHE_TTL_SECONDS=60`.
 - **Nota:** se corrigió un defecto real por el cual la caché fallaba desde el
@@ -1378,6 +1380,7 @@ deserialización de tipos temporales.*
 *El sistema no deberá almacenar contraseñas en texto plano ni de forma
 reversible; deberá utilizar BCrypt con factor de coste 12.*
 
+- **MoSCoW:** Must — línea base de seguridad de credenciales, sin la cual el sistema es inaceptable.
 - **Método de verificación:** Inspección
 
 Verificación: `db/seed.sql` y `SecurityConfig.java`.
@@ -1385,6 +1388,7 @@ Verificación: `db/seed.sql` y `SecurityConfig.java`.
 **RNF-04 — Transporte cifrado**
 *El sistema deberá ofrecer acceso mediante HTTPS con TLS 1.2 o superior.*
 
+- **MoSCoW:** Must — línea base de seguridad de transporte.
 - **Método de verificación:** Análisis
 
 Medido: TLS 1.3 vía nginx en `:8443`. Evidencia:
@@ -1395,6 +1399,7 @@ Medido: TLS 1.3 vía nginx en `:8443`. Evidencia:
 `Content-Security-Policy`, `X-Content-Type-Options: nosniff`,
 `X-Frame-Options: DENY` y, sobre HTTPS, `Strict-Transport-Security`.*
 
+- **MoSCoW:** Must — línea base OWASP, exigida por RNF-06/A01 y el escaneo ZAP.
 - **Método de verificación:** Análisis
 
 Evidencia: `docs/mediciones/sec/a05-cabeceras.txt` (OWASP A05).
@@ -1405,6 +1410,7 @@ presente una sesión válida (`401`) o cuyo rol no esté autorizado para la
 operación (`403`), y dicha verificación deberá aplicarse del lado del
 servidor con independencia de lo que muestre la interfaz.*
 
+- **MoSCoW:** Must — control de acceso; sin él, cualquier rol accede a cualquier recurso.
 - **Método de verificación:** Test
 
 Evidencia: `docs/mediciones/sec/a01-acceso-roto.txt` (OWASP A01).
@@ -1414,6 +1420,7 @@ Evidencia: `docs/mediciones/sec/a01-acceso-roto.txt` (OWASP A01).
 cadenas; toda consulta deberá usar parámetros vinculados o procedimientos
 almacenados con parámetros nombrados.*
 
+- **MoSCoW:** Must — previene inyección SQL, línea base OWASP A03.
 - **Método de verificación:** Análisis
 
 Verificación: `make audit` incluye auditoría de SQL dinámico.
@@ -1424,6 +1431,7 @@ Evidencia: `docs/mediciones/sec/a03-inyeccion.txt` (OWASP A03).
 fallido, incluyendo marca de tiempo, dirección IP de origen e identificador
 del sujeto, sin registrar nunca la contraseña.*
 
+- **MoSCoW:** Should — trazabilidad de seguridad; útil para auditoría, no bloquea el flujo de autenticación.
 - **Método de verificación:** Test
 
 Evidencia: `docs/mediciones/sec/a09-logging.txt` (OWASP A09).
@@ -1435,6 +1443,7 @@ bytes; esta política deberá aplicarse de forma uniforme en el registro de
 usuarios, en la activación de acceso del estudiante, en el cambio
 administrativo de contraseña y en el restablecimiento por enlace (RF-37).*
 
+- **MoSCoW:** Must — línea base de seguridad de credenciales, complementa RNF-03.
 - **Método de verificación:** Test; Inspección
 - **Origen:** `PasswordPolicy.java` — única fuente de la regla; llamada por
   `AuthService.register`, `UserAccountService`, `StudentAccessService` y
@@ -1454,6 +1463,7 @@ registrado. La configuración por defecto (`mail.enabled=false`) no envía
 correo y registra el enlace en la bitácora, de modo que el sistema funciona
 completo sin credenciales de correo (no rompe RNF-12).*
 
+- **MoSCoW:** Should — el propio requisito declara que el sistema funciona completo sin correo (no rompe RNF-12).
 - **Método de verificación:** Test; Demostración
 - **Origen:** `spring-boot-starter-mail`; `spring.mail.*` y `mail:` en
   `application.yml`; `SmtpPasswordResetMailer` (`mail.enabled=true`) /
@@ -1476,6 +1486,7 @@ completarse igual y el comentario simplemente no aparecerá. Deberán
 declararse el proveedor y el modelo autorizados; la integración está
 deshabilitada por defecto (`IA_HABILITADO=false`).*
 
+- **MoSCoW:** Must — protección de datos de menores frente al proveedor externo de IA, obligación ética/legal.
 - **Método de verificación:** Test; Inspección
 - **Origen:** paquete `common.ia` — `AnonymousPlayerProfile` (record con
   exactamente esos campos), `AIFeedbackGenerator` (interfaz),
@@ -1506,6 +1517,7 @@ cierre y fecha objetivo:*
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
 | H-09 — correo de reseteo no verificado | **RNF-26** (§4.3) — doble opt-in del correo de contacto: `correo_verificado` (`V28`), token de un solo uso, `POST /api/auth/confirmar-correo`, y `/forgot` no emite el enlace a un correo no verificado | ✅ Resuelto (2026-09-10) |
 
+- **MoSCoW:** Must — paraguas de protección de datos personales de menores; cierra los hallazgos H-01..H-09 de ETHICS.md.
 - **Método de verificación:** Inspección
 - **Origen:** `docs/etica/ETHICS.md` (inventario de datos y hallazgos),
   `docs/mediciones/sec/a01-acceso-roto.txt` (control de acceso por recurso).
@@ -1523,6 +1535,7 @@ superior, HSTS y redirección de HTTP a HTTPS. El estado actual —certificado
 autofirmado en el entorno de laboratorio— deberá declararse explícitamente
 (hallazgo H-05).*
 
+- **MoSCoW:** Must — TLS de producción con autoridad reconocida, línea base de seguridad de despliegue.
 - **Método de verificación:** Demostración; Inspección
 - **Origen:** `frontend/nginx.conf`, `docker-compose.yml` (`:8443`);
   `docs/mediciones/sec/a02-tls.txt`; hallazgo H-05 de `ETHICS.md`.
@@ -1544,6 +1557,7 @@ solicitud del titular. La baja lógica —que preserva el historial— no deber�
 presentarse como un borrado: la supresión efectiva la realiza el
 procedimiento de anonimización de RF-50.*
 
+- **MoSCoW:** Must — obligación legal/ética de declarar conservación y supresión de datos de menores.
 - **Método de verificación:** Inspección
 - **Origen:** `docs/etica/ETHICS.md` §3.4; `docs/despliegue/BACKUP.md`
   (retención de respaldos: 30 días); **RF-50** (mecanismo de supresión:
@@ -1570,6 +1584,7 @@ denegar el acceso a los recursos protegidos (`401`) en vez de aceptar tokens
 que podrían estar revocados.*
 
 - **Estado:** ✅ Implementado
+- **MoSCoW:** Must — falla-cerrado de autenticación; sin esto, una caída de Redis aceptaría tokens revocados.
 - **Método de verificación:** Análisis; Test
 - **Origen:** `JwtAuthenticationFilter` (envuelve la comprobación en
   `try/catch`; ante excepción no autentica y la petición continúa sin
@@ -1585,6 +1600,7 @@ degradarse a consulta directa a la base de datos mediante un
 endpoints de listado ni impedir la lectura.*
 
 - **Estado:** ✅ Implementado (2026-09-08)
+- **MoSCoW:** Should — degrada la experiencia de listados ante caída de Redis en vez de bloquear; RNF-23a es la mitad crítica.
 - **Método de verificación:** Test; Demostración
 - **Origen:** `RedisCacheConfig` implementa `CachingConfigurer` y registra un
   `CacheErrorHandler` que, ante un fallo de Redis, registra el incidente en
@@ -1602,15 +1618,16 @@ endpoints de listado ni impedir la lectura.*
 *El sistema deberá mantener una cobertura de líneas y de ramas (*branches*)
 igual o superior al 70 %, verificada automáticamente en la construcción.*
 
+- **MoSCoW:** Must — quality gate que hace fallar la construcción (mvn verify) si no se cumple.
 - **Método de verificación:** Análisis
 
 > **Corrección (2026-09-07).** El enunciado y la cifra de abajo citaban
 > 60 % de instrucciones — ese nunca fue el valor configurado en `pom.xml`
 > (que exige 70 % en `LINE` y en `BRANCH`, sin excepciones de paquete) y la
 > cifra estaba fechada 2026-07-30, mucho antes del estado actual del
-> código. Cifra vigente, regenerada el 2026-09-07 tras el rename de
-> identificadores de esta entrega (`./mvnw clean verify`): **84,63 % de
-> líneas (2638/3117) y 71,24 % de branches (664/932), 550 pruebas en 74
+> código. Cifra vigente, regenerada el 2026-09-07 (Bloque A.1, tras cubrir
+> `org.uteq.backend.reportes` y `common.exception`): **87,47 % de
+> líneas (2730/3121) y 72,10 % de branches (672/932), 576 pruebas en 76
 > clases, 200 clases analizadas — CUMPLE el 70 % en ambas métricas.**
 > Desglose por subdominio en `docs/informe/main.tex`
 > (Tabla `tab:cobertura-por-paquete`, 25 filas) y dato crudo en
@@ -1646,6 +1663,7 @@ EstadoGeneral — no tenían ninguna prueba propia); se agregaron 57 pruebas
 (RFC 9457), con `type`, `title`, `status`, `detail` e `instance`, y no
 deberá exponer trazas de pila ni detalles internos de implementación.*
 
+- **MoSCoW:** Should — mejora la calidad de la respuesta de error sin bloquear el flujo funcional.
 - **Método de verificación:** Test
 
 Origen: `GlobalExceptionHandler.java`, `ProblemDetailsAuthHandlers.java`.
@@ -1655,6 +1673,7 @@ Origen: `GlobalExceptionHandler.java`, `ProblemDetailsAuthHandlers.java`.
 migración Flyway versionada e incremental; no deberá modificarse el esquema
 de forma manual ni automática por el ORM en tiempo de arranque.*
 
+- **MoSCoW:** Must — integridad del esquema de datos; un ORM auto-DDL en producción es inaceptable.
 - **Método de verificación:** Inspección
 
 Origen: `V1` a `V6`; `ddl-auto: validate`.
@@ -1664,6 +1683,7 @@ Origen: `V1` a `V6`; `ddl-auto: validate`.
 para el proyecto; una condición incumplida deberá fallar la construcción en
 CI.*
 
+- **MoSCoW:** Should — gate de calidad estática; mejora mantenibilidad, no es una capacidad de negocio.
 - **Método de verificación:** Test; Inspección
 - **Origen:** `docs/mediciones/sonarqube/` (`quality-gate.json`,
   `measures.json`, `issues.json`); paso de análisis en `.github/workflows/`.
@@ -1684,6 +1704,7 @@ a 24 horas y un objetivo de tiempo de recuperación (RTO) medido, no estimado;
 (d) un procedimiento de restauración documentado y verificado con evidencia
 archivada y fechada de al menos una ejecución real contra una base separada.*
 
+- **MoSCoW:** Must — respaldo y recuperación de la base de datos, obligación de continuidad e integridad de datos.
 - **Método de verificación:** Demostración; Inspección
 - **Origen:** `docs/despliegue/BACKUP.md` (frecuencia, retención, destino,
   procedimiento `pg_dump -F c` / `pg_restore`), `docs/despliegue/RUNBOOK.md`
@@ -1721,6 +1742,7 @@ restringida a los roles del cuerpo técnico y de coordinación
 (ADMINISTRADOR / ENTRENADOR), nunca a RECEPCIONISTA, REPRESENTANTE ni ESTUDIANTE.*
 
 - **Estado:** ✅ Implementado (2026-09-08)
+- **MoSCoW:** Must — control de contenido de texto libre sobre menores; cierra el hallazgo H-02 de ETHICS.md.
 - **Método de verificación:** Inspección; Test
 - **Origen y controles:**
   - **Límite de longitud en el servidor:** `@Size(max = 1000)` en la descripción
@@ -1801,6 +1823,7 @@ frontend) desde una clonación limpia del repositorio mediante un único
 comando, en menos de dos minutos y sin configuración manual adicional más
 allá de copiar el archivo de variables de entorno de ejemplo.*
 
+- **MoSCoW:** Should — facilita el desarrollo y la evaluación, no es una capacidad de negocio.
 - **Método de verificación:** Demostración
 
 Origen: `make up`. Verificado mediante clonación real independiente en
@@ -1811,6 +1834,7 @@ carpeta separada, no solo reiniciando el volumen local.
 digest SHA-256 y no por etiqueta móvil, para garantizar que dos
 construcciones del mismo commit usen exactamente los mismos binarios.*
 
+- **MoSCoW:** Could — hardening de la cadena de suministro, mejora incremental sobre RNF-12.
 - **Método de verificación:** Inspección
 
 Origen: `docker-compose.yml` (digests reales aplicados por
@@ -1920,6 +1944,7 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 System Usability Scale (SUS), medida sobre una muestra de al menos 10
 participantes externos al equipo de desarrollo.*
 
+- **MoSCoW:** Should — mide la calidad de uso percibida; no bloquea ninguna capacidad funcional.
 - **Método de verificación:** Análisis (encuesta estructurada)
 - **Origen:** `docs/mediciones/sus/` — `INSTRUMENTO-SUS.md`, `respuestas.csv`,
   `REPORT.md` (regenerado por `scripts/sus-analysis.py`),
@@ -1938,6 +1963,7 @@ participantes externos al equipo de desarrollo.*
 igual o superior a 90 en Lighthouse, tomando WCAG 2.1 nivel AA como marco de
 referencia.*
 
+- **MoSCoW:** Should — accesibilidad WCAG; especialmente relevante por los usuarios menores de edad, pero no bloquea el flujo funcional.
 - **Método de verificación:** Test (auditoría Lighthouse)
 - **Origen:** `docs/mediciones/lighthouse/` — `REPORT.md` y los `*.report.json`
   de escritorio y móvil.

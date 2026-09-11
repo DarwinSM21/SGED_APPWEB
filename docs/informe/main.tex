@@ -2100,10 +2100,12 @@ de otra~\cite{georges2007benchmarking}. Los resultados: no
 \end{table}
 
 Con intervalo de confianza al 95\,\% —siguiendo el análisis declarado a
-priori (sección~\ref{sec:analisis-estadistico})— la caché cálida (corridas
+priori (sección~\ref{sec:analisis-estadistico})— la caché cálida
+(Tabla~\ref{tab:k6-resultados}; corridas
 2--5, tras descartar la primera de calentamiento de la JVM) da una media de
 $11{,}28 \pm 4{,}66$\,ms (DT $2{,}93$), p95 $19{,}94 \pm 13{,}51$\,ms y
-p99 $29{,}35 \pm 21{,}93$\,ms; la fría, media $17{,}74 \pm 1{,}72$\,ms
+p99 $29{,}35 \pm 21{,}93$\,ms; la fría (Tabla~\ref{tab:k6-resultados-frio}),
+media $17{,}74 \pm 1{,}72$\,ms
 (DT $1{,}08$), p95 $38{,}20 \pm 2{,}01$\,ms y p99 $49{,}22 \pm 2{,}54$\,ms.
 Ninguna corrida registró peticiones fallidas — la tasa de error es
 0,00\,\% en las diez, frente al 0,01\,\% de la corrida~4 de la
@@ -3139,17 +3141,17 @@ cobertura como líneas de autoría inflaría la medida sin reflejar trabajo
 
 \begin{table}[htbp]
 \centering
-\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log} sobre \texttt{main}, medido el 2026-09-06). La misma medición está en \ruta{CONTRIBUTORS.md}.}
+\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log} sobre \texttt{main}, medido el 2026-09-11). La misma medición está en \ruta{CONTRIBUTORS.md}. Arcalle Grefa suma los commits de sus dos correos vinculados a la misma cuenta de GitHub (\texttt{darcalleg@uteq.edu.ec} y \texttt{darwinarcalle@gmail.com}).}
 \label{tab:credit-cifras}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 \textbf{Integrante} & \textbf{\emph{Commits}} & \textbf{Líneas escritas} & \textbf{Archivos} \\
 \midrule
-Pallo Pinto Alejandro Daniel & 211 & 69\,850 & 1\,662 \\
-Arcalle Grefa Darwin Orlando & 58 & 45\,743 & 730 \\
-Velez Lopez Ricardo Elias & 41 & 6\,093 & 126 \\
+Pallo Pinto Alejandro Daniel & 229 & 81\,997 & 1\,944 \\
+Arcalle Grefa Darwin Orlando & 116 & 51\,106 & 994 \\
+Velez Lopez Ricardo Elias & 55 & 9\,200 & 189 \\
 \midrule
-\textbf{Total en \texttt{main}} & \textbf{310} & \textbf{121\,686} & \textbf{2\,518} \\
+\textbf{Total en \texttt{main}} & \textbf{400} & \textbf{142\,303} & \textbf{3\,127} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -3359,8 +3361,8 @@ corrigió a 72{,}5\,\%. La pregunta para la Entrega Final es si ese patrón
 se repite con el módulo de inventario y el resto del dominio deportivo,
 agregados después de esa medición. El reporte remedido para esta entrega
 (\ruta{docs/mediciones/jacoco/jacoco.xml}) responde que el patrón
-\textbf{no} se repitió: 84{,}66\,\% de líneas (2\,639 de 3\,117) y
-71{,}24\,\% de ramas (664 de 932) sobre el \texttt{main} que incluye ya
+\textbf{no} se repitió: 87{,}47\,\% de líneas (2\,730 de 3\,121) y
+72{,}10\,\% de ramas (672 de 932) sobre el \texttt{main} que incluye ya
 el módulo de inventario y el dominio deportivo completo (la cifra coincide
 con la de la sección~\ref{sec:cobertura} y es la única vigente en el
 documento). La comparación con el episodio de la Segunda Entrega es la que

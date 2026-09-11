@@ -39,10 +39,15 @@ reflejar trabajo real.
 
 | Integrante | Commits | Líneas escritas | Archivos escritos |
 |---|---:|---:|---:|
-| Pallo Pinto Alejandro Daniel | 211 | 69 850 | 1 662 |
-| Arcalle Grefa Darwin Orlando | 58 | 45 743 | 730 |
-| Velez Lopez Ricardo Elias | 41 | 6 093 | 126 |
-| **Total** | **310** | **121 686** | **2 518** |
+| Pallo Pinto Alejandro Daniel | 229 | 81 997 | 1 944 |
+| Arcalle Grefa Darwin Orlando | 116 | 51 106 | 994 |
+| Velez Lopez Ricardo Elias | 55 | 9 200 | 189 |
+| **Total** | **400** | **142 303** | **3 127** |
+
+_Medido 2026-09-11 sobre `main` (commit `f7d71d1`). El conteo de Arcalle Grefa
+Darwin Orlando suma los commits de sus dos correos vinculados a la misma
+cuenta de GitHub (`darcalleg@uteq.edu.ec` y `darwinarcalle@gmail.com`; ver
+nota más abajo)._
 
 Reproducible con:
 
@@ -58,14 +63,20 @@ git log --pretty="AUTOR:%an" --numstat main
 ## Nota de trazabilidad: historia del correo en el repositorio
 
 La identidad Git del equipo quedó unificada en correos institucionales al
-reorganizar el historial para este repositorio. Todo el historial vigente
-usa exclusivamente:
-`dpallop@uteq.edu.ec`, `rvelezl3@uteq.edu.ec` y `darcalleg@uteq.edu.ec` (el
-estado anterior mezclaba correos personales de `outlook.es`/`gmail.com` y
-un tipeo `uteq.edue.ec`; ninguno figura ya en `git log`). El contenido de
-los archivos no cambió; solo la atribución de autoría. La verificación se
-puede repetir con `git log main --format='%ae' | sort -u` (debe devolver
-exactamente los tres correos de arriba).
+reorganizar el historial para este repositorio (el estado anterior mezclaba
+correos personales de `outlook.es`/`gmail.com` y un tipeo `uteq.edue.ec`).
+Desde entonces, los commits de Pallo Pinto y Vélez López usan exclusivamente
+`dpallop@uteq.edu.ec` y `rvelezl3@uteq.edu.ec`. Los commits de Arcalle Grefa
+usan **dos** correos — `darcalleg@uteq.edu.ec` (institucional) y
+`darwinarcalle@gmail.com` (personal, usado en los commits más recientes) —
+porque ambos están vinculados a la misma cuenta de GitHub (`DarwinSM21`), la
+propietaria del repositorio canónico; GitHub atribuye los commits de
+cualquiera de los dos a esa única cuenta, y por eso esta tabla los suma
+juntos. El contenido de los archivos no cambió; solo la atribución de
+autoría. La verificación se puede repetir con
+`git log main --format='%ae' | sort -u` (debe devolver exactamente los
+cuatro correos de arriba: los dos de Arcalle Grefa más los de Pallo Pinto y
+Vélez López).
 
 ## Declaración de asistencia de Inteligencia Artificial
 
