@@ -54,6 +54,12 @@ public class EvaluacionDiaria {
     @Column(name = "actualizado_en")
     private Instant actualizadoEn;
 
+    /**
+     * Indica si la evaluación ya fue cerrada por el entrenador.
+     *
+     * @return {@code true} si el estado es "finalizada"; una evaluación
+     *         finalizada no admite más cambios en sus jugadores
+     */
     @Transient
     public boolean estaFinalizada() {
         return FINALIZADA.equals(estado);

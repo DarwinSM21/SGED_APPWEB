@@ -55,6 +55,13 @@ public class Asistencia {
     @Column(name = "actualizado_en")
     private Instant actualizadoEn;
 
+    /**
+     * Indica si este registro de asistencia habilita al estudiante para
+     * recibir una evaluación diaria de esa sesión.
+     *
+     * @return {@code true} si el estado es "presente" o "tarde"; {@code false}
+     *         si faltó (una ausencia no genera evaluación)
+     */
     @Transient
     public boolean habilitaEvaluacion() {
         return ESTADO_PRESENTE.equals(estado) || ESTADO_TARDE.equals(estado);

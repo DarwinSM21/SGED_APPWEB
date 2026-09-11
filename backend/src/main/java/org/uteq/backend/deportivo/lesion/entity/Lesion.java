@@ -51,6 +51,11 @@ public class Lesion {
     @Column(name = "actualizado_en")
     private Instant actualizadoEn;
 
+    /**
+     * Indica si la lesión sigue en curso.
+     *
+     * @return {@code true} si aún no se registró fecha de alta médica
+     */
     @Transient
     public boolean estaActiva() {
         return fechaAlta == null;

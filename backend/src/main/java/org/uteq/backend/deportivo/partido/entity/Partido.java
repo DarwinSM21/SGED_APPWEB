@@ -55,11 +55,23 @@ public class Partido {
     @Column(name = "actualizado_en")
     private Instant actualizadoEn;
 
+    /**
+     * Indica si ya se registró el marcador del partido.
+     *
+     * @return {@code true} si tanto los goles a favor como en contra tienen
+     *         un valor cargado
+     */
     @Transient
     public boolean tieneResultado() {
         return golesFavor != null && golesContra != null;
     }
 
+    /**
+     * Indica si el partido fue cerrado por un entrenador o administrador.
+     *
+     * @return {@code true} si el partido está cerrado; un partido cerrado no
+     *         admite más cambios de resultado ni de alineación
+     */
     @Transient
     public boolean estaCerrado() {
         return Boolean.TRUE.equals(cerrado);
