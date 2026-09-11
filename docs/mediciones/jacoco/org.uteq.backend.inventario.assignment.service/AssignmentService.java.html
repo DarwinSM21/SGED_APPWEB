@@ -46,7 +46,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page&lt;AssignmentResponse&gt; listPaged(Pageable pageable) {
-<span class="nc" id="L49">        return asignacionRepository.findAllByOrderByFechaAsignacionDesc(pageable).map(this::toResponse);</span>
+<span class="nc" id="L49">        return asignacionRepository.findAllByOrderByAssignmentDateDesc(pageable).map(this::toResponse);</span>
     }
 
     /**
@@ -58,7 +58,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page&lt;AssignmentResponse&gt; listByStudent(Long idEstudiante, Pageable pageable) {
-<span class="nc" id="L61">        return asignacionRepository.findByEstudiante_IdEstudianteOrderByFechaAsignacionDesc(idEstudiante, pageable)</span>
+<span class="nc" id="L61">        return asignacionRepository.findByStudent_IdOrderByAssignmentDateDesc(idEstudiante, pageable)</span>
 <span class="nc" id="L62">                .map(this::toResponse);</span>
     }
 
@@ -71,7 +71,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page&lt;AssignmentResponse&gt; listByCoach(Long idEntrenador, Pageable pageable) {
-<span class="nc" id="L74">        return asignacionRepository.findByEntrenador_IdEntrenadorOrderByFechaAsignacionDesc(idEntrenador, pageable)</span>
+<span class="nc" id="L74">        return asignacionRepository.findByCoach_IdEntrenadorOrderByAssignmentDateDesc(idEntrenador, pageable)</span>
 <span class="nc" id="L75">                .map(this::toResponse);</span>
     }
 
@@ -89,38 +89,38 @@ public class AssignmentService {
      *                                      especificado o no hay stock
      *                                      suficiente
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Asignacion&quot;, idSpel = &quot;#result.idAsignacion&quot;,
-            descripcionSpel = &quot;'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Asignacion&quot;, idSpel = &quot;#result.idAsignacion&quot;,
+            descriptionSpel = &quot;'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)&quot;)
     @Transactional
     public AssignmentResponse create(AssignmentRequest request, String usernameRegistrador) {
 <span class="fc" id="L96">        validateRecipient(request.tipoDestinatario(), request.idEstudiante(), request.idEntrenador());</span>
 
 <span class="fc" id="L98">        Item articulo = findItem(request.idArticulo());</span>
-<span class="fc" id="L99">        int nuevoStock = articulo.getStockActual() - request.cantidad();</span>
+<span class="fc" id="L99">        int nuevoStock = articulo.getCurrentStock() - request.cantidad();</span>
 <span class="fc bfc" id="L100" title="All 2 branches covered.">        if (nuevoStock &lt; 0) {</span>
 <span class="fc" id="L101">            throw new IllegalArgumentException(</span>
-<span class="fc" id="L102">                    &quot;Stock insuficiente: hay &quot; + articulo.getStockActual() + &quot; unidades de \&quot;&quot;</span>
-<span class="fc" id="L103">                            + articulo.getNombre() + &quot;\&quot; y se intentan asignar &quot; + request.cantidad());</span>
+<span class="fc" id="L102">                    &quot;Stock insuficiente: hay &quot; + articulo.getCurrentStock() + &quot; unidades de \&quot;&quot;</span>
+<span class="fc" id="L103">                            + articulo.getName() + &quot;\&quot; y se intentan asignar &quot; + request.cantidad());</span>
         }
-<span class="fc" id="L105">        articulo.setStockActual(nuevoStock);</span>
+<span class="fc" id="L105">        articulo.setCurrentStock(nuevoStock);</span>
 <span class="fc" id="L106">        articuloRepository.save(articulo);</span>
 
 <span class="fc" id="L108">        UserAccount registrador = findUser(usernameRegistrador);</span>
 
 <span class="fc" id="L110">        Assignment.AssignmentBuilder builder = Assignment.builder()</span>
-<span class="fc" id="L111">                .articulo(articulo)</span>
-<span class="fc" id="L112">                .cantidad(request.cantidad())</span>
-<span class="fc" id="L113">                .tipoDestinatario(request.tipoDestinatario())</span>
-<span class="fc" id="L114">                .fechaAsignacion(LocalDate.now(Zones.ECUADOR))</span>
-<span class="fc" id="L115">                .fechaDevolucionEsperada(request.fechaDevolucionEsperada())</span>
-<span class="fc" id="L116">                .estado(AssignmentStatus.ASIGNADO)</span>
-<span class="fc" id="L117">                .registradoPor(registrador)</span>
-<span class="fc" id="L118">                .observaciones(request.observaciones());</span>
+<span class="fc" id="L111">                .item(articulo)</span>
+<span class="fc" id="L112">                .quantity(request.cantidad())</span>
+<span class="fc" id="L113">                .recipientType(request.tipoDestinatario())</span>
+<span class="fc" id="L114">                .assignmentDate(LocalDate.now(Zones.ECUADOR))</span>
+<span class="fc" id="L115">                .expectedReturnDate(request.fechaDevolucionEsperada())</span>
+<span class="fc" id="L116">                .status(AssignmentStatus.ASIGNADO)</span>
+<span class="fc" id="L117">                .registeredBy(registrador)</span>
+<span class="fc" id="L118">                .notes(request.observaciones());</span>
 
 <span class="fc bfc" id="L120" title="All 2 branches covered.">        if (request.tipoDestinatario() == RecipientType.ESTUDIANTE) {</span>
-<span class="fc" id="L121">            builder.estudiante(findStudent(request.idEstudiante()));</span>
+<span class="fc" id="L121">            builder.student(findStudent(request.idEstudiante()));</span>
         } else {
-<span class="fc" id="L123">            builder.entrenador(findCoach(request.idEntrenador()));</span>
+<span class="fc" id="L123">            builder.coach(findCoach(request.idEntrenador()));</span>
         }
 
 <span class="fc" id="L126">        return toResponse(asignacionRepository.save(builder.build()));</span>
@@ -137,8 +137,8 @@ public class AssignmentService {
      * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
      *                                      la asignación ya estaba resuelta
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Asignacion&quot;, idSpel = &quot;#result.idAsignacion&quot;,
-            descripcionSpel = &quot;'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Asignacion&quot;, idSpel = &quot;#result.idAsignacion&quot;,
+            descriptionSpel = &quot;'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'&quot;)
     @Transactional
     public AssignmentResponse registerReturn(Long id, ReturnRequest request) {
 <span class="fc bfc" id="L144" title="All 2 branches covered.">        if (request.estado() == AssignmentStatus.ASIGNADO) {</span>
@@ -148,21 +148,21 @@ public class AssignmentService {
 <span class="fc" id="L148">        Assignment asignacion = asignacionRepository.findById(id)</span>
 <span class="fc" id="L149">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Asignación no encontrada con ID: &quot; + id));</span>
 
-<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (asignacion.getEstado() != AssignmentStatus.ASIGNADO) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">        if (asignacion.getStatus() != AssignmentStatus.ASIGNADO) {</span>
 <span class="fc" id="L152">            throw new IllegalArgumentException(</span>
-<span class="fc" id="L153">                    &quot;La asignación #&quot; + id + &quot; ya fue resuelta como &quot; + asignacion.getEstado());</span>
+<span class="fc" id="L153">                    &quot;La asignación #&quot; + id + &quot; ya fue resuelta como &quot; + asignacion.getStatus());</span>
         }
 
 <span class="fc bfc" id="L156" title="All 2 branches covered.">        if (request.estado() == AssignmentStatus.DEVUELTO) {</span>
-<span class="fc" id="L157">            Item articulo = asignacion.getArticulo();</span>
-<span class="fc" id="L158">            articulo.setStockActual(articulo.getStockActual() + asignacion.getCantidad());</span>
+<span class="fc" id="L157">            Item articulo = asignacion.getItem();</span>
+<span class="fc" id="L158">            articulo.setCurrentStock(articulo.getCurrentStock() + asignacion.getQuantity());</span>
 <span class="fc" id="L159">            articuloRepository.save(articulo);</span>
         }
 
-<span class="fc" id="L162">        asignacion.setEstado(request.estado());</span>
-<span class="fc" id="L163">        asignacion.setFechaDevolucionReal(LocalDate.now(Zones.ECUADOR));</span>
+<span class="fc" id="L162">        asignacion.setStatus(request.estado());</span>
+<span class="fc" id="L163">        asignacion.setActualReturnDate(LocalDate.now(Zones.ECUADOR));</span>
 <span class="pc bpc" id="L164" title="2 of 4 branches missed.">        if (request.observaciones() != null &amp;&amp; !request.observaciones().isBlank()) {</span>
-<span class="fc" id="L165">            asignacion.setObservaciones(request.observaciones());</span>
+<span class="fc" id="L165">            asignacion.setNotes(request.observaciones());</span>
         }
 
 <span class="fc" id="L168">        return toResponse(asignacionRepository.save(asignacion));</span>
@@ -201,38 +201,38 @@ public class AssignmentService {
     }
 
     private AssignmentResponse toResponse(Assignment a) {
-<span class="fc" id="L204">        var registrador = a.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L204">        var registrador = a.getRegisteredBy().getPerson();</span>
 <span class="fc" id="L205">        String nombreEstudiante = null;</span>
 <span class="fc" id="L206">        Long idEstudiante = null;</span>
-<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (a.getEstudiante() != null) {</span>
-<span class="fc" id="L208">            idEstudiante = a.getEstudiante().getIdEstudiante();</span>
-<span class="fc" id="L209">            var p = a.getEstudiante().getPersona();</span>
-<span class="fc" id="L210">            nombreEstudiante = p.getNombre() + &quot; &quot; + p.getApellido();</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">        if (a.getStudent() != null) {</span>
+<span class="fc" id="L208">            idEstudiante = a.getStudent().getId();</span>
+<span class="fc" id="L209">            var p = a.getStudent().getPerson();</span>
+<span class="fc" id="L210">            nombreEstudiante = p.getName() + &quot; &quot; + p.getLastName();</span>
         }
 <span class="fc" id="L212">        String nombreEntrenador = null;</span>
 <span class="fc" id="L213">        Long idEntrenador = null;</span>
-<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (a.getEntrenador() != null) {</span>
-<span class="fc" id="L215">            idEntrenador = a.getEntrenador().getIdEntrenador();</span>
-<span class="fc" id="L216">            var p = a.getEntrenador().getPersona();</span>
-<span class="fc" id="L217">            nombreEntrenador = p.getNombre() + &quot; &quot; + p.getApellido();</span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        if (a.getCoach() != null) {</span>
+<span class="fc" id="L215">            idEntrenador = a.getCoach().getIdEntrenador();</span>
+<span class="fc" id="L216">            var p = a.getCoach().getPersona();</span>
+<span class="fc" id="L217">            nombreEntrenador = p.getName() + &quot; &quot; + p.getLastName();</span>
         }
 
 <span class="fc" id="L220">        return new AssignmentResponse(</span>
-<span class="fc" id="L221">                a.getIdAsignacion(),</span>
-<span class="fc" id="L222">                a.getArticulo().getIdArticulo(),</span>
-<span class="fc" id="L223">                a.getArticulo().getNombre(),</span>
-<span class="fc" id="L224">                a.getCantidad(),</span>
-<span class="fc" id="L225">                a.getTipoDestinatario(),</span>
+<span class="fc" id="L221">                a.getId(),</span>
+<span class="fc" id="L222">                a.getItem().getId(),</span>
+<span class="fc" id="L223">                a.getItem().getName(),</span>
+<span class="fc" id="L224">                a.getQuantity(),</span>
+<span class="fc" id="L225">                a.getRecipientType(),</span>
                 idEstudiante,
                 nombreEstudiante,
                 idEntrenador,
                 nombreEntrenador,
-<span class="fc" id="L230">                a.getFechaAsignacion(),</span>
-<span class="fc" id="L231">                a.getFechaDevolucionEsperada(),</span>
-<span class="fc" id="L232">                a.getFechaDevolucionReal(),</span>
-<span class="fc" id="L233">                a.getEstado(),</span>
-<span class="fc" id="L234">                registrador.getNombre() + &quot; &quot; + registrador.getApellido(),</span>
-<span class="fc" id="L235">                a.getObservaciones(),</span>
+<span class="fc" id="L230">                a.getAssignmentDate(),</span>
+<span class="fc" id="L231">                a.getExpectedReturnDate(),</span>
+<span class="fc" id="L232">                a.getActualReturnDate(),</span>
+<span class="fc" id="L233">                a.getStatus(),</span>
+<span class="fc" id="L234">                registrador.getName() + &quot; &quot; + registrador.getLastName(),</span>
+<span class="fc" id="L235">                a.getNotes(),</span>
 <span class="fc" id="L236">                a.getCreatedAt()</span>
         );
     }

@@ -18,41 +18,41 @@ public class Person {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_persona&quot;)
-    private Long idPersona;
+    private Long id;
 
     @Column(name = &quot;nombre&quot;, nullable = false, length = 100)
-    private String nombre;
+    private String name;
 
     @Column(name = &quot;apellido&quot;, nullable = false, length = 100)
-    private String apellido;
+    private String lastName;
 
     // RF-49 / H-01: opcional. La unicidad, cuando hay valor, la impone el
     // índice único parcial de V26 (no una constraint de columna, que en
     // PostgreSQL permitiría varias filas con el mismo valor sólo si es NULL).
     @Column(name = &quot;cedula&quot;, length = 10)
-    private String cedula;
+    private String nationalId;
 
     @Column(name = &quot;correo&quot;, nullable = false, unique = true, length = 200)
-    private String correo;
+    private String email;
 
     @Column(name = &quot;telefono&quot;, length = 15)
-    private String telefono;
+    private String phone;
 
     @Column(name = &quot;foto&quot;, columnDefinition = &quot;text&quot;)
-    private String foto;
+    private String photo;
 
     @Column(name = &quot;fecha_nacimiento&quot;, nullable = false)
-    private LocalDate fechaNacimiento;
+    private LocalDate birthDate;
 
     @Column(name = &quot;activo&quot;)
-    private Boolean activo;
+    private Boolean active;
 
     // RNF-26 / H-09: doble opt-in del correo. El alta y el cambio de correo la
     // dejan en false y disparan un token de confirmación; RF-37 no envía el
     // enlace de restablecimiento a un correo no verificado. Las personas
     // preexistentes se dieron por verificadas en la migración V28.
     @Column(name = &quot;correo_verificado&quot;, nullable = false)
-    private Boolean correoVerificado;
+    private Boolean emailVerified;
 
     @Column(name = &quot;created_at&quot;, updatable = false)
     private OffsetDateTime createdAt;
@@ -64,8 +64,8 @@ public class Person {
     protected void onCreate() {
 <span class="fc" id="L65">        this.createdAt = OffsetDateTime.now();</span>
 <span class="fc" id="L66">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (this.activo == null) this.activo = true;</span>
-<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (this.correoVerificado == null) this.correoVerificado = false;</span>
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        if (this.active == null) this.active = true;</span>
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (this.emailVerified == null) this.emailVerified = false;</span>
 <span class="fc" id="L69">    }</span>
 
     @PreUpdate

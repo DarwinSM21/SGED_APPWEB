@@ -91,7 +91,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="fc bfc" id="L91" title="All 2 branches covered.">        if (!habilitado) {</span>
 <span class="fc" id="L92">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
         }
-<span class="fc" id="L94">        return invocar(PromptsFeedback.deJugador(profile));</span>
+<span class="fc" id="L94">        return invoke(PromptsFeedback.forPlayer(profile));</span>
     }
 
     /**
@@ -109,19 +109,19 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="pc bpc" id="L109" title="2 of 4 branches missed.">        if (lineup == null || lineup.isEmpty()) {</span>
 <span class="fc" id="L110">            return FeedbackResult.unavailable(&quot;La alineacion esta vacia&quot;);</span>
         }
-<span class="nc" id="L112">        return invocar(PromptsFeedback.dePlantilla(lineup));</span>
+<span class="nc" id="L112">        return invoke(PromptsFeedback.forLineup(lineup));</span>
     }
 
-    private FeedbackResult invocar(String prompt) {
+    private FeedbackResult invoke(String prompt) {
 <span class="fc" id="L116">        Exception ultimoFallo = null;</span>
 
 <span class="pc bpc" id="L118" title="1 of 2 branches missed.">        for (int intento = 0; intento &lt;= reintentos; intento++) {</span>
             try {
-<span class="nc" id="L120">                return intentarUnaVez(prompt);</span>
+<span class="nc" id="L120">                return tryOnce(prompt);</span>
 
 <span class="fc" id="L122">            } catch (HttpClientErrorException e) {</span>
 <span class="fc" id="L123">                log.warn(&quot;Gemini rechazo la peticion: {}&quot;, e.getStatusCode());</span>
-<span class="fc" id="L124">                return FeedbackResult.unavailable(motivoDeRechazo(e));</span>
+<span class="fc" id="L124">                return FeedbackResult.unavailable(rejectionReason(e));</span>
 
 <span class="nc" id="L126">            } catch (Exception e) {</span>
 <span class="nc" id="L127">                ultimoFallo = e;</span>
@@ -129,7 +129,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="nc" id="L129">                log.warn(&quot;Fallo transitorio de Gemini (intento {} de {}): {}&quot;,</span>
 <span class="nc" id="L130">                        intento + 1, reintentos + 1, e.getClass().getSimpleName());</span>
 <span class="nc bnc" id="L131" title="All 2 branches missed.">                if (intento &lt; reintentos) {</span>
-<span class="nc" id="L132">                    esperarAntesDeReintentar(intento);</span>
+<span class="nc" id="L132">                    waitBeforeRetry(intento);</span>
                 }
             }
         }
@@ -139,7 +139,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="nc" id="L139">        return FeedbackResult.unavailable(&quot;El servicio de generacion no respondio&quot;);</span>
     }
 
-    private String motivoDeRechazo(HttpClientErrorException e) {
+    private String rejectionReason(HttpClientErrorException e) {
 <span class="fc" id="L143">        int codigo = e.getStatusCode().value();</span>
 <span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (codigo == 429) {</span>
 <span class="nc" id="L145">            return &quot;Se agoto la cuota diaria del servicio de IA; se restablece manana&quot;;</span>
@@ -150,7 +150,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="fc" id="L150">        return &quot;El servicio de IA rechazo la peticion (codigo &quot; + codigo + &quot;)&quot;;</span>
     }
 
-    private FeedbackResult intentarUnaVez(String prompt) {
+    private FeedbackResult tryOnce(String prompt) {
 <span class="fc" id="L154">        var cuerpo = Map.of(</span>
 <span class="fc" id="L155">                &quot;systemInstruction&quot;, Map.of(</span>
 <span class="fc" id="L156">                        &quot;parts&quot;, List.of(Map.of(&quot;text&quot;, PromptsFeedback.INSTRUCCION_SISTEMA))),</span>
@@ -168,7 +168,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="fc" id="L168">                .retrieve()</span>
 <span class="nc" id="L169">                .body(JsonNode.class);</span>
 
-<span class="nc" id="L171">        String texto = extraerTexto(respuesta);</span>
+<span class="nc" id="L171">        String texto = extractText(respuesta);</span>
 <span class="nc bnc" id="L172" title="All 4 branches missed.">        if (texto == null || texto.isBlank()) {</span>
 <span class="nc" id="L173">            log.warn(&quot;Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)&quot;);</span>
 <span class="nc" id="L174">            return FeedbackResult.unavailable(&quot;El modelo no devolvio texto&quot;);</span>
@@ -176,7 +176,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="nc" id="L176">        return FeedbackResult.ok(texto.trim());</span>
     }
 
-    private void esperarAntesDeReintentar(int intento) {
+    private void waitBeforeRetry(int intento) {
         try {
 <span class="nc" id="L181">            Thread.sleep(400L * (intento + 1));</span>
 <span class="nc" id="L182">        } catch (InterruptedException e) {</span>
@@ -184,7 +184,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
 <span class="nc" id="L184">        }</span>
 <span class="nc" id="L185">    }</span>
 
-    private String extraerTexto(JsonNode respuesta) {
+    private String extractText(JsonNode respuesta) {
 <span class="nc bnc" id="L188" title="All 2 branches missed.">        if (respuesta == null) {</span>
 <span class="nc" id="L189">            return null;</span>
         }

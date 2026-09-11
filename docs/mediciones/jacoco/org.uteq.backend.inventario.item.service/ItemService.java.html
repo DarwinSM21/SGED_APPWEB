@@ -42,7 +42,7 @@ public class ItemService {
      */
     @Transactional(readOnly = true)
     public List&lt;ItemResponse&gt; listActive() {
-<span class="nc" id="L45">        return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();</span>
+<span class="nc" id="L45">        return articuloRepository.findByActiveTrue().stream().map(this::toResponse).toList();</span>
     }
 
     /**
@@ -63,20 +63,20 @@ public class ItemService {
      * @param request datos del artículo
      * @return el artículo creado
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;,
-            descripcionSpel = &quot;'creó el artículo ' + #result.nombre&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;,
+            descriptionSpel = &quot;'creó el artículo ' + #result.nombre&quot;)
     @Transactional
     public ItemResponse create(ItemRequest request) {
 <span class="fc" id="L70">        Item articulo = Item.builder()</span>
-<span class="fc" id="L71">                .nombre(request.nombre())</span>
-<span class="fc" id="L72">                .tipo(request.tipo())</span>
-<span class="fc" id="L73">                .talla(request.talla())</span>
-<span class="fc" id="L74">                .descripcion(request.descripcion())</span>
-<span class="fc" id="L75">                .stockActual(0)</span>
-<span class="fc" id="L76">                .stockMinimo(request.stockMinimo())</span>
-<span class="pc bpc" id="L77" title="1 of 4 branches missed.">                .unidadMedida(request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()</span>
+<span class="fc" id="L71">                .name(request.nombre())</span>
+<span class="fc" id="L72">                .type(request.tipo())</span>
+<span class="fc" id="L73">                .size(request.talla())</span>
+<span class="fc" id="L74">                .description(request.descripcion())</span>
+<span class="fc" id="L75">                .currentStock(0)</span>
+<span class="fc" id="L76">                .minimumStock(request.stockMinimo())</span>
+<span class="pc bpc" id="L77" title="1 of 4 branches missed.">                .unitOfMeasure(request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()</span>
 <span class="fc" id="L78">                        ? request.unidadMedida() : &quot;unidad&quot;)</span>
-<span class="fc" id="L79">                .activo(true)</span>
+<span class="fc" id="L79">                .active(true)</span>
 <span class="fc" id="L80">                .build();</span>
 
 <span class="fc" id="L82">        return toResponse(articuloRepository.save(articulo));</span>
@@ -90,19 +90,19 @@ public class ItemService {
      * @return el artículo actualizado
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;,
-            descripcionSpel = &quot;'editó el artículo ' + #result.nombre&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Articulo&quot;, idSpel = &quot;#result.idArticulo&quot;,
+            descriptionSpel = &quot;'editó el artículo ' + #result.nombre&quot;)
     @Transactional
     public ItemResponse update(Long id, ItemRequest request) {
 <span class="fc" id="L97">        Item articulo = findEntity(id);</span>
 
-<span class="fc" id="L99">        articulo.setNombre(request.nombre());</span>
-<span class="fc" id="L100">        articulo.setTipo(request.tipo());</span>
-<span class="fc" id="L101">        articulo.setTalla(request.talla());</span>
-<span class="fc" id="L102">        articulo.setDescripcion(request.descripcion());</span>
-<span class="fc" id="L103">        articulo.setStockMinimo(request.stockMinimo());</span>
+<span class="fc" id="L99">        articulo.setName(request.nombre());</span>
+<span class="fc" id="L100">        articulo.setType(request.tipo());</span>
+<span class="fc" id="L101">        articulo.setSize(request.talla());</span>
+<span class="fc" id="L102">        articulo.setDescription(request.descripcion());</span>
+<span class="fc" id="L103">        articulo.setMinimumStock(request.stockMinimo());</span>
 <span class="pc bpc" id="L104" title="1 of 4 branches missed.">        if (request.unidadMedida() != null &amp;&amp; !request.unidadMedida().isBlank()) {</span>
-<span class="fc" id="L105">            articulo.setUnidadMedida(request.unidadMedida());</span>
+<span class="fc" id="L105">            articulo.setUnitOfMeasure(request.unidadMedida());</span>
         }
 
 <span class="fc" id="L108">        return toResponse(articuloRepository.save(articulo));</span>
@@ -114,12 +114,12 @@ public class ItemService {
      * @param id identificador del artículo
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = &quot;ELIMINAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'desactivó el artículo #' + #p0&quot;)
+    @Audited(action = &quot;ELIMINAR&quot;, entity = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'desactivó el artículo #' + #p0&quot;)
     @Transactional
     public void delete(Long id) {
 <span class="fc" id="L121">        Item articulo = findEntity(id);</span>
-<span class="fc" id="L122">        articulo.setActivo(false);</span>
+<span class="fc" id="L122">        articulo.setActive(false);</span>
 <span class="fc" id="L123">        articuloRepository.save(articulo);</span>
 <span class="fc" id="L124">    }</span>
 
@@ -131,17 +131,17 @@ public class ItemService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Audited(accion = &quot;REACTIVAR&quot;, entidad = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'reactivo el articulo #' + #p0&quot;)
+    @Audited(action = &quot;REACTIVAR&quot;, entity = &quot;Articulo&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'reactivo el articulo #' + #p0&quot;)
     @Transactional
     public ItemResponse reactivate(Long id) {
 <span class="fc" id="L138">        Item articulo = findEntity(id);</span>
 
-<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (Boolean.TRUE.equals(articulo.getActivo())) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        if (Boolean.TRUE.equals(articulo.getActive())) {</span>
 <span class="fc" id="L141">            throw new IllegalArgumentException(&quot;El articulo ya se encuentra activo&quot;);</span>
         }
 
-<span class="fc" id="L144">        articulo.setActivo(true);</span>
+<span class="fc" id="L144">        articulo.setActive(true);</span>
 <span class="fc" id="L145">        return toResponse(articuloRepository.save(articulo));</span>
     }
 
@@ -166,15 +166,15 @@ public class ItemService {
 
     private ItemResponse toResponse(Item a) {
 <span class="fc" id="L168">        return new ItemResponse(</span>
-<span class="fc" id="L169">                a.getIdArticulo(),</span>
-<span class="fc" id="L170">                a.getNombre(),</span>
-<span class="fc" id="L171">                a.getTipo(),</span>
-<span class="fc" id="L172">                a.getTalla(),</span>
-<span class="fc" id="L173">                a.getDescripcion(),</span>
-<span class="fc" id="L174">                a.getStockActual(),</span>
-<span class="fc" id="L175">                a.getStockMinimo(),</span>
-<span class="fc" id="L176">                a.getUnidadMedida(),</span>
-<span class="fc" id="L177">                a.getActivo(),</span>
+<span class="fc" id="L169">                a.getId(),</span>
+<span class="fc" id="L170">                a.getName(),</span>
+<span class="fc" id="L171">                a.getType(),</span>
+<span class="fc" id="L172">                a.getSize(),</span>
+<span class="fc" id="L173">                a.getDescription(),</span>
+<span class="fc" id="L174">                a.getCurrentStock(),</span>
+<span class="fc" id="L175">                a.getMinimumStock(),</span>
+<span class="fc" id="L176">                a.getUnitOfMeasure(),</span>
+<span class="fc" id="L177">                a.getActive(),</span>
 <span class="fc" id="L178">                a.getCreatedAt()</span>
         );
     }

@@ -45,9 +45,9 @@ public class StudentAccessService {
      *                                  con un rol distinto de {@code ESTUDIANTE}
      */
     public void validateConsistencyWithStudentRecord(Long idPersona) {
-<span class="fc" id="L48">        usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -&gt; {</span>
+<span class="fc" id="L48">        usuarioRepository.findByPerson_IdAndActiveTrue(idPersona).ifPresent(usuario -&gt; {</span>
 <span class="pc bpc" id="L49" title="1 of 2 branches missed.">            boolean esEstudiante = usuario.getRoles() != null &amp;&amp; usuario.getRoles().stream()</span>
-<span class="fc bfc" id="L50" title="All 2 branches covered.">                    .anyMatch(r -&gt; &quot;ESTUDIANTE&quot;.equals(r.getNombre()));</span>
+<span class="fc bfc" id="L50" title="All 2 branches covered.">                    .anyMatch(r -&gt; &quot;ESTUDIANTE&quot;.equals(r.getName()));</span>
 <span class="fc bfc" id="L51" title="All 2 branches covered.">            if (!esEstudiante) {</span>
 <span class="fc" id="L52">                throw new IllegalArgumentException(</span>
                         &quot;La persona tiene una cuenta con otro rol: no se le puede crear una ficha de estudiante&quot;);
@@ -73,18 +73,18 @@ public class StudentAccessService {
         }
 <span class="fc" id="L74">        passwordPolicy.validate(request.password(), request.username());</span>
 
-<span class="fc" id="L76">        Role rolEstudiante = rolRepository.findByNombre(&quot;ESTUDIANTE&quot;)</span>
+<span class="fc" id="L76">        Role rolEstudiante = rolRepository.findByName(&quot;ESTUDIANTE&quot;)</span>
 <span class="fc" id="L77">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Falta el rol ESTUDIANTE (ver db/seed.sql)&quot;));</span>
 <span class="fc" id="L78">        GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)</span>
 <span class="pc" id="L79">                .orElseThrow(() -&gt; new IllegalStateException(</span>
                         &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
 
 <span class="fc" id="L82">        UserAccount usuario = UserAccount.builder()</span>
-<span class="fc" id="L83">                .persona(persona)</span>
-<span class="fc" id="L84">                .estadoGeneral(estadoActivo)</span>
+<span class="fc" id="L83">                .person(persona)</span>
+<span class="fc" id="L84">                .generalStatus(estadoActivo)</span>
 <span class="fc" id="L85">                .username(request.username())</span>
-<span class="fc" id="L86">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L87">                .activo(true)</span>
+<span class="fc" id="L86">                .passwordHash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L87">                .active(true)</span>
 <span class="fc" id="L88">                .roles(Set.of(rolEstudiante))</span>
 <span class="fc" id="L89">                .build();</span>
 <span class="fc" id="L90">        return usuarioRepository.save(usuario);</span>

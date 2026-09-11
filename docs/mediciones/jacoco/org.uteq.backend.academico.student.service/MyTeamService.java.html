@@ -37,33 +37,33 @@ public class MyTeamService {
      */
     @Transactional(readOnly = true)
     public MyTeamResponse myTeam(String username) {
-<span class="fc" id="L40">        Student estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L40">        Student estudiante = estudianteRepository.findByUserAccount_Username(username)</span>
 <span class="fc" id="L41">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
 
-<span class="fc" id="L43">        var categoria = estudiante.getCategoria();</span>
+<span class="fc" id="L43">        var categoria = estudiante.getCategory();</span>
 <span class="fc" id="L44">        var categoriaResponse = new CategoryDetailResponse(</span>
 <span class="fc" id="L45">                categoria.getNombre(),</span>
 <span class="pc bpc" id="L46" title="1 of 2 branches missed.">                categoria.getEdadMin() == null ? null : categoria.getEdadMin().intValue(),</span>
 <span class="pc bpc" id="L47" title="1 of 2 branches missed.">                categoria.getEdadMax() == null ? null : categoria.getEdadMax().intValue(),</span>
 <span class="fc" id="L48">                categoria.getDescripcion());</span>
 
-<span class="fc" id="L50">        var posicion = estudiante.getPosicion();</span>
+<span class="fc" id="L50">        var posicion = estudiante.getPosition();</span>
 <span class="pc bpc" id="L51" title="1 of 2 branches missed.">        PositionResponse posicionResponse = posicion == null ? null</span>
 <span class="pc" id="L52">                : new PositionResponse(posicion.getNombre(), posicion.getAbreviatura());</span>
 
-<span class="fc" id="L54">        AssignedCoachResponse entrenadorResponse = proximoEntrenadorDe(categoria.getIdCategoria());</span>
+<span class="fc" id="L54">        AssignedCoachResponse entrenadorResponse = nextCoachOf(categoria.getIdCategoria());</span>
 
 <span class="fc" id="L56">        List&lt;TeammateResponse&gt; companeros = estudianteRepository</span>
-<span class="fc" id="L57">                .findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(</span>
-<span class="fc" id="L58">                        categoria.getIdCategoria(), estudiante.getIdEstudiante())</span>
+<span class="fc" id="L57">                .findByCategory_IdCategoriaAndActiveTrueAndIdNot(</span>
+<span class="fc" id="L58">                        categoria.getIdCategoria(), estudiante.getId())</span>
 <span class="fc" id="L59">                .stream()</span>
-<span class="fc" id="L60">                .map(this::aCompanero)</span>
+<span class="fc" id="L60">                .map(this::toTeammate)</span>
 <span class="fc" id="L61">                .toList();</span>
 
 <span class="fc" id="L63">        return new MyTeamResponse(categoriaResponse, posicionResponse, entrenadorResponse, companeros);</span>
     }
 
-    private AssignedCoachResponse proximoEntrenadorDe(Long idCategoria) {
+    private AssignedCoachResponse nextCoachOf(Long idCategoria) {
 <span class="fc" id="L67">        LocalDate hoy = LocalDate.now(Zones.ECUADOR);</span>
 <span class="fc" id="L68">        List&lt;SesionEntrenamiento&gt; proximas = sesionRepository</span>
 <span class="fc" id="L69">                .findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(</span>
@@ -74,13 +74,13 @@ public class MyTeamService {
 <span class="fc" id="L74">        var entrenador = proximas.get(0).getEntrenador();</span>
 <span class="fc" id="L75">        var persona = entrenador.getPersona();</span>
 <span class="pc bpc" id="L76" title="1 of 2 branches missed.">        String especialidad = entrenador.getEspecialidad() == null ? null : entrenador.getEspecialidad().getNombre();</span>
-<span class="fc" id="L77">        return new AssignedCoachResponse(persona.getNombre() + &quot; &quot; + persona.getApellido(), especialidad);</span>
+<span class="fc" id="L77">        return new AssignedCoachResponse(persona.getName() + &quot; &quot; + persona.getLastName(), especialidad);</span>
     }
 
-    private TeammateResponse aCompanero(Student e) {
-<span class="fc" id="L81">        var persona = e.getPersona();</span>
-<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        String posicion = e.getPosicion() == null ? null : e.getPosicion().getNombre();</span>
-<span class="fc" id="L83">        return new TeammateResponse(e.getIdEstudiante(), persona.getNombre() + &quot; &quot; + persona.getApellido(), posicion);</span>
+    private TeammateResponse toTeammate(Student e) {
+<span class="fc" id="L81">        var persona = e.getPerson();</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">        String posicion = e.getPosition() == null ? null : e.getPosition().getNombre();</span>
+<span class="fc" id="L83">        return new TeammateResponse(e.getId(), persona.getName() + &quot; &quot; + persona.getLastName(), posicion);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

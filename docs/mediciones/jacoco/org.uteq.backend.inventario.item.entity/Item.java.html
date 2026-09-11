@@ -21,36 +21,36 @@ public class Item {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_articulo&quot;)
-    private Long idArticulo;
+    private Long id;
 
     @Column(nullable = false, length = 150)
-    private String nombre;
+    private String name;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private ItemType tipo;
+    private ItemType type;
 
     @Column(length = 20)
-    private String talla;
+    private String size;
 
     @Column(length = 255)
-    private String descripcion;
+    private String description;
 
     @Column(name = &quot;stock_actual&quot;, nullable = false)
     @Builder.Default
-    private Integer stockActual = 0;
+    private Integer currentStock = 0;
 
     @Column(name = &quot;stock_minimo&quot;, nullable = false)
     @Builder.Default
-    private Integer stockMinimo = 0;
+    private Integer minimumStock = 0;
 
     @Column(name = &quot;unidad_medida&quot;, nullable = false, length = 20)
     @Builder.Default
-    private String unidadMedida = &quot;unidad&quot;;
+    private String unitOfMeasure = &quot;unidad&quot;;
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean activo = true;
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = &quot;created_at&quot;, updatable = false)

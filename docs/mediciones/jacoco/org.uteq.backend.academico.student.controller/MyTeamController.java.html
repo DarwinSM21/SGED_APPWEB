@@ -42,7 +42,7 @@ public class MyTeamController {
     @GetMapping(&quot;/mi-informe&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;StudentReportResponse&gt; myReport() {
-<span class="fc" id="L45">        return ResponseEntity.ok(informeService.myReport(usernameAutenticado()));</span>
+<span class="fc" id="L45">        return ResponseEntity.ok(informeService.myReport(authenticatedUsername()));</span>
     }
 
     /**
@@ -57,7 +57,7 @@ public class MyTeamController {
     @PostMapping(&quot;/mi-informe/comentario&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;ReportCommentResponse&gt; myComment() {
-<span class="nc" id="L60">        return ResponseEntity.ok(informeService.myComment(usernameAutenticado()));</span>
+<span class="nc" id="L60">        return ResponseEntity.ok(informeService.myComment(authenticatedUsername()));</span>
     }
 
     /**
@@ -71,10 +71,10 @@ public class MyTeamController {
     @GetMapping(&quot;/mi-equipo&quot;)
     @Transactional(readOnly = true)
     public ResponseEntity&lt;MyTeamResponse&gt; myTeam() {
-<span class="fc" id="L74">        return ResponseEntity.ok(miEquipoService.myTeam(usernameAutenticado()));</span>
+<span class="fc" id="L74">        return ResponseEntity.ok(miEquipoService.myTeam(authenticatedUsername()));</span>
     }
 
-    private String usernameAutenticado() {
+    private String authenticatedUsername() {
 <span class="fc" id="L78">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 }

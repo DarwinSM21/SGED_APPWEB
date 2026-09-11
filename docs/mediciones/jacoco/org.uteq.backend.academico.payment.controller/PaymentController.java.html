@@ -48,7 +48,7 @@ public class PaymentController {
     public ResponseEntity&lt;List&lt;PaymentResponse&gt;&gt; registerMembership(@Valid @RequestBody RegisterMembershipRequest request) {
 <span class="fc" id="L49">        var pagos = pagoService.registerMembership(</span>
 <span class="fc" id="L50">                request.idEstudiante(), request.anio(), request.meses(),</span>
-<span class="fc" id="L51">                request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="fc" id="L51">                request.monto(), request.fechaPago(), authenticatedUsername());</span>
 <span class="fc" id="L52">        return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::toResponse).toList());</span>
     }
 
@@ -65,7 +65,7 @@ public class PaymentController {
     @Transactional
     public ResponseEntity&lt;PaymentResponse&gt; registerDaily(@Valid @RequestBody RegisterDailyRequest request) {
 <span class="fc" id="L67">        var pago = pagoService.registerDaily(</span>
-<span class="fc" id="L68">                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());</span>
+<span class="fc" id="L68">                request.idEstudiante(), request.monto(), request.fechaPago(), authenticatedUsername());</span>
 <span class="fc" id="L69">        return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(pago));</span>
     }
 
@@ -87,7 +87,7 @@ public class PaymentController {
     public ResponseEntity&lt;PaymentResponse&gt; cancel(@PathVariable Long idPago,
                                                @Valid @RequestBody CancelPaymentRequest request) {
 <span class="nc" id="L89">        return ResponseEntity.ok(toResponse(</span>
-<span class="nc" id="L90">                pagoService.cancel(idPago, request.motivo(), usernameAutenticado())));</span>
+<span class="nc" id="L90">                pagoService.cancel(idPago, request.motivo(), authenticatedUsername())));</span>
     }
 
     /**
@@ -132,28 +132,28 @@ public class PaymentController {
 <span class="nc" id="L132">        return ResponseEntity.ok(pagoService.incomeHistory(meses));</span>
     }
 
-    private String usernameAutenticado() {
+    private String authenticatedUsername() {
 <span class="fc" id="L136">        return SecurityContextHolder.getContext().getAuthentication().getName();</span>
     }
 
     private PaymentResponse toResponse(Payment p) {
-<span class="fc" id="L140">        var persona = p.getEstudiante().getPersona();</span>
-<span class="fc" id="L141">        var registrador = p.getRegistradoPor().getPersona();</span>
+<span class="fc" id="L140">        var persona = p.getStudent().getPerson();</span>
+<span class="fc" id="L141">        var registrador = p.getRegisteredBy().getPerson();</span>
 <span class="fc" id="L142">        return new PaymentResponse(</span>
-<span class="fc" id="L143">                p.getIdPago(),</span>
-<span class="fc" id="L144">                p.getEstudiante().getIdEstudiante(),</span>
-<span class="fc" id="L145">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
-<span class="fc" id="L146">                p.getTipo(),</span>
-<span class="fc bfc" id="L147" title="All 2 branches covered.">                p.getAnio() != null ? p.getAnio().intValue() : null,</span>
-<span class="fc bfc" id="L148" title="All 2 branches covered.">                p.getMes() != null ? p.getMes().intValue() : null,</span>
-<span class="fc" id="L149">                p.getMonto(),</span>
-<span class="fc" id="L150">                p.getFechaPago(),</span>
-<span class="fc" id="L151">                registrador.getNombre() + &quot; &quot; + registrador.getApellido(),</span>
-<span class="fc" id="L152">                p.getAnuladoEn(),</span>
-<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                p.getAnuladoPor() == null ? null</span>
-<span class="nc" id="L154">                        : p.getAnuladoPor().getPersona().getNombre() + &quot; &quot;</span>
-<span class="pc" id="L155">                          + p.getAnuladoPor().getPersona().getApellido(),</span>
-<span class="fc" id="L156">                p.getMotivoAnulacion());</span>
+<span class="fc" id="L143">                p.getId(),</span>
+<span class="fc" id="L144">                p.getStudent().getId(),</span>
+<span class="fc" id="L145">                persona.getName() + &quot; &quot; + persona.getLastName(),</span>
+<span class="fc" id="L146">                p.getType(),</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">                p.getYear() != null ? p.getYear().intValue() : null,</span>
+<span class="fc bfc" id="L148" title="All 2 branches covered.">                p.getMonth() != null ? p.getMonth().intValue() : null,</span>
+<span class="fc" id="L149">                p.getAmount(),</span>
+<span class="fc" id="L150">                p.getPaymentDate(),</span>
+<span class="fc" id="L151">                registrador.getName() + &quot; &quot; + registrador.getLastName(),</span>
+<span class="fc" id="L152">                p.getCanceledAt(),</span>
+<span class="pc bpc" id="L153" title="1 of 2 branches missed.">                p.getCanceledBy() == null ? null</span>
+<span class="nc" id="L154">                        : p.getCanceledBy().getPerson().getName() + &quot; &quot;</span>
+<span class="pc" id="L155">                          + p.getCanceledBy().getPerson().getLastName(),</span>
+<span class="fc" id="L156">                p.getCancellationReason());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

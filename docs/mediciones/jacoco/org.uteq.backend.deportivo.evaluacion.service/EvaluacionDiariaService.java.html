@@ -82,16 +82,16 @@ public class EvaluacionDiariaService {
 
 <span class="fc" id="L83">        Map&lt;Long, Asistencia&gt; asistenciaPorEstudiante = new HashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L84" title="All 2 branches covered.">        for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
-<span class="fc" id="L85">            asistenciaPorEstudiante.put(asistencia.getEstudiante().getIdEstudiante(), asistencia);</span>
+<span class="fc" id="L85">            asistenciaPorEstudiante.put(asistencia.getEstudiante().getId(), asistencia);</span>
 <span class="fc" id="L86">        }</span>
 
 <span class="fc" id="L88">        List&lt;Student&gt; estudiantesCategoria = estudianteRepository</span>
-<span class="fc" id="L89">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(sesion.getCategoria().getIdCategoria());</span>
+<span class="fc" id="L89">                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(sesion.getCategoria().getIdCategoria());</span>
 
 <span class="fc" id="L91">        List&lt;JugadorEvaluableResponse&gt; jugadores = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L92" title="All 2 branches covered.">        for (Student estudiante : estudiantesCategoria) {</span>
 <span class="fc" id="L93">            jugadores.add(construirJugador(</span>
-<span class="fc" id="L94">                    estudiante, asistenciaPorEstudiante.get(estudiante.getIdEstudiante()),</span>
+<span class="fc" id="L94">                    estudiante, asistenciaPorEstudiante.get(estudiante.getId()),</span>
                     evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
 <span class="fc" id="L96">        }</span>
 <span class="fc" id="L97">        jugadores.sort(Comparator.comparing(JugadorEvaluableResponse::nombreCompleto));</span>
@@ -112,9 +112,9 @@ public class EvaluacionDiariaService {
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
                                                       Map&lt;Long, Long&gt; lesionActivaPorEstudiante) {
-<span class="fc" id="L115">        Long idEstudiante = estudiante.getIdEstudiante();</span>
-<span class="fc" id="L116">        var persona = estudiante.getPersona();</span>
-<span class="fc" id="L117">        String nombre = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
+<span class="fc" id="L115">        Long idEstudiante = estudiante.getId();</span>
+<span class="fc" id="L116">        var persona = estudiante.getPerson();</span>
+<span class="fc" id="L117">        String nombre = persona.getName() + &quot; &quot; + persona.getLastName();</span>
 
 <span class="pc bpc" id="L119" title="2 of 4 branches missed.">        boolean puedeEvaluarse = asistencia != null &amp;&amp; asistencia.habilitaEvaluacion();</span>
 <span class="pc bpc" id="L120" title="1 of 2 branches missed.">        String motivo = puedeEvaluarse ? null</span>
@@ -129,8 +129,8 @@ public class EvaluacionDiariaService {
 <span class="fc" id="L129">        Map&lt;String, BigDecimal&gt; puntajes = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc" id="L130">        boolean precargado = false;</span>
 
-<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        Long idPosicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;</span>
-<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        String posicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getNombre() : null;</span>
+<span class="pc bpc" id="L132" title="1 of 2 branches missed.">        Long idPosicion = estudiante.getPosition() != null ? estudiante.getPosition().getIdPosicion() : null;</span>
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">        String posicion = estudiante.getPosition() != null ? estudiante.getPosition().getNombre() : null;</span>
 
 <span class="pc bpc" id="L135" title="1 of 2 branches missed.">        if (yaEvaluado.isPresent()) {</span>
 <span class="nc" id="L136">            var ee = yaEvaluado.get();</span>
@@ -148,7 +148,7 @@ public class EvaluacionDiariaService {
 <span class="fc" id="L148">        Long idLesionActiva = lesionActivaPorEstudiante.get(idEstudiante);</span>
 <span class="fc" id="L149">        return new JugadorEvaluableResponse(</span>
                 idEstudiante, nombre,
-<span class="fc" id="L151">                estudiante.getCategoria().getNombre(),</span>
+<span class="fc" id="L151">                estudiante.getCategory().getNombre(),</span>
                 idPosicion, posicion,
 <span class="pc bpc" id="L153" title="2 of 4 branches missed.">                asistencia == null ? null : asistencia.getEstado(),</span>
                 puntajes, precargado,
@@ -185,8 +185,8 @@ public class EvaluacionDiariaService {
      *                                      asistencia habilitante, o un
      *                                      puntaje supera su máximo
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p1.idEstudiante&quot;,
-            descripcionSpel = &quot;'editó estadísticas de estudiante #' + #p1.idEstudiante&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#p1.idEstudiante&quot;,
+            descriptionSpel = &quot;'editó estadísticas de estudiante #' + #p1.idEstudiante&quot;)
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
 <span class="fc" id="L192">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
@@ -219,7 +219,7 @@ public class EvaluacionDiariaService {
 <span class="fc" id="L219">                        .estudiante(estudiante)</span>
                         // Regla 3: la categoría del día se congela al crear la
                         // fila, tomándola del estudiante en este momento.
-<span class="fc" id="L222">                        .categoriaDia(estudiante.getCategoria())</span>
+<span class="fc" id="L222">                        .categoriaDia(estudiante.getCategory())</span>
 <span class="fc" id="L223">                        .build());</span>
 
         // El frontend siempre manda este campo: null es una instrucción
@@ -287,8 +287,8 @@ public class EvaluacionDiariaService {
      * @throws IllegalArgumentException     si ya estaba finalizada o si la
      *                                      observación supera el tope
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;EvaluacionDiaria&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'finalizó la evaluación de la sesión #' + #p0&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;EvaluacionDiaria&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'finalizó la evaluación de la sesión #' + #p0&quot;)
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
 <span class="pc bpc" id="L294" title="1 of 4 branches missed.">        if (observacionGeneral != null &amp;&amp; observacionGeneral.length() &gt; MAX_OBSERVACION_GENERAL) {</span>

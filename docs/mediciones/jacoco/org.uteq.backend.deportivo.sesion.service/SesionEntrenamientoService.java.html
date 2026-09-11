@@ -177,17 +177,17 @@ public class SesionEntrenamientoService {
 
 <span class="fc" id="L178">        Map&lt;Long, Asistencia&gt; porEstudiante = new HashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L179" title="All 2 branches covered.">        for (Asistencia a : asistenciaRepository.historialDeSesion(idSesion)) {</span>
-<span class="fc" id="L180">            porEstudiante.put(a.getEstudiante().getIdEstudiante(), a);</span>
+<span class="fc" id="L180">            porEstudiante.put(a.getEstudiante().getId(), a);</span>
 <span class="fc" id="L181">        }</span>
 
 <span class="fc" id="L183">        List&lt;Student&gt; plantel = estudianteRepository</span>
-<span class="fc" id="L184">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(</span>
+<span class="fc" id="L184">                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(</span>
 <span class="fc" id="L185">                        s.getCategoria().getIdCategoria());</span>
 
 <span class="fc" id="L187">        List&lt;SesionHistorialResponse.FilaAsistencia&gt; filas = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L188">        int presentes = 0, tarde = 0, ausentes = 0, justificados = 0, sinRegistro = 0;</span>
 <span class="fc bfc" id="L189" title="All 2 branches covered.">        for (Student e : plantel) {</span>
-<span class="fc" id="L190">            Asistencia a = porEstudiante.remove(e.getIdEstudiante());</span>
+<span class="fc" id="L190">            Asistencia a = porEstudiante.remove(e.getId());</span>
 <span class="fc bfc" id="L191" title="All 2 branches covered.">            String estado = a == null ? &quot;SIN_REGISTRO&quot; : a.getEstado();</span>
 <span class="fc bfc" id="L192" title="All 5 branches covered.">            switch (estado) {</span>
 <span class="fc" id="L193">                case Asistencia.ESTADO_PRESENTE -&gt; presentes++;</span>
@@ -197,9 +197,9 @@ public class SesionEntrenamientoService {
 <span class="fc" id="L197">                default -&gt; sinRegistro++;</span>
             }
 <span class="fc" id="L199">            filas.add(new SesionHistorialResponse.FilaAsistencia(</span>
-<span class="fc" id="L200">                    e.getIdEstudiante(),</span>
-<span class="fc" id="L201">                    e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
-<span class="fc bfc" id="L202" title="All 2 branches covered.">                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),</span>
+<span class="fc" id="L200">                    e.getId(),</span>
+<span class="fc" id="L201">                    e.getPerson().getName() + &quot; &quot; + e.getPerson().getLastName(),</span>
+<span class="fc bfc" id="L202" title="All 2 branches covered.">                    e.getPosition() == null ? null : e.getPosition().getAbreviatura(),</span>
                     estado,
 <span class="fc bfc" id="L204" title="All 2 branches covered.">                    a == null ? null : a.getHoraEntrada(),</span>
 <span class="fc bfc" id="L205" title="All 2 branches covered.">                    a == null ? null : a.getMetodo(),</span>
@@ -216,9 +216,9 @@ public class SesionEntrenamientoService {
                 default -&gt; { }
             }
 <span class="fc" id="L218">            filas.add(new SesionHistorialResponse.FilaAsistencia(</span>
-<span class="fc" id="L219">                    e.getIdEstudiante(),</span>
-<span class="fc" id="L220">                    e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
-<span class="pc bpc" id="L221" title="1 of 2 branches missed.">                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),</span>
+<span class="fc" id="L219">                    e.getId(),</span>
+<span class="fc" id="L220">                    e.getPerson().getName() + &quot; &quot; + e.getPerson().getLastName(),</span>
+<span class="pc bpc" id="L221" title="1 of 2 branches missed.">                    e.getPosition() == null ? null : e.getPosition().getAbreviatura(),</span>
 <span class="fc" id="L222">                    a.getEstado(), a.getHoraEntrada(), a.getMetodo(), a.getObservacion()));</span>
 <span class="fc" id="L223">        }</span>
 
@@ -227,7 +227,7 @@ public class SesionEntrenamientoService {
 <span class="fc" id="L227">        return new SesionHistorialResponse(</span>
 <span class="fc" id="L228">                s.getIdSesion(),</span>
 <span class="fc" id="L229">                s.getCategoria().getNombre(),</span>
-<span class="fc" id="L230">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L230">                persona.getName() + &quot; &quot; + persona.getLastName(),</span>
 <span class="fc" id="L231">                s.getFecha(), s.getHoraInicio(), s.getHoraFin(), s.getCampo(), s.getEstado(),</span>
 <span class="fc" id="L232">                evaluacion.isPresent(),</span>
 <span class="fc" id="L233">                evaluacion.map(ev -&gt; ev.getEstado()).orElse(null),</span>
@@ -245,7 +245,7 @@ public class SesionEntrenamientoService {
 <span class="fc" id="L245">        return new SesionHoyResponse(</span>
 <span class="fc" id="L246">                s.getIdSesion(),</span>
 <span class="fc" id="L247">                s.getCategoria().getNombre(),</span>
-<span class="fc" id="L248">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L248">                persona.getName() + &quot; &quot; + persona.getLastName(),</span>
 <span class="fc" id="L249">                s.getFecha(),</span>
 <span class="fc" id="L250">                s.getHoraInicio(),</span>
 <span class="fc" id="L251">                s.getHoraFin(),</span>

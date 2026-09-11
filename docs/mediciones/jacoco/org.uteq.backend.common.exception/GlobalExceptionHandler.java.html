@@ -94,7 +94,7 @@ import java.util.List;
      * @return {@code 400}
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ProblemDetail handleCuerpoIlegible(HttpMessageNotReadableException ex) {
+    public ProblemDetail handleUnreadableBody(HttpMessageNotReadableException ex) {
 <span class="fc" id="L98">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.BAD_REQUEST,
                 &quot;El cuerpo de la peticion falta o no tiene el formato esperado&quot;);
@@ -109,7 +109,7 @@ import java.util.List;
      * @return {@code 400} con el nombre del parámetro faltante en {@code parametro}
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ProblemDetail handleParametroFaltante(MissingServletRequestParameterException ex) {
+    public ProblemDetail handleMissingParameter(MissingServletRequestParameterException ex) {
 <span class="fc" id="L113">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.BAD_REQUEST,
 <span class="fc" id="L115">                &quot;Falta el parametro obligatorio '&quot; + ex.getParameterName() + &quot;'&quot;);</span>
@@ -126,7 +126,7 @@ import java.util.List;
      * @return {@code 400} con el nombre del parámetro inválido en {@code parametro}
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ProblemDetail handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
+    public ProblemDetail handleInvalidType(MethodArgumentTypeMismatchException ex) {
 <span class="fc" id="L130">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.BAD_REQUEST,
 <span class="fc" id="L132">                &quot;El valor de '&quot; + ex.getName() + &quot;' no tiene el formato esperado&quot;);</span>
@@ -142,7 +142,7 @@ import java.util.List;
      * @return {@code 404} genérico
      */
     @ExceptionHandler(NoResourceFoundException.class)
-    public ProblemDetail handleRutaDesconocida(NoResourceFoundException ex) {
+    public ProblemDetail handleUnknownRoute(NoResourceFoundException ex) {
 <span class="fc" id="L146">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.NOT_FOUND, &quot;El servidor no reconoce esta operacion&quot;);
 <span class="fc" id="L148">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/RutaDesconocida&quot;));</span>
@@ -162,7 +162,7 @@ import java.util.List;
      * @return {@code 405}, con el método rechazado en el mensaje
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ProblemDetail handleMetodoNoSoportado(HttpRequestMethodNotSupportedException ex) {
+    public ProblemDetail handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
 <span class="fc" id="L166">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.METHOD_NOT_ALLOWED,
 <span class="fc" id="L168">                &quot;El metodo &quot; + ex.getMethod() + &quot; no esta soportado en esta ruta&quot;);</span>

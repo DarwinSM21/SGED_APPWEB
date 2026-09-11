@@ -130,11 +130,11 @@ public class LesionController {
     }
 
     private LesionResponse aResponse(Lesion l) {
-<span class="fc" id="L133">        var persona = l.getEstudiante().getPersona();</span>
+<span class="fc" id="L133">        var persona = l.getEstudiante().getPerson();</span>
 <span class="fc" id="L134">        return new LesionResponse(</span>
 <span class="fc" id="L135">                l.getIdLesion(),</span>
-<span class="fc" id="L136">                l.getEstudiante().getIdEstudiante(),</span>
-<span class="fc" id="L137">                persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
+<span class="fc" id="L136">                l.getEstudiante().getId(),</span>
+<span class="fc" id="L137">                persona.getName() + &quot; &quot; + persona.getLastName(),</span>
 <span class="fc" id="L138">                l.getDescripcion(),</span>
 <span class="fc" id="L139">                l.getFechaLesion(),</span>
 <span class="fc" id="L140">                l.getFechaEstimadaRetorno(),</span>

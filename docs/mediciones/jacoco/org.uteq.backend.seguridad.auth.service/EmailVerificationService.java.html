@@ -57,18 +57,18 @@ public class EmailVerificationService {
      * @param persona persona ya persistida (con id y correo)
      */
     public void sendConfirmation(Person persona) {
-<span class="pc bpc" id="L60" title="1 of 6 branches missed.">        if (persona == null || persona.getIdPersona() == null || persona.getCorreo() == null) {</span>
+<span class="pc bpc" id="L60" title="1 of 6 branches missed.">        if (persona == null || persona.getId() == null || persona.getEmail() == null) {</span>
 <span class="fc" id="L61">            return;</span>
         }
 <span class="fc" id="L63">        String token = generateToken();</span>
-<span class="fc" id="L64">        tokenStore.save(persona.getIdPersona(), token, Duration.ofHours(ttlHoras));</span>
+<span class="fc" id="L64">        tokenStore.save(persona.getId(), token, Duration.ofHours(ttlHoras));</span>
 
 <span class="fc" id="L66">        String url = urlBase + &quot;?token=&quot; + token;</span>
-<span class="fc" id="L67">        mailer.sendConfirmation(persona.getCorreo(), url);</span>
+<span class="fc" id="L67">        mailer.sendConfirmation(persona.getEmail(), url);</span>
 
-<span class="fc" id="L69">        auditService.recordEvent(&quot;EMAILVERIFY_SOLICITADO&quot;, &quot;Persona&quot;, persona.getIdPersona(),</span>
+<span class="fc" id="L69">        auditService.recordEvent(&quot;EMAILVERIFY_SOLICITADO&quot;, &quot;Persona&quot;, persona.getId(),</span>
                 &quot;se emitió un enlace de confirmación de correo&quot;);
-<span class="fc" id="L71">        log.info(&quot;EMAILVERIFY enlace de confirmación emitido para la persona id={}&quot;, persona.getIdPersona());</span>
+<span class="fc" id="L71">        log.info(&quot;EMAILVERIFY enlace de confirmación emitido para la persona id={}&quot;, persona.getId());</span>
 <span class="fc" id="L72">    }</span>
 
     /**
@@ -87,13 +87,13 @@ public class EmailVerificationService {
 <span class="fc" id="L87">        Person persona = personaRepository.findById(idPersona)</span>
 <span class="fc" id="L88">                .orElseThrow(() -&gt; new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));</span>
 
-<span class="fc" id="L90">        persona.setCorreoVerificado(true);</span>
+<span class="fc" id="L90">        persona.setEmailVerified(true);</span>
 <span class="fc" id="L91">        personaRepository.save(persona);</span>
 <span class="fc" id="L92">        tokenStore.consume(token);</span>
 
-<span class="fc" id="L94">        auditService.recordEvent(&quot;EMAILVERIFY_CONFIRMADO&quot;, &quot;Persona&quot;, persona.getIdPersona(),</span>
+<span class="fc" id="L94">        auditService.recordEvent(&quot;EMAILVERIFY_CONFIRMADO&quot;, &quot;Persona&quot;, persona.getId(),</span>
                 &quot;confirmó su correo de contacto&quot;);
-<span class="fc" id="L96">        log.info(&quot;EMAILVERIFY correo confirmado para la persona id={}&quot;, persona.getIdPersona());</span>
+<span class="fc" id="L96">        log.info(&quot;EMAILVERIFY correo confirmado para la persona id={}&quot;, persona.getId());</span>
 <span class="fc" id="L97">    }</span>
 
     private String generateToken() {

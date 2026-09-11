@@ -61,7 +61,7 @@ import java.util.List;
 
 <span class="fc" id="L62">            documento.add(new Paragraph(&quot; &quot;));</span>
 <span class="fc" id="L63">            documento.add(new Paragraph(</span>
-<span class="fc" id="L64">                    &quot;Generado por &quot; + usuarioActual() + &quot; el &quot; + fechaActual(), FUENTE_PIE));</span>
+<span class="fc" id="L64">                    &quot;Generado por &quot; + currentUser() + &quot; el &quot; + currentDate(), FUENTE_PIE));</span>
 
 <span class="fc" id="L66">            documento.close();</span>
 <span class="fc" id="L67">            return salida.toByteArray();</span>
@@ -90,12 +90,12 @@ import java.util.List;
 <span class="fc" id="L90">        return tabla;</span>
     }
 
-    private String usuarioActual() {
+    private String currentUser() {
 <span class="fc" id="L94">        var auth = SecurityContextHolder.getContext().getAuthentication();</span>
 <span class="pc bpc" id="L95" title="1 of 4 branches missed.">        return auth != null &amp;&amp; auth.isAuthenticated() ? auth.getName() : &quot;desconocido&quot;;</span>
     }
 
-    private String fechaActual() {
+    private String currentDate() {
 <span class="fc" id="L99">        return LocalDateTime.now(Zones.ECUADOR).format(DateTimeFormatter.ofPattern(&quot;dd/MM/yyyy HH:mm&quot;));</span>
     }
 }

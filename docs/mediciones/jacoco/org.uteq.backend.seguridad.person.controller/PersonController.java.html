@@ -65,8 +65,8 @@ public class PersonController {
      */
     @GetMapping(&quot;/cedula/{cedula}&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
-    public ResponseEntity&lt;PersonResponse&gt; findByCedula(@PathVariable String cedula) {
-<span class="fc" id="L69">        return ResponseEntity.ok(personaService.findByCedula(cedula));</span>
+    public ResponseEntity&lt;PersonResponse&gt; findByNationalId(@PathVariable String cedula) {
+<span class="fc" id="L69">        return ResponseEntity.ok(personaService.findByNationalId(cedula));</span>
     }
 
     /**

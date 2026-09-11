@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.academico.payment.dto.PaymentDtos.IncomeHistoryResponse;
 import org.uteq.backend.academico.payment.dto.PaymentDtos.MonthlyIncomeResponse;
@@ -55,8 +55,8 @@ public class PaymentService {
      * @throws ResourceNotFoundException si el estudiante no existe
      * @throws IllegalArgumentException     si algún mes ya está cubierto
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Pago&quot;,
-            descripcionSpel = &quot;'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Pago&quot;,
+            descriptionSpel = &quot;'creó ' + #result.size() + ' pago(s) de membresía (estudiante #' + #p0 + ')'&quot;)
     @Transactional
     public List&lt;Payment&gt; registerMembership(Long idEstudiante, int anio, List&lt;Integer&gt; meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
@@ -65,8 +65,8 @@ public class PaymentService {
 
 <span class="fc" id="L66">        List&lt;Integer&gt; mesesUnicos = meses.stream().distinct().sorted().toList();</span>
 <span class="fc bfc" id="L67" title="All 2 branches covered.">        for (Integer mes : mesesUnicos) {</span>
-<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(</span>
-<span class="fc" id="L69">                    idEstudiante, TipoPago.MEMBRESIA, (short) anio, mes.shortValue())) {</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">            if (pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(</span>
+<span class="fc" id="L69">                    idEstudiante, PaymentType.MEMBRESIA, (short) anio, mes.shortValue())) {</span>
 <span class="fc" id="L70">                throw new IllegalArgumentException(</span>
                         &quot;El mes &quot; + mes + &quot;/&quot; + anio + &quot; ya está cubierto para este estudiante&quot;);
             }
@@ -75,13 +75,13 @@ public class PaymentService {
 <span class="fc bfc" id="L75" title="All 2 branches covered.">        LocalDate fecha = fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR);</span>
 <span class="fc" id="L76">        List&lt;Payment&gt; pagos = mesesUnicos.stream()</span>
 <span class="fc" id="L77">                .map(mes -&gt; Payment.builder()</span>
-<span class="fc" id="L78">                        .estudiante(estudiante)</span>
-<span class="fc" id="L79">                        .tipo(TipoPago.MEMBRESIA)</span>
-<span class="fc" id="L80">                        .anio((short) anio)</span>
-<span class="fc" id="L81">                        .mes(mes.shortValue())</span>
-<span class="fc" id="L82">                        .monto(monto)</span>
-<span class="fc" id="L83">                        .fechaPago(fecha)</span>
-<span class="fc" id="L84">                        .registradoPor(registrador)</span>
+<span class="fc" id="L78">                        .student(estudiante)</span>
+<span class="fc" id="L79">                        .type(PaymentType.MEMBRESIA)</span>
+<span class="fc" id="L80">                        .year((short) anio)</span>
+<span class="fc" id="L81">                        .month(mes.shortValue())</span>
+<span class="fc" id="L82">                        .amount(monto)</span>
+<span class="fc" id="L83">                        .paymentDate(fecha)</span>
+<span class="fc" id="L84">                        .registeredBy(registrador)</span>
 <span class="fc" id="L85">                        .build())</span>
 <span class="fc" id="L86">                .toList();</span>
 <span class="fc" id="L87">        return pagoRepository.saveAll(pagos);</span>
@@ -97,19 +97,19 @@ public class PaymentService {
      * @return el pago creado
      * @throws ResourceNotFoundException si el estudiante no existe
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Pago&quot;, idSpel = &quot;#result.idPago&quot;,
-            descripcionSpel = &quot;'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Pago&quot;, idSpel = &quot;#result.idPago&quot;,
+            descriptionSpel = &quot;'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'&quot;)
     @Transactional
     public Payment registerDaily(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
 <span class="fc" id="L104">        Student estudiante = findStudent(idEstudiante);</span>
 <span class="fc" id="L105">        UserAccount registrador = findUser(usernameRegistrador);</span>
 
 <span class="fc" id="L107">        return pagoRepository.save(Payment.builder()</span>
-<span class="fc" id="L108">                .estudiante(estudiante)</span>
-<span class="fc" id="L109">                .tipo(TipoPago.DIARIO)</span>
-<span class="fc" id="L110">                .monto(monto)</span>
-<span class="fc bfc" id="L111" title="All 2 branches covered.">                .fechaPago(fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR))</span>
-<span class="fc" id="L112">                .registradoPor(registrador)</span>
+<span class="fc" id="L108">                .student(estudiante)</span>
+<span class="fc" id="L109">                .type(PaymentType.DIARIO)</span>
+<span class="fc" id="L110">                .amount(monto)</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                .paymentDate(fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR))</span>
+<span class="fc" id="L112">                .registeredBy(registrador)</span>
 <span class="fc" id="L113">                .build());</span>
     }
 
@@ -125,7 +125,7 @@ public class PaymentService {
 <span class="fc bfc" id="L125" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
 <span class="fc" id="L126">            throw new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
         }
-<span class="fc" id="L128">        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);</span>
+<span class="fc" id="L128">        return pagoRepository.findByStudent_IdOrderByPaymentDateDesc(idEstudiante);</span>
     }
 
     /**
@@ -141,7 +141,7 @@ public class PaymentService {
 <span class="fc" id="L141">        LocalDate fin = mesActual.atEndOfMonth();</span>
 
 <span class="fc" id="L143">        BigDecimal total = pagoRepository.sumAmountBetweenDates(inicio, fin);</span>
-<span class="fc" id="L144">        long cantidad = pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin);</span>
+<span class="fc" id="L144">        long cantidad = pagoRepository.countByPaymentDateBetweenAndCanceledAtIsNull(inicio, fin);</span>
 <span class="fc" id="L145">        return new MonthlyIncomeResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);</span>
     }
 
@@ -203,7 +203,7 @@ public class PaymentService {
      * @throws ResourceNotFoundException si el pago no existe
      * @throws IllegalArgumentException     si el pago ya estaba anulado
      */
-    @Audited(accion = &quot;ANULAR&quot;, entidad = &quot;Pago&quot;, idSpel = &quot;#p0&quot;)
+    @Audited(action = &quot;ANULAR&quot;, entity = &quot;Pago&quot;, idSpel = &quot;#p0&quot;)
     @Transactional
     public Payment cancel(Long idPago, String motivo, String usernameAnulador) {
 <span class="fc" id="L209">        Payment pago = pagoRepository.findById(idPago)</span>
@@ -213,9 +213,9 @@ public class PaymentService {
 <span class="fc" id="L213">            throw new IllegalArgumentException(&quot;Este pago ya estaba anulado&quot;);</span>
         }
 
-<span class="fc" id="L216">        pago.setAnuladoEn(java.time.OffsetDateTime.now());</span>
-<span class="fc" id="L217">        pago.setAnuladoPor(findUser(usernameAnulador));</span>
-<span class="fc" id="L218">        pago.setMotivoAnulacion(motivo);</span>
+<span class="fc" id="L216">        pago.setCanceledAt(java.time.OffsetDateTime.now());</span>
+<span class="fc" id="L217">        pago.setCanceledBy(findUser(usernameAnulador));</span>
+<span class="fc" id="L218">        pago.setCancellationReason(motivo);</span>
 <span class="fc" id="L219">        return pagoRepository.save(pago);</span>
     }
 

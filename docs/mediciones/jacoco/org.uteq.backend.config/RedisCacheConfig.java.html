@@ -107,10 +107,13 @@ import java.time.Duration;
      * a la base en vez de propagar el error. Cada método registra el fallo una
      * vez (nivel WARN) y no relanza; Spring continúa como si fuera un fallo de
      * caché normal —invoca el método y consulta la base—.
+     *
+     * @return el manejador que degrada lectura, escritura, evicción y
+     *         limpieza de caché a advertencia registrada, sin relanzar
      */
     @Override
     public CacheErrorHandler errorHandler() {
-<span class="fc" id="L113">        return new CacheErrorHandler() {</span>
+<span class="fc" id="L116">        return new CacheErrorHandler() {</span>
             /**
              * @param ex excepción lanzada por Redis al leer
              * @param cache caché afectada
@@ -118,9 +121,9 @@ import java.time.Duration;
              */
             @Override
             public void handleCacheGetError(RuntimeException ex, Cache cache, Object key) {
-<span class="fc" id="L121">                log.warn(&quot;Caché no disponible al leer '{}' (clave {}): se consulta la base. Causa: {}&quot;,</span>
-<span class="fc" id="L122">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
-<span class="fc" id="L123">            }</span>
+<span class="fc" id="L124">                log.warn(&quot;Caché no disponible al leer '{}' (clave {}): se consulta la base. Causa: {}&quot;,</span>
+<span class="fc" id="L125">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L126">            }</span>
 
             /**
              * @param ex excepción lanzada por Redis al escribir
@@ -130,9 +133,9 @@ import java.time.Duration;
              */
             @Override
             public void handleCachePutError(RuntimeException ex, Cache cache, Object key, Object value) {
-<span class="fc" id="L133">                log.warn(&quot;Caché no disponible al escribir '{}' (clave {}): el resultado no se cachea. Causa: {}&quot;,</span>
-<span class="fc" id="L134">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
-<span class="fc" id="L135">            }</span>
+<span class="fc" id="L136">                log.warn(&quot;Caché no disponible al escribir '{}' (clave {}): el resultado no se cachea. Causa: {}&quot;,</span>
+<span class="fc" id="L137">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L138">            }</span>
 
             /**
              * @param ex excepción lanzada por Redis al invalidar
@@ -141,9 +144,9 @@ import java.time.Duration;
              */
             @Override
             public void handleCacheEvictError(RuntimeException ex, Cache cache, Object key) {
-<span class="fc" id="L144">                log.warn(&quot;Caché no disponible al invalidar '{}' (clave {}). Causa: {}&quot;,</span>
-<span class="fc" id="L145">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
-<span class="fc" id="L146">            }</span>
+<span class="fc" id="L147">                log.warn(&quot;Caché no disponible al invalidar '{}' (clave {}). Causa: {}&quot;,</span>
+<span class="fc" id="L148">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L149">            }</span>
 
             /**
              * @param ex excepción lanzada por Redis al limpiar
@@ -151,9 +154,9 @@ import java.time.Duration;
              */
             @Override
             public void handleCacheClearError(RuntimeException ex, Cache cache) {
-<span class="fc" id="L154">                log.warn(&quot;Caché no disponible al limpiar '{}'. Causa: {}&quot;,</span>
-<span class="fc" id="L155">                        cache.getName(), ex.getClass().getSimpleName());</span>
-<span class="fc" id="L156">            }</span>
+<span class="fc" id="L157">                log.warn(&quot;Caché no disponible al limpiar '{}'. Causa: {}&quot;,</span>
+<span class="fc" id="L158">                        cache.getName(), ex.getClass().getSimpleName());</span>
+<span class="fc" id="L159">            }</span>
         };
     }
 }

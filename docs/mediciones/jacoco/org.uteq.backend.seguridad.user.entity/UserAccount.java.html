@@ -21,27 +21,27 @@ public class UserAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_usuario&quot;)
-    private Long idUsuario;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;id_persona&quot;, nullable = false)
-    private Person persona;
+    private Person person;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;id_estado_general&quot;, nullable = false)
-    private GeneralStatus estadoGeneral;
+    private GeneralStatus generalStatus;
 
     @Column(name = &quot;username&quot;, nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(name = &quot;password_hash&quot;, nullable = false, columnDefinition = &quot;text&quot;)
-    private String password_Hash;
+    private String passwordHash;
 
     @Column(name = &quot;ultimo_acceso&quot;)
-    private OffsetDateTime ultimoAcceso;
+    private OffsetDateTime lastAccess;
 
     @Column(name = &quot;activo&quot;)
-    private Boolean activo;
+    private Boolean active;
 
     @Column(name = &quot;created_at&quot;, updatable = false)
     private OffsetDateTime createdAt;
@@ -62,17 +62,17 @@ public class UserAccount {
     protected void onCreate() {
 <span class="fc" id="L63">        this.createdAt = OffsetDateTime.now();</span>
 <span class="fc" id="L64">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (this.activo == null) this.activo = true;</span>
-<span class="fc" id="L66">        normalizarUsername();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        if (this.active == null) this.active = true;</span>
+<span class="fc" id="L66">        normalizeUsername();</span>
 <span class="fc" id="L67">    }</span>
 
     @PreUpdate
     protected void onUpdate() {
 <span class="fc" id="L71">        this.updatedAt = OffsetDateTime.now();</span>
-<span class="fc" id="L72">        normalizarUsername();</span>
+<span class="fc" id="L72">        normalizeUsername();</span>
 <span class="fc" id="L73">    }</span>
 
-    private void normalizarUsername() {
+    private void normalizeUsername() {
 <span class="fc bfc" id="L76" title="All 2 branches covered.">        if (this.username != null) {</span>
 <span class="fc" id="L77">            this.username = this.username.trim().toLowerCase(Locale.ROOT);</span>
         }

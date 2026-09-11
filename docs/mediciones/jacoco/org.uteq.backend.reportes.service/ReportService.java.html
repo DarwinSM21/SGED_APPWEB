@@ -63,17 +63,17 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] studentProfiles(Long idCategoria, Boolean activo) {
-<span class="fc" id="L66">        var encontrados = sinVacio(estudianteRepository.findForReport(idCategoria, activo));</span>
+<span class="fc" id="L66">        var encontrados = nonEmpty(estudianteRepository.findForReport(idCategoria, activo));</span>
 <span class="fc" id="L67">        var filas = encontrados.stream()</span>
 <span class="fc" id="L68">                .map(e -&gt; List.of(</span>
-<span class="fc" id="L69">                        e.getCodigoEstudiante(),</span>
-<span class="fc" id="L70">                        e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
-<span class="fc" id="L71">                        e.getCategoria().getNombre(),</span>
-<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                        Boolean.TRUE.equals(e.getActivo()) ? &quot;Activo&quot; : &quot;Inactivo&quot;,</span>
-<span class="fc" id="L73">                        e.getFechaIngreso().format(FECHA)))</span>
+<span class="fc" id="L69">                        e.getStudentCode(),</span>
+<span class="fc" id="L70">                        e.getPerson().getName() + &quot; &quot; + e.getPerson().getLastName(),</span>
+<span class="fc" id="L71">                        e.getCategory().getNombre(),</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                        Boolean.TRUE.equals(e.getActive()) ? &quot;Activo&quot; : &quot;Inactivo&quot;,</span>
+<span class="fc" id="L73">                        e.getEnrollmentDate().format(FECHA)))</span>
 <span class="fc" id="L74">                .toList();</span>
-<span class="fc" id="L75">        return pdfService.generate(titulo(&quot;Reporte de Fichas de Estudiantes&quot;, filas),</span>
-<span class="fc" id="L76">                List.of(&quot;Código&quot;, &quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Estado&quot;, &quot;Fecha ingreso&quot;), recortar(filas));</span>
+<span class="fc" id="L75">        return pdfService.generate(title(&quot;Reporte de Fichas de Estudiantes&quot;, filas),</span>
+<span class="fc" id="L76">                List.of(&quot;Código&quot;, &quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Estado&quot;, &quot;Fecha ingreso&quot;), truncate(filas));</span>
     }
 
     /**
@@ -87,14 +87,14 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] payments(Long idEstudiante, LocalDate desde, LocalDate hasta) {
-<span class="fc" id="L90">        Specification&lt;Payment&gt; spec = Specification.&lt;Payment&gt;where(igualA(&quot;estudiante.idEstudiante&quot;, idEstudiante))</span>
-<span class="fc" id="L91">                .and(this.&lt;Payment&gt;desdeDe(&quot;fechaPago&quot;, desde))</span>
-<span class="fc" id="L92">                .and(this.&lt;Payment&gt;hastaDe(&quot;fechaPago&quot;, hasta));</span>
-<span class="fc" id="L93">        var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;fechaPago&quot;))).getContent()).stream()</span>
+<span class="fc" id="L90">        Specification&lt;Payment&gt; spec = Specification.&lt;Payment&gt;where(equalTo(&quot;student.id&quot;, idEstudiante))</span>
+<span class="fc" id="L91">                .and(this.&lt;Payment&gt;fromDate(&quot;paymentDate&quot;, desde))</span>
+<span class="fc" id="L92">                .and(this.&lt;Payment&gt;toDate(&quot;paymentDate&quot;, hasta));</span>
+<span class="fc" id="L93">        var filas = nonEmpty(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;paymentDate&quot;))).getContent()).stream()</span>
 <span class="fc" id="L94">                .map(this::paymentRow)</span>
 <span class="fc" id="L95">                .toList();</span>
-<span class="fc" id="L96">        return pdfService.generate(titulo(&quot;Reporte de Pagos&quot;, filas),</span>
-<span class="fc" id="L97">                List.of(&quot;Estudiante&quot;, &quot;Tipo&quot;, &quot;Período&quot;, &quot;Monto&quot;, &quot;Fecha de pago&quot;, &quot;Registrado por&quot;), recortar(filas));</span>
+<span class="fc" id="L96">        return pdfService.generate(title(&quot;Reporte de Pagos&quot;, filas),</span>
+<span class="fc" id="L97">                List.of(&quot;Estudiante&quot;, &quot;Tipo&quot;, &quot;Período&quot;, &quot;Monto&quot;, &quot;Fecha de pago&quot;, &quot;Registrado por&quot;), truncate(filas));</span>
     }
 
     /**
@@ -110,15 +110,15 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] attendances(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-<span class="fc" id="L113">        Specification&lt;Asistencia&gt; spec = Specification.&lt;Asistencia&gt;where(igualA(&quot;estudiante.idEstudiante&quot;, idEstudiante))</span>
-<span class="fc" id="L114">                .and(this.&lt;Asistencia&gt;igualA(&quot;estudiante.categoria.idCategoria&quot;, idCategoria))</span>
-<span class="fc" id="L115">                .and(this.&lt;Asistencia&gt;desdeDe(&quot;sesion.fecha&quot;, desde))</span>
-<span class="fc" id="L116">                .and(this.&lt;Asistencia&gt;hastaDe(&quot;sesion.fecha&quot;, hasta));</span>
-<span class="fc" id="L117">        var filas = sinVacio(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;sesion.fecha&quot;))).getContent()).stream()</span>
-<span class="fc" id="L118">                .map(this::filaAsistencia)</span>
+<span class="fc" id="L113">        Specification&lt;Asistencia&gt; spec = Specification.&lt;Asistencia&gt;where(equalTo(&quot;estudiante.id&quot;, idEstudiante))</span>
+<span class="fc" id="L114">                .and(this.&lt;Asistencia&gt;equalTo(&quot;estudiante.category.idCategoria&quot;, idCategoria))</span>
+<span class="fc" id="L115">                .and(this.&lt;Asistencia&gt;fromDate(&quot;sesion.fecha&quot;, desde))</span>
+<span class="fc" id="L116">                .and(this.&lt;Asistencia&gt;toDate(&quot;sesion.fecha&quot;, hasta));</span>
+<span class="fc" id="L117">        var filas = nonEmpty(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;sesion.fecha&quot;))).getContent()).stream()</span>
+<span class="fc" id="L118">                .map(this::attendanceRow)</span>
 <span class="fc" id="L119">                .toList();</span>
-<span class="fc" id="L120">        return pdfService.generate(titulo(&quot;Reporte de Asistencias&quot;, filas),</span>
-<span class="fc" id="L121">                List.of(&quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Fecha sesión&quot;, &quot;Estado&quot;, &quot;Método&quot;), recortar(filas));</span>
+<span class="fc" id="L120">        return pdfService.generate(title(&quot;Reporte de Asistencias&quot;, filas),</span>
+<span class="fc" id="L121">                List.of(&quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Fecha sesión&quot;, &quot;Estado&quot;, &quot;Método&quot;), truncate(filas));</span>
     }
 
     /**
@@ -134,15 +134,15 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] evaluations(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-<span class="fc" id="L137">        Specification&lt;EvaluacionEstudiante&gt; spec = Specification.&lt;EvaluacionEstudiante&gt;where(igualA(&quot;estudiante.idEstudiante&quot;, idEstudiante))</span>
-<span class="fc" id="L138">                .and(this.&lt;EvaluacionEstudiante&gt;igualA(&quot;categoriaDia.idCategoria&quot;, idCategoria))</span>
-<span class="fc" id="L139">                .and(this.&lt;EvaluacionEstudiante&gt;desdeDe(&quot;evaluacion.fecha&quot;, desde))</span>
-<span class="fc" id="L140">                .and(this.&lt;EvaluacionEstudiante&gt;hastaDe(&quot;evaluacion.fecha&quot;, hasta));</span>
-<span class="fc" id="L141">        var filas = sinVacio(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;evaluacion.fecha&quot;))).getContent()).stream()</span>
-<span class="fc" id="L142">                .map(this::filaEvaluacion)</span>
+<span class="fc" id="L137">        Specification&lt;EvaluacionEstudiante&gt; spec = Specification.&lt;EvaluacionEstudiante&gt;where(equalTo(&quot;estudiante.id&quot;, idEstudiante))</span>
+<span class="fc" id="L138">                .and(this.&lt;EvaluacionEstudiante&gt;equalTo(&quot;categoriaDia.idCategoria&quot;, idCategoria))</span>
+<span class="fc" id="L139">                .and(this.&lt;EvaluacionEstudiante&gt;fromDate(&quot;evaluacion.fecha&quot;, desde))</span>
+<span class="fc" id="L140">                .and(this.&lt;EvaluacionEstudiante&gt;toDate(&quot;evaluacion.fecha&quot;, hasta));</span>
+<span class="fc" id="L141">        var filas = nonEmpty(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;evaluacion.fecha&quot;))).getContent()).stream()</span>
+<span class="fc" id="L142">                .map(this::evaluationRow)</span>
 <span class="fc" id="L143">                .toList();</span>
-<span class="fc" id="L144">        return pdfService.generate(titulo(&quot;Reporte de Evaluaciones&quot;, filas),</span>
-<span class="fc" id="L145">                List.of(&quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Fecha&quot;, &quot;Posición&quot;, &quot;Promedio&quot;), recortar(filas));</span>
+<span class="fc" id="L144">        return pdfService.generate(title(&quot;Reporte de Evaluaciones&quot;, filas),</span>
+<span class="fc" id="L145">                List.of(&quot;Estudiante&quot;, &quot;Categoría&quot;, &quot;Fecha&quot;, &quot;Posición&quot;, &quot;Promedio&quot;), truncate(filas));</span>
     }
 
     /**
@@ -157,34 +157,34 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] injuries(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-<span class="fc" id="L160">        Specification&lt;Lesion&gt; spec = Specification.&lt;Lesion&gt;where(igualA(&quot;estudiante.idEstudiante&quot;, idEstudiante))</span>
-<span class="fc" id="L161">                .and(this.&lt;Lesion&gt;igualA(&quot;estudiante.categoria.idCategoria&quot;, idCategoria))</span>
-<span class="fc" id="L162">                .and(this.&lt;Lesion&gt;desdeDe(&quot;fechaLesion&quot;, desde))</span>
-<span class="fc" id="L163">                .and(this.&lt;Lesion&gt;hastaDe(&quot;fechaLesion&quot;, hasta));</span>
-<span class="fc" id="L164">        var filas = sinVacio(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;fechaLesion&quot;))).getContent()).stream()</span>
-<span class="fc" id="L165">                .map(this::filaLesion)</span>
+<span class="fc" id="L160">        Specification&lt;Lesion&gt; spec = Specification.&lt;Lesion&gt;where(equalTo(&quot;estudiante.id&quot;, idEstudiante))</span>
+<span class="fc" id="L161">                .and(this.&lt;Lesion&gt;equalTo(&quot;estudiante.category.idCategoria&quot;, idCategoria))</span>
+<span class="fc" id="L162">                .and(this.&lt;Lesion&gt;fromDate(&quot;fechaLesion&quot;, desde))</span>
+<span class="fc" id="L163">                .and(this.&lt;Lesion&gt;toDate(&quot;fechaLesion&quot;, hasta));</span>
+<span class="fc" id="L164">        var filas = nonEmpty(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;fechaLesion&quot;))).getContent()).stream()</span>
+<span class="fc" id="L165">                .map(this::injuryRow)</span>
 <span class="fc" id="L166">                .toList();</span>
-<span class="fc" id="L167">        return pdfService.generate(titulo(&quot;Reporte de Lesiones&quot;, filas),</span>
-<span class="fc" id="L168">                List.of(&quot;Estudiante&quot;, &quot;Descripción&quot;, &quot;Fecha lesión&quot;, &quot;Retorno estimado&quot;, &quot;Estado&quot;), recortar(filas));</span>
+<span class="fc" id="L167">        return pdfService.generate(title(&quot;Reporte de Lesiones&quot;, filas),</span>
+<span class="fc" id="L168">                List.of(&quot;Estudiante&quot;, &quot;Descripción&quot;, &quot;Fecha lesión&quot;, &quot;Retorno estimado&quot;, &quot;Estado&quot;), truncate(filas));</span>
     }
 
-    private &lt;T&gt; Specification&lt;T&gt; igualA(String ruta, Object valor) {
+    private &lt;T&gt; Specification&lt;T&gt; equalTo(String path, Object valor) {
 <span class="fc bfc" id="L172" title="All 2 branches covered.">        if (valor == null) return Specification.&lt;T&gt;where(null);</span>
-<span class="pc" id="L173">        return (root, query, cb) -&gt; cb.equal(this.&lt;T, Object&gt;ruta(root, ruta), valor);</span>
+<span class="pc" id="L173">        return (root, query, cb) -&gt; cb.equal(this.&lt;T, Object&gt;path(root, path), valor);</span>
     }
 
-    private &lt;T&gt; Specification&lt;T&gt; desdeDe(String ruta, LocalDate desde) {
+    private &lt;T&gt; Specification&lt;T&gt; fromDate(String path, LocalDate desde) {
 <span class="pc bpc" id="L177" title="1 of 2 branches missed.">        if (desde == null) return Specification.&lt;T&gt;where(null);</span>
-<span class="nc" id="L178">        return (root, query, cb) -&gt; cb.greaterThanOrEqualTo(this.&lt;T, LocalDate&gt;ruta(root, ruta), desde);</span>
+<span class="nc" id="L178">        return (root, query, cb) -&gt; cb.greaterThanOrEqualTo(this.&lt;T, LocalDate&gt;path(root, path), desde);</span>
     }
 
-    private &lt;T&gt; Specification&lt;T&gt; hastaDe(String ruta, LocalDate hasta) {
+    private &lt;T&gt; Specification&lt;T&gt; toDate(String path, LocalDate hasta) {
 <span class="pc bpc" id="L182" title="1 of 2 branches missed.">        if (hasta == null) return Specification.&lt;T&gt;where(null);</span>
-<span class="nc" id="L183">        return (root, query, cb) -&gt; cb.lessThanOrEqualTo(this.&lt;T, LocalDate&gt;ruta(root, ruta), hasta);</span>
+<span class="nc" id="L183">        return (root, query, cb) -&gt; cb.lessThanOrEqualTo(this.&lt;T, LocalDate&gt;path(root, path), hasta);</span>
     }
 
     @SuppressWarnings(&quot;unchecked&quot;)
-    private &lt;T, Y&gt; jakarta.persistence.criteria.Path&lt;Y&gt; ruta(
+    private &lt;T, Y&gt; jakarta.persistence.criteria.Path&lt;Y&gt; path(
             jakarta.persistence.criteria.Root&lt;T&gt; root, String puntos) {
 <span class="nc" id="L189">        jakarta.persistence.criteria.Path&lt;Object&gt; path = null;</span>
 <span class="nc bnc" id="L190" title="All 2 branches missed.">        for (String segmento : puntos.split(&quot;\\.&quot;)) {</span>
@@ -193,7 +193,7 @@ public class ReportService {
 <span class="nc" id="L193">        return (jakarta.persistence.criteria.Path&lt;Y&gt;) (jakarta.persistence.criteria.Path&lt;?&gt;) path;</span>
     }
 
-    private &lt;T&gt; List&lt;T&gt; sinVacio(List&lt;T&gt; resultados) {
+    private &lt;T&gt; List&lt;T&gt; nonEmpty(List&lt;T&gt; resultados) {
 <span class="fc bfc" id="L197" title="All 2 branches covered.">        if (resultados.isEmpty()) {</span>
 <span class="fc" id="L198">            throw new ResourceNotFoundException(&quot;No hay datos para los filtros seleccionados&quot;);</span>
         }
@@ -201,62 +201,62 @@ public class ReportService {
     }
 
     private List&lt;String&gt; paymentRow(Payment p) {
-<span class="fc bfc" id="L204" title="All 2 branches covered.">        String periodo = p.getTipo() == Payment.TipoPago.MEMBRESIA ? p.getMes() + &quot;/&quot; + p.getAnio() : &quot;-&quot;;</span>
-<span class="fc" id="L205">        var registrador = p.getRegistradoPor().getPersona();</span>
+<span class="fc bfc" id="L204" title="All 2 branches covered.">        String periodo = p.getType() == Payment.PaymentType.MEMBRESIA ? p.getMonth() + &quot;/&quot; + p.getYear() : &quot;-&quot;;</span>
+<span class="fc" id="L205">        var registrador = p.getRegisteredBy().getPerson();</span>
 <span class="fc" id="L206">        return List.of(</span>
-<span class="fc" id="L207">                p.getEstudiante().getPersona().getNombre() + &quot; &quot; + p.getEstudiante().getPersona().getApellido(),</span>
-<span class="fc" id="L208">                p.getTipo().name(),</span>
+<span class="fc" id="L207">                p.getStudent().getPerson().getName() + &quot; &quot; + p.getStudent().getPerson().getLastName(),</span>
+<span class="fc" id="L208">                p.getType().name(),</span>
                 periodo,
-<span class="fc" id="L210">                p.getMonto().toPlainString(),</span>
-<span class="fc" id="L211">                p.getFechaPago().format(FECHA),</span>
-<span class="fc" id="L212">                registrador.getNombre() + &quot; &quot; + registrador.getApellido());</span>
+<span class="fc" id="L210">                p.getAmount().toPlainString(),</span>
+<span class="fc" id="L211">                p.getPaymentDate().format(FECHA),</span>
+<span class="fc" id="L212">                registrador.getName() + &quot; &quot; + registrador.getLastName());</span>
     }
 
-    private List&lt;String&gt; filaAsistencia(Asistencia a) {
+    private List&lt;String&gt; attendanceRow(Asistencia a) {
 <span class="fc" id="L216">        return List.of(</span>
-<span class="fc" id="L217">                a.getEstudiante().getPersona().getNombre() + &quot; &quot; + a.getEstudiante().getPersona().getApellido(),</span>
-<span class="fc" id="L218">                a.getEstudiante().getCategoria().getNombre(),</span>
+<span class="fc" id="L217">                a.getEstudiante().getPerson().getName() + &quot; &quot; + a.getEstudiante().getPerson().getLastName(),</span>
+<span class="fc" id="L218">                a.getEstudiante().getCategory().getNombre(),</span>
 <span class="fc" id="L219">                a.getSesion().getFecha().format(FECHA),</span>
 <span class="fc" id="L220">                a.getEstado(),</span>
 <span class="fc" id="L221">                a.getMetodo());</span>
     }
 
-    private List&lt;String&gt; filaEvaluacion(EvaluacionEstudiante ee) {
+    private List&lt;String&gt; evaluationRow(EvaluacionEstudiante ee) {
 <span class="pc bpc" id="L225" title="1 of 2 branches missed.">        String posicion = ee.getPosicionJugada() != null ? ee.getPosicionJugada().getNombre() : &quot;-&quot;;</span>
-<span class="pc bpc" id="L226" title="1 of 2 branches missed.">        String promedio = ee.getDetalles().isEmpty() ? &quot;-&quot; : promedio(ee.getDetalles());</span>
+<span class="pc bpc" id="L226" title="1 of 2 branches missed.">        String average = ee.getDetalles().isEmpty() ? &quot;-&quot; : average(ee.getDetalles());</span>
 <span class="fc" id="L227">        return List.of(</span>
-<span class="fc" id="L228">                ee.getEstudiante().getPersona().getNombre() + &quot; &quot; + ee.getEstudiante().getPersona().getApellido(),</span>
+<span class="fc" id="L228">                ee.getEstudiante().getPerson().getName() + &quot; &quot; + ee.getEstudiante().getPerson().getLastName(),</span>
 <span class="fc" id="L229">                ee.getCategoriaDia().getNombre(),</span>
 <span class="fc" id="L230">                ee.getEvaluacion().getFecha().format(FECHA),</span>
                 posicion,
-                promedio);
+                average);
     }
 
-    private List&lt;String&gt; filaLesion(Lesion l) {
+    private List&lt;String&gt; injuryRow(Lesion l) {
 <span class="fc bfc" id="L236" title="All 2 branches covered.">        String retorno = l.getFechaEstimadaRetorno() != null ? l.getFechaEstimadaRetorno().format(FECHA) : &quot;-&quot;;</span>
 <span class="fc bfc" id="L237" title="All 2 branches covered.">        String estado = l.estaActiva() ? &quot;Activa&quot; : &quot;De alta el &quot; + l.getFechaAlta().format(FECHA);</span>
 <span class="fc" id="L238">        return List.of(</span>
-<span class="fc" id="L239">                l.getEstudiante().getPersona().getNombre() + &quot; &quot; + l.getEstudiante().getPersona().getApellido(),</span>
+<span class="fc" id="L239">                l.getEstudiante().getPerson().getName() + &quot; &quot; + l.getEstudiante().getPerson().getLastName(),</span>
 <span class="fc" id="L240">                l.getDescripcion(),</span>
 <span class="fc" id="L241">                l.getFechaLesion().format(FECHA),</span>
                 retorno,
                 estado);
     }
 
-    private String promedio(List&lt;DetalleEvaluacion&gt; detalles) {
+    private String average(List&lt;DetalleEvaluacion&gt; detalles) {
 <span class="fc" id="L247">        BigDecimal suma = detalles.stream().map(DetalleEvaluacion::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);</span>
 <span class="fc" id="L248">        return suma.divide(BigDecimal.valueOf(detalles.size()), 2, RoundingMode.HALF_UP).toPlainString();</span>
     }
-    private boolean seQuedoCorto(List&lt;List&lt;String&gt;&gt; filas) {
+    private boolean exceedsLimit(List&lt;List&lt;String&gt;&gt; filas) {
 <span class="fc bfc" id="L251" title="All 2 branches covered.">        return filas.size() &gt; TOPE_FILAS;</span>
     }
 
-    private List&lt;List&lt;String&gt;&gt; recortar(List&lt;List&lt;String&gt;&gt; filas) {
-<span class="fc bfc" id="L255" title="All 2 branches covered.">        return seQuedoCorto(filas) ? filas.subList(0, TOPE_FILAS) : filas;</span>
+    private List&lt;List&lt;String&gt;&gt; truncate(List&lt;List&lt;String&gt;&gt; filas) {
+<span class="fc bfc" id="L255" title="All 2 branches covered.">        return exceedsLimit(filas) ? filas.subList(0, TOPE_FILAS) : filas;</span>
     }
 
-    private String titulo(String base, List&lt;List&lt;String&gt;&gt; filas) {
-<span class="fc bfc" id="L259" title="All 2 branches covered.">        return seQuedoCorto(filas)</span>
+    private String title(String base, List&lt;List&lt;String&gt;&gt; filas) {
+<span class="fc bfc" id="L259" title="All 2 branches covered.">        return exceedsLimit(filas)</span>
 <span class="fc" id="L260">                ? base + &quot; (primeras &quot; + TOPE_FILAS + &quot; filas — afine los filtros para ver el resto)&quot;</span>
 <span class="fc" id="L261">                : base;</span>
     }

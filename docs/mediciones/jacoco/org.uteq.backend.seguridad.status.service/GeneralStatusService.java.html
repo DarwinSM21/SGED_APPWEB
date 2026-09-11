@@ -30,8 +30,8 @@ public class GeneralStatusService {
 <span class="fc" id="L30">        return estadoGeneralRepository.findAll()</span>
 <span class="fc" id="L31">                .stream()</span>
 <span class="fc" id="L32">                .map(estado -&gt; new GeneralStatusResponse(</span>
-<span class="fc" id="L33">                        estado.getIdEstadoGeneral(),</span>
-<span class="fc" id="L34">                        estado.getNombre()</span>
+<span class="fc" id="L33">                        estado.getId(),</span>
+<span class="fc" id="L34">                        estado.getName()</span>
                 ))
 <span class="fc" id="L36">                .collect(Collectors.toList());</span>
     }

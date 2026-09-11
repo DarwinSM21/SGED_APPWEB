@@ -20,26 +20,26 @@ public class Notification {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_notificacion&quot;)
-    private Long idNotificacion;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_representante&quot;, nullable = false)
-    private Guardian representante;
+    private Guardian guardian;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_estudiante&quot;, nullable = false)
-    private Student estudiante;
+    private Student student;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Type tipo;
+    private Type type;
 
     @Column(nullable = false, columnDefinition = &quot;text&quot;)
-    private String mensaje;
+    private String message;
 
     @Column(nullable = false)
     @Builder.Default
-    private Boolean leida = false;
+    private Boolean read = false;
 
     @CreationTimestamp
     @Column(name = &quot;created_at&quot;, updatable = false)

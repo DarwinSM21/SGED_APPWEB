@@ -33,23 +33,23 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 <span class="pc bpc" id="L34" title="1 of 2 branches missed.">        String buscado = username == null ? &quot;&quot; : username.trim();</span>
 
-<span class="fc" id="L36">        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(buscado)</span>
+<span class="fc" id="L36">        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(buscado)</span>
 <span class="fc" id="L37">                .orElseThrow(() -&gt; new UsernameNotFoundException(</span>
                         &quot;Usuario no encontrado: &quot; + buscado));
 
 <span class="fc" id="L40">        List&lt;SimpleGrantedAuthority&gt; autoridades = usuario.getRoles().stream()</span>
 <span class="fc" id="L41">                .map(r -&gt; {</span>
-<span class="pc bpc" id="L42" title="1 of 2 branches missed.">                    String nombreRol = r.getNombre().startsWith(&quot;ROLE_&quot;)</span>
-<span class="nc" id="L43">                            ? r.getNombre()</span>
-<span class="fc" id="L44">                            : &quot;ROLE_&quot; + r.getNombre();</span>
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">                    String nombreRol = r.getName().startsWith(&quot;ROLE_&quot;)</span>
+<span class="nc" id="L43">                            ? r.getName()</span>
+<span class="fc" id="L44">                            : &quot;ROLE_&quot; + r.getName();</span>
 <span class="fc" id="L45">                    return new SimpleGrantedAuthority(nombreRol);</span>
                 })
 <span class="fc" id="L47">                .toList();</span>
 <span class="fc" id="L48">        return User.builder()</span>
 <span class="fc" id="L49">                .username(usuario.getUsername())</span>
-<span class="fc" id="L50">                .password(usuario.getPassword_Hash())</span>
+<span class="fc" id="L50">                .password(usuario.getPasswordHash())</span>
 <span class="fc" id="L51">                .authorities(autoridades)</span>
-<span class="pc bpc" id="L52" title="1 of 2 branches missed.">                .accountLocked(!usuario.getActivo())</span>
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">                .accountLocked(!usuario.getActive())</span>
 <span class="fc" id="L53">                .build();</span>
     }
 }

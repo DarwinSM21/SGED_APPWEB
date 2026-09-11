@@ -19,50 +19,50 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Payment {
-<span class="fc" id="L22">    public enum TipoPago { MEMBRESIA, DIARIO }</span>
+<span class="fc" id="L22">    public enum PaymentType { MEMBRESIA, DIARIO }</span>
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_pago&quot;)
-    private Long idPago;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_estudiante&quot;, nullable = false)
-    private Student estudiante;
+    private Student student;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TipoPago tipo;
+    private PaymentType type;
 
-    private Short anio;
+    private Short year;
 
-    private Short mes;
+    private Short month;
 
     @Column(nullable = false, precision = 8, scale = 2)
-    private BigDecimal monto;
+    private BigDecimal amount;
 
     @Column(name = &quot;fecha_pago&quot;, nullable = false)
-    private LocalDate fechaPago;
+    private LocalDate paymentDate;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;registrado_por_id_usuario&quot;, nullable = false)
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(name = &quot;anulado_en&quot;)
-    private java.time.OffsetDateTime anuladoEn;
+    private java.time.OffsetDateTime canceledAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;anulado_por_id_usuario&quot;)
-    private UserAccount anuladoPor;
+    private UserAccount canceledBy;
 
     @Column(name = &quot;motivo_anulacion&quot;, length = 255)
-    private String motivoAnulacion;
+    private String cancellationReason;
 
     /**
      * @return {@code true} si el pago no fue anulado
      */
     public boolean isActive() {
-<span class="fc bfc" id="L65" title="All 2 branches covered.">        return anuladoEn == null;</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">        return canceledAt == null;</span>
     }
 
     @CreationTimestamp

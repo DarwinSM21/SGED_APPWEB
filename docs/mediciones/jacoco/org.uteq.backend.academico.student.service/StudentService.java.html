@@ -90,7 +90,7 @@ public class StudentService {
      */
     @Transactional(readOnly = true)
     public StudentResponse findById(Long id) {
-<span class="fc" id="L93">        Student e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)</span>
+<span class="fc" id="L93">        Student e = estudianteRepository.findByIdAndActiveTrue(id)</span>
 <span class="fc" id="L94">            .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
 <span class="fc" id="L95">        return toResponse(e);</span>
     }
@@ -109,20 +109,20 @@ public class StudentService {
      *                                      está en uso o si la edad no cae en
      *                                      el rango de la categoría
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
-            descripcionSpel = &quot;'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descriptionSpel = &quot;'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse create(StudentRequest request) {
 <span class="fc" id="L117">        estudianteAccesoService.validateConsistencyWithStudentRecord(request.idPersona());</span>
 
         // 1. ¿La persona YA tiene un registro como estudiante (activo o inactivo)?
-<span class="fc" id="L120">        Optional&lt;Student&gt; estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());</span>
+<span class="fc" id="L120">        Optional&lt;Student&gt; estudianteExistente = estudianteRepository.findByPerson_Id(request.idPersona());</span>
 
 <span class="fc bfc" id="L122" title="All 2 branches covered.">        if (estudianteExistente.isPresent()) {</span>
 <span class="fc" id="L123">            Student est = estudianteExistente.get();</span>
 
-<span class="fc bfc" id="L125" title="All 2 branches covered.">            if (Boolean.TRUE.equals(est.getActivo())) {</span>
+<span class="fc bfc" id="L125" title="All 2 branches covered.">            if (Boolean.TRUE.equals(est.getActive())) {</span>
 <span class="fc" id="L126">                throw new IllegalArgumentException(&quot;La persona seleccionada ya cuenta con una ficha de estudiante activa.&quot;);</span>
             }
 
@@ -133,21 +133,21 @@ public class StudentService {
 <span class="fc" id="L133">            GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
 <span class="pc" id="L134">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
 
-<span class="fc" id="L136">            est.setCategoria(categoria);</span>
-<span class="fc" id="L137">            est.setEstadoGeneral(estadoGeneral);</span>
-<span class="fc" id="L138">            est.setCodigoEstudiante(request.codigoEstudiante());</span>
-<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));</span>
-<span class="fc" id="L140">            est.setPeso(request.peso());</span>
-<span class="fc" id="L141">            est.setAltura(request.altura());</span>
-<span class="fc" id="L142">            est.setPosicion(resolvePosition(request.idPosicion()));</span>
-<span class="fc" id="L143">            est.setActivo(true);</span>
+<span class="fc" id="L136">            est.setCategory(categoria);</span>
+<span class="fc" id="L137">            est.setGeneralStatus(estadoGeneral);</span>
+<span class="fc" id="L138">            est.setStudentCode(request.codigoEstudiante());</span>
+<span class="pc bpc" id="L139" title="1 of 2 branches missed.">            est.setEnrollmentDate(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));</span>
+<span class="fc" id="L140">            est.setWeight(request.peso());</span>
+<span class="fc" id="L141">            est.setHeight(request.altura());</span>
+<span class="fc" id="L142">            est.setPosition(resolvePosition(request.idPosicion()));</span>
+<span class="fc" id="L143">            est.setActive(true);</span>
 
 <span class="fc" id="L145">            est = estudianteRepository.save(est);</span>
 <span class="fc" id="L146">            return toResponse(est);</span>
         }
 
         // 2. La persona nunca fue estudiante: se crea un registro desde cero.
-<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {</span>
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (estudianteRepository.existsByStudentCode(request.codigoEstudiante())) {</span>
 <span class="nc" id="L151">            throw new IllegalArgumentException(&quot;El código de estudiante '&quot; + request.codigoEstudiante() + &quot;' ya se encuentra en uso.&quot;);</span>
         }
 
@@ -163,15 +163,15 @@ public class StudentService {
 <span class="pc" id="L163">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
 
 <span class="fc" id="L165">        Student estudiante = Student.builder()</span>
-<span class="fc" id="L166">                .persona(persona)</span>
-<span class="fc" id="L167">                .categoria(categoria)</span>
-<span class="fc" id="L168">                .estadoGeneral(estadoGeneral)</span>
-<span class="fc" id="L169">                .codigoEstudiante(request.codigoEstudiante())</span>
-<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))</span>
-<span class="fc" id="L171">                .peso(request.peso())</span>
-<span class="fc" id="L172">                .altura(request.altura())</span>
-<span class="fc" id="L173">                .posicion(resolvePosition(request.idPosicion()))</span>
-<span class="fc" id="L174">                .activo(true)</span>
+<span class="fc" id="L166">                .person(persona)</span>
+<span class="fc" id="L167">                .category(categoria)</span>
+<span class="fc" id="L168">                .generalStatus(estadoGeneral)</span>
+<span class="fc" id="L169">                .studentCode(request.codigoEstudiante())</span>
+<span class="pc bpc" id="L170" title="1 of 2 branches missed.">                .enrollmentDate(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))</span>
+<span class="fc" id="L171">                .weight(request.peso())</span>
+<span class="fc" id="L172">                .height(request.altura())</span>
+<span class="fc" id="L173">                .position(resolvePosition(request.idPosicion()))</span>
+<span class="fc" id="L174">                .active(true)</span>
 <span class="fc" id="L175">                .build();</span>
 
 <span class="fc" id="L177">        estudiante = estudianteRepository.save(estudiante);</span>
@@ -192,8 +192,8 @@ public class StudentService {
      *                                      estudiante o la edad no cae en el
      *                                      rango de la categoría nueva
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
-            descripcionSpel = &quot;'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descriptionSpel = &quot;'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse update(Long id, StudentRequest request) {
@@ -202,21 +202,21 @@ public class StudentService {
                         &quot;Estudiante no encontrado con id: &quot; + id));
 
         // Si cambia de código, ese código no puede pertenecer a otro estudiante.
-<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {</span>
+<span class="fc bfc" id="L205" title="All 2 branches covered.">        if (estudianteRepository.existsByStudentCodeAndIdNot(request.codigoEstudiante(), id)) {</span>
 <span class="fc" id="L206">            throw new IllegalArgumentException(&quot;El código '&quot; + request.codigoEstudiante() + &quot;' ya está asignado a otro estudiante.&quot;);</span>
         }
 
-<span class="fc" id="L209">        reasignarPersonaSiCambio(estudiante, request.idPersona());</span>
-<span class="fc" id="L210">        reasignarCategoriaSiCambio(estudiante, request.idCategoria());</span>
-<span class="fc" id="L211">        reasignarEstadoGeneralSiCambio(estudiante, request.idEstadoGeneral());</span>
-<span class="fc" id="L212">        reasignarPosicionSiCambio(estudiante, request.idPosicion());</span>
+<span class="fc" id="L209">        reassignPersonIfChanged(estudiante, request.idPersona());</span>
+<span class="fc" id="L210">        reassignCategoryIfChanged(estudiante, request.idCategoria());</span>
+<span class="fc" id="L211">        reassignGeneralStatusIfChanged(estudiante, request.idEstadoGeneral());</span>
+<span class="fc" id="L212">        reassignPositionIfChanged(estudiante, request.idPosicion());</span>
 
-<span class="fc" id="L214">        estudiante.setCodigoEstudiante(request.codigoEstudiante());</span>
+<span class="fc" id="L214">        estudiante.setStudentCode(request.codigoEstudiante());</span>
 <span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (request.fechaIngreso() != null) {</span>
-<span class="fc" id="L216">            estudiante.setFechaIngreso(request.fechaIngreso());</span>
+<span class="fc" id="L216">            estudiante.setEnrollmentDate(request.fechaIngreso());</span>
         }
-<span class="fc" id="L218">        estudiante.setPeso(request.peso());</span>
-<span class="fc" id="L219">        estudiante.setAltura(request.altura());</span>
+<span class="fc" id="L218">        estudiante.setWeight(request.peso());</span>
+<span class="fc" id="L219">        estudiante.setHeight(request.altura());</span>
 
 <span class="fc" id="L221">        estudiante = estudianteRepository.save(estudiante);</span>
 
@@ -237,14 +237,14 @@ public class StudentService {
      * @throws ResourceNotFoundException si el estudiante o la posición no
      *                                      existen
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
-            descripcionSpel = &quot;'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descriptionSpel = &quot;'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse updatePosition(Long id, Long idPosicion) {
-<span class="nc" id="L245">        Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)</span>
+<span class="nc" id="L245">        Student estudiante = estudianteRepository.findByIdAndActiveTrue(id)</span>
 <span class="nc" id="L246">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
-<span class="nc" id="L247">        estudiante.setPosicion(resolvePosition(idPosicion));</span>
+<span class="nc" id="L247">        estudiante.setPosition(resolvePosition(idPosicion));</span>
 <span class="nc" id="L248">        estudiante = estudianteRepository.save(estudiante);</span>
 <span class="nc" id="L249">        return toResponse(estudiante);</span>
     }
@@ -253,16 +253,16 @@ public class StudentService {
     // seguían el mismo patrón —si el id pedido difiere del actual, buscar la
     // nueva fila y reasignarla— y sumaban complejidad al método. Extraídas
     // para que update() quede lineal: valida, reasigna lo que cambió, guarda.
-    private void reasignarPersonaSiCambio(Student estudiante, Long idPersonaNueva) {
-<span class="pc bpc" id="L257" title="1 of 2 branches missed.">        if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {</span>
+    private void reassignPersonIfChanged(Student estudiante, Long idPersonaNueva) {
+<span class="pc bpc" id="L257" title="1 of 2 branches missed.">        if (estudiante.getPerson().getId().equals(idPersonaNueva)) {</span>
 <span class="fc" id="L258">            return;</span>
         }
-<span class="nc bnc" id="L260" title="All 2 branches missed.">        if (estudianteRepository.existsByPersona_IdPersona(idPersonaNueva)) {</span>
+<span class="nc bnc" id="L260" title="All 2 branches missed.">        if (estudianteRepository.existsByPerson_Id(idPersonaNueva)) {</span>
 <span class="nc" id="L261">            throw new IllegalArgumentException(&quot;La nueva persona seleccionada ya es un estudiante registrado.&quot;);</span>
         }
 <span class="nc" id="L263">        Person nuevaPersona = personaRepository.findById(idPersonaNueva)</span>
 <span class="nc" id="L264">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Persona no encontrada con ID: &quot; + idPersonaNueva));</span>
-<span class="nc" id="L265">        estudiante.setPersona(nuevaPersona);</span>
+<span class="nc" id="L265">        estudiante.setPerson(nuevaPersona);</span>
 <span class="nc" id="L266">    }</span>
 
     /**
@@ -285,7 +285,7 @@ public class StudentService {
      *                                  {@code [edadMin, edadMax]}
      */
     private void validateAgeInCategory(Person persona, Categoria categoria) {
-<span class="fc" id="L288">        LocalDate nacimiento = persona.getFechaNacimiento();</span>
+<span class="fc" id="L288">        LocalDate nacimiento = persona.getBirthDate();</span>
 <span class="pc bpc" id="L289" title="2 of 6 branches missed.">        if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {</span>
 <span class="fc" id="L290">            return;</span>
         }
@@ -293,40 +293,40 @@ public class StudentService {
 <span class="fc" id="L293">        int edad = Period.between(nacimiento, LocalDate.now(Zones.ECUADOR)).getYears();</span>
 <span class="pc bpc" id="L294" title="1 of 4 branches missed.">        if (edad &lt; categoria.getEdadMin() || edad &gt; categoria.getEdadMax()) {</span>
 <span class="fc" id="L295">            throw new IllegalArgumentException(</span>
-<span class="fc" id="L296">                    persona.getNombre() + &quot; &quot; + persona.getApellido() + &quot; tiene &quot; + edad</span>
+<span class="fc" id="L296">                    persona.getName() + &quot; &quot; + persona.getLastName() + &quot; tiene &quot; + edad</span>
 <span class="fc" id="L297">                    + &quot; años y &quot; + categoria.getNombre() + &quot; es para edades de &quot;</span>
 <span class="fc" id="L298">                    + categoria.getEdadMin() + &quot; a &quot; + categoria.getEdadMax() + &quot; años&quot;);</span>
         }
 <span class="fc" id="L300">    }</span>
 
-    private void reasignarCategoriaSiCambio(Student estudiante, Long idCategoriaNueva) {
-<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if (estudiante.getCategoria().getIdCategoria().equals(idCategoriaNueva)) {</span>
+    private void reassignCategoryIfChanged(Student estudiante, Long idCategoriaNueva) {
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if (estudiante.getCategory().getIdCategoria().equals(idCategoriaNueva)) {</span>
 <span class="fc" id="L304">            return;</span>
         }
 <span class="nc" id="L306">        Categoria categoria = categoriaRepository.findById(idCategoriaNueva)</span>
 <span class="nc" id="L307">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada: &quot; + idCategoriaNueva));</span>
-<span class="nc" id="L308">        validateAgeInCategory(estudiante.getPersona(), categoria);</span>
-<span class="nc" id="L309">        estudiante.setCategoria(categoria);</span>
+<span class="nc" id="L308">        validateAgeInCategory(estudiante.getPerson(), categoria);</span>
+<span class="nc" id="L309">        estudiante.setCategory(categoria);</span>
 <span class="nc" id="L310">    }</span>
 
-    private void reasignarEstadoGeneralSiCambio(Student estudiante, Long idEstadoGeneralNuevo) {
-<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        if (estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(idEstadoGeneralNuevo)) {</span>
+    private void reassignGeneralStatusIfChanged(Student estudiante, Long idEstadoGeneralNuevo) {
+<span class="pc bpc" id="L313" title="1 of 2 branches missed.">        if (estudiante.getGeneralStatus().getId().equals(idEstadoGeneralNuevo)) {</span>
 <span class="fc" id="L314">            return;</span>
         }
 <span class="nc" id="L316">        GeneralStatus estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)</span>
 <span class="nc" id="L317">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estado General no encontrado: &quot; + idEstadoGeneralNuevo));</span>
-<span class="nc" id="L318">        estudiante.setEstadoGeneral(estadoGeneral);</span>
+<span class="nc" id="L318">        estudiante.setGeneralStatus(estadoGeneral);</span>
 <span class="nc" id="L319">    }</span>
 
     // A diferencia de categoría/estadoGeneral, la posición es opcional y puede
     // pasar de asignada a sin asignar (idPosicionNueva null): hay que poder
     // desasignarla, no solo cambiarla.
-    private void reasignarPosicionSiCambio(Student estudiante, Long idPosicionNueva) {
-<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;</span>
+    private void reassignPositionIfChanged(Student estudiante, Long idPosicionNueva) {
+<span class="pc bpc" id="L325" title="1 of 2 branches missed.">        Long actual = estudiante.getPosition() != null ? estudiante.getPosition().getIdPosicion() : null;</span>
 <span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (java.util.Objects.equals(actual, idPosicionNueva)) {</span>
 <span class="fc" id="L327">            return;</span>
         }
-<span class="nc" id="L329">        estudiante.setPosicion(resolvePosition(idPosicionNueva));</span>
+<span class="nc" id="L329">        estudiante.setPosition(resolvePosition(idPosicionNueva));</span>
 <span class="nc" id="L330">    }</span>
 
     private Posicion resolvePosition(Long idPosicion) {
@@ -343,15 +343,15 @@ public class StudentService {
      * @param id identificador del estudiante
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = &quot;ELIMINAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'desactivó la ficha de estudiante #' + #p0&quot;)
+    @Audited(action = &quot;ELIMINAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'desactivó la ficha de estudiante #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void delete(Long id) {
 <span class="fc" id="L351">        Student estudiante = estudianteRepository.findById(id)</span>
 <span class="pc" id="L352">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
                         &quot;Estudiante no encontrado con id: &quot; + id));
-<span class="fc" id="L354">        estudiante.setActivo(false);</span>
+<span class="fc" id="L354">        estudiante.setActive(false);</span>
 <span class="fc" id="L355">        estudianteRepository.save(estudiante);</span>
 <span class="fc" id="L356">    }</span>
 
@@ -363,8 +363,8 @@ public class StudentService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la ficha ya está activa
      */
-    @Audited(accion = &quot;REACTIVAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'reactivo la ficha de estudiante #' + #p0&quot;)
+    @Audited(action = &quot;REACTIVAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'reactivo la ficha de estudiante #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse reactivate(Long id) {
@@ -372,11 +372,11 @@ public class StudentService {
 <span class="nc" id="L372">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
                         &quot;Estudiante no encontrado con id: &quot; + id));
 
-<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (Boolean.TRUE.equals(estudiante.getActivo())) {</span>
+<span class="nc bnc" id="L375" title="All 2 branches missed.">        if (Boolean.TRUE.equals(estudiante.getActive())) {</span>
 <span class="nc" id="L376">            throw new IllegalArgumentException(&quot;La ficha de estudiante ya se encuentra activa&quot;);</span>
         }
 
-<span class="nc" id="L379">        estudiante.setActivo(true);</span>
+<span class="nc" id="L379">        estudiante.setActive(true);</span>
 <span class="nc" id="L380">        return toResponse(estudianteRepository.save(estudiante));</span>
     }
 
@@ -394,15 +394,15 @@ public class StudentService {
      * @param id identificador del estudiante a anonimizar
      * @throws ResourceNotFoundException si el estudiante no existe
      */
-    @Audited(accion = &quot;ANONIMIZAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'anonimizó los datos personales del estudiante #' + #p0 + ' a solicitud del representante legal (RF-50 / derecho de supresión)'&quot;)
+    @Audited(action = &quot;ANONIMIZAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'anonimizó los datos personales del estudiante #' + #p0 + ' a solicitud del representante legal (RF-50 / derecho de supresión)'&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void anonymize(Long id) {
 <span class="fc" id="L402">        Student estudiante = estudianteRepository.findById(id)</span>
 <span class="fc" id="L403">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
                         &quot;Estudiante no encontrado con id: &quot; + id));
-<span class="fc" id="L405">        estudianteRepository.anonymizeStudent(estudiante.getIdEstudiante());</span>
+<span class="fc" id="L405">        estudianteRepository.anonymizeStudent(estudiante.getId());</span>
 <span class="fc" id="L406">    }</span>
 
     /**
@@ -425,8 +425,8 @@ public class StudentService {
      *
      * @param idCategoria identificador de la categoría
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;,
-            descripcionSpel = &quot;'desactivó los estudiantes de la Categoria #' + #p0&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Estudiante&quot;,
+            descriptionSpel = &quot;'desactivó los estudiantes de la Categoria #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void deactivateByCategory(Long idCategoria) {
@@ -458,7 +458,7 @@ public class StudentService {
 <span class="fc bfc" id="L458" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
 <span class="fc" id="L459">            throw new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
         }
-<span class="fc" id="L461">        return representanteEstudianteRepository.contactoDe(idEstudiante);</span>
+<span class="fc" id="L461">        return representanteEstudianteRepository.contactOf(idEstudiante);</span>
     }
 
     /**
@@ -473,43 +473,43 @@ public class StudentService {
      * @throws IllegalArgumentException     si el estudiante ya tiene cuenta o
      *                                      el {@code username} está en uso
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
-            descripcionSpel = &quot;'habilitó acceso al Student #' + #result.idEstudiante&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Estudiante&quot;, idSpel = &quot;#result.idEstudiante&quot;,
+            descriptionSpel = &quot;'habilitó acceso al Student #' + #result.idEstudiante&quot;)
     @Transactional
     public StudentResponse enableAccess(Long idEstudiante, EnableAccessRequest request) {
 <span class="fc" id="L480">        Student estudiante = estudianteRepository.findById(idEstudiante)</span>
 <span class="fc" id="L481">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>
 
-<span class="fc bfc" id="L483" title="All 2 branches covered.">        if (estudiante.getUsuario() != null) {</span>
+<span class="fc bfc" id="L483" title="All 2 branches covered.">        if (estudiante.getUserAccount() != null) {</span>
 <span class="fc" id="L484">            throw new IllegalArgumentException(&quot;Este estudiante ya tiene una cuenta de acceso&quot;);</span>
         }
 
-<span class="fc" id="L487">        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPersona(), request);</span>
+<span class="fc" id="L487">        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPerson(), request);</span>
 
-<span class="fc" id="L489">        estudiante.setUsuario(usuario);</span>
+<span class="fc" id="L489">        estudiante.setUserAccount(usuario);</span>
 <span class="fc" id="L490">        estudiante = estudianteRepository.save(estudiante);</span>
 <span class="fc" id="L491">        return toResponse(estudiante);</span>
     }
 
-    // Mapeador privado entidad -&gt; DTO.
+    // Mapeador privado entity -&gt; DTO.
     private StudentResponse toResponse(Student e) {
 <span class="fc" id="L496">        return new StudentResponse(</span>
-<span class="fc" id="L497">                e.getIdEstudiante(),</span>
-<span class="pc bpc" id="L498" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getIdPersona() : null,</span>
-<span class="pc bpc" id="L499" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,</span>
-<span class="pc bpc" id="L500" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,</span>
-<span class="pc bpc" id="L501" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getNombre() : null,</span>
-<span class="pc bpc" id="L502" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getApellido() : null,</span>
-<span class="pc bpc" id="L503" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getNombre() : null,</span>
-<span class="pc bpc" id="L504" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,</span>
-<span class="fc" id="L505">                e.getCodigoEstudiante(),</span>
-<span class="fc" id="L506">                e.getFechaIngreso(),</span>
-<span class="fc" id="L507">                e.getPeso(),</span>
-<span class="fc" id="L508">                e.getAltura(),</span>
-<span class="pc bpc" id="L509" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getIdPosicion() : null,</span>
-<span class="pc bpc" id="L510" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getNombre() : null,</span>
-<span class="pc bpc" id="L511" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,</span>
-<span class="fc" id="L512">                e.getActivo(),</span>
+<span class="fc" id="L497">                e.getId(),</span>
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">                e.getPerson() != null ? e.getPerson().getId() : null,</span>
+<span class="pc bpc" id="L499" title="1 of 2 branches missed.">                e.getCategory() != null ? e.getCategory().getIdCategoria() : null,</span>
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">                e.getGeneralStatus() != null ? e.getGeneralStatus().getId() : null,</span>
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">                e.getPerson() != null ? e.getPerson().getName() : null,</span>
+<span class="pc bpc" id="L502" title="1 of 2 branches missed.">                e.getPerson() != null ? e.getPerson().getLastName() : null,</span>
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">                e.getCategory() != null ? e.getCategory().getNombre() : null,</span>
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">                e.getGeneralStatus() != null ? e.getGeneralStatus().getName() : null,</span>
+<span class="fc" id="L505">                e.getStudentCode(),</span>
+<span class="fc" id="L506">                e.getEnrollmentDate(),</span>
+<span class="fc" id="L507">                e.getWeight(),</span>
+<span class="fc" id="L508">                e.getHeight(),</span>
+<span class="pc bpc" id="L509" title="1 of 2 branches missed.">                e.getPosition() != null ? e.getPosition().getIdPosicion() : null,</span>
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">                e.getPosition() != null ? e.getPosition().getNombre() : null,</span>
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">                e.getPosition() != null ? e.getPosition().getAbreviatura() : null,</span>
+<span class="fc" id="L512">                e.getActive(),</span>
 <span class="fc" id="L513">                e.getCreatedAt()</span>
         );
     }

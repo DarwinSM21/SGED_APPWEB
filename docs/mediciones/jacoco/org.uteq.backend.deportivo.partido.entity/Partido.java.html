@@ -55,14 +55,26 @@ public class Partido {
     @Column(name = &quot;actualizado_en&quot;)
     private Instant actualizadoEn;
 
+    /**
+     * Indica si ya se registró el marcador del partido.
+     *
+     * @return {@code true} si tanto los goles a favor como en contra tienen
+     *         un valor cargado
+     */
     @Transient
     public boolean tieneResultado() {
-<span class="fc bfc" id="L60" title="All 4 branches covered.">        return golesFavor != null &amp;&amp; golesContra != null;</span>
+<span class="fc bfc" id="L66" title="All 4 branches covered.">        return golesFavor != null &amp;&amp; golesContra != null;</span>
     }
 
+    /**
+     * Indica si el partido fue cerrado por un entrenador o administrador.
+     *
+     * @return {@code true} si el partido está cerrado; un partido cerrado no
+     *         admite más cambios de resultado ni de alineación
+     */
     @Transient
     public boolean estaCerrado() {
-<span class="fc" id="L65">        return Boolean.TRUE.equals(cerrado);</span>
+<span class="fc" id="L77">        return Boolean.TRUE.equals(cerrado);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

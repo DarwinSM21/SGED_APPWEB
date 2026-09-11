@@ -27,48 +27,48 @@ public class Assignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_asignacion&quot;)
-    private Long idAsignacion;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_articulo&quot;, nullable = false)
-    private Item articulo;
+    private Item item;
 
     @Column(nullable = false)
-    private Integer cantidad;
+    private Integer quantity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = &quot;tipo_destinatario&quot;, nullable = false, length = 15)
-    private RecipientType tipoDestinatario;
+    private RecipientType recipientType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;id_estudiante&quot;)
-    private Student estudiante;
+    private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;id_entrenador&quot;)
-    private Entrenador entrenador;
+    private Entrenador coach;
 
     @Column(name = &quot;fecha_asignacion&quot;, nullable = false)
     @Builder.Default
-    private LocalDate fechaAsignacion = LocalDate.now(Zones.ECUADOR);
+    private LocalDate assignmentDate = LocalDate.now(Zones.ECUADOR);
 
     @Column(name = &quot;fecha_devolucion_esperada&quot;)
-    private LocalDate fechaDevolucionEsperada;
+    private LocalDate expectedReturnDate;
 
     @Column(name = &quot;fecha_devolucion_real&quot;)
-    private LocalDate fechaDevolucionReal;
+    private LocalDate actualReturnDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
     @Builder.Default
-    private AssignmentStatus estado = AssignmentStatus.ASIGNADO;
+    private AssignmentStatus status = AssignmentStatus.ASIGNADO;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;registrado_por_id_usuario&quot;, nullable = false)
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(length = 255)
-    private String observaciones;
+    private String notes;
 
     @CreationTimestamp
     @Column(name = &quot;created_at&quot;, updatable = false)

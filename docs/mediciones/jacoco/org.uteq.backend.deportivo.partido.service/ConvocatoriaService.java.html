@@ -111,13 +111,13 @@ public class ConvocatoriaService {
                 new VentanaRendimiento(semanasRendimiento, desde, hasta, entrenamientos);
 
 <span class="fc" id="L113">        List&lt;Student&gt; plantel = estudianteRepository</span>
-<span class="fc" id="L114">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(idCategoria);</span>
+<span class="fc" id="L114">                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(idCategoria);</span>
 <span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (plantel.isEmpty()) {</span>
 <span class="nc" id="L116">            return new Convocatoria(partido, ventana, List.of(), List.of(), List.of(),</span>
 <span class="nc" id="L117">                    Map.of(), Map.of(), entrenamientos);</span>
         }
 
-<span class="fc" id="L120">        List&lt;Long&gt; ids = plantel.stream().map(Student::getIdEstudiante).toList();</span>
+<span class="fc" id="L120">        List&lt;Long&gt; ids = plantel.stream().map(Student::getId).toList();</span>
 <span class="fc" id="L121">        Map&lt;Long, BigDecimal&gt; promedios = promediosDe(ids, desde, hasta);</span>
 <span class="fc" id="L122">        Map&lt;Long, Long&gt; presencias = presenciasDe(ids, desde, hasta);</span>
 <span class="fc" id="L123">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
@@ -125,7 +125,7 @@ public class ConvocatoriaService {
 <span class="fc" id="L125">        List&lt;Student&gt; convocables = new ArrayList&lt;&gt;();</span>
 <span class="fc" id="L126">        List&lt;NoConvocable&gt; fuera = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L127" title="All 2 branches covered.">        for (Student e : plantel) {</span>
-<span class="fc" id="L128">            Long id = e.getIdEstudiante();</span>
+<span class="fc" id="L128">            Long id = e.getId();</span>
 <span class="fc bfc" id="L129" title="All 2 branches covered.">            if (lesionados.contains(id)) {</span>
 <span class="fc" id="L130">                fuera.add(new NoConvocable(id, nombreDe(e), &quot;Lesión activa&quot;));</span>
             // Si la categoría no tuvo entrenamientos en la ventana, nadie pudo
@@ -144,7 +144,7 @@ public class ConvocatoriaService {
 <span class="fc" id="L144">        Map&lt;Long, JugadorConvocado&gt; titularPorPuesto = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc" id="L145">        List&lt;JugadorConvocado&gt; suplentes = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L146" title="All 2 branches covered.">        for (Student e : convocables) {</span>
-<span class="pc bpc" id="L147" title="1 of 2 branches missed.">            Long idPosicion = e.getPosicion() == null ? null : e.getPosicion().getIdPosicion();</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">            Long idPosicion = e.getPosition() == null ? null : e.getPosition().getIdPosicion();</span>
 <span class="pc bpc" id="L148" title="1 of 2 branches missed.">            boolean hayCupo = titularPorPuesto.size() &lt; cantidadTitulares;</span>
 <span class="pc bpc" id="L149" title="2 of 6 branches missed.">            boolean titulariza = idPosicion != null &amp;&amp; hayCupo &amp;&amp; !titularPorPuesto.containsKey(idPosicion);</span>
 <span class="fc" id="L150">            JugadorConvocado fila =</span>
@@ -192,10 +192,10 @@ public class ConvocatoriaService {
                                                   Map&lt;Long, Long&gt; presencias) {
 <span class="fc" id="L193">        return Comparator</span>
 <span class="fc" id="L194">                .comparing((Student e) -&gt; promedios.getOrDefault(</span>
-<span class="fc" id="L195">                        e.getIdEstudiante(), BigDecimal.ZERO)).reversed()</span>
+<span class="fc" id="L195">                        e.getId(), BigDecimal.ZERO)).reversed()</span>
 <span class="fc" id="L196">                .thenComparing(Comparator.comparingLong(</span>
-<span class="fc" id="L197">                        (Student e) -&gt; presencias.getOrDefault(e.getIdEstudiante(), 0L)).reversed())</span>
-<span class="fc" id="L198">                .thenComparing(Student::getIdEstudiante);</span>
+<span class="fc" id="L197">                        (Student e) -&gt; presencias.getOrDefault(e.getId(), 0L)).reversed())</span>
+<span class="fc" id="L198">                .thenComparing(Student::getId);</span>
     }
 
     private Map&lt;Long, BigDecimal&gt; promediosDe(List&lt;Long&gt; ids, LocalDate desde, LocalDate hasta) {
@@ -236,14 +236,14 @@ public class ConvocatoriaService {
                                        long entrenamientos) {
 <span class="fc" id="L237">        String abreviatura = null;</span>
 <span class="pc bpc" id="L238" title="1 of 2 branches missed.">        if (idPosicion != null) {</span>
-<span class="fc" id="L239">            var nominal = e.getPosicion();</span>
+<span class="fc" id="L239">            var nominal = e.getPosition();</span>
 <span class="pc bpc" id="L240" title="2 of 4 branches missed.">            abreviatura = nominal != null &amp;&amp; idPosicion.equals(nominal.getIdPosicion())</span>
 <span class="pc" id="L241">                    ? nominal.getAbreviatura() : null;</span>
         }
 <span class="fc" id="L243">        return new JugadorConvocado(</span>
-<span class="fc" id="L244">                e.getIdEstudiante(), nombreDe(e), abreviatura, idPosicion, titular,</span>
-<span class="fc" id="L245">                promedios.get(e.getIdEstudiante()),</span>
-<span class="fc" id="L246">                presencias.getOrDefault(e.getIdEstudiante(), 0L),</span>
+<span class="fc" id="L244">                e.getId(), nombreDe(e), abreviatura, idPosicion, titular,</span>
+<span class="fc" id="L245">                promedios.get(e.getId()),</span>
+<span class="fc" id="L246">                presencias.getOrDefault(e.getId(), 0L),</span>
                 entrenamientos);
     }
 
@@ -254,7 +254,7 @@ public class ConvocatoriaService {
      * @return el nombre completo
      */
     public static String nombreDe(Student e) {
-<span class="fc" id="L257">        return e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido();</span>
+<span class="fc" id="L257">        return e.getPerson().getName() + &quot; &quot; + e.getPerson().getLastName();</span>
     }
 
     /**

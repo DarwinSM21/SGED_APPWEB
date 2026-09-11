@@ -25,12 +25,12 @@ public class AuditAspect {
     /**
      * Envuelve cualquier método anotado con {@link Audited}: lo deja ejecutar
      * primero y, si termina sin lanzar, resuelve las expresiones SpEL de
-     * {@code idSpel}/{@code descripcionSpel} contra el resultado y los
+     * {@code idSpel}/{@code descriptionSpel} contra el resultado y los
      * argumentos ({@code #result}, {@code #p0}, {@code #p1}, ...) y registra
      * el acto en la bitácora de auditoría.
      *
      * @param pjp punto de unión del método interceptado
-     * @param auditado datos de la anotación {@link Audited} (acción, entidad, expresiones)
+     * @param auditado datos de la anotación {@link Audited} (acción, entity, expresiones)
      * @return el resultado del método interceptado, sin modificar
      * @throws Throwable la excepción que haya lanzado el método interceptado, propagada tal cual
      */
@@ -45,44 +45,44 @@ public class AuditAspect {
 <span class="fc" id="L45">                contexto.setVariable(&quot;p&quot; + i, args[i]);</span>
             }
 
-<span class="fc" id="L48">            Long entidadId = evaluarId(auditado.idSpel(), contexto);</span>
-<span class="fc bfc" id="L49" title="All 2 branches covered.">            String descripcion = auditado.descripcionSpel().isBlank()</span>
-<span class="fc" id="L50">                    ? descripcionGenerica(auditado, entidadId)</span>
-<span class="fc" id="L51">                    : String.valueOf(evaluar(auditado.descripcionSpel(), contexto));</span>
+<span class="fc" id="L48">            Long entityId = evaluateId(auditado.idSpel(), contexto);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            String descripcion = auditado.descriptionSpel().isBlank()</span>
+<span class="fc" id="L50">                    ? genericDescription(auditado, entityId)</span>
+<span class="fc" id="L51">                    : String.valueOf(evaluate(auditado.descriptionSpel(), contexto));</span>
 
-<span class="fc" id="L53">            auditoriaService.recordEvent(auditado.accion(), auditado.entidad(), entidadId, descripcion);</span>
+<span class="fc" id="L53">            auditoriaService.recordEvent(auditado.action(), auditado.entity(), entityId, descripcion);</span>
 <span class="fc" id="L54">        } catch (Exception e) {</span>
 <span class="fc" id="L55">            log.error(&quot;No se pudo auditar la llamada a {}&quot;, pjp.getSignature(), e);</span>
 <span class="fc" id="L56">        }</span>
 <span class="fc" id="L57">        return resultado;</span>
     }
 
-    private Long evaluarId(String spel, StandardEvaluationContext contexto) {
+    private Long evaluateId(String spel, StandardEvaluationContext contexto) {
 <span class="pc bpc" id="L61" title="1 of 4 branches missed.">        if (spel == null || spel.isBlank()) {</span>
 <span class="fc" id="L62">            return null;</span>
         }
-<span class="fc" id="L64">        Object valor = evaluar(spel, contexto);</span>
+<span class="fc" id="L64">        Object valor = evaluate(spel, contexto);</span>
 <span class="pc bpc" id="L65" title="1 of 2 branches missed.">        if (valor == null) {</span>
 <span class="nc" id="L66">            return null;</span>
         }
 <span class="pc bpc" id="L68" title="1 of 2 branches missed.">        return valor instanceof Number n ? n.longValue() : Long.valueOf(valor.toString());</span>
     }
 
-    private Object evaluar(String spel, StandardEvaluationContext contexto) {
+    private Object evaluate(String spel, StandardEvaluationContext contexto) {
 <span class="fc" id="L72">        Expression expresion = PARSER.parseExpression(spel);</span>
 <span class="fc" id="L73">        return expresion.getValue(contexto);</span>
     }
 
-    private String descripcionGenerica(Audited auditado, Long entidadId) {
-<span class="pc bpc" id="L77" title="2 of 4 branches missed.">        String verbo = switch (auditado.accion()) {</span>
+    private String genericDescription(Audited auditado, Long entityId) {
+<span class="pc bpc" id="L77" title="2 of 4 branches missed.">        String verbo = switch (auditado.action()) {</span>
 <span class="fc" id="L78">            case &quot;CREAR&quot; -&gt; &quot;creó&quot;;</span>
 <span class="nc" id="L79">            case &quot;EDITAR&quot; -&gt; &quot;editó&quot;;</span>
 <span class="fc" id="L80">            case &quot;ELIMINAR&quot; -&gt; &quot;eliminó&quot;;</span>
-<span class="nc" id="L81">            default -&gt; auditado.accion().toLowerCase();</span>
+<span class="pc" id="L81">            default -&gt; auditado.action().toLowerCase();</span>
         };
-<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        return entidadId != null</span>
-<span class="fc" id="L84">                ? verbo + &quot; &quot; + auditado.entidad() + &quot; #&quot; + entidadId</span>
-<span class="nc" id="L85">                : verbo + &quot; &quot; + auditado.entidad();</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        return entityId != null</span>
+<span class="fc" id="L84">                ? verbo + &quot; &quot; + auditado.entity() + &quot; #&quot; + entityId</span>
+<span class="nc" id="L85">                : verbo + &quot; &quot; + auditado.entity();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

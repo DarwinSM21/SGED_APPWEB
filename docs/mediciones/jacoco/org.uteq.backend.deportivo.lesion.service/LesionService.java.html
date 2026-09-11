@@ -48,8 +48,8 @@ public class LesionService {
      *                                      de retorno es anterior a la de la
      *                                      lesión
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;,
-            descripcionSpel = &quot;'registró una lesión del estudiante #' + #p0&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;,
+            descriptionSpel = &quot;'registró una lesión del estudiante #' + #p0&quot;)
     @Transactional
     public Lesion registrar(Long idEstudiante, Long idEntrenador, String descripcion,
                             LocalDate fechaLesion, LocalDate fechaEstimadaRetorno) {
@@ -97,8 +97,8 @@ public class LesionService {
      *                                      alta es anterior a la fecha de la
      *                                      lesión
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;,
-            descripcionSpel = &quot;'dio de alta la lesión #' + #result.idLesion&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Lesion&quot;, idSpel = &quot;#result.idLesion&quot;,
+            descriptionSpel = &quot;'dio de alta la lesión #' + #result.idLesion&quot;)
     @Transactional
     public Lesion darDeAlta(Long idLesion, LocalDate fechaAlta) {
 <span class="fc" id="L104">        var lesion = lesionRepository.findById(idLesion)</span>

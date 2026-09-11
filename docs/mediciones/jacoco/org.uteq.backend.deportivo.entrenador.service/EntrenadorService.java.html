@@ -98,7 +98,7 @@ public class EntrenadorService {
 <span class="pc" id="L98">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Usuario no encontrado con id: &quot; + request.idUsuario()));</span>
 
 <span class="fc" id="L100">        boolean tieneRolEntrenador = usuario.getRoles().stream()</span>
-<span class="fc" id="L101">                .anyMatch(r -&gt; &quot;ENTRENADOR&quot;.equals(r.getNombre()));</span>
+<span class="fc" id="L101">                .anyMatch(r -&gt; &quot;ENTRENADOR&quot;.equals(r.getName()));</span>
 <span class="fc bfc" id="L102" title="All 2 branches covered.">        if (!tieneRolEntrenador) {</span>
 <span class="fc" id="L103">            throw new IllegalArgumentException(</span>
                     &quot;El usuario debe tener el rol ENTRENADOR para registrarse como entrenador&quot;);
@@ -146,8 +146,8 @@ public class EntrenadorService {
      * @param id identificador del entrenador
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = &quot;ELIMINAR&quot;, entidad = &quot;Entrenador&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'desactivo la ficha de entrenador #' + #p0&quot;)
+    @Audited(action = &quot;ELIMINAR&quot;, entity = &quot;Entrenador&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'desactivo la ficha de entrenador #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
@@ -165,8 +165,8 @@ public class EntrenadorService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Audited(accion = &quot;REACTIVAR&quot;, entidad = &quot;Entrenador&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'reactivo la ficha de entrenador #' + #p0&quot;)
+    @Audited(action = &quot;REACTIVAR&quot;, entity = &quot;Entrenador&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'reactivo la ficha de entrenador #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public EntrenadorResponse reactivar(Long id) {
@@ -190,13 +190,13 @@ public class EntrenadorService {
     private EntrenadorResponse toResponse(Entrenador e) {
 <span class="fc" id="L191">        return new EntrenadorResponse(</span>
 <span class="fc" id="L192">                e.getIdEntrenador(),</span>
-<span class="fc" id="L193">                e.getPersona().getIdPersona(),</span>
-<span class="fc" id="L194">                e.getPersona().getNombre(),</span>
-<span class="fc" id="L195">                e.getPersona().getApellido(),</span>
-<span class="fc" id="L196">                e.getPersona().getCedula(),</span>
-<span class="fc" id="L197">                e.getPersona().getCorreo(),</span>
-<span class="fc" id="L198">                e.getPersona().getTelefono(),</span>
-<span class="fc" id="L199">                e.getUsuario().getIdUsuario(),</span>
+<span class="fc" id="L193">                e.getPersona().getId(),</span>
+<span class="fc" id="L194">                e.getPersona().getName(),</span>
+<span class="fc" id="L195">                e.getPersona().getLastName(),</span>
+<span class="fc" id="L196">                e.getPersona().getNationalId(),</span>
+<span class="fc" id="L197">                e.getPersona().getEmail(),</span>
+<span class="fc" id="L198">                e.getPersona().getPhone(),</span>
+<span class="fc" id="L199">                e.getUsuario().getId(),</span>
 <span class="fc" id="L200">                e.getUsuario().getUsername(),</span>
 <span class="pc bpc" id="L201" title="1 of 2 branches missed.">                e.getEspecialidad() != null ? e.getEspecialidad().getIdEspecialidad() : null,</span>
 <span class="pc bpc" id="L202" title="1 of 2 branches missed.">                e.getEspecialidad() != null ? e.getEspecialidad().getNombre() : null,</span>

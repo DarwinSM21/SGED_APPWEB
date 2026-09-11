@@ -74,7 +74,7 @@ entregada.
 > asociada que pasa en integración continua *y* la construcción está
 > dentro del umbral de cobertura obligatorio — `mvn verify` rompe la
 > compilación por debajo del 70 % en líneas y ramas; la corrida de cierre
-> da **88,35 % de líneas y 74,20 % de ramas** (`docs/mediciones/jacoco/jacoco.csv`,
+> da **88,38 % de líneas y 74,20 % de ramas** (`docs/mediciones/jacoco/jacoco.csv`,
 > regenerado 2026-09-11 sobre 665 pruebas sin fallos, 216 clases).
 > La columna **Método de verificación** de cada requisito y la clase o
 > método de prueba citados en su fila de la matriz permiten comprobar ese
@@ -1629,8 +1629,8 @@ igual o superior al 70 %, verificada automáticamente en la construcción.*
 > (que exige 70 % en `LINE` y en `BRANCH`, sin excepciones de paquete) y la
 > cifra estaba fechada 2026-07-30, mucho antes del estado actual del
 > código. Cifra vigente, regenerada el 2026-09-11 (tras completar el
-> rename a inglés fuera de `deportivo`): **88,35 % de
-> líneas (3012/3409) y 74,20 % de branches (791/1066), 665 pruebas en
+> rename a inglés fuera de `deportivo`): **88,38 % de
+> líneas (3013/3409) y 74,20 % de branches (791/1066), 665 pruebas en
 > 216 clases — CUMPLE el 70 % en ambas métricas.** (Cifras intermedias de
 > esta misma semana: 87,47 %/72,10 % el 2026-09-07, 84,66 %/71,24 % antes
 > de esa fecha.)

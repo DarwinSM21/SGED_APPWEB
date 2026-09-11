@@ -83,8 +83,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si la categoría no existe
      * @throws IllegalArgumentException     si la categoría está inactiva
      */
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Partido&quot;, idSpel = &quot;#result.idPartido&quot;,
-            descripcionSpel = &quot;'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Partido&quot;, idSpel = &quot;#result.idPartido&quot;,
+            descriptionSpel = &quot;'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha&quot;)
     @Transactional
     public PartidoResponse crear(CrearPartidoRequest request) {
 <span class="fc" id="L90">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
@@ -115,8 +115,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido ya estaba cerrado
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Partido&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'cargó el resultado del partido ' + #p0 + ' y lo cerró'&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Partido&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'cargó el resultado del partido ' + #p0 + ' y lo cerró'&quot;)
     @Transactional
     public PartidoResponse registrarResultado(Long idPartido, ResultadoRequest request) {
 <span class="fc" id="L122">        Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)</span>
@@ -144,8 +144,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido no estaba cerrado
      */
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Partido&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'reabrio el partido ' + #p0 + ' para corregirlo'&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Partido&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'reabrio el partido ' + #p0 + ' para corregirlo'&quot;)
     @Transactional
     public PartidoResponse reabrir(Long idPartido) {
 <span class="nc" id="L151">        Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)</span>
@@ -180,8 +180,8 @@ public class PartidoService {
 <span class="nc bnc" id="L180" title="All 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
 <span class="nc" id="L181">            return null;</span>
         }
-<span class="nc" id="L183">        return usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(auth.getName())</span>
-<span class="nc" id="L184">                .map(u -&gt; u.getIdUsuario())</span>
+<span class="nc" id="L183">        return usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(auth.getName())</span>
+<span class="nc" id="L184">                .map(u -&gt; u.getId())</span>
 <span class="nc" id="L185">                .orElse(null);</span>
     }
 
@@ -193,8 +193,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el partido está cerrado
      */
-    @Audited(accion = &quot;ELIMINAR&quot;, entidad = &quot;Partido&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'eliminó el partido ' + #p0&quot;)
+    @Audited(action = &quot;ELIMINAR&quot;, entity = &quot;Partido&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'eliminó el partido ' + #p0&quot;)
     @Transactional
     public void eliminar(Long idPartido) {
 <span class="nc" id="L200">        Partido p = partidoRepository.findById(idPartido)</span>

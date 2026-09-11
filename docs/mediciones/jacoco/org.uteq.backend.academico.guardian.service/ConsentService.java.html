@@ -51,7 +51,7 @@ public class ConsentService {
 <span class="pc" id="L51">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
 <span class="nc" id="L52">                        &quot;Estudiante no encontrado con id: &quot; + request.idEstudiante()));</span>
 
-<span class="fc" id="L54">        consentimientoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(</span>
+<span class="fc" id="L54">        consentimientoRepository.findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(</span>
 <span class="fc" id="L55">                        request.idRepresentante(), request.idEstudiante(), request.alcance())</span>
 <span class="fc" id="L56">                .ifPresent(c -&gt; {</span>
 <span class="fc" id="L57">                    throw new IllegalArgumentException(&quot;Ya existe un consentimiento vigente con ese alcance&quot;);</span>
@@ -60,11 +60,11 @@ public class ConsentService {
 <span class="fc" id="L60">        UserAccount admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);</span>
 
 <span class="fc" id="L62">        Consent consentimiento = Consent.builder()</span>
-<span class="fc" id="L63">                .representante(representante)</span>
-<span class="fc" id="L64">                .estudiante(estudiante)</span>
-<span class="fc" id="L65">                .alcance(request.alcance())</span>
-<span class="fc" id="L66">                .otorgadoEn(OffsetDateTime.now())</span>
-<span class="fc" id="L67">                .registradoPor(admin)</span>
+<span class="fc" id="L63">                .guardian(representante)</span>
+<span class="fc" id="L64">                .student(estudiante)</span>
+<span class="fc" id="L65">                .scope(request.alcance())</span>
+<span class="fc" id="L66">                .grantedAt(OffsetDateTime.now())</span>
+<span class="fc" id="L67">                .registeredBy(admin)</span>
 <span class="fc" id="L68">                .build();</span>
 
 <span class="fc" id="L70">        consentimiento = consentimientoRepository.save(consentimiento);</span>
@@ -91,8 +91,8 @@ public class ConsentService {
         }
 
 <span class="fc" id="L93">        UserAccount admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);</span>
-<span class="fc" id="L94">        consentimiento.setRevocadoEn(OffsetDateTime.now());</span>
-<span class="fc" id="L95">        consentimiento.setRevocadoPor(admin);</span>
+<span class="fc" id="L94">        consentimiento.setRevokedAt(OffsetDateTime.now());</span>
+<span class="fc" id="L95">        consentimiento.setRevokedBy(admin);</span>
 <span class="fc" id="L96">        consentimiento = consentimientoRepository.save(consentimiento);</span>
 <span class="fc" id="L97">        return toResponse(consentimiento);</span>
     }
@@ -106,20 +106,20 @@ public class ConsentService {
      */
     @Transactional(readOnly = true)
     public List&lt;ConsentResponse&gt; listByStudent(Long idEstudiante) {
-<span class="fc" id="L109">        return consentimientoRepository.findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(idEstudiante).stream()</span>
+<span class="fc" id="L109">        return consentimientoRepository.findByStudent_IdOrderByGrantedAtDesc(idEstudiante).stream()</span>
 <span class="fc" id="L110">                .map(this::toResponse)</span>
 <span class="fc" id="L111">                .toList();</span>
     }
 
     private ConsentResponse toResponse(Consent c) {
 <span class="fc" id="L115">        return new ConsentResponse(</span>
-<span class="fc" id="L116">                c.getIdConsentimiento(),</span>
-<span class="fc" id="L117">                c.getRepresentante().getIdRepresentante(),</span>
-<span class="fc" id="L118">                c.getEstudiante().getIdEstudiante(),</span>
-<span class="fc" id="L119">                c.getAlcance(),</span>
-<span class="fc" id="L120">                c.getOtorgadoEn(),</span>
-<span class="fc bfc" id="L121" title="All 2 branches covered.">                c.getRegistradoPor() != null ? c.getRegistradoPor().getUsername() : null,</span>
-<span class="fc" id="L122">                c.getRevocadoEn(),</span>
+<span class="fc" id="L116">                c.getId(),</span>
+<span class="fc" id="L117">                c.getGuardian().getId(),</span>
+<span class="fc" id="L118">                c.getStudent().getId(),</span>
+<span class="fc" id="L119">                c.getScope(),</span>
+<span class="fc" id="L120">                c.getGrantedAt(),</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">                c.getRegisteredBy() != null ? c.getRegisteredBy().getUsername() : null,</span>
+<span class="fc" id="L122">                c.getRevokedAt(),</span>
 <span class="fc" id="L123">                c.isActive());</span>
     }
 }

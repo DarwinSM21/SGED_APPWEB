@@ -70,10 +70,10 @@ public class AsistenciaService {
      */
     @Transactional
     public Asistencia marcarPorQr(String username, Long idSesion) {
-<span class="fc" id="L73">        Student estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L73">        Student estudiante = estudianteRepository.findByUserAccount_Username(username)</span>
 <span class="fc" id="L74">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
 
-<span class="fc" id="L76">        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())</span>
+<span class="fc" id="L76">        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getId())</span>
 <span class="fc" id="L77">                .ifPresent(a -&gt; {</span>
 <span class="fc" id="L78">                    throw new IllegalArgumentException(&quot;Ya marcaste tu asistencia en esta sesión&quot;);</span>
                 });
@@ -82,7 +82,7 @@ public class AsistenciaService {
 <span class="pc" id="L82">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Sesión no encontrada con id: &quot; + idSesion));</span>
 
 <span class="fc" id="L84">        Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(</span>
-<span class="fc" id="L85">                estudiante.getIdEstudiante(), idSesion);</span>
+<span class="fc" id="L85">                estudiante.getId(), idSesion);</span>
 <span class="fc bfc" id="L86" title="All 4 branches covered.">        if (categoriaCoincide == null || !categoriaCoincide) {</span>
 <span class="fc" id="L87">            throw new IllegalArgumentException(&quot;Esta sesión no corresponde a tu categoría&quot;);</span>
         }
@@ -118,17 +118,17 @@ public class AsistenciaService {
 
 <span class="fc" id="L119">        Map&lt;Long, Asistencia&gt; yaRegistradas = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L120" title="All 2 branches covered.">        for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
-<span class="fc" id="L121">            yaRegistradas.put(a.getEstudiante().getIdEstudiante(), a);</span>
+<span class="fc" id="L121">            yaRegistradas.put(a.getEstudiante().getId(), a);</span>
 <span class="fc" id="L122">        }</span>
 
 <span class="fc" id="L124">        List&lt;FilaNomina&gt; filas = new ArrayList&lt;&gt;();</span>
 <span class="fc bfc" id="L125" title="All 2 branches covered.">        for (Student e : estudianteRepository</span>
-<span class="fc" id="L126">                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(</span>
+<span class="fc" id="L126">                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(</span>
 <span class="fc" id="L127">                        sesion.getCategoria().getIdCategoria())) {</span>
-<span class="fc" id="L128">            Asistencia a = yaRegistradas.get(e.getIdEstudiante());</span>
+<span class="fc" id="L128">            Asistencia a = yaRegistradas.get(e.getId());</span>
 <span class="fc" id="L129">            filas.add(new FilaNomina(</span>
-<span class="fc" id="L130">                    e.getIdEstudiante(),</span>
-<span class="fc" id="L131">                    e.getPersona().getNombre() + &quot; &quot; + e.getPersona().getApellido(),</span>
+<span class="fc" id="L130">                    e.getId(),</span>
+<span class="fc" id="L131">                    e.getPerson().getName() + &quot; &quot; + e.getPerson().getLastName(),</span>
 <span class="fc bfc" id="L132" title="All 2 branches covered.">                    a == null ? null : a.getEstado(),</span>
 <span class="fc bfc" id="L133" title="All 2 branches covered.">                    a == null ? null : a.getMetodo(),</span>
 <span class="fc bfc" id="L134" title="All 2 branches covered.">                    a == null ? null : a.getHoraEntrada(),</span>
@@ -166,12 +166,12 @@ public class AsistenciaService {
 
 <span class="fc" id="L167">        Map&lt;Long, Asistencia&gt; existentes = new LinkedHashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L168" title="All 2 branches covered.">        for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {</span>
-<span class="fc" id="L169">            existentes.put(a.getEstudiante().getIdEstudiante(), a);</span>
+<span class="fc" id="L169">            existentes.put(a.getEstudiante().getId(), a);</span>
 <span class="fc" id="L170">        }</span>
 
 <span class="fc bfc" id="L172" title="All 2 branches covered.">        for (MarcaAsistencia marca : request.marcas()) {</span>
 <span class="fc" id="L173">            Student estudiante = estudianteRepository</span>
-<span class="fc" id="L174">                    .findByIdEstudianteAndActivoTrue(marca.idEstudiante())</span>
+<span class="fc" id="L174">                    .findByIdAndActiveTrue(marca.idEstudiante())</span>
 <span class="pc" id="L175">                    .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
 <span class="nc" id="L176">                            &quot;Estudiante no encontrado o inactivo: &quot; + marca.idEstudiante()));</span>
 
@@ -179,10 +179,10 @@ public class AsistenciaService {
             // asistencia de ambas. Se resuelve en Java (no con el procedimiento
             // que usa el QR): pasar lista valida a los veinticinco de una
             // categoría, y el procedimiento sería un N+1.
-<span class="fc" id="L182">            if (!estudiante.getCategoria().getIdCategoria()</span>
+<span class="fc" id="L182">            if (!estudiante.getCategory().getIdCategoria()</span>
 <span class="fc bfc" id="L183" title="All 2 branches covered.">                    .equals(sesion.getCategoria().getIdCategoria())) {</span>
-<span class="fc" id="L184">                throw new IllegalArgumentException(estudiante.getPersona().getNombre() + &quot; &quot;</span>
-<span class="fc" id="L185">                        + estudiante.getPersona().getApellido() + &quot; no pertenece a &quot;</span>
+<span class="fc" id="L184">                throw new IllegalArgumentException(estudiante.getPerson().getName() + &quot; &quot;</span>
+<span class="fc" id="L185">                        + estudiante.getPerson().getLastName() + &quot; no pertenece a &quot;</span>
 <span class="fc" id="L186">                        + sesion.getCategoria().getNombre());</span>
             }
 
@@ -238,18 +238,18 @@ public class AsistenciaService {
      */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
-<span class="fc" id="L241">        Student estudiante = estudianteRepository.findByUsuario_Username(username)</span>
+<span class="fc" id="L241">        Student estudiante = estudianteRepository.findByUserAccount_Username(username)</span>
 <span class="fc" id="L242">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
 
 <span class="fc" id="L244">        List&lt;AsistenciaResponse&gt; asistencias = asistenciaRepository</span>
-<span class="fc" id="L245">                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())</span>
+<span class="fc" id="L245">                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getId(), Pageable.unpaged())</span>
 <span class="fc" id="L246">                .getContent().stream()</span>
 <span class="fc" id="L247">                .map(this::aResponse)</span>
 <span class="fc" id="L248">                .toList();</span>
 
 <span class="fc" id="L250">        LocalDate hoy = LocalDate.now(Zones.ECUADOR);</span>
 <span class="fc" id="L251">        BigDecimal porcentaje = asistenciaRepository</span>
-<span class="fc" id="L252">                .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);</span>
+<span class="fc" id="L252">                .calcularPorcentajeAsistencia(estudiante.getId(), hoy.minusDays(30), hoy);</span>
 
 <span class="fc" id="L254">        return new MiHistorialResponse(asistencias, porcentaje);</span>
     }

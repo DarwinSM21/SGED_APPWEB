@@ -21,29 +21,29 @@ public class StockMovement {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_movimiento&quot;)
-    private Long idMovimiento;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_articulo&quot;, nullable = false)
-    private Item articulo;
+    private Item item;
 
     @Enumerated(EnumType.STRING)
     @Column(name = &quot;tipo_movimiento&quot;, nullable = false, length = 10)
-    private MovementType tipoMovimiento;
+    private MovementType movementType;
 
     @Column(nullable = false)
-    private Integer cantidad;
+    private Integer quantity;
 
     @Column(length = 255)
-    private String motivo;
+    private String reason;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;registrado_por_id_usuario&quot;, nullable = false)
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(name = &quot;fecha_movimiento&quot;, nullable = false)
     @Builder.Default
-    private Instant fechaMovimiento = Instant.now();
+    private Instant movementDate = Instant.now();
 
     @CreationTimestamp
     @Column(name = &quot;created_at&quot;, updatable = false)

@@ -33,44 +33,44 @@ public class Consent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_consentimiento&quot;)
-    private Long idConsentimiento;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_representante&quot;, nullable = false)
-    private Guardian representante;
+    private Guardian guardian;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = &quot;id_estudiante&quot;, nullable = false)
-    private Student estudiante;
+    private Student student;
 
     @Column(name = &quot;alcance&quot;, nullable = false, length = 50)
-    private String alcance;
+    private String scope;
 
     @Column(name = &quot;otorgado_en&quot;, nullable = false)
-    private OffsetDateTime otorgadoEn;
+    private OffsetDateTime grantedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;registrado_por_id_usuario&quot;)
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(name = &quot;revocado_en&quot;)
-    private OffsetDateTime revocadoEn;
+    private OffsetDateTime revokedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = &quot;revocado_por_id_usuario&quot;)
-    private UserAccount revocadoPor;
+    private UserAccount revokedBy;
 
     /**
      * @return {@code true} si el consentimiento no fue revocado
      */
     @Transient
     public boolean isActive() {
-<span class="fc bfc" id="L68" title="All 2 branches covered.">        return revocadoEn == null;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        return revokedAt == null;</span>
     }
 
     @PrePersist
     protected void onCreate() {
-<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (this.otorgadoEn == null) this.otorgadoEn = OffsetDateTime.now();</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (this.grantedAt == null) this.grantedAt = OffsetDateTime.now();</span>
 <span class="fc" id="L74">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

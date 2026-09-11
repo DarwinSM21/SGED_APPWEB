@@ -102,13 +102,13 @@ public class AlineacionService {
 <span class="fc" id="L102">                throw new IllegalArgumentException(&quot;Un jugador no puede estar dos veces en la alineación&quot;);</span>
             }
 
-<span class="fc" id="L105">            Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())</span>
+<span class="fc" id="L105">            Student estudiante = estudianteRepository.findByIdAndActiveTrue(j.idEstudiante())</span>
 <span class="pc" id="L106">                    .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
 <span class="nc" id="L107">                            &quot;Estudiante no encontrado o inactivo: &quot; + j.idEstudiante()));</span>
 <span class="fc" id="L108">            String nombre = ConvocatoriaService.nombreDe(estudiante);</span>
 
-<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            Long categoriaDelJugador = estudiante.getCategoria() == null</span>
-<span class="pc" id="L111">                    ? null : estudiante.getCategoria().getIdCategoria();</span>
+<span class="pc bpc" id="L110" title="1 of 2 branches missed.">            Long categoriaDelJugador = estudiante.getCategory() == null</span>
+<span class="pc" id="L111">                    ? null : estudiante.getCategory().getIdCategoria();</span>
 <span class="fc bfc" id="L112" title="All 2 branches covered.">            if (!idCategoria.equals(categoriaDelJugador)) {</span>
 <span class="fc" id="L113">                throw new IllegalArgumentException(</span>
 <span class="fc" id="L114">                        nombre + &quot; no pertenece a la categoría &quot; + partido.getCategoria().getNombre());</span>
@@ -207,7 +207,7 @@ public class AlineacionService {
 
 <span class="nc bnc" id="L208" title="All 2 branches missed.">        for (AlineacionJugador j : a.getJugadores()) {</span>
 <span class="nc" id="L209">            Student e = j.getEstudiante();</span>
-<span class="nc" id="L210">            yaEstan.add(e.getIdEstudiante());</span>
+<span class="nc" id="L210">            yaEstan.add(e.getId());</span>
 <span class="nc" id="L211">            boolean titular = Boolean.TRUE.equals(j.getTitular());</span>
 <span class="nc bnc" id="L212" title="All 2 branches missed.">            Long idPosicion = j.getPosicion() == null ? null : j.getPosicion().getIdPosicion();</span>
 <span class="nc" id="L213">            JugadorConvocado fila = convocatoriaService.aConvocado(</span>

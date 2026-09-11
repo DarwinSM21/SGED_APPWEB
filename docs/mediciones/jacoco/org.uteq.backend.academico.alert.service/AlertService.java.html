@@ -8,7 +8,7 @@ import org.uteq.backend.academico.alert.dto.AlertDtos.StudentAtRiskResponse;
 import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
 import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -73,20 +73,20 @@ public class AlertService {
 <span class="fc" id="L73">        short anio = (short) hoy.getYear();</span>
 <span class="fc" id="L74">        short mes = (short) hoy.getMonthValue();</span>
 
-<span class="fc" id="L76">        List&lt;Student&gt; activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();</span>
+<span class="fc" id="L76">        List&lt;Student&gt; activos = estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc();</span>
 
 <span class="fc" id="L78">        Set&lt;Long&gt; alDia = new HashSet&lt;&gt;(</span>
-<span class="fc" id="L79">                pagoRepository.idsWithMembershipCovered(TipoPago.MEMBRESIA, anio, mes));</span>
+<span class="fc" id="L79">                pagoRepository.idsWithMembershipCovered(PaymentType.MEMBRESIA, anio, mes));</span>
 <span class="fc" id="L80">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
 
 <span class="fc" id="L82">        LocalDate corte = hoy.minusDays(1);</span>
 <span class="fc" id="L83">        LocalDate desde = hoy.minusDays(diasAsistencia);</span>
 <span class="fc" id="L84">        BigDecimal umbral = BigDecimal.valueOf(umbralAsistencia);</span>
 
-<span class="fc" id="L86">        Map&lt;Long, BigDecimal&gt; porcentajes = porcentajesPorEstudiante(desde, corte);</span>
+<span class="fc" id="L86">        Map&lt;Long, BigDecimal&gt; porcentajes = percentagesByStudent(desde, corte);</span>
 
 <span class="fc" id="L88">        List&lt;StudentAtRiskResponse&gt; enRiesgo = activos.stream()</span>
-<span class="fc" id="L89">                .map(e -&gt; evaluar(e, alDia, lesionados, porcentajes, umbral))</span>
+<span class="fc" id="L89">                .map(e -&gt; evaluate(e, alDia, lesionados, porcentajes, umbral))</span>
 <span class="fc bfc" id="L90" title="All 2 branches covered.">                .filter(r -&gt; r.totalAlertas() &gt; 0)</span>
 <span class="fc" id="L91">                .sorted(Comparator</span>
 <span class="fc" id="L92">                        .comparingInt(StudentAtRiskResponse::totalAlertas).reversed()</span>
@@ -111,7 +111,7 @@ public class AlertService {
     // mapa a propósito: el servicio lo lee como null (&quot;sin dato&quot;, no &quot;cero por
     // ciento&quot;). Marcar asistencia baja a quien no tuvo entrenamientos sería
     // acusarlo de algo que no hizo.
-    private Map&lt;Long, BigDecimal&gt; porcentajesPorEstudiante(LocalDate desde, LocalDate corte) {
+    private Map&lt;Long, BigDecimal&gt; percentagesByStudent(LocalDate desde, LocalDate corte) {
 <span class="fc" id="L115">        Map&lt;Long, BigDecimal&gt; porcentajes = new HashMap&lt;&gt;();</span>
 <span class="fc bfc" id="L116" title="All 2 branches covered.">        for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {</span>
 <span class="fc" id="L117">            long programadas = ((Number) fila[1]).longValue();</span>
@@ -126,10 +126,10 @@ public class AlertService {
 <span class="fc" id="L126">        return porcentajes;</span>
     }
 
-    private StudentAtRiskResponse evaluar(
+    private StudentAtRiskResponse evaluate(
             Student e, Set&lt;Long&gt; alDia, Set&lt;Long&gt; lesionados,
             Map&lt;Long, BigDecimal&gt; porcentajes, BigDecimal umbral) {
-<span class="fc" id="L132">        Long id = e.getIdEstudiante();</span>
+<span class="fc" id="L132">        Long id = e.getId();</span>
 <span class="fc bfc" id="L133" title="All 2 branches covered.">        boolean debe = !alDia.contains(id);</span>
 <span class="fc" id="L134">        boolean lesionada = lesionados.contains(id);</span>
 
@@ -138,12 +138,12 @@ public class AlertService {
 <span class="fc bfc" id="L138" title="All 4 branches covered.">        boolean asistenciaBaja = porcentaje != null &amp;&amp; porcentaje.compareTo(umbral) &lt; 0;</span>
 
 <span class="fc bfc" id="L140" title="All 6 branches covered.">        int total = (debe ? 1 : 0) + (asistenciaBaja ? 1 : 0) + (lesionada ? 1 : 0);</span>
-<span class="fc" id="L141">        var persona = e.getPersona();</span>
+<span class="fc" id="L141">        var persona = e.getPerson();</span>
 
 <span class="fc" id="L143">        return new StudentAtRiskResponse(</span>
                 id,
-<span class="fc bfc" id="L145" title="All 2 branches covered.">                persona == null ? &quot;(sin persona)&quot; : persona.getNombre() + &quot; &quot; + persona.getApellido(),</span>
-<span class="fc bfc" id="L146" title="All 2 branches covered.">                e.getCategoria() == null ? null : e.getCategoria().getNombre(),</span>
+<span class="fc bfc" id="L145" title="All 2 branches covered.">                persona == null ? &quot;(sin persona)&quot; : persona.getName() + &quot; &quot; + persona.getLastName(),</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">                e.getCategory() == null ? null : e.getCategory().getNombre(),</span>
                 debe, asistenciaBaja, porcentaje, lesionada, total);
     }
 }

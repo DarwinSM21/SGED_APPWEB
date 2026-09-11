@@ -95,24 +95,24 @@ public class AuthService {
 
         // RF-49 / H-01: la cédula es opcional; solo cuenta como colisión si viene.
 <span class="pc bpc" id="L97" title="2 of 4 branches missed.">        boolean cedulaDuplicada = request.cedula() != null &amp;&amp; !request.cedula().isBlank()</span>
-<span class="fc bfc" id="L98" title="All 2 branches covered.">                &amp;&amp; personaRepository.existsByCedulaAndActivoTrue(request.cedula());</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                &amp;&amp; personaRepository.existsByNationalIdAndActiveTrue(request.cedula());</span>
 <span class="fc bfc" id="L99" title="All 4 branches covered.">        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())</span>
                 || cedulaDuplicada
-<span class="fc bfc" id="L101" title="All 2 branches covered.">                || personaRepository.existsByCorreo(request.correo())) {</span>
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                || personaRepository.existsByEmail(request.correo())) {</span>
 <span class="fc" id="L102">            return Optional.empty();</span>
         }
 
-<span class="fc" id="L105">        Role rol = rolRepository.findByNombre(request.rol())</span>
+<span class="fc" id="L105">        Role rol = rolRepository.findByName(request.rol())</span>
 <span class="fc" id="L106">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + request.rol()));</span>
 
 <span class="fc" id="L108">        Person persona = Person.builder()</span>
-<span class="fc" id="L109">                .nombre(request.nombre())</span>
-<span class="fc" id="L110">                .apellido(request.apellido())</span>
-<span class="fc" id="L111">                .cedula(request.cedula())</span>
-<span class="fc" id="L112">                .correo(request.correo())</span>
-<span class="fc" id="L113">                .fechaNacimiento(request.fechaNacimiento())</span>
-<span class="fc" id="L114">                .activo(true)</span>
-<span class="fc" id="L115">                .correoVerificado(false)</span>
+<span class="fc" id="L109">                .name(request.nombre())</span>
+<span class="fc" id="L110">                .lastName(request.apellido())</span>
+<span class="fc" id="L111">                .nationalId(request.cedula())</span>
+<span class="fc" id="L112">                .email(request.correo())</span>
+<span class="fc" id="L113">                .birthDate(request.fechaNacimiento())</span>
+<span class="fc" id="L114">                .active(true)</span>
+<span class="fc" id="L115">                .emailVerified(false)</span>
 <span class="fc" id="L116">                .build();</span>
 <span class="fc" id="L117">        persona = personaRepository.save(persona);</span>
         // RNF-26 / H-09: doble opt-in del correo recién registrado.
@@ -125,22 +125,22 @@ public class AuthService {
                         &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
 
 <span class="fc" id="L127">        UserAccount usuario = UserAccount.builder()</span>
-<span class="fc" id="L128">                .persona(persona)</span>
-<span class="fc" id="L129">                .estadoGeneral(estadoActivo)</span>
+<span class="fc" id="L128">                .person(persona)</span>
+<span class="fc" id="L129">                .generalStatus(estadoActivo)</span>
 <span class="fc" id="L130">                .username(request.username())</span>
-<span class="fc" id="L131">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L132">                .activo(true)</span>
+<span class="fc" id="L131">                .passwordHash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L132">                .active(true)</span>
 <span class="fc" id="L133">                .roles(Set.of(rol))</span>
 <span class="fc" id="L134">                .build();</span>
 <span class="fc" id="L135">        usuario = usuarioRepository.save(usuario);</span>
 
-<span class="fc" id="L137">        String nombreCompleto = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
+<span class="fc" id="L137">        String nombreCompleto = persona.getName() + &quot; &quot; + persona.getLastName();</span>
 <span class="fc" id="L138">        return Optional.of(SessionResponse.builder()</span>
 <span class="fc" id="L139">                .username(usuario.getUsername())</span>
 <span class="fc" id="L140">                .nombre(nombreCompleto)</span>
-<span class="fc" id="L141">                .rol(rol.getNombre())</span>
-<span class="fc" id="L142">                .idPersona(persona.getIdPersona())</span>
-<span class="fc" id="L143">                .idUsuario(usuario.getIdUsuario())</span>
+<span class="fc" id="L141">                .rol(rol.getName())</span>
+<span class="fc" id="L142">                .idPersona(persona.getId())</span>
+<span class="fc" id="L143">                .idUsuario(usuario.getId())</span>
 <span class="fc" id="L144">                .build());</span>
     }
 
@@ -187,8 +187,8 @@ public class AuthService {
 <span class="fc" id="L187">        String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);</span>
 <span class="fc" id="L188">        String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);</span>
 
-<span class="fc" id="L190">        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())</span>
-<span class="fc" id="L191">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
+<span class="fc" id="L190">        String nombre = usuarioRepository.findByUsernameAndActiveTrue(userDetails.getUsername())</span>
+<span class="fc" id="L191">                .map(u -&gt; u.getPerson().getName() + &quot; &quot; + u.getPerson().getLastName())</span>
 <span class="fc" id="L192">                .orElse(userDetails.getUsername());</span>
 
 <span class="fc" id="L194">        SessionResponse session = SessionResponse.builder()</span>
@@ -240,7 +240,7 @@ public class AuthService {
         }
 
 <span class="fc" id="L242">        String username = jwtService.extractUsername(refreshToken);</span>
-<span class="fc" id="L243">        String rol = jwtService.extractRol(refreshToken);</span>
+<span class="fc" id="L243">        String rol = jwtService.extractRole(refreshToken);</span>
 <span class="fc" id="L244">        return Optional.of(jwtService.generateToken(username, rol));</span>
     }
 
@@ -261,7 +261,7 @@ public class AuthService {
 <span class="fc" id="L261">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
 
 <span class="fc" id="L263">        String nombre = usuarioRepository.findByUsername(userDetails.getUsername())</span>
-<span class="fc" id="L264">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
+<span class="fc" id="L264">                .map(u -&gt; u.getPerson().getName() + &quot; &quot; + u.getPerson().getLastName())</span>
 <span class="fc" id="L265">                .orElse(userDetails.getUsername());</span>
 
 <span class="fc" id="L267">        return Optional.of(SessionResponse.builder()</span>

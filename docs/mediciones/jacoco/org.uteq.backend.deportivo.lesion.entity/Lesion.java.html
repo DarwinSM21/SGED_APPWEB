@@ -51,9 +51,14 @@ public class Lesion {
     @Column(name = &quot;actualizado_en&quot;)
     private Instant actualizadoEn;
 
+    /**
+     * Indica si la lesión sigue en curso.
+     *
+     * @return {@code true} si aún no se registró fecha de alta médica
+     */
     @Transient
     public boolean estaActiva() {
-<span class="fc bfc" id="L56" title="All 2 branches covered.">        return fechaAlta == null;</span>
+<span class="fc bfc" id="L61" title="All 2 branches covered.">        return fechaAlta == null;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -81,7 +81,7 @@ public class UserAccountService {
      */
     @Transactional(readOnly = true)
     public UserAccountResponse findById(Long id) {
-<span class="fc" id="L84">        UserAccount u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)</span>
+<span class="fc" id="L84">        UserAccount u = usuarioRepository.findByIdAndActiveTrue(id)</span>
 <span class="pc" id="L85">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Usuario no encontrado con id: &quot; + id));</span>
 <span class="nc" id="L86">        return toResponse(u);</span>
  }
@@ -108,8 +108,8 @@ public class UserAccountService {
             @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
-    @Audited(accion = &quot;CREAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;,
-            descripcionSpel = &quot;'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'&quot;)
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;,
+            descriptionSpel = &quot;'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'&quot;)
     @Transactional
     public UserAccountResponse create(UserAccountRequest request) {
 <span class="pc bpc" id="L115" title="1 of 4 branches missed.">        if (request.password() == null || request.password().isBlank()) {</span>
@@ -127,11 +127,11 @@ public class UserAccountService {
 <span class="pc" id="L127">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
 
 <span class="fc" id="L129">        UserAccount.UserAccountBuilder builder = UserAccount.builder()</span>
-<span class="fc" id="L130">                .persona(persona)</span>
-<span class="fc" id="L131">                .estadoGeneral(estado)</span>
+<span class="fc" id="L130">                .person(persona)</span>
+<span class="fc" id="L131">                .generalStatus(estado)</span>
 <span class="fc" id="L132">                .username(request.username())</span>
-<span class="fc" id="L133">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L134">                .activo(true);</span>
+<span class="fc" id="L133">                .passwordHash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L134">                .active(true);</span>
 
 <span class="fc bfc" id="L136" title="All 2 branches covered.">        if (request.rol() != null) {</span>
 <span class="fc" id="L137">            validateRoleCoherent(request.idPersona(), request.rol());</span>
@@ -169,8 +169,8 @@ public class UserAccountService {
             @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
-    @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;,
-            descripcionSpel = &quot;'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'&quot;)
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Usuario&quot;, idSpel = &quot;#result.idUsuario&quot;,
+            descriptionSpel = &quot;'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'&quot;)
     @Transactional
     public UserAccountResponse update(Long id, UserAccountRequest request) {
 <span class="fc" id="L176">        UserAccount usuario = usuarioRepository.findById(id)</span>
@@ -187,8 +187,8 @@ public class UserAccountService {
 <span class="fc" id="L187">        GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
 <span class="pc" id="L188">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estado general no encontrado con id: &quot; + request.idEstadoGeneral()));</span>
 
-<span class="fc" id="L190">        usuario.setPersona(persona);</span>
-<span class="fc" id="L191">        usuario.setEstadoGeneral(estado);</span>
+<span class="fc" id="L190">        usuario.setPerson(persona);</span>
+<span class="fc" id="L191">        usuario.setGeneralStatus(estado);</span>
 <span class="fc" id="L192">        usuario.setUsername(request.username());</span>
 
 <span class="fc" id="L194">        updatePasswordIfApplicable(usuario, request.password());</span>
@@ -197,7 +197,7 @@ public class UserAccountService {
 <span class="fc" id="L197">        usuario = usuarioRepository.save(usuario);</span>
 
 <span class="fc bfc" id="L199" title="All 2 branches covered.">        if (request.rol() != null) {</span>
-<span class="fc" id="L200">            linkExistingRecord(persona.getIdPersona(), request.rol(), usuario);</span>
+<span class="fc" id="L200">            linkExistingRecord(persona.getId(), request.rol(), usuario);</span>
         }
 
 <span class="fc" id="L203">        return toResponse(usuario);</span>
@@ -209,14 +209,14 @@ public class UserAccountService {
      * @param id identificador de la cuenta
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = &quot;ELIMINAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'desactivó la cuenta de usuario #' + #p0&quot;)
+    @Audited(action = &quot;ELIMINAR&quot;, entity = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'desactivó la cuenta de usuario #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
     public void delete(Long id) {
 <span class="fc" id="L217">        UserAccount usuario = usuarioRepository.findById(id)</span>
 <span class="pc" id="L218">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Usuario no encontrado con id: &quot; + id));</span>
-<span class="fc" id="L219">        usuario.setActivo(false);</span>
+<span class="fc" id="L219">        usuario.setActive(false);</span>
 <span class="fc" id="L220">        usuarioRepository.save(usuario);</span>
 <span class="fc" id="L221">    }</span>
 
@@ -228,19 +228,19 @@ public class UserAccountService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la cuenta ya está activa
      */
-    @Audited(accion = &quot;REACTIVAR&quot;, entidad = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;,
-            descripcionSpel = &quot;'reactivo la cuenta de usuario #' + #p0&quot;)
+    @Audited(action = &quot;REACTIVAR&quot;, entity = &quot;Usuario&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'reactivo la cuenta de usuario #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
     public UserAccountResponse reactivate(Long id) {
 <span class="fc" id="L236">        UserAccount usuario = usuarioRepository.findById(id)</span>
 <span class="fc" id="L237">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Usuario no encontrado con id: &quot; + id));</span>
 
-<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (Boolean.TRUE.equals(usuario.getActivo())) {</span>
+<span class="fc bfc" id="L239" title="All 2 branches covered.">        if (Boolean.TRUE.equals(usuario.getActive())) {</span>
 <span class="fc" id="L240">            throw new IllegalArgumentException(&quot;La cuenta ya se encuentra activa&quot;);</span>
         }
 
-<span class="fc" id="L243">        usuario.setActivo(true);</span>
+<span class="fc" id="L243">        usuario.setActive(true);</span>
 <span class="fc" id="L244">        return toResponse(usuarioRepository.save(usuario));</span>
     }
 
@@ -249,7 +249,7 @@ public class UserAccountService {
     private void updatePasswordIfApplicable(UserAccount usuario, String nuevaPassword) {
 <span class="pc bpc" id="L250" title="1 of 4 branches missed.">        if (nuevaPassword != null &amp;&amp; !nuevaPassword.isBlank()) {</span>
 <span class="fc" id="L251">            passwordPolicy.validate(nuevaPassword, usuario.getUsername());</span>
-<span class="fc" id="L252">            usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));</span>
+<span class="fc" id="L252">            usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));</span>
         }
 <span class="fc" id="L254">    }</span>
 
@@ -261,9 +261,9 @@ public class UserAccountService {
 <span class="fc" id="L261">            return;</span>
         }
 <span class="pc bpc" id="L263" title="1 of 2 branches missed.">        String rolActual = usuario.getRoles() == null ? null</span>
-<span class="fc" id="L264">                : usuario.getRoles().stream().findFirst().map(Role::getNombre).orElse(null);</span>
+<span class="fc" id="L264">                : usuario.getRoles().stream().findFirst().map(Role::getName).orElse(null);</span>
 <span class="pc bpc" id="L265" title="1 of 2 branches missed.">        if (!rolPedido.equals(rolActual)) {</span>
-<span class="fc" id="L266">            validateRoleCoherent(persona.getIdPersona(), rolPedido);</span>
+<span class="fc" id="L266">            validateRoleCoherent(persona.getId(), rolPedido);</span>
             // HashSet mutable: Hibernate necesita poder mutar la colección ya
             // administrada de este Usuario persistido. Set.of() es inmutable y
             // hace fallar el flush con UnsupportedOperationException.
@@ -272,7 +272,7 @@ public class UserAccountService {
 <span class="fc" id="L272">    }</span>
 
     private Role findRole(String nombre) {
-<span class="fc" id="L275">        return rolRepository.findByNombre(nombre)</span>
+<span class="fc" id="L275">        return rolRepository.findByName(nombre)</span>
 <span class="fc" id="L276">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + nombre));</span>
     }
 
@@ -291,7 +291,7 @@ public class UserAccountService {
      *                                  otro rol
      */
     private void validateRoleCoherent(Long idPersona, String rol) {
-<span class="fc bfc" id="L294" title="All 2 branches covered.">        if (estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="fc bfc" id="L294" title="All 2 branches covered.">        if (estudianteRepository.existsByPerson_IdAndActiveTrue(idPersona)</span>
 <span class="fc bfc" id="L295" title="All 2 branches covered.">                &amp;&amp; !&quot;ESTUDIANTE&quot;.equals(rol)) {</span>
 <span class="fc" id="L296">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de estudiante activa: su cuenta solo puede tener el rol ESTUDIANTE&quot;);
@@ -301,7 +301,7 @@ public class UserAccountService {
 <span class="fc" id="L301">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de entrenador activa: su cuenta solo puede tener el rol ENTRENADOR&quot;);
         }
-<span class="fc bfc" id="L304" title="All 2 branches covered.">        if (representanteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="fc bfc" id="L304" title="All 2 branches covered.">        if (representanteRepository.existsByPerson_IdAndActiveTrue(idPersona)</span>
 <span class="pc bpc" id="L305" title="1 of 2 branches missed.">                &amp;&amp; !&quot;REPRESENTANTE&quot;.equals(rol)) {</span>
 <span class="fc" id="L306">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de representante activa: su cuenta solo puede tener el rol REPRESENTANTE&quot;);
@@ -322,34 +322,34 @@ public class UserAccountService {
      */
     private void linkExistingRecord(Long idPersona, String rol, UserAccount usuario) {
 <span class="pc bpc" id="L324" title="2 of 4 branches missed.">        switch (rol) {</span>
-<span class="fc" id="L325">            case &quot;ESTUDIANTE&quot; -&gt; estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="pc bnc" id="L326" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
-<span class="pc" id="L327">                    .ifPresent(e -&gt; { e.setUsuario(usuario); estudianteRepository.save(e); });</span>
+<span class="fc" id="L325">            case &quot;ESTUDIANTE&quot; -&gt; estudianteRepository.findByPerson_IdAndActiveTrue(idPersona)</span>
+<span class="pc bnc" id="L326" title="All 2 branches missed.">                    .filter(e -&gt; e.getUserAccount() == null)</span>
+<span class="pc" id="L327">                    .ifPresent(e -&gt; { e.setUserAccount(usuario); estudianteRepository.save(e); });</span>
 <span class="fc" id="L328">            case &quot;ENTRENADOR&quot; -&gt; entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
 <span class="pc bnc" id="L329" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
 <span class="pc" id="L330">                    .ifPresent(e -&gt; { e.setUsuario(usuario); entrenadorRepository.save(e); });</span>
-<span class="nc" id="L331">            case &quot;REPRESENTANTE&quot; -&gt; representanteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
-<span class="nc bnc" id="L332" title="All 2 branches missed.">                    .filter(r -&gt; r.getUsuario() == null)</span>
-<span class="nc" id="L333">                    .ifPresent(r -&gt; { r.setUsuario(usuario); representanteRepository.save(r); });</span>
+<span class="nc" id="L331">            case &quot;REPRESENTANTE&quot; -&gt; representanteRepository.findByPerson_IdAndActiveTrue(idPersona)</span>
+<span class="nc bnc" id="L332" title="All 2 branches missed.">                    .filter(r -&gt; r.getUserAccount() == null)</span>
+<span class="nc" id="L333">                    .ifPresent(r -&gt; { r.setUserAccount(usuario); representanteRepository.save(r); });</span>
             default -&gt; { }
         }
 <span class="fc" id="L336">    }</span>
 
     private UserAccountResponse toResponse(UserAccount u) {
 <span class="fc bfc" id="L339" title="All 2 branches covered.">        List&lt;String&gt; roles = u.getRoles() == null ? List.of()</span>
-<span class="fc" id="L340">                : u.getRoles().stream().map(Role::getNombre).toList();</span>
+<span class="fc" id="L340">                : u.getRoles().stream().map(Role::getName).toList();</span>
 <span class="fc" id="L341">        return new UserAccountResponse(</span>
-<span class="fc" id="L342">                u.getIdUsuario(),</span>
-<span class="fc" id="L343">                u.getPersona().getIdPersona(),</span>
-<span class="fc" id="L344">                u.getPersona().getNombre(),</span>
-<span class="fc" id="L345">                u.getPersona().getApellido(),</span>
-<span class="fc" id="L346">                u.getPersona().getCorreo(),</span>
-<span class="fc" id="L347">                u.getEstadoGeneral().getIdEstadoGeneral(),</span>
-<span class="fc" id="L348">                u.getEstadoGeneral().getNombre(),</span>
+<span class="fc" id="L342">                u.getId(),</span>
+<span class="fc" id="L343">                u.getPerson().getId(),</span>
+<span class="fc" id="L344">                u.getPerson().getName(),</span>
+<span class="fc" id="L345">                u.getPerson().getLastName(),</span>
+<span class="fc" id="L346">                u.getPerson().getEmail(),</span>
+<span class="fc" id="L347">                u.getGeneralStatus().getId(),</span>
+<span class="fc" id="L348">                u.getGeneralStatus().getName(),</span>
 <span class="fc" id="L349">                u.getUsername(),</span>
                 roles,
-<span class="fc" id="L351">                u.getUltimoAcceso(),</span>
-<span class="fc" id="L352">                u.getActivo(),</span>
+<span class="fc" id="L351">                u.getLastAccess(),</span>
+<span class="fc" id="L352">                u.getActive(),</span>
 <span class="fc" id="L353">                u.getCreatedAt()</span>
         );
     }

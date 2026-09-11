@@ -55,9 +55,16 @@ public class Asistencia {
     @Column(name = &quot;actualizado_en&quot;)
     private Instant actualizadoEn;
 
+    /**
+     * Indica si este registro de asistencia habilita al estudiante para
+     * recibir una evaluación diaria de esa sesión.
+     *
+     * @return {@code true} si el estado es &quot;presente&quot; o &quot;tarde&quot;; {@code false}
+     *         si faltó (una ausencia no genera evaluación)
+     */
     @Transient
     public boolean habilitaEvaluacion() {
-<span class="fc bfc" id="L60" title="All 4 branches covered.">        return ESTADO_PRESENTE.equals(estado) || ESTADO_TARDE.equals(estado);</span>
+<span class="fc bfc" id="L67" title="All 4 branches covered.">        return ESTADO_PRESENTE.equals(estado) || ESTADO_TARDE.equals(estado);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

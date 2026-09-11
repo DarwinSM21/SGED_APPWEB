@@ -91,7 +91,7 @@ import java.util.UUID;
      * @param token token JWT ya firmado
      * @return el valor del reclamo {@code rol}
      */
-    public String extractRol(String token) {
+    public String extractRole(String token) {
 <span class="fc" id="L95">        return parseToken(token).getPayload().get(&quot;rol&quot;, String.class);</span>
     }
 
