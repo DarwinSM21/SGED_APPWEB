@@ -273,6 +273,9 @@ public class EvaluacionDiariaService {
 <span class="fc" id="L273">        }</span>
 <span class="fc" id="L274">    }</span>
 
+    /** RNF-25 / hallazgo H-02: tope de longitud del texto libre sobre un menor. */
+    static final int MAX_OBSERVACION_GENERAL = 2000;
+
     /**
      * Cierra la evaluación. A partir de aquí no admite cambios.
      *
@@ -281,23 +284,29 @@ public class EvaluacionDiariaService {
      *                           {@code null}
      * @throws ResourceNotFoundException si la sesión no tiene evaluación
      *                                      abierta
-     * @throws IllegalArgumentException     si ya estaba finalizada
+     * @throws IllegalArgumentException     si ya estaba finalizada o si la
+     *                                      observación supera el tope
      */
     @Audited(accion = &quot;EDITAR&quot;, entidad = &quot;EvaluacionDiaria&quot;, idSpel = &quot;#p0&quot;,
             descripcionSpel = &quot;'finalizó la evaluación de la sesión #' + #p0&quot;)
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
-<span class="fc" id="L290">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
-<span class="pc" id="L291">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
-                        &quot;La sesion &quot; + idSesion + &quot; no tiene evaluacion abierta&quot;));
-
-<span class="pc bpc" id="L294" title="1 of 2 branches missed.">        if (evaluacion.estaFinalizada()) {</span>
-<span class="fc" id="L295">            throw new IllegalArgumentException(&quot;La evaluacion ya estaba finalizada&quot;);</span>
+<span class="pc bpc" id="L294" title="1 of 4 branches missed.">        if (observacionGeneral != null &amp;&amp; observacionGeneral.length() &gt; MAX_OBSERVACION_GENERAL) {</span>
+<span class="fc" id="L295">            throw new IllegalArgumentException(</span>
+                    &quot;La observación general no puede superar &quot; + MAX_OBSERVACION_GENERAL + &quot; caracteres&quot;);
         }
 
-<span class="nc" id="L298">        evaluacion.setObservacionGeneral(observacionGeneral);</span>
-<span class="nc" id="L299">        evaluacion.setEstado(EvaluacionDiaria.FINALIZADA);</span>
-<span class="nc" id="L300">        evaluacionRepository.save(evaluacion);</span>
-<span class="nc" id="L301">    }</span>
+<span class="fc" id="L299">        EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)</span>
+<span class="pc" id="L300">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+                        &quot;La sesion &quot; + idSesion + &quot; no tiene evaluacion abierta&quot;));
+
+<span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if (evaluacion.estaFinalizada()) {</span>
+<span class="fc" id="L304">            throw new IllegalArgumentException(&quot;La evaluacion ya estaba finalizada&quot;);</span>
+        }
+
+<span class="nc" id="L307">        evaluacion.setObservacionGeneral(observacionGeneral);</span>
+<span class="nc" id="L308">        evaluacion.setEstado(EvaluacionDiaria.FINALIZADA);</span>
+<span class="nc" id="L309">        evaluacionRepository.save(evaluacion);</span>
+<span class="nc" id="L310">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -115,7 +115,7 @@ public class GuardianService {
 <span class="fc" id="L115">        List&lt;Long&gt; idsIniciales = request.idsEstudiantesIniciales();</span>
 <span class="pc bpc" id="L116" title="1 of 2 branches missed.">        if (idsIniciales != null) {</span>
 <span class="fc bfc" id="L117" title="All 2 branches covered.">            for (Long idEstudiante : idsIniciales) {</span>
-<span class="fc" id="L118">                vincular(representante, idEstudiante);</span>
+<span class="fc" id="L118">                link(representante, idEstudiante);</span>
 <span class="fc" id="L119">            }</span>
         }
 
@@ -197,7 +197,7 @@ public class GuardianService {
 <span class="pc" id="L197">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Representante no encontrado con id: &quot; + idRepresentante));</span>
 <span class="pc bpc" id="L198" title="1 of 2 branches missed.">        String relacion = request == null ? null : request.relacion();</span>
 <span class="pc bpc" id="L199" title="2 of 4 branches missed.">        boolean contactoPrincipal = request != null &amp;&amp; Boolean.TRUE.equals(request.contactoPrincipal());</span>
-<span class="fc" id="L200">        vincular(representante, idEstudiante, relacion, contactoPrincipal);</span>
+<span class="fc" id="L200">        link(representante, idEstudiante, relacion, contactoPrincipal);</span>
 <span class="fc" id="L201">        return toResponse(representante);</span>
     }
 
@@ -218,13 +218,13 @@ public class GuardianService {
 <span class="fc" id="L218">        vinculoRepository.save(vinculo);</span>
 <span class="fc" id="L219">    }</span>
 
-    private void vincular(Guardian representante, Long idEstudiante) {
-<span class="fc" id="L222">        vincular(representante, idEstudiante, null, false);</span>
+    private void link(Guardian representante, Long idEstudiante) {
+<span class="fc" id="L222">        link(representante, idEstudiante, null, false);</span>
 <span class="fc" id="L223">    }</span>
 
     // Un estudiante tiene un solo contacto principal: designar uno nuevo
     // desplaza al anterior en vez de dejar dos marcados.
-    private void vincular(Guardian representante, Long idEstudiante,
+    private void link(Guardian representante, Long idEstudiante,
                           String relacion, boolean contactoPrincipal) {
 <span class="fc" id="L229">        Student estudiante = estudianteRepository.findById(idEstudiante)</span>
 <span class="fc" id="L230">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>

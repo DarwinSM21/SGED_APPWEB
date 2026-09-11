@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.TooManyRequestsException;
 import org.uteq.backend.seguridad.audit.service.AuditService;
+import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.auth.dto.LoginRequest;
 import org.uteq.backend.seguridad.auth.dto.RegisterRequest;
 import org.uteq.backend.seguridad.auth.dto.SessionResponse;
@@ -43,7 +44,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class AuthService {
 
-<span class="fc" id="L46">    private static final Logger AUTH_AUDIT_LOG = LoggerFactory.getLogger(&quot;AUTH_AUDIT&quot;);</span>
+<span class="fc" id="L47">    private static final Logger AUTH_AUDIT_LOG = LoggerFactory.getLogger(&quot;AUTH_AUDIT&quot;);</span>
 
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -54,7 +55,9 @@ public class AuthService {
     private final RoleRepository rolRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordPolicy passwordPolicy;
     private final AuditService auditoriaService;
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * Resultado de un inicio de sesión correcto: los dos tokens que el
@@ -65,7 +68,7 @@ public class AuthService {
      * @param refreshToken JWT de refresco, de vida larga
      * @param session      datos no sensibles de la sesión (nunca el token)
      */
-<span class="fc" id="L68">    public record LoginResult(String accessToken, String refreshToken, SessionResponse session) {}</span>
+<span class="fc" id="L71">    public record LoginResult(String accessToken, String refreshToken, SessionResponse session) {}</span>
 
     /**
      * Da de alta una {@link Person} y su {@link UserAccount} en una sola
@@ -79,6 +82,8 @@ public class AuthService {
      * @return la sesión del usuario recién creado, o {@link Optional#empty()}
      *         si el {@code username}, la cédula o el correo ya están en uso
      *         (el controlador lo traduce a {@code 409 Conflict})
+     * @throws org.uteq.backend.common.exception.ApiException {@code 422} si la
+     *                                  contraseña no cumple la política (RNF-14)
      * @throws IllegalArgumentException si {@code request.rol()} no existe en
      *                                  el catálogo de roles
      * @throws IllegalStateException    si falta el catálogo
@@ -86,49 +91,57 @@ public class AuthService {
      */
     @Transactional
     public Optional&lt;SessionResponse&gt; register(RegisterRequest request) {
-<span class="fc bfc" id="L89" title="All 2 branches covered.">        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())</span>
-<span class="fc bfc" id="L90" title="All 2 branches covered.">                || personaRepository.existsByCedulaAndActivoTrue(request.cedula())</span>
-<span class="fc bfc" id="L91" title="All 2 branches covered.">                || personaRepository.existsByCorreo(request.correo())) {</span>
-<span class="fc" id="L92">            return Optional.empty();</span>
+<span class="fc" id="L94">        passwordPolicy.validate(request.password(), request.username());</span>
+
+        // RF-49 / H-01: la cédula es opcional; solo cuenta como colisión si viene.
+<span class="pc bpc" id="L97" title="2 of 4 branches missed.">        boolean cedulaDuplicada = request.cedula() != null &amp;&amp; !request.cedula().isBlank()</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                &amp;&amp; personaRepository.existsByCedulaAndActivoTrue(request.cedula());</span>
+<span class="fc bfc" id="L99" title="All 4 branches covered.">        if (usuarioRepository.existsByUsernameIgnoreCase(request.username())</span>
+                || cedulaDuplicada
+<span class="fc bfc" id="L101" title="All 2 branches covered.">                || personaRepository.existsByCorreo(request.correo())) {</span>
+<span class="fc" id="L102">            return Optional.empty();</span>
         }
 
-<span class="fc" id="L95">        Role rol = rolRepository.findByNombre(request.rol())</span>
-<span class="fc" id="L96">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + request.rol()));</span>
+<span class="fc" id="L105">        Role rol = rolRepository.findByNombre(request.rol())</span>
+<span class="fc" id="L106">                .orElseThrow(() -&gt; new IllegalArgumentException(&quot;Rol inexistente: &quot; + request.rol()));</span>
 
-<span class="fc" id="L98">        Person persona = Person.builder()</span>
-<span class="fc" id="L99">                .nombre(request.nombre())</span>
-<span class="fc" id="L100">                .apellido(request.apellido())</span>
-<span class="fc" id="L101">                .cedula(request.cedula())</span>
-<span class="fc" id="L102">                .correo(request.correo())</span>
-<span class="fc" id="L103">                .fechaNacimiento(request.fechaNacimiento())</span>
-<span class="fc" id="L104">                .activo(true)</span>
-<span class="fc" id="L105">                .build();</span>
-<span class="fc" id="L106">        persona = personaRepository.save(persona);</span>
+<span class="fc" id="L108">        Person persona = Person.builder()</span>
+<span class="fc" id="L109">                .nombre(request.nombre())</span>
+<span class="fc" id="L110">                .apellido(request.apellido())</span>
+<span class="fc" id="L111">                .cedula(request.cedula())</span>
+<span class="fc" id="L112">                .correo(request.correo())</span>
+<span class="fc" id="L113">                .fechaNacimiento(request.fechaNacimiento())</span>
+<span class="fc" id="L114">                .activo(true)</span>
+<span class="fc" id="L115">                .correoVerificado(false)</span>
+<span class="fc" id="L116">                .build();</span>
+<span class="fc" id="L117">        persona = personaRepository.save(persona);</span>
+        // RNF-26 / H-09: doble opt-in del correo recién registrado.
+<span class="fc" id="L119">        emailVerificationService.sendConfirmation(persona);</span>
 
         // id_estado_general es NOT NULL: sin esto el alta también falla en base
         // de datos aunque la persona ya se haya podido insertar.
-<span class="fc" id="L110">        GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)</span>
-<span class="fc" id="L111">                .orElseThrow(() -&gt; new IllegalStateException(</span>
+<span class="fc" id="L123">        GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)</span>
+<span class="fc" id="L124">                .orElseThrow(() -&gt; new IllegalStateException(</span>
                         &quot;Falta el catalogo seguridad.estados_general (ver db/seed.sql)&quot;));
 
-<span class="fc" id="L114">        UserAccount usuario = UserAccount.builder()</span>
-<span class="fc" id="L115">                .persona(persona)</span>
-<span class="fc" id="L116">                .estadoGeneral(estadoActivo)</span>
-<span class="fc" id="L117">                .username(request.username())</span>
-<span class="fc" id="L118">                .password_Hash(passwordEncoder.encode(request.password()))</span>
-<span class="fc" id="L119">                .activo(true)</span>
-<span class="fc" id="L120">                .roles(Set.of(rol))</span>
-<span class="fc" id="L121">                .build();</span>
-<span class="fc" id="L122">        usuario = usuarioRepository.save(usuario);</span>
+<span class="fc" id="L127">        UserAccount usuario = UserAccount.builder()</span>
+<span class="fc" id="L128">                .persona(persona)</span>
+<span class="fc" id="L129">                .estadoGeneral(estadoActivo)</span>
+<span class="fc" id="L130">                .username(request.username())</span>
+<span class="fc" id="L131">                .password_Hash(passwordEncoder.encode(request.password()))</span>
+<span class="fc" id="L132">                .activo(true)</span>
+<span class="fc" id="L133">                .roles(Set.of(rol))</span>
+<span class="fc" id="L134">                .build();</span>
+<span class="fc" id="L135">        usuario = usuarioRepository.save(usuario);</span>
 
-<span class="fc" id="L124">        String nombreCompleto = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
-<span class="fc" id="L125">        return Optional.of(SessionResponse.builder()</span>
-<span class="fc" id="L126">                .username(usuario.getUsername())</span>
-<span class="fc" id="L127">                .nombre(nombreCompleto)</span>
-<span class="fc" id="L128">                .rol(rol.getNombre())</span>
-<span class="fc" id="L129">                .idPersona(persona.getIdPersona())</span>
-<span class="fc" id="L130">                .idUsuario(usuario.getIdUsuario())</span>
-<span class="fc" id="L131">                .build());</span>
+<span class="fc" id="L137">        String nombreCompleto = persona.getNombre() + &quot; &quot; + persona.getApellido();</span>
+<span class="fc" id="L138">        return Optional.of(SessionResponse.builder()</span>
+<span class="fc" id="L139">                .username(usuario.getUsername())</span>
+<span class="fc" id="L140">                .nombre(nombreCompleto)</span>
+<span class="fc" id="L141">                .rol(rol.getNombre())</span>
+<span class="fc" id="L142">                .idPersona(persona.getIdPersona())</span>
+<span class="fc" id="L143">                .idUsuario(usuario.getIdUsuario())</span>
+<span class="fc" id="L144">                .build());</span>
     }
 
     /**
@@ -146,45 +159,45 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public LoginResult login(LoginRequest request, String ip) {
-<span class="fc bfc" id="L149" title="All 2 branches covered.">        if (loginAttemptService.isBlocked(ip)) {</span>
-<span class="fc" id="L150">            throw new TooManyRequestsException(</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">        if (loginAttemptService.isBlocked(ip)) {</span>
+<span class="fc" id="L163">            throw new TooManyRequestsException(</span>
                     &quot;Demasiados intentos fallidos. Intenta de nuevo en 15 minutos.&quot;);
         }
 
         Authentication auth;
         try {
-<span class="fc" id="L156">            auth = authenticationManager.authenticate(</span>
-<span class="fc" id="L157">                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));</span>
-<span class="fc" id="L158">        } catch (BadCredentialsException e) {</span>
-<span class="fc" id="L159">            loginAttemptService.recordFailure(ip);</span>
-<span class="fc" id="L160">            AUTH_AUDIT_LOG.warn(&quot;AUTH_LOGIN_FAIL ip={} sub={}&quot;, ip, request.username());</span>
-<span class="fc" id="L161">            auditoriaService.recordEventWithIdentity(request.username(), null,</span>
+<span class="fc" id="L169">            auth = authenticationManager.authenticate(</span>
+<span class="fc" id="L170">                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));</span>
+<span class="fc" id="L171">        } catch (BadCredentialsException e) {</span>
+<span class="fc" id="L172">            loginAttemptService.recordFailure(ip);</span>
+<span class="fc" id="L173">            AUTH_AUDIT_LOG.warn(&quot;AUTH_LOGIN_FAIL ip={} sub={}&quot;, ip, request.username());</span>
+<span class="fc" id="L174">            auditoriaService.recordEventWithIdentity(request.username(), null,</span>
                     &quot;LOGIN_FALLIDO&quot;, &quot;Usuario&quot;, null, &quot;intento de inicio de sesión fallido&quot;);
-<span class="fc" id="L163">            throw e;</span>
-<span class="fc" id="L164">        }</span>
+<span class="fc" id="L176">            throw e;</span>
+<span class="fc" id="L177">        }</span>
 
-<span class="fc" id="L166">        loginAttemptService.recordSuccess(ip);</span>
+<span class="fc" id="L179">        loginAttemptService.recordSuccess(ip);</span>
 
-<span class="fc" id="L168">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
-<span class="fc" id="L169">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
-<span class="fc" id="L170">        AUTH_AUDIT_LOG.info(&quot;AUTH_LOGIN_OK ip={} sub={}&quot;, ip, userDetails.getUsername());</span>
-<span class="fc" id="L171">        auditoriaService.recordEventWithIdentity(userDetails.getUsername(), rol,</span>
+<span class="fc" id="L181">        UserDetails userDetails = (UserDetails) auth.getPrincipal();</span>
+<span class="fc" id="L182">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
+<span class="fc" id="L183">        AUTH_AUDIT_LOG.info(&quot;AUTH_LOGIN_OK ip={} sub={}&quot;, ip, userDetails.getUsername());</span>
+<span class="fc" id="L184">        auditoriaService.recordEventWithIdentity(userDetails.getUsername(), rol,</span>
                 &quot;LOGIN&quot;, &quot;Usuario&quot;, null, &quot;inició sesión&quot;);
 
-<span class="fc" id="L174">        String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);</span>
-<span class="fc" id="L175">        String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);</span>
+<span class="fc" id="L187">        String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);</span>
+<span class="fc" id="L188">        String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);</span>
 
-<span class="fc" id="L177">        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())</span>
-<span class="fc" id="L178">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
-<span class="fc" id="L179">                .orElse(userDetails.getUsername());</span>
+<span class="fc" id="L190">        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())</span>
+<span class="fc" id="L191">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
+<span class="fc" id="L192">                .orElse(userDetails.getUsername());</span>
 
-<span class="fc" id="L181">        SessionResponse session = SessionResponse.builder()</span>
-<span class="fc" id="L182">                .username(userDetails.getUsername())</span>
-<span class="fc" id="L183">                .nombre(nombre)</span>
-<span class="fc" id="L184">                .rol(rol)</span>
-<span class="fc" id="L185">                .build();</span>
+<span class="fc" id="L194">        SessionResponse session = SessionResponse.builder()</span>
+<span class="fc" id="L195">                .username(userDetails.getUsername())</span>
+<span class="fc" id="L196">                .nombre(nombre)</span>
+<span class="fc" id="L197">                .rol(rol)</span>
+<span class="fc" id="L198">                .build();</span>
 
-<span class="fc" id="L187">        return new LoginResult(accessToken, refreshToken, session);</span>
+<span class="fc" id="L200">        return new LoginResult(accessToken, refreshToken, session);</span>
     }
 
     /**
@@ -197,20 +210,20 @@ public class AuthService {
      *                    {@code null} si la cookie no vino
      */
     public void logout(String accessToken) {
-<span class="fc bfc" id="L200" title="All 2 branches covered.">        if (accessToken != null) {</span>
+<span class="fc bfc" id="L213" title="All 2 branches covered.">        if (accessToken != null) {</span>
             try {
-<span class="fc" id="L202">                String jti = jwtService.extractJti(accessToken);</span>
-<span class="pc bpc" id="L203" title="1 of 2 branches missed.">                if (jti != null) {</span>
-<span class="fc" id="L204">                    blacklistService.revoke(jti, jwtService.getExpirationMs());</span>
+<span class="fc" id="L215">                String jti = jwtService.extractJti(accessToken);</span>
+<span class="pc bpc" id="L216" title="1 of 2 branches missed.">                if (jti != null) {</span>
+<span class="fc" id="L217">                    blacklistService.revoke(jti, jwtService.getExpirationMs());</span>
                 }
-<span class="fc" id="L206">            } catch (Exception e) {</span>
+<span class="fc" id="L219">            } catch (Exception e) {</span>
                 // Token ya inválido: nada que revocar.
-<span class="fc" id="L208">            }</span>
+<span class="fc" id="L221">            }</span>
         }
 
-<span class="fc" id="L211">        auditoriaService.recordEvent(&quot;LOGOUT&quot;, &quot;Usuario&quot;, null, &quot;cerró sesión&quot;);</span>
-<span class="fc" id="L212">        SecurityContextHolder.clearContext();</span>
-<span class="fc" id="L213">    }</span>
+<span class="fc" id="L224">        auditoriaService.recordEvent(&quot;LOGOUT&quot;, &quot;Usuario&quot;, null, &quot;cerró sesión&quot;);</span>
+<span class="fc" id="L225">        SecurityContextHolder.clearContext();</span>
+<span class="fc" id="L226">    }</span>
 
     /**
      * Emite un nuevo token de acceso a partir de un refresh token vigente.
@@ -222,13 +235,13 @@ public class AuthService {
      *         {@code 401})
      */
     public Optional&lt;String&gt; refresh(String refreshToken) {
-<span class="pc bpc" id="L225" title="1 of 4 branches missed.">        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {</span>
-<span class="fc" id="L226">            return Optional.empty();</span>
+<span class="pc bpc" id="L238" title="1 of 4 branches missed.">        if (refreshToken == null || !jwtService.isTokenValid(refreshToken)) {</span>
+<span class="fc" id="L239">            return Optional.empty();</span>
         }
 
-<span class="fc" id="L229">        String username = jwtService.extractUsername(refreshToken);</span>
-<span class="fc" id="L230">        String rol = jwtService.extractRol(refreshToken);</span>
-<span class="fc" id="L231">        return Optional.of(jwtService.generateToken(username, rol));</span>
+<span class="fc" id="L242">        String username = jwtService.extractUsername(refreshToken);</span>
+<span class="fc" id="L243">        String rol = jwtService.extractRol(refreshToken);</span>
+<span class="fc" id="L244">        return Optional.of(jwtService.generateToken(username, rol));</span>
     }
 
     /**
@@ -240,22 +253,22 @@ public class AuthService {
      */
     @Transactional(readOnly = true)
     public Optional&lt;SessionResponse&gt; getCurrentSession() {
-<span class="fc" id="L243">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
-<span class="pc bpc" id="L244" title="2 of 6 branches missed.">        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails userDetails)) {</span>
-<span class="fc" id="L245">            return Optional.empty();</span>
+<span class="fc" id="L256">        Authentication auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="pc bpc" id="L257" title="2 of 6 branches missed.">        if (auth == null || !auth.isAuthenticated() || !(auth.getPrincipal() instanceof UserDetails userDetails)) {</span>
+<span class="fc" id="L258">            return Optional.empty();</span>
         }
 
-<span class="fc" id="L248">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
+<span class="fc" id="L261">        String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst(&quot;^ROLE_&quot;, &quot;&quot;);</span>
 
-<span class="fc" id="L250">        String nombre = usuarioRepository.findByUsername(userDetails.getUsername())</span>
-<span class="fc" id="L251">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
-<span class="fc" id="L252">                .orElse(userDetails.getUsername());</span>
+<span class="fc" id="L263">        String nombre = usuarioRepository.findByUsername(userDetails.getUsername())</span>
+<span class="fc" id="L264">                .map(u -&gt; u.getPersona().getNombre() + &quot; &quot; + u.getPersona().getApellido())</span>
+<span class="fc" id="L265">                .orElse(userDetails.getUsername());</span>
 
-<span class="fc" id="L254">        return Optional.of(SessionResponse.builder()</span>
-<span class="fc" id="L255">                .username(userDetails.getUsername())</span>
-<span class="fc" id="L256">                .nombre(nombre)</span>
-<span class="fc" id="L257">                .rol(rol)</span>
-<span class="fc" id="L258">                .build());</span>
+<span class="fc" id="L267">        return Optional.of(SessionResponse.builder()</span>
+<span class="fc" id="L268">                .username(userDetails.getUsername())</span>
+<span class="fc" id="L269">                .nombre(nombre)</span>
+<span class="fc" id="L270">                .rol(rol)</span>
+<span class="fc" id="L271">                .build());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

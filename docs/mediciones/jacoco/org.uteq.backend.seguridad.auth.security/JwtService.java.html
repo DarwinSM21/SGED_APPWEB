@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
+import java.time.Instant;
 import java.util.Date;
 import java.util.UUID;
 
@@ -16,7 +17,7 @@ import java.util.UUID;
  * reclamos de rol, tipo, emisor y audiencia configurados por propiedades.
  */
 @Service
-<span class="fc" id="L19">public class JwtService {</span>
+<span class="fc" id="L20">public class JwtService {</span>
     @Value(&quot;${security.jwt.secret}&quot;)
     private String secret;
 
@@ -41,7 +42,7 @@ import java.util.UUID;
      * @return token JWT firmado
      */
     public String generateToken(String username, String rol) {
-<span class="fc" id="L44">        return buildToken(username, rol, expirationMs, &quot;access&quot;);</span>
+<span class="fc" id="L45">        return buildToken(username, rol, expirationMs, &quot;access&quot;);</span>
     }
 
     /**
@@ -53,7 +54,7 @@ import java.util.UUID;
      * @return token JWT firmado
      */
     public String generateRefreshToken(String username, String rol) {
-<span class="fc" id="L56">        return buildToken(username, rol, refreshExpirationMs, &quot;refresh&quot;);</span>
+<span class="fc" id="L57">        return buildToken(username, rol, refreshExpirationMs, &quot;refresh&quot;);</span>
     }
 
     /**
@@ -66,11 +67,11 @@ import java.util.UUID;
      */
     public boolean isTokenValid(String token) {
         try {
-<span class="fc" id="L69">            Claims claims = parseToken(token).getPayload();</span>
-<span class="fc" id="L70">            java.util.Set&lt;String&gt; aud = claims.getAudience();</span>
-<span class="pc bpc" id="L71" title="2 of 6 branches missed.">            return aud != null &amp;&amp; aud.contains(audience) &amp;&amp; !claims.getExpiration().before(new Date());</span>
-<span class="fc" id="L72">        } catch (JwtException | IllegalArgumentException e) {</span>
-<span class="fc" id="L73">            return false;</span>
+<span class="fc" id="L70">            Claims claims = parseToken(token).getPayload();</span>
+<span class="fc" id="L71">            java.util.Set&lt;String&gt; aud = claims.getAudience();</span>
+<span class="pc bpc" id="L72" title="2 of 6 branches missed.">            return aud != null &amp;&amp; aud.contains(audience) &amp;&amp; !claims.getExpiration().before(new Date());</span>
+<span class="fc" id="L73">        } catch (JwtException | IllegalArgumentException e) {</span>
+<span class="fc" id="L74">            return false;</span>
         }
     }
 
@@ -81,7 +82,7 @@ import java.util.UUID;
      * @return el sujeto del token
      */
     public String extractUsername(String token) {
-<span class="fc" id="L84">        return parseToken(token).getPayload().getSubject();</span>
+<span class="fc" id="L85">        return parseToken(token).getPayload().getSubject();</span>
     }
 
     /**
@@ -91,7 +92,7 @@ import java.util.UUID;
      * @return el valor del reclamo {@code rol}
      */
     public String extractRol(String token) {
-<span class="fc" id="L94">        return parseToken(token).getPayload().get(&quot;rol&quot;, String.class);</span>
+<span class="fc" id="L95">        return parseToken(token).getPayload().get(&quot;rol&quot;, String.class);</span>
     }
 
     /**
@@ -101,7 +102,17 @@ import java.util.UUID;
      * @return el valor del reclamo {@code jti}
      */
     public String extractJti(String token) {
-<span class="fc" id="L104">        return parseToken(token).getPayload().getId();</span>
+<span class="fc" id="L105">        return parseToken(token).getPayload().getId();</span>
+    }
+
+    /**
+     * Extrae el instante de emisión ({@code iat}) de un token.
+     *
+     * @param token token JWT ya firmado
+     * @return el momento en que se emitió el token
+     */
+    public Instant extractIssuedAt(String token) {
+<span class="nc" id="L115">        return parseToken(token).getPayload().getIssuedAt().toInstant();</span>
     }
 
     /**
@@ -110,7 +121,7 @@ import java.util.UUID;
      * @return {@code security.jwt.expiration-ms}
      */
     public long getExpirationMs() {
-<span class="fc" id="L113">        return expirationMs;</span>
+<span class="fc" id="L124">        return expirationMs;</span>
     }
 
     /**
@@ -119,37 +130,37 @@ import java.util.UUID;
      * @return {@code security.jwt.refresh-expiration-ms}
      */
     public long getRefreshExpirationMs() {
-<span class="fc" id="L122">        return refreshExpirationMs;</span>
+<span class="fc" id="L133">        return refreshExpirationMs;</span>
     }
 
     private String buildToken(String username, String rol, long ttl, String tokenType) {
-<span class="fc" id="L126">        Date now = new Date();</span>
-<span class="fc" id="L127">        return Jwts.builder()</span>
-<span class="fc" id="L128">                .id(UUID.randomUUID().toString())</span>
-<span class="fc" id="L129">                .subject(username)</span>
-<span class="fc" id="L130">                .claim(&quot;rol&quot;, rol)</span>
-<span class="fc" id="L131">                .claim(&quot;type&quot;, tokenType)</span>
-<span class="fc" id="L132">                .issuer(issuer)</span>
-<span class="fc" id="L133">                .audience().add(audience).and()</span>
-<span class="fc" id="L134">                .issuedAt(now)</span>
-<span class="fc" id="L135">                .notBefore(now)</span>
-<span class="fc" id="L136">                .expiration(new Date(now.getTime() + ttl))</span>
-<span class="fc" id="L137">                .signWith(getSigningKey())</span>
-<span class="fc" id="L138">                .compact();</span>
+<span class="fc" id="L137">        Date now = new Date();</span>
+<span class="fc" id="L138">        return Jwts.builder()</span>
+<span class="fc" id="L139">                .id(UUID.randomUUID().toString())</span>
+<span class="fc" id="L140">                .subject(username)</span>
+<span class="fc" id="L141">                .claim(&quot;rol&quot;, rol)</span>
+<span class="fc" id="L142">                .claim(&quot;type&quot;, tokenType)</span>
+<span class="fc" id="L143">                .issuer(issuer)</span>
+<span class="fc" id="L144">                .audience().add(audience).and()</span>
+<span class="fc" id="L145">                .issuedAt(now)</span>
+<span class="fc" id="L146">                .notBefore(now)</span>
+<span class="fc" id="L147">                .expiration(new Date(now.getTime() + ttl))</span>
+<span class="fc" id="L148">                .signWith(getSigningKey())</span>
+<span class="fc" id="L149">                .compact();</span>
     }
 
     private Jws&lt;Claims&gt; parseToken(String token) {
-<span class="fc" id="L142">        return Jwts.parser()</span>
-<span class="fc" id="L143">                .verifyWith(getSigningKey())</span>
-<span class="fc" id="L144">                .requireIssuer(issuer)</span>
-<span class="fc" id="L145">                .build()</span>
-<span class="fc" id="L146">                .parseSignedClaims(token);</span>
+<span class="fc" id="L153">        return Jwts.parser()</span>
+<span class="fc" id="L154">                .verifyWith(getSigningKey())</span>
+<span class="fc" id="L155">                .requireIssuer(issuer)</span>
+<span class="fc" id="L156">                .build()</span>
+<span class="fc" id="L157">                .parseSignedClaims(token);</span>
     }
 
     private SecretKey getSigningKey() {
-<span class="fc" id="L150">        byte[] keyBytes = Decoders.BASE64.decode(</span>
-<span class="fc" id="L151">                java.util.Base64.getEncoder().encodeToString(secret.getBytes()));</span>
-<span class="fc" id="L152">        return Keys.hmacShaKeyFor(keyBytes);</span>
+<span class="fc" id="L161">        byte[] keyBytes = Decoders.BASE64.decode(</span>
+<span class="fc" id="L162">                java.util.Base64.getEncoder().encodeToString(secret.getBytes()));</span>
+<span class="fc" id="L163">        return Keys.hmacShaKeyFor(keyBytes);</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

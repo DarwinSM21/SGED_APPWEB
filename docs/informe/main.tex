@@ -594,10 +594,20 @@ regenerando \texttt{target/} desde el código vigente: \textbf{87,47\,\%
 de líneas} (2\,730 de 3\,121) y \textbf{72,10\,\% de \emph{branches}}
 (672 de 932), sobre 200 clases y \textbf{576 pruebas} en 76 clases, sin
 fallos; \texttt{reportes} subió a 93,8\,\% de líneas y
-\texttt{common.exception} a 100\,\%. \textbf{Esta es la cifra
-vigente en todo el documento} (sección~\ref{sec:cobertura}); las cuatro
-actualizaciones anteriores quedan como el registro cronológico de cómo
-se llegó a ella, no como cifras en disputa.
+\texttt{common.exception} a 100\,\%.
+
+\textbf{Sexta actualización (2026-09-11).} Revisión contra
+\texttt{Rubrica\_ExamenFinal\_SGED.pdf} (punto 2): el \texttt{SRS.md}
+citaba 84,66\,\%/71,24\,\% —la cifra de la cuarta actualización, no la
+vigente— y ninguna de las dos coincidía ya con el \texttt{jacoco.csv}
+committeado tras el renombrado a inglés de los métodos fuera de
+\texttt{deportivo} (Puntos E1/E2 de la misma rúbrica). Corrida de cierre:
+\textbf{88,35\,\% de líneas} (3\,012 de 3\,409) y \textbf{74,20\,\% de
+\emph{branches}} (791 de 1\,066), sobre 216 clases y \textbf{665 pruebas},
+sin fallos. \textbf{Esta es la cifra vigente en todo el documento}
+(sección~\ref{sec:cobertura}); las actualizaciones anteriores quedan como
+el registro cronológico de cómo se llegó a ella, no como cifras en
+disputa.
 \end{quote}
 
 La encuesta de usabilidad SUS (Bloque~C.3, sección~\ref{sec:sus}) sí se
@@ -2508,29 +2518,30 @@ verifican no solo que el bloqueo ocurra, sino que un fallo posterior
 atacante podría mantener la cuenta en estado de bloqueo indefinido, o bien
 —según cómo se implemente— reiniciar el contador y evadir el límite.
 
-\textbf{Cifra de cierre (2026-09-07).} Esta es la única cifra de
+\textbf{Cifra de cierre (2026-09-11).} Esta es la única cifra de
 cobertura vigente en el documento, recalculable línea por línea desde
 \ruta{docs/mediciones/jacoco/jacoco.csv} con
 \texttt{./mvnw verify} —el comando que exige y hace cumplir el umbral,
 no solo \texttt{test}—:
-\textbf{87,47\,\% de cobertura de líneas} (2\,730 de 3\,121) y
-\textbf{72,10\,\% de \emph{branches}} (672 de 932), sobre 200 clases
-analizadas, con \textbf{576 pruebas} en 76 clases de prueba y ningún
+\textbf{88,35\,\% de cobertura de líneas} (3\,012 de 3\,409) y
+\textbf{74,20\,\% de \emph{branches}} (791 de 1\,066), sobre 216 clases
+analizadas, con \textbf{665 pruebas} en 76 clases de prueba y ningún
 fallo. Cumple el
 \textbf{70\,\%} que exige \texttt{pom.xml} en líneas y en
 \emph{branches} —el umbral real del proyecto; una redacción anterior de
 este párrafo citaba 60\,\%, que nunca fue el valor configurado— con un
-margen de 2,10 puntos sobre el mínimo de \emph{branches}. Esta corrida
-corresponde al pendiente de cobertura de la guía: se añadieron
-\texttt{GlobalExceptionHandlerTest}, \texttt{ProblemDetailsAuthHandlersTest}
-y casos nuevos de \texttt{ReportServiceTest}/\texttt{ReportControllerTest},
-que llevaron \texttt{org.uteq.backend.reportes} (90,00\,\% el
-\texttt{controller}, 94,03\,\% el \texttt{service}) y
-\texttt{org.uteq.backend.common.exception} (100,00\,\%) por encima del
-70\,\%. El camino
+margen de 4,20 puntos sobre el mínimo de \emph{branches}. Esta corrida
+corresponde a la revisión contra \texttt{Rubrica\_ExamenFinal\_SGED.pdf}
+(Punto 2): la cifra anterior (87,47\,\%/576 pruebas del 2026-09-07)
+había quedado desincronizada del \texttt{SRS.md} (que citaba
+84,66\,\%/71,24\,\%, una cifra de la bitácora, no la vigente) tras el
+renombrado a inglés de los métodos fuera de \texttt{deportivo}
+(Puntos E1/E2 de la misma rúbrica), que agregó cobertura nueva sin que
+el CSV committeado se hubiese regenerado. El camino
 hasta esta cifra —41,9\,\% tras la reestructuración, 61,16\,\% con
 \texttt{main} dos semanas en rojo, 70,06\,\% de cierre provisional el
- 2026-09-02, 84,66\,\% del cierre anterior— queda documentado como
+ 2026-09-02, 84,66\,\% y luego 87,47\,\% de cierres anteriores— queda
+documentado como
 bitácora en la
 sección~\ref{sec:estado-entrega}; ninguna de esas cifras intermedias
 describe el estado actual. El desglose por capa se resume en la
@@ -2930,7 +2941,7 @@ empírica~\cite{iso25010}.
 
 \begin{itemize}[leftmargin=*]
   \item \textbf{La cobertura de instrucciones no mide calidad de las
-    pruebas.} Un 87,47\,\% indica qué proporción del código se ejecuta
+    pruebas.} Un 88,35\,\% indica qué proporción del código se ejecuta
     durante la suite, no que las aserciones sean pertinentes —el mismo
     desacople que documentan Imran~\emph{et al.} sobre pruebas de
     rendimiento en sistemas Java de código abierto: alcanzan una
@@ -3361,8 +3372,8 @@ corrigió a 72{,}5\,\%. La pregunta para la Entrega Final es si ese patrón
 se repite con el módulo de inventario y el resto del dominio deportivo,
 agregados después de esa medición. El reporte remedido para esta entrega
 (\ruta{docs/mediciones/jacoco/jacoco.xml}) responde que el patrón
-\textbf{no} se repitió: 87{,}47\,\% de líneas (2\,730 de 3\,121) y
-72{,}10\,\% de ramas (672 de 932) sobre el \texttt{main} que incluye ya
+\textbf{no} se repitió: 88{,}35\,\% de líneas (3\,012 de 3\,409) y
+74{,}20\,\% de ramas (791 de 1\,066) sobre el \texttt{main} que incluye ya
 el módulo de inventario y el dominio deportivo completo (la cifra coincide
 con la de la sección~\ref{sec:cobertura} y es la única vigente en el
 documento). La comparación con el episodio de la Segunda Entrega es la que
@@ -3434,8 +3445,8 @@ trabajo se resumen así:
     significativo con $p \approx 10^{-2483}$) frente a un límite de
     200\,ms, 6 de 6 controles OWASP
     verificados con evidencia reproducible, accesibilidad Lighthouse de
-    100/100, y \textbf{87,47\,\%} de cobertura de líneas y
-    \textbf{72,10\,\%} de \emph{branches} frente al mínimo de 70\,\%
+    100/100, y \textbf{88,35\,\%} de cobertura de líneas y
+    \textbf{74,20\,\%} de \emph{branches} frente al mínimo de 70\,\%
     (sección~\ref{sec:cobertura}) — cifra que cayó dos veces por debajo
     del umbral a medida que el sistema creció (39,8\,\% tras la
     reestructuración de paquetes, 61,16\,\% tras agregar el módulo de

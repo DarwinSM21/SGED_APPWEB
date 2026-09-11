@@ -10,6 +10,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,117 +19,191 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.List;
 
+/**
+ * Traduce cada excepción no atrapada por el código de negocio a una
+ * respuesta {@code ProblemDetail} (RFC 9457), sin exponer trazas de pila
+ * ni detalles internos (RNF-10). Cada manejador fija el {@code type}, el
+ * {@code title} y una marca de tiempo; el manejador general además deja
+ * registro en el log del servidor, nunca en la respuesta.
+ */
 @RestControllerAdvice
-<span class="fc" id="L22">public class GlobalExceptionHandler {</span>
-<span class="fc" id="L23">    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);</span>
+<span class="fc" id="L30">public class GlobalExceptionHandler {</span>
+<span class="fc" id="L31">    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);</span>
 
+    /**
+     * @param ex excepción de negocio lanzada por el código de la aplicación
+     * @return el detalle del problema con el estado HTTP que declara la excepción
+     */
     @ExceptionHandler(ApiException.class)
     public ProblemDetail handleApiException(ApiException ex) {
-<span class="fc" id="L27">        String tipo = ex.getClass().getSimpleName();</span>
-<span class="fc" id="L28">        ProblemDetail pd = ex.toProblemDetail(tipo, ex.getStatus().getReasonPhrase());</span>
-<span class="fc" id="L29">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L30">        return pd;</span>
+<span class="fc" id="L39">        String tipo = ex.getClass().getSimpleName();</span>
+<span class="fc" id="L40">        ProblemDetail pd = ex.toProblemDetail(tipo, ex.getStatus().getReasonPhrase());</span>
+<span class="fc" id="L41">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L42">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción con los errores de validación de Bean Validation ({@code @Valid})
+     * @return {@code 422} con la lista de errores campo por campo
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
-<span class="fc" id="L35">        List&lt;String&gt; errores = ex.getBindingResult().getFieldErrors().stream()</span>
-<span class="fc" id="L36">                .map(fe -&gt; fe.getField() + &quot;: &quot; + fe.getDefaultMessage())</span>
-<span class="fc" id="L37">                .toList();</span>
+<span class="fc" id="L51">        List&lt;String&gt; errores = ex.getBindingResult().getFieldErrors().stream()</span>
+<span class="fc" id="L52">                .map(fe -&gt; fe.getField() + &quot;: &quot; + fe.getDefaultMessage())</span>
+<span class="fc" id="L53">                .toList();</span>
 
-<span class="fc" id="L39">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L55">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.UNPROCESSABLE_ENTITY, &quot;Errores de validacion&quot;);
-<span class="fc" id="L41">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Validacion&quot;));</span>
-<span class="fc" id="L42">        pd.setTitle(&quot;Unprocessable Entity&quot;);</span>
-<span class="fc" id="L43">        pd.setProperty(&quot;errores&quot;, errores);</span>
-<span class="fc" id="L44">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L45">        return pd;</span>
+<span class="fc" id="L57">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Validacion&quot;));</span>
+<span class="fc" id="L58">        pd.setTitle(&quot;Unprocessable Entity&quot;);</span>
+<span class="fc" id="L59">        pd.setProperty(&quot;errores&quot;, errores);</span>
+<span class="fc" id="L60">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L61">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada por Spring Security ante usuario/contraseña inválidos
+     * @return {@code 401} genérico (no distingue usuario inexistente de contraseña incorrecta)
+     */
     @ExceptionHandler(BadCredentialsException.class)
     public ProblemDetail handleBadCredentials(BadCredentialsException ex) {
-<span class="fc" id="L50">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L70">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.UNAUTHORIZED, &quot;Credenciales invalidas&quot;);
-<span class="fc" id="L52">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/NoAutenticado&quot;));</span>
-<span class="fc" id="L53">        pd.setTitle(&quot;Unauthorized&quot;);</span>
-<span class="fc" id="L54">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L55">        return pd;</span>
+<span class="fc" id="L72">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/NoAutenticado&quot;));</span>
+<span class="fc" id="L73">        pd.setTitle(&quot;Unauthorized&quot;);</span>
+<span class="fc" id="L74">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L75">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada cuando el rol autenticado no tiene permiso sobre el recurso
+     * @return {@code 403} (RNF-06: la comprobación siempre ocurre del lado del servidor)
+     */
     @ExceptionHandler(AccessDeniedException.class)
     public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
-<span class="fc" id="L60">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L84">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.FORBIDDEN, &quot;No tiene permisos para acceder a este recurso&quot;);
-<span class="fc" id="L62">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/AccesoDenegado&quot;));</span>
-<span class="fc" id="L63">        pd.setTitle(&quot;Forbidden&quot;);</span>
-<span class="fc" id="L64">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L65">        return pd;</span>
+<span class="fc" id="L86">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/AccesoDenegado&quot;));</span>
+<span class="fc" id="L87">        pd.setTitle(&quot;Forbidden&quot;);</span>
+<span class="fc" id="L88">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L89">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada cuando el cuerpo de la petición falta o no es JSON válido
+     * @return {@code 400}
+     */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleCuerpoIlegible(HttpMessageNotReadableException ex) {
-<span class="fc" id="L70">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L98">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.BAD_REQUEST,
                 &quot;El cuerpo de la peticion falta o no tiene el formato esperado&quot;);
-<span class="fc" id="L73">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/CuerpoIlegible&quot;));</span>
-<span class="fc" id="L74">        pd.setTitle(&quot;Bad Request&quot;);</span>
-<span class="fc" id="L75">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L76">        return pd;</span>
+<span class="fc" id="L101">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/CuerpoIlegible&quot;));</span>
+<span class="fc" id="L102">        pd.setTitle(&quot;Bad Request&quot;);</span>
+<span class="fc" id="L103">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L104">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada cuando falta un parámetro de consulta obligatorio
+     * @return {@code 400} con el nombre del parámetro faltante en {@code parametro}
+     */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ProblemDetail handleParametroFaltante(MissingServletRequestParameterException ex) {
-<span class="fc" id="L81">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L113">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.BAD_REQUEST,
-<span class="fc" id="L83">                &quot;Falta el parametro obligatorio '&quot; + ex.getParameterName() + &quot;'&quot;);</span>
-<span class="fc" id="L84">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/ParametroFaltante&quot;));</span>
-<span class="fc" id="L85">        pd.setTitle(&quot;Bad Request&quot;);</span>
-<span class="fc" id="L86">        pd.setProperty(&quot;parametro&quot;, ex.getParameterName());</span>
-<span class="fc" id="L87">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L88">        return pd;</span>
+<span class="fc" id="L115">                &quot;Falta el parametro obligatorio '&quot; + ex.getParameterName() + &quot;'&quot;);</span>
+<span class="fc" id="L116">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/ParametroFaltante&quot;));</span>
+<span class="fc" id="L117">        pd.setTitle(&quot;Bad Request&quot;);</span>
+<span class="fc" id="L118">        pd.setProperty(&quot;parametro&quot;, ex.getParameterName());</span>
+<span class="fc" id="L119">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L120">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada cuando un parámetro no puede convertirse al tipo esperado
+     *           (ej. texto no numérico en un identificador)
+     * @return {@code 400} con el nombre del parámetro inválido en {@code parametro}
+     */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ProblemDetail handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
-<span class="fc" id="L93">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L130">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.BAD_REQUEST,
-<span class="fc" id="L95">                &quot;El valor de '&quot; + ex.getName() + &quot;' no tiene el formato esperado&quot;);</span>
-<span class="fc" id="L96">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/ParametroInvalido&quot;));</span>
-<span class="fc" id="L97">        pd.setTitle(&quot;Bad Request&quot;);</span>
-<span class="fc" id="L98">        pd.setProperty(&quot;parametro&quot;, ex.getName());</span>
-<span class="fc" id="L99">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L100">        return pd;</span>
+<span class="fc" id="L132">                &quot;El valor de '&quot; + ex.getName() + &quot;' no tiene el formato esperado&quot;);</span>
+<span class="fc" id="L133">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/ParametroInvalido&quot;));</span>
+<span class="fc" id="L134">        pd.setTitle(&quot;Bad Request&quot;);</span>
+<span class="fc" id="L135">        pd.setProperty(&quot;parametro&quot;, ex.getName());</span>
+<span class="fc" id="L136">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L137">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada cuando la ruta pedida no existe en la aplicación
+     * @return {@code 404} genérico
+     */
     @ExceptionHandler(NoResourceFoundException.class)
     public ProblemDetail handleRutaDesconocida(NoResourceFoundException ex) {
-<span class="fc" id="L105">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L146">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.NOT_FOUND, &quot;El servidor no reconoce esta operacion&quot;);
-<span class="fc" id="L107">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/RutaDesconocida&quot;));</span>
-<span class="fc" id="L108">        pd.setTitle(&quot;Not Found&quot;);</span>
-<span class="fc" id="L109">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L110">        return pd;</span>
+<span class="fc" id="L148">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/RutaDesconocida&quot;));</span>
+<span class="fc" id="L149">        pd.setTitle(&quot;Not Found&quot;);</span>
+<span class="fc" id="L150">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L151">        return pd;</span>
     }
 
+    // Hallazgo del escaneo ZAP autenticado (4.4): una ruta existente pedida
+    // con un metodo HTTP que no soporta (p. ej. GET a /api/auth/login, que
+    // solo acepta POST) caia en el catch-all de abajo y devolvia 500. No
+    // filtraba nada (el cuerpo ya era el ProblemDetail generico, sin traza),
+    // pero un metodo no soportado es un 405, no un error del servidor.
+    /**
+     * @param ex excepción lanzada cuando la ruta existe pero no admite el método HTTP usado
+     *           (ej. {@code GET} a un endpoint que solo acepta {@code POST})
+     * @return {@code 405}, con el método rechazado en el mensaje
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ProblemDetail handleMetodoNoSoportado(HttpRequestMethodNotSupportedException ex) {
+<span class="fc" id="L166">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+                HttpStatus.METHOD_NOT_ALLOWED,
+<span class="fc" id="L168">                &quot;El metodo &quot; + ex.getMethod() + &quot; no esta soportado en esta ruta&quot;);</span>
+<span class="fc" id="L169">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/MetodoNoSoportado&quot;));</span>
+<span class="fc" id="L170">        pd.setTitle(&quot;Method Not Allowed&quot;);</span>
+<span class="fc" id="L171">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L172">        return pd;</span>
+    }
+
+    /**
+     * Manejador de último recurso: cualquier excepción no cubierta por los
+     * manejadores anteriores llega acá. Registra el detalle en el log del
+     * servidor y devuelve un mensaje genérico, para no filtrar información
+     * interna en la respuesta.
+     *
+     * @param ex excepción no controlada
+     * @return {@code 500} genérico
+     */
     @ExceptionHandler(Exception.class)
     public ProblemDetail handleGeneral(Exception ex) {
-<span class="fc" id="L115">        log.error(&quot;Error no controlado&quot;, ex);</span>
-<span class="fc" id="L116">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L186">        log.error(&quot;Error no controlado&quot;, ex);</span>
+<span class="fc" id="L187">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
                 HttpStatus.INTERNAL_SERVER_ERROR, &quot;Error interno del servidor&quot;);
-<span class="fc" id="L118">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Interno&quot;));</span>
-<span class="fc" id="L119">        pd.setTitle(&quot;Internal Server Error&quot;);</span>
-<span class="fc" id="L120">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L121">        return pd;</span>
+<span class="fc" id="L189">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/Interno&quot;));</span>
+<span class="fc" id="L190">        pd.setTitle(&quot;Internal Server Error&quot;);</span>
+<span class="fc" id="L191">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L192">        return pd;</span>
     }
 
+    /**
+     * @param ex excepción lanzada por una regla de negocio incumplida en la capa de servicio
+     * @return {@code 400} con el mensaje de la excepción como detalle
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public ProblemDetail handleIllegalArgument(IllegalArgumentException ex) {
-<span class="fc" id="L126">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
-<span class="fc" id="L127">                HttpStatus.BAD_REQUEST, ex.getMessage());</span>
-<span class="fc" id="L128">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/ReglaDeNegocio&quot;));</span>
-<span class="fc" id="L129">        pd.setTitle(&quot;Bad Request&quot;);</span>
-<span class="fc" id="L130">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
-<span class="fc" id="L131">        return pd;</span>
+<span class="fc" id="L201">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(</span>
+<span class="fc" id="L202">                HttpStatus.BAD_REQUEST, ex.getMessage());</span>
+<span class="fc" id="L203">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/ReglaDeNegocio&quot;));</span>
+<span class="fc" id="L204">        pd.setTitle(&quot;Bad Request&quot;);</span>
+<span class="fc" id="L205">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L206">        return pd;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

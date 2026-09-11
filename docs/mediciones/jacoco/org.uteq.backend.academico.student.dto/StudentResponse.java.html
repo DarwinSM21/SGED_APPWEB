@@ -22,5 +22,20 @@ import java.time.LocalDate;
         String abreviaturaPosicion,
         Boolean activo,
         Instant createdAt
-) {}
+) {
+    /**
+     * RF-11b / hallazgo H-06: {@code peso} y {@code altura} son datos de salud
+     * de un menor y su lectura se restringe a {@code ADMINISTRADOR} y
+     * {@code ENTRENADOR} (cuerpo técnico). Esta copia los omite para el resto
+     * de roles con acceso a la ficha ({@code RECEPCIONISTA}).
+     *
+     * @return una copia de esta respuesta con {@code peso} y {@code altura} en {@code null}
+     */
+    public StudentResponse withoutPhysicalData() {
+<span class="fc" id="L35">        return new StudentResponse(idEstudiante, idPersona, idCategoria, idEstadoGeneral,</span>
+                nombrePersona, apellidoPersona, nombreCategoria, nombreEstadoGeneral,
+                codigoEstudiante, fechaIngreso, null, null, idPosicion, nombrePosicion,
+                abreviaturaPosicion, activo, createdAt);
+    }
+}
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

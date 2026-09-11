@@ -90,7 +90,7 @@ public class AuditService {
 <span class="fc" id="L90">                    .entidad(entidad)</span>
 <span class="fc" id="L91">                    .entidadId(entidadId)</span>
 <span class="fc" id="L92">                    .descripcion(descripcion)</span>
-<span class="fc" id="L93">                    .ip(resolverIp());</span>
+<span class="fc" id="L93">                    .ip(resolveIp());</span>
 
 <span class="fc" id="L95">            usuarioRepository.findByUsername(username).ifPresent(builder::usuario);</span>
 
@@ -158,7 +158,7 @@ public class AuditService {
         };
     }
 
-    private String resolverIp() {
+    private String resolveIp() {
 <span class="fc" id="L162">        var attrs = RequestContextHolder.getRequestAttributes();</span>
 <span class="fc bfc" id="L163" title="All 2 branches covered.">        if (attrs instanceof ServletRequestAttributes servletAttrs) {</span>
 <span class="fc" id="L164">            return servletAttrs.getRequest().getRemoteAddr();</span>

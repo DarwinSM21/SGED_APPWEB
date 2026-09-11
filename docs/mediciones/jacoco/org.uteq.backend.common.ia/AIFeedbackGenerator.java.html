@@ -2,15 +2,57 @@
 
 import java.util.List;
 
+/**
+ * Genera comentarios de apoyo (alineación, evaluación) a partir de un perfil
+ * seudonimizado (RNF-16: nunca se envía al proveedor un dato que identifique
+ * a un menor). Las implementaciones deben degradar de forma segura —{@link
+ * FeedbackResult#unavailable(String)}, nunca una excepción— si el proveedor
+ * falla o está deshabilitado.
+ */
 public interface AIFeedbackGenerator {
+
+    /**
+     * @param profile perfil seudonimizado del jugador
+     * @return el comentario generado, o un resultado no disponible si el proveedor falla
+     */
     FeedbackResult generatePlayerComment(AnonymousPlayerProfile profile);
+
+    /**
+     * @param lineup perfiles seudonimizados de los jugadores de la alineación
+     * @return el comentario generado, o un resultado no disponible si el proveedor falla
+     */
     FeedbackResult generateLineupComment(List&lt;AnonymousPlayerProfile&gt; lineup);
+
+    /**
+     * @return {@code true} si el proveedor está habilitado y configurado
+     */
     boolean isAvailable();
 
-<span class="fc" id="L10">    record FeedbackResult(String text, String reason) {</span>
-<span class="fc" id="L11">        public static FeedbackResult ok(String text) { return new FeedbackResult(text, null); }</span>
-<span class="fc" id="L12">        public static FeedbackResult unavailable(String reason) { return new FeedbackResult(null, reason); }</span>
-<span class="pc bpc" id="L13" title="1 of 4 branches missed.">        public boolean isAvailable() { return text != null &amp;&amp; !text.isBlank(); }</span>
+    /**
+     * Resultado de una generación de comentario: el texto, o —si no hubo
+     * texto— el motivo por el que no lo hay.
+     *
+     * @param text texto generado, o {@code null} si no se pudo generar
+     * @param reason motivo de la no disponibilidad, o {@code null} si {@code text} está presente
+     */
+<span class="fc" id="L38">    record FeedbackResult(String text, String reason) {</span>
+
+        /**
+         * @param text texto generado
+         * @return un resultado disponible con ese texto
+         */
+<span class="fc" id="L44">        public static FeedbackResult ok(String text) { return new FeedbackResult(text, null); }</span>
+
+        /**
+         * @param reason motivo por el que no hay texto disponible
+         * @return un resultado no disponible con ese motivo
+         */
+<span class="fc" id="L50">        public static FeedbackResult unavailable(String reason) { return new FeedbackResult(null, reason); }</span>
+
+        /**
+         * @return {@code true} si este resultado trae un texto generado
+         */
+<span class="pc bpc" id="L55" title="1 of 4 branches missed.">        public boolean isAvailable() { return text != null &amp;&amp; !text.isBlank(); }</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -15,22 +15,34 @@ import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 
+/**
+ * Da forma {@code ProblemDetail} (RFC 9457) a los dos rechazos que Spring
+ * Security resuelve antes de llegar a un controlador —sin sesión válida o
+ * sin permiso—, que de otro modo saldrían con el cuerpo por defecto del
+ * framework en vez del formato de error uniforme del resto de la API.
+ */
 @Configuration
-<span class="fc" id="L19">public class ProblemDetailsAuthHandlers {</span>
-<span class="fc" id="L20">    private static final ObjectMapper MAPPER = new ObjectMapper();</span>
+<span class="fc" id="L25">public class ProblemDetailsAuthHandlers {</span>
+<span class="fc" id="L26">    private static final ObjectMapper MAPPER = new ObjectMapper();</span>
 
+    /**
+     * @return el manejador que responde {@code 401} cuando la petición no trae una sesión válida
+     */
     @Bean
     public AuthenticationEntryPoint problemAuthEntryPoint() {
-<span class="fc" id="L24">        return (request, response, ex) -&gt;</span>
-<span class="fc" id="L25">                escribir(request, response, HttpStatus.UNAUTHORIZED,</span>
+<span class="fc" id="L33">        return (request, response, ex) -&gt;</span>
+<span class="fc" id="L34">                escribir(request, response, HttpStatus.UNAUTHORIZED,</span>
                         &quot;NoAutenticado&quot;,
                         &quot;Se requiere autenticación para acceder a este recurso&quot;);
     }
 
+    /**
+     * @return el manejador que responde {@code 403} cuando el rol autenticado no tiene permiso sobre el recurso
+     */
     @Bean
     public AccessDeniedHandler problemAccessDeniedHandler() {
-<span class="fc" id="L32">        return (request, response, ex) -&gt;</span>
-<span class="fc" id="L33">                escribir(request, response, HttpStatus.FORBIDDEN,</span>
+<span class="fc" id="L44">        return (request, response, ex) -&gt;</span>
+<span class="fc" id="L45">                escribir(request, response, HttpStatus.FORBIDDEN,</span>
                         &quot;AccesoDenegado&quot;,
                         &quot;No tiene permisos para acceder a este recurso&quot;);
     }
@@ -38,16 +50,16 @@ import java.time.Instant;
     private void escribir(HttpServletRequest request, HttpServletResponse response,
                           HttpStatus status, String tipo, String detalle)
             throws IOException {
-<span class="fc" id="L41">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detalle);</span>
-<span class="fc" id="L42">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
-<span class="fc" id="L43">        pd.setTitle(status.getReasonPhrase());</span>
-<span class="fc" id="L44">        pd.setInstance(URI.create(request.getRequestURI()));</span>
-<span class="fc" id="L45">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
+<span class="fc" id="L53">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detalle);</span>
+<span class="fc" id="L54">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
+<span class="fc" id="L55">        pd.setTitle(status.getReasonPhrase());</span>
+<span class="fc" id="L56">        pd.setInstance(URI.create(request.getRequestURI()));</span>
+<span class="fc" id="L57">        pd.setProperty(&quot;timestamp&quot;, Instant.now().toString());</span>
 
-<span class="fc" id="L47">        response.setStatus(status.value());</span>
-<span class="fc" id="L48">        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);</span>
-<span class="fc" id="L49">        response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
-<span class="fc" id="L50">        response.getWriter().write(MAPPER.writeValueAsString(pd));</span>
-<span class="fc" id="L51">    }</span>
+<span class="fc" id="L59">        response.setStatus(status.value());</span>
+<span class="fc" id="L60">        response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);</span>
+<span class="fc" id="L61">        response.setCharacterEncoding(&quot;UTF-8&quot;);</span>
+<span class="fc" id="L62">        response.getWriter().write(MAPPER.writeValueAsString(pd));</span>
+<span class="fc" id="L63">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

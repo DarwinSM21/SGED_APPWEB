@@ -60,8 +60,8 @@ public class PaymentService {
     @Transactional
     public List&lt;Payment&gt; registerMembership(Long idEstudiante, int anio, List&lt;Integer&gt; meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-<span class="fc" id="L63">        Student estudiante = buscarEstudiante(idEstudiante);</span>
-<span class="fc" id="L64">        UserAccount registrador = buscarUsuario(usernameRegistrador);</span>
+<span class="fc" id="L63">        Student estudiante = findStudent(idEstudiante);</span>
+<span class="fc" id="L64">        UserAccount registrador = findUser(usernameRegistrador);</span>
 
 <span class="fc" id="L66">        List&lt;Integer&gt; mesesUnicos = meses.stream().distinct().sorted().toList();</span>
 <span class="fc bfc" id="L67" title="All 2 branches covered.">        for (Integer mes : mesesUnicos) {</span>
@@ -101,8 +101,8 @@ public class PaymentService {
             descripcionSpel = &quot;'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'&quot;)
     @Transactional
     public Payment registerDaily(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-<span class="fc" id="L104">        Student estudiante = buscarEstudiante(idEstudiante);</span>
-<span class="fc" id="L105">        UserAccount registrador = buscarUsuario(usernameRegistrador);</span>
+<span class="fc" id="L104">        Student estudiante = findStudent(idEstudiante);</span>
+<span class="fc" id="L105">        UserAccount registrador = findUser(usernameRegistrador);</span>
 
 <span class="fc" id="L107">        return pagoRepository.save(Payment.builder()</span>
 <span class="fc" id="L108">                .estudiante(estudiante)</span>
@@ -214,17 +214,17 @@ public class PaymentService {
         }
 
 <span class="fc" id="L216">        pago.setAnuladoEn(java.time.OffsetDateTime.now());</span>
-<span class="fc" id="L217">        pago.setAnuladoPor(buscarUsuario(usernameAnulador));</span>
+<span class="fc" id="L217">        pago.setAnuladoPor(findUser(usernameAnulador));</span>
 <span class="fc" id="L218">        pago.setMotivoAnulacion(motivo);</span>
 <span class="fc" id="L219">        return pagoRepository.save(pago);</span>
     }
 
-    private Student buscarEstudiante(Long id) {
+    private Student findStudent(Long id) {
 <span class="fc" id="L223">        return estudianteRepository.findById(id)</span>
 <span class="fc" id="L224">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
     }
 
-    private UserAccount buscarUsuario(String username) {
+    private UserAccount findUser(String username) {
 <span class="fc" id="L228">        return usuarioRepository.findByUsername(username)</span>
 <span class="fc" id="L229">                .orElseThrow(() -&gt; new IllegalStateException(&quot;Usuario autenticado no encontrado: &quot; + username));</span>
     }

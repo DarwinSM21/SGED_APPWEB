@@ -5,23 +5,40 @@ import org.springframework.http.ProblemDetail;
 
 import java.net.URI;
 
+/**
+ * Excepción base de negocio con su propio estado HTTP, para que
+ * {@link GlobalExceptionHandler} la traduzca a un {@code ProblemDetail} sin
+ * caer en el manejador genérico de 500.
+ */
 public class ApiException extends RuntimeException {
     private final HttpStatus status;
 
+    /**
+     * @param status estado HTTP a devolver
+     * @param mensaje detalle legible del error
+     */
     public ApiException(HttpStatus status, String mensaje) {
-<span class="fc" id="L12">        super(mensaje);</span>
-<span class="fc" id="L13">        this.status = status;</span>
-<span class="fc" id="L14">    }</span>
+<span class="fc" id="L21">        super(mensaje);</span>
+<span class="fc" id="L22">        this.status = status;</span>
+<span class="fc" id="L23">    }</span>
 
+    /**
+     * @return el estado HTTP asociado a esta excepción
+     */
     public HttpStatus getStatus() {
-<span class="fc" id="L17">        return status;</span>
+<span class="fc" id="L29">        return status;</span>
     }
 
+    /**
+     * @param tipo segmento final de la URL de {@code type} (RFC 9457)
+     * @param titulo título legible del problema
+     * @return el detalle del problema con el estado, tipo y título indicados
+     */
     public ProblemDetail toProblemDetail(String tipo, String titulo) {
-<span class="fc" id="L21">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, getMessage());</span>
-<span class="fc" id="L22">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
-<span class="fc" id="L23">        pd.setTitle(titulo);</span>
-<span class="fc" id="L24">        return pd;</span>
+<span class="fc" id="L38">        ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, getMessage());</span>
+<span class="fc" id="L39">        pd.setType(URI.create(&quot;https://sged.uteq.edu.ec/errores/&quot; + tipo));</span>
+<span class="fc" id="L40">        pd.setTitle(titulo);</span>
+<span class="fc" id="L41">        return pd;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

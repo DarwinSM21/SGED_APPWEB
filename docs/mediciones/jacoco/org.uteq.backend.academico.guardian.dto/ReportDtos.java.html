@@ -13,9 +13,13 @@ public final class ReportDtos {
             String categoria
     ) {}
 
-<span class="fc" id="L16">    public record CriterionAverageResponse(String criterio, Double promedio) {}</span>
+    /**
+     * @param criterio nombre del criterio de evaluación
+     * @param promedio promedio de ese criterio en el período del reporte, o {@code null} sin evaluaciones
+     */
+<span class="fc" id="L20">    public record CriterionAverageResponse(String criterio, Double promedio) {}</span>
 
-<span class="fc" id="L18">    public record InjurySummaryResponse(</span>
+<span class="fc" id="L22">    public record InjurySummaryResponse(</span>
             Long idLesion,
             String descripcion,
             LocalDate fechaLesion,
@@ -24,7 +28,7 @@ public final class ReportDtos {
             boolean activa
     ) {}
 
-<span class="fc" id="L27">    public record StudentReportResponse(</span>
+<span class="fc" id="L31">    public record StudentReportResponse(</span>
             Long idEstudiante,
             String nombreCompleto,
             String categoria,
@@ -33,7 +37,7 @@ public final class ReportDtos {
             BigDecimal porcentajeAsistencia
     ) {}
 
-<span class="fc" id="L36">    public record ReportCommentResponse(</span>
+<span class="fc" id="L40">    public record ReportCommentResponse(</span>
             String comentario,
             boolean disponible,
             String motivo

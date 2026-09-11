@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailVerificationTokenStore.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth</a> &gt; <span class="el_source">EmailVerificationTokenStore.java</span></div><h1>EmailVerificationTokenStore.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Component;
+
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
+import java.util.HexFormat;
+import java.util.Optional;
+
+/**
+ * Almacén en Redis de los tokens de confirmación de correo (RNF-26 / H-09).
+ *
+ * &lt;p&gt;Mismo patrón que {@link PasswordResetTokenStore}: el token que viaja en el
+ * enlace nunca se guarda tal cual, en Redis vive su SHA-256. Se mantienen dos
+ * claves por token:
+ * &lt;ul&gt;
+ *   &lt;li&gt;{@code emailverify:{sha256}} → id de la persona, para resolve el enlace;&lt;/li&gt;
+ *   &lt;li&gt;{@code emailverify:persona:{id}} → {sha256}, para invalidar el token
+ *       anterior de esa persona cuando se emite uno nuevo (p. ej. al volver a
+ *       cambiar el correo).&lt;/li&gt;
+ * &lt;/ul&gt;
+ * El token es de un solo uso: {@link #consume} borra ambas claves.
+ */
+@Component
+@RequiredArgsConstructor
+public class EmailVerificationTokenStore {
+
+    private static final String TOKEN_PREFIX = &quot;emailverify:&quot;;
+    private static final String PERSONA_PREFIX = &quot;emailverify:persona:&quot;;
+
+    private final StringRedisTemplate redis;
+
+    /**
+     * Guarda un token para una persona, invalidando el que tuviera antes.
+     *
+     * @param idPersona  identificador de la persona dueña del token
+     * @param tokenCrudo el token que viajará en el enlace de confirmación
+     * @param ttl        vigencia de ambas claves
+     */
+    public void save(Long idPersona, String tokenCrudo, Duration ttl) {
+<span class="fc" id="L45">        String hash = sha256(tokenCrudo);</span>
+<span class="fc" id="L46">        String personaKey = PERSONA_PREFIX + idPersona;</span>
+
+<span class="fc" id="L48">        String hashAnterior = redis.opsForValue().get(personaKey);</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">        if (hashAnterior != null) {</span>
+<span class="fc" id="L50">            redis.delete(TOKEN_PREFIX + hashAnterior);</span>
+        }
+
+<span class="fc" id="L53">        redis.opsForValue().set(TOKEN_PREFIX + hash, String.valueOf(idPersona), ttl);</span>
+<span class="fc" id="L54">        redis.opsForValue().set(personaKey, hash, ttl);</span>
+<span class="fc" id="L55">    }</span>
+
+    /**
+     * Resuelve la persona asociada a un token vigente.
+     *
+     * @param tokenCrudo token recibido en la petición de confirmación
+     * @return el id de la persona, o {@link Optional#empty()} si el token no
+     *         existe, expiró o ya se consumió
+     */
+    public Optional&lt;Long&gt; resolve(String tokenCrudo) {
+<span class="fc bfc" id="L65" title="All 4 branches covered.">        if (tokenCrudo == null || tokenCrudo.isBlank()) {</span>
+<span class="fc" id="L66">            return Optional.empty();</span>
+        }
+<span class="fc" id="L68">        String valor = redis.opsForValue().get(TOKEN_PREFIX + sha256(tokenCrudo));</span>
+<span class="fc bfc" id="L69" title="All 2 branches covered.">        return valor == null ? Optional.empty() : Optional.of(Long.valueOf(valor));</span>
+    }
+
+    /**
+     * Invalida un token y su índice de persona. Idempotente.
+     *
+     * @param tokenCrudo token a consume
+     */
+    public void consume(String tokenCrudo) {
+<span class="fc" id="L78">        String hash = sha256(tokenCrudo);</span>
+<span class="fc" id="L79">        String idPersona = redis.opsForValue().get(TOKEN_PREFIX + hash);</span>
+<span class="fc" id="L80">        redis.delete(TOKEN_PREFIX + hash);</span>
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        if (idPersona != null) {</span>
+<span class="fc" id="L82">            redis.delete(PERSONA_PREFIX + idPersona);</span>
+        }
+<span class="fc" id="L84">    }</span>
+
+    private static String sha256(String valor) {
+        try {
+<span class="fc" id="L88">            byte[] digest = MessageDigest.getInstance(&quot;SHA-256&quot;)</span>
+<span class="fc" id="L89">                    .digest(valor.getBytes(StandardCharsets.UTF_8));</span>
+<span class="fc" id="L90">            return HexFormat.of().formatHex(digest);</span>
+<span class="nc" id="L91">        } catch (NoSuchAlgorithmException e) {</span>
+<span class="nc" id="L92">            throw new IllegalStateException(&quot;SHA-256 no disponible en la JVM&quot;, e);</span>
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

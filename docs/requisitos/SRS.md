@@ -1,12 +1,14 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.7 (Entrega Final, etiqueta `v1.0.3` —
-revisado el 2026-09-10 tras la revisión del SRS v1.6 del docente (M1–M3):
-se mueve la etiqueta al commit de cierre real, se explica el vocabulario
-de estados y se especifica **e implementa** el último hallazgo ético
-abierto (H-09 → RNF-26, doble opt-in del correo). El commit defendido es
-el que apunta la etiqueta (`git rev-parse v1.0.3^{commit}`)).
+**Versión del documento:** 1.8 (Entrega Final, etiqueta `v1.0.0` —
+revisado el 2026-09-11 contra la rúbrica del examen final: se mueve la
+etiqueta `v1.0.0` (la que el docente revisa según esa rúbrica) al commit
+de cierre real, se completa el renombrado a inglés de los métodos fuera
+de `deportivo`, se corrige una referencia `{@link}` que rompía
+`mvn javadoc:javadoc`, y se regenera la cobertura para que la cifra citada
+aquí coincida con `docs/mediciones/jacoco/jacoco.csv`. El commit defendido
+es el que apunta la etiqueta (`git rev-parse v1.0.0^{commit}`)).
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
 
@@ -72,7 +74,8 @@ entregada.
 > asociada que pasa en integración continua *y* la construcción está
 > dentro del umbral de cobertura obligatorio — `mvn verify` rompe la
 > compilación por debajo del 70 % en líneas y ramas; la corrida de cierre
-> da **84,66 % de líneas y 71,24 % de ramas** (`docs/mediciones/jacoco/jacoco.csv`).
+> da **88,35 % de líneas y 74,20 % de ramas** (`docs/mediciones/jacoco/jacoco.csv`,
+> regenerado 2026-09-11 sobre 665 pruebas sin fallos, 216 clases).
 > La columna **Método de verificación** de cada requisito y la clase o
 > método de prueba citados en su fila de la matriz permiten comprobar ese
 > respaldo requisito por requisito. Del corpus de **79 filas**: **75
@@ -1999,12 +2002,15 @@ previas se mantiene en `docs/observaciones/`.
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
 | 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (supresión / anonimización): procedimiento almacenado versionado `academico.sp_anonimizar_estudiante` (migración `V27`) + `POST /api/estudiantes/{id}/anonimizar` restringido a ADMINISTRADOR y auditado (`@Audited "ANONIMIZAR"`) — sustituye los datos identificativos de la persona por valores neutros, borra el texto libre sobre el menor y da de baja lógica la ficha, conservando FKs y agregados → ✅ Implementado. Con esto cierran **H-01**, **H-02**, **H-03** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
 | 1.7 | 2026-09-10 | Entrega Final (`v1.0.3`) | Revisión del SRS v1.6 del docente (**M1–M3**). **M1** — la etiqueta pasa de `v1.0.2` (commit `bd16891`, que quedó ~30 confirmaciones por detrás de `main`) a **`v1.0.3`** sobre el commit de cierre real; cabecera, §7, `docs/informe/caratula-standalone.tex`, `docs/informe/main.tex` y `README.md` actualizados. **M2** — §1.3 explica por qué el vocabulario de estados tiene tres valores y no cuatro: "Implementado" ya exige prueba automatizada que pasa en CI dentro del umbral de cobertura (`mvn verify`, 84,66 % líneas / 71,24 % ramas), de modo que equivale a "verificado"; se añade el recuento del corpus (75 Implementado / 3 Modelado / 1 Planificado sobre 79 filas). **M3** — §3.6 deja de estar marcada "(nuevo en esta revisión)" y se referencia desde el encabezado de §3 y desde RF-48; RF-48 gana una línea formal **"Condición de cierre"**; nuevo **RNF-26** — verificación del correo de contacto por doble opt-in, que cierra el hallazgo **H-09**. **Implementado el 2026-09-10:** migración `V28` (`seguridad.personas.correo_verificado`, con *grandfathering* de las filas existentes), `EmailVerificationTokenStore` (Redis), `EmailVerificationService` disparado al crear una persona y al cambiar su correo, `POST /api/auth/confirmar-correo`, pantalla `/#/confirmar-correo`, y compuerta en `PasswordResetService` (no se emite el enlace de RF-37 a un correo no verificado); ~20 pruebas nuevas (backend + frontend). `ETHICS.md` 1.7→1.8 (§4 retitulada "Hallazgos y estado de cierre", H-04 y H-09 reescritos, H-09 marcado resuelto). Matriz de trazabilidad: 79 filas (RNF-26). |
+| 1.8 | 2026-09-11 | Entrega Final (`v1.0.0`) | Revisión contra `Rubrica_ExamenFinal_SGED.pdf` (18 puntos, criterios de piso). **Punto 6** — la etiqueta que el docente revisa según esa rúbrica es `v1.0.0` (no `v1.0.3`); estaba 403 commits detrás de `main`, se movió al commit de cierre real. **E1** — se completa el renombrado a inglés de los ~40 métodos en español que quedaban fuera de `deportivo` (`seguridad.auth`, `academico`, `reportes`, `seguridad.audit`/`user`); `deportivo` queda para el resto del equipo por acuerdo explícito de reparto. **E2** — se corrige `{@link PasswordResetService#solicitar}` en `EmailVerificationService`, que citaba el nombre anterior al rename y rompía `mvn javadoc:javadoc`; el comando vuelve a compilar sin errores. **Punto 2** — la cifra de cobertura citada en §1.3 no coincidía con `docs/mediciones/jacoco/jacoco.csv` (84,66 %/71,24 % citado vs. 87,47 %/72,10 % en el CSV committeado); se regeneran ambos desde la misma corrida (665 pruebas, 0 fallos, 216 clases) y quedan sincronizados en 88,35 % líneas / 74,20 % ramas. |
 
 ## 7. Aprobación
 
 Este documento constituye la especificación de requisitos acordada para la
-Entrega Final del proyecto SGED, cerrada en la etiqueta `v1.0.3` del
-repositorio (`git rev-parse v1.0.3^{commit}` resuelve el commit defendido).
+Entrega Final del proyecto SGED, cerrada en la etiqueta `v1.0.0` del
+repositorio — la que revisa el docente según `Rubrica_ExamenFinal_SGED.pdf`
+(`git rev-parse v1.0.0^{commit}` resuelve el commit defendido; `v1.0.3`
+apunta al mismo commit).
 
 | Rol | Nombre | Firma | Fecha |
 |---|---|---|---|

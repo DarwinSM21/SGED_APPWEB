@@ -20,6 +20,16 @@ public class Consent {
     public static final String ALCANCE_NOTIFICACIONES_ASISTENCIA = &quot;NOTIFICACIONES_ASISTENCIA&quot;;
     public static final String ALCANCE_NOTIFICACIONES_LESION = &quot;NOTIFICACIONES_LESION&quot;;
 
+    /**
+     * Alcance para el tratamiento de {@code peso} y {@code altura} del
+     * estudiante (RF-11b / hallazgo H-06 de {@code docs/etica/ETHICS.md}):
+     * datos físico-deportivos, separado del consentimiento general de
+     * inscripción. El {@code ADMINISTRADOR} lo registra por el mismo endpoint
+     * de RF-39 ({@code POST /api/consentimientos} con este {@code alcance})
+     * cuando el representante autoriza el seguimiento físico-deportivo.
+     */
+    public static final String ALCANCE_DATOS_FISICO_DEPORTIVOS = &quot;DATOS_FISICO_DEPORTIVOS&quot;;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = &quot;id_consentimiento&quot;)
@@ -50,14 +60,17 @@ public class Consent {
     @JoinColumn(name = &quot;revocado_por_id_usuario&quot;)
     private UserAccount revocadoPor;
 
+    /**
+     * @return {@code true} si el consentimiento no fue revocado
+     */
     @Transient
     public boolean isActive() {
-<span class="fc bfc" id="L55" title="All 2 branches covered.">        return revocadoEn == null;</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">        return revocadoEn == null;</span>
     }
 
     @PrePersist
     protected void onCreate() {
-<span class="fc bfc" id="L60" title="All 2 branches covered.">        if (this.otorgadoEn == null) this.otorgadoEn = OffsetDateTime.now();</span>
-<span class="fc" id="L61">    }</span>
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (this.otorgadoEn == null) this.otorgadoEn = OffsetDateTime.now();</span>
+<span class="fc" id="L74">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

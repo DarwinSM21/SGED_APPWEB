@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SmtpEmailVerificationMailer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.mail</a> &gt; <span class="el_source">SmtpEmailVerificationMailer.java</span></div><h1>SmtpEmailVerificationMailer.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.mail;
+
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Component;
+
+/**
+ * Envía el enlace de confirmación de correo por SMTP (RNF-26 / RNF-15). Activa
+ * solo con {@code mail.enabled=true}; la configuración del proveedor está en
+ * {@code spring.mail.*}.
+ *
+ * &lt;p&gt;Un fallo del proveedor se registra pero &lt;em&gt;no se propaga&lt;/em&gt;: el alta de
+ * la persona no debe abortar porque el correo de confirmación no salga. La
+ * persona queda sin verificar y puede pedir un enlace nuevo.
+ */
+@Component
+@ConditionalOnProperty(name = &quot;mail.enabled&quot;, havingValue = &quot;true&quot;)
+@RequiredArgsConstructor
+public class SmtpEmailVerificationMailer implements EmailVerificationMailer {
+
+<span class="fc" id="L27">    private static final Logger log = LoggerFactory.getLogger(SmtpEmailVerificationMailer.class);</span>
+
+    private final JavaMailSender mailSender;
+
+    @Value(&quot;${mail.from}&quot;)
+    private String remitente;
+
+    @Value(&quot;${mail.verify-token-ttl-hours:48}&quot;)
+    private int horasVigencia;
+
+    /**
+     * @param correo correo destinatario del enlace de confirmación
+     * @param url enlace de confirmación de un solo uso
+     */
+    @Override
+    public void sendConfirmation(String correo, String url) {
+        try {
+<span class="fc" id="L44">            MimeMessage mensaje = mailSender.createMimeMessage();</span>
+<span class="fc" id="L45">            MimeMessageHelper helper = new MimeMessageHelper(mensaje, false, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L46">            helper.setFrom(remitente);</span>
+<span class="fc" id="L47">            helper.setTo(correo);</span>
+<span class="fc" id="L48">            helper.setSubject(&quot;Confirma tu correo en SGED&quot;);</span>
+<span class="fc" id="L49">            helper.setText(htmlBody(url), true);</span>
+<span class="fc" id="L50">            mailSender.send(mensaje);</span>
+<span class="fc" id="L51">            log.info(&quot;EMAILVERIFY correo de confirmación enviado a {}&quot;, correo);</span>
+<span class="fc" id="L52">        } catch (Exception e) {</span>
+<span class="fc" id="L53">            log.error(&quot;EMAILVERIFY no se pudo enviar el correo de confirmación a {}: {}&quot;,</span>
+<span class="fc" id="L54">                    correo, e.getMessage());</span>
+<span class="fc" id="L55">        }</span>
+<span class="fc" id="L56">    }</span>
+
+    private String htmlBody(String url) {
+<span class="fc" id="L59">        return &quot;&quot;&quot;</span>
+                &lt;p&gt;Se registró este correo en una cuenta de SGED.&lt;/p&gt;
+                &lt;p&gt;&lt;a href=&quot;%s&quot;&gt;Confirmar que este correo es mío&lt;/a&gt;&lt;/p&gt;
+                &lt;p&gt;El enlace vence en %d horas. Mientras el correo no se confirme,
+                no se podrá enviar a esta dirección el enlace de restablecimiento
+                de contraseña.&lt;/p&gt;
+<span class="fc" id="L65">                &quot;&quot;&quot;.formatted(url, horasVigencia);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

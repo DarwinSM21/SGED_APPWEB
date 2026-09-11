@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SessionEpochService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">SessionEpochService.java</span></div><h1>SessionEpochService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Locale;
+import java.util.Optional;
+
+/**
+ * Época de invalidación de sesiones por usuario (RF-37). Al restablecer su
+ * contraseña se marca el instante actual; a partir de ahí, cualquier token
+ * —de acceso o de refresco— emitido antes de esa marca deja de ser aceptado,
+ * lo que mata todas las sesiones abiertas del usuario, incluidas las de
+ * refresh token, que de otro modo no se pueden revocar.
+ *
+ * &lt;p&gt;La marca vive en Redis con un TTL igual a la vida del refresh token: más
+ * allá de eso ya no queda ningún token que pudiera ser anterior a ella.
+ */
+@Service
+@RequiredArgsConstructor
+public class SessionEpochService {
+
+    private static final String PREFIX = &quot;sec:pwepoch:&quot;;
+
+    private final StringRedisTemplate redis;
+
+    @Value(&quot;${security.jwt.refresh-expiration-ms}&quot;)
+    private long refreshExpirationMs;
+
+    /**
+     * Marca &quot;ahora&quot; como época de invalidación del usuario.
+     *
+     * @param username usuario cuyas sesiones previas quedan invalidadas
+     */
+    public void mark(String username) {
+<span class="fc" id="L40">        redis.opsForValue().set(</span>
+<span class="fc" id="L41">                PREFIX + normalize(username),</span>
+<span class="fc" id="L42">                Long.toString(Instant.now().getEpochSecond()),</span>
+<span class="fc" id="L43">                Duration.ofMillis(refreshExpirationMs));</span>
+<span class="fc" id="L44">    }</span>
+
+    /**
+     * Época de invalidación del usuario, si tiene una vigente.
+     *
+     * @param username usuario a consultar
+     * @return el instante (epoch en segundos) del último restablecimiento
+     */
+    public Optional&lt;Long&gt; epochOf(String username) {
+<span class="fc" id="L53">        String valor = redis.opsForValue().get(PREFIX + normalize(username));</span>
+<span class="fc bfc" id="L54" title="All 2 branches covered.">        return valor == null ? Optional.empty() : Optional.of(Long.parseLong(valor));</span>
+    }
+
+    /**
+     * Indica si un token quedó invalidado por un restablecimiento posterior
+     * a su emisión.
+     *
+     * @param username    sujeto del token
+     * @param emitidoEn   instante de emisión ({@code iat}) del token
+     * @return {@code true} si hubo un restablecimiento después de esa emisión
+     */
+    public boolean invalidatedByReset(String username, Instant emitidoEn) {
+<span class="fc bfc" id="L66" title="All 2 branches covered.">        if (emitidoEn == null) {</span>
+<span class="fc" id="L67">            return false;</span>
+        }
+<span class="fc" id="L69">        return epochOf(username)</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">                .map(epoca -&gt; emitidoEn.getEpochSecond() &lt; epoca)</span>
+<span class="fc" id="L71">                .orElse(false);</span>
+    }
+
+    private static String normalize(String username) {
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">        return username == null ? &quot;&quot; : username.trim().toLowerCase(Locale.ROOT);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

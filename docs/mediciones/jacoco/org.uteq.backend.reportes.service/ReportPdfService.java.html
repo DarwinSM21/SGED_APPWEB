@@ -56,7 +56,7 @@ import java.util.List;
 <span class="fc bfc" id="L56" title="All 2 branches covered.">            if (filas.isEmpty()) {</span>
 <span class="fc" id="L57">                documento.add(new Paragraph(&quot;No hay datos para los filtros seleccionados.&quot;, FUENTE_CELDA));</span>
             } else {
-<span class="fc" id="L59">                documento.add(construirTabla(encabezados, filas));</span>
+<span class="fc" id="L59">                documento.add(buildTable(encabezados, filas));</span>
             }
 
 <span class="fc" id="L62">            documento.add(new Paragraph(&quot; &quot;));</span>
@@ -70,7 +70,7 @@ import java.util.List;
         }
     }
 
-    private PdfPTable construirTabla(List&lt;String&gt; encabezados, List&lt;List&lt;String&gt;&gt; filas) {
+    private PdfPTable buildTable(List&lt;String&gt; encabezados, List&lt;List&lt;String&gt;&gt; filas) {
 <span class="fc" id="L74">        PdfPTable tabla = new PdfPTable(encabezados.size());</span>
 <span class="fc" id="L75">        tabla.setWidthPercentage(100);</span>
 

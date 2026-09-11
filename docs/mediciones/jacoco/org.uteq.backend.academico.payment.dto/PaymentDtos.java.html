@@ -44,25 +44,28 @@ public final class PaymentDtos {
             String anuladoPor,
             String motivoAnulacion
     ) {
+        /**
+         * @return {@code true} si el pago no fue anulado
+         */
         public boolean vigente() {
-<span class="nc bnc" id="L48" title="All 2 branches missed.">            return anuladoEn == null;</span>
+<span class="nc bnc" id="L51" title="All 2 branches missed.">            return anuladoEn == null;</span>
         }
     }
 
-<span class="nc" id="L52">    public record CancelPaymentRequest(</span>
+<span class="nc" id="L55">    public record CancelPaymentRequest(</span>
             @NotBlank(message = &quot;Indica por qué se anula el pago&quot;)
             @Size(max = 255, message = &quot;El motivo no puede superar los 255 caracteres&quot;)
             String motivo
     ) {}
 
-<span class="fc" id="L58">    public record MonthlyIncomeResponse(</span>
+<span class="fc" id="L61">    public record MonthlyIncomeResponse(</span>
             Integer anio,
             Integer mes,
             BigDecimal total,
             Long cantidadPagos
     ) {}
 
-<span class="nc" id="L65">    public record IncomeHistoryResponse(</span>
+<span class="nc" id="L68">    public record IncomeHistoryResponse(</span>
             List&lt;MonthlyIncomeResponse&gt; meses,
             BigDecimal total,
             BigDecimal promedioMensual,

@@ -12,13 +12,26 @@ public final class MyTeamDtos {
             String descripcion
     ) {}
 
-<span class="fc" id="L15">    public record PositionResponse(String nombre, String abreviatura) {}</span>
+    /**
+     * @param nombre nombre de la posición
+     * @param abreviatura abreviatura de la posición (ej. para el marcador del equipo)
+     */
+<span class="fc" id="L19">    public record PositionResponse(String nombre, String abreviatura) {}</span>
 
-<span class="fc" id="L17">    public record AssignedCoachResponse(String nombre, String especialidad) {}</span>
+    /**
+     * @param nombre nombre del entrenador asignado
+     * @param especialidad especialidad del entrenador
+     */
+<span class="fc" id="L25">    public record AssignedCoachResponse(String nombre, String especialidad) {}</span>
 
-<span class="fc" id="L19">    public record TeammateResponse(Long idEstudiante, String nombre, String posicion) {}</span>
+    /**
+     * @param idEstudiante identificador del compañero de equipo
+     * @param nombre nombre del compañero de equipo
+     * @param posicion posición del compañero, o {@code null} si no tiene una asignada
+     */
+<span class="fc" id="L32">    public record TeammateResponse(Long idEstudiante, String nombre, String posicion) {}</span>
 
-<span class="fc" id="L21">    public record MyTeamResponse(</span>
+<span class="fc" id="L34">    public record MyTeamResponse(</span>
             CategoryDetailResponse categoria,
             PositionResponse posicion,
             AssignedCoachResponse entrenador,

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ResetRequestLimitService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.security</a> &gt; <span class="el_source">ResetRequestLimitService.java</span></div><h1>ResetRequestLimitService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.security;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.stereotype.Service;
+import org.uteq.backend.common.exception.TooManyRequestsException;
+
+import java.time.Duration;
+import java.util.Locale;
+
+/**
+ * Límite de solicitudes de restablecimiento de contraseña (RF-37), sobre
+ * Redis y con el mismo patrón que {@link LoginAttemptService}: un count
+ * por clave con expiración fijada en el primer incremento.
+ *
+ * &lt;p&gt;Dos cuentas independientes:
+ * &lt;ul&gt;
+ *   &lt;li&gt;por identificador solicitado — frena el acoso a una cuenta concreta;&lt;/li&gt;
+ *   &lt;li&gt;por IP de origen — frena el uso del endpoint como emisor masivo de
+ *       correo.&lt;/li&gt;
+ * &lt;/ul&gt;
+ * Superar cualquiera de las dos corta la solicitud con {@code 429}, sin que
+ * la respuesta dependa de si la cuenta existe.
+ */
+@Service
+@RequiredArgsConstructor
+public class ResetRequestLimitService {
+
+    private static final String ID_PREFIX = &quot;pwreset_lim:id:&quot;;
+    private static final String IP_PREFIX = &quot;pwreset_lim:ip:&quot;;
+
+    private final StringRedisTemplate redis;
+
+    @Value(&quot;${security.reset.max-por-identificador:3}&quot;)
+    private int maxPorIdentificador;
+
+    @Value(&quot;${security.reset.ventana-identificador-minutos:15}&quot;)
+    private long ventanaIdentificadorMinutos;
+
+    @Value(&quot;${security.reset.max-por-ip:10}&quot;)
+    private int maxPorIp;
+
+    @Value(&quot;${security.reset.ventana-ip-minutos:60}&quot;)
+    private long ventanaIpMinutos;
+
+    /**
+     * Comprueba los dos límites antes de atender una solicitud.
+     *
+     * @param identificador username o correo tal como llegó en la petición
+     * @param ip            dirección remota del cliente
+     * @throws TooManyRequestsException si alguna de las dos cuentas ya alcanzó
+     *                                  su máximo dentro de la ventana
+     */
+    public void check(String identificador, String ip) {
+<span class="fc bfc" id="L56" title="All 2 branches covered.">        if (count(ID_PREFIX + normalize(identificador)) &gt;= maxPorIdentificador</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                || count(IP_PREFIX + ip) &gt;= maxPorIp) {</span>
+<span class="fc" id="L58">            throw new TooManyRequestsException(</span>
+                    &quot;Demasiadas solicitudes de restablecimiento. Intenta de nuevo más tarde.&quot;);
+        }
+<span class="fc" id="L61">    }</span>
+
+    /**
+     * Cuenta una solicitud atendida contra los dos contadores.
+     *
+     * @param identificador username o correo solicitado
+     * @param ip            dirección remota del cliente
+     */
+    public void record(String identificador, String ip) {
+<span class="fc" id="L70">        increment(ID_PREFIX + normalize(identificador), ventanaIdentificadorMinutos);</span>
+<span class="fc" id="L71">        increment(IP_PREFIX + ip, ventanaIpMinutos);</span>
+<span class="fc" id="L72">    }</span>
+
+    private long count(String clave) {
+<span class="fc" id="L75">        String valor = redis.opsForValue().get(clave);</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">        return valor == null ? 0L : Long.parseLong(valor);</span>
+    }
+
+    private void increment(String clave, long ventanaMinutos) {
+<span class="fc" id="L80">        Long total = redis.opsForValue().increment(clave);</span>
+<span class="pc bpc" id="L81" title="1 of 4 branches missed.">        if (total != null &amp;&amp; total == 1L) {</span>
+<span class="fc" id="L82">            redis.expire(clave, Duration.ofMinutes(ventanaMinutos));</span>
+        }
+<span class="fc" id="L84">    }</span>
+
+    private static String normalize(String identificador) {
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">        return identificador == null ? &quot;&quot; : identificador.trim().toLowerCase(Locale.ROOT);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

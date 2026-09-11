@@ -50,9 +50,9 @@ public class NotificationService {
      */
     @Transactional
     public void notifyAttendance(Student estudiante, String estadoAsistencia) {
-<span class="fc" id="L53">        sinTumbarElFlujoPrincipal(&quot;asistencia&quot;, () -&gt; {</span>
+<span class="fc" id="L53">        withoutBreakingMainFlow(&quot;asistencia&quot;, () -&gt; {</span>
 <span class="fc bfc" id="L54" title="All 2 branches covered.">            String estado = &quot;TARDE&quot;.equals(estadoAsistencia) ? &quot;con tardanza&quot; : &quot;a tiempo&quot;;</span>
-<span class="fc" id="L55">            crearParaCadaRepresentante(estudiante, Type.ASISTENCIA,</span>
+<span class="fc" id="L55">            createForEachGuardian(estudiante, Type.ASISTENCIA,</span>
                     Consent.ALCANCE_NOTIFICACIONES_ASISTENCIA,
 <span class="fc" id="L57">                    nombreCompleto(estudiante) + &quot; marcó asistencia hoy (&quot; + estado + &quot;).&quot;);</span>
 <span class="fc" id="L58">        });</span>
@@ -67,8 +67,8 @@ public class NotificationService {
      */
     @Transactional
     public void notifyInjury(Student estudiante, String descripcionLesion) {
-<span class="fc" id="L70">        sinTumbarElFlujoPrincipal(&quot;lesion&quot;, () -&gt;</span>
-<span class="fc" id="L71">                crearParaCadaRepresentante(estudiante, Type.LESION,</span>
+<span class="fc" id="L70">        withoutBreakingMainFlow(&quot;lesion&quot;, () -&gt;</span>
+<span class="fc" id="L71">                createForEachGuardian(estudiante, Type.LESION,</span>
                         Consent.ALCANCE_NOTIFICACIONES_LESION,
 <span class="fc" id="L73">                        &quot;Se registró una lesión para &quot; + nombreCompleto(estudiante) + &quot;: &quot; + descripcionLesion));</span>
 <span class="fc" id="L74">    }</span>
@@ -95,7 +95,7 @@ public class NotificationService {
      *                 {@code &quot;lesion&quot;})
      * @param efecto   el efecto de notificación a ejecutar
      */
-    private void sinTumbarElFlujoPrincipal(String contexto, Runnable efecto) {
+    private void withoutBreakingMainFlow(String contexto, Runnable efecto) {
         try {
 <span class="fc" id="L100">            efecto.run();</span>
 <span class="fc" id="L101">        } catch (RuntimeException e) {</span>
@@ -155,7 +155,7 @@ public class NotificationService {
 <span class="nc" id="L155">        notificacionRepository.save(notificacion);</span>
 <span class="nc" id="L156">    }</span>
 
-    private void crearParaCadaRepresentante(Student estudiante, Type tipo,
+    private void createForEachGuardian(Student estudiante, Type tipo,
                                             String alcanceRequerido, String mensaje) {
 <span class="fc" id="L160">        List&lt;Guardian&gt; representantes = vinculoRepository</span>
 <span class="fc" id="L161">                .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())</span>

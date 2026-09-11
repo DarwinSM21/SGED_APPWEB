@@ -4,13 +4,21 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
 
+/**
+ * Punto de entrada del backend de SGED. Habilita el escaneo automático de
+ * componentes de Spring Boot y la caché declarativa ({@code @Cacheable} en
+ * los listados, ver RNF-02).
+ */
 @SpringBootApplication
 @EnableCaching
-<span class="fc" id="L9">public class BackendApplication {</span>
+<span class="fc" id="L14">public class BackendApplication {</span>
 
+	/**
+	 * @param args argumentos de línea de comandos, delegados a Spring Boot sin modificación
+	 */
 	public static void main(String[] args) {
-<span class="nc" id="L12">		SpringApplication.run(BackendApplication.class, args);</span>
-<span class="nc" id="L13">	}</span>
+<span class="nc" id="L20">		SpringApplication.run(BackendApplication.class, args);</span>
+<span class="nc" id="L21">	}</span>
 
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

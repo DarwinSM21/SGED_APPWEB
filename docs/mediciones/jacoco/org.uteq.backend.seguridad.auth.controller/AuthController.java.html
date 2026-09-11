@@ -11,7 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.seguridad.auth.dto.*;
+import org.uteq.backend.seguridad.auth.security.ResetRequestLimitService;
 import org.uteq.backend.seguridad.auth.service.AuthService;
+import org.uteq.backend.seguridad.auth.service.EmailVerificationService;
+import org.uteq.backend.seguridad.auth.service.PasswordResetService;
+
+import java.util.Map;
 
 /**
  * Controlador de autenticación JWT: {@code /registro}, {@code /login},
@@ -37,6 +42,9 @@ public class AuthController {
     private boolean cookieSecure;
 
     private final AuthService authService;
+    private final PasswordResetService passwordResetService;
+    private final EmailVerificationService emailVerificationService;
+    private final ResetRequestLimitService resetRequestLimitService;
     private final org.uteq.backend.seguridad.auth.security.JwtService jwtService;
 
     /**
@@ -52,9 +60,9 @@ public class AuthController {
     @PostMapping(&quot;/registro&quot;)
     @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
     public ResponseEntity&lt;SessionResponse&gt; register(@Valid @RequestBody RegisterRequest request) {
-<span class="fc" id="L55">        return authService.register(request)</span>
-<span class="pc" id="L56">                .map(sesion -&gt; ResponseEntity.status(HttpStatus.CREATED).body(sesion))</span>
-<span class="fc" id="L57">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.CONFLICT).build());</span>
+<span class="fc" id="L63">        return authService.register(request)</span>
+<span class="pc" id="L64">                .map(sesion -&gt; ResponseEntity.status(HttpStatus.CREATED).body(sesion))</span>
+<span class="fc" id="L65">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.CONFLICT).build());</span>
     }
 
     /**
@@ -75,13 +83,13 @@ public class AuthController {
             @Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
-<span class="fc" id="L78">        AuthService.LoginResult resultado = authService.login(request, httpRequest.getRemoteAddr());</span>
+<span class="fc" id="L86">        AuthService.LoginResult resultado = authService.login(request, httpRequest.getRemoteAddr());</span>
 
         // El token viaja solo en la cookie HttpOnly de setAuthCookies; no se
         // repite en el cuerpo, que sería legible por cualquier fetch del
         // frontend y anularía la protección que declaran ADR-002 y ADR-008.
-<span class="fc" id="L83">        setAuthCookies(httpResponse, resultado.accessToken(), resultado.refreshToken());</span>
-<span class="fc" id="L84">        return ResponseEntity.ok(resultado.session());</span>
+<span class="fc" id="L91">        setAuthCookies(httpResponse, resultado.accessToken(), resultado.refreshToken());</span>
+<span class="fc" id="L92">        return ResponseEntity.ok(resultado.session());</span>
     }
 
     /**
@@ -96,9 +104,68 @@ public class AuthController {
     public ResponseEntity&lt;Void&gt; logout(
             @CookieValue(name = ACCESS_COOKIE, required = false) String accessToken,
             HttpServletResponse httpResponse) {
-<span class="fc" id="L99">        authService.logout(accessToken);</span>
-<span class="fc" id="L100">        clearAuthCookies(httpResponse);</span>
-<span class="fc" id="L101">        return ResponseEntity.noContent().build();</span>
+<span class="fc" id="L107">        authService.logout(accessToken);</span>
+<span class="fc" id="L108">        clearAuthCookies(httpResponse);</span>
+<span class="fc" id="L109">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Inicia el restablecimiento de contraseña (RF-37). Responde
+     * {@code 202 Accepted} de forma idéntica exista o no la cuenta y llegue o
+     * no el correo: la única señal distinta es el {@code 429} del límite de
+     * solicitudes, que no depende de la existencia de la cuenta.
+     *
+     * @param request     identificador (username o correo) del solicitante
+     * @param httpRequest petición entrante, de la que se toma la IP para el
+     *                    límite de solicitudes
+     * @return {@code 202 Accepted} con un mensaje genérico
+     * @throws org.uteq.backend.common.exception.TooManyRequestsException si se
+     *         superó el límite de solicitudes por identificador o por IP
+     */
+    @PostMapping(&quot;/forgot&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; forgot(
+            @Valid @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest) {
+<span class="fc" id="L129">        String ip = httpRequest.getRemoteAddr();</span>
+<span class="fc" id="L130">        resetRequestLimitService.check(request.identificador(), ip);</span>
+<span class="fc" id="L131">        passwordResetService.request(request.identificador());</span>
+<span class="fc" id="L132">        resetRequestLimitService.record(request.identificador(), ip);</span>
+<span class="fc" id="L133">        return ResponseEntity.accepted().body(Map.of(&quot;mensaje&quot;,</span>
+                &quot;Si existe una cuenta asociada, se enviaron instrucciones al correo registrado.&quot;));
+    }
+
+    /**
+     * Consume el enlace de restablecimiento y fija la contraseña nueva
+     * (RF-37).
+     *
+     * @param request token del enlace y contraseña nueva; validado con
+     *                {@code @Valid}
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.ApiException {@code 400} si el
+     *         token no es válido, expiró o ya se usó; {@code 422} si la
+     *         contraseña incumple la política (RNF-14)
+     */
+    @PostMapping(&quot;/reset&quot;)
+    public ResponseEntity&lt;Void&gt; reset(@Valid @RequestBody ResetPasswordRequest request) {
+<span class="fc" id="L150">        passwordResetService.reset(request.token(), request.nuevaPassword());</span>
+<span class="fc" id="L151">        return ResponseEntity.noContent().build();</span>
+    }
+
+    /**
+     * Consume el enlace de confirmación de correo y marca la dirección como
+     * verificada (RNF-26 / hallazgo H-09). Mientras un correo no esté
+     * verificado, {@code /forgot} no le envía el enlace de restablecimiento.
+     *
+     * @param request token del enlace de confirmación; validado con
+     *                {@code @Valid}
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.ApiException {@code 400} si el
+     *         token no es válido, expiró o ya se usó
+     */
+    @PostMapping(&quot;/confirmar-correo&quot;)
+    public ResponseEntity&lt;Void&gt; confirmEmail(@Valid @RequestBody ConfirmEmailRequest request) {
+<span class="fc" id="L167">        emailVerificationService.confirm(request.token());</span>
+<span class="fc" id="L168">        return ResponseEntity.noContent().build();</span>
     }
 
     /**
@@ -114,12 +181,12 @@ public class AuthController {
     public ResponseEntity&lt;Void&gt; refresh(
             @CookieValue(name = REFRESH_COOKIE, required = false) String refreshToken,
             HttpServletResponse httpResponse) {
-<span class="fc" id="L117">        return authService.refresh(refreshToken)</span>
-<span class="fc" id="L118">                .map(nuevoAccessToken -&gt; {</span>
-<span class="fc" id="L119">                    setAccessCookie(httpResponse, nuevoAccessToken);</span>
-<span class="fc" id="L120">                    return ResponseEntity.noContent().&lt;Void&gt;build();</span>
+<span class="fc" id="L184">        return authService.refresh(refreshToken)</span>
+<span class="fc" id="L185">                .map(nuevoAccessToken -&gt; {</span>
+<span class="fc" id="L186">                    setAccessCookie(httpResponse, nuevoAccessToken);</span>
+<span class="fc" id="L187">                    return ResponseEntity.noContent().&lt;Void&gt;build();</span>
                 })
-<span class="fc" id="L122">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());</span>
+<span class="fc" id="L189">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());</span>
     }
 
     /**
@@ -130,9 +197,9 @@ public class AuthController {
      */
     @GetMapping(&quot;/me&quot;)
     public ResponseEntity&lt;SessionResponse&gt; me() {
-<span class="fc" id="L133">        return authService.getCurrentSession()</span>
-<span class="fc" id="L134">                .map(ResponseEntity::ok)</span>
-<span class="fc" id="L135">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());</span>
+<span class="fc" id="L200">        return authService.getCurrentSession()</span>
+<span class="fc" id="L201">                .map(ResponseEntity::ok)</span>
+<span class="fc" id="L202">                .orElseGet(() -&gt; ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());</span>
     }
 
     /**
@@ -142,33 +209,33 @@ public class AuthController {
      */
     @GetMapping(&quot;/ping&quot;)
     public ResponseEntity&lt;String&gt; ping() {
-<span class="fc" id="L145">        return ResponseEntity.ok(&quot;pong&quot;);</span>
+<span class="fc" id="L212">        return ResponseEntity.ok(&quot;pong&quot;);</span>
     }
 
     private void setAuthCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-<span class="fc" id="L149">        setAccessCookie(response, accessToken);</span>
-<span class="fc" id="L150">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
-<span class="fc" id="L151">                buildCookie(REFRESH_COOKIE, refreshToken, jwtService.getRefreshExpirationMs()).toString());</span>
-<span class="fc" id="L152">    }</span>
+<span class="fc" id="L216">        setAccessCookie(response, accessToken);</span>
+<span class="fc" id="L217">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
+<span class="fc" id="L218">                buildCookie(REFRESH_COOKIE, refreshToken, jwtService.getRefreshExpirationMs()).toString());</span>
+<span class="fc" id="L219">    }</span>
 
     private void setAccessCookie(HttpServletResponse response, String accessToken) {
-<span class="fc" id="L155">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
-<span class="fc" id="L156">                buildCookie(ACCESS_COOKIE, accessToken, jwtService.getExpirationMs()).toString());</span>
-<span class="fc" id="L157">    }</span>
+<span class="fc" id="L222">        response.addHeader(HttpHeaders.SET_COOKIE,</span>
+<span class="fc" id="L223">                buildCookie(ACCESS_COOKIE, accessToken, jwtService.getExpirationMs()).toString());</span>
+<span class="fc" id="L224">    }</span>
 
     private void clearAuthCookies(HttpServletResponse response) {
-<span class="fc" id="L160">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_COOKIE, &quot;&quot;, 0).toString());</span>
-<span class="fc" id="L161">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_COOKIE, &quot;&quot;, 0).toString());</span>
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L227">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(ACCESS_COOKIE, &quot;&quot;, 0).toString());</span>
+<span class="fc" id="L228">        response.addHeader(HttpHeaders.SET_COOKIE, buildCookie(REFRESH_COOKIE, &quot;&quot;, 0).toString());</span>
+<span class="fc" id="L229">    }</span>
 
     private ResponseCookie buildCookie(String name, String value, long maxAgeMs) {
-<span class="fc" id="L165">        return ResponseCookie.from(name, value)</span>
-<span class="fc" id="L166">                .httpOnly(true)</span>
-<span class="fc" id="L167">                .secure(cookieSecure)</span>
-<span class="fc" id="L168">                .sameSite(&quot;Strict&quot;)</span>
-<span class="fc" id="L169">                .path(&quot;/api&quot;)</span>
-<span class="fc" id="L170">                .maxAge(maxAgeMs / 1000)</span>
-<span class="fc" id="L171">                .build();</span>
+<span class="fc" id="L232">        return ResponseCookie.from(name, value)</span>
+<span class="fc" id="L233">                .httpOnly(true)</span>
+<span class="fc" id="L234">                .secure(cookieSecure)</span>
+<span class="fc" id="L235">                .sameSite(&quot;Strict&quot;)</span>
+<span class="fc" id="L236">                .path(&quot;/api&quot;)</span>
+<span class="fc" id="L237">                .maxAge(maxAgeMs / 1000)</span>
+<span class="fc" id="L238">                .build();</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

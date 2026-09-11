@@ -97,7 +97,7 @@ public class StudentReportService {
 <span class="pc" id="L97">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante))</span>
 <span class="fc" id="L98">                .getEstudiante();</span>
 
-<span class="fc" id="L100">        return construirInforme(estudiante);</span>
+<span class="fc" id="L100">        return buildReport(estudiante);</span>
     }
 
     /**
@@ -114,7 +114,7 @@ public class StudentReportService {
     public StudentReportResponse myReport(String username) {
 <span class="fc" id="L115">        Student estudiante = estudianteRepository.findByUsuario_Username(username)</span>
 <span class="fc" id="L116">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un estudiante asociado a esta cuenta&quot;));</span>
-<span class="fc" id="L117">        return construirInforme(estudiante);</span>
+<span class="fc" id="L117">        return buildReport(estudiante);</span>
     }
 
     /**
@@ -187,7 +187,7 @@ public class StudentReportService {
 <span class="fc" id="L187">                resultado.text(), resultado.isAvailable(), resultado.reason());</span>
     }
 
-    private StudentReportResponse construirInforme(Student estudiante) {
+    private StudentReportResponse buildReport(Student estudiante) {
 <span class="fc" id="L191">        Long idEstudiante = estudiante.getIdEstudiante();</span>
 
 <span class="fc" id="L193">        List&lt;CriterionAverageResponse&gt; promedios = evaluacionEstudianteRepository</span>

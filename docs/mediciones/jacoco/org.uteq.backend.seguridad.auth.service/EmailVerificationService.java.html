@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailVerificationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.seguridad.auth.service</a> &gt; <span class="el_source">EmailVerificationService.java</span></div><h1>EmailVerificationService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.seguridad.auth.service;
+
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.ApiException;
+import org.uteq.backend.seguridad.audit.service.AuditService;
+import org.uteq.backend.seguridad.auth.EmailVerificationTokenStore;
+import org.uteq.backend.seguridad.auth.mail.EmailVerificationMailer;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.person.repository.PersonRepository;
+
+import java.security.SecureRandom;
+import java.time.Duration;
+import java.util.Base64;
+
+/**
+ * Doble opt-in del correo de contacto (RNF-26, cierra el hallazgo H-09 de
+ * {@code docs/etica/ETHICS.md}).
+ *
+ * &lt;p&gt;{@link #sendConfirmation} se llama al dar de alta una persona y cada vez
+ * que se le cambia el correo: deja {@code correo_verificado = false} (lo hacen
+ * los servicios que editan la persona) y hace llegar un enlace de un solo uso.
+ * {@link #confirm} consume el token y marca el correo como verificado. Hasta
+ * entonces, {@link PasswordResetService#request} no envía el enlace de
+ * restablecimiento a esa dirección.
+ */
+@Service
+@RequiredArgsConstructor
+public class EmailVerificationService {
+
+<span class="fc" id="L36">    private static final Logger log = LoggerFactory.getLogger(EmailVerificationService.class);</span>
+<span class="fc" id="L37">    private static final SecureRandom RANDOM = new SecureRandom();</span>
+    private static final int TOKEN_BYTES = 32;
+    private static final String ENLACE_INVALIDO = &quot;El enlace de confirmación es inválido o expiró.&quot;;
+
+    private final PersonRepository personaRepository;
+    private final EmailVerificationTokenStore tokenStore;
+    private final EmailVerificationMailer mailer;
+    private final AuditService auditService;
+
+    @Value(&quot;${mail.verify-url-base:https://localhost:8443/#/confirmar-correo}&quot;)
+    private String urlBase;
+
+    @Value(&quot;${mail.verify-token-ttl-hours:48}&quot;)
+    private long ttlHoras;
+
+    /**
+     * Emite y entrega un enlace de confirmación para el correo actual de la
+     * persona. No cambia {@code correo_verificado}: eso lo hace el servicio que
+     * crea o edita la persona antes de llamar aquí.
+     *
+     * @param persona persona ya persistida (con id y correo)
+     */
+    public void sendConfirmation(Person persona) {
+<span class="pc bpc" id="L60" title="1 of 6 branches missed.">        if (persona == null || persona.getIdPersona() == null || persona.getCorreo() == null) {</span>
+<span class="fc" id="L61">            return;</span>
+        }
+<span class="fc" id="L63">        String token = generateToken();</span>
+<span class="fc" id="L64">        tokenStore.save(persona.getIdPersona(), token, Duration.ofHours(ttlHoras));</span>
+
+<span class="fc" id="L66">        String url = urlBase + &quot;?token=&quot; + token;</span>
+<span class="fc" id="L67">        mailer.sendConfirmation(persona.getCorreo(), url);</span>
+
+<span class="fc" id="L69">        auditService.recordEvent(&quot;EMAILVERIFY_SOLICITADO&quot;, &quot;Persona&quot;, persona.getIdPersona(),</span>
+                &quot;se emitió un enlace de confirmación de correo&quot;);
+<span class="fc" id="L71">        log.info(&quot;EMAILVERIFY enlace de confirmación emitido para la persona id={}&quot;, persona.getIdPersona());</span>
+<span class="fc" id="L72">    }</span>
+
+    /**
+     * Consume el token del enlace y marca el correo de la persona como
+     * verificado.
+     *
+     * @param token token recibido en el enlace de confirmación
+     * @throws ApiException {@code 400} si el token no es válido, expiró o ya se
+     *                      usó, o si la persona ya no existe
+     */
+    @Transactional
+    public void confirm(String token) {
+<span class="fc" id="L84">        Long idPersona = tokenStore.resolve(token)</span>
+<span class="fc" id="L85">                .orElseThrow(() -&gt; new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));</span>
+
+<span class="fc" id="L87">        Person persona = personaRepository.findById(idPersona)</span>
+<span class="fc" id="L88">                .orElseThrow(() -&gt; new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));</span>
+
+<span class="fc" id="L90">        persona.setCorreoVerificado(true);</span>
+<span class="fc" id="L91">        personaRepository.save(persona);</span>
+<span class="fc" id="L92">        tokenStore.consume(token);</span>
+
+<span class="fc" id="L94">        auditService.recordEvent(&quot;EMAILVERIFY_CONFIRMADO&quot;, &quot;Persona&quot;, persona.getIdPersona(),</span>
+                &quot;confirmó su correo de contacto&quot;);
+<span class="fc" id="L96">        log.info(&quot;EMAILVERIFY correo confirmado para la persona id={}&quot;, persona.getIdPersona());</span>
+<span class="fc" id="L97">    }</span>
+
+    private String generateToken() {
+<span class="fc" id="L100">        byte[] bytes = new byte[TOKEN_BYTES];</span>
+<span class="fc" id="L101">        RANDOM.nextBytes(bytes);</span>
+<span class="fc" id="L102">        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

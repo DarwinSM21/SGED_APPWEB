@@ -71,9 +71,12 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         }
 <span class="fc" id="L72">    }</span>
 
+    /**
+     * @return {@code true} si el proveedor compatible con OpenAI está habilitado y tiene clave configurada
+     */
     @Override
     public boolean isAvailable() {
-<span class="fc" id="L76">        return habilitado;</span>
+<span class="fc" id="L79">        return habilitado;</span>
     }
 
     /**
@@ -85,10 +88,10 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
      */
     @Override
     public FeedbackResult generatePlayerComment(AnonymousPlayerProfile profile) {
-<span class="fc bfc" id="L88" title="All 2 branches covered.">        if (!habilitado) {</span>
-<span class="fc" id="L89">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
+<span class="fc bfc" id="L91" title="All 2 branches covered.">        if (!habilitado) {</span>
+<span class="fc" id="L92">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
         }
-<span class="fc" id="L91">        return invocar(PromptsFeedback.deJugador(profile));</span>
+<span class="fc" id="L94">        return invocar(PromptsFeedback.deJugador(profile));</span>
     }
 
     /**
@@ -100,99 +103,99 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
      */
     @Override
     public FeedbackResult generateLineupComment(List&lt;AnonymousPlayerProfile&gt; lineup) {
-<span class="pc bpc" id="L103" title="1 of 2 branches missed.">        if (!habilitado) {</span>
-<span class="nc" id="L104">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        if (!habilitado) {</span>
+<span class="nc" id="L107">            return FeedbackResult.unavailable(&quot;Generacion de texto deshabilitada&quot;);</span>
         }
-<span class="fc bfc" id="L106" title="All 4 branches covered.">        if (lineup == null || lineup.isEmpty()) {</span>
-<span class="fc" id="L107">            return FeedbackResult.unavailable(&quot;La alineacion esta vacia&quot;);</span>
+<span class="fc bfc" id="L109" title="All 4 branches covered.">        if (lineup == null || lineup.isEmpty()) {</span>
+<span class="fc" id="L110">            return FeedbackResult.unavailable(&quot;La alineacion esta vacia&quot;);</span>
         }
-<span class="fc" id="L109">        return invocar(PromptsFeedback.dePlantilla(lineup));</span>
+<span class="fc" id="L112">        return invocar(PromptsFeedback.dePlantilla(lineup));</span>
     }
 
     private FeedbackResult invocar(String prompt) {
-<span class="fc" id="L113">        Exception ultimoFallo = null;</span>
+<span class="fc" id="L116">        Exception ultimoFallo = null;</span>
 
-<span class="fc bfc" id="L115" title="All 2 branches covered.">        for (int intento = 0; intento &lt;= reintentos; intento++) {</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        for (int intento = 0; intento &lt;= reintentos; intento++) {</span>
             try {
-<span class="nc" id="L117">                return intentarUnaVez(prompt);</span>
+<span class="nc" id="L120">                return intentarUnaVez(prompt);</span>
 
-<span class="fc" id="L119">            } catch (HttpClientErrorException e) {</span>
-<span class="fc" id="L120">                log.warn(&quot;OpenAI rechazo la peticion: {}&quot;, e.getStatusCode());</span>
-<span class="fc" id="L121">                return FeedbackResult.unavailable(motivoDeRechazo(e));</span>
+<span class="fc" id="L122">            } catch (HttpClientErrorException e) {</span>
+<span class="fc" id="L123">                log.warn(&quot;OpenAI rechazo la peticion: {}&quot;, e.getStatusCode());</span>
+<span class="fc" id="L124">                return FeedbackResult.unavailable(motivoDeRechazo(e));</span>
 
-<span class="fc" id="L123">            } catch (Exception e) {</span>
-<span class="fc" id="L124">                ultimoFallo = e;</span>
+<span class="fc" id="L126">            } catch (Exception e) {</span>
+<span class="fc" id="L127">                ultimoFallo = e;</span>
 
-<span class="fc" id="L126">                log.warn(&quot;Fallo transitorio de OpenAI (intento {} de {}): {}&quot;,</span>
-<span class="fc" id="L127">                        intento + 1, reintentos + 1, e.getClass().getSimpleName());</span>
-<span class="pc bpc" id="L128" title="1 of 2 branches missed.">                if (intento &lt; reintentos) {</span>
-<span class="nc" id="L129">                    esperarAntesDeReintentar(intento);</span>
+<span class="fc" id="L129">                log.warn(&quot;Fallo transitorio de OpenAI (intento {} de {}): {}&quot;,</span>
+<span class="fc" id="L130">                        intento + 1, reintentos + 1, e.getClass().getSimpleName());</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                if (intento &lt; reintentos) {</span>
+<span class="nc" id="L132">                    esperarAntesDeReintentar(intento);</span>
                 }
             }
         }
 
-<span class="fc" id="L134">        log.warn(&quot;No se pudo generar feedback con IA tras {} intento(s): {}&quot;,</span>
-<span class="pc bpc" id="L135" title="1 of 2 branches missed.">                reintentos + 1, ultimoFallo == null ? &quot;sin detalle&quot; : ultimoFallo.getClass().getSimpleName());</span>
-<span class="fc" id="L136">        return FeedbackResult.unavailable(&quot;El servicio de generacion no respondio&quot;);</span>
+<span class="fc" id="L137">        log.warn(&quot;No se pudo generar feedback con IA tras {} intento(s): {}&quot;,</span>
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">                reintentos + 1, ultimoFallo == null ? &quot;sin detalle&quot; : ultimoFallo.getClass().getSimpleName());</span>
+<span class="fc" id="L139">        return FeedbackResult.unavailable(&quot;El servicio de generacion no respondio&quot;);</span>
     }
 
     private FeedbackResult intentarUnaVez(String prompt) {
-<span class="fc" id="L140">        var cuerpo = Map.of(</span>
+<span class="fc" id="L143">        var cuerpo = Map.of(</span>
                 &quot;model&quot;, modelo,
-<span class="fc" id="L142">                &quot;messages&quot;, List.of(</span>
-<span class="fc" id="L143">                        Map.of(&quot;role&quot;, &quot;system&quot;, &quot;content&quot;, PromptsFeedback.INSTRUCCION_SISTEMA),</span>
-<span class="fc" id="L144">                        Map.of(&quot;role&quot;, &quot;user&quot;, &quot;content&quot;, prompt)),</span>
-<span class="fc" id="L145">                &quot;temperature&quot;, 0.4,</span>
-<span class="fc" id="L146">                &quot;max_tokens&quot;, 800);</span>
+<span class="fc" id="L145">                &quot;messages&quot;, List.of(</span>
+<span class="fc" id="L146">                        Map.of(&quot;role&quot;, &quot;system&quot;, &quot;content&quot;, PromptsFeedback.INSTRUCCION_SISTEMA),</span>
+<span class="fc" id="L147">                        Map.of(&quot;role&quot;, &quot;user&quot;, &quot;content&quot;, prompt)),</span>
+<span class="fc" id="L148">                &quot;temperature&quot;, 0.4,</span>
+<span class="fc" id="L149">                &quot;max_tokens&quot;, 800);</span>
 
-<span class="fc" id="L148">        JsonNode respuesta = restClient.post()</span>
-<span class="fc" id="L149">                .uri(&quot;/chat/completions&quot;)</span>
-<span class="fc" id="L150">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + apiKey)</span>
-<span class="fc" id="L151">                .contentType(MediaType.APPLICATION_JSON)</span>
-<span class="fc" id="L152">                .body(cuerpo)</span>
-<span class="fc" id="L153">                .retrieve()</span>
-<span class="nc" id="L154">                .body(JsonNode.class);</span>
+<span class="fc" id="L151">        JsonNode respuesta = restClient.post()</span>
+<span class="fc" id="L152">                .uri(&quot;/chat/completions&quot;)</span>
+<span class="fc" id="L153">                .header(&quot;Authorization&quot;, &quot;Bearer &quot; + apiKey)</span>
+<span class="fc" id="L154">                .contentType(MediaType.APPLICATION_JSON)</span>
+<span class="fc" id="L155">                .body(cuerpo)</span>
+<span class="fc" id="L156">                .retrieve()</span>
+<span class="nc" id="L157">                .body(JsonNode.class);</span>
 
-<span class="nc" id="L156">        String texto = extraerTexto(respuesta);</span>
-<span class="nc bnc" id="L157" title="All 4 branches missed.">        if (texto == null || texto.isBlank()) {</span>
-<span class="nc" id="L158">            String motivoCorte = respuesta.path(&quot;choices&quot;).path(0).path(&quot;finish_reason&quot;).asText(&quot;&quot;);</span>
-<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (&quot;length&quot;.equals(motivoCorte)) {</span>
-<span class="nc" id="L160">                log.warn(&quot;El modelo agoto el presupuesto de tokens antes de escribir &quot;</span>
+<span class="nc" id="L159">        String texto = extraerTexto(respuesta);</span>
+<span class="nc bnc" id="L160" title="All 4 branches missed.">        if (texto == null || texto.isBlank()) {</span>
+<span class="nc" id="L161">            String motivoCorte = respuesta.path(&quot;choices&quot;).path(0).path(&quot;finish_reason&quot;).asText(&quot;&quot;);</span>
+<span class="nc bnc" id="L162" title="All 2 branches missed.">            if (&quot;length&quot;.equals(motivoCorte)) {</span>
+<span class="nc" id="L163">                log.warn(&quot;El modelo agoto el presupuesto de tokens antes de escribir &quot;</span>
                         + &quot;(finish_reason=length); revisar max_tokens&quot;);
-<span class="nc" id="L162">                return FeedbackResult.unavailable(</span>
+<span class="nc" id="L165">                return FeedbackResult.unavailable(</span>
                         &quot;El modelo se quedo sin espacio para responder&quot;);
             }
-<span class="nc" id="L165">            log.warn(&quot;OpenAI respondio sin texto utilizable (finish_reason={})&quot;, motivoCorte);</span>
-<span class="nc" id="L166">            return FeedbackResult.unavailable(&quot;El modelo no devolvio texto&quot;);</span>
+<span class="nc" id="L168">            log.warn(&quot;OpenAI respondio sin texto utilizable (finish_reason={})&quot;, motivoCorte);</span>
+<span class="nc" id="L169">            return FeedbackResult.unavailable(&quot;El modelo no devolvio texto&quot;);</span>
         }
-<span class="nc" id="L168">        return FeedbackResult.ok(texto.trim());</span>
+<span class="nc" id="L171">        return FeedbackResult.ok(texto.trim());</span>
     }
 
     private String motivoDeRechazo(HttpClientErrorException e) {
-<span class="fc" id="L172">        int codigo = e.getStatusCode().value();</span>
-<span class="pc bpc" id="L173" title="1 of 2 branches missed.">        if (codigo == 429) {</span>
-<span class="nc" id="L174">            return &quot;Se agoto la cuota del servicio de IA o se superó el limite de peticiones&quot;;</span>
+<span class="fc" id="L175">        int codigo = e.getStatusCode().value();</span>
+<span class="pc bpc" id="L176" title="1 of 2 branches missed.">        if (codigo == 429) {</span>
+<span class="nc" id="L177">            return &quot;Se agoto la cuota del servicio de IA o se superó el limite de peticiones&quot;;</span>
         }
-<span class="pc bpc" id="L176" title="3 of 4 branches missed.">        if (codigo == 401 || codigo == 403) {</span>
-<span class="fc" id="L177">            return &quot;La clave del servicio de IA no es valida o fue revocada&quot;;</span>
+<span class="pc bpc" id="L179" title="3 of 4 branches missed.">        if (codigo == 401 || codigo == 403) {</span>
+<span class="fc" id="L180">            return &quot;La clave del servicio de IA no es valida o fue revocada&quot;;</span>
         }
-<span class="nc" id="L179">        return &quot;El servicio de IA rechazo la peticion (codigo &quot; + codigo + &quot;)&quot;;</span>
+<span class="nc" id="L182">        return &quot;El servicio de IA rechazo la peticion (codigo &quot; + codigo + &quot;)&quot;;</span>
     }
 
     private String extraerTexto(JsonNode respuesta) {
-<span class="nc bnc" id="L183" title="All 2 branches missed.">        if (respuesta == null) {</span>
-<span class="nc" id="L184">            return null;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">        if (respuesta == null) {</span>
+<span class="nc" id="L187">            return null;</span>
         }
-<span class="nc" id="L186">        JsonNode contenido = respuesta.path(&quot;choices&quot;).path(0).path(&quot;message&quot;).path(&quot;content&quot;);</span>
-<span class="nc bnc" id="L187" title="All 2 branches missed.">        return contenido.isTextual() ? contenido.asText() : null;</span>
+<span class="nc" id="L189">        JsonNode contenido = respuesta.path(&quot;choices&quot;).path(0).path(&quot;message&quot;).path(&quot;content&quot;);</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">        return contenido.isTextual() ? contenido.asText() : null;</span>
     }
 
     private void esperarAntesDeReintentar(int intento) {
         try {
-<span class="nc" id="L192">            Thread.sleep(400L * (intento + 1));</span>
-<span class="nc" id="L193">        } catch (InterruptedException ie) {</span>
-<span class="nc" id="L194">            Thread.currentThread().interrupt();</span>
-<span class="nc" id="L195">        }</span>
-<span class="nc" id="L196">    }</span>
+<span class="nc" id="L195">            Thread.sleep(400L * (intento + 1));</span>
+<span class="nc" id="L196">        } catch (InterruptedException ie) {</span>
+<span class="nc" id="L197">            Thread.currentThread().interrupt();</span>
+<span class="nc" id="L198">        }</span>
+<span class="nc" id="L199">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

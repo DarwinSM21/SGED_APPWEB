@@ -139,7 +139,7 @@ public class StudentService {
 <span class="pc bpc" id="L139" title="1 of 2 branches missed.">            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));</span>
 <span class="fc" id="L140">            est.setPeso(request.peso());</span>
 <span class="fc" id="L141">            est.setAltura(request.altura());</span>
-<span class="fc" id="L142">            est.setPosicion(resolverPosicion(request.idPosicion()));</span>
+<span class="fc" id="L142">            est.setPosicion(resolvePosition(request.idPosicion()));</span>
 <span class="fc" id="L143">            est.setActivo(true);</span>
 
 <span class="fc" id="L145">            est = estudianteRepository.save(est);</span>
@@ -157,7 +157,7 @@ public class StudentService {
 <span class="fc" id="L157">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
 <span class="pc" id="L158">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
 
-<span class="fc" id="L160">        validarEdadEnCategoria(persona, categoria);</span>
+<span class="fc" id="L160">        validateAgeInCategory(persona, categoria);</span>
 
 <span class="fc" id="L162">        GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
 <span class="pc" id="L163">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estado General no encontrado: &quot; + request.idEstadoGeneral()));</span>
@@ -170,7 +170,7 @@ public class StudentService {
 <span class="pc bpc" id="L170" title="1 of 2 branches missed.">                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))</span>
 <span class="fc" id="L171">                .peso(request.peso())</span>
 <span class="fc" id="L172">                .altura(request.altura())</span>
-<span class="fc" id="L173">                .posicion(resolverPosicion(request.idPosicion()))</span>
+<span class="fc" id="L173">                .posicion(resolvePosition(request.idPosicion()))</span>
 <span class="fc" id="L174">                .activo(true)</span>
 <span class="fc" id="L175">                .build();</span>
 
@@ -244,7 +244,7 @@ public class StudentService {
     public StudentResponse updatePosition(Long id, Long idPosicion) {
 <span class="nc" id="L245">        Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)</span>
 <span class="nc" id="L246">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + id));</span>
-<span class="nc" id="L247">        estudiante.setPosicion(resolverPosicion(idPosicion));</span>
+<span class="nc" id="L247">        estudiante.setPosicion(resolvePosition(idPosicion));</span>
 <span class="nc" id="L248">        estudiante = estudianteRepository.save(estudiante);</span>
 <span class="nc" id="L249">        return toResponse(estudiante);</span>
     }
@@ -284,7 +284,7 @@ public class StudentService {
      * @throws IllegalArgumentException si la edad queda fuera del rango
      *                                  {@code [edadMin, edadMax]}
      */
-    private void validarEdadEnCategoria(Person persona, Categoria categoria) {
+    private void validateAgeInCategory(Person persona, Categoria categoria) {
 <span class="fc" id="L288">        LocalDate nacimiento = persona.getFechaNacimiento();</span>
 <span class="pc bpc" id="L289" title="2 of 6 branches missed.">        if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {</span>
 <span class="fc" id="L290">            return;</span>
@@ -305,7 +305,7 @@ public class StudentService {
         }
 <span class="nc" id="L306">        Categoria categoria = categoriaRepository.findById(idCategoriaNueva)</span>
 <span class="nc" id="L307">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada: &quot; + idCategoriaNueva));</span>
-<span class="nc" id="L308">        validarEdadEnCategoria(estudiante.getPersona(), categoria);</span>
+<span class="nc" id="L308">        validateAgeInCategory(estudiante.getPersona(), categoria);</span>
 <span class="nc" id="L309">        estudiante.setCategoria(categoria);</span>
 <span class="nc" id="L310">    }</span>
 
@@ -326,10 +326,10 @@ public class StudentService {
 <span class="pc bpc" id="L326" title="1 of 2 branches missed.">        if (java.util.Objects.equals(actual, idPosicionNueva)) {</span>
 <span class="fc" id="L327">            return;</span>
         }
-<span class="nc" id="L329">        estudiante.setPosicion(resolverPosicion(idPosicionNueva));</span>
+<span class="nc" id="L329">        estudiante.setPosicion(resolvePosition(idPosicionNueva));</span>
 <span class="nc" id="L330">    }</span>
 
-    private Posicion resolverPosicion(Long idPosicion) {
+    private Posicion resolvePosition(Long idPosicion) {
 <span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if (idPosicion == null) {</span>
 <span class="fc" id="L334">            return null;</span>
         }
@@ -381,6 +381,31 @@ public class StudentService {
     }
 
     /**
+     * RF-50 / hallazgo H-03: anonimiza los datos del titular a solicitud del
+     * representante legal. Delega en el procedimiento almacenado versionado
+     * {@code academico.sp_anonimizar_estudiante} (migración {@code V27}), que
+     * sustituye los datos identificativos de la persona por valores neutros,
+     * borra el texto libre escrito sobre el menor y da de baja lógica la
+     * ficha, conservando las claves foráneas y las estadísticas agregadas
+     * (asistencia, evaluaciones, pagos). El acto queda en la bitácora de
+     * auditoría ({@code @Audited}) e implementa el mecanismo de supresión que
+     * RNF-22 exige.
+     *
+     * @param id identificador del estudiante a anonimizar
+     * @throws ResourceNotFoundException si el estudiante no existe
+     */
+    @Audited(accion = &quot;ANONIMIZAR&quot;, entidad = &quot;Estudiante&quot;, idSpel = &quot;#p0&quot;,
+            descripcionSpel = &quot;'anonimizó los datos personales del estudiante #' + #p0 + ' a solicitud del representante legal (RF-50 / derecho de supresión)'&quot;)
+    @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
+    @Transactional
+    public void anonymize(Long id) {
+<span class="fc" id="L402">        Student estudiante = estudianteRepository.findById(id)</span>
+<span class="fc" id="L403">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+                        &quot;Estudiante no encontrado con id: &quot; + id));
+<span class="fc" id="L405">        estudianteRepository.anonymizeStudent(estudiante.getIdEstudiante());</span>
+<span class="fc" id="L406">    }</span>
+
+    /**
      * Cuenta los estudiantes activos de una categoría (procedimiento
      * almacenado).
      *
@@ -390,8 +415,8 @@ public class StudentService {
      */
     @Transactional(readOnly = true)
     public long countActiveByCategory(Long idCategoria) {
-<span class="fc" id="L393">        Long resultado = estudianteRepository.countActiveStudentsByCategory(idCategoria);</span>
-<span class="pc bpc" id="L394" title="1 of 2 branches missed.">        return resultado != null ? resultado : 0L;</span>
+<span class="fc" id="L418">        Long resultado = estudianteRepository.countActiveStudentsByCategory(idCategoria);</span>
+<span class="pc bpc" id="L419" title="1 of 2 branches missed.">        return resultado != null ? resultado : 0L;</span>
     }
 
     /**
@@ -405,8 +430,8 @@ public class StudentService {
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void deactivateByCategory(Long idCategoria) {
-<span class="fc" id="L408">        estudianteRepository.deactivateStudentsByCategory(idCategoria);</span>
-<span class="fc" id="L409">    }</span>
+<span class="fc" id="L433">        estudianteRepository.deactivateStudentsByCategory(idCategoria);</span>
+<span class="fc" id="L434">    }</span>
 
     /**
      * Sugiere el siguiente {@code codigo_estudiante} para un año; no reserva
@@ -417,7 +442,7 @@ public class StudentService {
      */
     @Transactional(readOnly = true)
     public String generateNextCode(int anio) {
-<span class="fc" id="L420">        return estudianteRepository.generateNextCode(anio);</span>
+<span class="fc" id="L445">        return estudianteRepository.generateNextCode(anio);</span>
     }
 
     /**
@@ -430,10 +455,10 @@ public class StudentService {
      */
     @Transactional(readOnly = true)
     public String emergencyContact(Long idEstudiante) {
-<span class="fc bfc" id="L433" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
-<span class="fc" id="L434">            throw new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
+<span class="fc bfc" id="L458" title="All 2 branches covered.">        if (!estudianteRepository.existsById(idEstudiante)) {</span>
+<span class="fc" id="L459">            throw new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante);</span>
         }
-<span class="fc" id="L436">        return representanteEstudianteRepository.contactoDe(idEstudiante);</span>
+<span class="fc" id="L461">        return representanteEstudianteRepository.contactoDe(idEstudiante);</span>
     }
 
     /**
@@ -452,40 +477,40 @@ public class StudentService {
             descripcionSpel = &quot;'habilitó acceso al Student #' + #result.idEstudiante&quot;)
     @Transactional
     public StudentResponse enableAccess(Long idEstudiante, EnableAccessRequest request) {
-<span class="fc" id="L455">        Student estudiante = estudianteRepository.findById(idEstudiante)</span>
-<span class="fc" id="L456">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>
+<span class="fc" id="L480">        Student estudiante = estudianteRepository.findById(idEstudiante)</span>
+<span class="fc" id="L481">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Estudiante no encontrado con id: &quot; + idEstudiante));</span>
 
-<span class="fc bfc" id="L458" title="All 2 branches covered.">        if (estudiante.getUsuario() != null) {</span>
-<span class="fc" id="L459">            throw new IllegalArgumentException(&quot;Este estudiante ya tiene una cuenta de acceso&quot;);</span>
+<span class="fc bfc" id="L483" title="All 2 branches covered.">        if (estudiante.getUsuario() != null) {</span>
+<span class="fc" id="L484">            throw new IllegalArgumentException(&quot;Este estudiante ya tiene una cuenta de acceso&quot;);</span>
         }
 
-<span class="fc" id="L462">        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPersona(), request);</span>
+<span class="fc" id="L487">        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPersona(), request);</span>
 
-<span class="fc" id="L464">        estudiante.setUsuario(usuario);</span>
-<span class="fc" id="L465">        estudiante = estudianteRepository.save(estudiante);</span>
-<span class="fc" id="L466">        return toResponse(estudiante);</span>
+<span class="fc" id="L489">        estudiante.setUsuario(usuario);</span>
+<span class="fc" id="L490">        estudiante = estudianteRepository.save(estudiante);</span>
+<span class="fc" id="L491">        return toResponse(estudiante);</span>
     }
 
     // Mapeador privado entidad -&gt; DTO.
     private StudentResponse toResponse(Student e) {
-<span class="fc" id="L471">        return new StudentResponse(</span>
-<span class="fc" id="L472">                e.getIdEstudiante(),</span>
-<span class="pc bpc" id="L473" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getIdPersona() : null,</span>
-<span class="pc bpc" id="L474" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,</span>
-<span class="pc bpc" id="L475" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,</span>
-<span class="pc bpc" id="L476" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getNombre() : null,</span>
-<span class="pc bpc" id="L477" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getApellido() : null,</span>
-<span class="pc bpc" id="L478" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getNombre() : null,</span>
-<span class="pc bpc" id="L479" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,</span>
-<span class="fc" id="L480">                e.getCodigoEstudiante(),</span>
-<span class="fc" id="L481">                e.getFechaIngreso(),</span>
-<span class="fc" id="L482">                e.getPeso(),</span>
-<span class="fc" id="L483">                e.getAltura(),</span>
-<span class="pc bpc" id="L484" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getIdPosicion() : null,</span>
-<span class="pc bpc" id="L485" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getNombre() : null,</span>
-<span class="pc bpc" id="L486" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,</span>
-<span class="fc" id="L487">                e.getActivo(),</span>
-<span class="fc" id="L488">                e.getCreatedAt()</span>
+<span class="fc" id="L496">        return new StudentResponse(</span>
+<span class="fc" id="L497">                e.getIdEstudiante(),</span>
+<span class="pc bpc" id="L498" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getIdPersona() : null,</span>
+<span class="pc bpc" id="L499" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,</span>
+<span class="pc bpc" id="L500" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,</span>
+<span class="pc bpc" id="L501" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getNombre() : null,</span>
+<span class="pc bpc" id="L502" title="1 of 2 branches missed.">                e.getPersona() != null ? e.getPersona().getApellido() : null,</span>
+<span class="pc bpc" id="L503" title="1 of 2 branches missed.">                e.getCategoria() != null ? e.getCategoria().getNombre() : null,</span>
+<span class="pc bpc" id="L504" title="1 of 2 branches missed.">                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,</span>
+<span class="fc" id="L505">                e.getCodigoEstudiante(),</span>
+<span class="fc" id="L506">                e.getFechaIngreso(),</span>
+<span class="fc" id="L507">                e.getPeso(),</span>
+<span class="fc" id="L508">                e.getAltura(),</span>
+<span class="pc bpc" id="L509" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getIdPosicion() : null,</span>
+<span class="pc bpc" id="L510" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getNombre() : null,</span>
+<span class="pc bpc" id="L511" title="1 of 2 branches missed.">                e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,</span>
+<span class="fc" id="L512">                e.getActivo(),</span>
+<span class="fc" id="L513">                e.getCreatedAt()</span>
         );
     }
 }

@@ -5,7 +5,12 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.annotation.CachingConfigurer;
+import org.springframework.cache.interceptor.CacheErrorHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -16,8 +21,23 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 
 import java.time.Duration;
 
+/**
+ * Configuración de la caché Redis (RNF-02) y su comportamiento ante fallos
+ * (RNF-23b).
+ *
+ * &lt;p&gt;Implementa {@link CachingConfigurer} para registrar un
+ * {@link CacheErrorHandler} que &lt;b&gt;degrada, no rompe&lt;/b&gt;: si Redis no está
+ * disponible, un {@code GET} cacheado (por ejemplo {@code GET /api/estudiantes})
+ * no debe devolver {@code 5xx} —debe caer a la consulta directa a la base—.
+ * El handler traga la excepción de lectura/escritura de caché y la registra;
+ * Spring entonces ejecuta el método anotado como si fuera un fallo de caché,
+ * que es exactamente la consulta a la base. Las caídas de Redis para la
+ * autenticación siguen fallando cerradas (RNF-23a), eso vive en
+ * {@code JwtAuthenticationFilter} y no lo toca este handler.
+ */
 @Configuration
-<span class="fc" id="L20">public class RedisCacheConfig {</span>
+<span class="fc" id="L39">public class RedisCacheConfig implements CachingConfigurer {</span>
+<span class="fc" id="L40">    private static final Logger log = LoggerFactory.getLogger(RedisCacheConfig.class);</span>
     public static final String CACHE_STUDENTS = &quot;estudiantes&quot;;
     public static final String CACHE_COACHES = &quot;entrenadores&quot;;
     public static final String CACHE_USERS = &quot;usuarios&quot;;
@@ -31,6 +51,11 @@ import java.time.Duration;
     @Value(&quot;${cache.usuarios.ttl-seconds:60}&quot;)
     private long ttlUsuariosSeconds;
 
+    /**
+     * @param factory conexión a Redis inyectada por Spring
+     * @return el gestor de caché con una configuración de TTL y serialización
+     *         propia para cada caché ({@code estudiantes}, {@code entrenadores}, {@code usuarios})
+     */
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         /*
@@ -44,37 +69,92 @@ import java.time.Duration;
          * serializacion deja de registrar la clase concreta del record
          * generico, por lo que el desempate al leer otra vez falla igual.
          */
-<span class="fc" id="L47">        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()</span>
-<span class="fc" id="L48">                .allowIfBaseType(Object.class)</span>
-<span class="fc" id="L49">                .build();</span>
+<span class="fc" id="L72">        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()</span>
+<span class="fc" id="L73">                .allowIfBaseType(Object.class)</span>
+<span class="fc" id="L74">                .build();</span>
 
-<span class="fc" id="L51">        ObjectMapper objectMapper = new ObjectMapper();</span>
-<span class="fc" id="L52">        objectMapper.registerModule(new JavaTimeModule());</span>
-<span class="fc" id="L53">        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);</span>
-<span class="fc" id="L54">        objectMapper.activateDefaultTyping(</span>
+<span class="fc" id="L76">        ObjectMapper objectMapper = new ObjectMapper();</span>
+<span class="fc" id="L77">        objectMapper.registerModule(new JavaTimeModule());</span>
+<span class="fc" id="L78">        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);</span>
+<span class="fc" id="L79">        objectMapper.activateDefaultTyping(</span>
                 ptv,
                 ObjectMapper.DefaultTyping.EVERYTHING,
                 com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY);
 
-<span class="fc" id="L59">        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);</span>
+<span class="fc" id="L84">        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer(objectMapper);</span>
 
-<span class="fc" id="L61">        RedisCacheConfiguration configEstudiantes = RedisCacheConfiguration.defaultCacheConfig()</span>
-<span class="fc" id="L62">                .entryTtl(Duration.ofSeconds(ttlEstudiantesSeconds))</span>
-<span class="fc" id="L63">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
+<span class="fc" id="L86">        RedisCacheConfiguration configEstudiantes = RedisCacheConfiguration.defaultCacheConfig()</span>
+<span class="fc" id="L87">                .entryTtl(Duration.ofSeconds(ttlEstudiantesSeconds))</span>
+<span class="fc" id="L88">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
 
-<span class="fc" id="L65">        RedisCacheConfiguration configEntrenadores = RedisCacheConfiguration.defaultCacheConfig()</span>
-<span class="fc" id="L66">                .entryTtl(Duration.ofSeconds(ttlEntrenadoresSeconds))</span>
-<span class="fc" id="L67">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
+<span class="fc" id="L90">        RedisCacheConfiguration configEntrenadores = RedisCacheConfiguration.defaultCacheConfig()</span>
+<span class="fc" id="L91">                .entryTtl(Duration.ofSeconds(ttlEntrenadoresSeconds))</span>
+<span class="fc" id="L92">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
 
-<span class="fc" id="L69">        RedisCacheConfiguration configUsuarios = RedisCacheConfiguration.defaultCacheConfig()</span>
-<span class="fc" id="L70">                .entryTtl(Duration.ofSeconds(ttlUsuariosSeconds))</span>
-<span class="fc" id="L71">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
+<span class="fc" id="L94">        RedisCacheConfiguration configUsuarios = RedisCacheConfiguration.defaultCacheConfig()</span>
+<span class="fc" id="L95">                .entryTtl(Duration.ofSeconds(ttlUsuariosSeconds))</span>
+<span class="fc" id="L96">                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(serializer));</span>
 
-<span class="fc" id="L73">        return RedisCacheManager.builder(factory)</span>
-<span class="fc" id="L74">                .withCacheConfiguration(CACHE_STUDENTS, configEstudiantes)</span>
-<span class="fc" id="L75">                .withCacheConfiguration(CACHE_COACHES, configEntrenadores)</span>
-<span class="fc" id="L76">                .withCacheConfiguration(CACHE_USERS, configUsuarios)</span>
-<span class="fc" id="L77">                .build();</span>
+<span class="fc" id="L98">        return RedisCacheManager.builder(factory)</span>
+<span class="fc" id="L99">                .withCacheConfiguration(CACHE_STUDENTS, configEstudiantes)</span>
+<span class="fc" id="L100">                .withCacheConfiguration(CACHE_COACHES, configEntrenadores)</span>
+<span class="fc" id="L101">                .withCacheConfiguration(CACHE_USERS, configUsuarios)</span>
+<span class="fc" id="L102">                .build();</span>
+    }
+
+    /**
+     * RNF-23b: ante un fallo de Redis, la caché se degrada a consulta directa
+     * a la base en vez de propagar el error. Cada método registra el fallo una
+     * vez (nivel WARN) y no relanza; Spring continúa como si fuera un fallo de
+     * caché normal —invoca el método y consulta la base—.
+     */
+    @Override
+    public CacheErrorHandler errorHandler() {
+<span class="fc" id="L113">        return new CacheErrorHandler() {</span>
+            /**
+             * @param ex excepción lanzada por Redis al leer
+             * @param cache caché afectada
+             * @param key clave que se intentaba leer
+             */
+            @Override
+            public void handleCacheGetError(RuntimeException ex, Cache cache, Object key) {
+<span class="fc" id="L121">                log.warn(&quot;Caché no disponible al leer '{}' (clave {}): se consulta la base. Causa: {}&quot;,</span>
+<span class="fc" id="L122">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L123">            }</span>
+
+            /**
+             * @param ex excepción lanzada por Redis al escribir
+             * @param cache caché afectada
+             * @param key clave que se intentaba escribir
+             * @param value valor que se intentaba cachear
+             */
+            @Override
+            public void handleCachePutError(RuntimeException ex, Cache cache, Object key, Object value) {
+<span class="fc" id="L133">                log.warn(&quot;Caché no disponible al escribir '{}' (clave {}): el resultado no se cachea. Causa: {}&quot;,</span>
+<span class="fc" id="L134">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L135">            }</span>
+
+            /**
+             * @param ex excepción lanzada por Redis al invalidar
+             * @param cache caché afectada
+             * @param key clave que se intentaba invalidar
+             */
+            @Override
+            public void handleCacheEvictError(RuntimeException ex, Cache cache, Object key) {
+<span class="fc" id="L144">                log.warn(&quot;Caché no disponible al invalidar '{}' (clave {}). Causa: {}&quot;,</span>
+<span class="fc" id="L145">                        cache.getName(), key, ex.getClass().getSimpleName());</span>
+<span class="fc" id="L146">            }</span>
+
+            /**
+             * @param ex excepción lanzada por Redis al limpiar
+             * @param cache caché afectada
+             */
+            @Override
+            public void handleCacheClearError(RuntimeException ex, Cache cache) {
+<span class="fc" id="L154">                log.warn(&quot;Caché no disponible al limpiar '{}'. Causa: {}&quot;,</span>
+<span class="fc" id="L155">                        cache.getName(), ex.getClass().getSimpleName());</span>
+<span class="fc" id="L156">            }</span>
+        };
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -91,7 +91,7 @@ public class ReportService {
 <span class="fc" id="L91">                .and(this.&lt;Payment&gt;desdeDe(&quot;fechaPago&quot;, desde))</span>
 <span class="fc" id="L92">                .and(this.&lt;Payment&gt;hastaDe(&quot;fechaPago&quot;, hasta));</span>
 <span class="fc" id="L93">        var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, &quot;fechaPago&quot;))).getContent()).stream()</span>
-<span class="fc" id="L94">                .map(this::filaPago)</span>
+<span class="fc" id="L94">                .map(this::paymentRow)</span>
 <span class="fc" id="L95">                .toList();</span>
 <span class="fc" id="L96">        return pdfService.generate(titulo(&quot;Reporte de Pagos&quot;, filas),</span>
 <span class="fc" id="L97">                List.of(&quot;Estudiante&quot;, &quot;Tipo&quot;, &quot;Período&quot;, &quot;Monto&quot;, &quot;Fecha de pago&quot;, &quot;Registrado por&quot;), recortar(filas));</span>
@@ -200,7 +200,7 @@ public class ReportService {
 <span class="fc" id="L200">        return resultados;</span>
     }
 
-    private List&lt;String&gt; filaPago(Payment p) {
+    private List&lt;String&gt; paymentRow(Payment p) {
 <span class="fc bfc" id="L204" title="All 2 branches covered.">        String periodo = p.getTipo() == Payment.TipoPago.MEMBRESIA ? p.getMes() + &quot;/&quot; + p.getAnio() : &quot;-&quot;;</span>
 <span class="fc" id="L205">        var registrador = p.getRegistradoPor().getPersona();</span>
 <span class="fc" id="L206">        return List.of(</span>
