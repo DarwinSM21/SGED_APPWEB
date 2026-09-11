@@ -11,7 +11,7 @@ import java.util.Locale;
 
 /**
  * Límite de solicitudes de restablecimiento de contraseña (RF-37), sobre
- * Redis y con el mismo patrón que {@link LoginAttemptService}: un contador
+ * Redis y con el mismo patrón que {@link LoginAttemptService}: un count
  * por clave con expiración fijada en el primer incremento.
  *
  * <p>Dos cuentas independientes:
@@ -53,8 +53,8 @@ public class ResetRequestLimitService {
      *                                  su máximo dentro de la ventana
      */
     public void check(String identificador, String ip) {
-        if (contador(ID_PREFIX + normalizar(identificador)) >= maxPorIdentificador
-                || contador(IP_PREFIX + ip) >= maxPorIp) {
+        if (count(ID_PREFIX + normalize(identificador)) >= maxPorIdentificador
+                || count(IP_PREFIX + ip) >= maxPorIp) {
             throw new TooManyRequestsException(
                     "Demasiadas solicitudes de restablecimiento. Intenta de nuevo más tarde.");
         }
@@ -66,24 +66,24 @@ public class ResetRequestLimitService {
      * @param identificador username o correo solicitado
      * @param ip            dirección remota del cliente
      */
-    public void registrar(String identificador, String ip) {
-        incrementar(ID_PREFIX + normalizar(identificador), ventanaIdentificadorMinutos);
-        incrementar(IP_PREFIX + ip, ventanaIpMinutos);
+    public void record(String identificador, String ip) {
+        increment(ID_PREFIX + normalize(identificador), ventanaIdentificadorMinutos);
+        increment(IP_PREFIX + ip, ventanaIpMinutos);
     }
 
-    private long contador(String clave) {
+    private long count(String clave) {
         String valor = redis.opsForValue().get(clave);
         return valor == null ? 0L : Long.parseLong(valor);
     }
 
-    private void incrementar(String clave, long ventanaMinutos) {
+    private void increment(String clave, long ventanaMinutos) {
         Long total = redis.opsForValue().increment(clave);
         if (total != null && total == 1L) {
             redis.expire(clave, Duration.ofMinutes(ventanaMinutos));
         }
     }
 
-    private static String normalizar(String identificador) {
+    private static String normalize(String identificador) {
         return identificador == null ? "" : identificador.trim().toLowerCase(Locale.ROOT);
     }
 }

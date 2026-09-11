@@ -60,8 +60,8 @@ public class PaymentService {
     @Transactional
     public List<Payment> registerMembership(Long idEstudiante, int anio, List<Integer> meses,
                                           BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-        Student estudiante = buscarEstudiante(idEstudiante);
-        UserAccount registrador = buscarUsuario(usernameRegistrador);
+        Student estudiante = findStudent(idEstudiante);
+        UserAccount registrador = findUser(usernameRegistrador);
 
         List<Integer> mesesUnicos = meses.stream().distinct().sorted().toList();
         for (Integer mes : mesesUnicos) {
@@ -101,8 +101,8 @@ public class PaymentService {
             descripcionSpel = "'registró un pago diario de $' + #p1 + ' (estudiante #' + #p0 + ')'")
     @Transactional
     public Payment registerDaily(Long idEstudiante, BigDecimal monto, LocalDate fechaPago, String usernameRegistrador) {
-        Student estudiante = buscarEstudiante(idEstudiante);
-        UserAccount registrador = buscarUsuario(usernameRegistrador);
+        Student estudiante = findStudent(idEstudiante);
+        UserAccount registrador = findUser(usernameRegistrador);
 
         return pagoRepository.save(Payment.builder()
                 .estudiante(estudiante)
@@ -214,17 +214,17 @@ public class PaymentService {
         }
 
         pago.setAnuladoEn(java.time.OffsetDateTime.now());
-        pago.setAnuladoPor(buscarUsuario(usernameAnulador));
+        pago.setAnuladoPor(findUser(usernameAnulador));
         pago.setMotivoAnulacion(motivo);
         return pagoRepository.save(pago);
     }
 
-    private Student buscarEstudiante(Long id) {
+    private Student findStudent(Long id) {
         return estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
     }
 
-    private UserAccount buscarUsuario(String username) {
+    private UserAccount findUser(String username) {
         return usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalStateException("Usuario autenticado no encontrado: " + username));
     }

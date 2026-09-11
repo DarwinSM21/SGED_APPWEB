@@ -115,7 +115,7 @@ public class GuardianService {
         List<Long> idsIniciales = request.idsEstudiantesIniciales();
         if (idsIniciales != null) {
             for (Long idEstudiante : idsIniciales) {
-                vincular(representante, idEstudiante);
+                link(representante, idEstudiante);
             }
         }
 
@@ -197,7 +197,7 @@ public class GuardianService {
                 .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + idRepresentante));
         String relacion = request == null ? null : request.relacion();
         boolean contactoPrincipal = request != null && Boolean.TRUE.equals(request.contactoPrincipal());
-        vincular(representante, idEstudiante, relacion, contactoPrincipal);
+        link(representante, idEstudiante, relacion, contactoPrincipal);
         return toResponse(representante);
     }
 
@@ -218,13 +218,13 @@ public class GuardianService {
         vinculoRepository.save(vinculo);
     }
 
-    private void vincular(Guardian representante, Long idEstudiante) {
-        vincular(representante, idEstudiante, null, false);
+    private void link(Guardian representante, Long idEstudiante) {
+        link(representante, idEstudiante, null, false);
     }
 
     // Un estudiante tiene un solo contacto principal: designar uno nuevo
     // desplaza al anterior en vez de dejar dos marcados.
-    private void vincular(Guardian representante, Long idEstudiante,
+    private void link(Guardian representante, Long idEstudiante,
                           String relacion, boolean contactoPrincipal) {
         Student estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));

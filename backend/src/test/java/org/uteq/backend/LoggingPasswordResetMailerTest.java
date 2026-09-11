@@ -19,7 +19,7 @@ class LoggingPasswordResetMailerTest {
         logger.addAppender(appender);
 
         try {
-            new LoggingPasswordResetMailer().enviarEnlace(
+            new LoggingPasswordResetMailer().sendLink(
                     "ana@x.com", "https://sged.test/#/restablecer?token=abc123");
 
             assertThat(appender.list).anyMatch(e ->

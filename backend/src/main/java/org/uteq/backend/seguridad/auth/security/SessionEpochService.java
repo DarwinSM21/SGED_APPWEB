@@ -36,9 +36,9 @@ public class SessionEpochService {
      *
      * @param username usuario cuyas sesiones previas quedan invalidadas
      */
-    public void marcar(String username) {
+    public void mark(String username) {
         redis.opsForValue().set(
-                PREFIX + normalizar(username),
+                PREFIX + normalize(username),
                 Long.toString(Instant.now().getEpochSecond()),
                 Duration.ofMillis(refreshExpirationMs));
     }
@@ -49,8 +49,8 @@ public class SessionEpochService {
      * @param username usuario a consultar
      * @return el instante (epoch en segundos) del último restablecimiento
      */
-    public Optional<Long> epocaDe(String username) {
-        String valor = redis.opsForValue().get(PREFIX + normalizar(username));
+    public Optional<Long> epochOf(String username) {
+        String valor = redis.opsForValue().get(PREFIX + normalize(username));
         return valor == null ? Optional.empty() : Optional.of(Long.parseLong(valor));
     }
 
@@ -62,16 +62,16 @@ public class SessionEpochService {
      * @param emitidoEn   instante de emisión ({@code iat}) del token
      * @return {@code true} si hubo un restablecimiento después de esa emisión
      */
-    public boolean invalidadoPorReseteo(String username, Instant emitidoEn) {
+    public boolean invalidatedByReset(String username, Instant emitidoEn) {
         if (emitidoEn == null) {
             return false;
         }
-        return epocaDe(username)
+        return epochOf(username)
                 .map(epoca -> emitidoEn.getEpochSecond() < epoca)
                 .orElse(false);
     }
 
-    private static String normalizar(String username) {
+    private static String normalize(String username) {
         return username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
     }
 }

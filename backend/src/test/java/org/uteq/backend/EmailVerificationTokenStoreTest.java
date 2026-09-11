@@ -41,7 +41,7 @@ class EmailVerificationTokenStoreTest {
     void guardar_escribe_ambas_claves() {
         when(valueOps.get("emailverify:persona:1")).thenReturn(null);
 
-        store.guardar(1L, "token-crudo", Duration.ofHours(48));
+        store.save(1L, "token-crudo", Duration.ofHours(48));
 
         verify(valueOps).set(startsWith("emailverify:"), eq("1"), eq(Duration.ofHours(48)));
         verify(valueOps).set(eq("emailverify:persona:1"), anyString(), eq(Duration.ofHours(48)));
@@ -53,7 +53,7 @@ class EmailVerificationTokenStoreTest {
     void guardar_invalida_el_anterior() {
         when(valueOps.get("emailverify:persona:1")).thenReturn("hash-viejo");
 
-        store.guardar(1L, "token-nuevo", Duration.ofHours(48));
+        store.save(1L, "token-nuevo", Duration.ofHours(48));
 
         verify(redis).delete("emailverify:hash-viejo");
     }
@@ -61,24 +61,24 @@ class EmailVerificationTokenStoreTest {
     @Test
     @DisplayName("resolver devuelve vacio para token nulo, en blanco o inexistente")
     void resolver_token_invalido() {
-        assertThat(store.resolver(null)).isEmpty();
-        assertThat(store.resolver("  ")).isEmpty();
+        assertThat(store.resolve(null)).isEmpty();
+        assertThat(store.resolve("  ")).isEmpty();
 
         when(valueOps.get(startsWith("emailverify:"))).thenReturn(null);
-        assertThat(store.resolver("no-existe")).isEmpty();
+        assertThat(store.resolve("no-existe")).isEmpty();
     }
 
     @Test
     @DisplayName("guardar y resolver son coherentes para el mismo token crudo")
     void guardar_y_resolver_coherentes() {
         when(valueOps.get("emailverify:persona:1")).thenReturn(null);
-        store.guardar(1L, "T0k3n-Cru2o", Duration.ofHours(48));
+        store.save(1L, "T0k3n-Cru2o", Duration.ofHours(48));
 
         ArgumentCaptor<String> claveToken = ArgumentCaptor.forClass(String.class);
         verify(valueOps).set(claveToken.capture(), eq("1"), eq(Duration.ofHours(48)));
 
         when(valueOps.get(claveToken.getValue())).thenReturn("1");
-        assertThat(store.resolver("T0k3n-Cru2o")).contains(1L);
+        assertThat(store.resolve("T0k3n-Cru2o")).contains(1L);
     }
 
     @Test
@@ -86,7 +86,7 @@ class EmailVerificationTokenStoreTest {
     void consumir_borra_ambas() {
         when(valueOps.get(startsWith("emailverify:"))).thenReturn("1");
 
-        store.consumir("token-crudo");
+        store.consume("token-crudo");
 
         verify(redis, times(2)).delete(startsWith("emailverify:"));
         verify(redis).delete("emailverify:persona:1");
@@ -97,7 +97,7 @@ class EmailVerificationTokenStoreTest {
     void consumir_idempotente() {
         when(valueOps.get(startsWith("emailverify:"))).thenReturn(null);
 
-        store.consumir("token-crudo");
+        store.consume("token-crudo");
 
         verify(redis).delete(startsWith("emailverify:"));
         verify(redis, never()).delete(startsWith("emailverify:persona:"));

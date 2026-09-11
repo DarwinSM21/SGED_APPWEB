@@ -170,7 +170,7 @@ class PersonServiceTest {
         personaService.create(requestValido("0000000000", "nueva@sged.test"));
 
         org.mockito.ArgumentCaptor<Person> capturada = org.mockito.ArgumentCaptor.forClass(Person.class);
-        verify(emailVerificationService).enviarConfirmacion(capturada.capture());
+        verify(emailVerificationService).sendConfirmation(capturada.capture());
         assertThat(capturada.getValue().getCorreoVerificado()).isFalse();
     }
 
@@ -186,7 +186,7 @@ class PersonServiceTest {
 
         personaService.update(1L, requestValido("1234567890", "maria@sged.test"));
 
-        verify(emailVerificationService, never()).enviarConfirmacion(any());
+        verify(emailVerificationService, never()).sendConfirmation(any());
         assertThat(existente.getCorreoVerificado()).isTrue();
     }
 
@@ -202,7 +202,7 @@ class PersonServiceTest {
 
         personaService.update(1L, requestValido("1234567890", "otro@sged.test"));
 
-        verify(emailVerificationService).enviarConfirmacion(existente);
+        verify(emailVerificationService).sendConfirmation(existente);
         assertThat(existente.getCorreoVerificado()).isFalse();
     }
 

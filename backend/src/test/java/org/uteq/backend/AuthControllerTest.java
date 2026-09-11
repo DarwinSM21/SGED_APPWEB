@@ -214,8 +214,8 @@ class AuthControllerTest {
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.mensaje").exists());
 
-        verify(passwordResetService).solicitar("ana@test.com");
-        verify(resetRequestLimitService).registrar("ana@test.com", "127.0.0.1");
+        verify(passwordResetService).request("ana@test.com");
+        verify(resetRequestLimitService).record("ana@test.com", "127.0.0.1");
     }
 
     @Test
@@ -237,7 +237,7 @@ class AuthControllerTest {
                         .content("{\"identificador\":\"ana@test.com\"}"))
                 .andExpect(status().isTooManyRequests());
 
-        verify(passwordResetService, never()).solicitar(anyString());
+        verify(passwordResetService, never()).request(anyString());
     }
 
     @Test
@@ -247,13 +247,13 @@ class AuthControllerTest {
                         .content("{\"token\":\"tok\",\"nuevaPassword\":\"clave1234\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(passwordResetService).restablecer("tok", "clave1234");
+        verify(passwordResetService).reset("tok", "clave1234");
     }
 
     @Test
     void resetConTokenInvalidoDa400() throws Exception {
         doThrow(new ApiException(HttpStatus.BAD_REQUEST, "enlace invalido"))
-                .when(passwordResetService).restablecer(anyString(), anyString());
+                .when(passwordResetService).reset(anyString(), anyString());
 
         mockMvc.perform(post("/api/auth/reset")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -264,7 +264,7 @@ class AuthControllerTest {
     @Test
     void resetConContrasenaDebilDa422() throws Exception {
         doThrow(new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "contrasena debil"))
-                .when(passwordResetService).restablecer(anyString(), anyString());
+                .when(passwordResetService).reset(anyString(), anyString());
 
         mockMvc.perform(post("/api/auth/reset")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -279,13 +279,13 @@ class AuthControllerTest {
                         .content("{\"token\":\"tok-confirm\"}"))
                 .andExpect(status().isNoContent());
 
-        verify(emailVerificationService).confirmar("tok-confirm");
+        verify(emailVerificationService).confirm("tok-confirm");
     }
 
     @Test
     void confirmarCorreoConTokenInvalidoDa400() throws Exception {
         doThrow(new ApiException(HttpStatus.BAD_REQUEST, "enlace invalido"))
-                .when(emailVerificationService).confirmar(anyString());
+                .when(emailVerificationService).confirm(anyString());
 
         mockMvc.perform(post("/api/auth/confirmar-correo")
                         .contentType(MediaType.APPLICATION_JSON)

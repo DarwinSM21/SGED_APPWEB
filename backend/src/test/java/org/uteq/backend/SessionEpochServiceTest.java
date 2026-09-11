@@ -39,7 +39,7 @@ class SessionEpochServiceTest {
     void marcar_escribe_epoca() {
         when(redis.opsForValue()).thenReturn(valueOps);
 
-        service.marcar("Ana.Torres");
+        service.mark("Ana.Torres");
 
         verify(valueOps).set(eq("sec:pwepoch:ana.torres"), anyString(),
                 eq(Duration.ofDays(7)));
@@ -51,7 +51,7 @@ class SessionEpochServiceTest {
         when(redis.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("sec:pwepoch:ana.torres")).thenReturn(null);
 
-        assertThat(service.invalidadoPorReseteo("ana.torres", Instant.now())).isFalse();
+        assertThat(service.invalidatedByReset("ana.torres", Instant.now())).isFalse();
     }
 
     @Test
@@ -61,7 +61,7 @@ class SessionEpochServiceTest {
         long ahora = Instant.now().getEpochSecond();
         when(valueOps.get("sec:pwepoch:ana.torres")).thenReturn(Long.toString(ahora));
 
-        assertThat(service.invalidadoPorReseteo("ana.torres", Instant.ofEpochSecond(ahora - 60))).isTrue();
+        assertThat(service.invalidatedByReset("ana.torres", Instant.ofEpochSecond(ahora - 60))).isTrue();
     }
 
     @Test
@@ -71,12 +71,12 @@ class SessionEpochServiceTest {
         long ahora = Instant.now().getEpochSecond();
         when(valueOps.get("sec:pwepoch:ana.torres")).thenReturn(Long.toString(ahora - 120));
 
-        assertThat(service.invalidadoPorReseteo("ana.torres", Instant.ofEpochSecond(ahora))).isFalse();
+        assertThat(service.invalidatedByReset("ana.torres", Instant.ofEpochSecond(ahora))).isFalse();
     }
 
     @Test
     @DisplayName("iat nulo nunca invalida")
     void iat_nulo_no_invalida() {
-        assertThat(service.invalidadoPorReseteo("ana.torres", null)).isFalse();
+        assertThat(service.invalidatedByReset("ana.torres", null)).isFalse();
     }
 }

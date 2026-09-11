@@ -19,5 +19,5 @@ public interface EmailVerificationMailer {
      * @param url    enlace absoluto de confirmación, con el token ya incluido
      *               como parámetro de consulta
      */
-    void enviarConfirmacion(String correo, String url);
+    void sendConfirmation(String correo, String url);
 }

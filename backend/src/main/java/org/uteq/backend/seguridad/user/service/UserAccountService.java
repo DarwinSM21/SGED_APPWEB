@@ -100,7 +100,7 @@ public class UserAccountService {
      *                                      rol no es coherente con la ficha
      * @throws ResourceNotFoundException si la persona o el estado no existen
      */
-    // vincularFichaExistente puede mutar Student/Entrenador (Representante
+    // linkExistingRecord puede mutar Student/Entrenador (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
@@ -115,7 +115,7 @@ public class UserAccountService {
         if (request.password() == null || request.password().isBlank()) {
             throw new IllegalArgumentException("La contraseña es obligatoria");
         }
-        passwordPolicy.validar(request.password(), request.username());
+        passwordPolicy.validate(request.password(), request.username());
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("El nombre de usuario ya se encuentra registrado");
         }
@@ -134,14 +134,14 @@ public class UserAccountService {
                 .activo(true);
 
         if (request.rol() != null) {
-            validarRolCoherente(request.idPersona(), request.rol());
-            builder.roles(Set.of(buscarRol(request.rol())));
+            validateRoleCoherent(request.idPersona(), request.rol());
+            builder.roles(Set.of(findRole(request.rol())));
         }
 
         UserAccount usuario = usuarioRepository.save(builder.build());
 
         if (request.rol() != null) {
-            vincularFichaExistente(request.idPersona(), request.rol(), usuario);
+            linkExistingRecord(request.idPersona(), request.rol(), usuario);
         }
 
         return toResponse(usuario);
@@ -161,7 +161,7 @@ public class UserAccountService {
      *                                      está ocupado o el rol no es
      *                                      coherente con la ficha
      */
-    // vincularFichaExistente puede mutar Student/Entrenador (Representante
+    // linkExistingRecord puede mutar Student/Entrenador (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
@@ -191,13 +191,13 @@ public class UserAccountService {
         usuario.setEstadoGeneral(estado);
         usuario.setUsername(request.username());
 
-        actualizarPasswordSiCorresponde(usuario, request.password());
-        actualizarRolSiCambio(usuario, persona, request.rol());
+        updatePasswordIfApplicable(usuario, request.password());
+        updateRoleIfChanged(usuario, persona, request.rol());
 
         usuario = usuarioRepository.save(usuario);
 
         if (request.rol() != null) {
-            vincularFichaExistente(persona.getIdPersona(), request.rol(), usuario);
+            linkExistingRecord(persona.getIdPersona(), request.rol(), usuario);
         }
 
         return toResponse(usuario);
@@ -246,9 +246,9 @@ public class UserAccountService {
 
     // R-09 (informe de evaluación de calidad): extraído de editar() para bajar
     // su complejidad ciclomática. "password en blanco" significa "no cambiarla".
-    private void actualizarPasswordSiCorresponde(UserAccount usuario, String nuevaPassword) {
+    private void updatePasswordIfApplicable(UserAccount usuario, String nuevaPassword) {
         if (nuevaPassword != null && !nuevaPassword.isBlank()) {
-            passwordPolicy.validar(nuevaPassword, usuario.getUsername());
+            passwordPolicy.validate(nuevaPassword, usuario.getUsername());
             usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
         }
     }
@@ -256,22 +256,22 @@ public class UserAccountService {
     // R-09: ídem. Solo revalida y reasigna el rol si de verdad cambió; si el
     // rol pedido es null (el formulario de edición no toca roles) o es el
     // mismo que ya tiene, no hace nada.
-    private void actualizarRolSiCambio(UserAccount usuario, Person persona, String rolPedido) {
+    private void updateRoleIfChanged(UserAccount usuario, Person persona, String rolPedido) {
         if (rolPedido == null) {
             return;
         }
         String rolActual = usuario.getRoles() == null ? null
                 : usuario.getRoles().stream().findFirst().map(Role::getNombre).orElse(null);
         if (!rolPedido.equals(rolActual)) {
-            validarRolCoherente(persona.getIdPersona(), rolPedido);
+            validateRoleCoherent(persona.getIdPersona(), rolPedido);
             // HashSet mutable: Hibernate necesita poder mutar la colección ya
             // administrada de este Usuario persistido. Set.of() es inmutable y
             // hace fallar el flush con UnsupportedOperationException.
-            usuario.setRoles(new java.util.HashSet<>(Set.of(buscarRol(rolPedido))));
+            usuario.setRoles(new java.util.HashSet<>(Set.of(findRole(rolPedido))));
         }
     }
 
-    private Role buscarRol(String nombre) {
+    private Role findRole(String nombre) {
         return rolRepository.findByNombre(nombre)
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + nombre));
     }
@@ -290,7 +290,7 @@ public class UserAccountService {
      * @throws IllegalArgumentException si la persona tiene una ficha activa de
      *                                  otro rol
      */
-    private void validarRolCoherente(Long idPersona, String rol) {
+    private void validateRoleCoherent(Long idPersona, String rol) {
         if (estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)
                 && !"ESTUDIANTE".equals(rol)) {
             throw new IllegalArgumentException(
@@ -320,7 +320,7 @@ public class UserAccountService {
      * @param rol       rol de la cuenta, que determina qué ficha buscar
      * @param usuario   cuenta recién guardada a la que vincular la ficha
      */
-    private void vincularFichaExistente(Long idPersona, String rol, UserAccount usuario) {
+    private void linkExistingRecord(Long idPersona, String rol, UserAccount usuario) {
         switch (rol) {
             case "ESTUDIANTE" -> estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
                     .filter(e -> e.getUsuario() == null)

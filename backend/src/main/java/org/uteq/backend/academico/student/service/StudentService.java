@@ -139,7 +139,7 @@ public class StudentService {
             est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));
             est.setPeso(request.peso());
             est.setAltura(request.altura());
-            est.setPosicion(resolverPosicion(request.idPosicion()));
+            est.setPosicion(resolvePosition(request.idPosicion()));
             est.setActivo(true);
 
             est = estudianteRepository.save(est);
@@ -157,7 +157,7 @@ public class StudentService {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
 
-        validarEdadEnCategoria(persona, categoria);
+        validateAgeInCategory(persona, categoria);
 
         GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
@@ -170,7 +170,7 @@ public class StudentService {
                 .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))
                 .peso(request.peso())
                 .altura(request.altura())
-                .posicion(resolverPosicion(request.idPosicion()))
+                .posicion(resolvePosition(request.idPosicion()))
                 .activo(true)
                 .build();
 
@@ -244,7 +244,7 @@ public class StudentService {
     public StudentResponse updatePosition(Long id, Long idPosicion) {
         Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
-        estudiante.setPosicion(resolverPosicion(idPosicion));
+        estudiante.setPosicion(resolvePosition(idPosicion));
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
     }
@@ -284,7 +284,7 @@ public class StudentService {
      * @throws IllegalArgumentException si la edad queda fuera del rango
      *                                  {@code [edadMin, edadMax]}
      */
-    private void validarEdadEnCategoria(Person persona, Categoria categoria) {
+    private void validateAgeInCategory(Person persona, Categoria categoria) {
         LocalDate nacimiento = persona.getFechaNacimiento();
         if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {
             return;
@@ -305,7 +305,7 @@ public class StudentService {
         }
         Categoria categoria = categoriaRepository.findById(idCategoriaNueva)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + idCategoriaNueva));
-        validarEdadEnCategoria(estudiante.getPersona(), categoria);
+        validateAgeInCategory(estudiante.getPersona(), categoria);
         estudiante.setCategoria(categoria);
     }
 
@@ -326,10 +326,10 @@ public class StudentService {
         if (java.util.Objects.equals(actual, idPosicionNueva)) {
             return;
         }
-        estudiante.setPosicion(resolverPosicion(idPosicionNueva));
+        estudiante.setPosicion(resolvePosition(idPosicionNueva));
     }
 
-    private Posicion resolverPosicion(Long idPosicion) {
+    private Posicion resolvePosition(Long idPosicion) {
         if (idPosicion == null) {
             return null;
         }

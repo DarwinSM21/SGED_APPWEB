@@ -22,7 +22,7 @@ public class LoggingEmailVerificationMailer implements EmailVerificationMailer {
      * @param url enlace de confirmación, escrito en el log en vez de enviarse
      */
     @Override
-    public void enviarConfirmacion(String correo, String url) {
+    public void sendConfirmation(String correo, String url) {
         log.warn("EMAILVERIFY (mail.enabled=false) enlace de confirmación para {}: {}", correo, url);
     }
 }

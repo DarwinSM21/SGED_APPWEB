@@ -41,14 +41,14 @@ public class SmtpPasswordResetMailer implements PasswordResetMailer {
      * @param url enlace de restablecimiento de un solo uso
      */
     @Override
-    public void enviarEnlace(String correo, String url) {
+    public void sendLink(String correo, String url) {
         try {
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, false, "UTF-8");
             helper.setFrom(remitente);
             helper.setTo(correo);
             helper.setSubject("Restablece tu contraseña de SGED");
-            helper.setText(cuerpoHtml(url), true);
+            helper.setText(htmlBody(url), true);
             mailSender.send(mensaje);
             log.info("PWRESET correo de restablecimiento enviado a {}", correo);
         } catch (Exception e) {
@@ -57,7 +57,7 @@ public class SmtpPasswordResetMailer implements PasswordResetMailer {
         }
     }
 
-    private String cuerpoHtml(String url) {
+    private String htmlBody(String url) {
         return """
                 <p>Recibimos una solicitud para restablecer tu contraseña de SGED.</p>
                 <p><a href="%s">Elegir una contraseña nueva</a></p>

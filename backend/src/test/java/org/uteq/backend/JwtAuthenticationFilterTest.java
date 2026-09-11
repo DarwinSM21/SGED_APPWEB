@@ -202,7 +202,7 @@ class JwtAuthenticationFilterTest {
         when(request.getHeader("Authorization")).thenReturn("Bearer token-viejo");
         when(jwtService.extractUsername("token-viejo")).thenReturn("coach@sged.test");
         when(jwtService.extractIssuedAt("token-viejo")).thenReturn(Instant.now().minusSeconds(3600));
-        when(sessionEpochService.invalidadoPorReseteo(eq("coach@sged.test"), any())).thenReturn(true);
+        when(sessionEpochService.invalidatedByReset(eq("coach@sged.test"), any())).thenReturn(true);
 
         filter.doFilter(request, response, filterChain);
 

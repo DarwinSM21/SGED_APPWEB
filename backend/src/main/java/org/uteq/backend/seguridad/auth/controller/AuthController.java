@@ -128,8 +128,8 @@ public class AuthController {
             HttpServletRequest httpRequest) {
         String ip = httpRequest.getRemoteAddr();
         resetRequestLimitService.check(request.identificador(), ip);
-        passwordResetService.solicitar(request.identificador());
-        resetRequestLimitService.registrar(request.identificador(), ip);
+        passwordResetService.request(request.identificador());
+        resetRequestLimitService.record(request.identificador(), ip);
         return ResponseEntity.accepted().body(Map.of("mensaje",
                 "Si existe una cuenta asociada, se enviaron instrucciones al correo registrado."));
     }
@@ -147,7 +147,7 @@ public class AuthController {
      */
     @PostMapping("/reset")
     public ResponseEntity<Void> reset(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordResetService.restablecer(request.token(), request.nuevaPassword());
+        passwordResetService.reset(request.token(), request.nuevaPassword());
         return ResponseEntity.noContent().build();
     }
 
@@ -163,8 +163,8 @@ public class AuthController {
      *         token no es válido, expiró o ya se usó
      */
     @PostMapping("/confirmar-correo")
-    public ResponseEntity<Void> confirmarCorreo(@Valid @RequestBody ConfirmEmailRequest request) {
-        emailVerificationService.confirmar(request.token());
+    public ResponseEntity<Void> confirmEmail(@Valid @RequestBody ConfirmEmailRequest request) {
+        emailVerificationService.confirm(request.token());
         return ResponseEntity.noContent().build();
     }
 

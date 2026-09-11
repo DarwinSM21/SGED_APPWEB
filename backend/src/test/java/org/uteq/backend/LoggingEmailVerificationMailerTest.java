@@ -19,7 +19,7 @@ class LoggingEmailVerificationMailerTest {
         logger.addAppender(appender);
 
         try {
-            new LoggingEmailVerificationMailer().enviarConfirmacion(
+            new LoggingEmailVerificationMailer().sendConfirmation(
                     "ana@x.com", "https://sged.test/#/confirmar-correo?token=abc123");
 
             assertThat(appender.list).anyMatch(e ->

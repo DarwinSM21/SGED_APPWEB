@@ -22,10 +22,10 @@ import java.util.Base64;
  * Doble opt-in del correo de contacto (RNF-26, cierra el hallazgo H-09 de
  * {@code docs/etica/ETHICS.md}).
  *
- * <p>{@link #enviarConfirmacion} se llama al dar de alta una persona y cada vez
+ * <p>{@link #sendConfirmation} se llama al dar de alta una persona y cada vez
  * que se le cambia el correo: deja {@code correo_verificado = false} (lo hacen
  * los servicios que editan la persona) y hace llegar un enlace de un solo uso.
- * {@link #confirmar} consume el token y marca el correo como verificado. Hasta
+ * {@link #confirm} consume el token y marca el correo como verificado. Hasta
  * entonces, {@link PasswordResetService#solicitar} no envía el enlace de
  * restablecimiento a esa dirección.
  */
@@ -56,15 +56,15 @@ public class EmailVerificationService {
      *
      * @param persona persona ya persistida (con id y correo)
      */
-    public void enviarConfirmacion(Person persona) {
+    public void sendConfirmation(Person persona) {
         if (persona == null || persona.getIdPersona() == null || persona.getCorreo() == null) {
             return;
         }
-        String token = generarToken();
-        tokenStore.guardar(persona.getIdPersona(), token, Duration.ofHours(ttlHoras));
+        String token = generateToken();
+        tokenStore.save(persona.getIdPersona(), token, Duration.ofHours(ttlHoras));
 
         String url = urlBase + "?token=" + token;
-        mailer.enviarConfirmacion(persona.getCorreo(), url);
+        mailer.sendConfirmation(persona.getCorreo(), url);
 
         auditService.recordEvent("EMAILVERIFY_SOLICITADO", "Persona", persona.getIdPersona(),
                 "se emitió un enlace de confirmación de correo");
@@ -80,8 +80,8 @@ public class EmailVerificationService {
      *                      usó, o si la persona ya no existe
      */
     @Transactional
-    public void confirmar(String token) {
-        Long idPersona = tokenStore.resolver(token)
+    public void confirm(String token) {
+        Long idPersona = tokenStore.resolve(token)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));
 
         Person persona = personaRepository.findById(idPersona)
@@ -89,14 +89,14 @@ public class EmailVerificationService {
 
         persona.setCorreoVerificado(true);
         personaRepository.save(persona);
-        tokenStore.consumir(token);
+        tokenStore.consume(token);
 
         auditService.recordEvent("EMAILVERIFY_CONFIRMADO", "Persona", persona.getIdPersona(),
                 "confirmó su correo de contacto");
         log.info("EMAILVERIFY correo confirmado para la persona id={}", persona.getIdPersona());
     }
 
-    private String generarToken() {
+    private String generateToken() {
         byte[] bytes = new byte[TOKEN_BYTES];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);

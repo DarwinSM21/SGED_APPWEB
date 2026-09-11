@@ -73,7 +73,7 @@ class ResetRequestLimitServiceTest {
         when(valueOps.increment("pwreset_lim:id:ana@x.com")).thenReturn(1L);
         when(valueOps.increment("pwreset_lim:ip:1.2.3.4")).thenReturn(4L);
 
-        service.registrar("Ana@x.com", "1.2.3.4");
+        service.record("Ana@x.com", "1.2.3.4");
 
         verify(redis).expire(eq("pwreset_lim:id:ana@x.com"), eq(Duration.ofMinutes(15)));
         verify(redis, org.mockito.Mockito.never())

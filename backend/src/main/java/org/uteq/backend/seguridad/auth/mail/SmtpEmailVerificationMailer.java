@@ -39,14 +39,14 @@ public class SmtpEmailVerificationMailer implements EmailVerificationMailer {
      * @param url enlace de confirmación de un solo uso
      */
     @Override
-    public void enviarConfirmacion(String correo, String url) {
+    public void sendConfirmation(String correo, String url) {
         try {
             MimeMessage mensaje = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mensaje, false, "UTF-8");
             helper.setFrom(remitente);
             helper.setTo(correo);
             helper.setSubject("Confirma tu correo en SGED");
-            helper.setText(cuerpoHtml(url), true);
+            helper.setText(htmlBody(url), true);
             mailSender.send(mensaje);
             log.info("EMAILVERIFY correo de confirmación enviado a {}", correo);
         } catch (Exception e) {
@@ -55,7 +55,7 @@ public class SmtpEmailVerificationMailer implements EmailVerificationMailer {
         }
     }
 
-    private String cuerpoHtml(String url) {
+    private String htmlBody(String url) {
         return """
                 <p>Se registró este correo en una cuenta de SGED.</p>
                 <p><a href="%s">Confirmar que este correo es mío</a></p>

@@ -91,7 +91,7 @@ public class ReportService {
                 .and(this.<Payment>desdeDe("fechaPago", desde))
                 .and(this.<Payment>hastaDe("fechaPago", hasta));
         var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaPago"))).getContent()).stream()
-                .map(this::filaPago)
+                .map(this::paymentRow)
                 .toList();
         return pdfService.generate(titulo("Reporte de Pagos", filas),
                 List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), recortar(filas));
@@ -200,7 +200,7 @@ public class ReportService {
         return resultados;
     }
 
-    private List<String> filaPago(Payment p) {
+    private List<String> paymentRow(Payment p) {
         String periodo = p.getTipo() == Payment.TipoPago.MEMBRESIA ? p.getMes() + "/" + p.getAnio() : "-";
         var registrador = p.getRegistradoPor().getPersona();
         return List.of(

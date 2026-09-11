@@ -40,7 +40,7 @@ class SmtpEmailVerificationMailerTest {
     void envia_correo_con_destinatario_asunto_y_enlace() throws Exception {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
 
-        mailer.enviarConfirmacion("ana@x.com", "https://sged.test/#/confirmar-correo?token=abc123");
+        mailer.sendConfirmation("ana@x.com", "https://sged.test/#/confirmar-correo?token=abc123");
 
         ArgumentCaptor<MimeMessage> captor = ArgumentCaptor.forClass(MimeMessage.class);
         verify(mailSender).send(captor.capture());
@@ -56,7 +56,7 @@ class SmtpEmailVerificationMailerTest {
         when(mailSender.createMimeMessage()).thenReturn(new MimeMessage((Session) null));
         doThrow(new MailSendException("proveedor caido")).when(mailSender).send(any(MimeMessage.class));
 
-        assertThatCode(() -> mailer.enviarConfirmacion("ana@x.com", "https://sged.test/x"))
+        assertThatCode(() -> mailer.sendConfirmation("ana@x.com", "https://sged.test/x"))
                 .doesNotThrowAnyException();
     }
 }

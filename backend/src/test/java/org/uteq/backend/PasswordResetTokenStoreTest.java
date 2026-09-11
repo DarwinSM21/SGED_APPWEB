@@ -41,7 +41,7 @@ class PasswordResetTokenStoreTest {
     void guardar_escribe_ambas_claves() {
         when(valueOps.get("pwreset:user:ana.torres")).thenReturn(null);
 
-        store.guardar("ana.torres", "token-crudo", Duration.ofMinutes(30));
+        store.save("ana.torres", "token-crudo", Duration.ofMinutes(30));
 
         verify(valueOps).set(startsWith("pwreset:"), eq("ana.torres"), eq(Duration.ofMinutes(30)));
         verify(valueOps).set(eq("pwreset:user:ana.torres"), anyString(), eq(Duration.ofMinutes(30)));
@@ -53,7 +53,7 @@ class PasswordResetTokenStoreTest {
     void guardar_invalida_el_anterior() {
         when(valueOps.get("pwreset:user:ana.torres")).thenReturn("hash-viejo");
 
-        store.guardar("ana.torres", "token-nuevo", Duration.ofMinutes(30));
+        store.save("ana.torres", "token-nuevo", Duration.ofMinutes(30));
 
         verify(redis).delete("pwreset:hash-viejo");
     }
@@ -63,17 +63,17 @@ class PasswordResetTokenStoreTest {
     void resolver_token_vigente() {
         when(valueOps.get(startsWith("pwreset:"))).thenReturn("ana.torres");
 
-        assertThat(store.resolver("token-crudo")).contains("ana.torres");
+        assertThat(store.resolve("token-crudo")).contains("ana.torres");
     }
 
     @Test
     @DisplayName("resolver devuelve vacio para token nulo, en blanco o inexistente")
     void resolver_token_invalido() {
-        assertThat(store.resolver(null)).isEmpty();
-        assertThat(store.resolver("  ")).isEmpty();
+        assertThat(store.resolve(null)).isEmpty();
+        assertThat(store.resolve("  ")).isEmpty();
 
         when(valueOps.get(startsWith("pwreset:"))).thenReturn(null);
-        assertThat(store.resolver("no-existe")).isEmpty();
+        assertThat(store.resolve("no-existe")).isEmpty();
     }
 
     @Test
@@ -81,7 +81,7 @@ class PasswordResetTokenStoreTest {
     void consumir_borra_ambas() {
         when(valueOps.get(startsWith("pwreset:"))).thenReturn("ana.torres");
 
-        store.consumir("token-crudo");
+        store.consume("token-crudo");
 
         verify(redis, times(2)).delete(startsWith("pwreset:"));
         verify(redis).delete("pwreset:user:ana.torres");
@@ -92,7 +92,7 @@ class PasswordResetTokenStoreTest {
     void consumir_idempotente() {
         when(valueOps.get(startsWith("pwreset:"))).thenReturn(null);
 
-        store.consumir("token-crudo");
+        store.consume("token-crudo");
 
         verify(redis).delete(startsWith("pwreset:"));
         verify(redis, never()).delete(startsWith("pwreset:user:"));
@@ -102,7 +102,7 @@ class PasswordResetTokenStoreTest {
     @DisplayName("resolver devuelve el mismo usuario que se guardo (ida y vuelta del hash)")
     void guardar_y_resolver_coherentes() {
         when(valueOps.get("pwreset:user:ana.torres")).thenReturn(null);
-        store.guardar("ana.torres", "T0k3n-Cru2o", Duration.ofMinutes(30));
+        store.save("ana.torres", "T0k3n-Cru2o", Duration.ofMinutes(30));
 
         // El set del token usa una clave pwreset:{sha256}; resolver debe pedir
         // esa misma clave para el mismo token crudo.
@@ -110,6 +110,6 @@ class PasswordResetTokenStoreTest {
         verify(valueOps).set(claveToken.capture(), eq("ana.torres"), eq(Duration.ofMinutes(30)));
 
         when(valueOps.get(claveToken.getValue())).thenReturn("ana.torres");
-        assertThat(store.resolver("T0k3n-Cru2o")).contains("ana.torres");
+        assertThat(store.resolve("T0k3n-Cru2o")).contains("ana.torres");
     }
 }

@@ -50,9 +50,9 @@ public class NotificationService {
      */
     @Transactional
     public void notifyAttendance(Student estudiante, String estadoAsistencia) {
-        sinTumbarElFlujoPrincipal("asistencia", () -> {
+        withoutBreakingMainFlow("asistencia", () -> {
             String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
-            crearParaCadaRepresentante(estudiante, Type.ASISTENCIA,
+            createForEachGuardian(estudiante, Type.ASISTENCIA,
                     Consent.ALCANCE_NOTIFICACIONES_ASISTENCIA,
                     nombreCompleto(estudiante) + " marcó asistencia hoy (" + estado + ").");
         });
@@ -67,8 +67,8 @@ public class NotificationService {
      */
     @Transactional
     public void notifyInjury(Student estudiante, String descripcionLesion) {
-        sinTumbarElFlujoPrincipal("lesion", () ->
-                crearParaCadaRepresentante(estudiante, Type.LESION,
+        withoutBreakingMainFlow("lesion", () ->
+                createForEachGuardian(estudiante, Type.LESION,
                         Consent.ALCANCE_NOTIFICACIONES_LESION,
                         "Se registró una lesión para " + nombreCompleto(estudiante) + ": " + descripcionLesion));
     }
@@ -95,7 +95,7 @@ public class NotificationService {
      *                 {@code "lesion"})
      * @param efecto   el efecto de notificación a ejecutar
      */
-    private void sinTumbarElFlujoPrincipal(String contexto, Runnable efecto) {
+    private void withoutBreakingMainFlow(String contexto, Runnable efecto) {
         try {
             efecto.run();
         } catch (RuntimeException e) {
@@ -155,7 +155,7 @@ public class NotificationService {
         notificacionRepository.save(notificacion);
     }
 
-    private void crearParaCadaRepresentante(Student estudiante, Type tipo,
+    private void createForEachGuardian(Student estudiante, Type tipo,
                                             String alcanceRequerido, String mensaje) {
         List<Guardian> representantes = vinculoRepository
                 .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())

@@ -26,8 +26,8 @@ import java.util.Optional;
 /**
  * Flujo de restablecimiento de contraseña por enlace de un solo uso (RF-37).
  *
- * <p>{@link #solicitar} nunca revela si la cuenta existe: haga lo que haga por
- * dentro, el controlador responde siempre {@code 202}. {@link #restablecer}
+ * <p>{@link #request} nunca revela si la cuenta existe: haga lo que haga por
+ * dentro, el controlador responde siempre {@code 202}. {@link #reset}
  * consume el token, cambia la contraseña, invalida las sesiones abiertas del
  * usuario (vía {@link SessionEpochService}) y audita el cambio.
  */
@@ -63,7 +63,7 @@ public class PasswordResetService {
      * @param identificador username o correo registrado
      */
     @Transactional
-    public void solicitar(String identificador) {
+    public void request(String identificador) {
         if (identificador == null || identificador.isBlank()) {
             return;
         }
@@ -87,11 +87,11 @@ public class PasswordResetService {
             return;
         }
 
-        String token = generarToken();
-        tokenStore.guardar(usuario.getUsername(), token, Duration.ofMinutes(ttlMinutos));
+        String token = generateToken();
+        tokenStore.save(usuario.getUsername(), token, Duration.ofMinutes(ttlMinutos));
 
         String url = urlBase + "?token=" + token;
-        mailer.enviarEnlace(usuario.getPersona().getCorreo(), url);
+        mailer.sendLink(usuario.getPersona().getCorreo(), url);
 
         auditService.recordEvent("PWRESET_SOLICITADO", "Usuario", usuario.getIdUsuario(),
                 "solicitó un enlace de restablecimiento de contraseña");
@@ -108,11 +108,11 @@ public class PasswordResetService {
      *                      política (RNF-14)
      */
     @Transactional
-    public void restablecer(String token, String nuevaPassword) {
-        String username = tokenStore.resolver(token)
+    public void reset(String token, String nuevaPassword) {
+        String username = tokenStore.resolve(token)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));
 
-        passwordPolicy.validar(nuevaPassword, username);
+        passwordPolicy.validate(nuevaPassword, username);
 
         UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));
@@ -120,15 +120,15 @@ public class PasswordResetService {
         usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
 
-        tokenStore.consumir(token);
-        sessionEpochService.marcar(username);
+        tokenStore.consume(token);
+        sessionEpochService.mark(username);
 
         auditService.recordEvent("PWRESET_COMPLETADO", "Usuario", usuario.getIdUsuario(),
                 "restableció su contraseña mediante enlace");
         log.info("PWRESET contrasena restablecida para el usuario id={}", usuario.getIdUsuario());
     }
 
-    private String generarToken() {
+    private String generateToken() {
         byte[] bytes = new byte[TOKEN_BYTES];
         RANDOM.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);

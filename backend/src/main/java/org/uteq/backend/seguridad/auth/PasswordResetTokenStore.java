@@ -19,11 +19,11 @@ import java.util.Optional;
  * su SHA-256, de modo que un volcado de la base no entrega tokens usables.
  * Se mantienen dos claves por token:
  * <ul>
- *   <li>{@code pwreset:{sha256}} → username, para resolver el enlace;</li>
+ *   <li>{@code pwreset:{sha256}} → username, para resolve el enlace;</li>
  *   <li>{@code pwreset:user:{username}} → {sha256}, para invalidar el token
  *       anterior de ese usuario cuando pide uno nuevo.</li>
  * </ul>
- * Ambas comparten el mismo TTL. El token es de un solo uso: {@link #consumir}
+ * Ambas comparten el mismo TTL. El token es de un solo uso: {@link #consume}
  * borra las dos claves.
  */
 @Component
@@ -43,9 +43,9 @@ public class PasswordResetTokenStore {
      * @param tokenCrudo el token que viajará en el enlace
      * @param ttl        vigencia de ambas claves
      */
-    public void guardar(String username, String tokenCrudo, Duration ttl) {
+    public void save(String username, String tokenCrudo, Duration ttl) {
         String hash = sha256(tokenCrudo);
-        String userKey = USER_PREFIX + normalizar(username);
+        String userKey = USER_PREFIX + normalize(username);
 
         String hashAnterior = redis.opsForValue().get(userKey);
         if (hashAnterior != null) {
@@ -63,7 +63,7 @@ public class PasswordResetTokenStore {
      * @return el username, o {@link Optional#empty()} si el token no existe,
      *         expiró o ya se consumió
      */
-    public Optional<String> resolver(String tokenCrudo) {
+    public Optional<String> resolve(String tokenCrudo) {
         if (tokenCrudo == null || tokenCrudo.isBlank()) {
             return Optional.empty();
         }
@@ -73,18 +73,18 @@ public class PasswordResetTokenStore {
     /**
      * Invalida un token y su índice de usuario. Idempotente.
      *
-     * @param tokenCrudo token a consumir
+     * @param tokenCrudo token a consume
      */
-    public void consumir(String tokenCrudo) {
+    public void consume(String tokenCrudo) {
         String hash = sha256(tokenCrudo);
         String username = redis.opsForValue().get(TOKEN_PREFIX + hash);
         redis.delete(TOKEN_PREFIX + hash);
         if (username != null) {
-            redis.delete(USER_PREFIX + normalizar(username));
+            redis.delete(USER_PREFIX + normalize(username));
         }
     }
 
-    private static String normalizar(String username) {
+    private static String normalize(String username) {
         return username == null ? "" : username.trim().toLowerCase(Locale.ROOT);
     }
 

@@ -52,7 +52,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     return;
                 }
 
-                if (sessionEpochService.invalidadoPorReseteo(username, jwtService.extractIssuedAt(token))) {
+                if (sessionEpochService.invalidatedByReset(username, jwtService.extractIssuedAt(token))) {
                     filterChain.doFilter(request, response);
                     return;
                 }

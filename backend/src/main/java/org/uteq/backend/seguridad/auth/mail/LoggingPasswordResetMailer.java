@@ -24,7 +24,7 @@ public class LoggingPasswordResetMailer implements PasswordResetMailer {
      * @param url enlace de restablecimiento, escrito en el log en vez de enviarse
      */
     @Override
-    public void enviarEnlace(String correo, String url) {
+    public void sendLink(String correo, String url) {
         log.warn("PWRESET (mail.enabled=false) enlace de restablecimiento para {}: {}", correo, url);
     }
 }

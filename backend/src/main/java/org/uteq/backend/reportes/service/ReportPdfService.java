@@ -56,7 +56,7 @@ public class ReportPdfService {
             if (filas.isEmpty()) {
                 documento.add(new Paragraph("No hay datos para los filtros seleccionados.", FUENTE_CELDA));
             } else {
-                documento.add(construirTabla(encabezados, filas));
+                documento.add(buildTable(encabezados, filas));
             }
 
             documento.add(new Paragraph(" "));
@@ -70,7 +70,7 @@ public class ReportPdfService {
         }
     }
 
-    private PdfPTable construirTabla(List<String> encabezados, List<List<String>> filas) {
+    private PdfPTable buildTable(List<String> encabezados, List<List<String>> filas) {
         PdfPTable tabla = new PdfPTable(encabezados.size());
         tabla.setWidthPercentage(100);
 

@@ -71,7 +71,7 @@ public class StudentAccessService {
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())) {
             throw new IllegalArgumentException("Ya existe una cuenta con ese usuario");
         }
-        passwordPolicy.validar(request.password(), request.username());
+        passwordPolicy.validate(request.password(), request.username());
 
         Role rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
                 .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));

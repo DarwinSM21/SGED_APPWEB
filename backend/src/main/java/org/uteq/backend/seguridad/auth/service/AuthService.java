@@ -91,7 +91,7 @@ public class AuthService {
      */
     @Transactional
     public Optional<SessionResponse> register(RegisterRequest request) {
-        passwordPolicy.validar(request.password(), request.username());
+        passwordPolicy.validate(request.password(), request.username());
 
         // RF-49 / H-01: la cédula es opcional; solo cuenta como colisión si viene.
         boolean cedulaDuplicada = request.cedula() != null && !request.cedula().isBlank()
@@ -116,7 +116,7 @@ public class AuthService {
                 .build();
         persona = personaRepository.save(persona);
         // RNF-26 / H-09: doble opt-in del correo recién registrado.
-        emailVerificationService.enviarConfirmacion(persona);
+        emailVerificationService.sendConfirmation(persona);
 
         // id_estado_general es NOT NULL: sin esto el alta también falla en base
         // de datos aunque la persona ya se haya podido insertar.

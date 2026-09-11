@@ -67,10 +67,10 @@ class PasswordResetServiceTest {
     void solicitar_por_username() {
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
 
-        service.solicitar("ana.torres");
+        service.request("ana.torres");
 
-        verify(tokenStore).guardar(eq("ana.torres"), anyString(), eq(Duration.ofMinutes(30)));
-        verify(mailer).enviarEnlace(eq("ana@x.com"), contains("token="));
+        verify(tokenStore).save(eq("ana.torres"), anyString(), eq(Duration.ofMinutes(30)));
+        verify(mailer).sendLink(eq("ana@x.com"), contains("token="));
     }
 
     @Test
@@ -80,10 +80,10 @@ class PasswordResetServiceTest {
         when(personaRepository.findByCorreo("ana@x.com")).thenReturn(Optional.of(ana.getPersona()));
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(ana));
 
-        service.solicitar("ana@x.com");
+        service.request("ana@x.com");
 
-        verify(tokenStore).guardar(eq("ana.torres"), anyString(), eq(Duration.ofMinutes(30)));
-        verify(mailer).enviarEnlace(eq("ana@x.com"), contains("token="));
+        verify(tokenStore).save(eq("ana.torres"), anyString(), eq(Duration.ofMinutes(30)));
+        verify(mailer).sendLink(eq("ana@x.com"), contains("token="));
     }
 
     @Test
@@ -92,10 +92,10 @@ class PasswordResetServiceTest {
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("nadie")).thenReturn(Optional.empty());
         when(personaRepository.findByCorreo("nadie")).thenReturn(Optional.empty());
 
-        assertThatCode(() -> service.solicitar("nadie")).doesNotThrowAnyException();
+        assertThatCode(() -> service.request("nadie")).doesNotThrowAnyException();
 
-        verify(tokenStore, never()).guardar(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
-        verify(mailer, never()).enviarEnlace(anyString(), anyString());
+        verify(tokenStore, never()).save(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
+        verify(mailer, never()).sendLink(anyString(), anyString());
     }
 
     @Test
@@ -104,73 +104,73 @@ class PasswordResetServiceTest {
         ana.getPersona().setCorreoVerificado(false);
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
 
-        service.solicitar("ana.torres");
+        service.request("ana.torres");
 
-        verify(tokenStore, never()).guardar(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
-        verify(mailer, never()).enviarEnlace(anyString(), anyString());
+        verify(tokenStore, never()).save(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
+        verify(mailer, never()).sendLink(anyString(), anyString());
     }
 
     @Test
     @DisplayName("solicitar con identificador en blanco o nulo: no op")
     void solicitar_en_blanco_es_no_op() {
-        service.solicitar("   ");
-        service.solicitar(null);
+        service.request("   ");
+        service.request(null);
 
-        verify(mailer, never()).enviarEnlace(anyString(), anyString());
+        verify(mailer, never()).sendLink(anyString(), anyString());
     }
 
     @Test
     @DisplayName("restablecer con token valido: cambia el hash, consume el token y marca la epoca")
     void restablecer_ok() {
-        when(tokenStore.resolver("tok")).thenReturn(Optional.of("ana.torres"));
+        when(tokenStore.resolve("tok")).thenReturn(Optional.of("ana.torres"));
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
         when(passwordEncoder.encode("clave1234")).thenReturn("hash-nuevo");
 
-        service.restablecer("tok", "clave1234");
+        service.reset("tok", "clave1234");
 
         assertThat(ana.getPassword_Hash()).isEqualTo("hash-nuevo");
         verify(usuarioRepository).save(ana);
-        verify(tokenStore).consumir("tok");
-        verify(sessionEpochService).marcar("ana.torres");
+        verify(tokenStore).consume("tok");
+        verify(sessionEpochService).mark("ana.torres");
         verify(auditService).recordEvent(eq("PWRESET_COMPLETADO"), eq("Usuario"), eq(7L), anyString());
     }
 
     @Test
     @DisplayName("restablecer con token inexistente o ya consumido: 400 y no cambia nada")
     void restablecer_token_invalido() {
-        when(tokenStore.resolver("tok")).thenReturn(Optional.empty());
+        when(tokenStore.resolve("tok")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.restablecer("tok", "clave1234"))
+        assertThatThrownBy(() -> service.reset("tok", "clave1234"))
                 .isInstanceOf(ApiException.class)
                 .satisfies(e -> assertThat(((ApiException) e).getStatus().value()).isEqualTo(400));
 
         verify(usuarioRepository, never()).save(org.mockito.ArgumentMatchers.any());
-        verify(sessionEpochService, never()).marcar(anyString());
+        verify(sessionEpochService, never()).mark(anyString());
     }
 
     @Test
     @DisplayName("restablecer con contrasena debil: 422 y no consume el token")
     void restablecer_contrasena_debil() {
-        when(tokenStore.resolver("tok")).thenReturn(Optional.of("ana.torres"));
+        when(tokenStore.resolve("tok")).thenReturn(Optional.of("ana.torres"));
 
-        assertThatThrownBy(() -> service.restablecer("tok", "corta1"))
+        assertThatThrownBy(() -> service.reset("tok", "corta1"))
                 .isInstanceOf(ApiException.class)
                 .satisfies(e -> assertThat(((ApiException) e).getStatus().value()).isEqualTo(422));
 
         verify(usuarioRepository, never()).save(org.mockito.ArgumentMatchers.any());
-        verify(tokenStore, never()).consumir(anyString());
+        verify(tokenStore, never()).consume(anyString());
         assertThat(ana.getPassword_Hash()).isEqualTo("hash-viejo");
     }
 
     @Test
     @DisplayName("restablecer cuando el usuario ya no esta activo: 400")
     void restablecer_usuario_inactivo() {
-        when(tokenStore.resolver("tok")).thenReturn(Optional.of("ana.torres"));
+        when(tokenStore.resolve("tok")).thenReturn(Optional.of("ana.torres"));
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.restablecer("tok", "clave1234"))
+        assertThatThrownBy(() -> service.reset("tok", "clave1234"))
                 .isInstanceOf(ApiException.class);
 
-        verify(tokenStore, never()).consumir(anyString());
+        verify(tokenStore, never()).consume(anyString());
     }
 }

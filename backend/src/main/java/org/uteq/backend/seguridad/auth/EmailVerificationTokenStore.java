@@ -18,12 +18,12 @@ import java.util.Optional;
  * enlace nunca se guarda tal cual, en Redis vive su SHA-256. Se mantienen dos
  * claves por token:
  * <ul>
- *   <li>{@code emailverify:{sha256}} → id de la persona, para resolver el enlace;</li>
+ *   <li>{@code emailverify:{sha256}} → id de la persona, para resolve el enlace;</li>
  *   <li>{@code emailverify:persona:{id}} → {sha256}, para invalidar el token
  *       anterior de esa persona cuando se emite uno nuevo (p. ej. al volver a
  *       cambiar el correo).</li>
  * </ul>
- * El token es de un solo uso: {@link #consumir} borra ambas claves.
+ * El token es de un solo uso: {@link #consume} borra ambas claves.
  */
 @Component
 @RequiredArgsConstructor
@@ -41,7 +41,7 @@ public class EmailVerificationTokenStore {
      * @param tokenCrudo el token que viajará en el enlace de confirmación
      * @param ttl        vigencia de ambas claves
      */
-    public void guardar(Long idPersona, String tokenCrudo, Duration ttl) {
+    public void save(Long idPersona, String tokenCrudo, Duration ttl) {
         String hash = sha256(tokenCrudo);
         String personaKey = PERSONA_PREFIX + idPersona;
 
@@ -61,7 +61,7 @@ public class EmailVerificationTokenStore {
      * @return el id de la persona, o {@link Optional#empty()} si el token no
      *         existe, expiró o ya se consumió
      */
-    public Optional<Long> resolver(String tokenCrudo) {
+    public Optional<Long> resolve(String tokenCrudo) {
         if (tokenCrudo == null || tokenCrudo.isBlank()) {
             return Optional.empty();
         }
@@ -72,9 +72,9 @@ public class EmailVerificationTokenStore {
     /**
      * Invalida un token y su índice de persona. Idempotente.
      *
-     * @param tokenCrudo token a consumir
+     * @param tokenCrudo token a consume
      */
-    public void consumir(String tokenCrudo) {
+    public void consume(String tokenCrudo) {
         String hash = sha256(tokenCrudo);
         String idPersona = redis.opsForValue().get(TOKEN_PREFIX + hash);
         redis.delete(TOKEN_PREFIX + hash);

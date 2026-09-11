@@ -54,7 +54,7 @@ public class StudentController {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by(dir, campo));
 
         StudentPageResponse<StudentResponse> pagina = estudianteService.list(pageRequest);
-        return ResponseEntity.ok(filtrarDatosFisicos(pagina, auth));
+        return ResponseEntity.ok(filterPhysicalData(pagina, auth));
     }
 
     /**
@@ -88,7 +88,7 @@ public class StudentController {
         return false;
     }
 
-    private StudentPageResponse<StudentResponse> filtrarDatosFisicos(
+    private StudentPageResponse<StudentResponse> filterPhysicalData(
             StudentPageResponse<StudentResponse> pagina, Authentication auth) {
         if (puedeVerDatosFisicos(auth)) return pagina;
         List<StudentResponse> filtrado = pagina.content().stream()

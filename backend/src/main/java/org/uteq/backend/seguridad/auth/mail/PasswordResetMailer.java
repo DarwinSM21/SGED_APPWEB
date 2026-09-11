@@ -18,5 +18,5 @@ public interface PasswordResetMailer {
      * @param url    enlace absoluto de restablecimiento, con el token ya
      *               incluido como parámetro de consulta
      */
-    void enviarEnlace(String correo, String url);
+    void sendLink(String correo, String url);
 }

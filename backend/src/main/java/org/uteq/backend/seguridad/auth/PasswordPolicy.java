@@ -45,26 +45,26 @@ public class PasswordPolicy {
      *                 restablecimiento, donde el usuario se resuelve del token)
      * @return los mensajes de cada regla incumplida, en orden
      */
-    public List<String> problemas(String password, String username) {
-        List<String> problemas = new ArrayList<>();
+    public List<String> problems(String password, String username) {
+        List<String> problems = new ArrayList<>();
         String p = password == null ? "" : password;
 
         if (p.length() < MIN_LONGITUD) {
-            problemas.add("La contraseña debe tener al menos " + MIN_LONGITUD + " caracteres.");
+            problems.add("La contraseña debe tener al menos " + MIN_LONGITUD + " caracteres.");
         }
         if (p.getBytes(StandardCharsets.UTF_8).length > MAX_BYTES) {
-            problemas.add("La contraseña no puede superar los " + MAX_BYTES + " bytes.");
+            problems.add("La contraseña no puede superar los " + MAX_BYTES + " bytes.");
         }
         if (p.chars().noneMatch(Character::isLetter)) {
-            problemas.add("La contraseña debe incluir al menos una letra.");
+            problems.add("La contraseña debe incluir al menos una letra.");
         }
         if (p.chars().noneMatch(Character::isDigit)) {
-            problemas.add("La contraseña debe incluir al menos un dígito.");
+            problems.add("La contraseña debe incluir al menos un dígito.");
         }
         if (username != null && !username.isBlank() && p.equalsIgnoreCase(username.trim())) {
-            problemas.add("La contraseña no puede ser igual al nombre de usuario.");
+            problems.add("La contraseña no puede ser igual al nombre de usuario.");
         }
-        return problemas;
+        return problems;
     }
 
     /**
@@ -76,10 +76,10 @@ public class PasswordPolicy {
      *                      incumplimientos en el detalle, si la contraseña no
      *                      cumple la política
      */
-    public void validar(String password, String username) {
-        List<String> problemas = problemas(password, username);
-        if (!problemas.isEmpty()) {
-            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, String.join(" ", problemas));
+    public void validate(String password, String username) {
+        List<String> problems = problems(password, username);
+        if (!problems.isEmpty()) {
+            throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, String.join(" ", problems));
         }
     }
 }

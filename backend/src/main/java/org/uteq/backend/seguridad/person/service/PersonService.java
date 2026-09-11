@@ -95,7 +95,7 @@ public class PersonService {
 
         persona = personaRepository.save(persona);
         // RNF-26 / H-09: el correo nace sin verificar; se dispara el doble opt-in.
-        emailVerificationService.enviarConfirmacion(persona);
+        emailVerificationService.sendConfirmation(persona);
         return toResponse(persona);
     }
 
@@ -137,7 +137,7 @@ public class PersonService {
 
         persona = personaRepository.save(persona);
         if (correoCambio) {
-            emailVerificationService.enviarConfirmacion(persona);
+            emailVerificationService.sendConfirmation(persona);
         }
         return toResponse(persona);
     }

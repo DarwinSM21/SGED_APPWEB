@@ -90,7 +90,7 @@ public class AuditService {
                     .entidad(entidad)
                     .entidadId(entidadId)
                     .descripcion(descripcion)
-                    .ip(resolverIp());
+                    .ip(resolveIp());
 
             usuarioRepository.findByUsername(username).ifPresent(builder::usuario);
 
@@ -158,7 +158,7 @@ public class AuditService {
         };
     }
 
-    private String resolverIp() {
+    private String resolveIp() {
         var attrs = RequestContextHolder.getRequestAttributes();
         if (attrs instanceof ServletRequestAttributes servletAttrs) {
             return servletAttrs.getRequest().getRemoteAddr();
