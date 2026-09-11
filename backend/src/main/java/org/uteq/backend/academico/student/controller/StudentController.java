@@ -39,6 +39,8 @@ public class StudentController {
      * @param size tamaño de página
      * @param sort par {@code campo[,asc|desc]}; por defecto
      *             {@code idEstudiante,asc}
+     * @param auth sesión autenticada; determina si el peso y la altura se
+     *             incluyen en la respuesta (RF-11b: {@code RECEPCIONISTA} no los ve)
      * @return {@code 200 OK} con la página solicitada
      */
     @GetMapping

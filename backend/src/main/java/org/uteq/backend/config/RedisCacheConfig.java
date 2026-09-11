@@ -107,6 +107,9 @@ public class RedisCacheConfig implements CachingConfigurer {
      * a la base en vez de propagar el error. Cada método registra el fallo una
      * vez (nivel WARN) y no relanza; Spring continúa como si fuera un fallo de
      * caché normal —invoca el método y consulta la base—.
+     *
+     * @return el manejador que degrada lectura, escritura, evicción y
+     *         limpieza de caché a advertencia registrada, sin relanzar
      */
     @Override
     public CacheErrorHandler errorHandler() {
