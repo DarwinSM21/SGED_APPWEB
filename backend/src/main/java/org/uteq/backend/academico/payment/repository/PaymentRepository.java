@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.uteq.backend.academico.payment.entity.Payment;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,14 +27,21 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
      * @param mes mes del período pagado
      * @return {@code true} si ya existe un pago vigente para ese período
      */
+    @Query("""
+           SELECT COUNT(p) > 0 FROM Payment p
+           WHERE p.student.id = :idEstudiante AND p.type = :tipo AND p.year = :anio AND p.month = :mes
+             AND p.canceledAt IS NULL
+           """)
     boolean existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
-            Long idEstudiante, TipoPago tipo, Short anio, Short mes);
+            @Param("idEstudiante") Long idEstudiante, @Param("tipo") PaymentType tipo,
+            @Param("anio") Short anio, @Param("mes") Short mes);
 
     /**
      * @param idEstudiante identificador del estudiante
      * @return los pagos de ese estudiante, del más reciente al más antiguo
      */
-    List<Payment> findByEstudiante_IdEstudianteOrderByFechaPagoDesc(Long idEstudiante);
+    @Query("SELECT p FROM Payment p WHERE p.student.id = :idEstudiante ORDER BY p.paymentDate DESC")
+    List<Payment> findByEstudiante_IdEstudianteOrderByFechaPagoDesc(@Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param inicio fecha inicial del rango, inclusive
@@ -42,9 +49,9 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
      * @return la suma de los montos no anulados pagados en ese rango de fechas
      */
     @Query("""
-           SELECT COALESCE(SUM(p.monto), 0) FROM Payment p
-            WHERE p.fechaPago BETWEEN :inicio AND :fin
-              AND p.anuladoEn IS NULL
+           SELECT COALESCE(SUM(p.amount), 0) FROM Payment p
+            WHERE p.paymentDate BETWEEN :inicio AND :fin
+              AND p.canceledAt IS NULL
            """)
     BigDecimal sumAmountBetweenDates(LocalDate inicio, LocalDate fin);
 
@@ -53,7 +60,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
      * @param fin fecha final del rango, inclusive
      * @return la cantidad de pagos no anulados registrados en ese rango de fechas
      */
-    long countByFechaPagoBetweenAndAnuladoEnIsNull(LocalDate inicio, LocalDate fin);
+    @Query("""
+           SELECT COUNT(p) FROM Payment p
+           WHERE p.paymentDate BETWEEN :inicio AND :fin AND p.canceledAt IS NULL
+           """)
+    long countByFechaPagoBetweenAndAnuladoEnIsNull(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /**
      * Estudiantes cuya mensualidad de un tipo/año/mes ya está cubierta por un
@@ -65,12 +76,12 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
      * @return identificadores de los estudiantes con ese período pagado
      */
     @Query("""
-           SELECT p.estudiante.idEstudiante FROM Payment p
-           WHERE p.tipo = :tipo AND p.anio = :anio AND p.mes = :mes
-             AND p.anuladoEn IS NULL
+           SELECT p.student.id FROM Payment p
+           WHERE p.type = :tipo AND p.year = :anio AND p.month = :mes
+             AND p.canceledAt IS NULL
            """)
     List<Long> idsWithMembershipCovered(
-            @Param("tipo") TipoPago tipo, @Param("anio") Short anio, @Param("mes") Short mes);
+            @Param("tipo") PaymentType tipo, @Param("anio") Short anio, @Param("mes") Short mes);
 
     /**
      * Totales de facturación agrupados por año y mes, para el reporte de
@@ -81,11 +92,11 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
      * @return filas {@code [año, mes, suma de montos, cantidad de pagos]} por período
      */
     @Query("""
-           SELECT year(p.fechaPago), month(p.fechaPago), SUM(p.monto), COUNT(p)
+           SELECT year(p.paymentDate), month(p.paymentDate), SUM(p.amount), COUNT(p)
            FROM Payment p
-           WHERE p.fechaPago BETWEEN :desde AND :hasta
-             AND p.anuladoEn IS NULL
-           GROUP BY year(p.fechaPago), month(p.fechaPago)
+           WHERE p.paymentDate BETWEEN :desde AND :hasta
+             AND p.canceledAt IS NULL
+           GROUP BY year(p.paymentDate), month(p.paymentDate)
            """)
     List<Object[]> monthlyBillingTotals(@Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }

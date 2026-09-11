@@ -22,7 +22,7 @@ final class PromptsFeedback {
             - Si un jugador arrastra una lesion, no sugieras aumentar su carga fisica.
             """;
 
-    static String deJugador(AnonymousPlayerProfile p) {
+    static String forPlayer(AnonymousPlayerProfile p) {
         var sb = new StringBuilder();
         sb.append("Resume como viene rindiendo este jugador, para que lo lea su padre, ")
           .append("madre o representante. Traduce los numeros a lenguaje corriente en vez ")
@@ -33,9 +33,9 @@ final class PromptsFeedback {
         if (p.position() != null) {
             sb.append("Posicion en la que juega: ").append(p.position()).append('\n');
         }
-        sb.append("Promedio por criterio (sobre 10): ").append(formatear(p.scores())).append('\n');
+        sb.append("Promedio por criterio (sobre 10): ").append(format(p.scores())).append('\n');
         if (!p.previousScores().isEmpty()) {
-            sb.append("Promedio historico: ").append(formatear(p.previousScores())).append('\n');
+            sb.append("Promedio historico: ").append(format(p.previousScores())).append('\n');
         }
         if (p.lastMonthAttendances() != null) {
             sb.append("Entrenamientos a los que asistio en el ultimo mes: ")
@@ -47,7 +47,7 @@ final class PromptsFeedback {
         return sb.toString();
     }
 
-    static String dePlantilla(List<AnonymousPlayerProfile> alineacion) {
+    static String forLineup(List<AnonymousPlayerProfile> alineacion) {
         var sb = new StringBuilder();
         sb.append("Comenta brevemente esta alineacion, ya seleccionada por el sistema ")
           .append("segun puntaje acumulado. No propongas cambios de jugadores ni de posiciones: ")
@@ -57,12 +57,12 @@ final class PromptsFeedback {
         for (var p : alineacion) {
             sb.append("- ").append(p.reference())
               .append(" (").append(p.position() == null ? "sin posicion" : p.position()).append("): ")
-              .append(formatear(p.scores())).append('\n');
+              .append(format(p.scores())).append('\n');
         }
         return sb.toString();
     }
 
-    private static String formatear(Map<String, Double> puntajes) {
+    private static String format(Map<String, Double> puntajes) {
         if (puntajes.isEmpty()) {
             return "sin datos";
         }

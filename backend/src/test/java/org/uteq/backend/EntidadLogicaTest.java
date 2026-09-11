@@ -27,7 +27,7 @@ class EntidadLogicaTest {
         Consent c = Consent.builder().build();
         assertThat(c.isActive()).isTrue();
 
-        c.setRevocadoEn(OffsetDateTime.now());
+        c.setRevokedAt(OffsetDateTime.now());
         assertThat(c.isActive()).isFalse();
     }
 
@@ -37,7 +37,7 @@ class EntidadLogicaTest {
         Payment p = Payment.builder().build();
         assertThat(p.isActive()).isTrue();
 
-        p.setAnuladoEn(OffsetDateTime.now());
+        p.setCanceledAt(OffsetDateTime.now());
         assertThat(p.isActive()).isFalse();
     }
 

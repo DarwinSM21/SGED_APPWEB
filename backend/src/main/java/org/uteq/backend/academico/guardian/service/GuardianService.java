@@ -97,18 +97,18 @@ public class GuardianService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
         boolean tieneRolRepresentante = usuario.getRoles().stream()
-                .anyMatch(r -> "REPRESENTANTE".equals(r.getNombre()));
+                .anyMatch(r -> "REPRESENTANTE".equals(r.getName()));
         if (!tieneRolRepresentante) {
             throw new IllegalArgumentException(
                     "El usuario debe tener el rol REPRESENTANTE para registrarse como representante");
         }
 
         Guardian representante = Guardian.builder()
-                .persona(persona)
-                .usuario(usuario)
-                .parentesco(request.parentesco())
-                .telefonoContacto(request.telefonoContacto())
-                .activo(true)
+                .person(persona)
+                .userAccount(usuario)
+                .relationship(request.parentesco())
+                .contactPhone(request.telefonoContacto())
+                .active(true)
                 .build();
         representante = representanteRepository.save(representante);
 
@@ -134,8 +134,8 @@ public class GuardianService {
     public GuardianResponse update(Long id, GuardianRequest request) {
         Guardian representante = representanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
-        representante.setParentesco(request.parentesco());
-        representante.setTelefonoContacto(request.telefonoContacto());
+        representante.setRelationship(request.parentesco());
+        representante.setContactPhone(request.telefonoContacto());
         representante = representanteRepository.save(representante);
         return toResponse(representante);
     }
@@ -146,13 +146,13 @@ public class GuardianService {
      * @param id identificador del representante
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Representante", idSpel = "#p0",
-            descripcionSpel = "'desactivo la ficha de representante #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Representante", idSpel = "#p0",
+            descriptionSpel = "'desactivo la ficha de representante #' + #p0")
     @Transactional
     public void delete(Long id) {
         Guardian representante = representanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
-        representante.setActivo(false);
+        representante.setActive(false);
         representanteRepository.save(representante);
     }
 
@@ -164,18 +164,18 @@ public class GuardianService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Audited(accion = "REACTIVAR", entidad = "Representante", idSpel = "#p0",
-            descripcionSpel = "'reactivo la ficha de representante #' + #p0")
+    @Audited(action = "REACTIVAR", entity = "Representante", idSpel = "#p0",
+            descriptionSpel = "'reactivo la ficha de representante #' + #p0")
     @Transactional
     public GuardianResponse reactivate(Long id) {
         Guardian representante = representanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
 
-        if (Boolean.TRUE.equals(representante.getActivo())) {
+        if (Boolean.TRUE.equals(representante.getActive())) {
             throw new IllegalArgumentException("La ficha de representante ya se encuentra activa");
         }
 
-        representante.setActivo(true);
+        representante.setActive(true);
         return toResponse(representanteRepository.save(representante));
     }
 
@@ -214,7 +214,7 @@ public class GuardianService {
         GuardianStudent vinculo = vinculoRepository
                 .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(idRepresentante, idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Ese estudiante no está vinculado a este representante"));
-        vinculo.setActivo(false);
+        vinculo.setActive(false);
         vinculoRepository.save(vinculo);
     }
 
@@ -231,56 +231,56 @@ public class GuardianService {
 
         if (contactoPrincipal) {
             vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(idEstudiante).stream()
-                    .filter(v -> !v.getRepresentante().getIdRepresentante().equals(representante.getIdRepresentante()))
-                    .filter(v -> Boolean.TRUE.equals(v.getContactoPrincipal()))
+                    .filter(v -> !v.getGuardian().getId().equals(representante.getId()))
+                    .filter(v -> Boolean.TRUE.equals(v.getPrimaryContact()))
                     .forEach(v -> {
-                        v.setContactoPrincipal(false);
+                        v.setPrimaryContact(false);
                         vinculoRepository.save(v);
                     });
         }
 
         vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(
-                        representante.getIdRepresentante(), idEstudiante)
+                        representante.getId(), idEstudiante)
                 .ifPresentOrElse(
                         existente -> {
-                            existente.setActivo(true);
-                            existente.setRelacion(relacion);
-                            existente.setContactoPrincipal(contactoPrincipal);
+                            existente.setActive(true);
+                            existente.setRelationship(relacion);
+                            existente.setPrimaryContact(contactoPrincipal);
                             vinculoRepository.save(existente);
                         },
                         () -> vinculoRepository.save(GuardianStudent.builder()
-                                .representante(representante)
-                                .estudiante(estudiante)
-                                .activo(true)
-                                .relacion(relacion)
-                                .contactoPrincipal(contactoPrincipal)
+                                .guardian(representante)
+                                .student(estudiante)
+                                .active(true)
+                                .relationship(relacion)
+                                .primaryContact(contactoPrincipal)
                                 .build())
                 );
     }
 
     private GuardianResponse toResponse(Guardian r) {
         List<LinkedStudentResponse> representados =
-                vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(r.getIdRepresentante()).stream()
+                vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(r.getId()).stream()
                         .map(v -> new LinkedStudentResponse(
-                                v.getEstudiante().getIdEstudiante(),
-                                v.getEstudiante().getPersona().getNombre() + " " + v.getEstudiante().getPersona().getApellido(),
-                                v.getEstudiante().getCategoria().getNombre(),
-                                v.getRelacion(),
-                                v.getContactoPrincipal()))
+                                v.getStudent().getId(),
+                                v.getStudent().getPerson().getName() + " " + v.getStudent().getPerson().getLastName(),
+                                v.getStudent().getCategory().getNombre(),
+                                v.getRelationship(),
+                                v.getPrimaryContact()))
                         .toList();
 
         return new GuardianResponse(
-                r.getIdRepresentante(),
-                r.getPersona().getIdPersona(),
-                r.getPersona().getNombre(),
-                r.getPersona().getApellido(),
-                r.getPersona().getCedula(),
-                r.getPersona().getCorreo(),
-                r.getUsuario().getIdUsuario(),
-                r.getUsuario().getUsername(),
-                r.getParentesco(),
-                r.getTelefonoContacto(),
-                r.getActivo(),
+                r.getId(),
+                r.getPerson().getId(),
+                r.getPerson().getName(),
+                r.getPerson().getLastName(),
+                r.getPerson().getNationalId(),
+                r.getPerson().getEmail(),
+                r.getUserAccount().getId(),
+                r.getUserAccount().getUsername(),
+                r.getRelationship(),
+                r.getContactPhone(),
+                r.getActive(),
                 r.getCreatedAt(),
                 representados
         );

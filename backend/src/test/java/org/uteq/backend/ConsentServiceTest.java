@@ -40,11 +40,11 @@ class ConsentServiceTest {
     private ConsentService consentimientoService;
 
     private Guardian representante() {
-        return Guardian.builder().idRepresentante(1L).build();
+        return Guardian.builder().id(1L).build();
     }
 
     private Student estudiante() {
-        return Student.builder().idEstudiante(10L).build();
+        return Student.builder().id(10L).build();
     }
 
     @Test
@@ -66,7 +66,7 @@ class ConsentServiceTest {
         when(consentimientoRepository
                 .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
                         1L, 10L, Consent.ALCANCE_INFORMES))
-                .thenReturn(Optional.of(Consent.builder().idConsentimiento(5L).build()));
+                .thenReturn(Optional.of(Consent.builder().id(5L).build()));
 
         assertThatThrownBy(() -> consentimientoService.grant(request, "admin"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -84,10 +84,10 @@ class ConsentServiceTest {
                         1L, 10L, Consent.ALCANCE_INFORMES))
                 .thenReturn(Optional.empty());
         when(usuarioRepository.findByUsername("admin")).thenReturn(
-                Optional.of(UserAccount.builder().idUsuario(99L).username("admin").build()));
+                Optional.of(UserAccount.builder().id(99L).username("admin").build()));
         when(consentimientoRepository.save(any(Consent.class))).thenAnswer(inv -> {
             Consent c = inv.getArgument(0);
-            c.setIdConsentimiento(7L);
+            c.setId(7L);
             return c;
         });
 
@@ -102,31 +102,31 @@ class ConsentServiceTest {
     @DisplayName("revocar marca revocadoEn y quien lo revoco")
     void revocar_marca_revocado() {
         Consent existente = Consent.builder()
-                .idConsentimiento(7L)
-                .representante(representante())
-                .estudiante(estudiante())
-                .alcance(Consent.ALCANCE_INFORMES)
-                .otorgadoEn(OffsetDateTime.now().minusDays(1))
+                .id(7L)
+                .guardian(representante())
+                .student(estudiante())
+                .scope(Consent.ALCANCE_INFORMES)
+                .grantedAt(OffsetDateTime.now().minusDays(1))
                 .build();
         when(consentimientoRepository.findById(7L)).thenReturn(Optional.of(existente));
         when(usuarioRepository.findByUsername("admin")).thenReturn(
-                Optional.of(UserAccount.builder().idUsuario(99L).username("admin").build()));
+                Optional.of(UserAccount.builder().id(99L).username("admin").build()));
         when(consentimientoRepository.save(any(Consent.class))).thenAnswer(inv -> inv.getArgument(0));
 
         ConsentResponse resultado = consentimientoService.revoke(7L, "admin");
 
         assertThat(resultado.vigente()).isFalse();
-        assertThat(existente.getRevocadoEn()).isNotNull();
+        assertThat(existente.getRevokedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("revocar rechaza un consentimiento que ya estaba revocado")
     void revocar_rechaza_doble_revocacion() {
         Consent yaRevocado = Consent.builder()
-                .idConsentimiento(7L)
-                .representante(representante())
-                .estudiante(estudiante())
-                .revocadoEn(OffsetDateTime.now())
+                .id(7L)
+                .guardian(representante())
+                .student(estudiante())
+                .revokedAt(OffsetDateTime.now())
                 .build();
         when(consentimientoRepository.findById(7L)).thenReturn(Optional.of(yaRevocado));
 
@@ -138,8 +138,8 @@ class ConsentServiceTest {
     @DisplayName("listarPorEstudiante delega en el repositorio y mapea vigencia")
     void listarPorEstudiante_devuelve_historial() {
         Consent c = Consent.builder()
-                .idConsentimiento(1L).representante(representante()).estudiante(estudiante())
-                .alcance(Consent.ALCANCE_INFORMES).otorgadoEn(OffsetDateTime.now())
+                .id(1L).guardian(representante()).student(estudiante())
+                .scope(Consent.ALCANCE_INFORMES).grantedAt(OffsetDateTime.now())
                 .build();
         when(consentimientoRepository.findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(10L))
                 .thenReturn(List.of(c));

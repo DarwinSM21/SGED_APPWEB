@@ -109,8 +109,8 @@ public class StudentService {
      *                                      está en uso o si la edad no cae en
      *                                      el rango de la categoría
      */
-    @Audited(accion = "CREAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
-            descripcionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
+    @Audited(action = "CREAR", entity = "Estudiante", idSpel = "#result.idEstudiante",
+            descriptionSpel = "'creó la ficha de estudiante de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse create(StudentRequest request) {
@@ -122,7 +122,7 @@ public class StudentService {
         if (estudianteExistente.isPresent()) {
             Student est = estudianteExistente.get();
 
-            if (Boolean.TRUE.equals(est.getActivo())) {
+            if (Boolean.TRUE.equals(est.getActive())) {
                 throw new IllegalArgumentException("La persona seleccionada ya cuenta con una ficha de estudiante activa.");
             }
 
@@ -133,14 +133,14 @@ public class StudentService {
             GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
                     .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
-            est.setCategoria(categoria);
-            est.setEstadoGeneral(estadoGeneral);
-            est.setCodigoEstudiante(request.codigoEstudiante());
-            est.setFechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));
-            est.setPeso(request.peso());
-            est.setAltura(request.altura());
-            est.setPosicion(resolvePosition(request.idPosicion()));
-            est.setActivo(true);
+            est.setCategory(categoria);
+            est.setGeneralStatus(estadoGeneral);
+            est.setStudentCode(request.codigoEstudiante());
+            est.setEnrollmentDate(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));
+            est.setWeight(request.peso());
+            est.setHeight(request.altura());
+            est.setPosition(resolvePosition(request.idPosicion()));
+            est.setActive(true);
 
             est = estudianteRepository.save(est);
             return toResponse(est);
@@ -163,15 +163,15 @@ public class StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
 
         Student estudiante = Student.builder()
-                .persona(persona)
-                .categoria(categoria)
-                .estadoGeneral(estadoGeneral)
-                .codigoEstudiante(request.codigoEstudiante())
-                .fechaIngreso(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))
-                .peso(request.peso())
-                .altura(request.altura())
-                .posicion(resolvePosition(request.idPosicion()))
-                .activo(true)
+                .person(persona)
+                .category(categoria)
+                .generalStatus(estadoGeneral)
+                .studentCode(request.codigoEstudiante())
+                .enrollmentDate(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))
+                .weight(request.peso())
+                .height(request.altura())
+                .position(resolvePosition(request.idPosicion()))
+                .active(true)
                 .build();
 
         estudiante = estudianteRepository.save(estudiante);
@@ -192,8 +192,8 @@ public class StudentService {
      *                                      estudiante o la edad no cae en el
      *                                      rango de la categoría nueva
      */
-    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
-            descripcionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
+    @Audited(action = "EDITAR", entity = "Estudiante", idSpel = "#result.idEstudiante",
+            descriptionSpel = "'editó la ficha de ' + #result.nombrePersona + ' ' + #result.apellidoPersona")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse update(Long id, StudentRequest request) {
@@ -206,17 +206,17 @@ public class StudentService {
             throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
         }
 
-        reasignarPersonaSiCambio(estudiante, request.idPersona());
-        reasignarCategoriaSiCambio(estudiante, request.idCategoria());
-        reasignarEstadoGeneralSiCambio(estudiante, request.idEstadoGeneral());
-        reasignarPosicionSiCambio(estudiante, request.idPosicion());
+        reassignPersonIfChanged(estudiante, request.idPersona());
+        reassignCategoryIfChanged(estudiante, request.idCategoria());
+        reassignGeneralStatusIfChanged(estudiante, request.idEstadoGeneral());
+        reassignPositionIfChanged(estudiante, request.idPosicion());
 
-        estudiante.setCodigoEstudiante(request.codigoEstudiante());
+        estudiante.setStudentCode(request.codigoEstudiante());
         if (request.fechaIngreso() != null) {
-            estudiante.setFechaIngreso(request.fechaIngreso());
+            estudiante.setEnrollmentDate(request.fechaIngreso());
         }
-        estudiante.setPeso(request.peso());
-        estudiante.setAltura(request.altura());
+        estudiante.setWeight(request.peso());
+        estudiante.setHeight(request.altura());
 
         estudiante = estudianteRepository.save(estudiante);
 
@@ -237,14 +237,14 @@ public class StudentService {
      * @throws ResourceNotFoundException si el estudiante o la posición no
      *                                      existen
      */
-    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
-            descripcionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
+    @Audited(action = "EDITAR", entity = "Estudiante", idSpel = "#result.idEstudiante",
+            descriptionSpel = "'editó la posición de ' + #result.nombrePersona + ' ' + #result.apellidoPersona + ' a ' + (#result.nombrePosicion != null ? #result.nombrePosicion : 'sin posición')")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse updatePosition(Long id, Long idPosicion) {
         Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
-        estudiante.setPosicion(resolvePosition(idPosicion));
+        estudiante.setPosition(resolvePosition(idPosicion));
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
     }
@@ -253,8 +253,8 @@ public class StudentService {
     // seguían el mismo patrón —si el id pedido difiere del actual, buscar la
     // nueva fila y reasignarla— y sumaban complejidad al método. Extraídas
     // para que update() quede lineal: valida, reasigna lo que cambió, guarda.
-    private void reasignarPersonaSiCambio(Student estudiante, Long idPersonaNueva) {
-        if (estudiante.getPersona().getIdPersona().equals(idPersonaNueva)) {
+    private void reassignPersonIfChanged(Student estudiante, Long idPersonaNueva) {
+        if (estudiante.getPerson().getId().equals(idPersonaNueva)) {
             return;
         }
         if (estudianteRepository.existsByPersona_IdPersona(idPersonaNueva)) {
@@ -262,7 +262,7 @@ public class StudentService {
         }
         Person nuevaPersona = personaRepository.findById(idPersonaNueva)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + idPersonaNueva));
-        estudiante.setPersona(nuevaPersona);
+        estudiante.setPerson(nuevaPersona);
     }
 
     /**
@@ -285,7 +285,7 @@ public class StudentService {
      *                                  {@code [edadMin, edadMax]}
      */
     private void validateAgeInCategory(Person persona, Categoria categoria) {
-        LocalDate nacimiento = persona.getFechaNacimiento();
+        LocalDate nacimiento = persona.getBirthDate();
         if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {
             return;
         }
@@ -293,40 +293,40 @@ public class StudentService {
         int edad = Period.between(nacimiento, LocalDate.now(Zones.ECUADOR)).getYears();
         if (edad < categoria.getEdadMin() || edad > categoria.getEdadMax()) {
             throw new IllegalArgumentException(
-                    persona.getNombre() + " " + persona.getApellido() + " tiene " + edad
+                    persona.getName() + " " + persona.getLastName() + " tiene " + edad
                     + " años y " + categoria.getNombre() + " es para edades de "
                     + categoria.getEdadMin() + " a " + categoria.getEdadMax() + " años");
         }
     }
 
-    private void reasignarCategoriaSiCambio(Student estudiante, Long idCategoriaNueva) {
-        if (estudiante.getCategoria().getIdCategoria().equals(idCategoriaNueva)) {
+    private void reassignCategoryIfChanged(Student estudiante, Long idCategoriaNueva) {
+        if (estudiante.getCategory().getIdCategoria().equals(idCategoriaNueva)) {
             return;
         }
         Categoria categoria = categoriaRepository.findById(idCategoriaNueva)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + idCategoriaNueva));
-        validateAgeInCategory(estudiante.getPersona(), categoria);
-        estudiante.setCategoria(categoria);
+        validateAgeInCategory(estudiante.getPerson(), categoria);
+        estudiante.setCategory(categoria);
     }
 
-    private void reasignarEstadoGeneralSiCambio(Student estudiante, Long idEstadoGeneralNuevo) {
-        if (estudiante.getEstadoGeneral().getIdEstadoGeneral().equals(idEstadoGeneralNuevo)) {
+    private void reassignGeneralStatusIfChanged(Student estudiante, Long idEstadoGeneralNuevo) {
+        if (estudiante.getGeneralStatus().getId().equals(idEstadoGeneralNuevo)) {
             return;
         }
         GeneralStatus estadoGeneral = estadoGeneralRepository.findById(idEstadoGeneralNuevo)
                 .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + idEstadoGeneralNuevo));
-        estudiante.setEstadoGeneral(estadoGeneral);
+        estudiante.setGeneralStatus(estadoGeneral);
     }
 
     // A diferencia de categoría/estadoGeneral, la posición es opcional y puede
     // pasar de asignada a sin asignar (idPosicionNueva null): hay que poder
     // desasignarla, no solo cambiarla.
-    private void reasignarPosicionSiCambio(Student estudiante, Long idPosicionNueva) {
-        Long actual = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
+    private void reassignPositionIfChanged(Student estudiante, Long idPosicionNueva) {
+        Long actual = estudiante.getPosition() != null ? estudiante.getPosition().getIdPosicion() : null;
         if (java.util.Objects.equals(actual, idPosicionNueva)) {
             return;
         }
-        estudiante.setPosicion(resolvePosition(idPosicionNueva));
+        estudiante.setPosition(resolvePosition(idPosicionNueva));
     }
 
     private Posicion resolvePosition(Long idPosicion) {
@@ -343,15 +343,15 @@ public class StudentService {
      * @param id identificador del estudiante
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0",
-            descripcionSpel = "'desactivó la ficha de estudiante #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Estudiante", idSpel = "#p0",
+            descriptionSpel = "'desactivó la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void delete(Long id) {
         Student estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
-        estudiante.setActivo(false);
+        estudiante.setActive(false);
         estudianteRepository.save(estudiante);
     }
 
@@ -363,8 +363,8 @@ public class StudentService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la ficha ya está activa
      */
-    @Audited(accion = "REACTIVAR", entidad = "Estudiante", idSpel = "#p0",
-            descripcionSpel = "'reactivo la ficha de estudiante #' + #p0")
+    @Audited(action = "REACTIVAR", entity = "Estudiante", idSpel = "#p0",
+            descriptionSpel = "'reactivo la ficha de estudiante #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse reactivate(Long id) {
@@ -372,11 +372,11 @@ public class StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
 
-        if (Boolean.TRUE.equals(estudiante.getActivo())) {
+        if (Boolean.TRUE.equals(estudiante.getActive())) {
             throw new IllegalArgumentException("La ficha de estudiante ya se encuentra activa");
         }
 
-        estudiante.setActivo(true);
+        estudiante.setActive(true);
         return toResponse(estudianteRepository.save(estudiante));
     }
 
@@ -394,15 +394,15 @@ public class StudentService {
      * @param id identificador del estudiante a anonimizar
      * @throws ResourceNotFoundException si el estudiante no existe
      */
-    @Audited(accion = "ANONIMIZAR", entidad = "Estudiante", idSpel = "#p0",
-            descripcionSpel = "'anonimizó los datos personales del estudiante #' + #p0 + ' a solicitud del representante legal (RF-50 / derecho de supresión)'")
+    @Audited(action = "ANONIMIZAR", entity = "Estudiante", idSpel = "#p0",
+            descriptionSpel = "'anonimizó los datos personales del estudiante #' + #p0 + ' a solicitud del representante legal (RF-50 / derecho de supresión)'")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void anonymize(Long id) {
         Student estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + id));
-        estudianteRepository.anonymizeStudent(estudiante.getIdEstudiante());
+        estudianteRepository.anonymizeStudent(estudiante.getId());
     }
 
     /**
@@ -425,8 +425,8 @@ public class StudentService {
      *
      * @param idCategoria identificador de la categoría
      */
-    @Audited(accion = "EDITAR", entidad = "Estudiante",
-            descripcionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
+    @Audited(action = "EDITAR", entity = "Estudiante",
+            descriptionSpel = "'desactivó los estudiantes de la Categoria #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void deactivateByCategory(Long idCategoria) {
@@ -473,43 +473,43 @@ public class StudentService {
      * @throws IllegalArgumentException     si el estudiante ya tiene cuenta o
      *                                      el {@code username} está en uso
      */
-    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#result.idEstudiante",
-            descripcionSpel = "'habilitó acceso al Student #' + #result.idEstudiante")
+    @Audited(action = "EDITAR", entity = "Estudiante", idSpel = "#result.idEstudiante",
+            descriptionSpel = "'habilitó acceso al Student #' + #result.idEstudiante")
     @Transactional
     public StudentResponse enableAccess(Long idEstudiante, EnableAccessRequest request) {
         Student estudiante = estudianteRepository.findById(idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));
 
-        if (estudiante.getUsuario() != null) {
+        if (estudiante.getUserAccount() != null) {
             throw new IllegalArgumentException("Este estudiante ya tiene una cuenta de acceso");
         }
 
-        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPersona(), request);
+        UserAccount usuario = estudianteAccesoService.createStudentAccount(estudiante.getPerson(), request);
 
-        estudiante.setUsuario(usuario);
+        estudiante.setUserAccount(usuario);
         estudiante = estudianteRepository.save(estudiante);
         return toResponse(estudiante);
     }
 
-    // Mapeador privado entidad -> DTO.
+    // Mapeador privado entity -> DTO.
     private StudentResponse toResponse(Student e) {
         return new StudentResponse(
-                e.getIdEstudiante(),
-                e.getPersona() != null ? e.getPersona().getIdPersona() : null,
-                e.getCategoria() != null ? e.getCategoria().getIdCategoria() : null,
-                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getIdEstadoGeneral() : null,
-                e.getPersona() != null ? e.getPersona().getNombre() : null,
-                e.getPersona() != null ? e.getPersona().getApellido() : null,
-                e.getCategoria() != null ? e.getCategoria().getNombre() : null,
-                e.getEstadoGeneral() != null ? e.getEstadoGeneral().getNombre() : null,
-                e.getCodigoEstudiante(),
-                e.getFechaIngreso(),
-                e.getPeso(),
-                e.getAltura(),
-                e.getPosicion() != null ? e.getPosicion().getIdPosicion() : null,
-                e.getPosicion() != null ? e.getPosicion().getNombre() : null,
-                e.getPosicion() != null ? e.getPosicion().getAbreviatura() : null,
-                e.getActivo(),
+                e.getId(),
+                e.getPerson() != null ? e.getPerson().getId() : null,
+                e.getCategory() != null ? e.getCategory().getIdCategoria() : null,
+                e.getGeneralStatus() != null ? e.getGeneralStatus().getId() : null,
+                e.getPerson() != null ? e.getPerson().getName() : null,
+                e.getPerson() != null ? e.getPerson().getLastName() : null,
+                e.getCategory() != null ? e.getCategory().getNombre() : null,
+                e.getGeneralStatus() != null ? e.getGeneralStatus().getName() : null,
+                e.getStudentCode(),
+                e.getEnrollmentDate(),
+                e.getWeight(),
+                e.getHeight(),
+                e.getPosition() != null ? e.getPosition().getIdPosicion() : null,
+                e.getPosition() != null ? e.getPosition().getNombre() : null,
+                e.getPosition() != null ? e.getPosition().getAbreviatura() : null,
+                e.getActive(),
                 e.getCreatedAt()
         );
     }

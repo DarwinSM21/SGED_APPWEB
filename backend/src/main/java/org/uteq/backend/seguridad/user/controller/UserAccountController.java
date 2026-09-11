@@ -16,7 +16,7 @@ import org.uteq.backend.seguridad.user.service.UserAccountService;
 /**
  * CRUD de cuentas de usuario. Toda la clase está reservada a
  * {@code ADMINISTRADOR} ({@code @PreAuthorize} a nivel de tipo); el endpoint
- * "mis datos" del propio usuario vive aparte, en {@link PerfilController}.
+ * "mis datos" del propio usuario vive aparte, en {@link ProfileController}.
  */
 @RestController
 @RequestMapping("/api/usuarios")

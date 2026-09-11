@@ -91,7 +91,7 @@ public class JwtService {
      * @param token token JWT ya firmado
      * @return el valor del reclamo {@code rol}
      */
-    public String extractRol(String token) {
+    public String extractRole(String token) {
         return parseToken(token).getPayload().get("rol", String.class);
     }
 

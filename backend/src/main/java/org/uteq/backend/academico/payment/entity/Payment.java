@@ -19,50 +19,50 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Payment {
-    public enum TipoPago { MEMBRESIA, DIARIO }
+    public enum PaymentType { MEMBRESIA, DIARIO }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pago")
-    private Long idPago;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Student estudiante;
+    private Student student;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private TipoPago tipo;
+    private PaymentType type;
 
-    private Short anio;
+    private Short year;
 
-    private Short mes;
+    private Short month;
 
     @Column(nullable = false, precision = 8, scale = 2)
-    private BigDecimal monto;
+    private BigDecimal amount;
 
     @Column(name = "fecha_pago", nullable = false)
-    private LocalDate fechaPago;
+    private LocalDate paymentDate;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(name = "anulado_en")
-    private java.time.OffsetDateTime anuladoEn;
+    private java.time.OffsetDateTime canceledAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "anulado_por_id_usuario")
-    private UserAccount anuladoPor;
+    private UserAccount canceledBy;
 
     @Column(name = "motivo_anulacion", length = 255)
-    private String motivoAnulacion;
+    private String cancellationReason;
 
     /**
      * @return {@code true} si el pago no fue anulado
      */
     public boolean isActive() {
-        return anuladoEn == null;
+        return canceledAt == null;
     }
 
     @CreationTimestamp

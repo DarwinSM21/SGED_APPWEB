@@ -38,16 +38,16 @@ class AuditAspectTest {
     }
 
     static class MetodosDeEjemplo {
-        @Audited(accion = "CREAR", entidad = "Lesion", idSpel = "#result.idLesion")
+        @Audited(action = "CREAR", entity = "Lesion", idSpel = "#result.idLesion")
         void conResultado() {
         }
 
-        @Audited(accion = "ELIMINAR", entidad = "Estudiante", idSpel = "#p0")
+        @Audited(action = "ELIMINAR", entity = "Estudiante", idSpel = "#p0")
         void conArgumentoPosicional(Long id) {
         }
 
-        @Audited(accion = "CREAR", entidad = "Pago",
-                descripcionSpel = "'creó ' + #result.size() + ' pago(s)'")
+        @Audited(action = "CREAR", entity = "Pago",
+                descriptionSpel = "'creó ' + #result.size() + ' pago(s)'")
         void conDescripcionPersonalizada() {
         }
     }
@@ -88,7 +88,7 @@ class AuditAspectTest {
     }
 
     @Test
-    @DisplayName("usa descripcionSpel personalizada cuando esta definida, sin id")
+    @DisplayName("usa descriptionSpel personalizada cuando esta definida, sin id")
     void usaDescripcionPersonalizada() throws Throwable {
         when(pjp.proceed()).thenReturn(List.of("a", "b"));
         when(pjp.getArgs()).thenReturn(new Object[0]);

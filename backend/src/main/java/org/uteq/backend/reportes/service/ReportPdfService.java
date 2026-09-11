@@ -61,7 +61,7 @@ public class ReportPdfService {
 
             documento.add(new Paragraph(" "));
             documento.add(new Paragraph(
-                    "Generado por " + usuarioActual() + " el " + fechaActual(), FUENTE_PIE));
+                    "Generado por " + currentUser() + " el " + currentDate(), FUENTE_PIE));
 
             documento.close();
             return salida.toByteArray();
@@ -90,12 +90,12 @@ public class ReportPdfService {
         return tabla;
     }
 
-    private String usuarioActual() {
+    private String currentUser() {
         var auth = SecurityContextHolder.getContext().getAuthentication();
         return auth != null && auth.isAuthenticated() ? auth.getName() : "desconocido";
     }
 
-    private String fechaActual() {
+    private String currentDate() {
         return LocalDateTime.now(Zones.ECUADOR).format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
     }
 }

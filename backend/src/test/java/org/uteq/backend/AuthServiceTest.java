@@ -94,9 +94,9 @@ class AuthServiceTest {
         when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
         when(jwtService.generateRefreshToken(anyString(), anyString())).thenReturn("mock-refresh-token");
 
-        Person persona = Person.builder().nombre("Admin").apellido("SGED").activo(true).build();
-        UserAccount usuario = UserAccount.builder().username("admin@test.com").persona(persona)
-                .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
+        Person persona = Person.builder().name("Admin").lastName("SGED").active(true).build();
+        UserAccount usuario = UserAccount.builder().username("admin@test.com").person(persona)
+                .roles(Set.of(Role.builder().name("ADMINISTRADOR").build())).build();
 
         when(usuarioRepository.findByUsernameAndActivoTrue("admin@test.com")).thenReturn(Optional.of(usuario));
 
@@ -199,16 +199,16 @@ class AuthServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("new@test.com")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(i -> {
             Person p = i.getArgument(0);
-            p.setIdPersona(1L);
+            p.setId(1L);
             return p;
         });
         when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
-                Optional.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build()));
+                Optional.of(Role.builder().id(2L).name("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(
-                Optional.of(GeneralStatus.builder().idEstadoGeneral(1L).build()));
+                Optional.of(GeneralStatus.builder().id(1L).build()));
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(i -> {
             UserAccount u = i.getArgument(0);
-            u.setIdUsuario(1L);
+            u.setId(1L);
             return u;
         });
         when(passwordEncoder.encode(anyString())).thenReturn("$2a$12$encoded");
@@ -258,11 +258,11 @@ class AuthServiceTest {
         when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(i -> {
             Person p = i.getArgument(0);
-            p.setIdPersona(9L);
+            p.setId(9L);
             return p;
         });
         when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
-                Optional.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build()));
+                Optional.of(Role.builder().id(2L).name("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.empty());
 
         RegisterRequest registerRequest = new RegisterRequest(
@@ -313,7 +313,7 @@ class AuthServiceTest {
     void refrescarConTokenValidoDevuelveNuevoAccessToken() {
         when(jwtService.isTokenValid("good-token")).thenReturn(true);
         when(jwtService.extractUsername("good-token")).thenReturn("admin@test.com");
-        when(jwtService.extractRol("good-token")).thenReturn("ADMINISTRADOR");
+        when(jwtService.extractRole("good-token")).thenReturn("ADMINISTRADOR");
         when(jwtService.generateToken("admin@test.com", "ADMINISTRADOR")).thenReturn("nuevo-access-token");
 
         assertThat(authService.refresh("good-token")).contains("nuevo-access-token");
@@ -325,9 +325,9 @@ class AuthServiceTest {
         var auth = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(auth);
 
-        Person persona = Person.builder().nombre("Admin").apellido("SGED").activo(true).build();
-        UserAccount usuario = UserAccount.builder().username("admin@test.com").persona(persona)
-                .roles(Set.of(Role.builder().nombre("ADMINISTRADOR").build())).build();
+        Person persona = Person.builder().name("Admin").lastName("SGED").active(true).build();
+        UserAccount usuario = UserAccount.builder().username("admin@test.com").person(persona)
+                .roles(Set.of(Role.builder().name("ADMINISTRADOR").build())).build();
         when(usuarioRepository.findByUsername("admin@test.com")).thenReturn(Optional.of(usuario));
 
         Optional<SessionResponse> resultado = authService.getCurrentSession();

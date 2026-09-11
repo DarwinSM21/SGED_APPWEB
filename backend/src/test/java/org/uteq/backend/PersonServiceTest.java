@@ -40,13 +40,13 @@ class PersonServiceTest {
 
     private Person persona() {
         return Person.builder()
-                .idPersona(1L)
-                .nombre("Maria")
-                .apellido("Lopez")
-                .cedula("1234567890")
-                .correo("maria@sged.test")
-                .fechaNacimiento(LocalDate.of(2012, 5, 10))
-                .activo(true)
+                .id(1L)
+                .name("Maria")
+                .lastName("Lopez")
+                .nationalId("1234567890")
+                .email("maria@sged.test")
+                .birthDate(LocalDate.of(2012, 5, 10))
+                .active(true)
                 .build();
     }
 
@@ -116,7 +116,7 @@ class PersonServiceTest {
         when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
-            p.setIdPersona(5L);
+            p.setId(5L);
             return p;
         });
 
@@ -132,7 +132,7 @@ class PersonServiceTest {
         when(personaRepository.existsByCorreo("sincedula@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
-            p.setIdPersona(9L);
+            p.setId(9L);
             return p;
         });
 
@@ -163,7 +163,7 @@ class PersonServiceTest {
         when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
-            p.setIdPersona(5L);
+            p.setId(5L);
             return p;
         });
 
@@ -171,14 +171,14 @@ class PersonServiceTest {
 
         org.mockito.ArgumentCaptor<Person> capturada = org.mockito.ArgumentCaptor.forClass(Person.class);
         verify(emailVerificationService).sendConfirmation(capturada.capture());
-        assertThat(capturada.getValue().getCorreoVerificado()).isFalse();
+        assertThat(capturada.getValue().getEmailVerified()).isFalse();
     }
 
     @Test
     @DisplayName("RNF-26 - editar sin cambiar el correo no dispara confirmacion ni lo invalida")
     void editar_sin_cambiar_correo_no_dispara_confirmacion() {
         Person existente = persona();
-        existente.setCorreoVerificado(true);
+        existente.setEmailVerified(true);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
         when(personaRepository.existsAnotherPersonWithEmail("maria@sged.test", 1L)).thenReturn(false);
@@ -187,14 +187,14 @@ class PersonServiceTest {
         personaService.update(1L, requestValido("1234567890", "maria@sged.test"));
 
         verify(emailVerificationService, never()).sendConfirmation(any());
-        assertThat(existente.getCorreoVerificado()).isTrue();
+        assertThat(existente.getEmailVerified()).isTrue();
     }
 
     @Test
     @DisplayName("RNF-26 - editar cambiando el correo lo invalida y dispara confirmacion")
     void editar_cambiando_correo_invalida_y_dispara() {
         Person existente = persona();
-        existente.setCorreoVerificado(true);
+        existente.setEmailVerified(true);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
         when(personaRepository.existsAnotherPersonWithEmail("otro@sged.test", 1L)).thenReturn(false);
@@ -203,7 +203,7 @@ class PersonServiceTest {
         personaService.update(1L, requestValido("1234567890", "otro@sged.test"));
 
         verify(emailVerificationService).sendConfirmation(existente);
-        assertThat(existente.getCorreoVerificado()).isFalse();
+        assertThat(existente.getEmailVerified()).isFalse();
     }
 
     @Test
@@ -215,6 +215,6 @@ class PersonServiceTest {
 
         personaService.delete(1L);
 
-        assertThat(existente.getActivo()).isFalse();
+        assertThat(existente.getActive()).isFalse();
     }
 }

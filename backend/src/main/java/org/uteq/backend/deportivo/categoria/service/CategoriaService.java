@@ -145,8 +145,8 @@ public class CategoriaService {
      * @param id identificador de la categoría
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Categoria", idSpel = "#p0",
-            descripcionSpel = "'desactivo la categoria #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Categoria", idSpel = "#p0",
+            descriptionSpel = "'desactivo la categoria #' + #p0")
     @Transactional
     public void eliminar(Long id) {
         Categoria categoria = categoriaRepository.findById(id)

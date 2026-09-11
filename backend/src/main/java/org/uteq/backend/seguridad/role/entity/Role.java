@@ -15,11 +15,11 @@ public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_rol")
-    private Long idRol;
+    private Long id;
 
     @Column(nullable = false, length = 50)
-    private String nombre;
+    private String name;
 
     @Column(length = 255)
-    private String descripcion;
+    private String description;
 }

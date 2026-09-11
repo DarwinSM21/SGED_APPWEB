@@ -9,7 +9,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.academico.payment.service.PaymentService;
 import org.uteq.backend.common.Zones;
@@ -44,14 +44,14 @@ class PaymentServiceTest {
     private static final String USERNAME = "recepcion@sged.test";
 
     private Student estudiante() {
-        return Student.builder().idEstudiante(ID_EST)
-                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
+        return Student.builder().id(ID_EST)
+                .person(Person.builder().name("Juan").lastName("Perez").build())
                 .build();
     }
 
     private UserAccount registrador() {
-        return UserAccount.builder().idUsuario(9L).username(USERNAME)
-                .persona(Person.builder().nombre("Ana").apellido("Admin").build())
+        return UserAccount.builder().id(9L).username(USERNAME)
+                .person(Person.builder().name("Ana").lastName("Admin").build())
                 .build();
     }
 
@@ -101,11 +101,11 @@ class PaymentServiceTest {
         var meses = List.of(3, 1, 2, 1);
         var pagos = service.registerMembership(ID_EST, 2026, meses, new BigDecimal("30.00"), null, USERNAME);
 
-        assertThat(pagos).extracting(p -> p.getMes().intValue()).containsExactly(1, 2, 3);
+        assertThat(pagos).extracting(p -> p.getMonth().intValue()).containsExactly(1, 2, 3);
         assertThat(pagos).allSatisfy(p -> {
-            assertThat(p.getTipo()).isEqualTo(TipoPago.MEMBRESIA);
-            assertThat(p.getAnio()).isEqualTo((short) 2026);
-            assertThat(p.getFechaPago()).isEqualTo(LocalDate.now(Zones.ECUADOR));
+            assertThat(p.getType()).isEqualTo(PaymentType.MEMBRESIA);
+            assertThat(p.getYear()).isEqualTo((short) 2026);
+            assertThat(p.getPaymentDate()).isEqualTo(LocalDate.now(Zones.ECUADOR));
         });
     }
 
@@ -120,7 +120,7 @@ class PaymentServiceTest {
         var fechaFija = LocalDate.of(2026, 1, 15);
         var pagos = service.registerMembership(ID_EST, 2026, List.of(1), new BigDecimal("30.00"), fechaFija, USERNAME);
 
-        assertThat(pagos).singleElement().satisfies(p -> assertThat(p.getFechaPago()).isEqualTo(fechaFija));
+        assertThat(pagos).singleElement().satisfies(p -> assertThat(p.getPaymentDate()).isEqualTo(fechaFija));
     }
 
     @Test
@@ -128,9 +128,9 @@ class PaymentServiceTest {
     void registrarMembresia_rechaza_mes_ya_cubierto() {
         existenEstudianteYUsuario();
         when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
-                ID_EST, TipoPago.MEMBRESIA, (short) 2026, (short) 1)).thenReturn(false);
+                ID_EST, PaymentType.MEMBRESIA, (short) 2026, (short) 1)).thenReturn(false);
         when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
-                ID_EST, TipoPago.MEMBRESIA, (short) 2026, (short) 2)).thenReturn(true);
+                ID_EST, PaymentType.MEMBRESIA, (short) 2026, (short) 2)).thenReturn(true);
 
         var e = assertThrows(IllegalArgumentException.class, () ->
                 service.registerMembership(ID_EST, 2026, List.of(1, 2), new BigDecimal("30.00"), null, USERNAME));
@@ -171,10 +171,10 @@ class PaymentServiceTest {
         var fechaFija = LocalDate.of(2026, 3, 10);
         var pago = service.registerDaily(ID_EST, new BigDecimal("5.00"), fechaFija, USERNAME);
 
-        assertThat(pago.getTipo()).isEqualTo(TipoPago.DIARIO);
-        assertThat(pago.getFechaPago()).isEqualTo(fechaFija);
-        assertThat(pago.getAnio()).isNull();
-        assertThat(pago.getMes()).isNull();
+        assertThat(pago.getType()).isEqualTo(PaymentType.DIARIO);
+        assertThat(pago.getPaymentDate()).isEqualTo(fechaFija);
+        assertThat(pago.getYear()).isNull();
+        assertThat(pago.getMonth()).isNull();
     }
 
     @Test
@@ -185,7 +185,7 @@ class PaymentServiceTest {
 
         var pago = service.registerDaily(ID_EST, new BigDecimal("5.00"), null, USERNAME);
 
-        assertThat(pago.getFechaPago()).isEqualTo(LocalDate.now(Zones.ECUADOR));
+        assertThat(pago.getPaymentDate()).isEqualTo(LocalDate.now(Zones.ECUADOR));
     }
 
     @Test
@@ -202,7 +202,7 @@ class PaymentServiceTest {
     @DisplayName("historialDe devuelve los pagos del estudiante ordenados por fecha descendente")
     void historialDe_devuelve_pagos_del_estudiante() {
         when(estudianteRepository.existsById(ID_EST)).thenReturn(true);
-        var esperado = List.of(Payment.builder().idPago(1L).tipo(TipoPago.DIARIO).build());
+        var esperado = List.of(Payment.builder().id(1L).type(PaymentType.DIARIO).build());
         when(pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(ID_EST)).thenReturn(esperado);
 
         var pagos = service.historyFor(ID_EST);
@@ -214,8 +214,8 @@ class PaymentServiceTest {
     @DisplayName("anular deja constancia de quien, cuando y por que")
     void anular_registra_la_trazabilidad() {
         Payment pago = Payment.builder()
-                .idPago(9L).tipo(Payment.TipoPago.DIARIO)
-                .monto(new BigDecimal("250.00")).fechaPago(LocalDate.now())
+                .id(9L).type(Payment.PaymentType.DIARIO)
+                .amount(new BigDecimal("250.00")).paymentDate(LocalDate.now())
                 .build();
         when(pagoRepository.findById(9L)).thenReturn(Optional.of(pago));
         when(usuarioRepository.findByUsername(USERNAME)).thenReturn(Optional.of(registrador()));
@@ -223,21 +223,21 @@ class PaymentServiceTest {
 
         Payment resultado = service.cancel(9L, "Monto mal digitado", USERNAME);
 
-        assertThat(resultado.getAnuladoEn()).isNotNull();
-        assertThat(resultado.getAnuladoPor()).isNotNull();
-        assertThat(resultado.getMotivoAnulacion()).isEqualTo("Monto mal digitado");
+        assertThat(resultado.getCanceledAt()).isNotNull();
+        assertThat(resultado.getCanceledBy()).isNotNull();
+        assertThat(resultado.getCancellationReason()).isEqualTo("Monto mal digitado");
 
-        assertThat(resultado.getMonto()).isEqualByComparingTo("250.00");
+        assertThat(resultado.getAmount()).isEqualByComparingTo("250.00");
     }
 
     @Test
     @DisplayName("anular dos veces se rechaza en vez de pasar en silencio")
     void anular_dos_veces_falla() {
         Payment yaAnulado = Payment.builder()
-                .idPago(9L).tipo(Payment.TipoPago.DIARIO)
-                .monto(new BigDecimal("25.00")).fechaPago(LocalDate.now())
-                .anuladoEn(java.time.OffsetDateTime.now())
-                .motivoAnulacion("ya estaba")
+                .id(9L).type(Payment.PaymentType.DIARIO)
+                .amount(new BigDecimal("25.00")).paymentDate(LocalDate.now())
+                .canceledAt(java.time.OffsetDateTime.now())
+                .cancellationReason("ya estaba")
                 .build();
         when(pagoRepository.findById(9L)).thenReturn(Optional.of(yaAnulado));
 

@@ -14,8 +14,8 @@ public class GeneralStatus {
 
     @Id
     @Column(name = "id_estado_general")
-    private Long idEstadoGeneral;
+    private Long id;
 
     @Column(name = "nombre", nullable = false, length = 50)
-    private String nombre;
+    private String name;
 }

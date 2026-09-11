@@ -23,56 +23,65 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * @param pageable página y tamaño solicitados
      * @return página de estudiantes con baja lógica excluida
      */
+    @Query("SELECT s FROM Student s WHERE s.active = true")
     Page<Student> findByActivoTrue(Pageable pageable);
 
     /**
      * @return todos los estudiantes activos, ordenados por apellido, con
      *         persona y categoría precargadas para evitar N+1
      */
-    @EntityGraph(attributePaths = {"persona", "categoria"})
+    @EntityGraph(attributePaths = {"person", "category"})
+    @Query("SELECT s FROM Student s WHERE s.active = true ORDER BY s.person.lastName ASC")
     List<Student> findByActivoTrueOrderByPersona_ApellidoAsc();
 
     /**
      * @param idCategoria identificador de la categoría
      * @return la cantidad de estudiantes activos de esa categoría
      */
-    long countByCategoria_IdCategoriaAndActivoTrue(Long idCategoria);
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.category.idCategoria = :idCategoria AND s.active = true")
+    long countByCategoria_IdCategoriaAndActivoTrue(@Param("idCategoria") Long idCategoria);
 
     /**
      * @param idEstudiante identificador del estudiante
      * @return el estudiante, si existe y está activo
      */
-    Optional<Student> findByIdEstudianteAndActivoTrue(Long idEstudiante);
+    @Query("SELECT s FROM Student s WHERE s.id = :idEstudiante AND s.active = true")
+    Optional<Student> findByIdEstudianteAndActivoTrue(@Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param idPersona identificador de la persona
      * @return {@code true} si esa persona ya tiene una ficha de estudiante, activa o no
      */
-    boolean existsByPersona_IdPersona(Long idPersona);
+    @Query("SELECT COUNT(s) > 0 FROM Student s WHERE s.person.id = :idPersona")
+    boolean existsByPersona_IdPersona(@Param("idPersona") Long idPersona);
 
     /**
      * @param idPersona identificador de la persona
      * @return {@code true} si esa persona tiene una ficha de estudiante activa
      */
-    boolean existsByPersona_IdPersonaAndActivoTrue(Long idPersona);
+    @Query("SELECT COUNT(s) > 0 FROM Student s WHERE s.person.id = :idPersona AND s.active = true")
+    boolean existsByPersona_IdPersonaAndActivoTrue(@Param("idPersona") Long idPersona);
 
     /**
      * @param codigoEstudiante código único del estudiante
      * @return {@code true} si ya existe un estudiante con ese código
      */
-    boolean existsByCodigoEstudiante(String codigoEstudiante);
+    @Query("SELECT COUNT(s) > 0 FROM Student s WHERE s.studentCode = :codigoEstudiante")
+    boolean existsByCodigoEstudiante(@Param("codigoEstudiante") String codigoEstudiante);
 
     /**
      * @param idPersona identificador de la persona
      * @return la ficha de estudiante de esa persona, activa o no, si existe
      */
-    Optional<Student> findByPersona_IdPersona(Long idPersona);
+    @Query("SELECT s FROM Student s WHERE s.person.id = :idPersona")
+    Optional<Student> findByPersona_IdPersona(@Param("idPersona") Long idPersona);
 
     /**
      * @param idPersona identificador de la persona
      * @return la ficha de estudiante activa de esa persona, si existe
      */
-    Optional<Student> findByPersona_IdPersonaAndActivoTrue(Long idPersona);
+    @Query("SELECT s FROM Student s WHERE s.person.id = :idPersona AND s.active = true")
+    Optional<Student> findByPersona_IdPersonaAndActivoTrue(@Param("idPersona") Long idPersona);
 
     /**
      * Comprueba unicidad del código excluyendo al propio estudiante, para
@@ -82,32 +91,37 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * @param idEstudiante identificador del estudiante que se excluye de la comprobación
      * @return {@code true} si otro estudiante ya usa ese código
      */
-    boolean existsByCodigoEstudianteAndIdEstudianteNot(String codigoEstudiante, Long idEstudiante);
+    @Query("SELECT COUNT(s) > 0 FROM Student s WHERE s.studentCode = :codigoEstudiante AND s.id <> :idEstudiante")
+    boolean existsByCodigoEstudianteAndIdEstudianteNot(@Param("codigoEstudiante") String codigoEstudiante, @Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param username nombre de usuario de la cuenta de acceso
      * @return el estudiante cuya cuenta tiene ese nombre de usuario, si existe
      */
-    Optional<Student> findByUsuario_Username(String username);
+    @Query("SELECT s FROM Student s WHERE s.userAccount.username = :username")
+    Optional<Student> findByUsuario_Username(@Param("username") String username);
 
     /**
      * @param idCategoria identificador de la categoría
      * @param idEstudiante identificador del estudiante que se excluye del resultado
      * @return estudiantes activos de esa categoría, sin incluir al indicado
      */
-    List<Student> findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(Long idCategoria, Long idEstudiante);
+    @Query("SELECT s FROM Student s WHERE s.category.idCategoria = :idCategoria AND s.active = true AND s.id <> :idEstudiante")
+    List<Student> findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(@Param("idCategoria") Long idCategoria, @Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param idCategoria identificador de la categoría
      * @return estudiantes activos de esa categoría, ordenados por apellido
      */
-    List<Student> findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(Long idCategoria);
+    @Query("SELECT s FROM Student s WHERE s.category.idCategoria = :idCategoria AND s.active = true ORDER BY s.person.lastName ASC")
+    List<Student> findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(@Param("idCategoria") Long idCategoria);
 
     /**
      * @param idUsuario identificador de la cuenta de usuario
      * @return {@code true} si esa cuenta está vinculada a una ficha de estudiante
      */
-    boolean existsByUsuario_IdUsuario(Long idUsuario);
+    @Query("SELECT COUNT(s) > 0 FROM Student s WHERE s.userAccount.id = :idUsuario")
+    boolean existsByUsuario_IdUsuario(@Param("idUsuario") Long idUsuario);
 
     /**
      * @param idCategoria identificador de la categoría, o {@code null} para el total general
@@ -154,9 +168,9 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      */
     @Query("""
            SELECT e FROM Student e
-           WHERE (:idCategoria IS NULL OR e.categoria.idCategoria = :idCategoria)
-             AND (:activo IS NULL OR e.activo = :activo)
-           ORDER BY e.persona.apellido, e.persona.nombre
+           WHERE (:idCategoria IS NULL OR e.category.idCategoria = :idCategoria)
+             AND (:activo IS NULL OR e.active = :activo)
+           ORDER BY e.person.lastName, e.person.name
            """)
     List<Student> findForReport(@Param("idCategoria") Long idCategoria, @Param("activo") Boolean activo);
 }

@@ -177,7 +177,7 @@ public class SesionEntrenamientoService {
 
         Map<Long, Asistencia> porEstudiante = new HashMap<>();
         for (Asistencia a : asistenciaRepository.historialDeSesion(idSesion)) {
-            porEstudiante.put(a.getEstudiante().getIdEstudiante(), a);
+            porEstudiante.put(a.getEstudiante().getId(), a);
         }
 
         List<Student> plantel = estudianteRepository
@@ -187,7 +187,7 @@ public class SesionEntrenamientoService {
         List<SesionHistorialResponse.FilaAsistencia> filas = new ArrayList<>();
         int presentes = 0, tarde = 0, ausentes = 0, justificados = 0, sinRegistro = 0;
         for (Student e : plantel) {
-            Asistencia a = porEstudiante.remove(e.getIdEstudiante());
+            Asistencia a = porEstudiante.remove(e.getId());
             String estado = a == null ? "SIN_REGISTRO" : a.getEstado();
             switch (estado) {
                 case Asistencia.ESTADO_PRESENTE -> presentes++;
@@ -197,9 +197,9 @@ public class SesionEntrenamientoService {
                 default -> sinRegistro++;
             }
             filas.add(new SesionHistorialResponse.FilaAsistencia(
-                    e.getIdEstudiante(),
-                    e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
-                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),
+                    e.getId(),
+                    e.getPerson().getName() + " " + e.getPerson().getLastName(),
+                    e.getPosition() == null ? null : e.getPosition().getAbreviatura(),
                     estado,
                     a == null ? null : a.getHoraEntrada(),
                     a == null ? null : a.getMetodo(),
@@ -216,9 +216,9 @@ public class SesionEntrenamientoService {
                 default -> { }
             }
             filas.add(new SesionHistorialResponse.FilaAsistencia(
-                    e.getIdEstudiante(),
-                    e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
-                    e.getPosicion() == null ? null : e.getPosicion().getAbreviatura(),
+                    e.getId(),
+                    e.getPerson().getName() + " " + e.getPerson().getLastName(),
+                    e.getPosition() == null ? null : e.getPosition().getAbreviatura(),
                     a.getEstado(), a.getHoraEntrada(), a.getMetodo(), a.getObservacion()));
         }
 
@@ -227,7 +227,7 @@ public class SesionEntrenamientoService {
         return new SesionHistorialResponse(
                 s.getIdSesion(),
                 s.getCategoria().getNombre(),
-                persona.getNombre() + " " + persona.getApellido(),
+                persona.getName() + " " + persona.getLastName(),
                 s.getFecha(), s.getHoraInicio(), s.getHoraFin(), s.getCampo(), s.getEstado(),
                 evaluacion.isPresent(),
                 evaluacion.map(ev -> ev.getEstado()).orElse(null),
@@ -245,7 +245,7 @@ public class SesionEntrenamientoService {
         return new SesionHoyResponse(
                 s.getIdSesion(),
                 s.getCategoria().getNombre(),
-                persona.getNombre() + " " + persona.getApellido(),
+                persona.getName() + " " + persona.getLastName(),
                 s.getFecha(),
                 s.getHoraInicio(),
                 s.getHoraFin(),

@@ -38,13 +38,13 @@ class ItemServiceTest {
 
     private Item balonExistente() {
         return Item.builder()
-                .idArticulo(1L)
-                .nombre("Balón N°5")
-                .tipo(ItemType.BALON)
-                .stockActual(10)
-                .stockMinimo(3)
-                .unidadMedida("unidad")
-                .activo(true)
+                .id(1L)
+                .name("Balón N°5")
+                .type(ItemType.BALON)
+                .currentStock(10)
+                .minimumStock(3)
+                .unitOfMeasure("unidad")
+                .active(true)
                 .build();
     }
 
@@ -54,7 +54,7 @@ class ItemServiceTest {
         ItemRequest request = new ItemRequest("Uniforme Sub-12", ItemType.UNIFORME, "M", null, 5, null);
         when(articuloRepository.save(any(Item.class))).thenAnswer(inv -> {
             Item a = inv.getArgument(0);
-            a.setIdArticulo(2L);
+            a.setId(2L);
             return a;
         });
 
@@ -98,7 +98,7 @@ class ItemServiceTest {
 
         articuloService.delete(1L);
 
-        assertThat(existente.getActivo()).isFalse();
+        assertThat(existente.getActive()).isFalse();
     }
 
     @Test
@@ -117,7 +117,7 @@ class ItemServiceTest {
     @DisplayName("stockBajo combina el listado JPA con el total del procedimiento almacenado")
     void stockBajo_combina_listado_y_total_del_procedimiento() {
         Item bajoStock = balonExistente();
-        bajoStock.setStockActual(2);
+        bajoStock.setCurrentStock(2);
         when(articuloRepository.findLowStock()).thenReturn(List.of(bajoStock));
         when(articuloRepository.countLowStock()).thenReturn(1L);
 
@@ -168,7 +168,7 @@ class ItemServiceTest {
     @DisplayName("reactivar vuelve a activar un articulo dado de baja")
     void reactivar_reactiva_un_articulo_inactivo() {
         Item existente = balonExistente();
-        existente.setActivo(false);
+        existente.setActive(false);
         when(articuloRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(articuloRepository.save(any(Item.class))).thenAnswer(inv -> inv.getArgument(0));
 

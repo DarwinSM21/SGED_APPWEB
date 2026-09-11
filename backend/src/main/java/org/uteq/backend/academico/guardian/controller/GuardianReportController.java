@@ -40,7 +40,7 @@ public class GuardianReportController {
     @GetMapping("/estudiantes")
     @Transactional(readOnly = true)
     public ResponseEntity<List<StudentSummaryResponse>> myStudents() {
-        return ResponseEntity.ok(informeService.myStudents(usernameAutenticado()));
+        return ResponseEntity.ok(informeService.myStudents(authenticatedUsername()));
     }
 
     /**
@@ -54,7 +54,7 @@ public class GuardianReportController {
     @GetMapping("/estudiantes/{idEstudiante}/informe")
     @Transactional(readOnly = true)
     public ResponseEntity<StudentReportResponse> report(@PathVariable Long idEstudiante) {
-        return ResponseEntity.ok(informeService.reportFor(usernameAutenticado(), idEstudiante));
+        return ResponseEntity.ok(informeService.reportFor(authenticatedUsername(), idEstudiante));
     }
 
     /**
@@ -70,7 +70,7 @@ public class GuardianReportController {
     @PostMapping("/estudiantes/{idEstudiante}/informe/comentario")
     @Transactional(readOnly = true)
     public ResponseEntity<ReportCommentResponse> comment(@PathVariable Long idEstudiante) {
-        return ResponseEntity.ok(informeService.commentFor(usernameAutenticado(), idEstudiante));
+        return ResponseEntity.ok(informeService.commentFor(authenticatedUsername(), idEstudiante));
     }
 
     /**
@@ -81,7 +81,7 @@ public class GuardianReportController {
     @GetMapping("/notificaciones")
     @Transactional(readOnly = true)
     public ResponseEntity<List<NotificationResponse>> myNotifications() {
-        return ResponseEntity.ok(notificacionService.myNotifications(usernameAutenticado()));
+        return ResponseEntity.ok(notificacionService.myNotifications(authenticatedUsername()));
     }
 
     /**
@@ -92,7 +92,7 @@ public class GuardianReportController {
     @GetMapping("/notificaciones/no-leidas")
     @Transactional(readOnly = true)
     public ResponseEntity<UnreadCountResponse> unreadCount() {
-        return ResponseEntity.ok(new UnreadCountResponse(notificacionService.unreadCount(usernameAutenticado())));
+        return ResponseEntity.ok(new UnreadCountResponse(notificacionService.unreadCount(authenticatedUsername())));
     }
 
     /**
@@ -107,11 +107,11 @@ public class GuardianReportController {
     @PostMapping("/notificaciones/{idNotificacion}/leida")
     @Transactional
     public ResponseEntity<Void> markRead(@PathVariable Long idNotificacion) {
-        notificacionService.markRead(usernameAutenticado(), idNotificacion);
+        notificacionService.markRead(authenticatedUsername(), idNotificacion);
         return ResponseEntity.noContent().build();
     }
 
-    private String usernameAutenticado() {
+    private String authenticatedUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

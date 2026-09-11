@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -34,7 +34,7 @@ public final class PaymentDtos {
             Long idPago,
             Long idEstudiante,
             String estudiante,
-            TipoPago tipo,
+            PaymentType tipo,
             Integer anio,
             Integer mes,
             BigDecimal monto,

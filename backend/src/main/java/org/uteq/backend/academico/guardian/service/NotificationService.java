@@ -54,7 +54,7 @@ public class NotificationService {
             String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
             createForEachGuardian(estudiante, Type.ASISTENCIA,
                     Consent.ALCANCE_NOTIFICACIONES_ASISTENCIA,
-                    nombreCompleto(estudiante) + " marcó asistencia hoy (" + estado + ").");
+                    fullName(estudiante) + " marcó asistencia hoy (" + estado + ").");
         });
     }
 
@@ -70,7 +70,7 @@ public class NotificationService {
         withoutBreakingMainFlow("lesion", () ->
                 createForEachGuardian(estudiante, Type.LESION,
                         Consent.ALCANCE_NOTIFICACIONES_LESION,
-                        "Se registró una lesión para " + nombreCompleto(estudiante) + ": " + descripcionLesion));
+                        "Se registró una lesión para " + fullName(estudiante) + ": " + descripcionLesion));
     }
 
     /**
@@ -115,10 +115,10 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public List<NotificationResponse> myNotifications(String username) {
-        Guardian representante = representanteDe(username);
+        Guardian representante = guardianOf(username);
         return notificacionRepository
-                .findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(representante.getIdRepresentante())
-                .stream().map(this::aResponse).toList();
+                .findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(representante.getId())
+                .stream().map(this::toResponse).toList();
     }
 
     /**
@@ -131,8 +131,8 @@ public class NotificationService {
      */
     @Transactional(readOnly = true)
     public long unreadCount(String username) {
-        Guardian representante = representanteDe(username);
-        return notificacionRepository.countByRepresentante_IdRepresentanteAndLeidaFalse(representante.getIdRepresentante());
+        Guardian representante = guardianOf(username);
+        return notificacionRepository.countByRepresentante_IdRepresentanteAndLeidaFalse(representante.getId());
     }
 
     /**
@@ -147,70 +147,70 @@ public class NotificationService {
      */
     @Transactional
     public void markRead(String username, Long idNotificacion) {
-        Guardian representante = representanteDe(username);
+        Guardian representante = guardianOf(username);
         Notification notificacion = notificacionRepository
-                .findByIdNotificacionAndRepresentante_IdRepresentante(idNotificacion, representante.getIdRepresentante())
+                .findByIdNotificacionAndRepresentante_IdRepresentante(idNotificacion, representante.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Notificación no encontrada con id: " + idNotificacion));
-        notificacion.setLeida(true);
+        notificacion.setRead(true);
         notificacionRepository.save(notificacion);
     }
 
     private void createForEachGuardian(Student estudiante, Type tipo,
                                             String alcanceRequerido, String mensaje) {
         List<Guardian> representantes = vinculoRepository
-                .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getIdEstudiante())
-                .stream().map(v -> v.getRepresentante()).toList();
+                .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getId())
+                .stream().map(v -> v.getGuardian()).toList();
 
         for (Guardian representante : representantes) {
-            if (!autorizo(representante, estudiante, alcanceRequerido)) {
+            if (!isAuthorized(representante, estudiante, alcanceRequerido)) {
                 log.info("No se notifica al representante {} sobre el estudiante {}: "
                                 + "no hay consentimiento vigente para {}",
-                        representante.getIdRepresentante(), estudiante.getIdEstudiante(), alcanceRequerido);
+                        representante.getId(), estudiante.getId(), alcanceRequerido);
                 continue;
             }
             notificacionRepository.save(Notification.builder()
-                    .representante(representante)
-                    .estudiante(estudiante)
-                    .tipo(tipo)
-                    .mensaje(mensaje)
-                    .leida(false)
+                    .guardian(representante)
+                    .student(estudiante)
+                    .type(tipo)
+                    .message(mensaje)
+                    .read(false)
                     .build());
         }
     }
 
-    private boolean autorizo(Guardian representante, Student estudiante, String alcance) {
-        Long idR = representante.getIdRepresentante();
-        Long idE = estudiante.getIdEstudiante();
-        return vigente(idR, idE, alcance)
-                || vigente(idR, idE, Consent.ALCANCE_NOTIFICACIONES);
+    private boolean isAuthorized(Guardian representante, Student estudiante, String alcance) {
+        Long idR = representante.getId();
+        Long idE = estudiante.getId();
+        return isCurrent(idR, idE, alcance)
+                || isCurrent(idR, idE, Consent.ALCANCE_NOTIFICACIONES);
     }
 
-    private boolean vigente(Long idRepresentante, Long idEstudiante, String alcance) {
+    private boolean isCurrent(Long idRepresentante, Long idEstudiante, String alcance) {
         return consentimientoRepository
                 .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
                         idRepresentante, idEstudiante, alcance)
                 .isPresent();
     }
 
-    private Guardian representanteDe(String username) {
+    private Guardian guardianOf(String username) {
         return representanteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 
-    private String nombreCompleto(Student e) {
-        var p = e.getPersona();
-        return p.getNombre() + " " + p.getApellido();
+    private String fullName(Student e) {
+        var p = e.getPerson();
+        return p.getName() + " " + p.getLastName();
     }
 
-    private NotificationResponse aResponse(Notification n) {
-        var persona = n.getEstudiante().getPersona();
+    private NotificationResponse toResponse(Notification n) {
+        var persona = n.getStudent().getPerson();
         return new NotificationResponse(
-                n.getIdNotificacion(),
-                n.getEstudiante().getIdEstudiante(),
-                persona.getNombre() + " " + persona.getApellido(),
-                n.getTipo(),
-                n.getMensaje(),
-                n.getLeida(),
+                n.getId(),
+                n.getStudent().getId(),
+                persona.getName() + " " + persona.getLastName(),
+                n.getType(),
+                n.getMessage(),
+                n.getRead(),
                 n.getCreatedAt());
     }
 }

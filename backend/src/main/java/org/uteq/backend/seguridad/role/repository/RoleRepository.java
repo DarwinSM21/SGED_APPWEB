@@ -1,6 +1,8 @@
 package org.uteq.backend.seguridad.role.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.uteq.backend.seguridad.role.entity.Role;
 
 import java.util.Optional;
@@ -14,5 +16,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
      * @param nombre nombre del rol
      * @return el rol con ese nombre, si existe
      */
-    Optional<Role> findByNombre(String nombre);
+    @Query("SELECT r FROM Role r WHERE r.name = :nombre")
+    Optional<Role> findByNombre(@Param("nombre") String nombre);
 }

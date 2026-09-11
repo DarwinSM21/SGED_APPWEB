@@ -45,7 +45,7 @@ class EmailVerificationServiceTest {
     void setUp() {
         ReflectionTestUtils.setField(service, "urlBase", "https://sged.test/#/confirmar-correo");
         ReflectionTestUtils.setField(service, "ttlHoras", 48L);
-        maria = Person.builder().idPersona(3L).correo("maria@x.com").correoVerificado(false).build();
+        maria = Person.builder().id(3L).email("maria@x.com").emailVerified(false).build();
     }
 
     @Test
@@ -61,7 +61,7 @@ class EmailVerificationServiceTest {
     @Test
     @DisplayName("enviarConfirmacion con persona sin id o sin correo: no hace nada")
     void enviarConfirmacion_persona_incompleta() {
-        service.sendConfirmation(Person.builder().correo("x@x.com").build());
+        service.sendConfirmation(Person.builder().email("x@x.com").build());
         service.sendConfirmation(null);
 
         verify(tokenStore, never()).save(any(), anyString(), any());
@@ -76,7 +76,7 @@ class EmailVerificationServiceTest {
 
         service.confirm("tok");
 
-        assertThat(maria.getCorreoVerificado()).isTrue();
+        assertThat(maria.getEmailVerified()).isTrue();
         verify(personaRepository).save(maria);
         verify(tokenStore).consume("tok");
         verify(auditService).recordEvent(eq("EMAILVERIFY_CONFIRMADO"), eq("Persona"), eq(3L), anyString());

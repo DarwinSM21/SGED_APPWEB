@@ -60,11 +60,11 @@ public class ConsentService {
         UserAccount admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);
 
         Consent consentimiento = Consent.builder()
-                .representante(representante)
-                .estudiante(estudiante)
-                .alcance(request.alcance())
-                .otorgadoEn(OffsetDateTime.now())
-                .registradoPor(admin)
+                .guardian(representante)
+                .student(estudiante)
+                .scope(request.alcance())
+                .grantedAt(OffsetDateTime.now())
+                .registeredBy(admin)
                 .build();
 
         consentimiento = consentimientoRepository.save(consentimiento);
@@ -91,8 +91,8 @@ public class ConsentService {
         }
 
         UserAccount admin = usuarioRepository.findByUsername(usernameAdmin).orElse(null);
-        consentimiento.setRevocadoEn(OffsetDateTime.now());
-        consentimiento.setRevocadoPor(admin);
+        consentimiento.setRevokedAt(OffsetDateTime.now());
+        consentimiento.setRevokedBy(admin);
         consentimiento = consentimientoRepository.save(consentimiento);
         return toResponse(consentimiento);
     }
@@ -113,13 +113,13 @@ public class ConsentService {
 
     private ConsentResponse toResponse(Consent c) {
         return new ConsentResponse(
-                c.getIdConsentimiento(),
-                c.getRepresentante().getIdRepresentante(),
-                c.getEstudiante().getIdEstudiante(),
-                c.getAlcance(),
-                c.getOtorgadoEn(),
-                c.getRegistradoPor() != null ? c.getRegistradoPor().getUsername() : null,
-                c.getRevocadoEn(),
+                c.getId(),
+                c.getGuardian().getId(),
+                c.getStudent().getId(),
+                c.getScope(),
+                c.getGrantedAt(),
+                c.getRegisteredBy() != null ? c.getRegisteredBy().getUsername() : null,
+                c.getRevokedAt(),
                 c.isActive());
     }
 }

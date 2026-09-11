@@ -91,7 +91,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         if (!habilitado) {
             return FeedbackResult.unavailable("Generacion de texto deshabilitada");
         }
-        return invocar(PromptsFeedback.deJugador(profile));
+        return invoke(PromptsFeedback.forPlayer(profile));
     }
 
     /**
@@ -109,19 +109,19 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         if (lineup == null || lineup.isEmpty()) {
             return FeedbackResult.unavailable("La alineacion esta vacia");
         }
-        return invocar(PromptsFeedback.dePlantilla(lineup));
+        return invoke(PromptsFeedback.forLineup(lineup));
     }
 
-    private FeedbackResult invocar(String prompt) {
+    private FeedbackResult invoke(String prompt) {
         Exception ultimoFallo = null;
 
         for (int intento = 0; intento <= reintentos; intento++) {
             try {
-                return intentarUnaVez(prompt);
+                return tryOnce(prompt);
 
             } catch (HttpClientErrorException e) {
                 log.warn("Gemini rechazo la peticion: {}", e.getStatusCode());
-                return FeedbackResult.unavailable(motivoDeRechazo(e));
+                return FeedbackResult.unavailable(rejectionReason(e));
 
             } catch (Exception e) {
                 ultimoFallo = e;
@@ -129,7 +129,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
                 log.warn("Fallo transitorio de Gemini (intento {} de {}): {}",
                         intento + 1, reintentos + 1, e.getClass().getSimpleName());
                 if (intento < reintentos) {
-                    esperarAntesDeReintentar(intento);
+                    waitBeforeRetry(intento);
                 }
             }
         }
@@ -139,7 +139,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         return FeedbackResult.unavailable("El servicio de generacion no respondio");
     }
 
-    private String motivoDeRechazo(HttpClientErrorException e) {
+    private String rejectionReason(HttpClientErrorException e) {
         int codigo = e.getStatusCode().value();
         if (codigo == 429) {
             return "Se agoto la cuota diaria del servicio de IA; se restablece manana";
@@ -150,7 +150,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         return "El servicio de IA rechazo la peticion (codigo " + codigo + ")";
     }
 
-    private FeedbackResult intentarUnaVez(String prompt) {
+    private FeedbackResult tryOnce(String prompt) {
         var cuerpo = Map.of(
                 "systemInstruction", Map.of(
                         "parts", List.of(Map.of("text", PromptsFeedback.INSTRUCCION_SISTEMA))),
@@ -168,7 +168,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
                 .retrieve()
                 .body(JsonNode.class);
 
-        String texto = extraerTexto(respuesta);
+        String texto = extractText(respuesta);
         if (texto == null || texto.isBlank()) {
             log.warn("Gemini respondio sin texto utilizable (posible bloqueo por filtro de seguridad)");
             return FeedbackResult.unavailable("El modelo no devolvio texto");
@@ -176,7 +176,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         return FeedbackResult.ok(texto.trim());
     }
 
-    private void esperarAntesDeReintentar(int intento) {
+    private void waitBeforeRetry(int intento) {
         try {
             Thread.sleep(400L * (intento + 1));
         } catch (InterruptedException e) {
@@ -184,7 +184,7 @@ public class GeminiFeedbackService implements AIFeedbackGenerator {
         }
     }
 
-    private String extraerTexto(JsonNode respuesta) {
+    private String extractText(JsonNode respuesta) {
         if (respuesta == null) {
             return null;
         }

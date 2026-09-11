@@ -15,14 +15,14 @@ import java.lang.annotation.Target;
 public @interface Audited {
 
     /** Verbo de la acción registrada (ej. {@code "CREAR"}, {@code "EDITAR"}, {@code "ELIMINAR"}). */
-    String accion();
+    String action();
 
-    /** Nombre de la entidad de dominio afectada (ej. {@code "Estudiante"}). */
-    String entidad();
+    /** Nombre de la entity de dominio afectada (ej. {@code "Estudiante"}). */
+    String entity();
 
-    /** Expresión SpEL que resuelve el identificador de la entidad afectada; vacío si no aplica. */
+    /** Expresión SpEL que resuelve el identificador de la entity afectada; vacío si no aplica. */
     String idSpel() default "";
 
     /** Expresión SpEL que arma la descripción legible del acto; vacío si no aplica. */
-    String descripcionSpel() default "";
+    String descriptionSpel() default "";
 }

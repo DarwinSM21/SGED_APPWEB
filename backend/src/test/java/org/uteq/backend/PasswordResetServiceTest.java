@@ -56,10 +56,10 @@ class PasswordResetServiceTest {
         ReflectionTestUtils.setField(service, "urlBase", "https://sged.test/#/restablecer");
         ReflectionTestUtils.setField(service, "ttlMinutos", 30L);
 
-        Person persona = Person.builder().idPersona(1L).correo("ana@x.com").correoVerificado(true).build();
+        Person persona = Person.builder().id(1L).email("ana@x.com").emailVerified(true).build();
         ana = UserAccount.builder()
-                .idUsuario(7L).username("ana.torres").persona(persona).activo(true)
-                .password_Hash("hash-viejo").build();
+                .id(7L).username("ana.torres").person(persona).active(true)
+                .passwordHash("hash-viejo").build();
     }
 
     @Test
@@ -77,7 +77,7 @@ class PasswordResetServiceTest {
     @DisplayName("solicitar por correo cuando no es un username")
     void solicitar_por_correo() {
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana@x.com")).thenReturn(Optional.empty());
-        when(personaRepository.findByCorreo("ana@x.com")).thenReturn(Optional.of(ana.getPersona()));
+        when(personaRepository.findByCorreo("ana@x.com")).thenReturn(Optional.of(ana.getPerson()));
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(ana));
 
         service.request("ana@x.com");
@@ -101,7 +101,7 @@ class PasswordResetServiceTest {
     @Test
     @DisplayName("RNF-26: solicitar cuando el correo no esta verificado: no guarda token ni envia enlace")
     void solicitar_correo_no_verificado_no_envia() {
-        ana.getPersona().setCorreoVerificado(false);
+        ana.getPerson().setEmailVerified(false);
         when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
 
         service.request("ana.torres");
@@ -128,7 +128,7 @@ class PasswordResetServiceTest {
 
         service.reset("tok", "clave1234");
 
-        assertThat(ana.getPassword_Hash()).isEqualTo("hash-nuevo");
+        assertThat(ana.getPasswordHash()).isEqualTo("hash-nuevo");
         verify(usuarioRepository).save(ana);
         verify(tokenStore).consume("tok");
         verify(sessionEpochService).mark("ana.torres");
@@ -159,7 +159,7 @@ class PasswordResetServiceTest {
 
         verify(usuarioRepository, never()).save(org.mockito.ArgumentMatchers.any());
         verify(tokenStore, never()).consume(anyString());
-        assertThat(ana.getPassword_Hash()).isEqualTo("hash-viejo");
+        assertThat(ana.getPasswordHash()).isEqualTo("hash-viejo");
     }
 
     @Test

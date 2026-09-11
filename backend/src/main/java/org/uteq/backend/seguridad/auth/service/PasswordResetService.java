@@ -71,7 +71,7 @@ public class PasswordResetService {
 
         Optional<UserAccount> cuenta = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(id)
                 .or(() -> personaRepository.findByCorreo(id)
-                        .flatMap(p -> usuarioRepository.findByPersona_IdPersonaAndActivoTrue(p.getIdPersona())));
+                        .flatMap(p -> usuarioRepository.findByPersona_IdPersonaAndActivoTrue(p.getId())));
         if (cuenta.isEmpty()) {
             return;
         }
@@ -81,9 +81,9 @@ public class PasswordResetService {
         // RNF-26 / H-09: no se envía el enlace a un correo que no ha sido
         // confirmado por su titular. La respuesta del controlador es la misma
         // (202) para no convertir esto en un oráculo.
-        if (!Boolean.TRUE.equals(usuario.getPersona().getCorreoVerificado())) {
+        if (!Boolean.TRUE.equals(usuario.getPerson().getEmailVerified())) {
             log.info("PWRESET correo no verificado para el usuario id={}: no se envía el enlace",
-                    usuario.getIdUsuario());
+                    usuario.getId());
             return;
         }
 
@@ -91,11 +91,11 @@ public class PasswordResetService {
         tokenStore.save(usuario.getUsername(), token, Duration.ofMinutes(ttlMinutos));
 
         String url = urlBase + "?token=" + token;
-        mailer.sendLink(usuario.getPersona().getCorreo(), url);
+        mailer.sendLink(usuario.getPerson().getEmail(), url);
 
-        auditService.recordEvent("PWRESET_SOLICITADO", "Usuario", usuario.getIdUsuario(),
+        auditService.recordEvent("PWRESET_SOLICITADO", "Usuario", usuario.getId(),
                 "solicitó un enlace de restablecimiento de contraseña");
-        log.info("PWRESET enlace generado para el usuario id={}", usuario.getIdUsuario());
+        log.info("PWRESET enlace generado para el usuario id={}", usuario.getId());
     }
 
     /**
@@ -117,15 +117,15 @@ public class PasswordResetService {
         UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));
 
-        usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
+        usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));
         usuarioRepository.save(usuario);
 
         tokenStore.consume(token);
         sessionEpochService.mark(username);
 
-        auditService.recordEvent("PWRESET_COMPLETADO", "Usuario", usuario.getIdUsuario(),
+        auditService.recordEvent("PWRESET_COMPLETADO", "Usuario", usuario.getId(),
                 "restableció su contraseña mediante enlace");
-        log.info("PWRESET contrasena restablecida para el usuario id={}", usuario.getIdUsuario());
+        log.info("PWRESET contrasena restablecida para el usuario id={}", usuario.getId());
     }
 
     private String generateToken() {

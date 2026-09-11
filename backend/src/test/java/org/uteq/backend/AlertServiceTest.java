@@ -12,7 +12,7 @@ import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
 import org.uteq.backend.academico.alert.service.AlertService;
 import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
 import org.uteq.backend.deportivo.categoria.entity.Categoria;
@@ -47,11 +47,11 @@ class AlertServiceTest {
 
     private Student estudiante(long id, String nombre, String apellido, Categoria categoria) {
         Person persona = nombre == null ? null
-                : Person.builder().nombre(nombre).apellido(apellido).build();
+                : Person.builder().name(nombre).lastName(apellido).build();
         return Student.builder()
-                .idEstudiante(id)
-                .persona(persona)
-                .categoria(categoria)
+                .id(id)
+                .person(persona)
+                .category(categoria)
                 .build();
     }
 
@@ -63,7 +63,7 @@ class AlertServiceTest {
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1));
-        when(pagoRepository.idsWithMembershipCovered(any(TipoPago.class), any(), any()))
+        when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of(1L)); // al dia
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
@@ -84,7 +84,7 @@ class AlertServiceTest {
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1));
-        when(pagoRepository.idsWithMembershipCovered(any(TipoPago.class), any(), any()))
+        when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // nadie al dia -> debe
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(2L));
         when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
@@ -113,7 +113,7 @@ class AlertServiceTest {
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(sinPersona));
-        when(pagoRepository.idsWithMembershipCovered(any(TipoPago.class), any(), any()))
+        when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // debe
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
@@ -136,7 +136,7 @@ class AlertServiceTest {
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1));
-        when(pagoRepository.idsWithMembershipCovered(any(TipoPago.class), any(), any()))
+        when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of(4L)); // al dia
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         // programadas = 0: la fila debe ignorarse en vez de intentar dividir entre cero
@@ -158,7 +158,7 @@ class AlertServiceTest {
 
         when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
                 .thenReturn(List.of(e1, e2));
-        when(pagoRepository.idsWithMembershipCovered(any(TipoPago.class), any(), any()))
+        when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // ninguno al dia -> ambos deben
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))

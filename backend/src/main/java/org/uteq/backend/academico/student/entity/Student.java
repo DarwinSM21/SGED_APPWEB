@@ -25,43 +25,43 @@ public class Student {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_estudiante")
-    private Long idEstudiante;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
-    private Person persona;
+    private Person person;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria", nullable = false)
-    private Categoria categoria;
+    private Categoria category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_general", nullable = false)
-    private GeneralStatus estadoGeneral;
+    private GeneralStatus generalStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_posicion")
-    private Posicion posicion;
+    private Posicion position;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", unique = true)
-    private UserAccount usuario;
+    private UserAccount userAccount;
 
     @Column(name = "codigo_estudiante", nullable = false, unique = true, length = 30)
-    private String codigoEstudiante;
+    private String studentCode;
 
     @Column(name = "fecha_ingreso", nullable = false)
-    private LocalDate fechaIngreso;
+    private LocalDate enrollmentDate;
 
     @Column(name = "peso", precision = 5, scale = 2)
-    private BigDecimal peso;
+    private BigDecimal weight;
 
     @Column(name = "altura", precision = 5, scale = 2)
-    private BigDecimal altura;
+    private BigDecimal height;
 
     @Column(name = "activo")
     @Builder.Default
-    private Boolean activo = true;
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

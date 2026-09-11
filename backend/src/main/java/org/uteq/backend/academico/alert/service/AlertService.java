@@ -8,7 +8,7 @@ import org.uteq.backend.academico.alert.dto.AlertDtos.StudentAtRiskResponse;
 import org.uteq.backend.academico.alert.dto.AlertDtos.AlertsPanelResponse;
 import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
@@ -76,17 +76,17 @@ public class AlertService {
         List<Student> activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();
 
         Set<Long> alDia = new HashSet<>(
-                pagoRepository.idsWithMembershipCovered(TipoPago.MEMBRESIA, anio, mes));
+                pagoRepository.idsWithMembershipCovered(PaymentType.MEMBRESIA, anio, mes));
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
 
         LocalDate corte = hoy.minusDays(1);
         LocalDate desde = hoy.minusDays(diasAsistencia);
         BigDecimal umbral = BigDecimal.valueOf(umbralAsistencia);
 
-        Map<Long, BigDecimal> porcentajes = porcentajesPorEstudiante(desde, corte);
+        Map<Long, BigDecimal> porcentajes = percentagesByStudent(desde, corte);
 
         List<StudentAtRiskResponse> enRiesgo = activos.stream()
-                .map(e -> evaluar(e, alDia, lesionados, porcentajes, umbral))
+                .map(e -> evaluate(e, alDia, lesionados, porcentajes, umbral))
                 .filter(r -> r.totalAlertas() > 0)
                 .sorted(Comparator
                         .comparingInt(StudentAtRiskResponse::totalAlertas).reversed()
@@ -111,7 +111,7 @@ public class AlertService {
     // mapa a propósito: el servicio lo lee como null ("sin dato", no "cero por
     // ciento"). Marcar asistencia baja a quien no tuvo entrenamientos sería
     // acusarlo de algo que no hizo.
-    private Map<Long, BigDecimal> porcentajesPorEstudiante(LocalDate desde, LocalDate corte) {
+    private Map<Long, BigDecimal> percentagesByStudent(LocalDate desde, LocalDate corte) {
         Map<Long, BigDecimal> porcentajes = new HashMap<>();
         for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {
             long programadas = ((Number) fila[1]).longValue();
@@ -126,10 +126,10 @@ public class AlertService {
         return porcentajes;
     }
 
-    private StudentAtRiskResponse evaluar(
+    private StudentAtRiskResponse evaluate(
             Student e, Set<Long> alDia, Set<Long> lesionados,
             Map<Long, BigDecimal> porcentajes, BigDecimal umbral) {
-        Long id = e.getIdEstudiante();
+        Long id = e.getId();
         boolean debe = !alDia.contains(id);
         boolean lesionada = lesionados.contains(id);
 
@@ -138,12 +138,12 @@ public class AlertService {
         boolean asistenciaBaja = porcentaje != null && porcentaje.compareTo(umbral) < 0;
 
         int total = (debe ? 1 : 0) + (asistenciaBaja ? 1 : 0) + (lesionada ? 1 : 0);
-        var persona = e.getPersona();
+        var persona = e.getPerson();
 
         return new StudentAtRiskResponse(
                 id,
-                persona == null ? "(sin persona)" : persona.getNombre() + " " + persona.getApellido(),
-                e.getCategoria() == null ? null : e.getCategoria().getNombre(),
+                persona == null ? "(sin persona)" : persona.getName() + " " + persona.getLastName(),
+                e.getCategory() == null ? null : e.getCategory().getNombre(),
                 debe, asistenciaBaja, porcentaje, lesionada, total);
     }
 }

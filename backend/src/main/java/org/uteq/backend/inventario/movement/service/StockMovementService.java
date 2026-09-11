@@ -63,8 +63,8 @@ public class StockMovementService {
      * @throws IllegalArgumentException     si una salida dejaría el stock
      *                                      negativo
      */
-    @Audited(accion = "CREAR", entidad = "MovimientoStock", idSpel = "#result.idMovimiento",
-            descripcionSpel = "'registró ' + #result.tipoMovimiento + ' de ' + #result.cantidad + ' (' + #result.articulo + ')'")
+    @Audited(action = "CREAR", entity = "MovimientoStock", idSpel = "#result.idMovimiento",
+            descriptionSpel = "'registró ' + #result.tipoMovimiento + ' de ' + #result.cantidad + ' (' + #result.articulo + ')'")
     @Transactional
     public StockMovementResponse register(StockMovementRequest request, String usernameRegistrador) {
         Item articulo = findItem(request.idArticulo());
@@ -73,23 +73,23 @@ public class StockMovementService {
         int delta = request.tipoMovimiento() == MovementType.SALIDA
                 ? -request.cantidad()
                 : request.cantidad();
-        int nuevoStock = articulo.getStockActual() + delta;
+        int nuevoStock = articulo.getCurrentStock() + delta;
 
         if (nuevoStock < 0) {
             throw new IllegalArgumentException(
-                    "Stock insuficiente: hay " + articulo.getStockActual() + " unidades de \""
-                            + articulo.getNombre() + "\" y se intentan retirar " + request.cantidad());
+                    "Stock insuficiente: hay " + articulo.getCurrentStock() + " unidades de \""
+                            + articulo.getName() + "\" y se intentan retirar " + request.cantidad());
         }
 
-        articulo.setStockActual(nuevoStock);
+        articulo.setCurrentStock(nuevoStock);
         articuloRepository.save(articulo);
 
         StockMovement movimiento = StockMovement.builder()
-                .articulo(articulo)
-                .tipoMovimiento(request.tipoMovimiento())
-                .cantidad(request.cantidad())
-                .motivo(request.motivo())
-                .registradoPor(registrador)
+                .item(articulo)
+                .movementType(request.tipoMovimiento())
+                .quantity(request.cantidad())
+                .reason(request.motivo())
+                .registeredBy(registrador)
                 .build();
 
         return toResponse(movimientoStockRepository.save(movimiento));
@@ -106,16 +106,16 @@ public class StockMovementService {
     }
 
     private StockMovementResponse toResponse(StockMovement m) {
-        var registrador = m.getRegistradoPor().getPersona();
+        var registrador = m.getRegisteredBy().getPerson();
         return new StockMovementResponse(
-                m.getIdMovimiento(),
-                m.getArticulo().getIdArticulo(),
-                m.getArticulo().getNombre(),
-                m.getTipoMovimiento(),
-                m.getCantidad(),
-                m.getMotivo(),
-                registrador.getNombre() + " " + registrador.getApellido(),
-                m.getFechaMovimiento()
+                m.getId(),
+                m.getItem().getId(),
+                m.getItem().getName(),
+                m.getMovementType(),
+                m.getQuantity(),
+                m.getReason(),
+                registrador.getName() + " " + registrador.getLastName(),
+                m.getMovementDate()
         );
     }
 }

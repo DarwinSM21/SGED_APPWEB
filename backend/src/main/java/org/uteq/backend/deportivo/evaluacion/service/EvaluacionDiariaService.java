@@ -82,7 +82,7 @@ public class EvaluacionDiariaService {
 
         Map<Long, Asistencia> asistenciaPorEstudiante = new HashMap<>();
         for (Asistencia asistencia : asistenciaRepository.findBySesionIdSesion(idSesion)) {
-            asistenciaPorEstudiante.put(asistencia.getEstudiante().getIdEstudiante(), asistencia);
+            asistenciaPorEstudiante.put(asistencia.getEstudiante().getId(), asistencia);
         }
 
         List<Student> estudiantesCategoria = estudianteRepository
@@ -91,7 +91,7 @@ public class EvaluacionDiariaService {
         List<JugadorEvaluableResponse> jugadores = new ArrayList<>();
         for (Student estudiante : estudiantesCategoria) {
             jugadores.add(construirJugador(
-                    estudiante, asistenciaPorEstudiante.get(estudiante.getIdEstudiante()),
+                    estudiante, asistenciaPorEstudiante.get(estudiante.getId()),
                     evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
         }
         jugadores.sort(Comparator.comparing(JugadorEvaluableResponse::nombreCompleto));
@@ -112,9 +112,9 @@ public class EvaluacionDiariaService {
                                                       EvaluacionDiaria evaluacion,
                                                       Long idEvaluacionPrevia,
                                                       Map<Long, Long> lesionActivaPorEstudiante) {
-        Long idEstudiante = estudiante.getIdEstudiante();
-        var persona = estudiante.getPersona();
-        String nombre = persona.getNombre() + " " + persona.getApellido();
+        Long idEstudiante = estudiante.getId();
+        var persona = estudiante.getPerson();
+        String nombre = persona.getName() + " " + persona.getLastName();
 
         boolean puedeEvaluarse = asistencia != null && asistencia.habilitaEvaluacion();
         String motivo = puedeEvaluarse ? null
@@ -129,8 +129,8 @@ public class EvaluacionDiariaService {
         Map<String, BigDecimal> puntajes = new LinkedHashMap<>();
         boolean precargado = false;
 
-        Long idPosicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getIdPosicion() : null;
-        String posicion = estudiante.getPosicion() != null ? estudiante.getPosicion().getNombre() : null;
+        Long idPosicion = estudiante.getPosition() != null ? estudiante.getPosition().getIdPosicion() : null;
+        String posicion = estudiante.getPosition() != null ? estudiante.getPosition().getNombre() : null;
 
         if (yaEvaluado.isPresent()) {
             var ee = yaEvaluado.get();
@@ -148,7 +148,7 @@ public class EvaluacionDiariaService {
         Long idLesionActiva = lesionActivaPorEstudiante.get(idEstudiante);
         return new JugadorEvaluableResponse(
                 idEstudiante, nombre,
-                estudiante.getCategoria().getNombre(),
+                estudiante.getCategory().getNombre(),
                 idPosicion, posicion,
                 asistencia == null ? null : asistencia.getEstado(),
                 puntajes, precargado,
@@ -185,8 +185,8 @@ public class EvaluacionDiariaService {
      *                                      asistencia habilitante, o un
      *                                      puntaje supera su máximo
      */
-    @Audited(accion = "EDITAR", entidad = "Estudiante", idSpel = "#p1.idEstudiante",
-            descripcionSpel = "'editó estadísticas de estudiante #' + #p1.idEstudiante")
+    @Audited(action = "EDITAR", entity = "Estudiante", idSpel = "#p1.idEstudiante",
+            descriptionSpel = "'editó estadísticas de estudiante #' + #p1.idEstudiante")
     @Transactional
     public void guardarJugador(Long idSesion, GuardarJugadorRequest request) {
         EvaluacionDiaria evaluacion = evaluacionRepository.findBySesionIdSesion(idSesion)
@@ -219,7 +219,7 @@ public class EvaluacionDiariaService {
                         .estudiante(estudiante)
                         // Regla 3: la categoría del día se congela al crear la
                         // fila, tomándola del estudiante en este momento.
-                        .categoriaDia(estudiante.getCategoria())
+                        .categoriaDia(estudiante.getCategory())
                         .build());
 
         // El frontend siempre manda este campo: null es una instrucción
@@ -287,8 +287,8 @@ public class EvaluacionDiariaService {
      * @throws IllegalArgumentException     si ya estaba finalizada o si la
      *                                      observación supera el tope
      */
-    @Audited(accion = "EDITAR", entidad = "EvaluacionDiaria", idSpel = "#p0",
-            descripcionSpel = "'finalizó la evaluación de la sesión #' + #p0")
+    @Audited(action = "EDITAR", entity = "EvaluacionDiaria", idSpel = "#p0",
+            descriptionSpel = "'finalizó la evaluación de la sesión #' + #p0")
     @Transactional
     public void finalizar(Long idSesion, String observacionGeneral) {
         if (observacionGeneral != null && observacionGeneral.length() > MAX_OBSERVACION_GENERAL) {

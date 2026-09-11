@@ -14,18 +14,19 @@ import java.util.Optional;
 public interface LesionRepository extends JpaRepository<Lesion, Long>, JpaSpecificationExecutor<Lesion> {
     @Query("""
            SELECT l FROM Lesion l
-           WHERE l.estudiante.idEstudiante = :idEstudiante
+           WHERE l.estudiante.id = :idEstudiante
              AND l.fechaAlta IS NULL
            """)
     Optional<Lesion> buscarActivaPorEstudiante(@Param("idEstudiante") Long idEstudiante);
 
-    @Query("SELECT l.estudiante.idEstudiante FROM Lesion l WHERE l.fechaAlta IS NULL")
+    @Query("SELECT l.estudiante.id FROM Lesion l WHERE l.fechaAlta IS NULL")
     List<Long> idsEstudiantesLesionados();
 
-    @Query("SELECT l.estudiante.idEstudiante, l.idLesion FROM Lesion l WHERE l.fechaAlta IS NULL")
+    @Query("SELECT l.estudiante.id, l.idLesion FROM Lesion l WHERE l.fechaAlta IS NULL")
     List<Object[]> idsYLesionActivaPorEstudiante();
 
-    Page<Lesion> findByEstudianteIdEstudianteOrderByFechaLesionDesc(Long idEstudiante, Pageable pageable);
+    @Query("SELECT l FROM Lesion l WHERE l.estudiante.id = :idEstudiante ORDER BY l.fechaLesion DESC")
+    Page<Lesion> findByEstudianteIdEstudianteOrderByFechaLesionDesc(@Param("idEstudiante") Long idEstudiante, Pageable pageable);
 
     @Query("SELECT l FROM Lesion l WHERE l.fechaAlta IS NULL ORDER BY l.fechaLesion DESC")
     Page<Lesion> listarActivas(Pageable pageable);

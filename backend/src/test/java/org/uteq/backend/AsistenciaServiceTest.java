@@ -45,7 +45,7 @@ class AsistenciaServiceTest {
     private AsistenciaService asistenciaService;
 
     private Student estudiante() {
-        return Student.builder().idEstudiante(6L).build();
+        return Student.builder().id(6L).build();
     }
 
     private SesionEntrenamiento sesionConHoraInicio(LocalTime horaInicio) {

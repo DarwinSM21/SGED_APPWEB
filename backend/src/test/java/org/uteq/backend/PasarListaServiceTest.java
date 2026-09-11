@@ -52,9 +52,9 @@ class PasarListaServiceTest {
 
     private Student estudiante(Long id, Long idCategoria) {
         return Student.builder()
-                .idEstudiante(id)
-                .persona(Person.builder().nombre("Ana").apellido("Vera").build())
-                .categoria(categoria(idCategoria, "SUB-18"))
+                .id(id)
+                .person(Person.builder().name("Ana").lastName("Vera").build())
+                .category(categoria(idCategoria, "SUB-18"))
                 .build();
     }
 

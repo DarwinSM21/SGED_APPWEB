@@ -73,8 +73,8 @@ class AlineacionServiceTest {
 
     private Student jugador(long id, Categoria suCategoria) {
         return Student.builder()
-                .idEstudiante(id).activo(true).categoria(suCategoria)
-                .persona(Person.builder().idPersona(id).nombre("Jugador").apellido("N" + id).build())
+                .id(id).active(true).category(suCategoria)
+                .person(Person.builder().id(id).name("Jugador").lastName("N" + id).build())
                 .build();
     }
 

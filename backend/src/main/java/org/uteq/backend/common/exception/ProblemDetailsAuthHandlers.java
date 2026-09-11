@@ -31,7 +31,7 @@ public class ProblemDetailsAuthHandlers {
     @Bean
     public AuthenticationEntryPoint problemAuthEntryPoint() {
         return (request, response, ex) ->
-                escribir(request, response, HttpStatus.UNAUTHORIZED,
+                writeProblem(request, response, HttpStatus.UNAUTHORIZED,
                         "NoAutenticado",
                         "Se requiere autenticación para acceder a este recurso");
     }
@@ -42,12 +42,12 @@ public class ProblemDetailsAuthHandlers {
     @Bean
     public AccessDeniedHandler problemAccessDeniedHandler() {
         return (request, response, ex) ->
-                escribir(request, response, HttpStatus.FORBIDDEN,
+                writeProblem(request, response, HttpStatus.FORBIDDEN,
                         "AccesoDenegado",
                         "No tiene permisos para acceder a este recurso");
     }
 
-    private void escribir(HttpServletRequest request, HttpServletResponse response,
+    private void writeProblem(HttpServletRequest request, HttpServletResponse response,
                           HttpStatus status, String tipo, String detalle)
             throws IOException {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(status, detalle);

@@ -17,7 +17,7 @@ import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.role.entity.Role;
-import org.uteq.backend.seguridad.user.controller.PerfilController;
+import org.uteq.backend.seguridad.user.controller.ProfileController;
 import org.uteq.backend.seguridad.user.entity.UserAccount;
 import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
@@ -32,15 +32,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
-class PerfilControllerTest {
+class ProfileControllerTest {
     @Mock private UserAccountRepository usuarioRepository;
 
-    private PerfilController controller;
+    private ProfileController controller;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        controller = new PerfilController(usuarioRepository, new ReportPdfService());
+        controller = new ProfileController(usuarioRepository, new ReportPdfService());
         mockMvc = MockMvcBuilders.standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -63,12 +63,12 @@ class PerfilControllerTest {
         autenticarComo("estudiante1", "ESTUDIANTE");
         UserAccount usuario = UserAccount.builder()
                 .username("estudiante1")
-                .persona(Person.builder()
-                        .nombre("Ana").apellido("Torres").cedula("1234567890")
-                        .correo("ana@sged.test").telefono("0999999999")
-                        .fechaNacimiento(LocalDate.of(2010, 5, 20))
+                .person(Person.builder()
+                        .name("Ana").lastName("Torres").nationalId("1234567890")
+                        .email("ana@sged.test").phone("0999999999")
+                        .birthDate(LocalDate.of(2010, 5, 20))
                         .build())
-                .roles(Set.of(Role.builder().nombre("ESTUDIANTE").build()))
+                .roles(Set.of(Role.builder().name("ESTUDIANTE").build()))
                 .build();
         when(usuarioRepository.findByUsername("estudiante1")).thenReturn(Optional.of(usuario));
 

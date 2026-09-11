@@ -65,11 +65,11 @@ class ConvocatoriaServiceTest {
         Posicion posicion = idPosicion == null ? null
                 : Posicion.builder().idPosicion(idPosicion).abreviatura(abreviatura).nombre(abreviatura).build();
         return Student.builder()
-                .idEstudiante(id)
-                .activo(true)
-                .categoria(categoria)
-                .posicion(posicion)
-                .persona(Person.builder().idPersona(id).nombre("Jugador").apellido(apellido).build())
+                .id(id)
+                .active(true)
+                .category(categoria)
+                .position(posicion)
+                .person(Person.builder().id(id).name("Jugador").lastName(apellido).build())
                 .build();
     }
 

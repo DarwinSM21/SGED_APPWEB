@@ -59,15 +59,15 @@ public class StudentReportService {
      */
     @Transactional(readOnly = true)
     public List<StudentSummaryResponse> myStudents(String username) {
-        Guardian representante = representanteDe(username);
-        return vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(representante.getIdRepresentante())
+        Guardian representante = guardianOf(username);
+        return vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(representante.getId())
                 .stream()
                 .map(v -> {
-                    Student e = v.getEstudiante();
+                    Student e = v.getStudent();
                     return new StudentSummaryResponse(
-                            e.getIdEstudiante(),
-                            e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
-                            e.getCategoria().getNombre());
+                            e.getId(),
+                            e.getPerson().getName() + " " + e.getPerson().getLastName(),
+                            e.getCategory().getNombre());
                 })
                 .toList();
     }
@@ -84,18 +84,18 @@ public class StudentReportService {
      */
     @Transactional(readOnly = true)
     public StudentReportResponse reportFor(String username, Long idEstudiante) {
-        Guardian representante = representanteDe(username);
+        Guardian representante = guardianOf(username);
 
         boolean esSuyo = vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(
-                representante.getIdRepresentante(), idEstudiante);
+                representante.getId(), idEstudiante);
         if (!esSuyo) {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
 
         Student estudiante = vinculoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(representante.getIdRepresentante(), idEstudiante)
+                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(representante.getId(), idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante))
-                .getEstudiante();
+                .getStudent();
 
         return buildReport(estudiante);
     }
@@ -133,7 +133,7 @@ public class StudentReportService {
     @Transactional(readOnly = true)
     public ReportCommentResponse commentFor(String username, Long idEstudiante) {
         StudentReportResponse informe = reportFor(username, idEstudiante);
-        return comentarSobre(informe);
+        return commentOn(informe);
     }
 
     /**
@@ -148,14 +148,14 @@ public class StudentReportService {
      */
     @Transactional(readOnly = true)
     public ReportCommentResponse myComment(String username) {
-        return comentarSobre(myReport(username));
+        return commentOn(myReport(username));
     }
 
     // Arma el perfil seudonimizado y pide el texto. Al modelo va un
     // AnonymousPlayerProfile, que no tiene nombre, cédula, correo ni fecha de
     // nacimiento: solo salen del sistema promedios, categoría y cuántos
     // entrenamientos asistió. El titular de estos datos es un menor.
-    private ReportCommentResponse comentarSobre(StudentReportResponse informe) {
+    private ReportCommentResponse commentOn(StudentReportResponse informe) {
         if (informe.promediosPorCriterio().isEmpty()) {
             return new ReportCommentResponse(null, false,
                     "Todavía no hay evaluaciones registradas para comentar");
@@ -188,7 +188,7 @@ public class StudentReportService {
     }
 
     private StudentReportResponse buildReport(Student estudiante) {
-        Long idEstudiante = estudiante.getIdEstudiante();
+        Long idEstudiante = estudiante.getId();
 
         List<CriterionAverageResponse> promedios = evaluacionEstudianteRepository
                 .promedioHistoricoPorCriterio(idEstudiante).stream()
@@ -200,7 +200,7 @@ public class StudentReportService {
         List<InjurySummaryResponse> lesiones = lesionRepository
                 .findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, Pageable.unpaged())
                 .getContent().stream()
-                .map(this::aLesionResumen)
+                .map(this::toInjurySummary)
                 .toList();
 
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
@@ -209,19 +209,19 @@ public class StudentReportService {
 
         return new StudentReportResponse(
                 idEstudiante,
-                estudiante.getPersona().getNombre() + " " + estudiante.getPersona().getApellido(),
-                estudiante.getCategoria().getNombre(),
+                estudiante.getPerson().getName() + " " + estudiante.getPerson().getLastName(),
+                estudiante.getCategory().getNombre(),
                 promedios,
                 lesiones,
                 porcentajeAsistencia);
     }
 
-    private Guardian representanteDe(String username) {
+    private Guardian guardianOf(String username) {
         return representanteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 
-    private InjurySummaryResponse aLesionResumen(Lesion l) {
+    private InjurySummaryResponse toInjurySummary(Lesion l) {
         return new InjurySummaryResponse(
                 l.getIdLesion(), l.getDescripcion(), l.getFechaLesion(),
                 l.getFechaEstimadaRetorno(), l.getFechaAlta(), l.estaActiva());

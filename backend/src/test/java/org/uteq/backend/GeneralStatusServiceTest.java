@@ -29,8 +29,8 @@ class GeneralStatusServiceTest {
     @DisplayName("listarTodos mapea todas las entidades a GeneralStatusResponse")
     void listarTodos_devuelve_todos_los_estados() {
         when(estadoGeneralRepository.findAll()).thenReturn(List.of(
-                GeneralStatus.builder().idEstadoGeneral(1L).nombre("ACTIVO").build(),
-                GeneralStatus.builder().idEstadoGeneral(2L).nombre("INACTIVO").build()
+                GeneralStatus.builder().id(1L).name("ACTIVO").build(),
+                GeneralStatus.builder().id(2L).name("INACTIVO").build()
         ));
 
         List<GeneralStatusResponse> resultado = estadoGeneralService.findAll();

@@ -40,7 +40,7 @@ class EntidadCicloVidaTest {
 
         assertThat(u.getCreatedAt()).isNotNull();
         assertThat(u.getUpdatedAt()).isNotNull();
-        assertThat(u.getActivo()).isTrue();
+        assertThat(u.getActive()).isTrue();
         assertThat(u.getUsername()).isEqualTo("darwinsm21");
     }
 
@@ -48,9 +48,9 @@ class EntidadCicloVidaTest {
     @DisplayName("UserAccount.onCreate(): respeta activo si ya viene seteado")
     void usuario_onCreate_respeta_activo() throws Exception {
         UserAccount u = new UserAccount();
-        u.setActivo(false);
+        u.setActive(false);
         invocar(u, "onCreate");
-        assertThat(u.getActivo()).isFalse();
+        assertThat(u.getActive()).isFalse();
     }
 
     @Test
@@ -73,11 +73,11 @@ class EntidadCicloVidaTest {
         invocar(p, "onCreate");
         assertThat(p.getCreatedAt()).isNotNull();
         assertThat(p.getUpdatedAt()).isNotNull();
-        assertThat(p.getActivo()).isTrue();
+        assertThat(p.getActive()).isTrue();
 
-        p.setActivo(false);
+        p.setActive(false);
         invocar(p, "onUpdate");
-        assertThat(p.getActivo()).isFalse();
+        assertThat(p.getActive()).isFalse();
         assertThat(p.getUpdatedAt()).isNotNull();
     }
 
@@ -113,13 +113,13 @@ class EntidadCicloVidaTest {
     void consentimiento_onCreate() throws Exception {
         Consent c = new Consent();
         invocar(c, "onCreate");
-        assertThat(c.getOtorgadoEn()).isNotNull();
+        assertThat(c.getGrantedAt()).isNotNull();
 
         OffsetDateTime fija = OffsetDateTime.now().minusHours(5);
         Consent d = new Consent();
-        d.setOtorgadoEn(fija);
+        d.setGrantedAt(fija);
         invocar(d, "onCreate");
-        assertThat(d.getOtorgadoEn()).isEqualTo(fija);
+        assertThat(d.getGrantedAt()).isEqualTo(fija);
     }
 
     @Test

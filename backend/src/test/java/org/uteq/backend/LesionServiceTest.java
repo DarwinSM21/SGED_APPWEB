@@ -41,7 +41,7 @@ class LesionServiceTest {
 
     private void existenAmbos() {
         when(estudianteRepository.findById(ID_EST))
-                .thenReturn(Optional.of(Student.builder().idEstudiante(ID_EST).build()));
+                .thenReturn(Optional.of(Student.builder().id(ID_EST).build()));
         when(entrenadorRepository.findById(ID_ENT))
                 .thenReturn(Optional.of(Entrenador.builder().idEntrenador(ID_ENT).build()));
     }
@@ -100,7 +100,7 @@ class LesionServiceTest {
     @DisplayName("Entrenador inexistente da 404")
     void entrenadorInexistente() {
         when(estudianteRepository.findById(ID_EST))
-                .thenReturn(Optional.of(Student.builder().idEstudiante(ID_EST).build()));
+                .thenReturn(Optional.of(Student.builder().id(ID_EST).build()));
         when(entrenadorRepository.findById(ID_ENT)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class,

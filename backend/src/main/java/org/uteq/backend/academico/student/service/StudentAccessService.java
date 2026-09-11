@@ -47,7 +47,7 @@ public class StudentAccessService {
     public void validateConsistencyWithStudentRecord(Long idPersona) {
         usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -> {
             boolean esEstudiante = usuario.getRoles() != null && usuario.getRoles().stream()
-                    .anyMatch(r -> "ESTUDIANTE".equals(r.getNombre()));
+                    .anyMatch(r -> "ESTUDIANTE".equals(r.getName()));
             if (!esEstudiante) {
                 throw new IllegalArgumentException(
                         "La persona tiene una cuenta con otro rol: no se le puede crear una ficha de estudiante");
@@ -80,11 +80,11 @@ public class StudentAccessService {
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
 
         UserAccount usuario = UserAccount.builder()
-                .persona(persona)
-                .estadoGeneral(estadoActivo)
+                .person(persona)
+                .generalStatus(estadoActivo)
                 .username(request.username())
-                .password_Hash(passwordEncoder.encode(request.password()))
-                .activo(true)
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .active(true)
                 .roles(Set.of(rolEstudiante))
                 .build();
         return usuarioRepository.save(usuario);

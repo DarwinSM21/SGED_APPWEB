@@ -11,15 +11,16 @@ import java.util.List;
 import java.util.Optional;
 
 public interface EvaluacionEstudianteRepository extends JpaRepository<EvaluacionEstudiante, Long>, JpaSpecificationExecutor<EvaluacionEstudiante> {
+    @Query("SELECT ee FROM EvaluacionEstudiante ee WHERE ee.evaluacion.idEvaluacion = :idEvaluacion AND ee.estudiante.id = :idEstudiante")
     Optional<EvaluacionEstudiante> findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(
-            Long idEvaluacion, Long idEstudiante);
+            @Param("idEvaluacion") Long idEvaluacion, @Param("idEstudiante") Long idEstudiante);
 
     @Query("""
            SELECT c.nombre, AVG(d.puntaje)
            FROM DetalleEvaluacion d
            JOIN d.evaluacionEstudiante ee
            JOIN d.criterio c
-           WHERE ee.estudiante.idEstudiante = :idEstudiante
+           WHERE ee.estudiante.id = :idEstudiante
            GROUP BY c.nombre
            """)
     List<Object[]> promedioHistoricoPorCriterio(@Param("idEstudiante") Long idEstudiante);
@@ -29,28 +30,28 @@ public interface EvaluacionEstudianteRepository extends JpaRepository<Evaluacion
            FROM DetalleEvaluacion d
            JOIN d.evaluacionEstudiante ee
            JOIN d.criterio c
-           WHERE ee.estudiante.idEstudiante = :idEstudiante
+           WHERE ee.estudiante.id = :idEstudiante
              AND ee.evaluacion.idEvaluacion = :idEvaluacionPrevia
            """)
     List<Object[]> puntajesDeEvaluacion(@Param("idEstudiante") Long idEstudiante,
                                         @Param("idEvaluacionPrevia") Long idEvaluacionPrevia);
 
     @Query("""
-           SELECT ee.estudiante.idEstudiante, AVG(d.puntaje)
+           SELECT ee.estudiante.id, AVG(d.puntaje)
            FROM DetalleEvaluacion d
            JOIN d.evaluacionEstudiante ee
-           WHERE ee.estudiante.idEstudiante IN :ids
-           GROUP BY ee.estudiante.idEstudiante
+           WHERE ee.estudiante.id IN :ids
+           GROUP BY ee.estudiante.id
            """)
     List<Object[]> promedioGeneralPorEstudiante(@Param("ids") List<Long> ids);
 
     @Query("""
-           SELECT ee.estudiante.idEstudiante, AVG(d.puntaje)
+           SELECT ee.estudiante.id, AVG(d.puntaje)
            FROM DetalleEvaluacion d
            JOIN d.evaluacionEstudiante ee
-           WHERE ee.estudiante.idEstudiante IN :ids
+           WHERE ee.estudiante.id IN :ids
              AND ee.evaluacion.sesion.fecha BETWEEN :desde AND :hasta
-           GROUP BY ee.estudiante.idEstudiante
+           GROUP BY ee.estudiante.id
            """)
     List<Object[]> promedioEnVentana(@Param("ids") List<Long> ids,
                                      @Param("desde") LocalDate desde,

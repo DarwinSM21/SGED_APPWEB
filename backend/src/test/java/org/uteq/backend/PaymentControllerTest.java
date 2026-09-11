@@ -18,7 +18,7 @@ import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.payment.controller.PaymentController;
 import org.uteq.backend.academico.payment.dto.PaymentDtos.MonthlyIncomeResponse;
 import org.uteq.backend.academico.payment.entity.Payment;
-import org.uteq.backend.academico.payment.entity.Payment.TipoPago;
+import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.service.PaymentService;
 import org.uteq.backend.common.exception.GlobalExceptionHandler;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
@@ -66,22 +66,22 @@ class PaymentControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    private Payment pago(Long id, TipoPago tipo, Integer anio, Integer mes) {
-        var estudiante = Student.builder().idEstudiante(1L)
-                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
+    private Payment pago(Long id, PaymentType tipo, Integer anio, Integer mes) {
+        var estudiante = Student.builder().id(1L)
+                .person(Person.builder().name("Juan").lastName("Perez").build())
                 .build();
-        var registrador = UserAccount.builder().idUsuario(9L)
-                .persona(Person.builder().nombre("Ana").apellido("Admin").build())
+        var registrador = UserAccount.builder().id(9L)
+                .person(Person.builder().name("Ana").lastName("Admin").build())
                 .build();
         return Payment.builder()
-                .idPago(id)
-                .estudiante(estudiante)
-                .tipo(tipo)
-                .anio(anio == null ? null : anio.shortValue())
-                .mes(mes == null ? null : mes.shortValue())
-                .monto(new BigDecimal("30.00"))
-                .fechaPago(LocalDate.of(2026, 8, 14))
-                .registradoPor(registrador)
+                .id(id)
+                .student(estudiante)
+                .type(tipo)
+                .year(anio == null ? null : anio.shortValue())
+                .month(mes == null ? null : mes.shortValue())
+                .amount(new BigDecimal("30.00"))
+                .paymentDate(LocalDate.of(2026, 8, 14))
+                .registeredBy(registrador)
                 .build();
     }
 
@@ -91,7 +91,7 @@ class PaymentControllerTest {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
         when(pagoService.registerMembership(eq(1L), eq(2026), eq(List.of(8)),
                 eq(new BigDecimal("30.00")), isNull(), eq("recepcion@sged.test")))
-                .thenReturn(List.of(pago(1L, TipoPago.MEMBRESIA, 2026, 8)));
+                .thenReturn(List.of(pago(1L, PaymentType.MEMBRESIA, 2026, 8)));
 
         mockMvc.perform(post("/api/pagos/membresia")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -130,7 +130,7 @@ class PaymentControllerTest {
     void registrarDiario_devuelve_201() throws Exception {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
         when(pagoService.registerDaily(eq(1L), eq(new BigDecimal("5.00")), isNull(), eq("recepcion@sged.test")))
-                .thenReturn(pago(2L, TipoPago.DIARIO, null, null));
+                .thenReturn(pago(2L, PaymentType.DIARIO, null, null));
 
         mockMvc.perform(post("/api/pagos/diario")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -144,7 +144,7 @@ class PaymentControllerTest {
     @Test
     @DisplayName("historial devuelve la lista de pagos del estudiante")
     void historial_devuelve_lista() throws Exception {
-        when(pagoService.historyFor(1L)).thenReturn(List.of(pago(3L, TipoPago.DIARIO, null, null)));
+        when(pagoService.historyFor(1L)).thenReturn(List.of(pago(3L, PaymentType.DIARIO, null, null)));
 
         mockMvc.perform(get("/api/pagos/estudiante/1"))
                 .andExpect(status().isOk())

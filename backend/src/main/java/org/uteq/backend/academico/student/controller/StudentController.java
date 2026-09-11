@@ -71,7 +71,7 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')")
     public ResponseEntity<StudentResponse> findById(@PathVariable Long id, Authentication auth) {
         StudentResponse est = estudianteService.findById(id);
-        return ResponseEntity.ok(puedeVerDatosFisicos(auth) ? est : est.withoutPhysicalData());
+        return ResponseEntity.ok(canViewPhysicalData(auth) ? est : est.withoutPhysicalData());
     }
 
     /**
@@ -79,7 +79,7 @@ public class StudentController {
      * un menor) solo los ven {@code ADMINISTRADOR} y {@code ENTRENADOR}. Para
      * {@code RECEPCIONISTA} se devuelven nulos.
      */
-    private boolean puedeVerDatosFisicos(Authentication auth) {
+    private boolean canViewPhysicalData(Authentication auth) {
         if (auth == null) return false;
         for (GrantedAuthority a : auth.getAuthorities()) {
             String rol = a.getAuthority();
@@ -90,7 +90,7 @@ public class StudentController {
 
     private StudentPageResponse<StudentResponse> filterPhysicalData(
             StudentPageResponse<StudentResponse> pagina, Authentication auth) {
-        if (puedeVerDatosFisicos(auth)) return pagina;
+        if (canViewPhysicalData(auth)) return pagina;
         List<StudentResponse> filtrado = pagina.content().stream()
                 .map(StudentResponse::withoutPhysicalData)
                 .toList();

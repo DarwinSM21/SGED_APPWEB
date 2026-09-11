@@ -15,11 +15,13 @@ import java.util.List;
 import java.util.Optional;
 
 public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, JpaSpecificationExecutor<Asistencia> {
-    Optional<Asistencia> findBySesionIdSesionAndEstudianteIdEstudiante(Long idSesion, Long idEstudiante);
+    @Query("SELECT a FROM Asistencia a WHERE a.sesion.idSesion = :idSesion AND a.estudiante.id = :idEstudiante")
+    Optional<Asistencia> findBySesionIdSesionAndEstudianteIdEstudiante(@Param("idSesion") Long idSesion, @Param("idEstudiante") Long idEstudiante);
 
     List<Asistencia> findBySesionIdSesion(Long idSesion);
 
-    Page<Asistencia> findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(Long idEstudiante, Pageable pageable);
+    @Query("SELECT a FROM Asistencia a WHERE a.estudiante.id = :idEstudiante ORDER BY a.sesion.fecha DESC")
+    Page<Asistencia> findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(@Param("idEstudiante") Long idEstudiante, Pageable pageable);
 
     @Query("""
            SELECT a FROM Asistencia a
@@ -30,7 +32,7 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, J
 
     @Query("""
            SELECT COUNT(a) FROM Asistencia a
-           WHERE a.estudiante.idEstudiante = :idEstudiante
+           WHERE a.estudiante.id = :idEstudiante
              AND a.estado IN ('PRESENTE', 'TARDE')
              AND a.sesion.fecha >= :desde
            """)
@@ -70,12 +72,12 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, J
             @Param("desde") LocalDate desde, @Param("corte") LocalDate corte);
 
     @Query("""
-           SELECT a.estudiante.idEstudiante, COUNT(a)
+           SELECT a.estudiante.id, COUNT(a)
            FROM Asistencia a
-           WHERE a.estudiante.idEstudiante IN :ids
+           WHERE a.estudiante.id IN :ids
              AND a.estado IN ('PRESENTE', 'TARDE')
              AND a.sesion.fecha BETWEEN :desde AND :hasta
-           GROUP BY a.estudiante.idEstudiante
+           GROUP BY a.estudiante.id
            """)
     List<Object[]> presenciasEnVentana(@Param("ids") List<Long> ids,
                                        @Param("desde") LocalDate desde,
@@ -84,10 +86,10 @@ public interface AsistenciaRepository extends JpaRepository<Asistencia, Long>, J
     @Query("""
            SELECT a FROM Asistencia a
            JOIN FETCH a.estudiante e
-           JOIN FETCH e.persona
-           LEFT JOIN FETCH e.posicion
+           JOIN FETCH e.person
+           LEFT JOIN FETCH e.position
            WHERE a.sesion.idSesion = :idSesion
-           ORDER BY e.persona.apellido ASC
+           ORDER BY e.person.lastName ASC
            """)
     List<Asistencia> historialDeSesion(@Param("idSesion") Long idSesion);
 }

@@ -18,37 +18,43 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @param pageable página y tamaño solicitados
      * @return página de personas con baja lógica excluida
      */
+    @Query("SELECT p FROM Person p WHERE p.active = true")
     Page<Person> findByActivoTrue(Pageable pageable);
 
     /**
      * @param cedula cédula a buscar (puede no estar presente, ver RF-49)
      * @return la persona activa con esa cédula, si existe
      */
-    Optional<Person> findByCedulaAndActivoTrue(String cedula);
+    @Query("SELECT p FROM Person p WHERE p.nationalId = :cedula AND p.active = true")
+    Optional<Person> findByCedulaAndActivoTrue(@Param("cedula") String cedula);
 
     /**
      * @param idPersona identificador de la persona
      * @return la persona, si existe y está activa
      */
-    Optional<Person> findByIdPersonaAndActivoTrue(Long idPersona);
+    @Query("SELECT p FROM Person p WHERE p.id = :idPersona AND p.active = true")
+    Optional<Person> findByIdPersonaAndActivoTrue(@Param("idPersona") Long idPersona);
 
     /**
      * @param correo correo electrónico a buscar
      * @return la persona con ese correo, activa o no, si existe
      */
-    Optional<Person> findByCorreo(String correo);
+    @Query("SELECT p FROM Person p WHERE p.email = :correo")
+    Optional<Person> findByCorreo(@Param("correo") String correo);
 
     /**
      * @param cedula cédula a comprobar
      * @return {@code true} si existe una persona activa con esa cédula
      */
-    boolean existsByCedulaAndActivoTrue(String cedula);
+    @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.nationalId = :cedula AND p.active = true")
+    boolean existsByCedulaAndActivoTrue(@Param("cedula") String cedula);
 
     /**
      * @param correo correo electrónico a comprobar
      * @return {@code true} si ya existe una persona con ese correo
      */
-    boolean existsByCorreo(String correo);
+    @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.email = :correo")
+    boolean existsByCorreo(@Param("correo") String correo);
 
     /**
      * Comprueba unicidad de cédula excluyendo a la propia persona, para
@@ -58,7 +64,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @param idPersona identificador de la persona que se excluye de la comprobación
      * @return {@code true} si otra persona activa ya usa esa cédula
      */
-    @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.cedula = :cedula AND p.activo = true AND p.idPersona != :idPersona")
+    @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.nationalId = :cedula AND p.active = true AND p.id != :idPersona")
     boolean existsAnotherPersonWithCedula(@Param("cedula") String cedula, @Param("idPersona") Long idPersona);
 
     /**
@@ -69,6 +75,6 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @param idPersona identificador de la persona que se excluye de la comprobación
      * @return {@code true} si otra persona ya usa ese correo
      */
-    @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.correo = :correo AND p.idPersona != :idPersona")
+    @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.email = :correo AND p.id != :idPersona")
     boolean existsAnotherPersonWithEmail(@Param("correo") String correo, @Param("idPersona") Long idPersona);
 }

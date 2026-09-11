@@ -63,20 +63,20 @@ public class ItemService {
      * @param request datos del artículo
      * @return el artículo creado
      */
-    @Audited(accion = "CREAR", entidad = "Articulo", idSpel = "#result.idArticulo",
-            descripcionSpel = "'creó el artículo ' + #result.nombre")
+    @Audited(action = "CREAR", entity = "Articulo", idSpel = "#result.idArticulo",
+            descriptionSpel = "'creó el artículo ' + #result.nombre")
     @Transactional
     public ItemResponse create(ItemRequest request) {
         Item articulo = Item.builder()
-                .nombre(request.nombre())
-                .tipo(request.tipo())
-                .talla(request.talla())
-                .descripcion(request.descripcion())
-                .stockActual(0)
-                .stockMinimo(request.stockMinimo())
-                .unidadMedida(request.unidadMedida() != null && !request.unidadMedida().isBlank()
+                .name(request.nombre())
+                .type(request.tipo())
+                .size(request.talla())
+                .description(request.descripcion())
+                .currentStock(0)
+                .minimumStock(request.stockMinimo())
+                .unitOfMeasure(request.unidadMedida() != null && !request.unidadMedida().isBlank()
                         ? request.unidadMedida() : "unidad")
-                .activo(true)
+                .active(true)
                 .build();
 
         return toResponse(articuloRepository.save(articulo));
@@ -90,19 +90,19 @@ public class ItemService {
      * @return el artículo actualizado
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "EDITAR", entidad = "Articulo", idSpel = "#result.idArticulo",
-            descripcionSpel = "'editó el artículo ' + #result.nombre")
+    @Audited(action = "EDITAR", entity = "Articulo", idSpel = "#result.idArticulo",
+            descriptionSpel = "'editó el artículo ' + #result.nombre")
     @Transactional
     public ItemResponse update(Long id, ItemRequest request) {
         Item articulo = findEntity(id);
 
-        articulo.setNombre(request.nombre());
-        articulo.setTipo(request.tipo());
-        articulo.setTalla(request.talla());
-        articulo.setDescripcion(request.descripcion());
-        articulo.setStockMinimo(request.stockMinimo());
+        articulo.setName(request.nombre());
+        articulo.setType(request.tipo());
+        articulo.setSize(request.talla());
+        articulo.setDescription(request.descripcion());
+        articulo.setMinimumStock(request.stockMinimo());
         if (request.unidadMedida() != null && !request.unidadMedida().isBlank()) {
-            articulo.setUnidadMedida(request.unidadMedida());
+            articulo.setUnitOfMeasure(request.unidadMedida());
         }
 
         return toResponse(articuloRepository.save(articulo));
@@ -114,12 +114,12 @@ public class ItemService {
      * @param id identificador del artículo
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Articulo", idSpel = "#p0",
-            descripcionSpel = "'desactivó el artículo #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Articulo", idSpel = "#p0",
+            descriptionSpel = "'desactivó el artículo #' + #p0")
     @Transactional
     public void delete(Long id) {
         Item articulo = findEntity(id);
-        articulo.setActivo(false);
+        articulo.setActive(false);
         articuloRepository.save(articulo);
     }
 
@@ -131,17 +131,17 @@ public class ItemService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Audited(accion = "REACTIVAR", entidad = "Articulo", idSpel = "#p0",
-            descripcionSpel = "'reactivo el articulo #' + #p0")
+    @Audited(action = "REACTIVAR", entity = "Articulo", idSpel = "#p0",
+            descriptionSpel = "'reactivo el articulo #' + #p0")
     @Transactional
     public ItemResponse reactivate(Long id) {
         Item articulo = findEntity(id);
 
-        if (Boolean.TRUE.equals(articulo.getActivo())) {
+        if (Boolean.TRUE.equals(articulo.getActive())) {
             throw new IllegalArgumentException("El articulo ya se encuentra activo");
         }
 
-        articulo.setActivo(true);
+        articulo.setActive(true);
         return toResponse(articuloRepository.save(articulo));
     }
 
@@ -166,15 +166,15 @@ public class ItemService {
 
     private ItemResponse toResponse(Item a) {
         return new ItemResponse(
-                a.getIdArticulo(),
-                a.getNombre(),
-                a.getTipo(),
-                a.getTalla(),
-                a.getDescripcion(),
-                a.getStockActual(),
-                a.getStockMinimo(),
-                a.getUnidadMedida(),
-                a.getActivo(),
+                a.getId(),
+                a.getName(),
+                a.getType(),
+                a.getSize(),
+                a.getDescription(),
+                a.getCurrentStock(),
+                a.getMinimumStock(),
+                a.getUnitOfMeasure(),
+                a.getActive(),
                 a.getCreatedAt()
         );
     }

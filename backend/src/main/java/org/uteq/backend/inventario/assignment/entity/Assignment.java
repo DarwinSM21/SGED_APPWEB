@@ -27,48 +27,48 @@ public class Assignment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_asignacion")
-    private Long idAsignacion;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_articulo", nullable = false)
-    private Item articulo;
+    private Item item;
 
     @Column(nullable = false)
-    private Integer cantidad;
+    private Integer quantity;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo_destinatario", nullable = false, length = 15)
-    private RecipientType tipoDestinatario;
+    private RecipientType recipientType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estudiante")
-    private Student estudiante;
+    private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_entrenador")
-    private Entrenador entrenador;
+    private Entrenador coach;
 
     @Column(name = "fecha_asignacion", nullable = false)
     @Builder.Default
-    private LocalDate fechaAsignacion = LocalDate.now(Zones.ECUADOR);
+    private LocalDate assignmentDate = LocalDate.now(Zones.ECUADOR);
 
     @Column(name = "fecha_devolucion_esperada")
-    private LocalDate fechaDevolucionEsperada;
+    private LocalDate expectedReturnDate;
 
     @Column(name = "fecha_devolucion_real")
-    private LocalDate fechaDevolucionReal;
+    private LocalDate actualReturnDate;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 15)
     @Builder.Default
-    private AssignmentStatus estado = AssignmentStatus.ASIGNADO;
+    private AssignmentStatus status = AssignmentStatus.ASIGNADO;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(length = 255)
-    private String observaciones;
+    private String notes;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -91,7 +91,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         if (!habilitado) {
             return FeedbackResult.unavailable("Generacion de texto deshabilitada");
         }
-        return invocar(PromptsFeedback.deJugador(profile));
+        return invoke(PromptsFeedback.forPlayer(profile));
     }
 
     /**
@@ -109,19 +109,19 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         if (lineup == null || lineup.isEmpty()) {
             return FeedbackResult.unavailable("La alineacion esta vacia");
         }
-        return invocar(PromptsFeedback.dePlantilla(lineup));
+        return invoke(PromptsFeedback.forLineup(lineup));
     }
 
-    private FeedbackResult invocar(String prompt) {
+    private FeedbackResult invoke(String prompt) {
         Exception ultimoFallo = null;
 
         for (int intento = 0; intento <= reintentos; intento++) {
             try {
-                return intentarUnaVez(prompt);
+                return tryOnce(prompt);
 
             } catch (HttpClientErrorException e) {
                 log.warn("OpenAI rechazo la peticion: {}", e.getStatusCode());
-                return FeedbackResult.unavailable(motivoDeRechazo(e));
+                return FeedbackResult.unavailable(rejectionReason(e));
 
             } catch (Exception e) {
                 ultimoFallo = e;
@@ -129,7 +129,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
                 log.warn("Fallo transitorio de OpenAI (intento {} de {}): {}",
                         intento + 1, reintentos + 1, e.getClass().getSimpleName());
                 if (intento < reintentos) {
-                    esperarAntesDeReintentar(intento);
+                    waitBeforeRetry(intento);
                 }
             }
         }
@@ -139,7 +139,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         return FeedbackResult.unavailable("El servicio de generacion no respondio");
     }
 
-    private FeedbackResult intentarUnaVez(String prompt) {
+    private FeedbackResult tryOnce(String prompt) {
         var cuerpo = Map.of(
                 "model", modelo,
                 "messages", List.of(
@@ -156,7 +156,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
                 .retrieve()
                 .body(JsonNode.class);
 
-        String texto = extraerTexto(respuesta);
+        String texto = extractText(respuesta);
         if (texto == null || texto.isBlank()) {
             String motivoCorte = respuesta.path("choices").path(0).path("finish_reason").asText("");
             if ("length".equals(motivoCorte)) {
@@ -171,7 +171,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         return FeedbackResult.ok(texto.trim());
     }
 
-    private String motivoDeRechazo(HttpClientErrorException e) {
+    private String rejectionReason(HttpClientErrorException e) {
         int codigo = e.getStatusCode().value();
         if (codigo == 429) {
             return "Se agoto la cuota del servicio de IA o se superó el limite de peticiones";
@@ -182,7 +182,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         return "El servicio de IA rechazo la peticion (codigo " + codigo + ")";
     }
 
-    private String extraerTexto(JsonNode respuesta) {
+    private String extractText(JsonNode respuesta) {
         if (respuesta == null) {
             return null;
         }
@@ -190,7 +190,7 @@ public class OpenAiFeedbackService implements AIFeedbackGenerator {
         return contenido.isTextual() ? contenido.asText() : null;
     }
 
-    private void esperarAntesDeReintentar(int intento) {
+    private void waitBeforeRetry(int intento) {
         try {
             Thread.sleep(400L * (intento + 1));
         } catch (InterruptedException ie) {

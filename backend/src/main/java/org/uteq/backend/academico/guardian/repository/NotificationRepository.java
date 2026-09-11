@@ -1,6 +1,8 @@
 package org.uteq.backend.academico.guardian.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.uteq.backend.academico.guardian.entity.Notification;
 
 import java.util.List;
@@ -15,13 +17,15 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * @param idRepresentante identificador del representante
      * @return las notificaciones de ese representante, de la más reciente a la más antigua
      */
-    List<Notification> findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(Long idRepresentante);
+    @Query("SELECT n FROM Notification n WHERE n.guardian.id = :idRepresentante ORDER BY n.createdAt DESC")
+    List<Notification> findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(@Param("idRepresentante") Long idRepresentante);
 
     /**
      * @param idRepresentante identificador del representante
      * @return la cantidad de notificaciones sin leer de ese representante
      */
-    long countByRepresentante_IdRepresentanteAndLeidaFalse(Long idRepresentante);
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.guardian.id = :idRepresentante AND n.read = false")
+    long countByRepresentante_IdRepresentanteAndLeidaFalse(@Param("idRepresentante") Long idRepresentante);
 
     /**
      * Busca una notificación puntual y comprueba a la vez que pertenece al
@@ -31,6 +35,7 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * @param idRepresentante identificador del representante que la solicita
      * @return la notificación, si existe y pertenece a ese representante
      */
+    @Query("SELECT n FROM Notification n WHERE n.id = :idNotificacion AND n.guardian.id = :idRepresentante")
     Optional<Notification> findByIdNotificacionAndRepresentante_IdRepresentante(
-            Long idNotificacion, Long idRepresentante);
+            @Param("idNotificacion") Long idNotificacion, @Param("idRepresentante") Long idRepresentante);
 }

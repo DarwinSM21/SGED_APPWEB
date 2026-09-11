@@ -39,17 +39,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         List<SimpleGrantedAuthority> autoridades = usuario.getRoles().stream()
                 .map(r -> {
-                    String nombreRol = r.getNombre().startsWith("ROLE_")
-                            ? r.getNombre()
-                            : "ROLE_" + r.getNombre();
+                    String nombreRol = r.getName().startsWith("ROLE_")
+                            ? r.getName()
+                            : "ROLE_" + r.getName();
                     return new SimpleGrantedAuthority(nombreRol);
                 })
                 .toList();
         return User.builder()
                 .username(usuario.getUsername())
-                .password(usuario.getPassword_Hash())
+                .password(usuario.getPasswordHash())
                 .authorities(autoridades)
-                .accountLocked(!usuario.getActivo())
+                .accountLocked(!usuario.getActive())
                 .build();
     }
 }

@@ -57,10 +57,10 @@ class StudentServiceTest {
     @BeforeEach
     void setUp() {
         personaDummy = Person.builder()
-                .idPersona(1L)
-                .nombre("Ana")
-                .apellido("Gomez")
-                .activo(true)
+                .id(1L)
+                .name("Ana")
+                .lastName("Gomez")
+                .active(true)
                 .build();
 
         categoriaDummy = Categoria.builder()
@@ -71,20 +71,20 @@ class StudentServiceTest {
                 .build();
 
         estadoDummy = GeneralStatus.builder()
-                .idEstadoGeneral(1L)
-                .nombre("ACTIVO")
+                .id(1L)
+                .name("ACTIVO")
                 .build();
 
         estudianteDummy = Student.builder()
-                .idEstudiante(1L)
-                .persona(personaDummy)
-                .categoria(categoriaDummy)
-                .estadoGeneral(estadoDummy)
-                .codigoEstudiante("EST-001")
-                .fechaIngreso(LocalDate.now())
-                .peso(new BigDecimal("45.50"))
-                .altura(new BigDecimal("1.50"))
-                .activo(true)
+                .id(1L)
+                .person(personaDummy)
+                .category(categoriaDummy)
+                .generalStatus(estadoDummy)
+                .studentCode("EST-001")
+                .enrollmentDate(LocalDate.now())
+                .weight(new BigDecimal("45.50"))
+                .height(new BigDecimal("1.50"))
+                .active(true)
                 .createdAt(Instant.now())
                 .build();
     }
@@ -196,9 +196,9 @@ class StudentServiceTest {
     @DisplayName("crear - Reactiva ficha de estudiante si la persona tenía un registro inactivo")
     void crear_reactiva_estudiante_inactivo() {
         Student estudianteInactivo = Student.builder()
-                .idEstudiante(1L)
-                .persona(personaDummy)
-                .activo(false)
+                .id(1L)
+                .person(personaDummy)
+                .active(false)
                 .build();
 
         StudentRequest request = crearRequestValido();
@@ -211,7 +211,7 @@ class StudentServiceTest {
         StudentResponse resp = service.create(request);
 
         assertNotNull(resp);
-        assertTrue(estudianteInactivo.getActivo());
+        assertTrue(estudianteInactivo.getActive());
     }
 
     @Test
@@ -249,7 +249,7 @@ class StudentServiceTest {
 
         service.delete(1L);
 
-        assertFalse(estudianteDummy.getActivo());
+        assertFalse(estudianteDummy.getActive());
         verify(estudianteRepository).save(estudianteDummy);
     }
 
@@ -325,7 +325,7 @@ class StudentServiceTest {
     @DisplayName("habilitarAcceso - Crea el usuario sobre la Persona YA existente, no una nueva")
     void habilitarAcceso_crea_usuario_sobre_persona_existente() {
         EnableAccessRequest request = new EnableAccessRequest("andres@sged.test", "password123");
-        UserAccount usuarioCreado = UserAccount.builder().idUsuario(9L).persona(personaDummy).build();
+        UserAccount usuarioCreado = UserAccount.builder().id(9L).person(personaDummy).build();
 
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
         when(estudianteAccesoService.createStudentAccount(personaDummy, request)).thenReturn(usuarioCreado);
@@ -336,13 +336,13 @@ class StudentServiceTest {
         assertNotNull(resp);
         verify(estudianteAccesoService).createStudentAccount(personaDummy, request);
         verify(personaRepository, never()).save(any());
-        assertSame(usuarioCreado, estudianteDummy.getUsuario());
+        assertSame(usuarioCreado, estudianteDummy.getUserAccount());
     }
 
     @Test
     @DisplayName("habilitarAcceso - Rechaza si el estudiante ya tiene una cuenta")
     void habilitarAcceso_rechaza_si_ya_tiene_cuenta() {
-        estudianteDummy.setUsuario(UserAccount.builder().idUsuario(5L).build());
+        estudianteDummy.setUserAccount(UserAccount.builder().id(5L).build());
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
 
         assertThrows(IllegalArgumentException.class,
@@ -375,11 +375,11 @@ class StudentServiceTest {
 
     private Person personaDeEdad(int anios) {
         return Person.builder()
-                .idPersona(1L)
-                .nombre("Ana")
-                .apellido("Gomez")
-                .fechaNacimiento(LocalDate.now().minusYears(anios).minusDays(1))
-                .activo(true)
+                .id(1L)
+                .name("Ana")
+                .lastName("Gomez")
+                .birthDate(LocalDate.now().minusYears(anios).minusDays(1))
+                .active(true)
                 .build();
     }
 

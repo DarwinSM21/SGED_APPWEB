@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface AlineacionRepository extends JpaRepository<Alineacion, Long> {
     @EntityGraph(attributePaths = {
-            "jugadores", "jugadores.estudiante", "jugadores.estudiante.persona", "jugadores.posicion"})
+            "jugadores", "jugadores.estudiante", "jugadores.estudiante.person", "jugadores.posicion"})
     Optional<Alineacion> findByPartido_IdPartido(Long idPartido);
 
     boolean existsByPartido_IdPartido(Long idPartido);

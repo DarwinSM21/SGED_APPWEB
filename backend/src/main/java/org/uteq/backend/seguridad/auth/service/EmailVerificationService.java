@@ -57,18 +57,18 @@ public class EmailVerificationService {
      * @param persona persona ya persistida (con id y correo)
      */
     public void sendConfirmation(Person persona) {
-        if (persona == null || persona.getIdPersona() == null || persona.getCorreo() == null) {
+        if (persona == null || persona.getId() == null || persona.getEmail() == null) {
             return;
         }
         String token = generateToken();
-        tokenStore.save(persona.getIdPersona(), token, Duration.ofHours(ttlHoras));
+        tokenStore.save(persona.getId(), token, Duration.ofHours(ttlHoras));
 
         String url = urlBase + "?token=" + token;
-        mailer.sendConfirmation(persona.getCorreo(), url);
+        mailer.sendConfirmation(persona.getEmail(), url);
 
-        auditService.recordEvent("EMAILVERIFY_SOLICITADO", "Persona", persona.getIdPersona(),
+        auditService.recordEvent("EMAILVERIFY_SOLICITADO", "Persona", persona.getId(),
                 "se emitió un enlace de confirmación de correo");
-        log.info("EMAILVERIFY enlace de confirmación emitido para la persona id={}", persona.getIdPersona());
+        log.info("EMAILVERIFY enlace de confirmación emitido para la persona id={}", persona.getId());
     }
 
     /**
@@ -87,13 +87,13 @@ public class EmailVerificationService {
         Person persona = personaRepository.findById(idPersona)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));
 
-        persona.setCorreoVerificado(true);
+        persona.setEmailVerified(true);
         personaRepository.save(persona);
         tokenStore.consume(token);
 
-        auditService.recordEvent("EMAILVERIFY_CONFIRMADO", "Persona", persona.getIdPersona(),
+        auditService.recordEvent("EMAILVERIFY_CONFIRMADO", "Persona", persona.getId(),
                 "confirmó su correo de contacto");
-        log.info("EMAILVERIFY correo confirmado para la persona id={}", persona.getIdPersona());
+        log.info("EMAILVERIFY correo confirmado para la persona id={}", persona.getId());
     }
 
     private String generateToken() {

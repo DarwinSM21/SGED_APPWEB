@@ -38,7 +38,7 @@ public interface SesionEntrenamientoRepository extends JpaRepository<SesionEntre
            SELECT s.fecha,
                   SUM(CASE WHEN a.estado IN ('PRESENTE', 'TARDE') THEN 1L ELSE 0L END),
                   (SELECT COUNT(e) FROM Student e
-                     WHERE e.categoria = s.categoria AND e.activo = true)
+                     WHERE e.category = s.categoria AND e.active = true)
            FROM SesionEntrenamiento s
            LEFT JOIN Asistencia a ON a.sesion = s
            WHERE s.fecha BETWEEN :desde AND :hasta

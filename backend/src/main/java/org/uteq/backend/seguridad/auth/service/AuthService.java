@@ -106,13 +106,13 @@ public class AuthService {
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.rol()));
 
         Person persona = Person.builder()
-                .nombre(request.nombre())
-                .apellido(request.apellido())
-                .cedula(request.cedula())
-                .correo(request.correo())
-                .fechaNacimiento(request.fechaNacimiento())
-                .activo(true)
-                .correoVerificado(false)
+                .name(request.nombre())
+                .lastName(request.apellido())
+                .nationalId(request.cedula())
+                .email(request.correo())
+                .birthDate(request.fechaNacimiento())
+                .active(true)
+                .emailVerified(false)
                 .build();
         persona = personaRepository.save(persona);
         // RNF-26 / H-09: doble opt-in del correo recién registrado.
@@ -125,22 +125,22 @@ public class AuthService {
                         "Falta el catalogo seguridad.estados_general (ver db/seed.sql)"));
 
         UserAccount usuario = UserAccount.builder()
-                .persona(persona)
-                .estadoGeneral(estadoActivo)
+                .person(persona)
+                .generalStatus(estadoActivo)
                 .username(request.username())
-                .password_Hash(passwordEncoder.encode(request.password()))
-                .activo(true)
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .active(true)
                 .roles(Set.of(rol))
                 .build();
         usuario = usuarioRepository.save(usuario);
 
-        String nombreCompleto = persona.getNombre() + " " + persona.getApellido();
+        String nombreCompleto = persona.getName() + " " + persona.getLastName();
         return Optional.of(SessionResponse.builder()
                 .username(usuario.getUsername())
                 .nombre(nombreCompleto)
-                .rol(rol.getNombre())
-                .idPersona(persona.getIdPersona())
-                .idUsuario(usuario.getIdUsuario())
+                .rol(rol.getName())
+                .idPersona(persona.getId())
+                .idUsuario(usuario.getId())
                 .build());
     }
 
@@ -188,7 +188,7 @@ public class AuthService {
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
 
         String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())
-                .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
+                .map(u -> u.getPerson().getName() + " " + u.getPerson().getLastName())
                 .orElse(userDetails.getUsername());
 
         SessionResponse session = SessionResponse.builder()
@@ -240,7 +240,7 @@ public class AuthService {
         }
 
         String username = jwtService.extractUsername(refreshToken);
-        String rol = jwtService.extractRol(refreshToken);
+        String rol = jwtService.extractRole(refreshToken);
         return Optional.of(jwtService.generateToken(username, rol));
     }
 
@@ -261,7 +261,7 @@ public class AuthService {
         String rol = userDetails.getAuthorities().iterator().next().getAuthority().replaceFirst("^ROLE_", "");
 
         String nombre = usuarioRepository.findByUsername(userDetails.getUsername())
-                .map(u -> u.getPersona().getNombre() + " " + u.getPersona().getApellido())
+                .map(u -> u.getPerson().getName() + " " + u.getPerson().getLastName())
                 .orElse(userDetails.getUsername());
 
         return Optional.of(SessionResponse.builder()

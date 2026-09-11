@@ -30,8 +30,8 @@ public class GeneralStatusService {
         return estadoGeneralRepository.findAll()
                 .stream()
                 .map(estado -> new GeneralStatusResponse(
-                        estado.getIdEstadoGeneral(),
-                        estado.getNombre()
+                        estado.getId(),
+                        estado.getName()
                 ))
                 .collect(Collectors.toList());
     }

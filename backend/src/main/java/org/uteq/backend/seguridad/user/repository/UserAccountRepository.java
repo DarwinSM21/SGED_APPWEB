@@ -4,6 +4,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.util.Optional;
@@ -18,13 +20,15 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @param idUsuario identificador de la cuenta
      * @return la cuenta activa, con roles y persona precargados, si existe
      */
-    @EntityGraph(attributePaths = {"roles", "persona"})
-    Optional<UserAccount> findByIdUsuarioAndActivoTrue(Long idUsuario);
+    @EntityGraph(attributePaths = {"roles", "person"})
+    @Query("SELECT u FROM UserAccount u WHERE u.id = :idUsuario AND u.active = true")
+    Optional<UserAccount> findByIdUsuarioAndActivoTrue(@Param("idUsuario") Long idUsuario);
 
     /**
      * @param pageable página y tamaño solicitados
      * @return página de cuentas con baja lógica excluida
      */
+    @Query("SELECT u FROM UserAccount u WHERE u.active = true")
     Page<UserAccount> findByActivoTrue(Pageable pageable);
 
     /**
@@ -41,8 +45,9 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @param username nombre de usuario
      * @return la cuenta activa con ese nombre de usuario, si existe
      */
-    @EntityGraph(attributePaths = {"roles", "persona"})
-    Optional<UserAccount> findByUsernameAndActivoTrue(String username);
+    @EntityGraph(attributePaths = {"roles", "person"})
+    @Query("SELECT u FROM UserAccount u WHERE u.username = :username AND u.active = true")
+    Optional<UserAccount> findByUsernameAndActivoTrue(@Param("username") String username);
 
     /**
      * Igual que {@link #findByUsernameAndActivoTrue(String)} pero sin
@@ -51,8 +56,9 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @param username nombre de usuario, sin distinguir mayúsculas/minúsculas
      * @return la cuenta activa con ese nombre de usuario, si existe
      */
-    @EntityGraph(attributePaths = {"roles", "persona"})
-    Optional<UserAccount> findByUsernameIgnoreCaseAndActivoTrue(String username);
+    @EntityGraph(attributePaths = {"roles", "person"})
+    @Query("SELECT u FROM UserAccount u WHERE LOWER(u.username) = LOWER(:username) AND u.active = true")
+    Optional<UserAccount> findByUsernameIgnoreCaseAndActivoTrue(@Param("username") String username);
 
     /**
      * @param username nombre de usuario a comprobar
@@ -70,12 +76,14 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @param idPersona identificador de la persona
      * @return {@code true} si esa persona ya tiene una cuenta de acceso, activa o no
      */
-    boolean existsByPersona_IdPersona(Long idPersona);
+    @Query("SELECT COUNT(u) > 0 FROM UserAccount u WHERE u.person.id = :idPersona")
+    boolean existsByPersona_IdPersona(@Param("idPersona") Long idPersona);
 
     /**
      * @param idPersona identificador de la persona
      * @return la cuenta activa de esa persona, con roles precargados, si existe
      */
     @EntityGraph(attributePaths = {"roles"})
-    Optional<UserAccount> findByPersona_IdPersonaAndActivoTrue(Long idPersona);
+    @Query("SELECT u FROM UserAccount u WHERE u.person.id = :idPersona AND u.active = true")
+    Optional<UserAccount> findByPersona_IdPersonaAndActivoTrue(@Param("idPersona") Long idPersona);
 }

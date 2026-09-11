@@ -47,10 +47,10 @@ class MyTeamServiceTest {
 
     private Student estudiante(Long id, String nombre, Posicion posicion) {
         return Student.builder()
-                .idEstudiante(id)
-                .persona(Person.builder().nombre(nombre).apellido("Perez").build())
-                .categoria(categoria())
-                .posicion(posicion)
+                .id(id)
+                .person(Person.builder().name(nombre).lastName("Perez").build())
+                .category(categoria())
+                .position(posicion)
                 .build();
     }
 
@@ -120,7 +120,7 @@ class MyTeamServiceTest {
         var especialidad = Especialidad.builder().nombre("Tecnico").build();
         var entrenador = Entrenador.builder()
                 .idEntrenador(9L)
-                .persona(Person.builder().nombre("Pedro").apellido("Gomez").build())
+                .persona(Person.builder().name("Pedro").lastName("Gomez").build())
                 .especialidad(especialidad)
                 .build();
         var proximaSesion = SesionEntrenamiento.builder()

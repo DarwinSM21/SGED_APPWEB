@@ -52,30 +52,30 @@ class GuardianServiceTest {
     private GuardianService representanteService;
 
     private Person persona() {
-        return Person.builder().idPersona(1L).nombre("Ana").apellido("Vera")
-                .cedula("1234567890").correo("ana@sged.test").build();
+        return Person.builder().id(1L).name("Ana").lastName("Vera")
+                .nationalId("1234567890").email("ana@sged.test").build();
     }
 
     private UserAccount usuario() {
-        return UserAccount.builder().idUsuario(1L).username("ana.vera@sged.test")
-                .roles(Set.of(Role.builder().idRol(1L).nombre("REPRESENTANTE").build())).build();
+        return UserAccount.builder().id(1L).username("ana.vera@sged.test")
+                .roles(Set.of(Role.builder().id(1L).name("REPRESENTANTE").build())).build();
     }
 
     private Guardian representante() {
         return Guardian.builder()
-                .idRepresentante(1L)
-                .persona(persona())
-                .usuario(usuario())
-                .parentesco("Madre")
-                .activo(true)
+                .id(1L)
+                .person(persona())
+                .userAccount(usuario())
+                .relationship("Madre")
+                .active(true)
                 .build();
     }
 
     private Student estudiante(long id, String nombre) {
         return Student.builder()
-                .idEstudiante(id)
-                .persona(Person.builder().nombre(nombre).apellido("Hijo").build())
-                .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
+                .id(id)
+                .person(Person.builder().name(nombre).lastName("Hijo").build())
+                .category(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
                 .build();
     }
 
@@ -131,8 +131,8 @@ class GuardianServiceTest {
     @DisplayName("crear rechaza cuando el usuario no tiene el rol REPRESENTANTE")
     void crear_sin_rol_representante_lanza_excepcion() {
         GuardianRequest request = new GuardianRequest(1L, 1L, "Madre", "0999999999", null);
-        UserAccount usuarioSinRol = UserAccount.builder().idUsuario(1L).username("ana.vera@sged.test")
-                .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
+        UserAccount usuarioSinRol = UserAccount.builder().id(1L).username("ana.vera@sged.test")
+                .roles(Set.of(Role.builder().id(2L).name("ENTRENADOR").build())).build();
         when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
         when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
@@ -155,7 +155,7 @@ class GuardianServiceTest {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
         when(representanteRepository.save(any(Guardian.class))).thenAnswer(inv -> {
             Guardian r = inv.getArgument(0);
-            r.setIdRepresentante(5L);
+            r.setId(5L);
             return r;
         });
         when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante(10L, "Juan")));
@@ -195,17 +195,17 @@ class GuardianServiceTest {
 
         representanteService.delete(1L);
 
-        assertThat(existente.getActivo()).isFalse();
+        assertThat(existente.getActive()).isFalse();
     }
 
     @Test
     @DisplayName("desvincularEstudiante desactiva el vinculo sin tocar la cuenta")
     void desvincular_desactiva_el_vinculo() {
         GuardianStudent vinculo = GuardianStudent.builder()
-                .idRepresentanteEstudiante(7L)
-                .representante(representante())
-                .estudiante(estudiante(10L, "Juan"))
-                .activo(true)
+                .id(7L)
+                .guardian(representante())
+                .student(estudiante(10L, "Juan"))
+                .active(true)
                 .build();
         when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
@@ -213,7 +213,7 @@ class GuardianServiceTest {
 
         representanteService.unlinkStudent(1L, 10L);
 
-        assertThat(vinculo.getActivo()).isFalse();
+        assertThat(vinculo.getActive()).isFalse();
     }
 
     @Test
@@ -241,19 +241,19 @@ class GuardianServiceTest {
 
         ArgumentCaptor<GuardianStudent> captor = ArgumentCaptor.forClass(GuardianStudent.class);
         verify(vinculoRepository).save(captor.capture());
-        assertThat(captor.getValue().getRelacion()).isEqualTo("Madre");
-        assertThat(captor.getValue().getContactoPrincipal()).isTrue();
+        assertThat(captor.getValue().getRelationship()).isEqualTo("Madre");
+        assertThat(captor.getValue().getPrimaryContact()).isTrue();
     }
 
     @Test
     @DisplayName("designar un contacto principal desmarca al anterior del mismo estudiante")
     void vincular_principal_desmarca_al_anterior() {
         GuardianStudent anterior = GuardianStudent.builder()
-                .idRepresentanteEstudiante(7L)
-                .representante(Guardian.builder().idRepresentante(2L).build())
-                .estudiante(estudiante(10L, "Juan"))
-                .activo(true)
-                .contactoPrincipal(true)
+                .id(7L)
+                .guardian(Guardian.builder().id(2L).build())
+                .student(estudiante(10L, "Juan"))
+                .active(true)
+                .primaryContact(true)
                 .build();
 
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(representante()));
@@ -266,7 +266,7 @@ class GuardianServiceTest {
 
         representanteService.linkStudent(1L, 10L, new LinkRequest("Padre", true));
 
-        assertThat(anterior.getContactoPrincipal()).isFalse();
+        assertThat(anterior.getPrimaryContact()).isFalse();
     }
 
     @Test
@@ -299,7 +299,7 @@ class GuardianServiceTest {
     @DisplayName("reactivar vuelve a activar una ficha de representante dada de baja")
     void reactivar_reactiva_una_ficha_inactiva() {
         Guardian existente = representante();
-        existente.setActivo(false);
+        existente.setActive(false);
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(representanteRepository.save(any(Guardian.class))).thenAnswer(inv -> inv.getArgument(0));
         when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());

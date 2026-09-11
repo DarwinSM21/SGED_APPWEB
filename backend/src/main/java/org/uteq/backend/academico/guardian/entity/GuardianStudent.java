@@ -19,26 +19,26 @@ public class GuardianStudent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_representante_estudiante")
-    private Long idRepresentanteEstudiante;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_representante", nullable = false)
-    private Guardian representante;
+    private Guardian guardian;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Student estudiante;
+    private Student student;
 
     @Column(name = "activo")
     @Builder.Default
-    private Boolean activo = true;
+    private Boolean active = true;
 
     @Column(name = "relacion", length = 50)
-    private String relacion;
+    private String relationship;
 
     @Column(name = "contacto_principal", nullable = false)
     @Builder.Default
-    private Boolean contactoPrincipal = false;
+    private Boolean primaryContact = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -48,7 +48,7 @@ public class PaymentController {
     public ResponseEntity<List<PaymentResponse>> registerMembership(@Valid @RequestBody RegisterMembershipRequest request) {
         var pagos = pagoService.registerMembership(
                 request.idEstudiante(), request.anio(), request.meses(),
-                request.monto(), request.fechaPago(), usernameAutenticado());
+                request.monto(), request.fechaPago(), authenticatedUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::toResponse).toList());
     }
 
@@ -65,7 +65,7 @@ public class PaymentController {
     @Transactional
     public ResponseEntity<PaymentResponse> registerDaily(@Valid @RequestBody RegisterDailyRequest request) {
         var pago = pagoService.registerDaily(
-                request.idEstudiante(), request.monto(), request.fechaPago(), usernameAutenticado());
+                request.idEstudiante(), request.monto(), request.fechaPago(), authenticatedUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(pago));
     }
 
@@ -87,7 +87,7 @@ public class PaymentController {
     public ResponseEntity<PaymentResponse> cancel(@PathVariable Long idPago,
                                                @Valid @RequestBody CancelPaymentRequest request) {
         return ResponseEntity.ok(toResponse(
-                pagoService.cancel(idPago, request.motivo(), usernameAutenticado())));
+                pagoService.cancel(idPago, request.motivo(), authenticatedUsername())));
     }
 
     /**
@@ -132,27 +132,27 @@ public class PaymentController {
         return ResponseEntity.ok(pagoService.incomeHistory(meses));
     }
 
-    private String usernameAutenticado() {
+    private String authenticatedUsername() {
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
     private PaymentResponse toResponse(Payment p) {
-        var persona = p.getEstudiante().getPersona();
-        var registrador = p.getRegistradoPor().getPersona();
+        var persona = p.getStudent().getPerson();
+        var registrador = p.getRegisteredBy().getPerson();
         return new PaymentResponse(
-                p.getIdPago(),
-                p.getEstudiante().getIdEstudiante(),
-                persona.getNombre() + " " + persona.getApellido(),
-                p.getTipo(),
-                p.getAnio() != null ? p.getAnio().intValue() : null,
-                p.getMes() != null ? p.getMes().intValue() : null,
-                p.getMonto(),
-                p.getFechaPago(),
-                registrador.getNombre() + " " + registrador.getApellido(),
-                p.getAnuladoEn(),
-                p.getAnuladoPor() == null ? null
-                        : p.getAnuladoPor().getPersona().getNombre() + " "
-                          + p.getAnuladoPor().getPersona().getApellido(),
-                p.getMotivoAnulacion());
+                p.getId(),
+                p.getStudent().getId(),
+                persona.getName() + " " + persona.getLastName(),
+                p.getType(),
+                p.getYear() != null ? p.getYear().intValue() : null,
+                p.getMonth() != null ? p.getMonth().intValue() : null,
+                p.getAmount(),
+                p.getPaymentDate(),
+                registrador.getName() + " " + registrador.getLastName(),
+                p.getCanceledAt(),
+                p.getCanceledBy() == null ? null
+                        : p.getCanceledBy().getPerson().getName() + " "
+                          + p.getCanceledBy().getPerson().getLastName(),
+                p.getCancellationReason());
     }
 }

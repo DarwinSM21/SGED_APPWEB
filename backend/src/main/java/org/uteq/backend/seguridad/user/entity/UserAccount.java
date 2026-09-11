@@ -21,27 +21,27 @@ public class UserAccount {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_usuario")
-    private Long idUsuario;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false)
-    private Person persona;
+    private Person person;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_general", nullable = false)
-    private GeneralStatus estadoGeneral;
+    private GeneralStatus generalStatus;
 
     @Column(name = "username", nullable = false, unique = true, length = 50)
     private String username;
 
     @Column(name = "password_hash", nullable = false, columnDefinition = "text")
-    private String password_Hash;
+    private String passwordHash;
 
     @Column(name = "ultimo_acceso")
-    private OffsetDateTime ultimoAcceso;
+    private OffsetDateTime lastAccess;
 
     @Column(name = "activo")
-    private Boolean activo;
+    private Boolean active;
 
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
@@ -62,17 +62,17 @@ public class UserAccount {
     protected void onCreate() {
         this.createdAt = OffsetDateTime.now();
         this.updatedAt = OffsetDateTime.now();
-        if (this.activo == null) this.activo = true;
-        normalizarUsername();
+        if (this.active == null) this.active = true;
+        normalizeUsername();
     }
 
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = OffsetDateTime.now();
-        normalizarUsername();
+        normalizeUsername();
     }
 
-    private void normalizarUsername() {
+    private void normalizeUsername() {
         if (this.username != null) {
             this.username = this.username.trim().toLowerCase(Locale.ROOT);
         }

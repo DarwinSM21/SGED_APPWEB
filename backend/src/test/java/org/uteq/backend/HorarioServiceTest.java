@@ -48,7 +48,7 @@ class HorarioServiceTest {
 
     private Entrenador entrenador(long id) {
         return Entrenador.builder().idEntrenador(id)
-                .persona(Person.builder().nombre("Carlos").apellido("Apellido").build())
+                .persona(Person.builder().name("Carlos").lastName("Apellido").build())
                 .build();
     }
 

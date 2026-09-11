@@ -73,8 +73,8 @@ class LesionControllerTest {
     }
 
     private Lesion lesion(Long id, boolean activa) {
-        var estudiante = Student.builder().idEstudiante(1L)
-                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
+        var estudiante = Student.builder().id(1L)
+                .person(Person.builder().name("Juan").lastName("Perez").build())
                 .build();
         return Lesion.builder()
                 .idLesion(id)

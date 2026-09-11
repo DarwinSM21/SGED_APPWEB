@@ -47,35 +47,35 @@ class AssignmentServiceTest {
 
     private Item uniformeConStock(int stockActual) {
         return Item.builder()
-                .idArticulo(1L)
-                .nombre("Uniforme Sub-12")
-                .tipo(ItemType.UNIFORME)
-                .stockActual(stockActual)
-                .stockMinimo(2)
-                .activo(true)
+                .id(1L)
+                .name("Uniforme Sub-12")
+                .type(ItemType.UNIFORME)
+                .currentStock(stockActual)
+                .minimumStock(2)
+                .active(true)
                 .build();
     }
 
     private Student estudiante() {
-        Person persona = Person.builder().nombre("Juan").apellido("Perez").build();
-        return Student.builder().idEstudiante(5L).persona(persona).build();
+        Person persona = Person.builder().name("Juan").lastName("Perez").build();
+        return Student.builder().id(5L).person(persona).build();
     }
 
     private Entrenador entrenador() {
-        Person persona = Person.builder().nombre("Carlos").apellido("Ruiz").build();
+        Person persona = Person.builder().name("Carlos").lastName("Ruiz").build();
         return Entrenador.builder().idEntrenador(7L).persona(persona).build();
     }
 
     private UserAccount registrador() {
-        Person persona = Person.builder().nombre("Ana").apellido("Diaz").build();
-        return UserAccount.builder().idUsuario(9L).username("recepcion").persona(persona).build();
+        Person persona = Person.builder().name("Ana").lastName("Diaz").build();
+        return UserAccount.builder().id(9L).username("recepcion").person(persona).build();
     }
 
     private void stubGuardarAsignacion() {
         when(usuarioRepository.findByUsername("recepcion")).thenReturn(Optional.of(registrador()));
         when(asignacionRepository.save(any(Assignment.class))).thenAnswer(inv -> {
             Assignment a = inv.getArgument(0);
-            a.setIdAsignacion(100L);
+            a.setId(100L);
             return a;
         });
     }
@@ -91,7 +91,7 @@ class AssignmentServiceTest {
         AssignmentRequest request = new AssignmentRequest(1L, 1, RecipientType.ESTUDIANTE, 5L, null, null, null);
         AssignmentResponse resultado = asignacionService.create(request, "recepcion");
 
-        assertThat(articulo.getStockActual()).isEqualTo(9);
+        assertThat(articulo.getCurrentStock()).isEqualTo(9);
         assertThat(resultado.estado()).isEqualTo(AssignmentStatus.ASIGNADO);
         assertThat(resultado.estudiante()).isEqualTo("Juan Perez");
     }
@@ -108,7 +108,7 @@ class AssignmentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Stock insuficiente");
 
-        assertThat(articulo.getStockActual()).isEqualTo(1);
+        assertThat(articulo.getCurrentStock()).isEqualTo(1);
         verify(asignacionRepository, never()).save(any());
     }
 
@@ -141,13 +141,13 @@ class AssignmentServiceTest {
 
     private Assignment asignacionActiva() {
         return Assignment.builder()
-                .idAsignacion(100L)
-                .articulo(uniformeConStock(9))
-                .cantidad(1)
-                .tipoDestinatario(RecipientType.ESTUDIANTE)
-                .estudiante(estudiante())
-                .estado(AssignmentStatus.ASIGNADO)
-                .registradoPor(registrador())
+                .id(100L)
+                .item(uniformeConStock(9))
+                .quantity(1)
+                .recipientType(RecipientType.ESTUDIANTE)
+                .student(estudiante())
+                .status(AssignmentStatus.ASIGNADO)
+                .registeredBy(registrador())
                 .build();
     }
 
@@ -162,7 +162,7 @@ class AssignmentServiceTest {
         AssignmentResponse resultado = asignacionService.registerReturn(100L, request);
 
         assertThat(resultado.estado()).isEqualTo(AssignmentStatus.DEVUELTO);
-        assertThat(asignacion.getArticulo().getStockActual()).isEqualTo(10);
+        assertThat(asignacion.getItem().getCurrentStock()).isEqualTo(10);
         assertThat(resultado.fechaDevolucionReal()).isNotNull();
     }
 
@@ -177,14 +177,14 @@ class AssignmentServiceTest {
         AssignmentResponse resultado = asignacionService.registerReturn(100L, request);
 
         assertThat(resultado.estado()).isEqualTo(AssignmentStatus.PERDIDO);
-        assertThat(asignacion.getArticulo().getStockActual()).isEqualTo(9);
+        assertThat(asignacion.getItem().getCurrentStock()).isEqualTo(9);
     }
 
     @Test
     @DisplayName("devolver una asignacion ya resuelta lanza excepcion")
     void devolver_asignacion_ya_resuelta_lanza_excepcion() {
         Assignment asignacion = asignacionActiva();
-        asignacion.setEstado(AssignmentStatus.DEVUELTO);
+        asignacion.setStatus(AssignmentStatus.DEVUELTO);
         when(asignacionRepository.findById(100L)).thenReturn(Optional.of(asignacion));
 
         ReturnRequest request = new ReturnRequest(AssignmentStatus.PERDIDO, null);

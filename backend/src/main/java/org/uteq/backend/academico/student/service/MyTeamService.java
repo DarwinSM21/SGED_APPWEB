@@ -40,30 +40,30 @@ public class MyTeamService {
         Student estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
-        var categoria = estudiante.getCategoria();
+        var categoria = estudiante.getCategory();
         var categoriaResponse = new CategoryDetailResponse(
                 categoria.getNombre(),
                 categoria.getEdadMin() == null ? null : categoria.getEdadMin().intValue(),
                 categoria.getEdadMax() == null ? null : categoria.getEdadMax().intValue(),
                 categoria.getDescripcion());
 
-        var posicion = estudiante.getPosicion();
+        var posicion = estudiante.getPosition();
         PositionResponse posicionResponse = posicion == null ? null
                 : new PositionResponse(posicion.getNombre(), posicion.getAbreviatura());
 
-        AssignedCoachResponse entrenadorResponse = proximoEntrenadorDe(categoria.getIdCategoria());
+        AssignedCoachResponse entrenadorResponse = nextCoachOf(categoria.getIdCategoria());
 
         List<TeammateResponse> companeros = estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(
-                        categoria.getIdCategoria(), estudiante.getIdEstudiante())
+                        categoria.getIdCategoria(), estudiante.getId())
                 .stream()
-                .map(this::aCompanero)
+                .map(this::toTeammate)
                 .toList();
 
         return new MyTeamResponse(categoriaResponse, posicionResponse, entrenadorResponse, companeros);
     }
 
-    private AssignedCoachResponse proximoEntrenadorDe(Long idCategoria) {
+    private AssignedCoachResponse nextCoachOf(Long idCategoria) {
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         List<SesionEntrenamiento> proximas = sesionRepository
                 .findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
@@ -74,12 +74,12 @@ public class MyTeamService {
         var entrenador = proximas.get(0).getEntrenador();
         var persona = entrenador.getPersona();
         String especialidad = entrenador.getEspecialidad() == null ? null : entrenador.getEspecialidad().getNombre();
-        return new AssignedCoachResponse(persona.getNombre() + " " + persona.getApellido(), especialidad);
+        return new AssignedCoachResponse(persona.getName() + " " + persona.getLastName(), especialidad);
     }
 
-    private TeammateResponse aCompanero(Student e) {
-        var persona = e.getPersona();
-        String posicion = e.getPosicion() == null ? null : e.getPosicion().getNombre();
-        return new TeammateResponse(e.getIdEstudiante(), persona.getNombre() + " " + persona.getApellido(), posicion);
+    private TeammateResponse toTeammate(Student e) {
+        var persona = e.getPerson();
+        String posicion = e.getPosition() == null ? null : e.getPosition().getNombre();
+        return new TeammateResponse(e.getId(), persona.getName() + " " + persona.getLastName(), posicion);
     }
 }

@@ -89,38 +89,38 @@ public class AssignmentService {
      *                                      especificado o no hay stock
      *                                      suficiente
      */
-    @Audited(accion = "CREAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
-            descripcionSpel = "'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)")
+    @Audited(action = "CREAR", entity = "Asignacion", idSpel = "#result.idAsignacion",
+            descriptionSpel = "'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)")
     @Transactional
     public AssignmentResponse create(AssignmentRequest request, String usernameRegistrador) {
         validateRecipient(request.tipoDestinatario(), request.idEstudiante(), request.idEntrenador());
 
         Item articulo = findItem(request.idArticulo());
-        int nuevoStock = articulo.getStockActual() - request.cantidad();
+        int nuevoStock = articulo.getCurrentStock() - request.cantidad();
         if (nuevoStock < 0) {
             throw new IllegalArgumentException(
-                    "Stock insuficiente: hay " + articulo.getStockActual() + " unidades de \""
-                            + articulo.getNombre() + "\" y se intentan asignar " + request.cantidad());
+                    "Stock insuficiente: hay " + articulo.getCurrentStock() + " unidades de \""
+                            + articulo.getName() + "\" y se intentan asignar " + request.cantidad());
         }
-        articulo.setStockActual(nuevoStock);
+        articulo.setCurrentStock(nuevoStock);
         articuloRepository.save(articulo);
 
         UserAccount registrador = findUser(usernameRegistrador);
 
         Assignment.AssignmentBuilder builder = Assignment.builder()
-                .articulo(articulo)
-                .cantidad(request.cantidad())
-                .tipoDestinatario(request.tipoDestinatario())
-                .fechaAsignacion(LocalDate.now(Zones.ECUADOR))
-                .fechaDevolucionEsperada(request.fechaDevolucionEsperada())
-                .estado(AssignmentStatus.ASIGNADO)
-                .registradoPor(registrador)
-                .observaciones(request.observaciones());
+                .item(articulo)
+                .quantity(request.cantidad())
+                .recipientType(request.tipoDestinatario())
+                .assignmentDate(LocalDate.now(Zones.ECUADOR))
+                .expectedReturnDate(request.fechaDevolucionEsperada())
+                .status(AssignmentStatus.ASIGNADO)
+                .registeredBy(registrador)
+                .notes(request.observaciones());
 
         if (request.tipoDestinatario() == RecipientType.ESTUDIANTE) {
-            builder.estudiante(findStudent(request.idEstudiante()));
+            builder.student(findStudent(request.idEstudiante()));
         } else {
-            builder.entrenador(findCoach(request.idEntrenador()));
+            builder.coach(findCoach(request.idEntrenador()));
         }
 
         return toResponse(asignacionRepository.save(builder.build()));
@@ -137,8 +137,8 @@ public class AssignmentService {
      * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
      *                                      la asignación ya estaba resuelta
      */
-    @Audited(accion = "EDITAR", entidad = "Asignacion", idSpel = "#result.idAsignacion",
-            descripcionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
+    @Audited(action = "EDITAR", entity = "Asignacion", idSpel = "#result.idAsignacion",
+            descriptionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
     @Transactional
     public AssignmentResponse registerReturn(Long id, ReturnRequest request) {
         if (request.estado() == AssignmentStatus.ASIGNADO) {
@@ -148,21 +148,21 @@ public class AssignmentService {
         Assignment asignacion = asignacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asignación no encontrada con ID: " + id));
 
-        if (asignacion.getEstado() != AssignmentStatus.ASIGNADO) {
+        if (asignacion.getStatus() != AssignmentStatus.ASIGNADO) {
             throw new IllegalArgumentException(
-                    "La asignación #" + id + " ya fue resuelta como " + asignacion.getEstado());
+                    "La asignación #" + id + " ya fue resuelta como " + asignacion.getStatus());
         }
 
         if (request.estado() == AssignmentStatus.DEVUELTO) {
-            Item articulo = asignacion.getArticulo();
-            articulo.setStockActual(articulo.getStockActual() + asignacion.getCantidad());
+            Item articulo = asignacion.getItem();
+            articulo.setCurrentStock(articulo.getCurrentStock() + asignacion.getQuantity());
             articuloRepository.save(articulo);
         }
 
-        asignacion.setEstado(request.estado());
-        asignacion.setFechaDevolucionReal(LocalDate.now(Zones.ECUADOR));
+        asignacion.setStatus(request.estado());
+        asignacion.setActualReturnDate(LocalDate.now(Zones.ECUADOR));
         if (request.observaciones() != null && !request.observaciones().isBlank()) {
-            asignacion.setObservaciones(request.observaciones());
+            asignacion.setNotes(request.observaciones());
         }
 
         return toResponse(asignacionRepository.save(asignacion));
@@ -201,38 +201,38 @@ public class AssignmentService {
     }
 
     private AssignmentResponse toResponse(Assignment a) {
-        var registrador = a.getRegistradoPor().getPersona();
+        var registrador = a.getRegisteredBy().getPerson();
         String nombreEstudiante = null;
         Long idEstudiante = null;
-        if (a.getEstudiante() != null) {
-            idEstudiante = a.getEstudiante().getIdEstudiante();
-            var p = a.getEstudiante().getPersona();
-            nombreEstudiante = p.getNombre() + " " + p.getApellido();
+        if (a.getStudent() != null) {
+            idEstudiante = a.getStudent().getId();
+            var p = a.getStudent().getPerson();
+            nombreEstudiante = p.getName() + " " + p.getLastName();
         }
         String nombreEntrenador = null;
         Long idEntrenador = null;
-        if (a.getEntrenador() != null) {
-            idEntrenador = a.getEntrenador().getIdEntrenador();
-            var p = a.getEntrenador().getPersona();
-            nombreEntrenador = p.getNombre() + " " + p.getApellido();
+        if (a.getCoach() != null) {
+            idEntrenador = a.getCoach().getIdEntrenador();
+            var p = a.getCoach().getPersona();
+            nombreEntrenador = p.getName() + " " + p.getLastName();
         }
 
         return new AssignmentResponse(
-                a.getIdAsignacion(),
-                a.getArticulo().getIdArticulo(),
-                a.getArticulo().getNombre(),
-                a.getCantidad(),
-                a.getTipoDestinatario(),
+                a.getId(),
+                a.getItem().getId(),
+                a.getItem().getName(),
+                a.getQuantity(),
+                a.getRecipientType(),
                 idEstudiante,
                 nombreEstudiante,
                 idEntrenador,
                 nombreEntrenador,
-                a.getFechaAsignacion(),
-                a.getFechaDevolucionEsperada(),
-                a.getFechaDevolucionReal(),
-                a.getEstado(),
-                registrador.getNombre() + " " + registrador.getApellido(),
-                a.getObservaciones(),
+                a.getAssignmentDate(),
+                a.getExpectedReturnDate(),
+                a.getActualReturnDate(),
+                a.getStatus(),
+                registrador.getName() + " " + registrador.getLastName(),
+                a.getNotes(),
                 a.getCreatedAt()
         );
     }

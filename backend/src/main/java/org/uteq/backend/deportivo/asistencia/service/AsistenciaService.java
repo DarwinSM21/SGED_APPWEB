@@ -73,7 +73,7 @@ public class AsistenciaService {
         Student estudiante = estudianteRepository.findByUsuario_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
-        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getIdEstudiante())
+        asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getId())
                 .ifPresent(a -> {
                     throw new IllegalArgumentException("Ya marcaste tu asistencia en esta sesión");
                 });
@@ -82,7 +82,7 @@ public class AsistenciaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Sesión no encontrada con id: " + idSesion));
 
         Boolean categoriaCoincide = asistenciaRepository.validarCategoriaCoincide(
-                estudiante.getIdEstudiante(), idSesion);
+                estudiante.getId(), idSesion);
         if (categoriaCoincide == null || !categoriaCoincide) {
             throw new IllegalArgumentException("Esta sesión no corresponde a tu categoría");
         }
@@ -118,17 +118,17 @@ public class AsistenciaService {
 
         Map<Long, Asistencia> yaRegistradas = new LinkedHashMap<>();
         for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {
-            yaRegistradas.put(a.getEstudiante().getIdEstudiante(), a);
+            yaRegistradas.put(a.getEstudiante().getId(), a);
         }
 
         List<FilaNomina> filas = new ArrayList<>();
         for (Student e : estudianteRepository
                 .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(
                         sesion.getCategoria().getIdCategoria())) {
-            Asistencia a = yaRegistradas.get(e.getIdEstudiante());
+            Asistencia a = yaRegistradas.get(e.getId());
             filas.add(new FilaNomina(
-                    e.getIdEstudiante(),
-                    e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
+                    e.getId(),
+                    e.getPerson().getName() + " " + e.getPerson().getLastName(),
                     a == null ? null : a.getEstado(),
                     a == null ? null : a.getMetodo(),
                     a == null ? null : a.getHoraEntrada(),
@@ -166,7 +166,7 @@ public class AsistenciaService {
 
         Map<Long, Asistencia> existentes = new LinkedHashMap<>();
         for (Asistencia a : asistenciaRepository.findBySesionIdSesion(idSesion)) {
-            existentes.put(a.getEstudiante().getIdEstudiante(), a);
+            existentes.put(a.getEstudiante().getId(), a);
         }
 
         for (MarcaAsistencia marca : request.marcas()) {
@@ -179,10 +179,10 @@ public class AsistenciaService {
             // asistencia de ambas. Se resuelve en Java (no con el procedimiento
             // que usa el QR): pasar lista valida a los veinticinco de una
             // categoría, y el procedimiento sería un N+1.
-            if (!estudiante.getCategoria().getIdCategoria()
+            if (!estudiante.getCategory().getIdCategoria()
                     .equals(sesion.getCategoria().getIdCategoria())) {
-                throw new IllegalArgumentException(estudiante.getPersona().getNombre() + " "
-                        + estudiante.getPersona().getApellido() + " no pertenece a "
+                throw new IllegalArgumentException(estudiante.getPerson().getName() + " "
+                        + estudiante.getPerson().getLastName() + " no pertenece a "
                         + sesion.getCategoria().getNombre());
             }
 
@@ -242,14 +242,14 @@ public class AsistenciaService {
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         List<AsistenciaResponse> asistencias = asistenciaRepository
-                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getIdEstudiante(), Pageable.unpaged())
+                .findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(estudiante.getId(), Pageable.unpaged())
                 .getContent().stream()
                 .map(this::aResponse)
                 .toList();
 
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         BigDecimal porcentaje = asistenciaRepository
-                .calcularPorcentajeAsistencia(estudiante.getIdEstudiante(), hoy.minusDays(30), hoy);
+                .calcularPorcentajeAsistencia(estudiante.getId(), hoy.minusDays(30), hoy);
 
         return new MiHistorialResponse(asistencias, porcentaje);
     }

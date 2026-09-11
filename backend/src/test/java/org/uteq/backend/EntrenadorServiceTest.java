@@ -50,13 +50,13 @@ class EntrenadorServiceTest {
     private EntrenadorService entrenadorService;
 
     private Person persona() {
-        return Person.builder().idPersona(1L).nombre("Carlos").apellido("Mora")
-                .cedula("1234567890").correo("carlos@sged.test").build();
+        return Person.builder().id(1L).name("Carlos").lastName("Mora")
+                .nationalId("1234567890").email("carlos@sged.test").build();
     }
 
     private UserAccount usuario() {
-        return UserAccount.builder().idUsuario(1L).username("carlos.mora")
-                .roles(Set.of(Role.builder().idRol(1L).nombre("ENTRENADOR").build())).build();
+        return UserAccount.builder().id(1L).username("carlos.mora")
+                .roles(Set.of(Role.builder().id(1L).name("ENTRENADOR").build())).build();
     }
 
     private Especialidad especialidad() {
@@ -160,8 +160,8 @@ class EntrenadorServiceTest {
     @DisplayName("crear rechaza cuando el usuario no tiene el rol ENTRENADOR")
     void crear_sin_rol_entrenador_lanza_excepcion() {
         EntrenadorRequest request = new EntrenadorRequest(1L, 1L, null, (short) 3, null);
-        UserAccount usuarioSinRol = UserAccount.builder().idUsuario(1L).username("carlos.mora")
-                .roles(Set.of(Role.builder().idRol(2L).nombre("RECEPCIONISTA").build())).build();
+        UserAccount usuarioSinRol = UserAccount.builder().id(1L).username("carlos.mora")
+                .roles(Set.of(Role.builder().id(2L).name("RECEPCIONISTA").build())).build();
         when(entrenadorRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
         when(entrenadorRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));

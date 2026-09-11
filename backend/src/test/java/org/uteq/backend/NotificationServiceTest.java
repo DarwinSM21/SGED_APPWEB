@@ -42,8 +42,8 @@ class NotificationServiceTest {
     private NotificationService notificacionService;
 
     private Student estudianteValido() {
-        Person persona = Person.builder().nombre("Andres").apellido("Rivas").build();
-        return Student.builder().idEstudiante(6L).persona(persona).build();
+        Person persona = Person.builder().name("Andres").lastName("Rivas").build();
+        return Student.builder().id(6L).person(persona).build();
     }
 
     @Test
@@ -69,7 +69,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("notificarAsistencia no propaga si el estudiante no tiene persona asociada")
     void notificarAsistencia_no_propaga_dato_incompleto() {
-        Student sinPersona = Student.builder().idEstudiante(7L).build();
+        Student sinPersona = Student.builder().id(7L).build();
 
         assertThatCode(() -> notificacionService.notifyAttendance(sinPersona, "TARDE"))
                 .doesNotThrowAnyException();
@@ -136,15 +136,15 @@ class NotificationServiceTest {
     }
 
     private Student estudianteCon(Long id) {
-        Person persona = Person.builder().nombre("Juan").apellido("Perez").build();
-        return Student.builder().idEstudiante(id).persona(persona).build();
+        Person persona = Person.builder().name("Juan").lastName("Perez").build();
+        return Student.builder().id(id).person(persona).build();
     }
 
     private Guardian representanteCon(Long id) {
-        return Guardian.builder().idRepresentante(id).build();
+        return Guardian.builder().id(id).build();
     }
 
     private GuardianStudent vinculoDe(Guardian r, Student e) {
-        return GuardianStudent.builder().representante(r).estudiante(e).build();
+        return GuardianStudent.builder().guardian(r).student(e).build();
     }
 }

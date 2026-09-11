@@ -108,8 +108,8 @@ public class UserAccountService {
             @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
-    @Audited(accion = "CREAR", entidad = "Usuario", idSpel = "#result.idUsuario",
-            descripcionSpel = "'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
+    @Audited(action = "CREAR", entity = "Usuario", idSpel = "#result.idUsuario",
+            descriptionSpel = "'creó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UserAccountResponse create(UserAccountRequest request) {
         if (request.password() == null || request.password().isBlank()) {
@@ -127,11 +127,11 @@ public class UserAccountService {
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
         UserAccount.UserAccountBuilder builder = UserAccount.builder()
-                .persona(persona)
-                .estadoGeneral(estado)
+                .person(persona)
+                .generalStatus(estado)
                 .username(request.username())
-                .password_Hash(passwordEncoder.encode(request.password()))
-                .activo(true);
+                .passwordHash(passwordEncoder.encode(request.password()))
+                .active(true);
 
         if (request.rol() != null) {
             validateRoleCoherent(request.idPersona(), request.rol());
@@ -169,8 +169,8 @@ public class UserAccountService {
             @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true),
             @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true),
     })
-    @Audited(accion = "EDITAR", entidad = "Usuario", idSpel = "#result.idUsuario",
-            descripcionSpel = "'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
+    @Audited(action = "EDITAR", entity = "Usuario", idSpel = "#result.idUsuario",
+            descriptionSpel = "'editó la cuenta ' + #result.username + ' (' + #result.nombrePersona + ' ' + #result.apellidoPersona + ')'")
     @Transactional
     public UserAccountResponse update(Long id, UserAccountRequest request) {
         UserAccount usuario = usuarioRepository.findById(id)
@@ -187,8 +187,8 @@ public class UserAccountService {
         GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
                 .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
 
-        usuario.setPersona(persona);
-        usuario.setEstadoGeneral(estado);
+        usuario.setPerson(persona);
+        usuario.setGeneralStatus(estado);
         usuario.setUsername(request.username());
 
         updatePasswordIfApplicable(usuario, request.password());
@@ -197,7 +197,7 @@ public class UserAccountService {
         usuario = usuarioRepository.save(usuario);
 
         if (request.rol() != null) {
-            linkExistingRecord(persona.getIdPersona(), request.rol(), usuario);
+            linkExistingRecord(persona.getId(), request.rol(), usuario);
         }
 
         return toResponse(usuario);
@@ -209,14 +209,14 @@ public class UserAccountService {
      * @param id identificador de la cuenta
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Usuario", idSpel = "#p0",
-            descripcionSpel = "'desactivó la cuenta de usuario #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Usuario", idSpel = "#p0",
+            descriptionSpel = "'desactivó la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
     public void delete(Long id) {
         UserAccount usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
-        usuario.setActivo(false);
+        usuario.setActive(false);
         usuarioRepository.save(usuario);
     }
 
@@ -228,19 +228,19 @@ public class UserAccountService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si la cuenta ya está activa
      */
-    @Audited(accion = "REACTIVAR", entidad = "Usuario", idSpel = "#p0",
-            descripcionSpel = "'reactivo la cuenta de usuario #' + #p0")
+    @Audited(action = "REACTIVAR", entity = "Usuario", idSpel = "#p0",
+            descriptionSpel = "'reactivo la cuenta de usuario #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_USERS, allEntries = true)
     @Transactional
     public UserAccountResponse reactivate(Long id) {
         UserAccount usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
 
-        if (Boolean.TRUE.equals(usuario.getActivo())) {
+        if (Boolean.TRUE.equals(usuario.getActive())) {
             throw new IllegalArgumentException("La cuenta ya se encuentra activa");
         }
 
-        usuario.setActivo(true);
+        usuario.setActive(true);
         return toResponse(usuarioRepository.save(usuario));
     }
 
@@ -249,7 +249,7 @@ public class UserAccountService {
     private void updatePasswordIfApplicable(UserAccount usuario, String nuevaPassword) {
         if (nuevaPassword != null && !nuevaPassword.isBlank()) {
             passwordPolicy.validate(nuevaPassword, usuario.getUsername());
-            usuario.setPassword_Hash(passwordEncoder.encode(nuevaPassword));
+            usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));
         }
     }
 
@@ -261,9 +261,9 @@ public class UserAccountService {
             return;
         }
         String rolActual = usuario.getRoles() == null ? null
-                : usuario.getRoles().stream().findFirst().map(Role::getNombre).orElse(null);
+                : usuario.getRoles().stream().findFirst().map(Role::getName).orElse(null);
         if (!rolPedido.equals(rolActual)) {
-            validateRoleCoherent(persona.getIdPersona(), rolPedido);
+            validateRoleCoherent(persona.getId(), rolPedido);
             // HashSet mutable: Hibernate necesita poder mutar la colección ya
             // administrada de este Usuario persistido. Set.of() es inmutable y
             // hace fallar el flush con UnsupportedOperationException.
@@ -323,33 +323,33 @@ public class UserAccountService {
     private void linkExistingRecord(Long idPersona, String rol, UserAccount usuario) {
         switch (rol) {
             case "ESTUDIANTE" -> estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
-                    .filter(e -> e.getUsuario() == null)
-                    .ifPresent(e -> { e.setUsuario(usuario); estudianteRepository.save(e); });
+                    .filter(e -> e.getUserAccount() == null)
+                    .ifPresent(e -> { e.setUserAccount(usuario); estudianteRepository.save(e); });
             case "ENTRENADOR" -> entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
                     .filter(e -> e.getUsuario() == null)
                     .ifPresent(e -> { e.setUsuario(usuario); entrenadorRepository.save(e); });
             case "REPRESENTANTE" -> representanteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
-                    .filter(r -> r.getUsuario() == null)
-                    .ifPresent(r -> { r.setUsuario(usuario); representanteRepository.save(r); });
+                    .filter(r -> r.getUserAccount() == null)
+                    .ifPresent(r -> { r.setUserAccount(usuario); representanteRepository.save(r); });
             default -> { }
         }
     }
 
     private UserAccountResponse toResponse(UserAccount u) {
         List<String> roles = u.getRoles() == null ? List.of()
-                : u.getRoles().stream().map(Role::getNombre).toList();
+                : u.getRoles().stream().map(Role::getName).toList();
         return new UserAccountResponse(
-                u.getIdUsuario(),
-                u.getPersona().getIdPersona(),
-                u.getPersona().getNombre(),
-                u.getPersona().getApellido(),
-                u.getPersona().getCorreo(),
-                u.getEstadoGeneral().getIdEstadoGeneral(),
-                u.getEstadoGeneral().getNombre(),
+                u.getId(),
+                u.getPerson().getId(),
+                u.getPerson().getName(),
+                u.getPerson().getLastName(),
+                u.getPerson().getEmail(),
+                u.getGeneralStatus().getId(),
+                u.getGeneralStatus().getName(),
                 u.getUsername(),
                 roles,
-                u.getUltimoAcceso(),
-                u.getActivo(),
+                u.getLastAccess(),
+                u.getActive(),
                 u.getCreatedAt()
         );
     }

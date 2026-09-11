@@ -38,18 +38,18 @@ class StockMovementServiceTest {
 
     private Item articuloConStock(int stockActual) {
         return Item.builder()
-                .idArticulo(1L)
-                .nombre("Balón N°5")
-                .tipo(ItemType.BALON)
-                .stockActual(stockActual)
-                .stockMinimo(3)
-                .activo(true)
+                .id(1L)
+                .name("Balón N°5")
+                .type(ItemType.BALON)
+                .currentStock(stockActual)
+                .minimumStock(3)
+                .active(true)
                 .build();
     }
 
     private UserAccount registrador() {
-        Person persona = Person.builder().nombre("Ana").apellido("Diaz").build();
-        return UserAccount.builder().idUsuario(9L).username("recepcion").persona(persona).build();
+        Person persona = Person.builder().name("Ana").lastName("Diaz").build();
+        return UserAccount.builder().id(9L).username("recepcion").person(persona).build();
     }
 
     @Test
@@ -60,14 +60,14 @@ class StockMovementServiceTest {
         when(usuarioRepository.findByUsername("recepcion")).thenReturn(Optional.of(registrador()));
         when(movimientoStockRepository.save(any(StockMovement.class))).thenAnswer(inv -> {
             StockMovement m = inv.getArgument(0);
-            m.setIdMovimiento(1L);
+            m.setId(1L);
             return m;
         });
 
         StockMovementRequest request = new StockMovementRequest(1L, MovementType.ENTRADA, 5, "compra");
         StockMovementResponse resultado = movimientoStockService.register(request, "recepcion");
 
-        assertThat(articulo.getStockActual()).isEqualTo(15);
+        assertThat(articulo.getCurrentStock()).isEqualTo(15);
         assertThat(resultado.cantidad()).isEqualTo(5);
         verify(articuloRepository).save(articulo);
     }
@@ -83,7 +83,7 @@ class StockMovementServiceTest {
         StockMovementRequest request = new StockMovementRequest(1L, MovementType.AJUSTE, 2, "conteo fisico");
         movimientoStockService.register(request, "recepcion");
 
-        assertThat(articulo.getStockActual()).isEqualTo(12);
+        assertThat(articulo.getCurrentStock()).isEqualTo(12);
     }
 
     @Test
@@ -97,7 +97,7 @@ class StockMovementServiceTest {
         StockMovementRequest request = new StockMovementRequest(1L, MovementType.SALIDA, 4, "desgaste");
         movimientoStockService.register(request, "recepcion");
 
-        assertThat(articulo.getStockActual()).isEqualTo(6);
+        assertThat(articulo.getCurrentStock()).isEqualTo(6);
     }
 
     @Test
@@ -113,7 +113,7 @@ class StockMovementServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Stock insuficiente");
 
-        assertThat(articulo.getStockActual()).isEqualTo(3);
+        assertThat(articulo.getCurrentStock()).isEqualTo(3);
         verify(articuloRepository, never()).save(any());
         verify(movimientoStockRepository, never()).save(any());
     }

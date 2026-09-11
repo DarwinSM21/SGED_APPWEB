@@ -33,43 +33,43 @@ public class Consent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_consentimiento")
-    private Long idConsentimiento;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_representante", nullable = false)
-    private Guardian representante;
+    private Guardian guardian;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_estudiante", nullable = false)
-    private Student estudiante;
+    private Student student;
 
     @Column(name = "alcance", nullable = false, length = 50)
-    private String alcance;
+    private String scope;
 
     @Column(name = "otorgado_en", nullable = false)
-    private OffsetDateTime otorgadoEn;
+    private OffsetDateTime grantedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "registrado_por_id_usuario")
-    private UserAccount registradoPor;
+    private UserAccount registeredBy;
 
     @Column(name = "revocado_en")
-    private OffsetDateTime revocadoEn;
+    private OffsetDateTime revokedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "revocado_por_id_usuario")
-    private UserAccount revocadoPor;
+    private UserAccount revokedBy;
 
     /**
      * @return {@code true} si el consentimiento no fue revocado
      */
     @Transient
     public boolean isActive() {
-        return revocadoEn == null;
+        return revokedAt == null;
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.otorgadoEn == null) this.otorgadoEn = OffsetDateTime.now();
+        if (this.grantedAt == null) this.grantedAt = OffsetDateTime.now();
     }
 }

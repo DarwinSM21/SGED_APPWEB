@@ -57,9 +57,9 @@ class EvaluacionDiariaServiceTest {
 
     private Student estudiante() {
         return Student.builder()
-                .idEstudiante(ID_ESTUDIANTE)
-                .persona(Person.builder().nombre("Juan").apellido("Perez").build())
-                .categoria(Categoria.builder().idCategoria(3L).nombre("SUB-12").build())
+                .id(ID_ESTUDIANTE)
+                .person(Person.builder().name("Juan").lastName("Perez").build())
+                .category(Categoria.builder().idCategoria(3L).nombre("SUB-12").build())
                 .build();
     }
 

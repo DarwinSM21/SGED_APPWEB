@@ -94,7 +94,7 @@ public class GlobalExceptionHandler {
      * @return {@code 400}
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ProblemDetail handleCuerpoIlegible(HttpMessageNotReadableException ex) {
+    public ProblemDetail handleUnreadableBody(HttpMessageNotReadableException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
                 "El cuerpo de la peticion falta o no tiene el formato esperado");
@@ -109,7 +109,7 @@ public class GlobalExceptionHandler {
      * @return {@code 400} con el nombre del parámetro faltante en {@code parametro}
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
-    public ProblemDetail handleParametroFaltante(MissingServletRequestParameterException ex) {
+    public ProblemDetail handleMissingParameter(MissingServletRequestParameterException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
                 "Falta el parametro obligatorio '" + ex.getParameterName() + "'");
@@ -126,7 +126,7 @@ public class GlobalExceptionHandler {
      * @return {@code 400} con el nombre del parámetro inválido en {@code parametro}
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ProblemDetail handleTipoInvalido(MethodArgumentTypeMismatchException ex) {
+    public ProblemDetail handleInvalidType(MethodArgumentTypeMismatchException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.BAD_REQUEST,
                 "El valor de '" + ex.getName() + "' no tiene el formato esperado");
@@ -142,7 +142,7 @@ public class GlobalExceptionHandler {
      * @return {@code 404} genérico
      */
     @ExceptionHandler(NoResourceFoundException.class)
-    public ProblemDetail handleRutaDesconocida(NoResourceFoundException ex) {
+    public ProblemDetail handleUnknownRoute(NoResourceFoundException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.NOT_FOUND, "El servidor no reconoce esta operacion");
         pd.setType(URI.create("https://sged.uteq.edu.ec/errores/RutaDesconocida"));
@@ -162,7 +162,7 @@ public class GlobalExceptionHandler {
      * @return {@code 405}, con el método rechazado en el mensaje
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ProblemDetail handleMetodoNoSoportado(HttpRequestMethodNotSupportedException ex) {
+    public ProblemDetail handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         ProblemDetail pd = ProblemDetail.forStatusAndDetail(
                 HttpStatus.METHOD_NOT_ALLOWED,
                 "El metodo " + ex.getMethod() + " no esta soportado en esta ruta");

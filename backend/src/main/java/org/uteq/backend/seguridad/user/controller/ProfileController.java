@@ -30,7 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/usuarios/me")
 @RequiredArgsConstructor
-public class PerfilController {
+public class ProfileController {
     private static final DateTimeFormatter FECHA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     private final UserAccountRepository usuarioRepository;
@@ -47,24 +47,24 @@ public class PerfilController {
      */
     @GetMapping("/datos-pdf")
     @Transactional(readOnly = true)
-    public ResponseEntity<byte[]> descargarMisDatos() {
+    public ResponseEntity<byte[]> downloadMyData() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserAccount usuario = usuarioRepository.findByUsername(auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + auth.getName()));
 
-        Person persona = usuario.getPersona();
+        Person persona = usuario.getPerson();
         String roles = usuario.getRoles() == null || usuario.getRoles().isEmpty()
                 ? "-"
-                : usuario.getRoles().stream().map(Role::getNombre).reduce((a, b) -> a + ", " + b).orElse("-");
+                : usuario.getRoles().stream().map(Role::getName).reduce((a, b) -> a + ", " + b).orElse("-");
 
         List<List<String>> filas = List.of(
                 List.of("Usuario", usuario.getUsername()),
                 List.of("Rol", roles),
-                List.of("Nombre", persona.getNombre() + " " + persona.getApellido()),
-                List.of("Cédula", persona.getCedula()),
-                List.of("Correo", persona.getCorreo()),
-                List.of("Teléfono", persona.getTelefono() != null ? persona.getTelefono() : "-"),
-                List.of("Fecha de nacimiento", persona.getFechaNacimiento().format(FECHA)),
+                List.of("Nombre", persona.getName() + " " + persona.getLastName()),
+                List.of("Cédula", persona.getNationalId()),
+                List.of("Correo", persona.getEmail()),
+                List.of("Teléfono", persona.getPhone() != null ? persona.getPhone() : "-"),
+                List.of("Fecha de nacimiento", persona.getBirthDate().format(FECHA)),
                 List.of("Cuenta creada el", usuario.getCreatedAt() != null ? usuario.getCreatedAt().format(FECHA) : "-")
         );
 

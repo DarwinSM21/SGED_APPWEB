@@ -20,25 +20,25 @@ public class Guardian {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_representante")
-    private Long idRepresentante;
+    private Long id;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_persona", nullable = false, unique = true)
-    private Person persona;
+    private Person person;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", nullable = false, unique = true)
-    private UserAccount usuario;
+    private UserAccount userAccount;
 
     @Column(name = "parentesco", length = 30)
-    private String parentesco;
+    private String relationship;
 
     @Column(name = "telefono_contacto", length = 20)
-    private String telefonoContacto;
+    private String contactPhone;
 
     @Column(name = "activo")
     @Builder.Default
-    private Boolean activo = true;
+    private Boolean active = true;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

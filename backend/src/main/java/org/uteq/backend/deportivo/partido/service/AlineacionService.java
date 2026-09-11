@@ -107,8 +107,8 @@ public class AlineacionService {
                             "Estudiante no encontrado o inactivo: " + j.idEstudiante()));
             String nombre = ConvocatoriaService.nombreDe(estudiante);
 
-            Long categoriaDelJugador = estudiante.getCategoria() == null
-                    ? null : estudiante.getCategoria().getIdCategoria();
+            Long categoriaDelJugador = estudiante.getCategory() == null
+                    ? null : estudiante.getCategory().getIdCategoria();
             if (!idCategoria.equals(categoriaDelJugador)) {
                 throw new IllegalArgumentException(
                         nombre + " no pertenece a la categoría " + partido.getCategoria().getNombre());
@@ -207,7 +207,7 @@ public class AlineacionService {
 
         for (AlineacionJugador j : a.getJugadores()) {
             Student e = j.getEstudiante();
-            yaEstan.add(e.getIdEstudiante());
+            yaEstan.add(e.getId());
             boolean titular = Boolean.TRUE.equals(j.getTitular());
             Long idPosicion = j.getPosicion() == null ? null : j.getPosicion().getIdPosicion();
             JugadorConvocado fila = convocatoriaService.aConvocado(

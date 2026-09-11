@@ -75,22 +75,22 @@ public class PersonService {
      * @throws IllegalArgumentException si la cédula o el correo ya están en
      *                                  uso por otra persona activa
      */
-    @Audited(accion = "CREAR", entidad = "Persona", idSpel = "#result.idPersona",
-            descripcionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
+    @Audited(action = "CREAR", entity = "Persona", idSpel = "#result.idPersona",
+            descriptionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonResponse create(PersonRequest request) {
         validateUniqueCedulaAndEmail(request.cedula(), request.correo(), null);
 
         Person persona = Person.builder()
-                .nombre(request.nombre())
-                .apellido(request.apellido())
-                .cedula(request.cedula())
-                .correo(request.correo())
-                .telefono(request.telefono())
-                .foto(request.foto())
-                .fechaNacimiento(request.fechaNacimiento())
-                .activo(true)
-                .correoVerificado(false)
+                .name(request.nombre())
+                .lastName(request.apellido())
+                .nationalId(request.cedula())
+                .email(request.correo())
+                .phone(request.telefono())
+                .photo(request.foto())
+                .birthDate(request.fechaNacimiento())
+                .active(true)
+                .emailVerified(false)
                 .build();
 
         persona = personaRepository.save(persona);
@@ -110,8 +110,8 @@ public class PersonService {
      * @throws IllegalArgumentException     si la cédula o el correo
      *                                      pertenecen a otra persona
      */
-    @Audited(accion = "EDITAR", entidad = "Persona", idSpel = "#result.idPersona",
-            descripcionSpel = "'editó los datos de ' + #result.nombre + ' ' + #result.apellido")
+    @Audited(action = "EDITAR", entity = "Persona", idSpel = "#result.idPersona",
+            descriptionSpel = "'editó los datos de ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonResponse update(Long id, PersonRequest request) {
         Person persona = personaRepository.findById(id)
@@ -119,20 +119,20 @@ public class PersonService {
 
         validateUniqueCedulaAndEmail(request.cedula(), request.correo(), id);
 
-        boolean correoCambio = !java.util.Objects.equals(persona.getCorreo(), request.correo());
+        boolean correoCambio = !java.util.Objects.equals(persona.getEmail(), request.correo());
 
-        persona.setNombre(request.nombre());
-        persona.setApellido(request.apellido());
-        persona.setCedula(request.cedula());
-        persona.setCorreo(request.correo());
-        persona.setTelefono(request.telefono());
-        persona.setFoto(request.foto());
-        persona.setFechaNacimiento(request.fechaNacimiento());
+        persona.setName(request.nombre());
+        persona.setLastName(request.apellido());
+        persona.setNationalId(request.cedula());
+        persona.setEmail(request.correo());
+        persona.setPhone(request.telefono());
+        persona.setPhoto(request.foto());
+        persona.setBirthDate(request.fechaNacimiento());
 
         // RNF-26 / H-09: cambiar el correo lo deja sin verificar y dispara un
         // enlace de confirmación nuevo para la dirección nueva.
         if (correoCambio) {
-            persona.setCorreoVerificado(false);
+            persona.setEmailVerified(false);
         }
 
         persona = personaRepository.save(persona);
@@ -148,14 +148,14 @@ public class PersonService {
      * @param id identificador de la persona
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Persona", idSpel = "#p0",
-            descripcionSpel = "'desactivó la persona #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Persona", idSpel = "#p0",
+            descriptionSpel = "'desactivó la persona #' + #p0")
     @Transactional
     public void delete(Long id) {
         Person persona = personaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + id));
 
-        persona.setActivo(false);
+        persona.setActive(false);
         personaRepository.save(persona);
     }
 
@@ -183,15 +183,15 @@ public class PersonService {
 
     private PersonResponse toResponse(Person p) {
         return new PersonResponse(
-                p.getIdPersona(),
-                p.getNombre(),
-                p.getApellido(),
-                p.getCedula(),
-                p.getCorreo(),
-                p.getTelefono(),
-                p.getFoto(),
-                p.getFechaNacimiento(),
-                p.getActivo(),
+                p.getId(),
+                p.getName(),
+                p.getLastName(),
+                p.getNationalId(),
+                p.getEmail(),
+                p.getPhone(),
+                p.getPhoto(),
+                p.getBirthDate(),
+                p.getActive(),
                 p.getCreatedAt() != null ? p.getCreatedAt().toInstant() : null
         );
     }

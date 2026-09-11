@@ -139,7 +139,7 @@ class AuditServiceTest {
     @Test
     @DisplayName("registrarConIdentidad vincula la fila de Usuario cuando existe")
     void registrarConIdentidadVinculaUsuarioExistente() {
-        UserAccount usuario = UserAccount.builder().idUsuario(7L).username("ana.torres").build();
+        UserAccount usuario = UserAccount.builder().id(7L).username("ana.torres").build();
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.of(usuario));
 
         servicio.recordEventWithIdentity("ana.torres", "ADMINISTRADOR", "LOGIN", "Usuario", null, "inició sesión");

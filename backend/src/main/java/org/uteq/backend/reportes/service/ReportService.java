@@ -63,17 +63,17 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] studentProfiles(Long idCategoria, Boolean activo) {
-        var encontrados = sinVacio(estudianteRepository.findForReport(idCategoria, activo));
+        var encontrados = nonEmpty(estudianteRepository.findForReport(idCategoria, activo));
         var filas = encontrados.stream()
                 .map(e -> List.of(
-                        e.getCodigoEstudiante(),
-                        e.getPersona().getNombre() + " " + e.getPersona().getApellido(),
-                        e.getCategoria().getNombre(),
-                        Boolean.TRUE.equals(e.getActivo()) ? "Activo" : "Inactivo",
-                        e.getFechaIngreso().format(FECHA)))
+                        e.getStudentCode(),
+                        e.getPerson().getName() + " " + e.getPerson().getLastName(),
+                        e.getCategory().getNombre(),
+                        Boolean.TRUE.equals(e.getActive()) ? "Activo" : "Inactivo",
+                        e.getEnrollmentDate().format(FECHA)))
                 .toList();
-        return pdfService.generate(titulo("Reporte de Fichas de Estudiantes", filas),
-                List.of("Código", "Estudiante", "Categoría", "Estado", "Fecha ingreso"), recortar(filas));
+        return pdfService.generate(title("Reporte de Fichas de Estudiantes", filas),
+                List.of("Código", "Estudiante", "Categoría", "Estado", "Fecha ingreso"), truncate(filas));
     }
 
     /**
@@ -87,14 +87,14 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] payments(Long idEstudiante, LocalDate desde, LocalDate hasta) {
-        Specification<Payment> spec = Specification.<Payment>where(igualA("estudiante.idEstudiante", idEstudiante))
-                .and(this.<Payment>desdeDe("fechaPago", desde))
-                .and(this.<Payment>hastaDe("fechaPago", hasta));
-        var filas = sinVacio(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaPago"))).getContent()).stream()
+        Specification<Payment> spec = Specification.<Payment>where(equalTo("student.id", idEstudiante))
+                .and(this.<Payment>fromDate("paymentDate", desde))
+                .and(this.<Payment>toDate("paymentDate", hasta));
+        var filas = nonEmpty(pagoRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "paymentDate"))).getContent()).stream()
                 .map(this::paymentRow)
                 .toList();
-        return pdfService.generate(titulo("Reporte de Pagos", filas),
-                List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), recortar(filas));
+        return pdfService.generate(title("Reporte de Pagos", filas),
+                List.of("Estudiante", "Tipo", "Período", "Monto", "Fecha de pago", "Registrado por"), truncate(filas));
     }
 
     /**
@@ -110,15 +110,15 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] attendances(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        Specification<Asistencia> spec = Specification.<Asistencia>where(igualA("estudiante.idEstudiante", idEstudiante))
-                .and(this.<Asistencia>igualA("estudiante.categoria.idCategoria", idCategoria))
-                .and(this.<Asistencia>desdeDe("sesion.fecha", desde))
-                .and(this.<Asistencia>hastaDe("sesion.fecha", hasta));
-        var filas = sinVacio(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
-                .map(this::filaAsistencia)
+        Specification<Asistencia> spec = Specification.<Asistencia>where(equalTo("estudiante.id", idEstudiante))
+                .and(this.<Asistencia>equalTo("estudiante.category.idCategoria", idCategoria))
+                .and(this.<Asistencia>fromDate("sesion.fecha", desde))
+                .and(this.<Asistencia>toDate("sesion.fecha", hasta));
+        var filas = nonEmpty(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
+                .map(this::attendanceRow)
                 .toList();
-        return pdfService.generate(titulo("Reporte de Asistencias", filas),
-                List.of("Estudiante", "Categoría", "Fecha sesión", "Estado", "Método"), recortar(filas));
+        return pdfService.generate(title("Reporte de Asistencias", filas),
+                List.of("Estudiante", "Categoría", "Fecha sesión", "Estado", "Método"), truncate(filas));
     }
 
     /**
@@ -134,15 +134,15 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] evaluations(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        Specification<EvaluacionEstudiante> spec = Specification.<EvaluacionEstudiante>where(igualA("estudiante.idEstudiante", idEstudiante))
-                .and(this.<EvaluacionEstudiante>igualA("categoriaDia.idCategoria", idCategoria))
-                .and(this.<EvaluacionEstudiante>desdeDe("evaluacion.fecha", desde))
-                .and(this.<EvaluacionEstudiante>hastaDe("evaluacion.fecha", hasta));
-        var filas = sinVacio(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
-                .map(this::filaEvaluacion)
+        Specification<EvaluacionEstudiante> spec = Specification.<EvaluacionEstudiante>where(equalTo("estudiante.id", idEstudiante))
+                .and(this.<EvaluacionEstudiante>equalTo("categoriaDia.idCategoria", idCategoria))
+                .and(this.<EvaluacionEstudiante>fromDate("evaluacion.fecha", desde))
+                .and(this.<EvaluacionEstudiante>toDate("evaluacion.fecha", hasta));
+        var filas = nonEmpty(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
+                .map(this::evaluationRow)
                 .toList();
-        return pdfService.generate(titulo("Reporte de Evaluaciones", filas),
-                List.of("Estudiante", "Categoría", "Fecha", "Posición", "Promedio"), recortar(filas));
+        return pdfService.generate(title("Reporte de Evaluaciones", filas),
+                List.of("Estudiante", "Categoría", "Fecha", "Posición", "Promedio"), truncate(filas));
     }
 
     /**
@@ -157,34 +157,34 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] injuries(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        Specification<Lesion> spec = Specification.<Lesion>where(igualA("estudiante.idEstudiante", idEstudiante))
-                .and(this.<Lesion>igualA("estudiante.categoria.idCategoria", idCategoria))
-                .and(this.<Lesion>desdeDe("fechaLesion", desde))
-                .and(this.<Lesion>hastaDe("fechaLesion", hasta));
-        var filas = sinVacio(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()
-                .map(this::filaLesion)
+        Specification<Lesion> spec = Specification.<Lesion>where(equalTo("estudiante.id", idEstudiante))
+                .and(this.<Lesion>equalTo("estudiante.category.idCategoria", idCategoria))
+                .and(this.<Lesion>fromDate("fechaLesion", desde))
+                .and(this.<Lesion>toDate("fechaLesion", hasta));
+        var filas = nonEmpty(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()
+                .map(this::injuryRow)
                 .toList();
-        return pdfService.generate(titulo("Reporte de Lesiones", filas),
-                List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), recortar(filas));
+        return pdfService.generate(title("Reporte de Lesiones", filas),
+                List.of("Estudiante", "Descripción", "Fecha lesión", "Retorno estimado", "Estado"), truncate(filas));
     }
 
-    private <T> Specification<T> igualA(String ruta, Object valor) {
+    private <T> Specification<T> equalTo(String path, Object valor) {
         if (valor == null) return Specification.<T>where(null);
-        return (root, query, cb) -> cb.equal(this.<T, Object>ruta(root, ruta), valor);
+        return (root, query, cb) -> cb.equal(this.<T, Object>path(root, path), valor);
     }
 
-    private <T> Specification<T> desdeDe(String ruta, LocalDate desde) {
+    private <T> Specification<T> fromDate(String path, LocalDate desde) {
         if (desde == null) return Specification.<T>where(null);
-        return (root, query, cb) -> cb.greaterThanOrEqualTo(this.<T, LocalDate>ruta(root, ruta), desde);
+        return (root, query, cb) -> cb.greaterThanOrEqualTo(this.<T, LocalDate>path(root, path), desde);
     }
 
-    private <T> Specification<T> hastaDe(String ruta, LocalDate hasta) {
+    private <T> Specification<T> toDate(String path, LocalDate hasta) {
         if (hasta == null) return Specification.<T>where(null);
-        return (root, query, cb) -> cb.lessThanOrEqualTo(this.<T, LocalDate>ruta(root, ruta), hasta);
+        return (root, query, cb) -> cb.lessThanOrEqualTo(this.<T, LocalDate>path(root, path), hasta);
     }
 
     @SuppressWarnings("unchecked")
-    private <T, Y> jakarta.persistence.criteria.Path<Y> ruta(
+    private <T, Y> jakarta.persistence.criteria.Path<Y> path(
             jakarta.persistence.criteria.Root<T> root, String puntos) {
         jakarta.persistence.criteria.Path<Object> path = null;
         for (String segmento : puntos.split("\\.")) {
@@ -193,7 +193,7 @@ public class ReportService {
         return (jakarta.persistence.criteria.Path<Y>) (jakarta.persistence.criteria.Path<?>) path;
     }
 
-    private <T> List<T> sinVacio(List<T> resultados) {
+    private <T> List<T> nonEmpty(List<T> resultados) {
         if (resultados.isEmpty()) {
             throw new ResourceNotFoundException("No hay datos para los filtros seleccionados");
         }
@@ -201,62 +201,62 @@ public class ReportService {
     }
 
     private List<String> paymentRow(Payment p) {
-        String periodo = p.getTipo() == Payment.TipoPago.MEMBRESIA ? p.getMes() + "/" + p.getAnio() : "-";
-        var registrador = p.getRegistradoPor().getPersona();
+        String periodo = p.getType() == Payment.PaymentType.MEMBRESIA ? p.getMonth() + "/" + p.getYear() : "-";
+        var registrador = p.getRegisteredBy().getPerson();
         return List.of(
-                p.getEstudiante().getPersona().getNombre() + " " + p.getEstudiante().getPersona().getApellido(),
-                p.getTipo().name(),
+                p.getStudent().getPerson().getName() + " " + p.getStudent().getPerson().getLastName(),
+                p.getType().name(),
                 periodo,
-                p.getMonto().toPlainString(),
-                p.getFechaPago().format(FECHA),
-                registrador.getNombre() + " " + registrador.getApellido());
+                p.getAmount().toPlainString(),
+                p.getPaymentDate().format(FECHA),
+                registrador.getName() + " " + registrador.getLastName());
     }
 
-    private List<String> filaAsistencia(Asistencia a) {
+    private List<String> attendanceRow(Asistencia a) {
         return List.of(
-                a.getEstudiante().getPersona().getNombre() + " " + a.getEstudiante().getPersona().getApellido(),
-                a.getEstudiante().getCategoria().getNombre(),
+                a.getEstudiante().getPerson().getName() + " " + a.getEstudiante().getPerson().getLastName(),
+                a.getEstudiante().getCategory().getNombre(),
                 a.getSesion().getFecha().format(FECHA),
                 a.getEstado(),
                 a.getMetodo());
     }
 
-    private List<String> filaEvaluacion(EvaluacionEstudiante ee) {
+    private List<String> evaluationRow(EvaluacionEstudiante ee) {
         String posicion = ee.getPosicionJugada() != null ? ee.getPosicionJugada().getNombre() : "-";
-        String promedio = ee.getDetalles().isEmpty() ? "-" : promedio(ee.getDetalles());
+        String average = ee.getDetalles().isEmpty() ? "-" : average(ee.getDetalles());
         return List.of(
-                ee.getEstudiante().getPersona().getNombre() + " " + ee.getEstudiante().getPersona().getApellido(),
+                ee.getEstudiante().getPerson().getName() + " " + ee.getEstudiante().getPerson().getLastName(),
                 ee.getCategoriaDia().getNombre(),
                 ee.getEvaluacion().getFecha().format(FECHA),
                 posicion,
-                promedio);
+                average);
     }
 
-    private List<String> filaLesion(Lesion l) {
+    private List<String> injuryRow(Lesion l) {
         String retorno = l.getFechaEstimadaRetorno() != null ? l.getFechaEstimadaRetorno().format(FECHA) : "-";
         String estado = l.estaActiva() ? "Activa" : "De alta el " + l.getFechaAlta().format(FECHA);
         return List.of(
-                l.getEstudiante().getPersona().getNombre() + " " + l.getEstudiante().getPersona().getApellido(),
+                l.getEstudiante().getPerson().getName() + " " + l.getEstudiante().getPerson().getLastName(),
                 l.getDescripcion(),
                 l.getFechaLesion().format(FECHA),
                 retorno,
                 estado);
     }
 
-    private String promedio(List<DetalleEvaluacion> detalles) {
+    private String average(List<DetalleEvaluacion> detalles) {
         BigDecimal suma = detalles.stream().map(DetalleEvaluacion::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);
         return suma.divide(BigDecimal.valueOf(detalles.size()), 2, RoundingMode.HALF_UP).toPlainString();
     }
-    private boolean seQuedoCorto(List<List<String>> filas) {
+    private boolean exceedsLimit(List<List<String>> filas) {
         return filas.size() > TOPE_FILAS;
     }
 
-    private List<List<String>> recortar(List<List<String>> filas) {
-        return seQuedoCorto(filas) ? filas.subList(0, TOPE_FILAS) : filas;
+    private List<List<String>> truncate(List<List<String>> filas) {
+        return exceedsLimit(filas) ? filas.subList(0, TOPE_FILAS) : filas;
     }
 
-    private String titulo(String base, List<List<String>> filas) {
-        return seQuedoCorto(filas)
+    private String title(String base, List<List<String>> filas) {
+        return exceedsLimit(filas)
                 ? base + " (primeras " + TOPE_FILAS + " filas — afine los filtros para ver el resto)"
                 : base;
     }

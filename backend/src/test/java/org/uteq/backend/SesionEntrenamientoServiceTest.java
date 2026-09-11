@@ -58,7 +58,7 @@ class SesionEntrenamientoServiceTest {
     private Entrenador entrenador(long id, String nombre) {
         return Entrenador.builder()
                 .idEntrenador(id)
-                .persona(Person.builder().nombre(nombre).apellido("Apellido").build())
+                .persona(Person.builder().name(nombre).lastName("Apellido").build())
                 .build();
     }
 
@@ -249,9 +249,9 @@ class SesionEntrenamientoServiceTest {
 
     private Student estudianteDe(long id, String nombre, Posicion posicion) {
         return Student.builder()
-                .idEstudiante(id)
-                .persona(Person.builder().nombre(nombre).apellido("Apellido").build())
-                .posicion(posicion)
+                .id(id)
+                .person(Person.builder().name(nombre).lastName("Apellido").build())
+                .position(posicion)
                 .build();
     }
 

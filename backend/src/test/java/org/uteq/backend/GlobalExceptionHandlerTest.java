@@ -62,7 +62,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("HttpMessageNotReadableException produce 400")
     void cuerpoIlegible() {
-        ProblemDetail pd = handler.handleCuerpoIlegible(
+        ProblemDetail pd = handler.handleUnreadableBody(
                 new HttpMessageNotReadableException("cuerpo ilegible", (Throwable) null));
 
         assertThat(pd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -72,7 +72,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("MissingServletRequestParameterException refleja el nombre del parametro")
     void parametroFaltante() throws Exception {
-        ProblemDetail pd = handler.handleParametroFaltante(
+        ProblemDetail pd = handler.handleMissingParameter(
                 new MissingServletRequestParameterException("nombre", "string"));
 
         assertThat(pd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -82,7 +82,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("MethodArgumentTypeMismatchException refleja el nombre del argumento")
     void tipoInvalido() {
-        ProblemDetail pd = handler.handleTipoInvalido(
+        ProblemDetail pd = handler.handleInvalidType(
                 new MethodArgumentTypeMismatchException("abc", Long.class, "id", null, null));
 
         assertThat(pd.getStatus()).isEqualTo(HttpStatus.BAD_REQUEST.value());
@@ -92,7 +92,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("NoResourceFoundException produce 404")
     void rutaDesconocida() {
-        ProblemDetail pd = handler.handleRutaDesconocida(
+        ProblemDetail pd = handler.handleUnknownRoute(
                 new NoResourceFoundException(HttpMethod.GET, "/api/no-existe"));
 
         assertThat(pd.getStatus()).isEqualTo(HttpStatus.NOT_FOUND.value());
@@ -101,7 +101,7 @@ class GlobalExceptionHandlerTest {
     @Test
     @DisplayName("HttpRequestMethodNotSupportedException produce 405, no 500 (hallazgo del escaneo ZAP autenticado)")
     void metodoNoSoportado() {
-        ProblemDetail pd = handler.handleMetodoNoSoportado(
+        ProblemDetail pd = handler.handleMethodNotSupported(
                 new HttpRequestMethodNotSupportedException("GET"));
 
         assertThat(pd.getStatus()).isEqualTo(HttpStatus.METHOD_NOT_ALLOWED.value());

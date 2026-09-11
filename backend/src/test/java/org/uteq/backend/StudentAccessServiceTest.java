@@ -39,7 +39,7 @@ class StudentAccessServiceTest {
 
     @InjectMocks private StudentAccessService service;
 
-    private final Person persona = Person.builder().idPersona(1L).nombre("Ana").apellido("Vera").build();
+    private final Person persona = Person.builder().id(1L).name("Ana").lastName("Vera").build();
 
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante no lanza si la persona no tiene cuenta")
@@ -52,8 +52,8 @@ class StudentAccessServiceTest {
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante lanza si la cuenta existente es de otro rol")
     void validarCoherencia_con_cuenta_de_otro_rol_lanza() {
-        UserAccount cuentaEntrenador = UserAccount.builder().idUsuario(9L)
-                .roles(Set.of(Role.builder().idRol(2L).nombre("ENTRENADOR").build())).build();
+        UserAccount cuentaEntrenador = UserAccount.builder().id(9L)
+                .roles(Set.of(Role.builder().id(2L).name("ENTRENADOR").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
 
         assertThatThrownBy(() -> service.validateConsistencyWithStudentRecord(1L))
@@ -63,8 +63,8 @@ class StudentAccessServiceTest {
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante no lanza si la cuenta ya es de rol ESTUDIANTE")
     void validarCoherencia_con_cuenta_de_estudiante_no_lanza() {
-        UserAccount cuentaEstudiante = UserAccount.builder().idUsuario(9L)
-                .roles(Set.of(Role.builder().idRol(5L).nombre("ESTUDIANTE").build())).build();
+        UserAccount cuentaEstudiante = UserAccount.builder().id(9L)
+                .roles(Set.of(Role.builder().id(5L).name("ESTUDIANTE").build())).build();
         when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
 
         service.validateConsistencyWithStudentRecord(1L);
@@ -86,23 +86,23 @@ class StudentAccessServiceTest {
     @DisplayName("crearCuentaDeEstudiante crea el usuario con rol ESTUDIANTE, la contrasena hasheada y sobre la Persona dada")
     void crearCuenta_exitosa() {
         EnableAccessRequest request = new EnableAccessRequest("andres@sged.test", "password123");
-        Role rolEstudiante = Role.builder().idRol(6L).nombre("ESTUDIANTE").build();
+        Role rolEstudiante = Role.builder().id(6L).name("ESTUDIANTE").build();
 
         when(usuarioRepository.existsByUsernameIgnoreCase("andres@sged.test")).thenReturn(false);
         when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
-        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(GeneralStatus.builder().idEstadoGeneral(1L).build()));
+        when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(GeneralStatus.builder().id(1L).build()));
         when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(i -> {
             UserAccount u = i.getArgument(0);
-            u.setIdUsuario(9L);
+            u.setId(9L);
             return u;
         });
 
         UserAccount resultado = service.createStudentAccount(persona, request);
 
-        assertThat(resultado.getIdUsuario()).isEqualTo(9L);
-        assertThat(resultado.getPersona()).isSameAs(persona);
-        assertThat(resultado.getPassword_Hash()).isEqualTo("$2a$12$encoded");
+        assertThat(resultado.getId()).isEqualTo(9L);
+        assertThat(resultado.getPerson()).isSameAs(persona);
+        assertThat(resultado.getPasswordHash()).isEqualTo("$2a$12$encoded");
         assertThat(resultado.getRoles()).containsExactly(rolEstudiante);
     }
 

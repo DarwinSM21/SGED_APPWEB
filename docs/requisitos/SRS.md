@@ -1146,8 +1146,8 @@ los datos personales que el sistema guarda sobre él.*
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — es,
   en la práctica, el derecho de acceso del titular sobre sus datos.
 - **Método de verificación:** Test
-- **Origen:** `GET /api/usuarios/me/datos-pdf` — `PerfilController`.
-- **Verificación:** `PerfilControllerTest`.
+- **Origen:** `GET /api/usuarios/me/datos-pdf` — `ProfileController`.
+- **Verificación:** `ProfileControllerTest`.
 
 ---
 
@@ -1628,10 +1628,12 @@ igual o superior al 70 %, verificada automáticamente en la construcción.*
 > 60 % de instrucciones — ese nunca fue el valor configurado en `pom.xml`
 > (que exige 70 % en `LINE` y en `BRANCH`, sin excepciones de paquete) y la
 > cifra estaba fechada 2026-07-30, mucho antes del estado actual del
-> código. Cifra vigente, regenerada el 2026-09-07 (Bloque A.1, tras cubrir
-> `org.uteq.backend.reportes` y `common.exception`): **87,47 % de
-> líneas (2730/3121) y 72,10 % de branches (672/932), 576 pruebas en 76
-> clases, 200 clases analizadas — CUMPLE el 70 % en ambas métricas.**
+> código. Cifra vigente, regenerada el 2026-09-11 (tras completar el
+> rename a inglés fuera de `deportivo`): **88,35 % de
+> líneas (3012/3409) y 74,20 % de branches (791/1066), 665 pruebas en
+> 216 clases — CUMPLE el 70 % en ambas métricas.** (Cifras intermedias de
+> esta misma semana: 87,47 %/72,10 % el 2026-09-07, 84,66 %/71,24 % antes
+> de esa fecha.)
 > Desglose por subdominio en `docs/informe/main.tex`
 > (Tabla `tab:cobertura-por-paquete`, 25 filas) y dato crudo en
 > `docs/mediciones/jacoco/jacoco.csv`. La bitácora original de esta

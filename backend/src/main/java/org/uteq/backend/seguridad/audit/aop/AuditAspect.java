@@ -25,12 +25,12 @@ public class AuditAspect {
     /**
      * Envuelve cualquier método anotado con {@link Audited}: lo deja ejecutar
      * primero y, si termina sin lanzar, resuelve las expresiones SpEL de
-     * {@code idSpel}/{@code descripcionSpel} contra el resultado y los
+     * {@code idSpel}/{@code descriptionSpel} contra el resultado y los
      * argumentos ({@code #result}, {@code #p0}, {@code #p1}, ...) y registra
      * el acto en la bitácora de auditoría.
      *
      * @param pjp punto de unión del método interceptado
-     * @param auditado datos de la anotación {@link Audited} (acción, entidad, expresiones)
+     * @param auditado datos de la anotación {@link Audited} (acción, entity, expresiones)
      * @return el resultado del método interceptado, sin modificar
      * @throws Throwable la excepción que haya lanzado el método interceptado, propagada tal cual
      */
@@ -45,43 +45,43 @@ public class AuditAspect {
                 contexto.setVariable("p" + i, args[i]);
             }
 
-            Long entidadId = evaluarId(auditado.idSpel(), contexto);
-            String descripcion = auditado.descripcionSpel().isBlank()
-                    ? descripcionGenerica(auditado, entidadId)
-                    : String.valueOf(evaluar(auditado.descripcionSpel(), contexto));
+            Long entityId = evaluateId(auditado.idSpel(), contexto);
+            String descripcion = auditado.descriptionSpel().isBlank()
+                    ? genericDescription(auditado, entityId)
+                    : String.valueOf(evaluate(auditado.descriptionSpel(), contexto));
 
-            auditoriaService.recordEvent(auditado.accion(), auditado.entidad(), entidadId, descripcion);
+            auditoriaService.recordEvent(auditado.action(), auditado.entity(), entityId, descripcion);
         } catch (Exception e) {
             log.error("No se pudo auditar la llamada a {}", pjp.getSignature(), e);
         }
         return resultado;
     }
 
-    private Long evaluarId(String spel, StandardEvaluationContext contexto) {
+    private Long evaluateId(String spel, StandardEvaluationContext contexto) {
         if (spel == null || spel.isBlank()) {
             return null;
         }
-        Object valor = evaluar(spel, contexto);
+        Object valor = evaluate(spel, contexto);
         if (valor == null) {
             return null;
         }
         return valor instanceof Number n ? n.longValue() : Long.valueOf(valor.toString());
     }
 
-    private Object evaluar(String spel, StandardEvaluationContext contexto) {
+    private Object evaluate(String spel, StandardEvaluationContext contexto) {
         Expression expresion = PARSER.parseExpression(spel);
         return expresion.getValue(contexto);
     }
 
-    private String descripcionGenerica(Audited auditado, Long entidadId) {
-        String verbo = switch (auditado.accion()) {
+    private String genericDescription(Audited auditado, Long entityId) {
+        String verbo = switch (auditado.action()) {
             case "CREAR" -> "creó";
             case "EDITAR" -> "editó";
             case "ELIMINAR" -> "eliminó";
-            default -> auditado.accion().toLowerCase();
+            default -> auditado.action().toLowerCase();
         };
-        return entidadId != null
-                ? verbo + " " + auditado.entidad() + " #" + entidadId
-                : verbo + " " + auditado.entidad();
+        return entityId != null
+                ? verbo + " " + auditado.entity() + " #" + entityId
+                : verbo + " " + auditado.entity();
     }
 }

@@ -65,22 +65,22 @@ class UserAccountServiceTest {
     private UserAccountService usuarioService;
 
     private Person persona() {
-        return Person.builder().idPersona(1L).nombre("Ana").apellido("Torres")
-                .correo("ana@sged.test").build();
+        return Person.builder().id(1L).name("Ana").lastName("Torres")
+                .email("ana@sged.test").build();
     }
 
     private GeneralStatus estadoActivo() {
-        return GeneralStatus.builder().idEstadoGeneral(1L).nombre("ACTIVO").build();
+        return GeneralStatus.builder().id(1L).name("ACTIVO").build();
     }
 
     private UserAccount usuario() {
         return UserAccount.builder()
-                .idUsuario(1L)
-                .persona(persona())
-                .estadoGeneral(estadoActivo())
+                .id(1L)
+                .person(persona())
+                .generalStatus(estadoActivo())
                 .username("ana.torres")
-                .password_Hash("hash-existente")
-                .activo(true)
+                .passwordHash("hash-existente")
+                .active(true)
                 .build();
     }
 
@@ -101,7 +101,7 @@ class UserAccountServiceTest {
     @DisplayName("listar incluye las cuentas desactivadas para que el administrador pueda reactivarlas")
     void listar_incluye_inactivos() {
         UserAccount apagado = usuario();
-        apagado.setActivo(false);
+        apagado.setActive(false);
         Page<UserAccount> pagina = new PageImpl<>(List.of(apagado), PageRequest.of(0, 10), 1);
         when(usuarioRepository.findAll(any(Pageable.class))).thenReturn(pagina);
 
@@ -115,14 +115,14 @@ class UserAccountServiceTest {
     @DisplayName("reactivar vuelve a encender una cuenta apagada")
     void reactivar_enciende_la_cuenta() {
         UserAccount apagado = usuario();
-        apagado.setActivo(false);
+        apagado.setActive(false);
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(apagado));
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(i -> i.getArgument(0));
 
         UserAccountResponse resultado = usuarioService.reactivate(1L);
 
         assertThat(resultado.activo()).isTrue();
-        assertThat(apagado.getActivo()).isTrue();
+        assertThat(apagado.getActive()).isTrue();
     }
 
     @Test
@@ -178,7 +178,7 @@ class UserAccountServiceTest {
         when(passwordEncoder.encode("clave123")).thenReturn("hash-codificado");
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(inv -> {
             UserAccount u = inv.getArgument(0);
-            u.setIdUsuario(2L);
+            u.setId(2L);
             return u;
         });
 
@@ -194,7 +194,7 @@ class UserAccountServiceTest {
     @DisplayName("crear con rol lo busca y lo asigna al usuario nuevo")
     void crear_con_rol_asigna_el_rol() {
         UserAccountRequest request = new UserAccountRequest(1L, 1L, "coach.nuevo", "clave123", "ENTRENADOR");
-        Role entrenador = Role.builder().idRol(2L).nombre("ENTRENADOR").build();
+        Role entrenador = Role.builder().id(2L).name("ENTRENADOR").build();
         when(usuarioRepository.existsByUsernameIgnoreCase("coach.nuevo")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
@@ -202,7 +202,7 @@ class UserAccountServiceTest {
         when(passwordEncoder.encode("clave123")).thenReturn("hash-codificado");
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(inv -> {
             UserAccount u = inv.getArgument(0);
-            u.setIdUsuario(3L);
+            u.setId(3L);
             return u;
         });
 
@@ -247,7 +247,7 @@ class UserAccountServiceTest {
 
         usuarioService.delete(1L);
 
-        assertThat(existente.getActivo()).isFalse();
+        assertThat(existente.getActive()).isFalse();
     }
 
     @Test
@@ -274,7 +274,7 @@ class UserAccountServiceTest {
 
         usuarioService.update(1L, request);
 
-        assertThat(existente.getPassword_Hash()).isEqualTo("hash-existente");
+        assertThat(existente.getPasswordHash()).isEqualTo("hash-existente");
         verify(passwordEncoder, never()).encode(any());
     }
 
@@ -291,16 +291,16 @@ class UserAccountServiceTest {
 
         usuarioService.update(1L, request);
 
-        assertThat(existente.getPassword_Hash()).isEqualTo("hash-nuevo");
+        assertThat(existente.getPasswordHash()).isEqualTo("hash-nuevo");
     }
 
     @Test
     @DisplayName("editar cambia el rol cuando la persona no tiene ninguna ficha activa")
     void editar_cambia_el_rol_sin_ficha_activa() {
         UserAccount existente = usuario();
-        existente.setRoles(Set.of(Role.builder().idRol(1L).nombre("RECEPCIONISTA").build()));
+        existente.setRoles(Set.of(Role.builder().id(1L).name("RECEPCIONISTA").build()));
         UserAccountRequest request = new UserAccountRequest(1L, 1L, "ana.torres", null, "ENTRENADOR");
-        Role entrenador = Role.builder().idRol(2L).nombre("ENTRENADOR").build();
+        Role entrenador = Role.builder().id(2L).name("ENTRENADOR").build();
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
@@ -319,7 +319,7 @@ class UserAccountServiceTest {
     @DisplayName("editar rechaza el cambio de rol cuando la persona tiene ficha de entrenador activa")
     void editar_rechaza_cambio_de_rol_con_ficha_entrenador() {
         UserAccount existente = usuario();
-        existente.setRoles(Set.of(Role.builder().idRol(1L).nombre("ENTRENADOR").build()));
+        existente.setRoles(Set.of(Role.builder().id(1L).name("ENTRENADOR").build()));
         UserAccountRequest request = new UserAccountRequest(1L, 1L, "ana.torres", null, "RECEPCIONISTA");
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
@@ -354,7 +354,7 @@ class UserAccountServiceTest {
     @DisplayName("crear acepta el rol que si corresponde a la ficha de la persona")
     void crear_con_rol_coherente_persiste() {
         UserAccountRequest request = new UserAccountRequest(1L, 1L, "fernanda.c", "clave123", "ESTUDIANTE");
-        Role estudiante = Role.builder().idRol(5L).nombre("ESTUDIANTE").build();
+        Role estudiante = Role.builder().id(5L).name("ESTUDIANTE").build();
         when(usuarioRepository.existsByUsernameIgnoreCase("fernanda.c")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));

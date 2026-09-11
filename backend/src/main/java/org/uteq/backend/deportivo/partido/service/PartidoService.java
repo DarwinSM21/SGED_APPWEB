@@ -83,8 +83,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si la categoría no existe
      * @throws IllegalArgumentException     si la categoría está inactiva
      */
-    @Audited(accion = "CREAR", entidad = "Partido", idSpel = "#result.idPartido",
-            descripcionSpel = "'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha")
+    @Audited(action = "CREAR", entity = "Partido", idSpel = "#result.idPartido",
+            descriptionSpel = "'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha")
     @Transactional
     public PartidoResponse crear(CrearPartidoRequest request) {
         Categoria categoria = categoriaRepository.findById(request.idCategoria())
@@ -115,8 +115,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido ya estaba cerrado
      */
-    @Audited(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
-            descripcionSpel = "'cargó el resultado del partido ' + #p0 + ' y lo cerró'")
+    @Audited(action = "EDITAR", entity = "Partido", idSpel = "#p0",
+            descriptionSpel = "'cargó el resultado del partido ' + #p0 + ' y lo cerró'")
     @Transactional
     public PartidoResponse registrarResultado(Long idPartido, ResultadoRequest request) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
@@ -144,8 +144,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si el partido no existe
      * @throws IllegalArgumentException     si el partido no estaba cerrado
      */
-    @Audited(accion = "EDITAR", entidad = "Partido", idSpel = "#p0",
-            descripcionSpel = "'reabrio el partido ' + #p0 + ' para corregirlo'")
+    @Audited(action = "EDITAR", entity = "Partido", idSpel = "#p0",
+            descriptionSpel = "'reabrio el partido ' + #p0 + ' para corregirlo'")
     @Transactional
     public PartidoResponse reabrir(Long idPartido) {
         Partido p = partidoRepository.findWithCategoriaByIdPartido(idPartido)
@@ -181,7 +181,7 @@ public class PartidoService {
             return null;
         }
         return usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(auth.getName())
-                .map(u -> u.getIdUsuario())
+                .map(u -> u.getId())
                 .orElse(null);
     }
 
@@ -193,8 +193,8 @@ public class PartidoService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si el partido está cerrado
      */
-    @Audited(accion = "ELIMINAR", entidad = "Partido", idSpel = "#p0",
-            descripcionSpel = "'eliminó el partido ' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Partido", idSpel = "#p0",
+            descriptionSpel = "'eliminó el partido ' + #p0")
     @Transactional
     public void eliminar(Long idPartido) {
         Partido p = partidoRepository.findById(idPartido)

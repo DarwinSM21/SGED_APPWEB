@@ -33,13 +33,13 @@ class UserDetailsServiceImplTest {
 
     private UserAccount usuarioDe(String username) {
         return UserAccount.builder()
-                .idUsuario(1L)
+                .id(1L)
                 .username(username)
-                .password_Hash("$2b$12$hashfalso")
-                .activo(true)
-                .persona(Person.builder().idPersona(1L).nombre("Juan").apellido("Perez").build())
-                .estadoGeneral(GeneralStatus.builder().idEstadoGeneral(1L).nombre("Activo").build())
-                .roles(Set.of(Role.builder().idRol(1L).nombre("ESTUDIANTE").build()))
+                .passwordHash("$2b$12$hashfalso")
+                .active(true)
+                .person(Person.builder().id(1L).name("Juan").lastName("Perez").build())
+                .generalStatus(GeneralStatus.builder().id(1L).name("Activo").build())
+                .roles(Set.of(Role.builder().id(1L).name("ESTUDIANTE").build()))
                 .build();
     }
 

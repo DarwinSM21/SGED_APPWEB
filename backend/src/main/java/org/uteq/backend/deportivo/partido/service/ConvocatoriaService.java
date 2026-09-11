@@ -117,7 +117,7 @@ public class ConvocatoriaService {
                     Map.of(), Map.of(), entrenamientos);
         }
 
-        List<Long> ids = plantel.stream().map(Student::getIdEstudiante).toList();
+        List<Long> ids = plantel.stream().map(Student::getId).toList();
         Map<Long, BigDecimal> promedios = promediosDe(ids, desde, hasta);
         Map<Long, Long> presencias = presenciasDe(ids, desde, hasta);
         Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
@@ -125,7 +125,7 @@ public class ConvocatoriaService {
         List<Student> convocables = new ArrayList<>();
         List<NoConvocable> fuera = new ArrayList<>();
         for (Student e : plantel) {
-            Long id = e.getIdEstudiante();
+            Long id = e.getId();
             if (lesionados.contains(id)) {
                 fuera.add(new NoConvocable(id, nombreDe(e), "Lesión activa"));
             // Si la categoría no tuvo entrenamientos en la ventana, nadie pudo
@@ -144,7 +144,7 @@ public class ConvocatoriaService {
         Map<Long, JugadorConvocado> titularPorPuesto = new LinkedHashMap<>();
         List<JugadorConvocado> suplentes = new ArrayList<>();
         for (Student e : convocables) {
-            Long idPosicion = e.getPosicion() == null ? null : e.getPosicion().getIdPosicion();
+            Long idPosicion = e.getPosition() == null ? null : e.getPosition().getIdPosicion();
             boolean hayCupo = titularPorPuesto.size() < cantidadTitulares;
             boolean titulariza = idPosicion != null && hayCupo && !titularPorPuesto.containsKey(idPosicion);
             JugadorConvocado fila =
@@ -192,10 +192,10 @@ public class ConvocatoriaService {
                                                   Map<Long, Long> presencias) {
         return Comparator
                 .comparing((Student e) -> promedios.getOrDefault(
-                        e.getIdEstudiante(), BigDecimal.ZERO)).reversed()
+                        e.getId(), BigDecimal.ZERO)).reversed()
                 .thenComparing(Comparator.comparingLong(
-                        (Student e) -> presencias.getOrDefault(e.getIdEstudiante(), 0L)).reversed())
-                .thenComparing(Student::getIdEstudiante);
+                        (Student e) -> presencias.getOrDefault(e.getId(), 0L)).reversed())
+                .thenComparing(Student::getId);
     }
 
     private Map<Long, BigDecimal> promediosDe(List<Long> ids, LocalDate desde, LocalDate hasta) {
@@ -236,14 +236,14 @@ public class ConvocatoriaService {
                                        long entrenamientos) {
         String abreviatura = null;
         if (idPosicion != null) {
-            var nominal = e.getPosicion();
+            var nominal = e.getPosition();
             abreviatura = nominal != null && idPosicion.equals(nominal.getIdPosicion())
                     ? nominal.getAbreviatura() : null;
         }
         return new JugadorConvocado(
-                e.getIdEstudiante(), nombreDe(e), abreviatura, idPosicion, titular,
-                promedios.get(e.getIdEstudiante()),
-                presencias.getOrDefault(e.getIdEstudiante(), 0L),
+                e.getId(), nombreDe(e), abreviatura, idPosicion, titular,
+                promedios.get(e.getId()),
+                presencias.getOrDefault(e.getId(), 0L),
                 entrenamientos);
     }
 
@@ -254,7 +254,7 @@ public class ConvocatoriaService {
      * @return el nombre completo
      */
     public static String nombreDe(Student e) {
-        return e.getPersona().getNombre() + " " + e.getPersona().getApellido();
+        return e.getPerson().getName() + " " + e.getPerson().getLastName();
     }
 
     /**

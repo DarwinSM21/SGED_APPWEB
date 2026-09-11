@@ -58,17 +58,17 @@ class ReportServiceTest {
     }
 
     private Person persona(String nombre, String apellido) {
-        return Person.builder().nombre(nombre).apellido(apellido).build();
+        return Person.builder().name(nombre).lastName(apellido).build();
     }
 
     private Student estudiante(Long id, String categoria) {
         return Student.builder()
-                .idEstudiante(id)
-                .persona(persona("Ana", "Torres"))
-                .categoria(Categoria.builder().idCategoria(1L).nombre(categoria).build())
-                .codigoEstudiante("EST-2026-0001")
-                .fechaIngreso(LocalDate.of(2026, 1, 10))
-                .activo(true)
+                .id(id)
+                .person(persona("Ana", "Torres"))
+                .category(Categoria.builder().idCategoria(1L).nombre(categoria).build())
+                .studentCode("EST-2026-0001")
+                .enrollmentDate(LocalDate.of(2026, 1, 10))
+                .active(true)
                 .build();
     }
 
@@ -101,13 +101,13 @@ class ReportServiceTest {
     @Test
     @DisplayName("pagos con resultados genera un PDF valido")
     void paymentsWithResultsGeneratesPdf() {
-        UserAccount registrador = UserAccount.builder().persona(persona("Luis", "Gómez")).build();
+        UserAccount registrador = UserAccount.builder().person(persona("Luis", "Gómez")).build();
         Payment pago = Payment.builder()
-                .estudiante(estudiante(1L, "SUB-12"))
-                .tipo(Payment.TipoPago.DIARIO)
-                .monto(BigDecimal.TEN)
-                .fechaPago(LocalDate.of(2026, 8, 1))
-                .registradoPor(registrador)
+                .student(estudiante(1L, "SUB-12"))
+                .type(Payment.PaymentType.DIARIO)
+                .amount(BigDecimal.TEN)
+                .paymentDate(LocalDate.of(2026, 8, 1))
+                .registeredBy(registrador)
                 .build();
         when(pagoRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(pago)));
 
@@ -207,15 +207,15 @@ class ReportServiceTest {
     @Test
     @DisplayName("pago de membresia muestra el periodo mes/anio en lugar de '-'")
     void paymentMembresiaShowsPeriod() {
-        UserAccount registrador = UserAccount.builder().persona(persona("Luis", "Gómez")).build();
+        UserAccount registrador = UserAccount.builder().person(persona("Luis", "Gómez")).build();
         Payment pago = Payment.builder()
-                .estudiante(estudiante(1L, "SUB-12"))
-                .tipo(Payment.TipoPago.MEMBRESIA)
-                .monto(BigDecimal.valueOf(50))
-                .mes((short) 7)
-                .anio((short) 2026)
-                .fechaPago(LocalDate.of(2026, 7, 31))
-                .registradoPor(registrador)
+                .student(estudiante(1L, "SUB-12"))
+                .type(Payment.PaymentType.MEMBRESIA)
+                .amount(BigDecimal.valueOf(50))
+                .month((short) 7)
+                .year((short) 2026)
+                .paymentDate(LocalDate.of(2026, 7, 31))
+                .registeredBy(registrador)
                 .build();
         when(pagoRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(pago)));

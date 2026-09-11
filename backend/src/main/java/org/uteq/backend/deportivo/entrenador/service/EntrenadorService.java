@@ -98,7 +98,7 @@ public class EntrenadorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
 
         boolean tieneRolEntrenador = usuario.getRoles().stream()
-                .anyMatch(r -> "ENTRENADOR".equals(r.getNombre()));
+                .anyMatch(r -> "ENTRENADOR".equals(r.getName()));
         if (!tieneRolEntrenador) {
             throw new IllegalArgumentException(
                     "El usuario debe tener el rol ENTRENADOR para registrarse como entrenador");
@@ -146,8 +146,8 @@ public class EntrenadorService {
      * @param id identificador del entrenador
      * @throws ResourceNotFoundException si no existe
      */
-    @Audited(accion = "ELIMINAR", entidad = "Entrenador", idSpel = "#p0",
-            descripcionSpel = "'desactivo la ficha de entrenador #' + #p0")
+    @Audited(action = "ELIMINAR", entity = "Entrenador", idSpel = "#p0",
+            descriptionSpel = "'desactivo la ficha de entrenador #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public void eliminar(Long id) {
@@ -165,8 +165,8 @@ public class EntrenadorService {
      * @throws ResourceNotFoundException si no existe
      * @throws IllegalArgumentException     si ya está activo
      */
-    @Audited(accion = "REACTIVAR", entidad = "Entrenador", idSpel = "#p0",
-            descripcionSpel = "'reactivo la ficha de entrenador #' + #p0")
+    @Audited(action = "REACTIVAR", entity = "Entrenador", idSpel = "#p0",
+            descriptionSpel = "'reactivo la ficha de entrenador #' + #p0")
     @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public EntrenadorResponse reactivar(Long id) {
@@ -190,13 +190,13 @@ public class EntrenadorService {
     private EntrenadorResponse toResponse(Entrenador e) {
         return new EntrenadorResponse(
                 e.getIdEntrenador(),
-                e.getPersona().getIdPersona(),
-                e.getPersona().getNombre(),
-                e.getPersona().getApellido(),
-                e.getPersona().getCedula(),
-                e.getPersona().getCorreo(),
-                e.getPersona().getTelefono(),
-                e.getUsuario().getIdUsuario(),
+                e.getPersona().getId(),
+                e.getPersona().getName(),
+                e.getPersona().getLastName(),
+                e.getPersona().getNationalId(),
+                e.getPersona().getEmail(),
+                e.getPersona().getPhone(),
+                e.getUsuario().getId(),
                 e.getUsuario().getUsername(),
                 e.getEspecialidad() != null ? e.getEspecialidad().getIdEspecialidad() : null,
                 e.getEspecialidad() != null ? e.getEspecialidad().getNombre() : null,

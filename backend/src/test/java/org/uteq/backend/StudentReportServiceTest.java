@@ -56,16 +56,16 @@ class StudentReportServiceTest {
 
     private Guardian representante() {
         return Guardian.builder()
-                .idRepresentante(1L)
-                .persona(Person.builder().nombre("Ana").apellido("Vera").build())
+                .id(1L)
+                .person(Person.builder().name("Ana").lastName("Vera").build())
                 .build();
     }
 
     private Student estudiante(long id, String nombre) {
         return Student.builder()
-                .idEstudiante(id)
-                .persona(Person.builder().nombre(nombre).apellido("Hijo").build())
-                .categoria(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
+                .id(id)
+                .person(Person.builder().name(nombre).lastName("Hijo").build())
+                .category(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
                 .build();
     }
 
@@ -83,7 +83,7 @@ class StudentReportServiceTest {
     void misRepresentados_devuelve_representados_activos() {
         Guardian r = representante();
         GuardianStudent vinculo = GuardianStudent.builder()
-                .representante(r).estudiante(estudiante(10L, "Juan")).activo(true).build();
+                .guardian(r).student(estudiante(10L, "Juan")).active(true).build();
 
         when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
         when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of(vinculo));
@@ -125,7 +125,7 @@ class StudentReportServiceTest {
         Guardian r = representante();
         Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
-                .representante(r).estudiante(hijo).activo(true).build();
+                .guardian(r).student(hijo).active(true).build();
         Lesion lesion = Lesion.builder()
                 .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
                 .fechaAlta(null).build();
@@ -206,7 +206,7 @@ class StudentReportServiceTest {
         Guardian r = representante();
         Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
-                .representante(r).estudiante(hijo).activo(true).build();
+                .guardian(r).student(hijo).active(true).build();
 
         when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
         when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
@@ -230,7 +230,7 @@ class StudentReportServiceTest {
         Guardian r = representante();
         Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
-                .representante(r).estudiante(hijo).activo(true).build();
+                .guardian(r).student(hijo).active(true).build();
 
         when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
         when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
@@ -265,7 +265,7 @@ class StudentReportServiceTest {
         Guardian r = representante();
         Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
-                .representante(r).estudiante(hijo).activo(true).build();
+                .guardian(r).student(hijo).active(true).build();
 
         when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
         when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))

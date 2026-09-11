@@ -16,7 +16,7 @@ class PromptsFeedbackTest {
         var perfil = new AnonymousPlayerProfile("Jugador 1", "SUB-12", "Mediocentro",
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
-        String prompt = PromptsFeedback.deJugador(perfil);
+        String prompt = PromptsFeedback.forPlayer(perfil);
 
         assertThat(prompt).contains("Posicion en la que juega: Mediocentro");
     }
@@ -27,7 +27,7 @@ class PromptsFeedbackTest {
         var perfil = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
-        String prompt = PromptsFeedback.deJugador(perfil);
+        String prompt = PromptsFeedback.forPlayer(perfil);
 
         assertThat(prompt).doesNotContain("Posicion en la que juega");
     }
@@ -40,8 +40,8 @@ class PromptsFeedbackTest {
         var sinHistorico = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
-        assertThat(PromptsFeedback.deJugador(conHistorico)).contains("Promedio historico");
-        assertThat(PromptsFeedback.deJugador(sinHistorico)).doesNotContain("Promedio historico");
+        assertThat(PromptsFeedback.forPlayer(conHistorico)).contains("Promedio historico");
+        assertThat(PromptsFeedback.forPlayer(sinHistorico)).doesNotContain("Promedio historico");
     }
 
     @Test
@@ -52,9 +52,9 @@ class PromptsFeedbackTest {
         var sinAsistencias = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
-        assertThat(PromptsFeedback.deJugador(conAsistencias))
+        assertThat(PromptsFeedback.forPlayer(conAsistencias))
                 .contains("Entrenamientos a los que asistio en el ultimo mes: 10");
-        assertThat(PromptsFeedback.deJugador(sinAsistencias))
+        assertThat(PromptsFeedback.forPlayer(sinAsistencias))
                 .doesNotContain("Entrenamientos a los que asistio");
     }
 
@@ -66,8 +66,8 @@ class PromptsFeedbackTest {
         var sano = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 7.5), Map.of(), null, false);
 
-        assertThat(PromptsFeedback.deJugador(lesionado)).contains("Arrastra una lesion activa");
-        assertThat(PromptsFeedback.deJugador(sano)).doesNotContain("Arrastra una lesion activa");
+        assertThat(PromptsFeedback.forPlayer(lesionado)).contains("Arrastra una lesion activa");
+        assertThat(PromptsFeedback.forPlayer(sano)).doesNotContain("Arrastra una lesion activa");
     }
 
     @Test
@@ -78,7 +78,7 @@ class PromptsFeedbackTest {
         var sinPosicion = new AnonymousPlayerProfile("Jugador 2", "SUB-12", null,
                 Map.of("Tecnica", 6.0), Map.of(), null, false);
 
-        String prompt = PromptsFeedback.dePlantilla(List.of(conPosicion, sinPosicion));
+        String prompt = PromptsFeedback.forLineup(List.of(conPosicion, sinPosicion));
 
         assertThat(prompt).contains("(Defensa)");
         assertThat(prompt).contains("(sin posicion)");
@@ -90,7 +90,7 @@ class PromptsFeedbackTest {
         var perfil = new AnonymousPlayerProfile("Jugador 1", "SUB-12", null,
                 Map.of(), Map.of(), null, false);
 
-        String prompt = PromptsFeedback.dePlantilla(List.of(perfil));
+        String prompt = PromptsFeedback.forLineup(List.of(perfil));
 
         assertThat(prompt).contains("sin datos");
     }
