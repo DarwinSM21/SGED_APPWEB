@@ -13,7 +13,7 @@ ProFútbol: estudiantes, entrenadores, asistencias, evaluaciones y reportes.
 
 | | URL |
 |---|---|
-| **Aplicación (frontend)** | https://sged-frontend-jofa.onrender.com |
+| **Aplicación (frontend)** | https://sged-frontend-r2rs.onrender.com |
 | **API (backend)** | https://sged-backend-2p05.onrender.com |
 | Punto de salud | https://sged-backend-2p05.onrender.com/actuator/health → `{"status":"UP"}` |
 
@@ -23,13 +23,15 @@ apaga el backend tras 15 min sin tráfico; la primera petición tras ese lapso
 tarda ~1 min en responder mientras arranca en frío. Pasos de despliegue en
 [`docs/despliegue/render.md`](docs/despliegue/render.md).
 
-> Los sufijos `-jofa` / `-2p05` los asignó Render porque los nombres
+> Los sufijos `-r2rs` / `-2p05` los asignó Render porque los nombres
 > `sged-frontend` / `sged-backend` ya estaban tomados globalmente en
 > `.onrender.com` por otro despliegue del equipo. **2026-09-11:** se detectó
-> que `render.yaml` traía grabado un sufijo de backend viejo (`-5nh7`, un
-> servicio sin desplegar desde antes de RF-37) en la regla de reescritura
-> `/api/*` del frontend — el sitio público llevaba semanas hablando con un
-> backend desactualizado. Corregido a `-2p05`, el servicio real.
+> que `render.yaml` traía grabados sufijos viejos, huérfanos —
+> `sged-backend-5nh7` (sin desplegar desde antes de RF-37) en la regla de
+> reescritura `/api/*` del frontend, y `sged-frontend-jofa` en
+> `CORS_ALLOWED_ORIGIN_PATTERNS`/los enlaces de correo del backend —. El
+> sitio público llevaba semanas proxiando a un backend desactualizado; ambos
+> corregidos a los servicios reales, `-r2rs` y `-2p05`.
 
 ## Pila tecnológica
 

@@ -1531,7 +1531,7 @@ autofirmado en el entorno de laboratorio— deberá declararse explícitamente
 - **Estado (2026-09-09):** ✅ cumplido en producción. El despliegue público en
   Render (`docs/despliegue/render.md`) sirve HTTPS con certificado emitido por
   *Google Trust Services* (autoridad reconocida), con redirección de HTTP a
-  HTTPS y HSTS, verificado sobre `sged-frontend-jofa.onrender.com` y
+  HTTPS y HSTS, verificado sobre `sged-frontend-r2rs.onrender.com` y
   `sged-backend-2p05.onrender.com`. El certificado autofirmado queda declarado
   como propio del entorno de laboratorio (nginx `:8443`), sin datos reales.
 - **Nota:** complementa RNF-04, que solo exigía la versión del protocolo.

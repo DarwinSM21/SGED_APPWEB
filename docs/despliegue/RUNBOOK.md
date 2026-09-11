@@ -111,7 +111,7 @@ modo que `make up` y la CI no necesitan credenciales de correo.
 | `MAIL_USERNAME` | el correo de esa cuenta Google |
 | `MAIL_PASSWORD` | las 16 letras del App Password (secreto) |
 | `MAIL_FROM` | normalmente el mismo correo |
-| `MAIL_RESET_URL_BASE` | base del enlace, p. ej. `https://sged-frontend-jofa.onrender.com/#/restablecer` |
+| `MAIL_RESET_URL_BASE` | base del enlace, p. ej. `https://sged-frontend-r2rs.onrender.com/#/restablecer` |
 | `MAIL_RESET_TTL` | minutos de vigencia del enlace (por defecto `30`) |
 
 - **Local:** en `.env` de la raíz (está en `.gitignore`).

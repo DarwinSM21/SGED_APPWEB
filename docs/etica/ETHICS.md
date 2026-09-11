@@ -266,7 +266,7 @@ para producción con datos reales de menores.
 **Resuelto el 2026-09-09:** el despliegue público está en Render
 (`docs/despliegue/render.md`), que termina TLS con un certificado emitido por
 una **autoridad reconocida** — *Google Trust Services* (verificado sobre
-`https://sged-frontend-jofa.onrender.com` y `https://sged-backend-2p05.onrender.com`),
+`https://sged-frontend-r2rs.onrender.com` y `https://sged-backend-2p05.onrender.com`),
 con redirección de HTTP a HTTPS y HSTS. El certificado autofirmado queda
 únicamente en el entorno local de laboratorio, donde no hay datos reales.
 **Requisito de cierre:** **RNF-21** (SRS). El endurecimiento TLS del laboratorio
