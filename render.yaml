@@ -144,6 +144,13 @@ services:
         value: "https://sged-frontend-jofa.onrender.com/#/restablecer"
       - key: MAIL_RESET_TTL
         value: "30"
+      # Enlace de confirmación de correo (RNF-26 / H-09). Con MAIL_ENABLED=false
+      # solo va a la bitácora; se apunta igualmente al frontend real para
+      # cuando el correo se active.
+      - key: MAIL_VERIFY_URL_BASE
+        value: "https://sged-frontend-jofa.onrender.com/#/confirmar-correo"
+      - key: MAIL_VERIFY_TTL_HOURS
+        value: "48"
 
   # ----------------------------------------------------------------
   # Redis (caché de Spring y tokens de QR)
