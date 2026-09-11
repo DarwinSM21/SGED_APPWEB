@@ -6,9 +6,11 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 ---
 
-## Estado final (2026-09-09)
+## Estado final (2026-09-10)
 
-`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`, HEAD **`eca162c`**. CI en verde.
+`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`. CI en verde. Corte defendido: etiqueta **`v1.0.3`**.
+
+> **Revisión del SRS v1.6 del docente (M1–M3), 2026-09-10 — cerrada.** Ver la sección [Revisión SRS v1.6 — M1/M2/M3](#revisión-srs-v16--m1m2m3-2026-09-10) al final. M1: etiqueta movida al cierre real (`v1.0.3`). M2: §1.3 del SRS explica el vocabulario de estados. M3: `RNF-26` convierte el hallazgo **H-09** en requisito con criterio, condición de cierre y fecha objetivo (2026-10-31); RF-48 gana "Condición de cierre"; `ETHICS.md` v1.8.
 
 **Cerrado — no queda nada de código ni de documentación:**
 
@@ -229,3 +231,27 @@ cumplen; 4.4 queda como limitación de alcance declarada.**
 
 1. **4.4** — decidir con el docente si el escaneo pasivo basta; si no, correr ZAP autenticado contra las rutas protegidas y versionar la evidencia.
 2. **4.6** — último barrido de procedencia (`git cat-file -t`) contra `main` y revisión de los ordinales de corridas de CI en el informe.
+
+---
+
+## Revisión SRS v1.6 — M1/M2/M3 (2026-09-10)
+
+Tercera revisión del docente sobre el SRS, esta vez de la **v1.6** (etiqueta
+`v1.0.2`), verificada contra `main` en el commit `0a4b997`. El veredicto
+reconoce cerrados todos los defectos de forma de la matriz (M1–M9, A1) y
+señala **tres puntos M** por resolver.
+
+| Punto | Qué pedía | Estado | Qué se hizo · commit |
+| :--- | :--- | :--- | :--- |
+| **M1** | La etiqueta `v1.0.2` (`bd16891`, 7-sep) quedó ~30 commits por detrás de `main`. Mover la etiqueta al cierre real, o mantener la declaración y verificar que la evidencia citada exista en ese commit. | ✅ **Cumple** | Etiqueta **`v1.0.3`** creada sobre el commit de cierre real. Cabecera y §7 del SRS, `docs/informe/caratula-standalone.tex`, `docs/informe/main.tex`, `README.md` y `VERSIONING.md` actualizados a `v1.0.3` (con `git rev-parse v1.0.3^{commit}` como forma de resolver el commit). `v1.0.0/1/2` se conservan como cortes anteriores. |
+| **M2** | 74 de 78 filas en `Implementado` y ninguna en un estado que refleje verificación con prueba automatizada. Añadir un cuarto valor `Verificado`, o explicar por qué el vocabulario tiene tres y no cuatro. | ✅ **Cumple** | §1.3 del SRS: nota nueva — *"Implementado" ya significa verificado*: una fila solo se marca ✅ si hay endpoint **+** prueba automatizada que pasa en CI **+** construcción dentro del umbral de cobertura (`mvn verify` rompe la build < 70 %; corrida de cierre 84,66 % líneas / 71,24 % ramas). La columna *Método de verificación* y la clase/método citados en la matriz permiten comprobarlo requisito por requisito. Recuento del corpus (74/3/2 sobre 79 filas) explícito. |
+| **M3** | RF-48 sigue con la advertencia de funcionalidad sin resolución ética; los hallazgos abiertos de `ETHICS.md` siguen sin requisito que obligue a cerrarlos. Convertirlos en requisitos con criterio y condición de cierre, igual que RF-37. | ✅ **Cumple** | La §3.6 del SRS ya convertía H-01…H-04 en RF-49/RF-50/RF-51/RNF-25 (punto A2, commit `f265b84`) — el docente revisó un corte anterior. Se remata: (a) §3.6 deja de estar marcada "(nuevo)" y se referencia desde §3 y desde RF-48; (b) **RF-48** gana línea formal **"Condición de cierre"** (H-02 → RNF-25); (c) **RNF-26** — nuevo requisito que cierra **H-09** (correo no verificado por doble opt-in) con criterio, condición de cierre y **fecha objetivo 2026-10-31**; fila en `matriz.csv` (79 filas) y en la tabla de RNF-17; (d) `ETHICS.md` 1.7→1.8: §4 retitulada *"Hallazgos y estado de cierre"*, H-04 y H-09 reescritos. |
+
+**Lo que queda como trabajo futuro con fecha (no bloquea la defensa):**
+
+- **RNF-26** (doble opt-in del correo, cierre de H-09) — Planificado, objetivo **2026-10-31**. Mitigaciones de RF-37 vigentes mientras tanto.
+
+**Nota sobre CHANGELOG.md:** el archivo raíz `CHANGELOG.md` no lleva entradas
+por tag desde `v1.0.0` (nunca se añadieron `v1.0.1`/`v1.0.2`); el esquema de
+versiones vigente vive en `VERSIONING.md`, ya actualizado. Ordenar
+`CHANGELOG.md` queda como tarea de higiene aparte.

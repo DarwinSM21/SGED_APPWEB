@@ -8,7 +8,15 @@ corresponde cada entrega del Proyecto Fin de Curso:
 |---|---|---|
 | `v0.1.0-entrega-1b` | Entrega 1B | ✅ Publicado (2026-06-24) |
 | `v0.9.0-rc` | Tercera Entrega (release candidate) | ✅ Publicado (2026-07-30) |
-| `v1.0.0` | Entrega Final | ⏳ Pendiente (2026-08-17) |
+| `v1.0.0` | Entrega Final — corte entregado el 2026-08-24 | ✅ Publicado |
+| `v1.0.1` | Entrega Final — matriz de trazabilidad tras el rename a inglés; corte con DOI de Zenodo | ✅ Publicado (2026-09-06) |
+| `v1.0.2` | Entrega Final — recuperación de contraseña (RF-37) + revisión del SRS contra ISO/IEC/IEEE 29148 (M1–M9, A1–A4) | ✅ Publicado (2026-09-07) |
+| `v1.0.3` | Entrega Final — **corte defendido**: revisión M1–M3 del SRS v1.6 (etiqueta sobre el cierre real, vocabulario de estados, RNF-26 para H-09) | ✅ Publicado (2026-09-10) |
+
+Cada tag de la familia `v1.0.x` conserva el corte que se entregó en su
+fecha; `v1.0.3` es el que se defiende y al que apunta la cabecera del SRS.
+Los anteriores no se mueven, para que el estado declarado en cada uno siga
+siendo verificable contra lo que ese tag realmente contiene.
 
 ## Criterios verificados antes de crear `v0.9.0-rc`
 

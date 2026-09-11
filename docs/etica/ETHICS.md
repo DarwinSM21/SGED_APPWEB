@@ -1,7 +1,7 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.7 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.8 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
 cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
@@ -13,10 +13,12 @@ redacción), **H-03** (RF-50: procedimiento de anonimización `sp_anonimizar_est
 —base legal documentada, lectura restringida por rol y alcance de
 consentimiento `DATOS_FISICO_DEPORTIVOS` propio—, **H-07** (plantilla de
 consentimiento) resuelto —nuevo `consentimiento/representante.md` para el
-representante legal—, y **H-09** (correo no verificado) delimitado
-explícitamente como trabajo posterior a la entrega.
-**Todos los hallazgos (H-01…H-08) están cerrados; H-09 queda como trabajo
-futuro documentado.**)
+representante legal—; 2026-09-10 (revisión M3 del SRS v1.6): **H-09**
+(correo no verificado) deja de ser solo "trabajo futuro" y se especifica
+como **RNF-26** en el SRS, con criterio, condición de cierre y fecha
+objetivo (2026-10-31).
+**Todos los hallazgos H-01…H-08 están cerrados; H-09 tiene requisito de
+cierre (RNF-26) con fecha objetivo.**)
 
 ---
 
@@ -125,7 +127,12 @@ agregadas (asistencia, evaluaciones, pagos). Ver hallazgo H-03 (resuelto).
 
 ---
 
-## 4. Hallazgos abiertos (honestidad sobre lo que falta)
+## 4. Hallazgos y estado de cierre
+
+> Todos los hallazgos H-01…H-08 están **cerrados**; H-09 tiene requisito de
+> cierre (**RNF-26** en el SRS) con criterio, condición y **fecha objetivo
+> 2026-10-31**. Cada apartado conserva la redacción original del hallazgo y
+> el registro de cómo se cerró, por honestidad sobre el proceso.
 
 Se documentan como riesgos reconocidos, no se ocultan.
 
@@ -203,10 +210,11 @@ REPRESENTANTE y el vínculo `academico.representante_estudiante` (con su
 propio `activo`, para poder cortar el acceso de un tutor puntual sin tocar
 su cuenta ni sus otros representados) también se implementaron.
 
-Sigue **parcial** a propósito: lo que queda abierto es la mitad que este
-mismo hallazgo prohíbe construir sin la otra — el envío real de
-notificaciones (RF-22 propiamente dicho, push/email/SMS) no está
-implementado. La lectura de informes (evaluación diaria y lesiones) por
+**A la fecha de esta nota (2026-08-03) seguía parcial a propósito** — el
+cierre pleno llegó el 2026-09-08 con RF-51 (más abajo). Lo que quedaba
+abierto entonces era la mitad que este mismo hallazgo prohíbe construir sin
+la otra — el envío real de notificaciones (RF-22 propiamente dicho,
+push/email/SMS) no está implementado. La lectura de informes (evaluación diaria y lesiones) por
 parte del representante SÍ está disponible, pero se autoriza únicamente por
 el vínculo activo `representante_estudiante` (creado por un administrador),
 no por un consentimiento vigente: un guardián consultando los datos del hijo
@@ -382,7 +390,7 @@ evidencia está en `docs/mediciones/sec/a01-acceso-roto.txt`, que ahora
 comprueba recurso por recurso —incluida la búsqueda por cédula— y verifica
 también que las lecturas permitidas siguen respondiendo `200`.
 
-### H-09 — El restablecimiento de contraseña se envía a un correo no verificado (limitación documentada — trabajo posterior a la entrega)
+### H-09 — El restablecimiento de contraseña se envía a un correo no verificado (requisito de cierre: RNF-26, objetivo 2026-10-31)
 
 El flujo de recuperación de contraseña (RF-37, agregado el 2026-09-07) envía
 el enlace de un solo uso al valor de `seguridad.personas.correo` del usuario.
@@ -397,16 +405,26 @@ uso y vence en 30 minutos; la respuesta de `/forgot` es genérica y no revela
 si la cuenta existe; hay límite de solicitudes por identificador y por IP; y
 al completarse el cambio se invalidan todas las sesiones previas del usuario.
 
-**Alcance.** Cerrar del todo este hallazgo exige un paso de verificación del
-correo (doble opt-in) en el alta de la persona: una columna
-`correo_verificado`, un token de confirmación con su propio almacén y ventana
-de vigencia, una pantalla de confirmación y que RF-37 solo envíe a
-direcciones verificadas — una funcionalidad del tamaño de RF-37 completo.
-**Queda fuera del alcance de la Entrega Final:** no figura en la lista de la
-revisión A2 del docente (cédula, texto libre, supresión, consentimiento), el
-riesgo residual está acotado y mitigado, y añadirla a días de la defensa sería
-ampliar el alcance sin necesidad. Se planifica como **trabajo posterior a la
-entrega**, con las mitigaciones actuales vigentes mientras tanto.
+**Requisito de cierre: RNF-26 (SRS §4.3).** Tras la revisión M3 del SRS
+v1.6, este hallazgo deja de ser solo "trabajo futuro documentado" y pasa a
+tener un requisito con criterio verificable, condición de cierre y fecha:
+
+- **Criterio:** una dirección de correo no confirmada no recibe el enlace de
+  restablecimiento; el alta o la modificación del correo exige verificación
+  por un token de confirmación de un solo uso con ventana de vigencia.
+- **Controles previstos:** columna `seguridad.personas.correo_verificado`,
+  almacén de tokens de confirmación (análogo al de RF-37), pantalla de
+  confirmación, y `PasswordResetService` filtrando por `correo_verificado`
+  antes de emitir el enlace.
+- **Condición de cierre:** el flujo implementado y probado con prueba
+  automatizada.
+- **Fecha objetivo:** **2026-10-31** — es una funcionalidad del tamaño de
+  RF-37 completo; el riesgo residual está acotado y mitigado (enlace de un
+  solo uso, 30 min, respuesta genérica, rate limit, invalidación de sesiones
+  al cambiar la contraseña), por lo que se aborda después de la Entrega
+  Final, con esas mitigaciones vigentes mientras tanto. No figura en la lista
+  de la revisión A2 del docente (cédula, texto libre, supresión,
+  consentimiento).
 
 ---
 
