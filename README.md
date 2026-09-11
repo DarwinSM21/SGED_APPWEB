@@ -1,13 +1,13 @@
 # SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
 
 [![CI](https://github.com/DarwinSM21/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinSM21/SGED_APPWEB/actions)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22635766.svg)](https://doi.org/10.5281/zenodo.22635766)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22714477.svg)](https://doi.org/10.5281/zenodo.22714477)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Aplicación web para la gestión administrativa y deportiva de la escuela
 ProFútbol: estudiantes, entrenadores, asistencias, evaluaciones y reportes.
 
-**Versión de esta entrega:** `v1.0.3` (Entrega Final, PFC Aplicaciones Web, UTEQ)
+**Versión de esta entrega:** `v1.0.0` (Entrega Final, PFC Aplicaciones Web, UTEQ)
 
 ## Despliegue público
 
@@ -47,7 +47,7 @@ Requisitos: Docker + Docker Compose + GNU Make.
 ```bash
 git clone https://github.com/DarwinSM21/SGED_APPWEB.git
 cd SGED_APPWEB
-git checkout v1.0.3
+git checkout v1.0.0
 cp .env.example .env
 make up
 ```
@@ -135,7 +135,7 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 
 * **Informe de la Entrega Final (PDF):**
   [`docs/informe/main.pdf`](docs/informe/main.pdf) — 54 páginas,
-  cerrado en la etiqueta `v1.0.3`.
+  cerrado en la etiqueta `v1.0.0`.
 * Fuente del informe: [`docs/informe/main.tex`](docs/informe/main.tex),
   compilable con `pdflatex→bibtex→pdflatex→pdflatex`. El PDF de arriba se
   genera de aquí: existe fuente versionada y es reproducible, a diferencia
@@ -145,7 +145,7 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
 * Video de demostración: PENDIENTE (enlace) — falta grabarlo y enlazarlo
-* DOI Zenodo del software: [`10.5281/zenodo.22635766`](https://doi.org/10.5281/zenodo.22635766) — emitido para el corte `v1.0.1` de `DarwinSM21/SGED_APPWEB` (concept DOI: `10.5281/zenodo.21713239`); la entrega avanzó a `v1.0.2` y luego a `v1.0.3` después de esa publicación (recuperación de contraseña y correcciones del SRS contra ISO/IEC/IEEE 29148) — pendiente publicar una nueva versión en Zenodo sobre ese concept DOI para que quede archivado el corte vigente
+* DOI Zenodo del software: [`10.5281/zenodo.22714477`](https://doi.org/10.5281/zenodo.22714477) — nueva versión publicada el 2026-09-11 sobre el concept DOI `10.5281/zenodo.21713239`, correspondiente al corte `v1.0.0` vigente de `DarwinSM21/SGED_APPWEB` (el DOI anterior, `10.5281/zenodo.22635766`, quedó retirado/tombstone en Zenodo por haberse publicado como depósito separado en vez de nueva versión de la misma serie; no debe citarse)
 * DOI Zenodo del *dataset*: [`10.5281/zenodo.22422305`](https://doi.org/10.5281/zenodo.22422305) — publicado, versión 1.0.0, CC BY 4.0
 * Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
 

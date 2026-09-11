@@ -11,12 +11,20 @@ corresponde cada entrega del Proyecto Fin de Curso:
 | `v1.0.0` | Entrega Final — corte entregado el 2026-08-24 | ✅ Publicado |
 | `v1.0.1` | Entrega Final — matriz de trazabilidad tras el rename a inglés; corte con DOI de Zenodo | ✅ Publicado (2026-09-06) |
 | `v1.0.2` | Entrega Final — recuperación de contraseña (RF-37) + revisión del SRS contra ISO/IEC/IEEE 29148 (M1–M9, A1–A4) | ✅ Publicado (2026-09-07) |
-| `v1.0.3` | Entrega Final — **corte defendido**: revisión M1–M3 del SRS v1.6 (etiqueta sobre el cierre real, vocabulario de estados, RNF-26 para H-09) | ✅ Publicado (2026-09-10) |
+| `v1.0.3` | Entrega Final — revisión M1–M3 del SRS v1.6 (vocabulario de estados, RNF-26 para H-09) | ✅ Publicado (2026-09-10) |
 
-Cada tag de la familia `v1.0.x` conserva el corte que se entregó en su
-fecha; `v1.0.3` es el que se defiende y al que apunta la cabecera del SRS.
-Los anteriores no se mueven, para que el estado declarado en cada uno siga
-siendo verificable contra lo que ese tag realmente contiene.
+**Excepción declarada:** `v1.0.0` es el único tag de esta familia que **se
+mueve**, a propósito. La rúbrica del examen final evalúa literalmente el
+commit al que apunte `v1.0.0` en el momento del cierre (Rúbrica_ExamenFinal,
+Punto 6), así que esa etiqueta se reasigna cada vez que se corrige algo
+crítico después de un corte anterior — incluidas correcciones posteriores
+a `v1.0.3` (ej. el fix de arranque en los repositorios JPA tras el rename
+a inglés, 2026-09-11). `v1.0.1`, `v1.0.2` y `v1.0.3` sí conservan el corte
+que se entregó en su fecha y no se mueven, para que el estado declarado en
+cada uno siga siendo verificable contra lo que ese tag realmente contiene;
+son puntos de referencia históricos, no el corte vigente. El DOI de Zenodo
+del software está anclado a `v1.0.0` (`10.5281/zenodo.22714477`, corte
+2026-09-11).
 
 ## Criterios verificados antes de crear `v0.9.0-rc`
 

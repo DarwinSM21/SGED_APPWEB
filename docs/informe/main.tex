@@ -89,9 +89,9 @@
 \textbf{Asignatura:} & Aplicaciones Web (Quinto nivel) \\[0.2cm]
 \textbf{Docente:} & Dr. Gleiston Cicerón Guerrero Ulloa, Ph.D. \\[0.2cm]
 \textbf{Periodo:} & PPA 2026-2027 \\[0.2cm]
-\textbf{Etiqueta:} & \texttt{v1.0.3} \\[0.2cm]
-\textbf{\emph{Commit} del corte:} & el \emph{commit} al que apunta la etiqueta \texttt{v1.0.3} \\[0.2cm]
-\textbf{DOI del software:} & \href{https://doi.org/10.5281/zenodo.22635766}{10.5281/zenodo.22635766} (corte \texttt{v1.0.1}; pendiente nueva versión en Zenodo para \texttt{v1.0.3}) \\[0.2cm]
+\textbf{Etiqueta:} & \texttt{v1.0.0} \\[0.2cm]
+\textbf{\emph{Commit} del corte:} & el \emph{commit} al que apunta la etiqueta \texttt{v1.0.0} \\[0.2cm]
+\textbf{DOI del software:} & \href{https://doi.org/10.5281/zenodo.22714477}{10.5281/zenodo.22714477} (corte \texttt{v1.0.0}, publicado el 2026-09-11) \\[0.2cm]
 \textbf{DOI del \emph{dataset}:} & \href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305} \\
 \end{tabular}\\[0.9cm]
 
@@ -117,7 +117,7 @@ Velez Lopez Ricardo Elias & ORCID: \url{https://orcid.org/0009-0005-9463-6847} \
 \begin{quote}
 \small\itshape\color{alerta}
 Nota de versión (honesta, no cosmética): esta entrega queda cerrada en la
-etiqueta \texttt{v1.0.3}, cuyo \emph{commit} consta arriba. Los tres
+etiqueta \texttt{v1.0.0}, cuyo \emph{commit} consta arriba. Los tres
 ORCID ya están registrados y verificados contra la API pública de
 \url{orcid.org}. El DOI del \emph{dataset} de mediciones está publicado
 en Zenodo (\href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305})
@@ -3025,17 +3025,18 @@ verificada en este informe, pero la decisión sobre cuál de las dos fuentes
 queda como autoritativa está pendiente y se declara abierta.
 
 Finalmente, \textbf{el DOI de Zenodo ya está asignado}: el corte
-\texttt{v1.0.1} de este repositorio está archivado con DOI
-\href{https://doi.org/10.5281/zenodo.22635766}{10.5281/zenodo.22635766}
+\texttt{v1.0.0} de este repositorio está archivado con DOI
+\href{https://doi.org/10.5281/zenodo.22714477}{10.5281/zenodo.22714477}
 (concept DOI~\href{https://doi.org/10.5281/zenodo.21713239}{10.5281/zenodo.21713239}),
-lo que satisface el archivo permanente exigido por el Bloque~E.2. La
-entrega avanzó después a las etiquetas \texttt{v1.0.2} y \texttt{v1.0.3}
-(recuperación de contraseña y correcciones del SRS contra 29148:2018 —M1--M9,
-A1--A4 y M1--M3—, sección~\ref{sec:estado-entrega});
-queda pendiente publicar una nueva versión en Zenodo sobre el mismo
-concept DOI para que el archivo permanente cubra el corte vigente, no solo
-\texttt{v1.0.1}. La versión \texttt{v0.9.0-rc} del repositorio anterior
-conserva su propio DOI heredado
+publicado el 2026-09-11 como nueva versión de la misma serie mediante la
+integración GitHub\,\textrightarrow\,Zenodo sobre el \emph{release} de esa
+etiqueta, lo que satisface el archivo permanente exigido por el
+Bloque~E.2. Un depósito anterior, publicado por error como registro
+independiente en vez de nueva versión de esta serie
+(\href{https://doi.org/10.5281/zenodo.22635766}{10.5281/zenodo.22635766},
+corte \texttt{v1.0.1}), quedó retirado en Zenodo y no debe citarse. La
+versión \texttt{v0.9.0-rc} del repositorio anterior es la primera de esta
+misma serie y conserva su propio DOI de versión
 (\href{https://doi.org/10.5281/zenodo.21713240}{10.5281/zenodo.21713240}).
 
 % ============================================================
@@ -3519,10 +3520,9 @@ duplicarse, junto con las declaraciones que todavía no tenían una
 sección propia.
 
 \textbf{Disponibilidad de código.} Repositorio público en
-\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.3}
-(corte defendido; sucede a \texttt{v1.0.1}, que es la que tiene DOI
-publicado). DOI del software en
-Zenodo: \href{https://doi.org/10.5281/zenodo.22635766}{10.5281/zenodo.22635766}
+\url{https://github.com/DarwinSM21/SGED_APPWEB}, etiqueta \texttt{v1.0.0}
+(corte defendido, con DOI publicado). DOI del software en
+Zenodo: \href{https://doi.org/10.5281/zenodo.22714477}{10.5281/zenodo.22714477}
 (concept DOI
 \href{https://doi.org/10.5281/zenodo.21713239}{10.5281/zenodo.21713239}).
 
@@ -3839,7 +3839,7 @@ El procedimiento de evaluación es reproducible por un tercero & \parcial & \tex
 Se declara el contexto/entorno de la evaluación & \cumple & Sección~\ref{sec:entorno} (o equivalente): SO, versión de Docker, JDK, estado inicial de la base de datos \\
 Se declaran las limitaciones de la muestra cuando aplica & \cumple & Sección~\ref{sec:muestreo}: $N=15$ para SUS, muestreo por conveniencia declarado según Baltes y Ralph (2022) \\
 Amenazas a la validez tratadas por categoría & \cumple & Capítulo~\ref{sec:amenazas}, cuatro categorías con mitigación declarada por cada una \\
-El artefacto y los datos de evaluación están disponibles para un tercero & \cumple & Repositorio público con DOI de \emph{software} (\href{https://doi.org/10.5281/zenodo.22635766}{10.5281/zenodo.22635766}); \emph{dataset} de mediciones con DOI propio (\href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305}) y licencia CC BY 4.0 (sección~\ref{sec:declaraciones}) \\
+El artefacto y los datos de evaluación están disponibles para un tercero & \cumple & Repositorio público con DOI de \emph{software} (\href{https://doi.org/10.5281/zenodo.22714477}{10.5281/zenodo.22714477}); \emph{dataset} de mediciones con DOI propio (\href{https://doi.org/10.5281/zenodo.22422305}{10.5281/zenodo.22422305}) y licencia CC BY 4.0 (sección~\ref{sec:declaraciones}) \\
 Conflictos de interés y financiamiento declarados & \cumple & Sección~\ref{sec:declaraciones} \\
 Los resultados se interpretan sin sobregeneralizar & \cumple & Sección~\ref{sec:discusion} responde cada RQ contra evidencia concreta; las Conclusiones distinguen lo cumplido de lo pendiente \\
 Defectos del propio proceso de medición se reportan si se encuentran & \cumple & Rasgo distintivo del proyecto: cinco instrumentos de medición defectuosos detectados y corregidos a lo largo de las cuatro entregas, documentados como hallazgo \\

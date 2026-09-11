@@ -10,11 +10,14 @@ intención, solo por evidencia — mismo criterio que ya aplica
 ## F — Findable (localizable)
 
 - [x] El software tiene un identificador persistente: DOI de Zenodo
-      `10.5281/zenodo.21713240` (`CITATION.cff`, badge en `README.md`).
-- [ ] Ese DOI corresponde a la versión `v1.0.0`. `CITATION.cff` ya declara
-      `version: 1.0.0` y el tag `v1.0.0` se cerró, pero en Zenodo el DOI
-      aún resuelve a la versión publicada (v0.9.0-rc). Pendiente publicar
-      la nueva versión en Zenodo y verificar que el DOI resuelva a v1.0.0.
+      `10.5281/zenodo.22714477` (`CITATION.cff`, badge en `README.md`).
+- [x] Ese DOI corresponde a la versión `v1.0.0`. Publicado el 2026-09-11
+      como nueva versión sobre el concept DOI `10.5281/zenodo.21713239`
+      mediante la integración GitHub→Zenodo (release de la etiqueta
+      `v1.0.0`); resuelve directamente a esa versión, verificado contra
+      la API de Zenodo. Un intento anterior de publicar quedó como
+      depósito independiente (`10.5281/zenodo.22635766`, corte `v1.0.1`)
+      y terminó retirado/tombstone en Zenodo — no citar ese DOI.
 - [x] Metadatos ricos y buscables: `CITATION.cff` con título, autores,
       afiliación, licencia, palabras clave (`spring-boot`, `angular`,
       `postgresql`, `jwt`, `owasp`, `proyecto-fin-de-curso`).

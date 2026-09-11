@@ -7,6 +7,36 @@ cuándo y en qué commit), ver
 [`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) —
 complementario a este, no un duplicado.
 
+## [v1.0.0] - 2026-09-11
+
+Corte defendido de la Entrega Final (la rúbrica del examen evalúa el
+commit al que apunta `v1.0.0`, no las etiquetas `v1.0.1`–`v1.0.3`; ver
+la excepción declarada en [VERSIONING.md](VERSIONING.md)).
+
+### Corregido
+- **Fix crítico de arranque:** 20 repositorios JPA (`StudentRepository`,
+  `PersonRepository`, `AsistenciaRepository`, etc.) tenían métodos por
+  convención de nombre (ej. `findByIdEstudianteAndActivoTrue`) que Spring
+  Data ya no podía traducir a SQL tras el rename de campos de entidades a
+  inglés — la aplicación no arrancaba. Se mantuvieron los nombres de
+  método (sin tocar cada *caller*) y se agregó `@Query` explícito con la
+  ruta de campo correcta.
+- 14 archivos de test que habían quedado sin compilar por una mezcla
+  incorrecta de campos en inglés (mis entidades) y en español (paquete
+  `deportivo`, DTOs) tras un *rename* automático.
+- **DOI de Zenodo del software** (Punto 9 de la rúbrica): el DOI anterior
+  (`10.5281/zenodo.22635766`) había quedado retirado/*tombstone* en
+  Zenodo por publicarse como depósito independiente en vez de nueva
+  versión de la serie del concept DOI `10.5281/zenodo.21713239`. Nueva
+  versión publicada el 2026-09-11 vía integración GitHub→Zenodo sobre el
+  *release* de `v1.0.0`: DOI `10.5281/zenodo.22714477`. Actualizado en
+  `CITATION.cff`, `README.md`, `docs/informe/main.tex`,
+  `docs/informe/caratula-standalone.tex` y `docs/checklists/fair.md`.
+
+### Cambiado
+- 665 pruebas, 0 fallos; `javadoc:javadoc` y
+  `scripts/validate-traceability.py` sin errores.
+
 ## [v1.0.3] - 2026-09-10
 
 Corte defendido de la Entrega Final. Cierra la revisión del SRS v1.6 del
