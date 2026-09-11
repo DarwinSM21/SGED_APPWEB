@@ -120,6 +120,10 @@ mail:
   # al frontend (ruta con hash de Angular).
   reset-url-base: ${MAIL_RESET_URL_BASE:https://localhost:8443/#/restablecer}
   reset-token-ttl-minutes: ${MAIL_RESET_TTL:30}
+  # RNF-26 / H-09: doble opt-in del correo de contacto. Base del enlace de
+  # confirmacion (frontend, ruta con hash) y vigencia del token.
+  verify-url-base: ${MAIL_VERIFY_URL_BASE:https://localhost:8443/#/confirmar-correo}
+  verify-token-ttl-hours: ${MAIL_VERIFY_TTL_HOURS:48}
 
 asistencia:
   qr:

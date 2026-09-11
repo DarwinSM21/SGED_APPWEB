@@ -56,7 +56,7 @@ class PasswordResetServiceTest {
         ReflectionTestUtils.setField(service, "urlBase", "https://sged.test/#/restablecer");
         ReflectionTestUtils.setField(service, "ttlMinutos", 30L);
 
-        Person persona = Person.builder().idPersona(1L).correo("ana@x.com").build();
+        Person persona = Person.builder().idPersona(1L).correo("ana@x.com").correoVerificado(true).build();
         ana = UserAccount.builder()
                 .idUsuario(7L).username("ana.torres").persona(persona).activo(true)
                 .password_Hash("hash-viejo").build();
@@ -93,6 +93,18 @@ class PasswordResetServiceTest {
         when(personaRepository.findByCorreo("nadie")).thenReturn(Optional.empty());
 
         assertThatCode(() -> service.solicitar("nadie")).doesNotThrowAnyException();
+
+        verify(tokenStore, never()).guardar(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
+        verify(mailer, never()).enviarEnlace(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("RNF-26: solicitar cuando el correo no esta verificado: no guarda token ni envia enlace")
+    void solicitar_correo_no_verificado_no_envia() {
+        ana.getPersona().setCorreoVerificado(false);
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
+
+        service.solicitar("ana.torres");
 
         verify(tokenStore, never()).guardar(anyString(), anyString(), org.mockito.ArgumentMatchers.any());
         verify(mailer, never()).enviarEnlace(anyString(), anyString());

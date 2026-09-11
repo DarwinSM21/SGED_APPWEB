@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.uteq.backend.seguridad.auth.dto.*;
 import org.uteq.backend.seguridad.auth.security.ResetRequestLimitService;
 import org.uteq.backend.seguridad.auth.service.AuthService;
+import org.uteq.backend.seguridad.auth.service.EmailVerificationService;
 import org.uteq.backend.seguridad.auth.service.PasswordResetService;
 
 import java.util.Map;
@@ -42,6 +43,7 @@ public class AuthController {
 
     private final AuthService authService;
     private final PasswordResetService passwordResetService;
+    private final EmailVerificationService emailVerificationService;
     private final ResetRequestLimitService resetRequestLimitService;
     private final org.uteq.backend.seguridad.auth.security.JwtService jwtService;
 
@@ -146,6 +148,23 @@ public class AuthController {
     @PostMapping("/reset")
     public ResponseEntity<Void> reset(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.restablecer(request.token(), request.nuevaPassword());
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Consume el enlace de confirmación de correo y marca la dirección como
+     * verificada (RNF-26 / hallazgo H-09). Mientras un correo no esté
+     * verificado, {@code /forgot} no le envía el enlace de restablecimiento.
+     *
+     * @param request token del enlace de confirmación; validado con
+     *                {@code @Valid}
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.ApiException {@code 400} si el
+     *         token no es válido, expiró o ya se usó
+     */
+    @PostMapping("/confirmar-correo")
+    public ResponseEntity<Void> confirmarCorreo(@Valid @RequestBody ConfirmEmailRequest request) {
+        emailVerificationService.confirmar(request.token());
         return ResponseEntity.noContent().build();
     }
 

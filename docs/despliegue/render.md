@@ -121,7 +121,7 @@ del paso 3).
 aplica con `psql "$SUPA_DB" -f <ruta>` en orden ascendente. `V23`
 (`roles_de_base_de_datos`) se **omite** en Supabase (gestiona sus propios roles).
 
-Pendientes a fecha 2026-09-08 (esquema base + estas tres = lo que espera el
+Pendientes a fecha 2026-09-10 (esquema base + estas cuatro = lo que espera el
 código en `main`):
 
 ```bash
@@ -133,12 +133,19 @@ psql "$SUPA_DB" -c "SELECT cedula, COUNT(*) FROM seguridad.personas WHERE cedula
 psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V25__limite_texto_libre_menores.sql
 psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V26__cedula_opcional_y_unica.sql
 psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V27__sp_anonimizar_estudiante.sql
+psql "$SUPA_DB" -f backend/src/main/resources/db/migration/V28__correo_verificado.sql
 ```
 
-Idempotencia: `V26` y `V27` se pueden re-ejecutar sin daño (`IF [NOT] EXISTS`,
-`CREATE OR REPLACE`). **`V25` no**: su `ALTER TABLE ... ADD CONSTRAINT` aborta si
-la constraint ya existe — si hay que reintentar, quita antes las tres
-`ck_*_longitud` o salta `V25`.
+Idempotencia: `V26`, `V27` y `V28` se pueden re-ejecutar sin daño (`IF [NOT]
+EXISTS`, `CREATE OR REPLACE`; `V28` marca como verificadas las filas ya
+verificadas, que es un no-op en la segunda pasada). **`V25` no**: su
+`ALTER TABLE ... ADD CONSTRAINT` aborta si la constraint ya existe — si hay
+que reintentar, quita antes las tres `ck_*_longitud` o salta `V25`.
+
+`V28` (RNF-26 / H-09) **es requisito de arranque**: la entidad `Person` mapea
+`correo_verificado` como `nullable = false`, así que con `ddl-auto: validate`
+el backend **no levanta** si la columna no existe. Aplicar `V28` **antes** de
+sincronizar el Blueprint con el commit que la introduce.
 
 Verifica que quedaron:
 

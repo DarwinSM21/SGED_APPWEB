@@ -47,6 +47,7 @@ class AuthControllerTest {
 
     @Mock private AuthService authService;
     @Mock private PasswordResetService passwordResetService;
+    @Mock private org.uteq.backend.seguridad.auth.service.EmailVerificationService emailVerificationService;
     @Mock private ResetRequestLimitService resetRequestLimitService;
     @Mock private JwtService jwtService;
 
@@ -269,5 +270,26 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"tok\",\"nuevaPassword\":\"corta1\"}"))
                 .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void confirmarCorreoConTokenValidoDa204() throws Exception {
+        mockMvc.perform(post("/api/auth/confirmar-correo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"tok-confirm\"}"))
+                .andExpect(status().isNoContent());
+
+        verify(emailVerificationService).confirmar("tok-confirm");
+    }
+
+    @Test
+    void confirmarCorreoConTokenInvalidoDa400() throws Exception {
+        doThrow(new ApiException(HttpStatus.BAD_REQUEST, "enlace invalido"))
+                .when(emailVerificationService).confirmar(anyString());
+
+        mockMvc.perform(post("/api/auth/confirmar-correo")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"token\":\"malo\"}"))
+                .andExpect(status().isBadRequest());
     }
 }

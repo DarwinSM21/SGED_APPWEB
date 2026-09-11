@@ -65,6 +65,7 @@ class AuthServiceTest {
     @Spy private PasswordPolicy passwordPolicy = new PasswordPolicy();
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private AuditService auditoriaService;
+    @Mock private org.uteq.backend.seguridad.auth.service.EmailVerificationService emailVerificationService;
 
     @InjectMocks private AuthService authService;
 

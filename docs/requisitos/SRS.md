@@ -4,9 +4,9 @@
 **Versión del documento:** 1.7 (Entrega Final, etiqueta `v1.0.3` —
 revisado el 2026-09-10 tras la revisión del SRS v1.6 del docente (M1–M3):
 se mueve la etiqueta al commit de cierre real, se explica el vocabulario
-de estados y se convierte el último hallazgo ético abierto (H-09) en
-requisito con fecha. El commit defendido es el que apunta la etiqueta
-(`git rev-parse v1.0.3^{commit}`)).
+de estados y se especifica **e implementa** el último hallazgo ético
+abierto (H-09 → RNF-26, doble opt-in del correo). El commit defendido es
+el que apunta la etiqueta (`git rev-parse v1.0.3^{commit}`)).
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
 
@@ -75,10 +75,10 @@ entregada.
 > da **84,66 % de líneas y 71,24 % de ramas** (`docs/mediciones/jacoco/jacoco.csv`).
 > La columna **Método de verificación** de cada requisito y la clase o
 > método de prueba citados en su fila de la matriz permiten comprobar ese
-> respaldo requisito por requisito. Del corpus de **79 filas**: **74
+> respaldo requisito por requisito. Del corpus de **79 filas**: **75
 > Implementado**, **3 Modelado** (RF-21, RNF-17, RNF-22 — esquema o
-> política sin API REST todavía) y **2 Planificado** (RF-19b, sin lector
-> físico; RNF-26, doble opt-in del correo, objetivo 2026-10-31). Un puñado
+> política sin API REST todavía) y **1 Planificado** (RF-19b — sin lector
+> físico de RFID). Un puñado
 > de RNF son políticas documentales que se verifican por Inspección; para
 > esas, "Implementado" significa que la política está escrita y su tabla o
 > correspondencia está completa y vigente.
@@ -1220,10 +1220,9 @@ un estudiante (`deportivo.observaciones_estudiante`).*
 > revisión del SRS v1.6.** Cada hallazgo de `docs/etica/ETHICS.md` se
 > convierte aquí en un requisito con criterio verificable y condición de
 > cierre, en vez de quedar solo como riesgo declarado. RF-49, RF-50,
-> RF-51 y RNF-25 quedan Implementados; el último hallazgo abierto (H-09,
-> correo no verificado) se especifica como **RNF-26** (§4.3), Planificado
-> con fecha objetivo. **RNF-17** (§4.2) es el paraguas que enlaza cada
-> hallazgo con su requisito.
+> RF-51, RNF-25 y —desde 2026-09-10— **RNF-26** (§4.3, doble opt-in del
+> correo, cierre de H-09) quedan Implementados. **RNF-17** (§4.2) es el
+> paraguas que enlaza cada hallazgo con su requisito.
 
 ---
 
@@ -1505,7 +1504,7 @@ cierre y fecha objetivo:*
 | H-05 — certificado TLS autofirmado | **RNF-21** | ✅ Resuelto (2026-09-09) — despliegue en Render con certificado de *Google Trust Services*, HTTP→HTTPS y HSTS; autofirmado solo en el laboratorio |
 | H-06 — peso y altura sin base legal | **RF-11b** — decisión M7 (2026-09-08): se conservan con finalidad y base legal documentadas; lectura restringida a ADMINISTRADOR/ENTRENADOR; consentimiento de alcance `DATOS_FISICO_DEPORTIVOS` por las rutas de RF-39 | ✅ Resuelto (2026-09-09) — ambas condiciones cerradas |
 | H-08 — recursos sin `@PreAuthorize` | corregido 2026-07-30 (`a01-acceso-roto.txt`) | ✅ Corregido |
-| H-09 — correo de reseteo no verificado | **RNF-26** (§4.3) — doble opt-in del correo de contacto, con criterio, condición de cierre y **fecha objetivo 2026-10-31**. Mitigaciones de RF-37 vigentes mientras tanto (enlace de un solo uso, 30 min, respuesta genérica, rate limit, invalidación de sesiones) | ⬜ Planificado (objetivo 2026-10-31) — trabajo posterior a la Entrega Final; feature del tamaño de RF-37, riesgo residual acotado y mitigado |
+| H-09 — correo de reseteo no verificado | **RNF-26** (§4.3) — doble opt-in del correo de contacto: `correo_verificado` (`V28`), token de un solo uso, `POST /api/auth/confirmar-correo`, y `/forgot` no emite el enlace a un correo no verificado | ✅ Resuelto (2026-09-10) |
 
 - **Método de verificación:** Inspección
 - **Origen:** `docs/etica/ETHICS.md` (inventario de datos y hallazgos),
@@ -1757,25 +1756,42 @@ deberá generar un token de confirmación de un solo uso con ventana de
 vigencia, y `POST /api/auth/forgot` no deberá enviar el enlace a una
 dirección no confirmada.*
 
-- **Prioridad:** Media · **Estado:** ⬜ Planificado · **MoSCoW:** Should
+- **Prioridad:** Media · **Estado:** ✅ Implementado (2026-09-10) · **MoSCoW:** Should
 - **Método de verificación:** Test
-- **Origen:** hallazgo **H-09** de `docs/etica/ETHICS.md`. Hoy el correo lo
-  registra el ADMINISTRADOR al crear la cuenta y el sistema nunca comprueba
-  que exista ni que sea del titular.
-- **Controles previstos:** columna `seguridad.personas.correo_verificado`;
-  almacén de tokens de confirmación con expiración (análogo al de RF-37);
-  pantalla de confirmación; `PasswordResetService` filtra por
-  `correo_verificado = true` antes de emitir el enlace.
-- **Mitigaciones vigentes mientras tanto** (de RF-37): enlace de un solo uso
-  que vence en 30 min, respuesta genérica de `/forgot`, límite de solicitudes
-  por identificador y por IP, e invalidación de todas las sesiones al cambiar
-  la contraseña.
-- **Condición de cierre:** el flujo de confirmación implementado y probado
-  (`correo_verificado` se exige en `/forgot`), con prueba automatizada.
-- **Fecha objetivo:** **2026-10-31** — trabajo posterior a la Entrega Final;
-  es una funcionalidad del tamaño de RF-37 completo y el riesgo residual está
-  acotado y mitigado. Cierra **H-09**; responde al punto **M3** de la revisión
-  del SRS v1.6.
+- **Origen:** hallazgo **H-09** de `docs/etica/ETHICS.md`. Responde al punto
+  **M3** de la revisión del SRS v1.6.
+- **Controles:**
+  - **Columna** `seguridad.personas.correo_verificado` (migración `V28`); las
+    personas preexistentes se dieron por verificadas (*grandfathering*), las
+    altas nuevas nacen sin verificar.
+  - **Token de un solo uso con expiración:** `EmailVerificationTokenStore`
+    (Redis, SHA-256 del token, TTL `mail.verify-token-ttl-hours` = 48 h por
+    defecto), invalidando el anterior de la misma persona.
+  - **Emisión:** `EmailVerificationService.enviarConfirmacion` se dispara al
+    crear una persona (`PersonService.create`, `AuthService.register`) y al
+    cambiar su correo (`PersonService.update`, que además vuelve a poner
+    `correo_verificado = false`). Entrega vía `EmailVerificationMailer`
+    (`Logging` por defecto, `Smtp` con `mail.enabled=true`).
+  - **Confirmación:** `POST /api/auth/confirmar-correo` `{token}` → `204`
+    (`EmailVerificationService.confirmar`, auditado `EMAILVERIFY_CONFIRMADO`);
+    frontend en `/#/confirmar-correo`.
+  - **Compuerta de RF-37:** `PasswordResetService.solicitar` no emite el
+    enlace si `correo_verificado` es `false` (la respuesta de `/forgot` sigue
+    siendo `202` genérica, para no volverlo un oráculo).
+- **Mitigaciones de RF-37 que siguen vigentes:** enlace de un solo uso que
+  vence en 30 min, respuesta genérica de `/forgot`, límite por identificador y
+  por IP, e invalidación de todas las sesiones al cambiar la contraseña.
+- **Verificación:** `EmailVerificationServiceTest` (5),
+  `EmailVerificationTokenStoreTest` (6),
+  `PasswordResetServiceTest.solicitar_correo_no_verificado_no_envia`,
+  `PersonServiceTest` (crear/editar disparan o no la confirmación),
+  `AuthControllerTest.confirmarCorreoConTokenValidoDa204` /
+  `...ConTokenInvalidoDa400`, `LoggingEmailVerificationMailerTest`,
+  `SmtpEmailVerificationMailerTest`; frontend `confirmar-correo.component.spec`.
+- **Condición de cierre:** cumplida — `ETHICS.md` §H-09 marcado "resuelto".
+- **Nota de despliegue:** `V28` se aplica a la Supabase de producción por el
+  procedimiento incremental de `docs/despliegue/render.md` (Paso 3b), junto a
+  `V25`–`V27`.
 
 ### 4.4 Portabilidad
 
@@ -1956,7 +1972,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
 | 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (supresión / anonimización): procedimiento almacenado versionado `academico.sp_anonimizar_estudiante` (migración `V27`) + `POST /api/estudiantes/{id}/anonimizar` restringido a ADMINISTRADOR y auditado (`@Audited "ANONIMIZAR"`) — sustituye los datos identificativos de la persona por valores neutros, borra el texto libre sobre el menor y da de baja lógica la ficha, conservando FKs y agregados → ✅ Implementado. Con esto cierran **H-01**, **H-02**, **H-03** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
-| 1.7 | 2026-09-10 | Entrega Final (`v1.0.3`) | Revisión del SRS v1.6 del docente (**M1–M3**). **M1** — la etiqueta pasa de `v1.0.2` (commit `bd16891`, que quedó ~30 confirmaciones por detrás de `main`) a **`v1.0.3`** sobre el commit de cierre real; cabecera, §7, `docs/informe/caratula-standalone.tex`, `docs/informe/main.tex` y `README.md` actualizados. **M2** — §1.3 explica por qué el vocabulario de estados tiene tres valores y no cuatro: "Implementado" ya exige prueba automatizada que pasa en CI dentro del umbral de cobertura (`mvn verify`, 84,66 % líneas / 71,24 % ramas), de modo que equivale a "verificado"; se añade el recuento del corpus (74 Implementado / 3 Modelado / 2 Planificado sobre 79 filas). **M3** — §3.6 deja de estar marcada "(nuevo en esta revisión)" y se referencia desde el encabezado de §3 y desde RF-48; RF-48 gana una línea formal **"Condición de cierre"**; nuevo **RNF-26** (verificación del correo de contacto por doble opt-in) que convierte el hallazgo **H-09** en requisito con criterio, condición de cierre y **fecha objetivo 2026-10-31**; la fila H-09 de la tabla de RNF-17 apunta ahora a RNF-26. `ETHICS.md` 1.7→1.8 (§4 retitulada "Hallazgos y estado de cierre", H-04 y H-09 reescritos). Matriz de trazabilidad: 79 filas (RNF-26). |
+| 1.7 | 2026-09-10 | Entrega Final (`v1.0.3`) | Revisión del SRS v1.6 del docente (**M1–M3**). **M1** — la etiqueta pasa de `v1.0.2` (commit `bd16891`, que quedó ~30 confirmaciones por detrás de `main`) a **`v1.0.3`** sobre el commit de cierre real; cabecera, §7, `docs/informe/caratula-standalone.tex`, `docs/informe/main.tex` y `README.md` actualizados. **M2** — §1.3 explica por qué el vocabulario de estados tiene tres valores y no cuatro: "Implementado" ya exige prueba automatizada que pasa en CI dentro del umbral de cobertura (`mvn verify`, 84,66 % líneas / 71,24 % ramas), de modo que equivale a "verificado"; se añade el recuento del corpus (75 Implementado / 3 Modelado / 1 Planificado sobre 79 filas). **M3** — §3.6 deja de estar marcada "(nuevo en esta revisión)" y se referencia desde el encabezado de §3 y desde RF-48; RF-48 gana una línea formal **"Condición de cierre"**; nuevo **RNF-26** — verificación del correo de contacto por doble opt-in, que cierra el hallazgo **H-09**. **Implementado el 2026-09-10:** migración `V28` (`seguridad.personas.correo_verificado`, con *grandfathering* de las filas existentes), `EmailVerificationTokenStore` (Redis), `EmailVerificationService` disparado al crear una persona y al cambiar su correo, `POST /api/auth/confirmar-correo`, pantalla `/#/confirmar-correo`, y compuerta en `PasswordResetService` (no se emite el enlace de RF-37 a un correo no verificado); ~20 pruebas nuevas (backend + frontend). `ETHICS.md` 1.7→1.8 (§4 retitulada "Hallazgos y estado de cierre", H-04 y H-09 reescritos, H-09 marcado resuelto). Matriz de trazabilidad: 79 filas (RNF-26). |
 
 ## 7. Aprobación
 

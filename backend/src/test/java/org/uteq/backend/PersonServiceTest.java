@@ -13,6 +13,7 @@ import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.person.dto.PersonRequest;
 import org.uteq.backend.seguridad.person.dto.PersonResponse;
 import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.seguridad.auth.service.EmailVerificationService;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.person.service.PersonService;
 
@@ -30,6 +31,9 @@ class PersonServiceTest {
 
     @Mock
     private PersonRepository personaRepository;
+
+    @Mock
+    private EmailVerificationService emailVerificationService;
 
     @InjectMocks
     private PersonService personaService;
@@ -150,6 +154,56 @@ class PersonServiceTest {
         PersonResponse resultado = personaService.update(1L, requestValido("1234567890", "maria2@sged.test"));
 
         assertThat(resultado.correo()).isEqualTo("maria2@sged.test");
+    }
+
+    @Test
+    @DisplayName("RNF-26 - crear deja el correo sin verificar y dispara el doble opt-in")
+    void crear_dispara_confirmacion_de_correo() {
+        when(personaRepository.existsByCedulaAndActivoTrue("0000000000")).thenReturn(false);
+        when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
+        when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
+            Person p = inv.getArgument(0);
+            p.setIdPersona(5L);
+            return p;
+        });
+
+        personaService.create(requestValido("0000000000", "nueva@sged.test"));
+
+        org.mockito.ArgumentCaptor<Person> capturada = org.mockito.ArgumentCaptor.forClass(Person.class);
+        verify(emailVerificationService).enviarConfirmacion(capturada.capture());
+        assertThat(capturada.getValue().getCorreoVerificado()).isFalse();
+    }
+
+    @Test
+    @DisplayName("RNF-26 - editar sin cambiar el correo no dispara confirmacion ni lo invalida")
+    void editar_sin_cambiar_correo_no_dispara_confirmacion() {
+        Person existente = persona();
+        existente.setCorreoVerificado(true);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
+        when(personaRepository.existsAnotherPersonWithEmail("maria@sged.test", 1L)).thenReturn(false);
+        when(personaRepository.save(any(Person.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        personaService.update(1L, requestValido("1234567890", "maria@sged.test"));
+
+        verify(emailVerificationService, never()).enviarConfirmacion(any());
+        assertThat(existente.getCorreoVerificado()).isTrue();
+    }
+
+    @Test
+    @DisplayName("RNF-26 - editar cambiando el correo lo invalida y dispara confirmacion")
+    void editar_cambiando_correo_invalida_y_dispara() {
+        Person existente = persona();
+        existente.setCorreoVerificado(true);
+        when(personaRepository.findById(1L)).thenReturn(Optional.of(existente));
+        when(personaRepository.existsAnotherPersonWithCedula("1234567890", 1L)).thenReturn(false);
+        when(personaRepository.existsAnotherPersonWithEmail("otro@sged.test", 1L)).thenReturn(false);
+        when(personaRepository.save(any(Person.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        personaService.update(1L, requestValido("1234567890", "otro@sged.test"));
+
+        verify(emailVerificationService).enviarConfirmacion(existente);
+        assertThat(existente.getCorreoVerificado()).isFalse();
     }
 
     @Test

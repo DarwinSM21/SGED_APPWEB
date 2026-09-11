@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.seguridad.audit.aop.Audited;
+import org.uteq.backend.seguridad.auth.service.EmailVerificationService;
 import org.uteq.backend.seguridad.person.dto.PersonRequest;
 import org.uteq.backend.seguridad.person.dto.PersonResponse;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -23,6 +24,7 @@ import org.uteq.backend.seguridad.person.repository.PersonRepository;
 @RequiredArgsConstructor
 public class PersonService {
     private final PersonRepository personaRepository;
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * Lista paginada de personas activas.
@@ -88,9 +90,12 @@ public class PersonService {
                 .foto(request.foto())
                 .fechaNacimiento(request.fechaNacimiento())
                 .activo(true)
+                .correoVerificado(false)
                 .build();
 
         persona = personaRepository.save(persona);
+        // RNF-26 / H-09: el correo nace sin verificar; se dispara el doble opt-in.
+        emailVerificationService.enviarConfirmacion(persona);
         return toResponse(persona);
     }
 
@@ -114,6 +119,8 @@ public class PersonService {
 
         validateUniqueCedulaAndEmail(request.cedula(), request.correo(), id);
 
+        boolean correoCambio = !java.util.Objects.equals(persona.getCorreo(), request.correo());
+
         persona.setNombre(request.nombre());
         persona.setApellido(request.apellido());
         persona.setCedula(request.cedula());
@@ -122,7 +129,16 @@ public class PersonService {
         persona.setFoto(request.foto());
         persona.setFechaNacimiento(request.fechaNacimiento());
 
+        // RNF-26 / H-09: cambiar el correo lo deja sin verificar y dispara un
+        // enlace de confirmación nuevo para la dirección nueva.
+        if (correoCambio) {
+            persona.setCorreoVerificado(false);
+        }
+
         persona = personaRepository.save(persona);
+        if (correoCambio) {
+            emailVerificationService.enviarConfirmacion(persona);
+        }
         return toResponse(persona);
     }
 

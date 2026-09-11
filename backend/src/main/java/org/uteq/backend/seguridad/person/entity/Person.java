@@ -47,6 +47,13 @@ public class Person {
     @Column(name = "activo")
     private Boolean activo;
 
+    // RNF-26 / H-09: doble opt-in del correo. El alta y el cambio de correo la
+    // dejan en false y disparan un token de confirmación; RF-37 no envía el
+    // enlace de restablecimiento a un correo no verificado. Las personas
+    // preexistentes se dieron por verificadas en la migración V28.
+    @Column(name = "correo_verificado", nullable = false)
+    private Boolean correoVerificado;
+
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
 
@@ -58,6 +65,7 @@ public class Person {
         this.createdAt = OffsetDateTime.now();
         this.updatedAt = OffsetDateTime.now();
         if (this.activo == null) this.activo = true;
+        if (this.correoVerificado == null) this.correoVerificado = false;
     }
 
     @PreUpdate

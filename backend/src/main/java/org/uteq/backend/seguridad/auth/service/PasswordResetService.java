@@ -77,6 +77,16 @@ public class PasswordResetService {
         }
 
         UserAccount usuario = cuenta.get();
+
+        // RNF-26 / H-09: no se envía el enlace a un correo que no ha sido
+        // confirmado por su titular. La respuesta del controlador es la misma
+        // (202) para no convertir esto en un oráculo.
+        if (!Boolean.TRUE.equals(usuario.getPersona().getCorreoVerificado())) {
+            log.info("PWRESET correo no verificado para el usuario id={}: no se envía el enlace",
+                    usuario.getIdUsuario());
+            return;
+        }
+
         String token = generarToken();
         tokenStore.guardar(usuario.getUsername(), token, Duration.ofMinutes(ttlMinutos));
 

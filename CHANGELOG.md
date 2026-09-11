@@ -7,6 +7,55 @@ cuándo y en qué commit), ver
 [`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) —
 complementario a este, no un duplicado.
 
+## [v1.0.3] - 2026-09-10
+
+Corte defendido de la Entrega Final. Cierra la revisión del SRS v1.6 del
+docente (M1–M3).
+
+### Añadido
+- **RNF-26 — verificación del correo de contacto por doble opt-in** (cierra el
+  hallazgo ético H-09). Migración `V28` (`seguridad.personas.correo_verificado`,
+  con *grandfathering* de las filas existentes); `EmailVerificationTokenStore`
+  (Redis, token de un solo uso, TTL 48 h); `EmailVerificationService` disparado
+  al crear una persona y al cambiar su correo; `POST /api/auth/confirmar-correo`
+  y pantalla `/#/confirmar-correo`; `POST /api/auth/forgot` ya no envía el
+  enlace de restablecimiento a un correo no verificado (respuesta genérica
+  intacta). ~20 pruebas nuevas.
+
+### Cambiado
+- **SRS §1.3** explica por qué el vocabulario de estados tiene tres valores y
+  no cuatro: «Implementado» ya exige prueba automatizada en CI dentro del
+  umbral de cobertura, de modo que equivale a «verificado» (respuesta a M2).
+- **SRS §3.6** deja de estar marcada «(nuevo en esta revisión)» y se referencia
+  desde §3 y desde RF-48; **RF-48** gana una línea formal «Condición de cierre»
+  (respuesta a M3).
+- La etiqueta del corte defendido pasa de `v1.0.2` a **`v1.0.3`**, sobre el
+  commit de cierre real (respuesta a M1). Cabecera y §7 del SRS,
+  `docs/informe/`, `README.md` y `VERSIONING.md` actualizados.
+- `docs/etica/ETHICS.md` → v1.9: §4 «Hallazgos y estado de cierre»;
+  **H-01…H-09 cerrados**.
+
+### Notas de despliegue
+- `V28` es requisito de arranque (`ddl-auto: validate`): aplicarla a la
+  Supabase de producción por `docs/despliegue/render.md` (Paso 3b), junto a
+  `V25`–`V27`, **antes** de sincronizar el Blueprint.
+
+## [v1.0.2] - 2026-09-08
+
+- Restablecimiento de contraseña por enlace de un solo uso (RF-37) y correo
+  saliente opcional (RNF-15); política de contraseñas unificada (RNF-14).
+- Revisión del SRS contra ISO/IEC/IEEE 29148:2018 (M1–M9, A1–A4): matriz de
+  trazabilidad bien formada, división RF-19a/RF-19b y RNF-23a/RNF-23b,
+  validador reescrito en Python con autotest, §3.6 (RF-49/RF-50/RF-51/RNF-25)
+  que convierte los hallazgos de `ETHICS.md` en requisitos de cierre, RNF-24
+  reforzado.
+
+## [v1.0.1] - 2026-09-06
+
+- Matriz de trazabilidad actualizada tras el renombrado a inglés de los
+  módulos `person`/`user`/`alert`/`payment`/`guardian`/`student`. Corte
+  archivado con DOI de Zenodo.
+
 ## [Sin publicar]
 
 ### Añadido

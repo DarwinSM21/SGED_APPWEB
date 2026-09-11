@@ -57,6 +57,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordPolicy passwordPolicy;
     private final AuditService auditoriaService;
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * Resultado de un inicio de sesión correcto: los dos tokens que el
@@ -111,8 +112,11 @@ public class AuthService {
                 .correo(request.correo())
                 .fechaNacimiento(request.fechaNacimiento())
                 .activo(true)
+                .correoVerificado(false)
                 .build();
         persona = personaRepository.save(persona);
+        // RNF-26 / H-09: doble opt-in del correo recién registrado.
+        emailVerificationService.enviarConfirmacion(persona);
 
         // id_estado_general es NOT NULL: sin esto el alta también falla en base
         // de datos aunque la persona ya se haya podido insertar.

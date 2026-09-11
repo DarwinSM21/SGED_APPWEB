@@ -1,7 +1,7 @@
 # Consideraciones éticas y tratamiento de datos personales
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión:** 1.8 (Entrega Final — revisado tras la reestructuración de
+**Versión:** 1.9 (Entrega Final — revisado tras la reestructuración de
 paquetes `academico`/`deportivo`/`seguridad`; 2026-09-08: cada hallazgo abierto
 enlaza su requisito de cierre en el SRS (punto A2 de la revisión 29148), y se
 cierran **H-01** (RF-49: cédula opcional + dígito verificador + índice único
@@ -14,11 +14,11 @@ redacción), **H-03** (RF-50: procedimiento de anonimización `sp_anonimizar_est
 consentimiento `DATOS_FISICO_DEPORTIVOS` propio—, **H-07** (plantilla de
 consentimiento) resuelto —nuevo `consentimiento/representante.md` para el
 representante legal—; 2026-09-10 (revisión M3 del SRS v1.6): **H-09**
-(correo no verificado) deja de ser solo "trabajo futuro" y se especifica
-como **RNF-26** en el SRS, con criterio, condición de cierre y fecha
-objetivo (2026-10-31).
-**Todos los hallazgos H-01…H-08 están cerrados; H-09 tiene requisito de
-cierre (RNF-26) con fecha objetivo.**)
+(correo no verificado) se especifica como **RNF-26** y se implementa —
+doble opt-in del correo (`correo_verificado`, token de un solo uso,
+`POST /api/auth/confirmar-correo`) y `/forgot` no envía el enlace a un
+correo no verificado.
+**Todos los hallazgos H-01…H-09 están cerrados.**)
 
 ---
 
@@ -129,10 +129,9 @@ agregadas (asistencia, evaluaciones, pagos). Ver hallazgo H-03 (resuelto).
 
 ## 4. Hallazgos y estado de cierre
 
-> Todos los hallazgos H-01…H-08 están **cerrados**; H-09 tiene requisito de
-> cierre (**RNF-26** en el SRS) con criterio, condición y **fecha objetivo
-> 2026-10-31**. Cada apartado conserva la redacción original del hallazgo y
-> el registro de cómo se cerró, por honestidad sobre el proceso.
+> Todos los hallazgos **H-01…H-09 están cerrados**. Cada apartado conserva
+> la redacción original del hallazgo y el registro de cómo se cerró, por
+> honestidad sobre el proceso.
 
 Se documentan como riesgos reconocidos, no se ocultan.
 
@@ -390,7 +389,7 @@ evidencia está en `docs/mediciones/sec/a01-acceso-roto.txt`, que ahora
 comprueba recurso por recurso —incluida la búsqueda por cédula— y verifica
 también que las lecturas permitidas siguen respondiendo `200`.
 
-### H-09 — El restablecimiento de contraseña se envía a un correo no verificado (requisito de cierre: RNF-26, objetivo 2026-10-31)
+### H-09 — El restablecimiento de contraseña se envía a un correo no verificado (resuelto el 2026-09-10 — RNF-26)
 
 El flujo de recuperación de contraseña (RF-37, agregado el 2026-09-07) envía
 el enlace de un solo uso al valor de `seguridad.personas.correo` del usuario.
@@ -405,26 +404,33 @@ uso y vence en 30 minutos; la respuesta de `/forgot` es genérica y no revela
 si la cuenta existe; hay límite de solicitudes por identificador y por IP; y
 al completarse el cambio se invalidan todas las sesiones previas del usuario.
 
-**Requisito de cierre: RNF-26 (SRS §4.3).** Tras la revisión M3 del SRS
-v1.6, este hallazgo deja de ser solo "trabajo futuro documentado" y pasa a
-tener un requisito con criterio verificable, condición de cierre y fecha:
+**Requisito de cierre: RNF-26 (SRS §4.3). Resuelto el 2026-09-10.** Tras la
+revisión M3 del SRS v1.6 este hallazgo se especificó como requisito y se
+implementó:
 
 - **Criterio:** una dirección de correo no confirmada no recibe el enlace de
   restablecimiento; el alta o la modificación del correo exige verificación
   por un token de confirmación de un solo uso con ventana de vigencia.
-- **Controles previstos:** columna `seguridad.personas.correo_verificado`,
-  almacén de tokens de confirmación (análogo al de RF-37), pantalla de
-  confirmación, y `PasswordResetService` filtrando por `correo_verificado`
-  antes de emitir el enlace.
-- **Condición de cierre:** el flujo implementado y probado con prueba
-  automatizada.
-- **Fecha objetivo:** **2026-10-31** — es una funcionalidad del tamaño de
-  RF-37 completo; el riesgo residual está acotado y mitigado (enlace de un
-  solo uso, 30 min, respuesta genérica, rate limit, invalidación de sesiones
-  al cambiar la contraseña), por lo que se aborda después de la Entrega
-  Final, con esas mitigaciones vigentes mientras tanto. No figura en la lista
-  de la revisión A2 del docente (cédula, texto libre, supresión,
-  consentimiento).
+- **Implementación:** columna `seguridad.personas.correo_verificado`
+  (migración `V28`; las personas preexistentes se dieron por verificadas,
+  las altas nuevas nacen sin verificar). `EmailVerificationTokenStore`
+  (Redis, SHA-256 del token, TTL 48 h). `EmailVerificationService.enviarConfirmacion`
+  se dispara al crear una persona (`PersonService.create`,
+  `AuthService.register`) y al cambiar su correo (`PersonService.update`, que
+  además vuelve a marcarlo sin verificar). `POST /api/auth/confirmar-correo`
+  canjea el token (auditado `EMAILVERIFY_CONFIRMADO`); pantalla
+  `/#/confirmar-correo`. `PasswordResetService.solicitar` no emite el enlace
+  de RF-37 si `correo_verificado` es `false` (la respuesta de `/forgot` sigue
+  siendo `202` genérica).
+- **Condición de cierre:** cumplida — flujo implementado y probado
+  (`EmailVerificationServiceTest`, `EmailVerificationTokenStoreTest`,
+  `PasswordResetServiceTest.solicitar_correo_no_verificado_no_envia`,
+  `AuthControllerTest`, `PersonServiceTest`, mailers, y
+  `confirmar-correo.component.spec` en el frontend).
+- **Despliegue:** `V28` se aplica a la Supabase de producción por el
+  procedimiento incremental de `docs/despliegue/render.md` (Paso 3b), junto a
+  `V25`–`V27`. Mitigaciones de RF-37 siguen vigentes (enlace de un solo uso,
+  30 min, respuesta genérica, rate limit, invalidación de sesiones).
 
 ---
 

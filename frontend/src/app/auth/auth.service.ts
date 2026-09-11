@@ -73,4 +73,13 @@ export class AuthService {
   restablecerPassword(token: string, nuevaPassword: string) {
     return this.http.post<void>(`${this.apiUrl}/reset`, { token, nuevaPassword });
   }
+
+  /**
+   * Confirma el correo de contacto a partir del token del enlace (RNF-26 /
+   * hallazgo H-09). Mientras un correo no esté confirmado, el backend no le
+   * envía el enlace de restablecimiento de contraseña.
+   */
+  confirmarCorreo(token: string) {
+    return this.http.post<void>(`${this.apiUrl}/confirmar-correo`, { token });
+  }
 }
