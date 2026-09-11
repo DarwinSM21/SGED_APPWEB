@@ -181,7 +181,7 @@ public class SesionEntrenamientoService {
         }
 
         List<Student> plantel = estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(
+                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(
                         s.getCategoria().getIdCategoria());
 
         List<SesionHistorialResponse.FilaAsistencia> filas = new ArrayList<>();

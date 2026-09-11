@@ -119,7 +119,7 @@ class StudentServiceTest {
     @Test
     @DisplayName("buscarPorId - Devuelve el estudiante cuando existe y está activo")
     void buscarPorId_existente() {
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L)).thenReturn(Optional.of(estudianteDummy));
+        when(estudianteRepository.findByIdAndActiveTrue(1L)).thenReturn(Optional.of(estudianteDummy));
 
         StudentResponse resp = service.findById(1L);
 
@@ -131,7 +131,7 @@ class StudentServiceTest {
     @Test
     @DisplayName("buscarPorId - Lanza ResourceNotFoundException cuando no existe")
     void buscarPorId_inexistente_lanza_404() {
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(99L)).thenReturn(Optional.empty());
+        when(estudianteRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> service.findById(99L));
     }
@@ -141,8 +141,8 @@ class StudentServiceTest {
     void crear_nuevo_estudiante_exito() {
         StudentRequest request = crearRequestValido();
 
-        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
-        when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
+        when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.empty());
+        when(estudianteRepository.existsByStudentCode("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
@@ -161,7 +161,7 @@ class StudentServiceTest {
     @DisplayName("crear - Lanza IllegalArgumentException si la persona ya tiene una ficha activa")
     void crear_persona_con_ficha_activa_lanza_excepcion() {
         StudentRequest request = crearRequestValido();
-        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.of(estudianteDummy));
+        when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.of(estudianteDummy));
 
         assertThrows(IllegalArgumentException.class, () -> service.create(request));
     }
@@ -182,8 +182,8 @@ class StudentServiceTest {
     @DisplayName("crear - Acepta a la persona cuya cuenta ya tiene rol ESTUDIANTE")
     void crear_persona_con_cuenta_de_estudiante_pasa() {
         StudentRequest request = crearRequestValido();
-        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
-        when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
+        when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.empty());
+        when(estudianteRepository.existsByStudentCode("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
@@ -203,7 +203,7 @@ class StudentServiceTest {
 
         StudentRequest request = crearRequestValido();
 
-        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.of(estudianteInactivo));
+        when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.of(estudianteInactivo));
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
         when(estudianteRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
@@ -220,7 +220,7 @@ class StudentServiceTest {
         StudentRequest request = crearRequestValido();
 
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
-        when(estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot("EST-001", 1L)).thenReturn(false);
+        when(estudianteRepository.existsByStudentCodeAndIdNot("EST-001", 1L)).thenReturn(false);
         when(estudianteRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
 
         StudentResponse resp = service.update(1L, request);
@@ -236,7 +236,7 @@ class StudentServiceTest {
         StudentRequest request = crearRequestValido();
 
         when(estudianteRepository.findById(1L)).thenReturn(Optional.of(estudianteDummy));
-        when(estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot("EST-001", 1L)).thenReturn(true);
+        when(estudianteRepository.existsByStudentCodeAndIdNot("EST-001", 1L)).thenReturn(true);
 
         assertThrows(IllegalArgumentException.class, () -> service.update(1L, request));
     }
@@ -305,7 +305,7 @@ class StudentServiceTest {
     @DisplayName("contactoDeEmergencia - Delega al SP via @Procedure cuando el estudiante existe")
     void contactoDeEmergencia_delega_en_sp() {
         when(estudianteRepository.existsById(1L)).thenReturn(true);
-        when(representanteEstudianteRepository.contactoDe(1L)).thenReturn("Maria Perez - 0991234567");
+        when(representanteEstudianteRepository.contactOf(1L)).thenReturn("Maria Perez - 0991234567");
 
         String contacto = service.emergencyContact(1L);
 
@@ -318,7 +318,7 @@ class StudentServiceTest {
         when(estudianteRepository.existsById(99L)).thenReturn(false);
 
         assertThrows(ResourceNotFoundException.class, () -> service.emergencyContact(99L));
-        verify(representanteEstudianteRepository, never()).contactoDe(any());
+        verify(representanteEstudianteRepository, never()).contactOf(any());
     }
 
     @Test
@@ -384,8 +384,8 @@ class StudentServiceTest {
     }
 
     private void prepararCrear(Person persona) {
-        when(estudianteRepository.findByPersona_IdPersona(1L)).thenReturn(Optional.empty());
-        when(estudianteRepository.existsByCodigoEstudiante("EST-001")).thenReturn(false);
+        when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.empty());
+        when(estudianteRepository.existsByStudentCode("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
     }

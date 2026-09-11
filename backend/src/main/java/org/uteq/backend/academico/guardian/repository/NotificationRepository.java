@@ -18,14 +18,14 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * @return las notificaciones de ese representante, de la más reciente a la más antigua
      */
     @Query("SELECT n FROM Notification n WHERE n.guardian.id = :idRepresentante ORDER BY n.createdAt DESC")
-    List<Notification> findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(@Param("idRepresentante") Long idRepresentante);
+    List<Notification> findByGuardian_IdOrderByCreatedAtDesc(@Param("idRepresentante") Long idRepresentante);
 
     /**
      * @param idRepresentante identificador del representante
      * @return la cantidad de notificaciones sin leer de ese representante
      */
     @Query("SELECT COUNT(n) FROM Notification n WHERE n.guardian.id = :idRepresentante AND n.read = false")
-    long countByRepresentante_IdRepresentanteAndLeidaFalse(@Param("idRepresentante") Long idRepresentante);
+    long countByGuardian_IdAndReadFalse(@Param("idRepresentante") Long idRepresentante);
 
     /**
      * Busca una notificación puntual y comprueba a la vez que pertenece al
@@ -36,6 +36,6 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
      * @return la notificación, si existe y pertenece a ese representante
      */
     @Query("SELECT n FROM Notification n WHERE n.id = :idNotificacion AND n.guardian.id = :idRepresentante")
-    Optional<Notification> findByIdNotificacionAndRepresentante_IdRepresentante(
+    Optional<Notification> findByIdAndGuardian_Id(
             @Param("idNotificacion") Long idNotificacion, @Param("idRepresentante") Long idRepresentante);
 }

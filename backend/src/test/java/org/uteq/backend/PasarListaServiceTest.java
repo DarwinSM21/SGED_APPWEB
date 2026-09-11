@@ -77,9 +77,9 @@ class PasarListaServiceTest {
         var hoy = LocalDate.now(Zones.ECUADOR);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(6L))
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         asistenciaService.pasarLista(ID_SESION, lista(6L, Asistencia.ESTADO_PRESENTE));
@@ -96,9 +96,9 @@ class PasarListaServiceTest {
         var hoy = LocalDate.now(Zones.ECUADOR);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(6L))
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         asistenciaService.pasarLista(ID_SESION, lista(6L, Asistencia.ESTADO_PRESENTE));
@@ -123,9 +123,9 @@ class PasarListaServiceTest {
 
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of(yaMarcada));
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(6L))
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         asistenciaService.pasarLista(ID_SESION, lista(6L, Asistencia.ESTADO_TARDE));
@@ -150,9 +150,9 @@ class PasarListaServiceTest {
 
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of(yaMarcada));
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(6L))
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         asistenciaService.pasarLista(ID_SESION, lista(6L, Asistencia.ESTADO_AUSENTE));
@@ -181,7 +181,7 @@ class PasarListaServiceTest {
         var hoy = LocalDate.now(Zones.ECUADOR);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(9L))
+        when(estudianteRepository.findByIdAndActiveTrue(9L))
                 .thenReturn(Optional.of(estudiante(9L, 99L)));
 
         assertThatThrownBy(() -> asistenciaService.pasarLista(ID_SESION, lista(9L, Asistencia.ESTADO_PRESENTE)))
@@ -204,7 +204,7 @@ class PasarListaServiceTest {
 
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of(conMarca));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA), estudiante(7L, ID_CATEGORIA)));
 
         var nomina = asistenciaService.nomina(ID_SESION);
@@ -223,7 +223,7 @@ class PasarListaServiceTest {
         var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION)).thenReturn(List.of());
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         var nomina = asistenciaService.nomina(ID_SESION);

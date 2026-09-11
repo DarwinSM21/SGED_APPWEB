@@ -60,7 +60,7 @@ public class StudentReportService {
     @Transactional(readOnly = true)
     public List<StudentSummaryResponse> myStudents(String username) {
         Guardian representante = guardianOf(username);
-        return vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(representante.getId())
+        return vinculoRepository.findByGuardian_IdAndActiveTrue(representante.getId())
                 .stream()
                 .map(v -> {
                     Student e = v.getStudent();
@@ -86,14 +86,14 @@ public class StudentReportService {
     public StudentReportResponse reportFor(String username, Long idEstudiante) {
         Guardian representante = guardianOf(username);
 
-        boolean esSuyo = vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(
+        boolean esSuyo = vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(
                 representante.getId(), idEstudiante);
         if (!esSuyo) {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
 
         Student estudiante = vinculoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(representante.getId(), idEstudiante)
+                .findByGuardian_IdAndStudent_Id(representante.getId(), idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante))
                 .getStudent();
 
@@ -112,7 +112,7 @@ public class StudentReportService {
      */
     @Transactional(readOnly = true)
     public StudentReportResponse myReport(String username) {
-        Student estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUserAccount_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
         return buildReport(estudiante);
     }
@@ -217,7 +217,7 @@ public class StudentReportService {
     }
 
     private Guardian guardianOf(String username) {
-        return representanteRepository.findByUsuario_Username(username)
+        return representanteRepository.findByUserAccount_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 

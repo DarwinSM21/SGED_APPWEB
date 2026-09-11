@@ -64,7 +64,7 @@ class ConsentServiceTest {
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(representante()));
         when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante()));
         when(consentimientoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                .findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         1L, 10L, Consent.ALCANCE_INFORMES))
                 .thenReturn(Optional.of(Consent.builder().id(5L).build()));
 
@@ -80,7 +80,7 @@ class ConsentServiceTest {
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(representante()));
         when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante()));
         when(consentimientoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                .findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         1L, 10L, Consent.ALCANCE_INFORMES))
                 .thenReturn(Optional.empty());
         when(usuarioRepository.findByUsername("admin")).thenReturn(
@@ -141,7 +141,7 @@ class ConsentServiceTest {
                 .id(1L).guardian(representante()).student(estudiante())
                 .scope(Consent.ALCANCE_INFORMES).grantedAt(OffsetDateTime.now())
                 .build();
-        when(consentimientoRepository.findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(10L))
+        when(consentimientoRepository.findByStudent_IdOrderByGrantedAtDesc(10L))
                 .thenReturn(List.of(c));
 
         List<ConsentResponse> resultado = consentimientoService.listByStudent(10L);

@@ -180,7 +180,7 @@ public class PartidoService {
         if (auth == null || auth.getName() == null) {
             return null;
         }
-        return usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(auth.getName())
+        return usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(auth.getName())
                 .map(u -> u.getId())
                 .orElse(null);
     }

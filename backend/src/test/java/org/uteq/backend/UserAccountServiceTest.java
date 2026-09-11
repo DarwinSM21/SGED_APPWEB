@@ -149,7 +149,7 @@ class UserAccountServiceTest {
     @Test
     @DisplayName("buscarPorId lanza ResourceNotFoundException cuando no existe o esta inactivo")
     void buscarPorId_inexistente_lanza_excepcion() {
-        when(usuarioRepository.findByIdUsuarioAndActivoTrue(99L)).thenReturn(Optional.empty());
+        when(usuarioRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.findById(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -198,7 +198,7 @@ class UserAccountServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("coach.nuevo")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(Optional.of(entrenador));
+        when(rolRepository.findByName("ENTRENADOR")).thenReturn(Optional.of(entrenador));
         when(passwordEncoder.encode("clave123")).thenReturn("hash-codificado");
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(inv -> {
             UserAccount u = inv.getArgument(0);
@@ -218,7 +218,7 @@ class UserAccountServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("nuevo")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(rolRepository.findByNombre("NO_EXISTE")).thenReturn(Optional.empty());
+        when(rolRepository.findByName("NO_EXISTE")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> usuarioService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -304,10 +304,10 @@ class UserAccountServiceTest {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
-        when(representanteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
-        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(Optional.of(entrenador));
+        when(representanteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
+        when(rolRepository.findByName("ENTRENADOR")).thenReturn(Optional.of(entrenador));
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(inv -> inv.getArgument(0));
 
         UserAccountResponse resultado = usuarioService.update(1L, request);
@@ -324,7 +324,7 @@ class UserAccountServiceTest {
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.update(1L, request))
@@ -341,7 +341,7 @@ class UserAccountServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("fernanda.c")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+        when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -358,10 +358,10 @@ class UserAccountServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("fernanda.c")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+        when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(true);
         when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
-        when(representanteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
-        when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(estudiante));
+        when(representanteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
+        when(rolRepository.findByName("ESTUDIANTE")).thenReturn(Optional.of(estudiante));
         when(passwordEncoder.encode("clave123")).thenReturn("hash");
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -377,9 +377,9 @@ class UserAccountServiceTest {
         when(usuarioRepository.existsByUsernameIgnoreCase("ana.t")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
-        when(estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
-        when(representanteRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+        when(representanteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)

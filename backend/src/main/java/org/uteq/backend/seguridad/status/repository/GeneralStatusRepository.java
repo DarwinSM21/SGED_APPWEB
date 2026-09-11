@@ -18,13 +18,13 @@ public interface GeneralStatusRepository extends JpaRepository<GeneralStatus, Lo
      * @return el estado con ese nombre, si existe
      */
     @Query("SELECT g FROM GeneralStatus g WHERE g.name = :nombre")
-    Optional<GeneralStatus> findByNombre(@Param("nombre") String nombre);
+    Optional<GeneralStatus> findByName(@Param("nombre") String nombre);
 
     /**
      * @param nombre nombre del estado a comprobar
      * @return {@code true} si ya existe un estado con ese nombre
      */
     @Query("SELECT COUNT(g) > 0 FROM GeneralStatus g WHERE g.name = :nombre")
-    boolean existsByNombre(@Param("nombre") String nombre);
+    boolean existsByName(@Param("nombre") String nombre);
 
 }

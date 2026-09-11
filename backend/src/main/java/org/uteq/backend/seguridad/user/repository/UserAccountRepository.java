@@ -22,14 +22,14 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      */
     @EntityGraph(attributePaths = {"roles", "person"})
     @Query("SELECT u FROM UserAccount u WHERE u.id = :idUsuario AND u.active = true")
-    Optional<UserAccount> findByIdUsuarioAndActivoTrue(@Param("idUsuario") Long idUsuario);
+    Optional<UserAccount> findByIdAndActiveTrue(@Param("idUsuario") Long idUsuario);
 
     /**
      * @param pageable página y tamaño solicitados
      * @return página de cuentas con baja lógica excluida
      */
     @Query("SELECT u FROM UserAccount u WHERE u.active = true")
-    Page<UserAccount> findByActivoTrue(Pageable pageable);
+    Page<UserAccount> findByActiveTrue(Pageable pageable);
 
     /**
      * @param username nombre de usuario
@@ -47,10 +47,10 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      */
     @EntityGraph(attributePaths = {"roles", "person"})
     @Query("SELECT u FROM UserAccount u WHERE u.username = :username AND u.active = true")
-    Optional<UserAccount> findByUsernameAndActivoTrue(@Param("username") String username);
+    Optional<UserAccount> findByUsernameAndActiveTrue(@Param("username") String username);
 
     /**
-     * Igual que {@link #findByUsernameAndActivoTrue(String)} pero sin
+     * Igual que {@link #findByUsernameAndActiveTrue(String)} pero sin
      * distinguir mayúsculas/minúsculas en el nombre de usuario.
      *
      * @param username nombre de usuario, sin distinguir mayúsculas/minúsculas
@@ -58,7 +58,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      */
     @EntityGraph(attributePaths = {"roles", "person"})
     @Query("SELECT u FROM UserAccount u WHERE LOWER(u.username) = LOWER(:username) AND u.active = true")
-    Optional<UserAccount> findByUsernameIgnoreCaseAndActivoTrue(@Param("username") String username);
+    Optional<UserAccount> findByUsernameIgnoreCaseAndActiveTrue(@Param("username") String username);
 
     /**
      * @param username nombre de usuario a comprobar
@@ -77,7 +77,7 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      * @return {@code true} si esa persona ya tiene una cuenta de acceso, activa o no
      */
     @Query("SELECT COUNT(u) > 0 FROM UserAccount u WHERE u.person.id = :idPersona")
-    boolean existsByPersona_IdPersona(@Param("idPersona") Long idPersona);
+    boolean existsByPerson_Id(@Param("idPersona") Long idPersona);
 
     /**
      * @param idPersona identificador de la persona
@@ -85,5 +85,5 @@ public interface UserAccountRepository extends JpaRepository<UserAccount, Long> 
      */
     @EntityGraph(attributePaths = {"roles"})
     @Query("SELECT u FROM UserAccount u WHERE u.person.id = :idPersona AND u.active = true")
-    Optional<UserAccount> findByPersona_IdPersonaAndActivoTrue(@Param("idPersona") Long idPersona);
+    Optional<UserAccount> findByPerson_IdAndActiveTrue(@Param("idPersona") Long idPersona);
 }

@@ -22,7 +22,7 @@ public interface ConsentRepository extends JpaRepository<Consent, Long> {
      * @return consentimientos ordenados por fecha de otorgamiento descendente
      */
     @Query("SELECT c FROM Consent c WHERE c.student.id = :idEstudiante ORDER BY c.grantedAt DESC")
-    List<Consent> findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(@Param("idEstudiante") Long idEstudiante);
+    List<Consent> findByStudent_IdOrderByGrantedAtDesc(@Param("idEstudiante") Long idEstudiante);
 
     /**
      * Consentimiento vigente (no revocado) de un representante sobre un
@@ -35,6 +35,6 @@ public interface ConsentRepository extends JpaRepository<Consent, Long> {
      */
     @Query("SELECT c FROM Consent c WHERE c.guardian.id = :idRepresentante AND c.student.id = :idEstudiante "
             + "AND c.scope = :alcance AND c.revokedAt IS NULL")
-    Optional<Consent> findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+    Optional<Consent> findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
             @Param("idRepresentante") Long idRepresentante, @Param("idEstudiante") Long idEstudiante, @Param("alcance") String alcance);
 }

@@ -57,7 +57,7 @@ class MyTeamServiceTest {
     @Test
     @DisplayName("miEquipo responde 404 si la cuenta no tiene fila de estudiante asociada")
     void sinEstudianteAsociado() {
-        when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+        when(estudianteRepository.findByUserAccount_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> servicio.myTeam("huerfano@sged.test"))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -67,10 +67,10 @@ class MyTeamServiceTest {
     @DisplayName("la posicion viene null si el estudiante no tiene una asignada")
     void sinPosicionAsignada() {
         var yo = estudiante(1L, "Juan", null);
-        when(estudianteRepository.findByUsuario_Username("juan@sged.test")).thenReturn(Optional.of(yo));
+        when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
@@ -82,10 +82,10 @@ class MyTeamServiceTest {
     @DisplayName("el entrenador viene null si la categoria no tiene ninguna sesion futura")
     void sinSesionFutura() {
         var yo = estudiante(1L, "Juan", null);
-        when(estudianteRepository.findByUsuario_Username("juan@sged.test")).thenReturn(Optional.of(yo));
+        when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
@@ -100,10 +100,10 @@ class MyTeamServiceTest {
         var yo = estudiante(1L, "Juan", null);
         var companero = estudiante(2L, "Carlos", posicionDelantero);
 
-        when(estudianteRepository.findByUsuario_Username("juan@sged.test")).thenReturn(Optional.of(yo));
+        when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of(companero));
 
         var equipo = servicio.myTeam("juan@sged.test");
@@ -128,10 +128,10 @@ class MyTeamServiceTest {
                 .fecha(LocalDate.of(2026, 8, 20))
                 .build();
 
-        when(estudianteRepository.findByUsuario_Username("juan@sged.test")).thenReturn(Optional.of(yo));
+        when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of(proximaSesion));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
@@ -145,10 +145,10 @@ class MyTeamServiceTest {
     @DisplayName("la categoria trae nombre, rango de edad y descripcion completos")
     void categoriaConDatosCompletos() {
         var yo = estudiante(1L, "Juan", null);
-        when(estudianteRepository.findByUsuario_Username("juan@sged.test")).thenReturn(Optional.of(yo));
+        when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");

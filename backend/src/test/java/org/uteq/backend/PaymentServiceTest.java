@@ -68,7 +68,7 @@ class PaymentServiceTest {
         LocalDate fin = hoy.atEndOfMonth();
 
         when(pagoRepository.sumAmountBetweenDates(inicio, fin)).thenReturn(new BigDecimal("150.00"));
-        when(pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin)).thenReturn(3L);
+        when(pagoRepository.countByPaymentDateBetweenAndCanceledAtIsNull(inicio, fin)).thenReturn(3L);
 
         var response = service.currentMonthIncome();
 
@@ -82,7 +82,7 @@ class PaymentServiceTest {
     @DisplayName("ingresosDelMes devuelve cero, no null, cuando no hay pagos este mes")
     void ingresosDelMes_sin_pagos_devuelve_cero() {
         when(pagoRepository.sumAmountBetweenDates(any(), any())).thenReturn(BigDecimal.ZERO);
-        when(pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(any(), any())).thenReturn(0L);
+        when(pagoRepository.countByPaymentDateBetweenAndCanceledAtIsNull(any(), any())).thenReturn(0L);
 
         var response = service.currentMonthIncome();
 
@@ -94,7 +94,7 @@ class PaymentServiceTest {
     @DisplayName("registrarMembresia guarda un pago por cada mes, sin duplicados y en orden")
     void registrarMembresia_guarda_un_pago_por_mes_distinto_y_ordenado() {
         existenEstudianteYUsuario();
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
+        when(pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
                 any(), any(), any(), any())).thenReturn(false);
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
@@ -113,7 +113,7 @@ class PaymentServiceTest {
     @DisplayName("registrarMembresia usa la fecha dada en vez de la de hoy si se especifica")
     void registrarMembresia_usa_la_fecha_dada() {
         existenEstudianteYUsuario();
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
+        when(pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
                 any(), any(), any(), any())).thenReturn(false);
         when(pagoRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
@@ -127,9 +127,9 @@ class PaymentServiceTest {
     @DisplayName("registrarMembresia rechaza si algun mes solicitado ya esta cubierto")
     void registrarMembresia_rechaza_mes_ya_cubierto() {
         existenEstudianteYUsuario();
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
+        when(pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
                 ID_EST, PaymentType.MEMBRESIA, (short) 2026, (short) 1)).thenReturn(false);
-        when(pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
+        when(pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
                 ID_EST, PaymentType.MEMBRESIA, (short) 2026, (short) 2)).thenReturn(true);
 
         var e = assertThrows(IllegalArgumentException.class, () ->
@@ -195,7 +195,7 @@ class PaymentServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> service.historyFor(ID_EST));
 
-        verify(pagoRepository, never()).findByEstudiante_IdEstudianteOrderByFechaPagoDesc(any());
+        verify(pagoRepository, never()).findByStudent_IdOrderByPaymentDateDesc(any());
     }
 
     @Test
@@ -203,7 +203,7 @@ class PaymentServiceTest {
     void historialDe_devuelve_pagos_del_estudiante() {
         when(estudianteRepository.existsById(ID_EST)).thenReturn(true);
         var esperado = List.of(Payment.builder().id(1L).type(PaymentType.DIARIO).build());
-        when(pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(ID_EST)).thenReturn(esperado);
+        when(pagoRepository.findByStudent_IdOrderByPaymentDateDesc(ID_EST)).thenReturn(esperado);
 
         var pagos = service.historyFor(ID_EST);
 

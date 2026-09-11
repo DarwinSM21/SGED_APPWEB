@@ -42,7 +42,7 @@ public class ItemService {
      */
     @Transactional(readOnly = true)
     public List<ItemResponse> listActive() {
-        return articuloRepository.findByActivoTrue().stream().map(this::toResponse).toList();
+        return articuloRepository.findByActiveTrue().stream().map(this::toResponse).toList();
     }
 
     /**

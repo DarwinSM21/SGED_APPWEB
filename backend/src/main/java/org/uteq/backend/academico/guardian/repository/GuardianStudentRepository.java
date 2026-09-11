@@ -20,7 +20,7 @@ public interface GuardianStudentRepository extends JpaRepository<GuardianStudent
      * @return {@code true} si el vínculo entre ambos existe y está activo
      */
     @Query("SELECT COUNT(v) > 0 FROM GuardianStudent v WHERE v.guardian.id = :idRepresentante AND v.student.id = :idEstudiante AND v.active = true")
-    boolean existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(
+    boolean existsByGuardian_IdAndStudent_IdAndActiveTrue(
             @Param("idRepresentante") Long idRepresentante, @Param("idEstudiante") Long idEstudiante);
 
     /**
@@ -28,14 +28,14 @@ public interface GuardianStudentRepository extends JpaRepository<GuardianStudent
      * @return los estudiantes activos vinculados a ese representante
      */
     @Query("SELECT v FROM GuardianStudent v WHERE v.guardian.id = :idRepresentante AND v.active = true")
-    List<GuardianStudent> findByRepresentante_IdRepresentanteAndActivoTrue(@Param("idRepresentante") Long idRepresentante);
+    List<GuardianStudent> findByGuardian_IdAndActiveTrue(@Param("idRepresentante") Long idRepresentante);
 
     /**
      * @param idEstudiante identificador del estudiante
      * @return los representantes activos vinculados a ese estudiante
      */
     @Query("SELECT v FROM GuardianStudent v WHERE v.student.id = :idEstudiante AND v.active = true")
-    List<GuardianStudent> findByEstudiante_IdEstudianteAndActivoTrue(@Param("idEstudiante") Long idEstudiante);
+    List<GuardianStudent> findByStudent_IdAndActiveTrue(@Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param idRepresentante identificador del representante
@@ -43,7 +43,7 @@ public interface GuardianStudentRepository extends JpaRepository<GuardianStudent
      * @return el vínculo entre ambos, activo o no, si existe
      */
     @Query("SELECT v FROM GuardianStudent v WHERE v.guardian.id = :idRepresentante AND v.student.id = :idEstudiante")
-    Optional<GuardianStudent> findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(
+    Optional<GuardianStudent> findByGuardian_IdAndStudent_Id(
             @Param("idRepresentante") Long idRepresentante, @Param("idEstudiante") Long idEstudiante);
 
     /**
@@ -55,5 +55,5 @@ public interface GuardianStudentRepository extends JpaRepository<GuardianStudent
      *         si el estudiante no tiene representante activo
      */
     @Procedure(procedureName = "academico.sp_contacto_representante_estudiante")
-    String contactoDe(@Param("p_estudiante") Long idEstudiante);
+    String contactOf(@Param("p_estudiante") Long idEstudiante);
 }

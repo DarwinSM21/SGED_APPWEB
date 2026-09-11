@@ -90,7 +90,7 @@ public class StudentService {
      */
     @Transactional(readOnly = true)
     public StudentResponse findById(Long id) {
-        Student e = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
+        Student e = estudianteRepository.findByIdAndActiveTrue(id)
             .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
         return toResponse(e);
     }
@@ -117,7 +117,7 @@ public class StudentService {
         estudianteAccesoService.validateConsistencyWithStudentRecord(request.idPersona());
 
         // 1. ¿La persona YA tiene un registro como estudiante (activo o inactivo)?
-        Optional<Student> estudianteExistente = estudianteRepository.findByPersona_IdPersona(request.idPersona());
+        Optional<Student> estudianteExistente = estudianteRepository.findByPerson_Id(request.idPersona());
 
         if (estudianteExistente.isPresent()) {
             Student est = estudianteExistente.get();
@@ -147,7 +147,7 @@ public class StudentService {
         }
 
         // 2. La persona nunca fue estudiante: se crea un registro desde cero.
-        if (estudianteRepository.existsByCodigoEstudiante(request.codigoEstudiante())) {
+        if (estudianteRepository.existsByStudentCode(request.codigoEstudiante())) {
             throw new IllegalArgumentException("El código de estudiante '" + request.codigoEstudiante() + "' ya se encuentra en uso.");
         }
 
@@ -202,7 +202,7 @@ public class StudentService {
                         "Estudiante no encontrado con id: " + id));
 
         // Si cambia de código, ese código no puede pertenecer a otro estudiante.
-        if (estudianteRepository.existsByCodigoEstudianteAndIdEstudianteNot(request.codigoEstudiante(), id)) {
+        if (estudianteRepository.existsByStudentCodeAndIdNot(request.codigoEstudiante(), id)) {
             throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
         }
 
@@ -242,7 +242,7 @@ public class StudentService {
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse updatePosition(Long id, Long idPosicion) {
-        Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(id)
+        Student estudiante = estudianteRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + id));
         estudiante.setPosition(resolvePosition(idPosicion));
         estudiante = estudianteRepository.save(estudiante);
@@ -257,7 +257,7 @@ public class StudentService {
         if (estudiante.getPerson().getId().equals(idPersonaNueva)) {
             return;
         }
-        if (estudianteRepository.existsByPersona_IdPersona(idPersonaNueva)) {
+        if (estudianteRepository.existsByPerson_Id(idPersonaNueva)) {
             throw new IllegalArgumentException("La nueva persona seleccionada ya es un estudiante registrado.");
         }
         Person nuevaPersona = personaRepository.findById(idPersonaNueva)
@@ -458,7 +458,7 @@ public class StudentService {
         if (!estudianteRepository.existsById(idEstudiante)) {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
-        return representanteEstudianteRepository.contactoDe(idEstudiante);
+        return representanteEstudianteRepository.contactOf(idEstudiante);
     }
 
     /**

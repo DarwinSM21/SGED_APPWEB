@@ -98,7 +98,7 @@ class AuthServiceTest {
         UserAccount usuario = UserAccount.builder().username("admin@test.com").person(persona)
                 .roles(Set.of(Role.builder().name("ADMINISTRADOR").build())).build();
 
-        when(usuarioRepository.findByUsernameAndActivoTrue("admin@test.com")).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findByUsernameAndActiveTrue("admin@test.com")).thenReturn(Optional.of(usuario));
 
         AuthService.LoginResult resultado = authService.login(
                 new LoginRequest("admin@test.com", "Admin2026!"), "127.0.0.1");
@@ -121,7 +121,7 @@ class AuthServiceTest {
                 .thenReturn(auth);
         when(jwtService.generateToken(anyString(), anyString())).thenReturn("mock-jwt-token");
         when(jwtService.generateRefreshToken(anyString(), anyString())).thenReturn("mock-refresh-token");
-        when(usuarioRepository.findByUsernameAndActivoTrue("sinficha@test.com")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByUsernameAndActiveTrue("sinficha@test.com")).thenReturn(Optional.empty());
 
         AuthService.LoginResult resultado = authService.login(
                 new LoginRequest("sinficha@test.com", "Admin2026!"), "127.0.0.1");
@@ -184,7 +184,7 @@ class AuthServiceTest {
     void registrarConCorreoDuplicadoDevuelveVacio() {
         when(usuarioRepository.existsByUsernameIgnoreCase("correo.dup@test.com")).thenReturn(false);
         when(personaRepository.existsByNationalIdAndActiveTrue("0912345681")).thenReturn(false);
-        when(personaRepository.existsByCorreo("correo.dup.persona@test.com")).thenReturn(true);
+        when(personaRepository.existsByEmail("correo.dup.persona@test.com")).thenReturn(true);
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345681", "correo.dup.persona@test.com",
@@ -202,7 +202,7 @@ class AuthServiceTest {
             p.setId(1L);
             return p;
         });
-        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
+        when(rolRepository.findByName("ENTRENADOR")).thenReturn(
                 Optional.of(Role.builder().id(2L).name("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(
                 Optional.of(GeneralStatus.builder().id(1L).build()));
@@ -228,7 +228,7 @@ class AuthServiceTest {
     @Test
     void registrarConRolInexistenteLanzaIllegalArgumentException() {
         when(usuarioRepository.existsByUsernameIgnoreCase("otro@test.com")).thenReturn(false);
-        when(rolRepository.findByNombre("SUPERADMIN")).thenReturn(Optional.empty());
+        when(rolRepository.findByName("SUPERADMIN")).thenReturn(Optional.empty());
 
         RegisterRequest registerRequest = new RegisterRequest(
                 "Test", "User", "0912345680", "otro.correo@test.com",
@@ -255,13 +255,13 @@ class AuthServiceTest {
     void registrarSinCatalogoEstadoGeneralLanzaIllegalStateException() {
         when(usuarioRepository.existsByUsernameIgnoreCase("sinestado@test.com")).thenReturn(false);
         when(personaRepository.existsByNationalIdAndActiveTrue("0912345682")).thenReturn(false);
-        when(personaRepository.existsByCorreo("sinestado.persona@test.com")).thenReturn(false);
+        when(personaRepository.existsByEmail("sinestado.persona@test.com")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(i -> {
             Person p = i.getArgument(0);
             p.setId(9L);
             return p;
         });
-        when(rolRepository.findByNombre("ENTRENADOR")).thenReturn(
+        when(rolRepository.findByName("ENTRENADOR")).thenReturn(
                 Optional.of(Role.builder().id(2L).name("ENTRENADOR").build()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.empty());
 

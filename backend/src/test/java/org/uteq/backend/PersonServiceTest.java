@@ -59,7 +59,7 @@ class PersonServiceTest {
     @DisplayName("listar delega en el repositorio")
     void listar_devuelve_pagina() {
         Page<Person> pagina = new PageImpl<>(List.of(persona()), PageRequest.of(0, 10), 1);
-        when(personaRepository.findByActivoTrue(any())).thenReturn(pagina);
+        when(personaRepository.findByActiveTrue(any())).thenReturn(pagina);
 
         Page<PersonResponse> resultado = personaService.list(PageRequest.of(0, 10));
 
@@ -70,7 +70,7 @@ class PersonServiceTest {
     @Test
     @DisplayName("buscarPorId lanza ResourceNotFoundException si esta inactiva o no existe")
     void buscarPorId_inexistente_lanza_excepcion() {
-        when(personaRepository.findByIdPersonaAndActivoTrue(99L)).thenReturn(Optional.empty());
+        when(personaRepository.findByIdAndActiveTrue(99L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> personaService.findById(99L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -102,7 +102,7 @@ class PersonServiceTest {
     @DisplayName("crear rechaza correo duplicado")
     void crear_correo_duplicado_lanza_excepcion() {
         when(personaRepository.existsByNationalIdAndActiveTrue("0000000000")).thenReturn(false);
-        when(personaRepository.existsByCorreo("maria@sged.test")).thenReturn(true);
+        when(personaRepository.existsByEmail("maria@sged.test")).thenReturn(true);
 
         assertThatThrownBy(() -> personaService.create(requestValido("0000000000", "maria@sged.test")))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -113,7 +113,7 @@ class PersonServiceTest {
     @DisplayName("crear persiste la persona cuando cedula y correo son unicos")
     void crear_persiste_persona_valida() {
         when(personaRepository.existsByNationalIdAndActiveTrue("0000000000")).thenReturn(false);
-        when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
+        when(personaRepository.existsByEmail("nueva@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
             p.setId(5L);
@@ -129,7 +129,7 @@ class PersonServiceTest {
     @Test
     @DisplayName("RF-49 - crear sin cedula no consulta unicidad de cedula y persiste")
     void crear_sin_cedula_persiste() {
-        when(personaRepository.existsByCorreo("sincedula@sged.test")).thenReturn(false);
+        when(personaRepository.existsByEmail("sincedula@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
             p.setId(9L);
@@ -160,7 +160,7 @@ class PersonServiceTest {
     @DisplayName("RNF-26 - crear deja el correo sin verificar y dispara el doble opt-in")
     void crear_dispara_confirmacion_de_correo() {
         when(personaRepository.existsByNationalIdAndActiveTrue("0000000000")).thenReturn(false);
-        when(personaRepository.existsByCorreo("nueva@sged.test")).thenReturn(false);
+        when(personaRepository.existsByEmail("nueva@sged.test")).thenReturn(false);
         when(personaRepository.save(any(Person.class))).thenAnswer(inv -> {
             Person p = inv.getArgument(0);
             p.setId(5L);

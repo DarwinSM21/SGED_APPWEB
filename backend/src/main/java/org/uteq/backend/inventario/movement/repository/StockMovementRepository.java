@@ -18,7 +18,7 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
      * @return todos los movimientos, del más reciente al más antiguo
      */
     @Query("SELECT m FROM StockMovement m ORDER BY m.movementDate DESC")
-    Page<StockMovement> findAllByOrderByFechaMovimientoDesc(Pageable pageable);
+    Page<StockMovement> findAllByOrderByMovementDateDesc(Pageable pageable);
 
     /**
      * @param idArticulo identificador del artículo
@@ -26,5 +26,5 @@ public interface StockMovementRepository extends JpaRepository<StockMovement, Lo
      * @return los movimientos de ese artículo, del más reciente al más antiguo
      */
     @Query("SELECT m FROM StockMovement m WHERE m.item.id = :idArticulo ORDER BY m.movementDate DESC")
-    Page<StockMovement> findByArticulo_IdArticuloOrderByFechaMovimientoDesc(@Param("idArticulo") Long idArticulo, Pageable pageable);
+    Page<StockMovement> findByItem_IdOrderByMovementDateDesc(@Param("idArticulo") Long idArticulo, Pageable pageable);
 }

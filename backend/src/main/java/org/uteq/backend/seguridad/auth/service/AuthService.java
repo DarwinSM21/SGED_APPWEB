@@ -98,11 +98,11 @@ public class AuthService {
                 && personaRepository.existsByNationalIdAndActiveTrue(request.cedula());
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
                 || cedulaDuplicada
-                || personaRepository.existsByCorreo(request.correo())) {
+                || personaRepository.existsByEmail(request.correo())) {
             return Optional.empty();
         }
 
-        Role rol = rolRepository.findByNombre(request.rol())
+        Role rol = rolRepository.findByName(request.rol())
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.rol()));
 
         Person persona = Person.builder()
@@ -187,7 +187,7 @@ public class AuthService {
         String accessToken = jwtService.generateToken(userDetails.getUsername(), rol);
         String refreshToken = jwtService.generateRefreshToken(userDetails.getUsername(), rol);
 
-        String nombre = usuarioRepository.findByUsernameAndActivoTrue(userDetails.getUsername())
+        String nombre = usuarioRepository.findByUsernameAndActiveTrue(userDetails.getUsername())
                 .map(u -> u.getPerson().getName() + " " + u.getPerson().getLastName())
                 .orElse(userDetails.getUsername());
 

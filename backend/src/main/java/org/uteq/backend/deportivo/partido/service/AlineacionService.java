@@ -102,7 +102,7 @@ public class AlineacionService {
                 throw new IllegalArgumentException("Un jugador no puede estar dos veces en la alineación");
             }
 
-            Student estudiante = estudianteRepository.findByIdEstudianteAndActivoTrue(j.idEstudiante())
+            Student estudiante = estudianteRepository.findByIdAndActiveTrue(j.idEstudiante())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Estudiante no encontrado o inactivo: " + j.idEstudiante()));
             String nombre = ConvocatoriaService.nombreDe(estudiante);

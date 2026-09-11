@@ -111,7 +111,7 @@ public class ConvocatoriaService {
                 new VentanaRendimiento(semanasRendimiento, desde, hasta, entrenamientos);
 
         List<Student> plantel = estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(idCategoria);
+                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(idCategoria);
         if (plantel.isEmpty()) {
             return new Convocatoria(partido, ventana, List.of(), List.of(), List.of(),
                     Map.of(), Map.of(), entrenamientos);

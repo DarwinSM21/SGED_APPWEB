@@ -72,7 +72,7 @@ class StudentReportServiceTest {
     @Test
     @DisplayName("misRepresentados lanza ResourceNotFoundException si la cuenta no tiene fila de representante")
     void misRepresentados_sin_representante_asociado_lanza_excepcion() {
-        when(representanteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+        when(representanteRepository.findByUserAccount_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> informeService.myStudents("huerfano@sged.test"))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -85,8 +85,8 @@ class StudentReportServiceTest {
         GuardianStudent vinculo = GuardianStudent.builder()
                 .guardian(r).student(estudiante(10L, "Juan")).active(true).build();
 
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of(vinculo));
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(1L)).thenReturn(List.of(vinculo));
 
         List<StudentSummaryResponse> resultado = informeService.myStudents("ana.vera@sged.test");
 
@@ -98,8 +98,8 @@ class StudentReportServiceTest {
     @DisplayName("informeDe responde 404 (ResourceNotFoundException) si el estudiante no es un representado suyo")
     void informeDe_lanza404_cuandoEstudianteNoEsSuyo() {
         Guardian r = representante();
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 999L))
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 999L))
                 .thenReturn(false);
 
         assertThatThrownBy(() -> informeService.reportFor("ana.vera@sged.test", 999L))
@@ -110,9 +110,9 @@ class StudentReportServiceTest {
     @DisplayName("informeDe responde 404 si el vinculo existe pero fue desactivado (custodia revocada)")
     void informeDe_lanza404_cuandoVinculoEstaDesactivado() {
         Guardian r = representante();
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
 
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 10L))
                 .thenReturn(false);
 
         assertThatThrownBy(() -> informeService.reportFor("ana.vera@sged.test", 10L))
@@ -130,10 +130,10 @@ class StudentReportServiceTest {
                 .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
                 .fechaAlta(null).build();
 
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 10L))
                 .thenReturn(true);
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
         when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
@@ -156,7 +156,7 @@ class StudentReportServiceTest {
     @Test
     @DisplayName("miInforme responde 404 si la cuenta no tiene fila de estudiante asociada")
     void miInforme_sin_estudiante_asociado_lanza_excepcion() {
-        when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+        when(estudianteRepository.findByUserAccount_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> informeService.myReport("huerfano@sged.test"))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -170,7 +170,7 @@ class StudentReportServiceTest {
                 .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
                 .fechaAlta(null).build();
 
-        when(estudianteRepository.findByUsuario_Username("juan.hijo@sged.test")).thenReturn(Optional.of(yo));
+        when(estudianteRepository.findByUserAccount_Username("juan.hijo@sged.test")).thenReturn(Optional.of(yo));
         when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
         when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
@@ -190,8 +190,8 @@ class StudentReportServiceTest {
     @DisplayName("pedir el comentario de un estudiante ajeno da 404 y NO llega al modelo")
     void comentarioDe_lanza404_cuandoEstudianteNoEsSuyo() {
         Guardian r = representante();
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 999L))
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 999L))
                 .thenReturn(false);
 
         assertThatThrownBy(() -> informeService.commentFor("ana.vera@sged.test", 999L))
@@ -208,10 +208,10 @@ class StudentReportServiceTest {
         GuardianStudent vinculo = GuardianStudent.builder()
                 .guardian(r).student(hijo).active(true).build();
 
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 10L))
                 .thenReturn(true);
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
         when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L)).thenReturn(List.of());
         when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
@@ -232,10 +232,10 @@ class StudentReportServiceTest {
         GuardianStudent vinculo = GuardianStudent.builder()
                 .guardian(r).student(hijo).active(true).build();
 
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 10L))
                 .thenReturn(true);
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
         when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
@@ -267,10 +267,10 @@ class StudentReportServiceTest {
         GuardianStudent vinculo = GuardianStudent.builder()
                 .guardian(r).student(hijo).active(true).build();
 
-        when(representanteRepository.findByUsuario_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
-        when(vinculoRepository.existsByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndActivoTrue(1L, 10L))
+        when(representanteRepository.findByUserAccount_Username("ana.vera@sged.test")).thenReturn(Optional.of(r));
+        when(vinculoRepository.existsByGuardian_IdAndStudent_IdAndActiveTrue(1L, 10L))
                 .thenReturn(true);
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
         when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));

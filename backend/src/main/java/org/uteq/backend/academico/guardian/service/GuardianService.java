@@ -84,10 +84,10 @@ public class GuardianService {
      */
     @Transactional
     public GuardianResponse create(GuardianRequest request) {
-        if (representanteRepository.existsByPersona_IdPersona(request.idPersona())) {
+        if (representanteRepository.existsByPerson_Id(request.idPersona())) {
             throw new IllegalArgumentException("La persona ya está registrada como representante");
         }
-        if (representanteRepository.existsByUsuario_IdUsuario(request.idUsuario())) {
+        if (representanteRepository.existsByUserAccount_Id(request.idUsuario())) {
             throw new IllegalArgumentException("El usuario ya está asignado a otro representante");
         }
 
@@ -212,7 +212,7 @@ public class GuardianService {
     @Transactional
     public void unlinkStudent(Long idRepresentante, Long idEstudiante) {
         GuardianStudent vinculo = vinculoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(idRepresentante, idEstudiante)
+                .findByGuardian_IdAndStudent_Id(idRepresentante, idEstudiante)
                 .orElseThrow(() -> new ResourceNotFoundException("Ese estudiante no está vinculado a este representante"));
         vinculo.setActive(false);
         vinculoRepository.save(vinculo);
@@ -230,7 +230,7 @@ public class GuardianService {
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante));
 
         if (contactoPrincipal) {
-            vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(idEstudiante).stream()
+            vinculoRepository.findByStudent_IdAndActiveTrue(idEstudiante).stream()
                     .filter(v -> !v.getGuardian().getId().equals(representante.getId()))
                     .filter(v -> Boolean.TRUE.equals(v.getPrimaryContact()))
                     .forEach(v -> {
@@ -239,7 +239,7 @@ public class GuardianService {
                     });
         }
 
-        vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(
+        vinculoRepository.findByGuardian_IdAndStudent_Id(
                         representante.getId(), idEstudiante)
                 .ifPresentOrElse(
                         existente -> {
@@ -260,7 +260,7 @@ public class GuardianService {
 
     private GuardianResponse toResponse(Guardian r) {
         List<LinkedStudentResponse> representados =
-                vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(r.getId()).stream()
+                vinculoRepository.findByGuardian_IdAndActiveTrue(r.getId()).stream()
                         .map(v -> new LinkedStudentResponse(
                                 v.getStudent().getId(),
                                 v.getStudent().getPerson().getName() + " " + v.getStudent().getPerson().getLastName(),

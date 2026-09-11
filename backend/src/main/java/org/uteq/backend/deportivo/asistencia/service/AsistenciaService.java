@@ -70,7 +70,7 @@ public class AsistenciaService {
      */
     @Transactional
     public Asistencia marcarPorQr(String username, Long idSesion) {
-        Student estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUserAccount_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(idSesion, estudiante.getId())
@@ -123,7 +123,7 @@ public class AsistenciaService {
 
         List<FilaNomina> filas = new ArrayList<>();
         for (Student e : estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(
+                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(
                         sesion.getCategoria().getIdCategoria())) {
             Asistencia a = yaRegistradas.get(e.getId());
             filas.add(new FilaNomina(
@@ -171,7 +171,7 @@ public class AsistenciaService {
 
         for (MarcaAsistencia marca : request.marcas()) {
             Student estudiante = estudianteRepository
-                    .findByIdEstudianteAndActivoTrue(marca.idEstudiante())
+                    .findByIdAndActiveTrue(marca.idEstudiante())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Estudiante no encontrado o inactivo: " + marca.idEstudiante()));
 
@@ -238,7 +238,7 @@ public class AsistenciaService {
      */
     @Transactional(readOnly = true)
     public MiHistorialResponse misAsistencias(String username) {
-        Student estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUserAccount_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         List<AsistenciaResponse> asistencias = asistenciaRepository

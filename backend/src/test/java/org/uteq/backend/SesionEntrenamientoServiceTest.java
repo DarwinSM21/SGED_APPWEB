@@ -281,7 +281,7 @@ class SesionEntrenamientoServiceTest {
         Student ausente = estudianteDe(3L, "Cindy", null);
         Student justificado = estudianteDe(4L, "Dario", null);
         Student sinRegistro = estudianteDe(5L, "Eva", null);
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(1L))
                 .thenReturn(List.of(presente, tarde, ausente, justificado, sinRegistro));
 
         when(asistenciaRepository.historialDeSesion(500L)).thenReturn(List.of(
@@ -328,7 +328,7 @@ class SesionEntrenamientoServiceTest {
         when(sesionRepository.findById(501L)).thenReturn(Optional.of(sesion));
 
         // Plantel activo vacio: el estudiante se dio de baja despues de la sesion.
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(1L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(1L))
                 .thenReturn(List.of());
 
         Student deBaja = estudianteDe(9L, "Fabio", null);

@@ -32,7 +32,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
            WHERE p.student.id = :idEstudiante AND p.type = :tipo AND p.year = :anio AND p.month = :mes
              AND p.canceledAt IS NULL
            """)
-    boolean existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
+    boolean existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
             @Param("idEstudiante") Long idEstudiante, @Param("tipo") PaymentType tipo,
             @Param("anio") Short anio, @Param("mes") Short mes);
 
@@ -41,7 +41,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
      * @return los pagos de ese estudiante, del más reciente al más antiguo
      */
     @Query("SELECT p FROM Payment p WHERE p.student.id = :idEstudiante ORDER BY p.paymentDate DESC")
-    List<Payment> findByEstudiante_IdEstudianteOrderByFechaPagoDesc(@Param("idEstudiante") Long idEstudiante);
+    List<Payment> findByStudent_IdOrderByPaymentDateDesc(@Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param inicio fecha inicial del rango, inclusive
@@ -64,7 +64,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long>, JpaSpec
            SELECT COUNT(p) FROM Payment p
            WHERE p.paymentDate BETWEEN :inicio AND :fin AND p.canceledAt IS NULL
            """)
-    long countByFechaPagoBetweenAndAnuladoEnIsNull(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
+    long countByPaymentDateBetweenAndCanceledAtIsNull(@Param("inicio") LocalDate inicio, @Param("fin") LocalDate fin);
 
     /**
      * Estudiantes cuya mensualidad de un tipo/año/mes ya está cubierta por un

@@ -51,7 +51,7 @@ public class ConsentService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Estudiante no encontrado con id: " + request.idEstudiante()));
 
-        consentimientoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+        consentimientoRepository.findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         request.idRepresentante(), request.idEstudiante(), request.alcance())
                 .ifPresent(c -> {
                     throw new IllegalArgumentException("Ya existe un consentimiento vigente con ese alcance");
@@ -106,7 +106,7 @@ public class ConsentService {
      */
     @Transactional(readOnly = true)
     public List<ConsentResponse> listByStudent(Long idEstudiante) {
-        return consentimientoRepository.findByEstudiante_IdEstudianteOrderByOtorgadoEnDesc(idEstudiante).stream()
+        return consentimientoRepository.findByStudent_IdOrderByGrantedAtDesc(idEstudiante).stream()
                 .map(this::toResponse)
                 .toList();
     }

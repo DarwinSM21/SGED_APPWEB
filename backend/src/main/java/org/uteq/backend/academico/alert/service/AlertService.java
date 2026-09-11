@@ -73,7 +73,7 @@ public class AlertService {
         short anio = (short) hoy.getYear();
         short mes = (short) hoy.getMonthValue();
 
-        List<Student> activos = estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc();
+        List<Student> activos = estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc();
 
         Set<Long> alDia = new HashSet<>(
                 pagoRepository.idsWithMembershipCovered(PaymentType.MEMBRESIA, anio, mes));

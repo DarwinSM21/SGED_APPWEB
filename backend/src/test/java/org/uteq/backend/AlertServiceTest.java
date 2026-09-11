@@ -61,7 +61,7 @@ class AlertServiceTest {
         Categoria sub12 = Categoria.builder().nombre("SUB-12").build();
         Student e1 = estudiante(1L, "Ana", "Perez", sub12);
 
-        when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
+        when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of(1L)); // al dia
@@ -82,7 +82,7 @@ class AlertServiceTest {
         Categoria sub15 = Categoria.builder().nombre("SUB-15").build();
         Student e1 = estudiante(2L, "Luis", "Gomez", sub15);
 
-        when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
+        when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // nadie al dia -> debe
@@ -111,7 +111,7 @@ class AlertServiceTest {
     void estudianteSinPersonaNiCategoriaUsaValoresPorDefecto() {
         Student sinPersona = estudiante(3L, null, null, null);
 
-        when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
+        when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(sinPersona));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // debe
@@ -134,7 +134,7 @@ class AlertServiceTest {
         Categoria sub18 = Categoria.builder().nombre("SUB-18").build();
         Student e1 = estudiante(4L, "Rosa", "Diaz", sub18);
 
-        when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
+        when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of(4L)); // al dia
@@ -156,7 +156,7 @@ class AlertServiceTest {
         Student e1 = estudiante(5L, "Ana", "Ramos", sub12);
         Student e2 = estudiante(6L, "Beto", "Soto", sub12);
 
-        when(estudianteRepository.findByActivoTrueOrderByPersona_ApellidoAsc())
+        when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1, e2));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // ninguno al dia -> ambos deben

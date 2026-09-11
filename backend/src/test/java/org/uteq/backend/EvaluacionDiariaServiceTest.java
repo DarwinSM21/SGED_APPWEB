@@ -227,7 +227,7 @@ class EvaluacionDiariaServiceTest {
                 .thenReturn(List.of());
         when(asistenciaRepository.findBySesionIdSesion(ID_SESION))
                 .thenReturn(List.of(asistenciaCon(Asistencia.ESTADO_PRESENTE)));
-        when(estudianteRepository.findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(3L))
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(3L))
                 .thenReturn(List.of(estudiante()));
         when(evaluacionEstudianteRepository.findByEvaluacionIdEvaluacionAndEstudianteIdEstudiante(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());

@@ -49,7 +49,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("notificarAsistencia no propaga si la consulta de vinculos falla")
     void notificarAsistencia_no_propaga_fallo_de_repositorio() {
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(anyLong()))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(anyLong()))
                 .thenThrow(new DataIntegrityViolationException("vinculo inconsistente"));
 
         assertThatCode(() -> notificacionService.notifyAttendance(estudianteValido(), "PRESENTE"))
@@ -59,7 +59,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("notificarLesion no propaga si la consulta de vinculos falla")
     void notificarLesion_no_propaga_fallo_de_repositorio() {
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(anyLong()))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(anyLong()))
                 .thenThrow(new DataIntegrityViolationException("vinculo inconsistente"));
 
         assertThatCode(() -> notificacionService.notifyInjury(estudianteValido(), "esguince"))
@@ -78,7 +78,7 @@ class NotificationServiceTest {
     @Test
     @DisplayName("sin representantes vinculados no es error: no se crea ninguna notificacion")
     void sin_representantes_no_es_error() {
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(anyLong()))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(anyLong()))
                 .thenReturn(List.of());
 
         assertThatCode(() -> notificacionService.notifyAttendance(estudianteValido(), "PRESENTE"))
@@ -89,10 +89,10 @@ class NotificationServiceTest {
     void sin_consentimiento_no_se_notifica() {
         Student estudiante = estudianteCon(7L);
         Guardian representante = representanteCon(3L);
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(7L))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(7L))
                 .thenReturn(List.of(vinculoDe(representante, estudiante)));
         when(consentimientoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                .findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         eq(3L), eq(7L), anyString()))
                 .thenReturn(Optional.empty());
 
@@ -106,10 +106,10 @@ class NotificationServiceTest {
     void con_consentimiento_se_notifica() {
         Student estudiante = estudianteCon(7L);
         Guardian representante = representanteCon(3L);
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(7L))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(7L))
                 .thenReturn(List.of(vinculoDe(representante, estudiante)));
         when(consentimientoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                .findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         3L, 7L, Consent.ALCANCE_NOTIFICACIONES_ASISTENCIA))
                 .thenReturn(Optional.of(new Consent()));
 
@@ -123,10 +123,10 @@ class NotificationServiceTest {
     void el_alcance_no_se_mezcla() {
         Student estudiante = estudianteCon(7L);
         Guardian representante = representanteCon(3L);
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(7L))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(7L))
                 .thenReturn(List.of(vinculoDe(representante, estudiante)));
         when(consentimientoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                .findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         eq(3L), eq(7L), anyString()))
                 .thenReturn(Optional.empty());
 

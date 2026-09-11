@@ -86,7 +86,7 @@ public class EvaluacionDiariaService {
         }
 
         List<Student> estudiantesCategoria = estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(sesion.getCategoria().getIdCategoria());
+                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(sesion.getCategoria().getIdCategoria());
 
         List<JugadorEvaluableResponse> jugadores = new ArrayList<>();
         for (Student estudiante : estudiantesCategoria) {

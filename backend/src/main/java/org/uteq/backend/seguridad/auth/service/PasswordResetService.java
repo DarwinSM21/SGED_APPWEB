@@ -69,9 +69,9 @@ public class PasswordResetService {
         }
         String id = identificador.trim();
 
-        Optional<UserAccount> cuenta = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(id)
-                .or(() -> personaRepository.findByCorreo(id)
-                        .flatMap(p -> usuarioRepository.findByPersona_IdPersonaAndActivoTrue(p.getId())));
+        Optional<UserAccount> cuenta = usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(id)
+                .or(() -> personaRepository.findByEmail(id)
+                        .flatMap(p -> usuarioRepository.findByPerson_IdAndActiveTrue(p.getId())));
         if (cuenta.isEmpty()) {
             return;
         }
@@ -114,7 +114,7 @@ public class PasswordResetService {
 
         passwordPolicy.validate(nuevaPassword, username);
 
-        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(username)
+        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.BAD_REQUEST, ENLACE_INVALIDO));
 
         usuario.setPasswordHash(passwordEncoder.encode(nuevaPassword));

@@ -19,13 +19,13 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
      * @return página de artículos con baja lógica excluida
      */
     @Query("SELECT a FROM Item a WHERE a.active = true")
-    Page<Item> findByActivoTrue(Pageable pageable);
+    Page<Item> findByActiveTrue(Pageable pageable);
 
     /**
      * @return todos los artículos activos, sin paginar
      */
     @Query("SELECT a FROM Item a WHERE a.active = true")
-    List<Item> findByActivoTrue();
+    List<Item> findByActiveTrue();
 
     /**
      * @return artículos activos cuyo stock actual llegó o quedó por debajo del mínimo configurado

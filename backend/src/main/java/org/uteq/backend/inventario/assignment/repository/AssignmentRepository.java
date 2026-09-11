@@ -18,7 +18,7 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
      * @return todas las asignaciones, de la más reciente a la más antigua
      */
     @Query("SELECT a FROM Assignment a ORDER BY a.assignmentDate DESC")
-    Page<Assignment> findAllByOrderByFechaAsignacionDesc(Pageable pageable);
+    Page<Assignment> findAllByOrderByAssignmentDateDesc(Pageable pageable);
 
     /**
      * @param idEstudiante identificador del estudiante
@@ -26,7 +26,7 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
      * @return las asignaciones de ese estudiante, de la más reciente a la más antigua
      */
     @Query("SELECT a FROM Assignment a WHERE a.student.id = :idEstudiante ORDER BY a.assignmentDate DESC")
-    Page<Assignment> findByEstudiante_IdEstudianteOrderByFechaAsignacionDesc(@Param("idEstudiante") Long idEstudiante, Pageable pageable);
+    Page<Assignment> findByStudent_IdOrderByAssignmentDateDesc(@Param("idEstudiante") Long idEstudiante, Pageable pageable);
 
     /**
      * @param idEntrenador identificador del entrenador
@@ -34,5 +34,5 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
      * @return las asignaciones de ese entrenador, de la más reciente a la más antigua
      */
     @Query("SELECT a FROM Assignment a WHERE a.coach.idEntrenador = :idEntrenador ORDER BY a.assignmentDate DESC")
-    Page<Assignment> findByEntrenador_IdEntrenadorOrderByFechaAsignacionDesc(@Param("idEntrenador") Long idEntrenador, Pageable pageable);
+    Page<Assignment> findByCoach_IdEntrenadorOrderByAssignmentDateDesc(@Param("idEntrenador") Long idEntrenador, Pageable pageable);
 }

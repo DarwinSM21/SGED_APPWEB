@@ -76,7 +76,7 @@ class ConvocatoriaServiceTest {
     private void plantel(List<Student> estudiantes) {
         when(partidoRepository.findWithCategoriaByIdPartido(ID_PARTIDO)).thenReturn(Optional.of(partido()));
         when(estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(estudiantes);
         when(sesionRepository.countByCategoriaIdCategoriaAndFechaBetween(eq(ID_CATEGORIA), any(), any()))
                 .thenReturn(8L);
@@ -147,7 +147,7 @@ class ConvocatoriaServiceTest {
     void sinEntrenamientosNadieQuedaFuera() {
         when(partidoRepository.findWithCategoriaByIdPartido(ID_PARTIDO)).thenReturn(Optional.of(partido()));
         when(estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueOrderByPersona_ApellidoAsc(ID_CATEGORIA))
+                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(jugador(1L, "Alfa", 1L, "POR")));
         when(sesionRepository.countByCategoriaIdCategoriaAndFechaBetween(eq(ID_CATEGORIA), any(), any()))
                 .thenReturn(0L);

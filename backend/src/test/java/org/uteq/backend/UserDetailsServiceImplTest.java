@@ -46,7 +46,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("un username escrito con mayusculas encuentra la misma cuenta")
     void usernameConMayusculasEncuentraLaCuenta() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("Juan.Perez@sged.test"))
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("Juan.Perez@sged.test"))
                 .thenReturn(Optional.of(usuarioDe("juan.perez@sged.test")));
 
         UserDetails detalles = userDetailsService.loadUserByUsername("Juan.Perez@sged.test");
@@ -57,7 +57,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("el principal queda con el username canonico guardado, no con lo que se tecleo")
     void elPrincipalUsaElUsernameGuardado() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(anyString()))
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(anyString()))
                 .thenReturn(Optional.of(usuarioDe("juan.perez@sged.test")));
 
         UserDetails detalles = userDetailsService.loadUserByUsername("JUAN.PEREZ@SGED.TEST");
@@ -68,7 +68,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("el rol se expone con el prefijo ROLE_ que espera hasRole(...)")
     void elRolLlevaPrefijoRole() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(anyString()))
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(anyString()))
                 .thenReturn(Optional.of(usuarioDe("juan.perez@sged.test")));
 
         UserDetails detalles = userDetailsService.loadUserByUsername("juan.perez@sged.test");
@@ -81,7 +81,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("los espacios sobrantes al pegar credenciales no impiden entrar")
     void usernameConEspaciosEncuentraLaCuenta() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("juan.perez@sged.test"))
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("juan.perez@sged.test"))
                 .thenReturn(Optional.of(usuarioDe("juan.perez@sged.test")));
 
         UserDetails detalles = userDetailsService.loadUserByUsername("  juan.perez@sged.test  ");
@@ -92,7 +92,7 @@ class UserDetailsServiceImplTest {
     @Test
     @DisplayName("un username inexistente sigue dando UsernameNotFoundException")
     void usernameInexistenteLanzaExcepcion() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(anyString()))
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(anyString()))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> userDetailsService.loadUserByUsername("nadie@sged.test"))

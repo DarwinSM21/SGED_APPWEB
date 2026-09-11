@@ -81,7 +81,7 @@ public class UserAccountService {
      */
     @Transactional(readOnly = true)
     public UserAccountResponse findById(Long id) {
-        UserAccount u = usuarioRepository.findByIdUsuarioAndActivoTrue(id)
+        UserAccount u = usuarioRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + id));
         return toResponse(u);
  }
@@ -272,7 +272,7 @@ public class UserAccountService {
     }
 
     private Role findRole(String nombre) {
-        return rolRepository.findByNombre(nombre)
+        return rolRepository.findByName(nombre)
                 .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + nombre));
     }
 
@@ -291,7 +291,7 @@ public class UserAccountService {
      *                                  otro rol
      */
     private void validateRoleCoherent(Long idPersona, String rol) {
-        if (estudianteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)
+        if (estudianteRepository.existsByPerson_IdAndActiveTrue(idPersona)
                 && !"ESTUDIANTE".equals(rol)) {
             throw new IllegalArgumentException(
                     "La persona tiene una ficha de estudiante activa: su cuenta solo puede tener el rol ESTUDIANTE");
@@ -301,7 +301,7 @@ public class UserAccountService {
             throw new IllegalArgumentException(
                     "La persona tiene una ficha de entrenador activa: su cuenta solo puede tener el rol ENTRENADOR");
         }
-        if (representanteRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)
+        if (representanteRepository.existsByPerson_IdAndActiveTrue(idPersona)
                 && !"REPRESENTANTE".equals(rol)) {
             throw new IllegalArgumentException(
                     "La persona tiene una ficha de representante activa: su cuenta solo puede tener el rol REPRESENTANTE");
@@ -322,13 +322,13 @@ public class UserAccountService {
      */
     private void linkExistingRecord(Long idPersona, String rol, UserAccount usuario) {
         switch (rol) {
-            case "ESTUDIANTE" -> estudianteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
+            case "ESTUDIANTE" -> estudianteRepository.findByPerson_IdAndActiveTrue(idPersona)
                     .filter(e -> e.getUserAccount() == null)
                     .ifPresent(e -> { e.setUserAccount(usuario); estudianteRepository.save(e); });
             case "ENTRENADOR" -> entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
                     .filter(e -> e.getUsuario() == null)
                     .ifPresent(e -> { e.setUsuario(usuario); entrenadorRepository.save(e); });
-            case "REPRESENTANTE" -> representanteRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)
+            case "REPRESENTANTE" -> representanteRepository.findByPerson_IdAndActiveTrue(idPersona)
                     .filter(r -> r.getUserAccount() == null)
                     .ifPresent(r -> { r.setUserAccount(usuario); representanteRepository.save(r); });
             default -> { }

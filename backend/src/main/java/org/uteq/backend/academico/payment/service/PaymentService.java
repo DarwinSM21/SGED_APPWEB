@@ -65,7 +65,7 @@ public class PaymentService {
 
         List<Integer> mesesUnicos = meses.stream().distinct().sorted().toList();
         for (Integer mes : mesesUnicos) {
-            if (pagoRepository.existsByEstudiante_IdEstudianteAndTipoAndAnioAndMesAndAnuladoEnIsNull(
+            if (pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
                     idEstudiante, PaymentType.MEMBRESIA, (short) anio, mes.shortValue())) {
                 throw new IllegalArgumentException(
                         "El mes " + mes + "/" + anio + " ya está cubierto para este estudiante");
@@ -125,7 +125,7 @@ public class PaymentService {
         if (!estudianteRepository.existsById(idEstudiante)) {
             throw new ResourceNotFoundException("Estudiante no encontrado con id: " + idEstudiante);
         }
-        return pagoRepository.findByEstudiante_IdEstudianteOrderByFechaPagoDesc(idEstudiante);
+        return pagoRepository.findByStudent_IdOrderByPaymentDateDesc(idEstudiante);
     }
 
     /**
@@ -141,7 +141,7 @@ public class PaymentService {
         LocalDate fin = mesActual.atEndOfMonth();
 
         BigDecimal total = pagoRepository.sumAmountBetweenDates(inicio, fin);
-        long cantidad = pagoRepository.countByFechaPagoBetweenAndAnuladoEnIsNull(inicio, fin);
+        long cantidad = pagoRepository.countByPaymentDateBetweenAndCanceledAtIsNull(inicio, fin);
         return new MonthlyIncomeResponse(mesActual.getYear(), mesActual.getMonthValue(), total, cantidad);
     }
 

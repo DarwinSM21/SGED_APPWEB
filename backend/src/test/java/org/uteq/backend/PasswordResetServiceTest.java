@@ -65,7 +65,7 @@ class PasswordResetServiceTest {
     @Test
     @DisplayName("solicitar por username: guarda token con TTL y envia el enlace al correo")
     void solicitar_por_username() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("ana.torres")).thenReturn(Optional.of(ana));
 
         service.request("ana.torres");
 
@@ -76,9 +76,9 @@ class PasswordResetServiceTest {
     @Test
     @DisplayName("solicitar por correo cuando no es un username")
     void solicitar_por_correo() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana@x.com")).thenReturn(Optional.empty());
-        when(personaRepository.findByCorreo("ana@x.com")).thenReturn(Optional.of(ana.getPerson()));
-        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(ana));
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("ana@x.com")).thenReturn(Optional.empty());
+        when(personaRepository.findByEmail("ana@x.com")).thenReturn(Optional.of(ana.getPerson()));
+        when(usuarioRepository.findByPerson_IdAndActiveTrue(1L)).thenReturn(Optional.of(ana));
 
         service.request("ana@x.com");
 
@@ -89,8 +89,8 @@ class PasswordResetServiceTest {
     @Test
     @DisplayName("solicitar con identificador desconocido: no toca token ni mailer, no lanza")
     void solicitar_desconocido_es_no_op() {
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("nadie")).thenReturn(Optional.empty());
-        when(personaRepository.findByCorreo("nadie")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("nadie")).thenReturn(Optional.empty());
+        when(personaRepository.findByEmail("nadie")).thenReturn(Optional.empty());
 
         assertThatCode(() -> service.request("nadie")).doesNotThrowAnyException();
 
@@ -102,7 +102,7 @@ class PasswordResetServiceTest {
     @DisplayName("RNF-26: solicitar cuando el correo no esta verificado: no guarda token ni envia enlace")
     void solicitar_correo_no_verificado_no_envia() {
         ana.getPerson().setEmailVerified(false);
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("ana.torres")).thenReturn(Optional.of(ana));
 
         service.request("ana.torres");
 
@@ -123,7 +123,7 @@ class PasswordResetServiceTest {
     @DisplayName("restablecer con token valido: cambia el hash, consume el token y marca la epoca")
     void restablecer_ok() {
         when(tokenStore.resolve("tok")).thenReturn(Optional.of("ana.torres"));
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.of(ana));
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("ana.torres")).thenReturn(Optional.of(ana));
         when(passwordEncoder.encode("clave1234")).thenReturn("hash-nuevo");
 
         service.reset("tok", "clave1234");
@@ -166,7 +166,7 @@ class PasswordResetServiceTest {
     @DisplayName("restablecer cuando el usuario ya no esta activo: 400")
     void restablecer_usuario_inactivo() {
         when(tokenStore.resolve("tok")).thenReturn(Optional.of("ana.torres"));
-        when(usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue("ana.torres")).thenReturn(Optional.empty());
+        when(usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue("ana.torres")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.reset("tok", "clave1234"))
                 .isInstanceOf(ApiException.class);

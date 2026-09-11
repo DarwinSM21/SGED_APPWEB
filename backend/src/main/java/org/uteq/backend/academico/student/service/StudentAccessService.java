@@ -45,7 +45,7 @@ public class StudentAccessService {
      *                                  con un rol distinto de {@code ESTUDIANTE}
      */
     public void validateConsistencyWithStudentRecord(Long idPersona) {
-        usuarioRepository.findByPersona_IdPersonaAndActivoTrue(idPersona).ifPresent(usuario -> {
+        usuarioRepository.findByPerson_IdAndActiveTrue(idPersona).ifPresent(usuario -> {
             boolean esEstudiante = usuario.getRoles() != null && usuario.getRoles().stream()
                     .anyMatch(r -> "ESTUDIANTE".equals(r.getName()));
             if (!esEstudiante) {
@@ -73,7 +73,7 @@ public class StudentAccessService {
         }
         passwordPolicy.validate(request.password(), request.username());
 
-        Role rolEstudiante = rolRepository.findByNombre("ESTUDIANTE")
+        Role rolEstudiante = rolRepository.findByName("ESTUDIANTE")
                 .orElseThrow(() -> new IllegalStateException("Falta el rol ESTUDIANTE (ver db/seed.sql)"));
         GeneralStatus estadoActivo = estadoGeneralRepository.findById(1L)
                 .orElseThrow(() -> new IllegalStateException(

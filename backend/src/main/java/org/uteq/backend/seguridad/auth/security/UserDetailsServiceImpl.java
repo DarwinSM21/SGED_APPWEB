@@ -33,7 +33,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String buscado = username == null ? "" : username.trim();
 
-        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActivoTrue(buscado)
+        UserAccount usuario = usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(buscado)
                 .orElseThrow(() -> new UsernameNotFoundException(
                         "Usuario no encontrado: " + buscado));
 

@@ -84,7 +84,7 @@ class GuardianServiceTest {
     void listar_devuelve_pagina_mapeada() {
         Page<Guardian> pagina = new PageImpl<>(List.of(representante()), PageRequest.of(0, 10), 1);
         when(representanteRepository.findAll(any(Pageable.class))).thenReturn(pagina);
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(1L)).thenReturn(List.of());
 
         GuardianPageResponse<GuardianResponse> resultado = representanteService.list(PageRequest.of(0, 10));
 
@@ -106,7 +106,7 @@ class GuardianServiceTest {
     @DisplayName("crear rechaza cuando la persona ya es representante")
     void crear_persona_duplicada_lanza_excepcion() {
         GuardianRequest request = new GuardianRequest(1L, 2L, "Madre", "0999999999", null);
-        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(true);
+        when(representanteRepository.existsByPerson_Id(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> representanteService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -119,8 +119,8 @@ class GuardianServiceTest {
     @DisplayName("crear rechaza cuando el usuario ya esta asignado a otro representante")
     void crear_usuario_duplicado_lanza_excepcion() {
         GuardianRequest request = new GuardianRequest(1L, 2L, "Madre", "0999999999", null);
-        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
-        when(representanteRepository.existsByUsuario_IdUsuario(2L)).thenReturn(true);
+        when(representanteRepository.existsByPerson_Id(1L)).thenReturn(false);
+        when(representanteRepository.existsByUserAccount_Id(2L)).thenReturn(true);
 
         assertThatThrownBy(() -> representanteService.create(request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -133,8 +133,8 @@ class GuardianServiceTest {
         GuardianRequest request = new GuardianRequest(1L, 1L, "Madre", "0999999999", null);
         UserAccount usuarioSinRol = UserAccount.builder().id(1L).username("ana.vera@sged.test")
                 .roles(Set.of(Role.builder().id(2L).name("ENTRENADOR").build())).build();
-        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
-        when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
+        when(representanteRepository.existsByPerson_Id(1L)).thenReturn(false);
+        when(representanteRepository.existsByUserAccount_Id(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuarioSinRol));
 
@@ -149,8 +149,8 @@ class GuardianServiceTest {
     @DisplayName("crear vincula de una vez los estudiantes iniciales pedidos")
     void crear_vincula_estudiantes_iniciales() {
         GuardianRequest request = new GuardianRequest(1L, 1L, "Madre", "0999999999", List.of(10L, 20L));
-        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
-        when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
+        when(representanteRepository.existsByPerson_Id(1L)).thenReturn(false);
+        when(representanteRepository.existsByUserAccount_Id(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
         when(representanteRepository.save(any(Guardian.class))).thenAnswer(inv -> {
@@ -160,10 +160,10 @@ class GuardianServiceTest {
         });
         when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante(10L, "Juan")));
         when(estudianteRepository.findById(20L)).thenReturn(Optional.of(estudiante(20L, "Maria")));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(anyLong(), anyLong()))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
         when(vinculoRepository.save(any(GuardianStudent.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(5L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(5L)).thenReturn(List.of());
 
         GuardianResponse resultado = representanteService.create(request);
 
@@ -175,8 +175,8 @@ class GuardianServiceTest {
     @DisplayName("crear lanza ResourceNotFoundException si un estudiante inicial no existe")
     void crear_falla_si_estudiante_inicial_no_existe() {
         GuardianRequest request = new GuardianRequest(1L, 1L, "Madre", null, List.of(999L));
-        when(representanteRepository.existsByPersona_IdPersona(1L)).thenReturn(false);
-        when(representanteRepository.existsByUsuario_IdUsuario(1L)).thenReturn(false);
+        when(representanteRepository.existsByPerson_Id(1L)).thenReturn(false);
+        when(representanteRepository.existsByUserAccount_Id(1L)).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(usuarioRepository.findById(1L)).thenReturn(Optional.of(usuario()));
         when(representanteRepository.save(any(Guardian.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -207,7 +207,7 @@ class GuardianServiceTest {
                 .student(estudiante(10L, "Juan"))
                 .active(true)
                 .build();
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
         when(vinculoRepository.save(any(GuardianStudent.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -219,7 +219,7 @@ class GuardianServiceTest {
     @Test
     @DisplayName("desvincularEstudiante lanza ResourceNotFoundException si no habia vinculo")
     void desvincular_sin_vinculo_lanza_excepcion() {
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> representanteService.unlinkStudent(1L, 10L))
@@ -231,11 +231,11 @@ class GuardianServiceTest {
     void vincular_guarda_relacion_y_contacto_principal() {
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(representante()));
         when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante(10L, "Juan")));
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(10L)).thenReturn(List.of());
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(10L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.empty());
         when(vinculoRepository.save(any(GuardianStudent.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(1L)).thenReturn(List.of());
 
         representanteService.linkStudent(1L, 10L, new LinkRequest("Madre", true));
 
@@ -258,11 +258,11 @@ class GuardianServiceTest {
 
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(representante()));
         when(estudianteRepository.findById(10L)).thenReturn(Optional.of(estudiante(10L, "Juan")));
-        when(vinculoRepository.findByEstudiante_IdEstudianteAndActivoTrue(10L)).thenReturn(List.of(anterior));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndEstudiante_IdEstudiante(1L, 10L))
+        when(vinculoRepository.findByStudent_IdAndActiveTrue(10L)).thenReturn(List.of(anterior));
+        when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.empty());
         when(vinculoRepository.save(any(GuardianStudent.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(1L)).thenReturn(List.of());
 
         representanteService.linkStudent(1L, 10L, new LinkRequest("Padre", true));
 
@@ -275,7 +275,7 @@ class GuardianServiceTest {
         Guardian existente = representante();
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(representanteRepository.save(any(Guardian.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(1L)).thenReturn(List.of());
 
         GuardianRequest request = new GuardianRequest(1L, 1L, "Padre", "0999999999", null);
         GuardianResponse resultado = representanteService.update(1L, request);
@@ -302,7 +302,7 @@ class GuardianServiceTest {
         existente.setActive(false);
         when(representanteRepository.findById(1L)).thenReturn(Optional.of(existente));
         when(representanteRepository.save(any(Guardian.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(vinculoRepository.findByRepresentante_IdRepresentanteAndActivoTrue(1L)).thenReturn(List.of());
+        when(vinculoRepository.findByGuardian_IdAndActiveTrue(1L)).thenReturn(List.of());
 
         GuardianResponse resultado = representanteService.reactivate(1L);
 

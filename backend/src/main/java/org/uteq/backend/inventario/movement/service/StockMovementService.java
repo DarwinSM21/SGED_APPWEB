@@ -36,7 +36,7 @@ public class StockMovementService {
      */
     @Transactional(readOnly = true)
     public Page<StockMovementResponse> listPaged(Pageable pageable) {
-        return movimientoStockRepository.findAllByOrderByFechaMovimientoDesc(pageable).map(this::toResponse);
+        return movimientoStockRepository.findAllByOrderByMovementDateDesc(pageable).map(this::toResponse);
     }
 
     /**
@@ -48,7 +48,7 @@ public class StockMovementService {
      */
     @Transactional(readOnly = true)
     public Page<StockMovementResponse> listByItem(Long idArticulo, Pageable pageable) {
-        return movimientoStockRepository.findByArticulo_IdArticuloOrderByFechaMovimientoDesc(idArticulo, pageable)
+        return movimientoStockRepository.findByItem_IdOrderByMovementDateDesc(idArticulo, pageable)
                 .map(this::toResponse);
     }
 

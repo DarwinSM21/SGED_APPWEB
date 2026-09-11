@@ -92,7 +92,7 @@ class AlineacionServiceTest {
         when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
         for (long i = 1; i <= 12; i++) {
-            when(estudianteRepository.findByIdEstudianteAndActivoTrue(i))
+            when(estudianteRepository.findByIdAndActiveTrue(i))
                     .thenReturn(Optional.of(jugador(i, categoria)));
             when(posicionRepository.findById(i)).thenReturn(Optional.of(posicion(i)));
         }
@@ -111,7 +111,7 @@ class AlineacionServiceTest {
     void puestoUnicoEntreTitulares() {
         when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(anyLong()))
+        when(estudianteRepository.findByIdAndActiveTrue(anyLong()))
                 .thenAnswer(inv -> Optional.of(jugador(inv.getArgument(0), categoria)));
         when(posicionRepository.findById(1L)).thenReturn(Optional.of(posicion(1L)));
 
@@ -128,7 +128,7 @@ class AlineacionServiceTest {
     void categoriaAjena() {
         when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L))
+        when(estudianteRepository.findByIdAndActiveTrue(1L))
                 .thenReturn(Optional.of(jugador(1L, otraCategoria)));
 
         var request = conJugadores(List.of(new JugadorEnCancha(1L, null, true)));
@@ -143,7 +143,7 @@ class AlineacionServiceTest {
     void lesionadoNoJuega() {
         when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(1L));
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L))
+        when(estudianteRepository.findByIdAndActiveTrue(1L))
                 .thenReturn(Optional.of(jugador(1L, categoria)));
 
         var request = conJugadores(List.of(new JugadorEnCancha(1L, null, true)));
@@ -159,7 +159,7 @@ class AlineacionServiceTest {
     void sinRepetidos() {
         when(convocatoriaService.calcular(ID_PARTIDO)).thenReturn(convocatoriaVacia());
         when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(estudianteRepository.findByIdEstudianteAndActivoTrue(1L))
+        when(estudianteRepository.findByIdAndActiveTrue(1L))
                 .thenReturn(Optional.of(jugador(1L, categoria)));
 
         var request = conJugadores(List.of(

@@ -37,7 +37,7 @@ public class MyTeamService {
      */
     @Transactional(readOnly = true)
     public MyTeamResponse myTeam(String username) {
-        Student estudiante = estudianteRepository.findByUsuario_Username(username)
+        Student estudiante = estudianteRepository.findByUserAccount_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un estudiante asociado a esta cuenta"));
 
         var categoria = estudiante.getCategory();
@@ -54,7 +54,7 @@ public class MyTeamService {
         AssignedCoachResponse entrenadorResponse = nextCoachOf(categoria.getIdCategoria());
 
         List<TeammateResponse> companeros = estudianteRepository
-                .findByCategoria_IdCategoriaAndActivoTrueAndIdEstudianteNot(
+                .findByCategory_IdCategoriaAndActiveTrueAndIdNot(
                         categoria.getIdCategoria(), estudiante.getId())
                 .stream()
                 .map(this::toTeammate)

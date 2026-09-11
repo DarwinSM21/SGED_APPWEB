@@ -46,7 +46,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page<AssignmentResponse> listPaged(Pageable pageable) {
-        return asignacionRepository.findAllByOrderByFechaAsignacionDesc(pageable).map(this::toResponse);
+        return asignacionRepository.findAllByOrderByAssignmentDateDesc(pageable).map(this::toResponse);
     }
 
     /**
@@ -58,7 +58,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page<AssignmentResponse> listByStudent(Long idEstudiante, Pageable pageable) {
-        return asignacionRepository.findByEstudiante_IdEstudianteOrderByFechaAsignacionDesc(idEstudiante, pageable)
+        return asignacionRepository.findByStudent_IdOrderByAssignmentDateDesc(idEstudiante, pageable)
                 .map(this::toResponse);
     }
 
@@ -71,7 +71,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page<AssignmentResponse> listByCoach(Long idEntrenador, Pageable pageable) {
-        return asignacionRepository.findByEntrenador_IdEntrenadorOrderByFechaAsignacionDesc(idEntrenador, pageable)
+        return asignacionRepository.findByCoach_IdEntrenadorOrderByAssignmentDateDesc(idEntrenador, pageable)
                 .map(this::toResponse);
     }
 

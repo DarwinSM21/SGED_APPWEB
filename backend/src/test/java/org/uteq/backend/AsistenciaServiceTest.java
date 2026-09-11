@@ -60,7 +60,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("marcarPorQr lanza ResourceNotFoundException si la cuenta no tiene estudiante asociado")
     void marcarPorQr_sin_estudiante_asociado_lanza_excepcion() {
-        when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+        when(estudianteRepository.findByUserAccount_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> asistenciaService.marcarPorQr("huerfano@sged.test", 1L))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -70,7 +70,7 @@ class AsistenciaServiceTest {
     @DisplayName("marcarPorQr rechaza un segundo marcado en la misma sesion")
     void marcarPorQr_rechaza_doble_marcado() {
         Student e = estudiante();
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L))
                 .thenReturn(Optional.of(Asistencia.builder().idAsistencia(50L).build()));
 
@@ -84,7 +84,7 @@ class AsistenciaServiceTest {
         Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
         when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
@@ -107,7 +107,7 @@ class AsistenciaServiceTest {
         LocalTime horaInicio = ahora.isBefore(LocalTime.of(1, 0)) ? LocalTime.MIDNIGHT : ahora.minusHours(1);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicio);
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
         when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
@@ -125,7 +125,7 @@ class AsistenciaServiceTest {
         Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(null);
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
         when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
@@ -148,7 +148,7 @@ class AsistenciaServiceTest {
                 ? LocalTime.MIDNIGHT : ahoraTolerancia.minusMinutes(5);
         SesionEntrenamiento sesion = sesionConHoraInicio(horaInicioTolerancia);
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
         when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(true);
@@ -166,7 +166,7 @@ class AsistenciaServiceTest {
         Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
         when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(false);
@@ -182,7 +182,7 @@ class AsistenciaServiceTest {
         Student e = estudiante();
         SesionEntrenamiento sesion = sesionConHoraInicio(enUnaHora());
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findBySesionIdSesionAndEstudianteIdEstudiante(1L, 6L)).thenReturn(Optional.empty());
         when(sesionRepository.findById(1L)).thenReturn(Optional.of(sesion));
         when(asistenciaRepository.validarCategoriaCoincide(6L, 1L)).thenReturn(null);
@@ -194,7 +194,7 @@ class AsistenciaServiceTest {
     @Test
     @DisplayName("misAsistencias lanza ResourceNotFoundException si la cuenta no tiene estudiante asociado")
     void misAsistencias_sin_estudiante_asociado_lanza_excepcion() {
-        when(estudianteRepository.findByUsuario_Username("huerfano@sged.test")).thenReturn(Optional.empty());
+        when(estudianteRepository.findByUserAccount_Username("huerfano@sged.test")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> asistenciaService.misAsistencias("huerfano@sged.test"))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -213,7 +213,7 @@ class AsistenciaServiceTest {
                 .horaEntrada(LocalTime.of(16, 5)).estado(Asistencia.ESTADO_PRESENTE)
                 .build();
 
-        when(estudianteRepository.findByUsuario_Username("andres@sged.test")).thenReturn(Optional.of(e));
+        when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
         when(asistenciaRepository.findByEstudiante_IdEstudianteOrderBySesion_FechaDesc(anyLong(), any()))
                 .thenReturn(new PageImpl<>(List.of(asistencia)));
         when(asistenciaRepository.calcularPorcentajeAsistencia(anyLong(), any(), any()))

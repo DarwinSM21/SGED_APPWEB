@@ -44,7 +44,7 @@ class StudentAccessServiceTest {
     @Test
     @DisplayName("validarCoherenciaConFichaEstudiante no lanza si la persona no tiene cuenta")
     void validarCoherencia_sin_cuenta_no_lanza() {
-        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.empty());
+        when(usuarioRepository.findByPerson_IdAndActiveTrue(1L)).thenReturn(Optional.empty());
 
         service.validateConsistencyWithStudentRecord(1L);
     }
@@ -54,7 +54,7 @@ class StudentAccessServiceTest {
     void validarCoherencia_con_cuenta_de_otro_rol_lanza() {
         UserAccount cuentaEntrenador = UserAccount.builder().id(9L)
                 .roles(Set.of(Role.builder().id(2L).name("ENTRENADOR").build())).build();
-        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
+        when(usuarioRepository.findByPerson_IdAndActiveTrue(1L)).thenReturn(Optional.of(cuentaEntrenador));
 
         assertThatThrownBy(() -> service.validateConsistencyWithStudentRecord(1L))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -65,7 +65,7 @@ class StudentAccessServiceTest {
     void validarCoherencia_con_cuenta_de_estudiante_no_lanza() {
         UserAccount cuentaEstudiante = UserAccount.builder().id(9L)
                 .roles(Set.of(Role.builder().id(5L).name("ESTUDIANTE").build())).build();
-        when(usuarioRepository.findByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
+        when(usuarioRepository.findByPerson_IdAndActiveTrue(1L)).thenReturn(Optional.of(cuentaEstudiante));
 
         service.validateConsistencyWithStudentRecord(1L);
     }
@@ -89,7 +89,7 @@ class StudentAccessServiceTest {
         Role rolEstudiante = Role.builder().id(6L).name("ESTUDIANTE").build();
 
         when(usuarioRepository.existsByUsernameIgnoreCase("andres@sged.test")).thenReturn(false);
-        when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
+        when(rolRepository.findByName("ESTUDIANTE")).thenReturn(Optional.of(rolEstudiante));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(GeneralStatus.builder().id(1L).build()));
         when(passwordEncoder.encode("password123")).thenReturn("$2a$12$encoded");
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(i -> {
@@ -110,7 +110,7 @@ class StudentAccessServiceTest {
     @DisplayName("crearCuentaDeEstudiante lanza IllegalStateException si falta el rol ESTUDIANTE en el catalogo")
     void crearCuenta_sin_rol_estudiante_en_catalogo_lanza() {
         when(usuarioRepository.existsByUsernameIgnoreCase("x@sged.test")).thenReturn(false);
-        when(rolRepository.findByNombre("ESTUDIANTE")).thenReturn(Optional.empty());
+        when(rolRepository.findByName("ESTUDIANTE")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.createStudentAccount(persona, new EnableAccessRequest("x@sged.test", "password123")))
                 .isInstanceOf(IllegalStateException.class);

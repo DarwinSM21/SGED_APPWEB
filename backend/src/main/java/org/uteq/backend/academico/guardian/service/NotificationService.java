@@ -117,7 +117,7 @@ public class NotificationService {
     public List<NotificationResponse> myNotifications(String username) {
         Guardian representante = guardianOf(username);
         return notificacionRepository
-                .findByRepresentante_IdRepresentanteOrderByCreatedAtDesc(representante.getId())
+                .findByGuardian_IdOrderByCreatedAtDesc(representante.getId())
                 .stream().map(this::toResponse).toList();
     }
 
@@ -132,7 +132,7 @@ public class NotificationService {
     @Transactional(readOnly = true)
     public long unreadCount(String username) {
         Guardian representante = guardianOf(username);
-        return notificacionRepository.countByRepresentante_IdRepresentanteAndLeidaFalse(representante.getId());
+        return notificacionRepository.countByGuardian_IdAndReadFalse(representante.getId());
     }
 
     /**
@@ -149,7 +149,7 @@ public class NotificationService {
     public void markRead(String username, Long idNotificacion) {
         Guardian representante = guardianOf(username);
         Notification notificacion = notificacionRepository
-                .findByIdNotificacionAndRepresentante_IdRepresentante(idNotificacion, representante.getId())
+                .findByIdAndGuardian_Id(idNotificacion, representante.getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Notificación no encontrada con id: " + idNotificacion));
         notificacion.setRead(true);
         notificacionRepository.save(notificacion);
@@ -158,7 +158,7 @@ public class NotificationService {
     private void createForEachGuardian(Student estudiante, Type tipo,
                                             String alcanceRequerido, String mensaje) {
         List<Guardian> representantes = vinculoRepository
-                .findByEstudiante_IdEstudianteAndActivoTrue(estudiante.getId())
+                .findByStudent_IdAndActiveTrue(estudiante.getId())
                 .stream().map(v -> v.getGuardian()).toList();
 
         for (Guardian representante : representantes) {
@@ -187,13 +187,13 @@ public class NotificationService {
 
     private boolean isCurrent(Long idRepresentante, Long idEstudiante, String alcance) {
         return consentimientoRepository
-                .findByRepresentante_IdRepresentanteAndEstudiante_IdEstudianteAndAlcanceAndRevocadoEnIsNull(
+                .findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
                         idRepresentante, idEstudiante, alcance)
                 .isPresent();
     }
 
     private Guardian guardianOf(String username) {
-        return representanteRepository.findByUsuario_Username(username)
+        return representanteRepository.findByUserAccount_Username(username)
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 

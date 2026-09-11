@@ -34,7 +34,7 @@ public class PersonService {
      */
     @Transactional(readOnly = true)
     public Page<PersonResponse> list(Pageable pageable) {
-        return personaRepository.findByActivoTrue(pageable)
+        return personaRepository.findByActiveTrue(pageable)
                 .map(this::toResponse);
     }
 
@@ -47,7 +47,7 @@ public class PersonService {
      */
     @Transactional(readOnly = true)
     public PersonResponse findById(Long id) {
-        Person p = personaRepository.findByIdPersonaAndActivoTrue(id)
+        Person p = personaRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada o inactivada con id: " + id));
         return toResponse(p);
     }
@@ -168,7 +168,7 @@ public class PersonService {
             if (tieneCedula && personaRepository.existsByNationalIdAndActiveTrue(cedula)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con la cédula: " + cedula);
             }
-            if (personaRepository.existsByCorreo(correo)) {
+            if (personaRepository.existsByEmail(correo)) {
                 throw new IllegalArgumentException("Ya existe una persona registrada con el correo: " + correo);
             }
         } else {

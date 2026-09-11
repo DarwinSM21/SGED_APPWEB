@@ -19,7 +19,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @return página de personas con baja lógica excluida
      */
     @Query("SELECT p FROM Person p WHERE p.active = true")
-    Page<Person> findByActivoTrue(Pageable pageable);
+    Page<Person> findByActiveTrue(Pageable pageable);
 
     /**
      * @param cedula cédula a buscar (puede no estar presente, ver RF-49)
@@ -33,14 +33,14 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @return la persona, si existe y está activa
      */
     @Query("SELECT p FROM Person p WHERE p.id = :idPersona AND p.active = true")
-    Optional<Person> findByIdPersonaAndActivoTrue(@Param("idPersona") Long idPersona);
+    Optional<Person> findByIdAndActiveTrue(@Param("idPersona") Long idPersona);
 
     /**
      * @param correo correo electrónico a buscar
      * @return la persona con ese correo, activa o no, si existe
      */
     @Query("SELECT p FROM Person p WHERE p.email = :correo")
-    Optional<Person> findByCorreo(@Param("correo") String correo);
+    Optional<Person> findByEmail(@Param("correo") String correo);
 
     /**
      * @param cedula cédula a comprobar
@@ -54,7 +54,7 @@ public interface PersonRepository extends JpaRepository<Person, Long> {
      * @return {@code true} si ya existe una persona con ese correo
      */
     @Query("SELECT COUNT(p) > 0 FROM Person p WHERE p.email = :correo")
-    boolean existsByCorreo(@Param("correo") String correo);
+    boolean existsByEmail(@Param("correo") String correo);
 
     /**
      * Comprueba unicidad de cédula excluyendo a la propia persona, para
