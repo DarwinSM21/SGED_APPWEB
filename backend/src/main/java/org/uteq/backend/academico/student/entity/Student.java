@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.posicion.entity.Posicion;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.position.entity.Position;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.user.entity.UserAccount;
@@ -33,7 +33,7 @@ public class Student {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria", nullable = false)
-    private Categoria category;
+    private Category category;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_general", nullable = false)
@@ -41,7 +41,7 @@ public class Student {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_posicion")
-    private Posicion position;
+    private Position position;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_usuario", unique = true)

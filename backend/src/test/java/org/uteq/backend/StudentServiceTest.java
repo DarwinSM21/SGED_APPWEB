@@ -20,8 +20,8 @@ import org.uteq.backend.academico.student.service.StudentAccessService;
 import org.uteq.backend.academico.student.service.StudentService;
 import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.category.repository.CategoryRepository;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -42,7 +42,7 @@ import static org.mockito.Mockito.*;
 class StudentServiceTest {
     @Mock private StudentRepository estudianteRepository;
     @Mock private PersonRepository personaRepository;
-    @Mock private CategoriaRepository categoriaRepository;
+    @Mock private CategoryRepository categoryRepository;
     @Mock private GeneralStatusRepository estadoGeneralRepository;
     @Mock private GuardianStudentRepository representanteEstudianteRepository;
     @Mock private StudentAccessService estudianteAccesoService;
@@ -50,7 +50,7 @@ class StudentServiceTest {
     @InjectMocks private StudentService service;
 
     private Person personaDummy;
-    private Categoria categoriaDummy;
+    private Category categoriaDummy;
     private GeneralStatus estadoDummy;
     private Student estudianteDummy;
 
@@ -63,7 +63,7 @@ class StudentServiceTest {
                 .active(true)
                 .build();
 
-        categoriaDummy = Categoria.builder()
+        categoriaDummy = Category.builder()
                 .idCategoria(1L)
                 .nombre("SUB-12")
                 .edadMin((short) 10)
@@ -144,7 +144,7 @@ class StudentServiceTest {
         when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.existsByStudentCode("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
-        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
         when(estudianteRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -185,7 +185,7 @@ class StudentServiceTest {
         when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.existsByStudentCode("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(personaDummy));
-        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
         when(estudianteRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -204,7 +204,7 @@ class StudentServiceTest {
         StudentRequest request = crearRequestValido();
 
         when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.of(estudianteInactivo));
-        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoDummy));
         when(estudianteRepository.save(any(Student.class))).thenAnswer(i -> i.getArgument(0));
 
@@ -387,7 +387,7 @@ class StudentServiceTest {
         when(estudianteRepository.findByPerson_Id(1L)).thenReturn(Optional.empty());
         when(estudianteRepository.existsByStudentCode("EST-001")).thenReturn(false);
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona));
-        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
+        when(categoryRepository.findById(1L)).thenReturn(Optional.of(categoriaDummy));
     }
 
     @Test

@@ -21,11 +21,11 @@ import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.academico.guardian.service.StudentReportService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.evaluation.repository.StudentEvaluationRepository;
+import org.uteq.backend.deportivo.injury.entity.Injury;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.math.BigDecimal;
@@ -46,9 +46,9 @@ class StudentReportServiceTest {
     @Mock private GuardianRepository representanteRepository;
     @Mock private GuardianStudentRepository vinculoRepository;
     @Mock private StudentRepository estudianteRepository;
-    @Mock private LesionRepository lesionRepository;
-    @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
-    @Mock private AsistenciaRepository asistenciaRepository;
+    @Mock private InjuryRepository injuryRepository;
+    @Mock private StudentEvaluationRepository studentEvaluationRepository;
+    @Mock private AttendanceRepository attendanceRepository;
     @Mock private AIFeedbackGenerator generadorFeedback;
 
     @InjectMocks
@@ -65,7 +65,7 @@ class StudentReportServiceTest {
         return Student.builder()
                 .id(id)
                 .person(Person.builder().name(nombre).lastName("Hijo").build())
-                .category(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
+                .category(Category.builder().idCategoria(1L).nombre("SUB-12").build())
                 .build();
     }
 
@@ -126,7 +126,7 @@ class StudentReportServiceTest {
         Student hijo = estudiante(10L, "Juan");
         GuardianStudent vinculo = GuardianStudent.builder()
                 .guardian(r).student(hijo).active(true).build();
-        Lesion lesion = Lesion.builder()
+        Injury lesion = Injury.builder()
                 .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
                 .fechaAlta(null).build();
 
@@ -135,11 +135,11 @@ class StudentReportServiceTest {
                 .thenReturn(true);
         when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
-        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+        when(studentEvaluationRepository.historicalAverageByCriterion(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
-        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
-                .thenReturn((Page<Lesion>) new PageImpl<>(List.of(lesion)));
-        when(asistenciaRepository.calcularPorcentajeAsistencia(eq(10L), any(LocalDate.class), any(LocalDate.class)))
+        when(injuryRepository.findByStudentOrderByInjuryDateDesc(any(), any()))
+                .thenReturn((Page<Injury>) new PageImpl<>(List.of(lesion)));
+        when(attendanceRepository.calculateAttendancePercentage(eq(10L), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(new BigDecimal("85.71"));
 
         StudentReportResponse informe = informeService.reportFor("ana.vera@sged.test", 10L);
@@ -166,16 +166,16 @@ class StudentReportServiceTest {
     @DisplayName("miInforme arma el mismo DTO que informeDe, resuelto por la cuenta autenticada")
     void miInforme_devuelve_el_informe_del_propio_estudiante() {
         Student yo = estudiante(10L, "Juan");
-        Lesion lesion = Lesion.builder()
+        Injury lesion = Injury.builder()
                 .idLesion(5L).descripcion("Esguince").fechaLesion(LocalDate.of(2026, 1, 10))
                 .fechaAlta(null).build();
 
         when(estudianteRepository.findByUserAccount_Username("juan.hijo@sged.test")).thenReturn(Optional.of(yo));
-        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+        when(studentEvaluationRepository.historicalAverageByCriterion(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
-        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
-                .thenReturn((Page<Lesion>) new PageImpl<>(List.of(lesion)));
-        when(asistenciaRepository.calcularPorcentajeAsistencia(eq(10L), any(LocalDate.class), any(LocalDate.class)))
+        when(injuryRepository.findByStudentOrderByInjuryDateDesc(any(), any()))
+                .thenReturn((Page<Injury>) new PageImpl<>(List.of(lesion)));
+        when(attendanceRepository.calculateAttendancePercentage(eq(10L), any(LocalDate.class), any(LocalDate.class)))
                 .thenReturn(new BigDecimal("85.71"));
 
         StudentReportResponse informe = informeService.myReport("juan.hijo@sged.test");
@@ -213,9 +213,9 @@ class StudentReportServiceTest {
                 .thenReturn(true);
         when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
-        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L)).thenReturn(List.of());
-        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
-                .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
+        when(studentEvaluationRepository.historicalAverageByCriterion(10L)).thenReturn(List.of());
+        when(injuryRepository.findByStudentOrderByInjuryDateDesc(any(), any()))
+                .thenReturn((Page<Injury>) new PageImpl<>(List.<Injury>of()));
 
         var respuesta = informeService.commentFor("ana.vera@sged.test", 10L);
 
@@ -237,11 +237,11 @@ class StudentReportServiceTest {
                 .thenReturn(true);
         when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
-        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+        when(studentEvaluationRepository.historicalAverageByCriterion(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
-        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
-                .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
-        when(asistenciaRepository.contarAsistenciasDesde(eq(10L), any(LocalDate.class))).thenReturn(12L);
+        when(injuryRepository.findByStudentOrderByInjuryDateDesc(any(), any()))
+                .thenReturn((Page<Injury>) new PageImpl<>(List.<Injury>of()));
+        when(attendanceRepository.countSince(eq(10L), any(LocalDate.class))).thenReturn(12L);
         when(generadorFeedback.generatePlayerComment(any()))
                 .thenReturn(AIFeedbackGenerator.FeedbackResult.ok("Viene creciendo en actitud."));
 
@@ -272,11 +272,11 @@ class StudentReportServiceTest {
                 .thenReturn(true);
         when(vinculoRepository.findByGuardian_IdAndStudent_Id(1L, 10L))
                 .thenReturn(Optional.of(vinculo));
-        when(evaluacionEstudianteRepository.promedioHistoricoPorCriterio(10L))
+        when(studentEvaluationRepository.historicalAverageByCriterion(10L))
                 .thenReturn(List.<Object[]>of(new Object[]{"Tecnica", 7.5}));
-        when(lesionRepository.findByEstudianteIdEstudianteOrderByFechaLesionDesc(any(), any()))
-                .thenReturn((Page<Lesion>) new PageImpl<>(List.<Lesion>of()));
-        when(asistenciaRepository.contarAsistenciasDesde(eq(10L), any(LocalDate.class))).thenReturn(3L);
+        when(injuryRepository.findByStudentOrderByInjuryDateDesc(any(), any()))
+                .thenReturn((Page<Injury>) new PageImpl<>(List.<Injury>of()));
+        when(attendanceRepository.countSince(eq(10L), any(LocalDate.class))).thenReturn(3L);
         when(generadorFeedback.generatePlayerComment(any()))
                 .thenReturn(AIFeedbackGenerator.FeedbackResult.unavailable("El servicio no respondio"));
 

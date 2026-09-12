@@ -54,7 +54,7 @@ public class NotificationService {
             String estado = "TARDE".equals(estadoAsistencia) ? "con tardanza" : "a tiempo";
             createForEachGuardian(estudiante, Type.ASISTENCIA,
                     Consent.ALCANCE_NOTIFICACIONES_ASISTENCIA,
-                    fullName(estudiante) + " marcó asistencia hoy (" + estado + ").");
+                    fullName(estudiante) + " marcó asistencia today (" + estado + ").");
         });
     }
 
@@ -78,7 +78,7 @@ public class NotificationService {
      *
      * <p>La captura tiene que estar <b>aquí dentro</b> y no en quien llama:
      * estos métodos son {@code @Transactional} y se invocan desde
-     * {@code AsistenciaService} / {@code LesionService}, ya dentro de una
+     * {@code AttendanceService} / {@code InjuryService}, ya dentro de una
      * transacción. Si la excepción saliera, el proxy de Spring marcaría la
      * transacción como {@code rollback-only} y el {@code try/catch} del
      * llamador no serviría —al confirmar saltaría

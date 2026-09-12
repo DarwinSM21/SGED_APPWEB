@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
+import org.uteq.backend.deportivo.injury.entity.Injury;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.audit.aop.AuditAspect;
 import org.uteq.backend.seguridad.audit.service.AuditService;
@@ -38,7 +38,7 @@ class AuditAspectTest {
     }
 
     static class MetodosDeEjemplo {
-        @Audited(action = "CREAR", entity = "Lesion", idSpel = "#result.idLesion")
+        @Audited(action = "CREAR", entity = "Injury", idSpel = "#result.idLesion")
         void conResultado() {
         }
 
@@ -64,7 +64,7 @@ class AuditAspectTest {
     @Test
     @DisplayName("evalua el idSpel sobre el resultado y registra la auditoria con la descripcion generica")
     void evaluaIdSobreElResultado() throws Throwable {
-        Lesion resultado = Lesion.builder().idLesion(45L).build();
+        Injury resultado = Injury.builder().idLesion(45L).build();
         when(pjp.proceed()).thenReturn(resultado);
         when(pjp.getArgs()).thenReturn(new Object[0]);
         Audited auditado = anotacionDe("conResultado");
@@ -72,7 +72,7 @@ class AuditAspectTest {
         Object devuelto = aspecto.audit(pjp, auditado);
 
         assertSame(resultado, devuelto);
-        verify(auditoriaService).recordEvent(eq("CREAR"), eq("Lesion"), eq(45L), eq("creó Lesion #45"));
+        verify(auditoriaService).recordEvent(eq("CREAR"), eq("Injury"), eq(45L), eq("creó Injury #45"));
     }
 
     @Test
@@ -102,7 +102,7 @@ class AuditAspectTest {
     @Test
     @DisplayName("un error al auditar no impide devolver el resultado del metodo envuelto")
     void erroresDeAuditoriaNoRompenElResultado() throws Throwable {
-        Lesion resultado = Lesion.builder().idLesion(45L).build();
+        Injury resultado = Injury.builder().idLesion(45L).build();
         when(pjp.proceed()).thenReturn(resultado);
         when(pjp.getArgs()).thenReturn(new Object[0]);
         when(pjp.getSignature()).thenReturn(mock(Signature.class));

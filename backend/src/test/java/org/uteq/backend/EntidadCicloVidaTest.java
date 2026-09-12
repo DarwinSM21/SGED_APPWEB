@@ -3,9 +3,9 @@ package org.uteq.backend;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.uteq.backend.academico.guardian.entity.Consent;
-import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
-import org.uteq.backend.deportivo.evaluacion.entity.Alineacion;
-import org.uteq.backend.deportivo.evaluacion.entity.AlineacionJugador;
+import org.uteq.backend.deportivo.coach.entity.Coach;
+import org.uteq.backend.deportivo.evaluation.entity.Lineup;
+import org.uteq.backend.deportivo.evaluation.entity.LineupPlayer;
 import org.uteq.backend.seguridad.audit.entity.AuditLog;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.user.entity.UserAccount;
@@ -82,9 +82,9 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Entrenador.onCreate()/onUpdate(): timestamps y activo por defecto")
+    @DisplayName("Coach.onCreate()/onUpdate(): timestamps y activo por defecto")
     void entrenador_ciclo_vida() throws Exception {
-        Entrenador e = new Entrenador();
+        Coach e = new Coach();
         invocar(e, "onCreate");
         assertThat(e.getCreatedAt()).isNotNull();
         assertThat(e.getUpdatedAt()).isNotNull();
@@ -123,22 +123,22 @@ class EntidadCicloVidaTest {
     }
 
     @Test
-    @DisplayName("Alineacion.alCrear()/alActualizar(): sella creadoEn y actualizadoEn")
+    @DisplayName("Lineup.onCreate()/onUpdate(): sella creadoEn y actualizadoEn")
     void alineacion_ciclo_vida() throws Exception {
-        Alineacion a = new Alineacion();
-        invocar(a, "alCrear");
+        Lineup a = new Lineup();
+        invocar(a, "onCreate");
         assertThat(a.getCreadoEn()).isNotNull();
         assertThat(a.getActualizadoEn()).isEqualTo(a.getCreadoEn());
 
-        invocar(a, "alActualizar");
+        invocar(a, "onUpdate");
         assertThat(a.getActualizadoEn()).isNotNull();
     }
 
     @Test
-    @DisplayName("AlineacionJugador.alCrear(): sella creadoEn")
+    @DisplayName("LineupPlayer.onCreate(): sella creadoEn")
     void alineacionJugador_alCrear() throws Exception {
-        AlineacionJugador j = new AlineacionJugador();
-        invocar(j, "alCrear");
+        LineupPlayer j = new LineupPlayer();
+        invocar(j, "onCreate");
         assertThat(j.getCreadoEn()).isNotNull();
     }
 }

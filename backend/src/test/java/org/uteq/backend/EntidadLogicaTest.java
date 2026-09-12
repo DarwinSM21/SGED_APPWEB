@@ -4,10 +4,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.guardian.entity.Consent;
-import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
-import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionDiaria;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.deportivo.partido.entity.Partido;
+import org.uteq.backend.deportivo.attendance.entity.Attendance;
+import org.uteq.backend.deportivo.evaluation.entity.DailyEvaluation;
+import org.uteq.backend.deportivo.injury.entity.Injury;
+import org.uteq.backend.deportivo.match.entity.Match;
 
 import java.time.OffsetDateTime;
 
@@ -42,58 +42,58 @@ class EntidadLogicaTest {
     }
 
     @Test
-    @DisplayName("Lesion.estaActiva(): activa hasta que hay fecha de alta")
+    @DisplayName("Injury.isActive(): activa hasta que hay fecha de alta")
     void lesion_estaActiva() {
-        Lesion l = new Lesion();
-        assertThat(l.estaActiva()).isTrue();
+        Injury l = new Injury();
+        assertThat(l.isActive()).isTrue();
 
         l.setFechaAlta(java.time.LocalDate.now());
-        assertThat(l.estaActiva()).isFalse();
+        assertThat(l.isActive()).isFalse();
     }
 
     @Test
-    @DisplayName("Asistencia.habilitaEvaluacion(): solo PRESENTE o TARDE habilitan calificar")
+    @DisplayName("Attendance.enablesEvaluation(): solo PRESENTE o TARDE habilitan calificar")
     void asistencia_habilitaEvaluacion() {
-        Asistencia a = new Asistencia();
+        Attendance a = new Attendance();
 
-        a.setEstado(Asistencia.ESTADO_PRESENTE);
-        assertThat(a.habilitaEvaluacion()).isTrue();
+        a.setEstado(Attendance.ESTADO_PRESENTE);
+        assertThat(a.enablesEvaluation()).isTrue();
 
-        a.setEstado(Asistencia.ESTADO_TARDE);
-        assertThat(a.habilitaEvaluacion()).isTrue();
+        a.setEstado(Attendance.ESTADO_TARDE);
+        assertThat(a.enablesEvaluation()).isTrue();
 
-        a.setEstado(Asistencia.ESTADO_AUSENTE);
-        assertThat(a.habilitaEvaluacion()).isFalse();
+        a.setEstado(Attendance.ESTADO_AUSENTE);
+        assertThat(a.enablesEvaluation()).isFalse();
 
-        a.setEstado(Asistencia.ESTADO_JUSTIFICADO);
-        assertThat(a.habilitaEvaluacion()).isFalse();
+        a.setEstado(Attendance.ESTADO_JUSTIFICADO);
+        assertThat(a.enablesEvaluation()).isFalse();
     }
 
     @Test
-    @DisplayName("EvaluacionDiaria.estaFinalizada(): true solo en estado FINALIZADA")
+    @DisplayName("DailyEvaluation.isFinished(): true solo en estado FINALIZADA")
     void evaluacion_estaFinalizada() {
-        EvaluacionDiaria e = new EvaluacionDiaria();
-        assertThat(e.estaFinalizada()).isFalse();
+        DailyEvaluation e = new DailyEvaluation();
+        assertThat(e.isFinished()).isFalse();
 
-        e.setEstado(EvaluacionDiaria.FINALIZADA);
-        assertThat(e.estaFinalizada()).isTrue();
+        e.setEstado(DailyEvaluation.FINALIZADA);
+        assertThat(e.isFinished()).isTrue();
     }
 
     @Test
-    @DisplayName("Partido.tieneResultado() / estaCerrado(): ambas ramas")
+    @DisplayName("Match.hasResult() / isClosed(): ambas ramas")
     void partido_predicados() {
-        Partido p = Partido.builder().build();
-        assertThat(p.tieneResultado()).isFalse();
-        assertThat(p.estaCerrado()).isFalse();
+        Match p = Match.builder().build();
+        assertThat(p.hasResult()).isFalse();
+        assertThat(p.isClosed()).isFalse();
 
         p.setGolesFavor((short) 2);
-        assertThat(p.tieneResultado()).isFalse();
+        assertThat(p.hasResult()).isFalse();
         p.setGolesContra((short) 1);
-        assertThat(p.tieneResultado()).isTrue();
+        assertThat(p.hasResult()).isTrue();
 
         p.setCerrado(true);
-        assertThat(p.estaCerrado()).isTrue();
+        assertThat(p.isClosed()).isTrue();
         p.setCerrado(false);
-        assertThat(p.estaCerrado()).isFalse();
+        assertThat(p.isClosed()).isFalse();
     }
 }

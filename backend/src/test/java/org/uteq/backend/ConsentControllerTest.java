@@ -56,7 +56,7 @@ class ConsentControllerTest {
         SecurityContextHolder.clearContext();
     }
 
-    private ConsentResponse respuesta(boolean vigente) {
+    private ConsentResponse response(boolean vigente) {
         return new ConsentResponse(1L, 1L, 10L, Consent.ALCANCE_INFORMES,
                 OffsetDateTime.now(), "admin@sged.test", vigente ? null : OffsetDateTime.now(), vigente);
     }
@@ -64,7 +64,7 @@ class ConsentControllerTest {
     @Test
     @DisplayName("POST /api/consentimientos - otorga y usa el username autenticado, no uno del cuerpo")
     void otorgar_devuelve_201_con_admin_autenticado() throws Exception {
-        when(consentimientoService.grant(any(), eq("admin@sged.test"))).thenReturn(respuesta(true));
+        when(consentimientoService.grant(any(), eq("admin@sged.test"))).thenReturn(response(true));
 
         mockMvc.perform(post("/api/consentimientos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -77,7 +77,7 @@ class ConsentControllerTest {
     @Test
     @DisplayName("POST /api/consentimientos/{id}/revocar - revoca y devuelve 200")
     void revocar_devuelve_200() throws Exception {
-        when(consentimientoService.revoke(eq(1L), eq("admin@sged.test"))).thenReturn(respuesta(false));
+        when(consentimientoService.revoke(eq(1L), eq("admin@sged.test"))).thenReturn(response(false));
 
         mockMvc.perform(post("/api/consentimientos/1/revocar"))
                 .andExpect(status().isOk())
@@ -87,7 +87,7 @@ class ConsentControllerTest {
     @Test
     @DisplayName("GET /api/consentimientos/estudiante/{id} - lista el historial")
     void listarPorEstudiante_devuelve_200() throws Exception {
-        when(consentimientoService.listByStudent(10L)).thenReturn(List.of(respuesta(true)));
+        when(consentimientoService.listByStudent(10L)).thenReturn(List.of(response(true)));
 
         mockMvc.perform(get("/api/consentimientos/estudiante/10"))
                 .andExpect(status().isOk())

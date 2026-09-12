@@ -40,7 +40,7 @@ public class StudentController {
      * @param sort par {@code campo[,asc|desc]}; por defecto
      *             {@code idEstudiante,asc}
      * @param auth sesión autenticada; determina si el peso y la altura se
-     *             incluyen en la respuesta (RF-11b: {@code RECEPCIONISTA} no los ve)
+     *             incluyen en la response (RF-11b: {@code RECEPCIONISTA} no los ve)
      * @return {@code 200 OK} con la página solicitada
      */
     @GetMapping
@@ -64,7 +64,7 @@ public class StudentController {
      *
      * @param id identificador del estudiante
      * @param auth sesión autenticada; determina si el peso y la altura se
-     *             incluyen en la respuesta (RF-11b: {@code RECEPCIONISTA} no los ve)
+     *             incluyen en la response (RF-11b: {@code RECEPCIONISTA} no los ve)
      * @return {@code 200 OK} con el estudiante
      * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si no existe ({@code 404})

@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.uteq.backend.academico.student.entity.Student;
-import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
+import org.uteq.backend.deportivo.coach.entity.Coach;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.inventario.item.entity.Item;
 import org.uteq.backend.seguridad.user.entity.UserAccount;
@@ -46,7 +46,7 @@ public class Assignment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_entrenador")
-    private Entrenador coach;
+    private Coach coach;
 
     @Column(name = "fecha_asignacion", nullable = false)
     @Builder.Default

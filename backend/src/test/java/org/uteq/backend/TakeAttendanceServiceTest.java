@@ -1,0 +1,234 @@
+package org.uteq.backend;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.seguridad.person.entity.Person;
+import org.uteq.backend.academico.guardian.service.NotificationService;
+import org.uteq.backend.common.Zones;
+import org.uteq.backend.deportivo.attendance.dto.TakeAttendanceDtos.AttendanceMark;
+import org.uteq.backend.deportivo.attendance.dto.TakeAttendanceDtos.TakeAttendanceRequest;
+import org.uteq.backend.deportivo.attendance.entity.Attendance;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.attendance.service.AttendanceService;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.session.entity.TrainingSession;
+import org.uteq.backend.deportivo.session.repository.TrainingSessionRepository;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+@ExtendWith(MockitoExtension.class)
+class TakeAttendanceServiceTest {
+    @Mock private AttendanceRepository attendanceRepository;
+    @Mock private StudentRepository estudianteRepository;
+    @Mock private TrainingSessionRepository sesionRepository;
+    @Mock private NotificationService notificacionService;
+
+    @InjectMocks
+    private AttendanceService attendanceService;
+
+    private static final Long ID_CATEGORIA = 3L;
+    private static final Long ID_SESION = 77L;
+
+    private Category categoria(Long id, String nombre) {
+        return Category.builder().idCategoria(id).nombre(nombre).build();
+    }
+
+    private Student estudiante(Long id, Long idCategoria) {
+        return Student.builder()
+                .id(id)
+                .person(Person.builder().name("Ana").lastName("Vera").build())
+                .category(categoria(idCategoria, "SUB-18"))
+                .build();
+    }
+
+    private TrainingSession sesion(LocalDate fecha) {
+        return TrainingSession.builder()
+                .idSesion(ID_SESION)
+                .fecha(fecha)
+                .horaInicio(LocalTime.of(18, 0))
+                .categoria(categoria(ID_CATEGORIA, "SUB-18"))
+                .build();
+    }
+
+    private TakeAttendanceRequest lista(Long idEstudiante, String estado) {
+        return new TakeAttendanceRequest(List.of(new AttendanceMark(idEstudiante, estado, null)));
+    }
+
+    @Test
+    @DisplayName("pasarLista registra al estudiante que no escaneo el QR")
+    void pasarLista_registra_al_que_no_escaneo() {
+        var hoy = LocalDate.now(Zones.ECUADOR);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
+                .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
+
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE));
+
+        ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
+        verify(attendanceRepository).save(capturada.capture());
+        assertThat(capturada.getValue().getEstado()).isEqualTo(Attendance.ESTADO_PRESENTE);
+        assertThat(capturada.getValue().getMetodo()).isEqualTo(Attendance.METODO_MANUAL);
+    }
+
+    @Test
+    @DisplayName("la lista manual no inventa una hora de llegada")
+    void pasarLista_no_inventa_hora_de_llegada() {
+        var hoy = LocalDate.now(Zones.ECUADOR);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
+                .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
+
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE));
+
+        ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
+        verify(attendanceRepository).save(capturada.capture());
+
+        assertThat(capturada.getValue().getHoraEntrada()).isNull();
+    }
+
+    @Test
+    @DisplayName("corregir a PRESENTE conserva la hora real que ya habia medido el QR")
+    void pasarLista_conserva_la_hora_del_qr() {
+        var hoy = LocalDate.now(Zones.ECUADOR);
+        var horaReal = LocalTime.of(18, 3, 12);
+        var yaMarcada = Attendance.builder()
+                .estudiante(estudiante(6L, ID_CATEGORIA))
+                .estado(Attendance.ESTADO_PRESENTE)
+                .metodo(Attendance.METODO_QR)
+                .horaEntrada(horaReal)
+                .build();
+
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of(yaMarcada));
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
+                .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
+
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_TARDE));
+
+        ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
+        verify(attendanceRepository).save(capturada.capture());
+        assertThat(capturada.getValue().getEstado()).isEqualTo(Attendance.ESTADO_TARDE);
+        assertThat(capturada.getValue().getHoraEntrada()).isEqualTo(horaReal);
+        assertThat(capturada.getValue().getMetodo()).isEqualTo(Attendance.METODO_QR);
+    }
+
+    @Test
+    @DisplayName("marcar AUSENTE borra la hora de entrada que hubiera")
+    void pasarLista_ausente_borra_la_hora() {
+        var hoy = LocalDate.now(Zones.ECUADOR);
+        var yaMarcada = Attendance.builder()
+                .estudiante(estudiante(6L, ID_CATEGORIA))
+                .estado(Attendance.ESTADO_PRESENTE)
+                .metodo(Attendance.METODO_QR)
+                .horaEntrada(LocalTime.of(18, 3))
+                .build();
+
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of(yaMarcada));
+        when(estudianteRepository.findByIdAndActiveTrue(6L))
+                .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
+
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_AUSENTE));
+
+        ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
+        verify(attendanceRepository).save(capturada.capture());
+        assertThat(capturada.getValue().getHoraEntrada()).isNull();
+    }
+
+    @Test
+    @DisplayName("no se puede pasar lista de una sesion que todavia no ocurrio")
+    void pasarLista_rechaza_sesion_futura() {
+        var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
+
+        assertThatThrownBy(() -> attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("todavía no ocurre");
+
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("un estudiante de otra categoria no entra en la lista de esta sesion")
+    void pasarLista_rechaza_estudiante_de_otra_categoria() {
+        var hoy = LocalDate.now(Zones.ECUADOR);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
+        when(estudianteRepository.findByIdAndActiveTrue(9L))
+                .thenReturn(Optional.of(estudiante(9L, 99L)));
+
+        assertThatThrownBy(() -> attendanceService.takeAttendance(ID_SESION, lista(9L, Attendance.ESTADO_PRESENTE)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("no pertenece a");
+
+        verify(attendanceRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("la nomina lista a toda la categoria, no solo a quienes ya marcaron")
+    void nomina_incluye_a_los_que_faltan_por_marcar() {
+        var hoy = LocalDate.now(Zones.ECUADOR);
+        var conMarca = Attendance.builder()
+                .estudiante(estudiante(6L, ID_CATEGORIA))
+                .estado(Attendance.ESTADO_PRESENTE)
+                .metodo(Attendance.METODO_QR)
+                .horaEntrada(LocalTime.of(18, 1))
+                .build();
+
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of(conMarca));
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .thenReturn(List.of(estudiante(6L, ID_CATEGORIA), estudiante(7L, ID_CATEGORIA)));
+
+        var nomina = attendanceService.roster(ID_SESION);
+
+        assertThat(nomina.filas()).hasSize(2);
+        assertThat(nomina.editable()).isTrue();
+
+        assertThat(nomina.filas())
+                .anySatisfy(f -> assertThat(f.estado()).isEqualTo(Attendance.ESTADO_PRESENTE))
+                .anySatisfy(f -> assertThat(f.estado()).isNull());
+    }
+
+    @Test
+    @DisplayName("la nomina de una sesion futura se puede ver pero no editar")
+    void nomina_de_sesion_futura_no_es_editable() {
+        var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
+        when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
+        when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
+        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
+
+        var nomina = attendanceService.roster(ID_SESION);
+
+        assertThat(nomina.editable()).isFalse();
+        assertThat(nomina.motivoNoEditable()).contains("todavía no ocurre");
+    }
+}

@@ -14,9 +14,9 @@ import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.util.List;
@@ -29,15 +29,15 @@ import static org.mockito.Mockito.when;
 class AlertServiceTest {
     @Mock private StudentRepository estudianteRepository;
     @Mock private PaymentRepository pagoRepository;
-    @Mock private LesionRepository lesionRepository;
-    @Mock private AsistenciaRepository asistenciaRepository;
+    @Mock private InjuryRepository injuryRepository;
+    @Mock private AttendanceRepository attendanceRepository;
 
     private AlertService service;
 
     @BeforeEach
     void setUp() {
         service = new AlertService(
-                estudianteRepository, pagoRepository, lesionRepository, asistenciaRepository);
+                estudianteRepository, pagoRepository, injuryRepository, attendanceRepository);
         // @Value no se procesa fuera de un contexto Spring: se fijan a mano
         // los mismos valores por defecto declarados en application.yml.
         ReflectionTestUtils.setField(service, "umbralAsistencia", 75);
@@ -45,7 +45,7 @@ class AlertServiceTest {
         ReflectionTestUtils.setField(service, "topeDetalle", 25);
     }
 
-    private Student estudiante(long id, String nombre, String apellido, Categoria categoria) {
+    private Student estudiante(long id, String nombre, String apellido, Category categoria) {
         Person persona = nombre == null ? null
                 : Person.builder().name(nombre).lastName(apellido).build();
         return Student.builder()
@@ -58,15 +58,15 @@ class AlertServiceTest {
     @Test
     @DisplayName("Un estudiante sin ninguna alerta no aparece en el panel")
     void estudianteSinAlertasQuedaFueraDelPanel() {
-        Categoria sub12 = Categoria.builder().nombre("SUB-12").build();
+        Category sub12 = Category.builder().nombre("SUB-12").build();
         Student e1 = estudiante(1L, "Ana", "Perez", sub12);
 
         when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of(1L)); // al dia
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
+        when(injuryRepository.injuredStudentIds()).thenReturn(List.of());
+        when(attendanceRepository.activeSummary(any(), any()))
                 .thenReturn(List.<Object[]>of(new Object[]{1L, 10L, 9L})); // 90% > umbral 75
 
         AlertsPanelResponse panel = service.panel();
@@ -79,15 +79,15 @@ class AlertServiceTest {
     @Test
     @DisplayName("Mensualidad pendiente, asistencia baja y lesion activa se acumulan en un mismo estudiante")
     void lasTresAlertasSeAcumulan() {
-        Categoria sub15 = Categoria.builder().nombre("SUB-15").build();
+        Category sub15 = Category.builder().nombre("SUB-15").build();
         Student e1 = estudiante(2L, "Luis", "Gomez", sub15);
 
         when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // nadie al dia -> debe
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of(2L));
-        when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
+        when(injuryRepository.injuredStudentIds()).thenReturn(List.of(2L));
+        when(attendanceRepository.activeSummary(any(), any()))
                 .thenReturn(List.<Object[]>of(new Object[]{2L, 10L, 5L})); // 50% < umbral 75
 
         AlertsPanelResponse panel = service.panel();
@@ -115,8 +115,8 @@ class AlertServiceTest {
                 .thenReturn(List.of(sinPersona));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // debe
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
+        when(injuryRepository.injuredStudentIds()).thenReturn(List.of());
+        when(attendanceRepository.activeSummary(any(), any()))
                 .thenReturn(List.<Object[]>of());
 
         AlertsPanelResponse panel = service.panel();
@@ -131,16 +131,16 @@ class AlertServiceTest {
     @Test
     @DisplayName("Una categoria sin sesiones programadas (programadas=0) se descarta, no divide por cero")
     void categoriaSinSesionesProgramadasSeDescarta() {
-        Categoria sub18 = Categoria.builder().nombre("SUB-18").build();
+        Category sub18 = Category.builder().nombre("SUB-18").build();
         Student e1 = estudiante(4L, "Rosa", "Diaz", sub18);
 
         when(estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc())
                 .thenReturn(List.of(e1));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of(4L)); // al dia
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
+        when(injuryRepository.injuredStudentIds()).thenReturn(List.of());
         // programadas = 0: la fila debe ignorarse en vez de intentar dividir entre cero
-        when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
+        when(attendanceRepository.activeSummary(any(), any()))
                 .thenReturn(List.<Object[]>of(new Object[]{4L, 0L, 0L}));
 
         AlertsPanelResponse panel = assertDoesNotThrow(() -> service.panel());
@@ -152,7 +152,7 @@ class AlertServiceTest {
     @DisplayName("El detalle se trunca al tope configurado, pero los conteos agregados cuentan a todos")
     void detalleSeTruncaAlTope() {
         ReflectionTestUtils.setField(service, "topeDetalle", 1);
-        Categoria sub12 = Categoria.builder().nombre("SUB-12").build();
+        Category sub12 = Category.builder().nombre("SUB-12").build();
         Student e1 = estudiante(5L, "Ana", "Ramos", sub12);
         Student e2 = estudiante(6L, "Beto", "Soto", sub12);
 
@@ -160,8 +160,8 @@ class AlertServiceTest {
                 .thenReturn(List.of(e1, e2));
         when(pagoRepository.idsWithMembershipCovered(any(PaymentType.class), any(), any()))
                 .thenReturn(List.of()); // ninguno al dia -> ambos deben
-        when(lesionRepository.idsEstudiantesLesionados()).thenReturn(List.of());
-        when(asistenciaRepository.resumenAsistenciaDeActivos(any(), any()))
+        when(injuryRepository.injuredStudentIds()).thenReturn(List.of());
+        when(attendanceRepository.activeSummary(any(), any()))
                 .thenReturn(List.<Object[]>of());
 
         AlertsPanelResponse panel = service.panel();

@@ -101,7 +101,7 @@ class GuardianReportControllerTest {
     void misNotificaciones_devuelve_200() throws Exception {
         when(notificacionService.myNotifications("marta.representante@sged.test")).thenReturn(List.of(
                 new NotificationResponse(1L, 6L, "Andres Rivas", Type.ASISTENCIA,
-                        "Andres Rivas marcó asistencia hoy (a tiempo).", false, Instant.now())));
+                        "Andres Rivas marcó asistencia today (a tiempo).", false, Instant.now())));
 
         mockMvc.perform(get("/api/representante/notificaciones"))
                 .andExpect(status().isOk())

@@ -1,0 +1,38 @@
+package org.uteq.backend.deportivo.evaluation.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+
+@Entity
+@Table(name = "detalle_evaluacion", schema = "deportivo")
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class EvaluationDetail {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_detalle")
+    private Long idDetalle;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_evaluacion_estudiante", nullable = false)
+    private StudentEvaluation evaluacionEstudiante;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_criterio", nullable = false)
+    private EvaluationCriterion criterio;
+
+    @Column(nullable = false, precision = 4, scale = 1)
+    private BigDecimal puntaje;
+
+    @CreationTimestamp
+    @Column(name = "creado_en", updatable = false)
+    private Instant creadoEn;
+
+    @UpdateTimestamp
+    @Column(name = "actualizado_en")
+    private Instant actualizadoEn;
+}

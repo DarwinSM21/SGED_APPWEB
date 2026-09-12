@@ -63,7 +63,7 @@ public class RedisCacheConfig implements CachingConfigurer {
          * reconstruir el tipo concreto al leer. El constructor que recibe un
          * ObjectMapper NO lo activa por defecto: al deserializar devolvió
          * LinkedHashMap y el cache hit reventaba con ClassCastException en
-         * StudentService.listar(). Se habilita explicitamente con
+         * StudentService.list(). Se habilita explicitamente con
          * activateDefaultTyping(EVERYTHING): el tipo raiz del record de
          * respuesta no esta anotado con @JsonTypeInfo, y con NON_FINAL la
          * serializacion deja de registrar la clase concreta del record

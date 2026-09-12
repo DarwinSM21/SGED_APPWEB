@@ -10,13 +10,13 @@ import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.evaluacion.entity.DetalleEvaluacion;
-import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionEstudiante;
-import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.entity.Attendance;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.evaluation.entity.EvaluationDetail;
+import org.uteq.backend.deportivo.evaluation.entity.StudentEvaluation;
+import org.uteq.backend.deportivo.evaluation.repository.StudentEvaluationRepository;
+import org.uteq.backend.deportivo.injury.entity.Injury;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -48,9 +48,9 @@ public class ReportService {
     private final ReportPdfService pdfService;
     private final StudentRepository estudianteRepository;
     private final PaymentRepository pagoRepository;
-    private final AsistenciaRepository asistenciaRepository;
-    private final LesionRepository lesionRepository;
-    private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final InjuryRepository injuryRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
 
     /**
      * PDF de fichas de estudiantes.
@@ -110,11 +110,11 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] attendances(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        Specification<Asistencia> spec = Specification.<Asistencia>where(equalTo("estudiante.id", idEstudiante))
-                .and(this.<Asistencia>equalTo("estudiante.category.idCategoria", idCategoria))
-                .and(this.<Asistencia>fromDate("sesion.fecha", desde))
-                .and(this.<Asistencia>toDate("sesion.fecha", hasta));
-        var filas = nonEmpty(asistenciaRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
+        Specification<Attendance> spec = Specification.<Attendance>where(equalTo("estudiante.id", idEstudiante))
+                .and(this.<Attendance>equalTo("estudiante.category.idCategoria", idCategoria))
+                .and(this.<Attendance>fromDate("sesion.fecha", desde))
+                .and(this.<Attendance>toDate("sesion.fecha", hasta));
+        var filas = nonEmpty(attendanceRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
                 .map(this::attendanceRow)
                 .toList();
         return pdfService.generate(title("Reporte de Asistencias", filas),
@@ -134,11 +134,11 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] evaluations(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        Specification<EvaluacionEstudiante> spec = Specification.<EvaluacionEstudiante>where(equalTo("estudiante.id", idEstudiante))
-                .and(this.<EvaluacionEstudiante>equalTo("categoriaDia.idCategoria", idCategoria))
-                .and(this.<EvaluacionEstudiante>fromDate("evaluacion.fecha", desde))
-                .and(this.<EvaluacionEstudiante>toDate("evaluacion.fecha", hasta));
-        var filas = nonEmpty(evaluacionEstudianteRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
+        Specification<StudentEvaluation> spec = Specification.<StudentEvaluation>where(equalTo("estudiante.id", idEstudiante))
+                .and(this.<StudentEvaluation>equalTo("categoriaDia.idCategoria", idCategoria))
+                .and(this.<StudentEvaluation>fromDate("evaluacion.fecha", desde))
+                .and(this.<StudentEvaluation>toDate("evaluacion.fecha", hasta));
+        var filas = nonEmpty(studentEvaluationRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
                 .map(this::evaluationRow)
                 .toList();
         return pdfService.generate(title("Reporte de Evaluaciones", filas),
@@ -157,11 +157,11 @@ public class ReportService {
      */
     @Transactional(readOnly = true)
     public byte[] injuries(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
-        Specification<Lesion> spec = Specification.<Lesion>where(equalTo("estudiante.id", idEstudiante))
-                .and(this.<Lesion>equalTo("estudiante.category.idCategoria", idCategoria))
-                .and(this.<Lesion>fromDate("fechaLesion", desde))
-                .and(this.<Lesion>toDate("fechaLesion", hasta));
-        var filas = nonEmpty(lesionRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()
+        Specification<Injury> spec = Specification.<Injury>where(equalTo("estudiante.id", idEstudiante))
+                .and(this.<Injury>equalTo("estudiante.category.idCategoria", idCategoria))
+                .and(this.<Injury>fromDate("fechaLesion", desde))
+                .and(this.<Injury>toDate("fechaLesion", hasta));
+        var filas = nonEmpty(injuryRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()
                 .map(this::injuryRow)
                 .toList();
         return pdfService.generate(title("Reporte de Lesiones", filas),
@@ -212,7 +212,7 @@ public class ReportService {
                 registrador.getName() + " " + registrador.getLastName());
     }
 
-    private List<String> attendanceRow(Asistencia a) {
+    private List<String> attendanceRow(Attendance a) {
         return List.of(
                 a.getEstudiante().getPerson().getName() + " " + a.getEstudiante().getPerson().getLastName(),
                 a.getEstudiante().getCategory().getNombre(),
@@ -221,7 +221,7 @@ public class ReportService {
                 a.getMetodo());
     }
 
-    private List<String> evaluationRow(EvaluacionEstudiante ee) {
+    private List<String> evaluationRow(StudentEvaluation ee) {
         String posicion = ee.getPosicionJugada() != null ? ee.getPosicionJugada().getNombre() : "-";
         String average = ee.getDetalles().isEmpty() ? "-" : average(ee.getDetalles());
         return List.of(
@@ -232,9 +232,9 @@ public class ReportService {
                 average);
     }
 
-    private List<String> injuryRow(Lesion l) {
+    private List<String> injuryRow(Injury l) {
         String retorno = l.getFechaEstimadaRetorno() != null ? l.getFechaEstimadaRetorno().format(FECHA) : "-";
-        String estado = l.estaActiva() ? "Activa" : "De alta el " + l.getFechaAlta().format(FECHA);
+        String estado = l.isActive() ? "Activa" : "De alta el " + l.getFechaAlta().format(FECHA);
         return List.of(
                 l.getEstudiante().getPerson().getName() + " " + l.getEstudiante().getPerson().getLastName(),
                 l.getDescripcion(),
@@ -243,8 +243,8 @@ public class ReportService {
                 estado);
     }
 
-    private String average(List<DetalleEvaluacion> detalles) {
-        BigDecimal suma = detalles.stream().map(DetalleEvaluacion::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);
+    private String average(List<EvaluationDetail> detalles) {
+        BigDecimal suma = detalles.stream().map(EvaluationDetail::getPuntaje).reduce(BigDecimal.ZERO, BigDecimal::add);
         return suma.divide(BigDecimal.valueOf(detalles.size()), 2, RoundingMode.HALF_UP).toPlainString();
     }
     private boolean exceedsLimit(List<List<String>> filas) {

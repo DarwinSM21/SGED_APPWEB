@@ -50,7 +50,7 @@ class PersonControllerTest {
                 .build();
     }
 
-    private PersonResponse respuesta() {
+    private PersonResponse response() {
         return new PersonResponse(1L, "Maria", "Lopez", "0912345675", "maria@sged.test",
                 "0999999999", null, LocalDate.of(2012, 5, 10), true, Instant.now());
     }
@@ -58,7 +58,7 @@ class PersonControllerTest {
     @Test
     @DisplayName("GET /api/personas - lista paginada")
     void listar_devuelve_200() throws Exception {
-        when(personaService.list(any())).thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+        when(personaService.list(any())).thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/personas"))
                 .andExpect(status().isOk())
@@ -77,7 +77,7 @@ class PersonControllerTest {
     @Test
     @DisplayName("GET /api/personas/cedula/{cedula} - devuelve la persona")
     void buscarPorCedula_devuelve_200() throws Exception {
-        when(personaService.findByNationalId("0912345675")).thenReturn(respuesta());
+        when(personaService.findByNationalId("0912345675")).thenReturn(response());
 
         mockMvc.perform(get("/api/personas/cedula/0912345675"))
                 .andExpect(status().isOk())
@@ -87,7 +87,7 @@ class PersonControllerTest {
     @Test
     @DisplayName("POST /api/personas - crea y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        when(personaService.create(any(PersonRequest.class))).thenReturn(respuesta());
+        when(personaService.create(any(PersonRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +117,7 @@ class PersonControllerTest {
     @Test
     @DisplayName("RF-49 - crear una persona sin cedula devuelve 201 (la cedula es opcional)")
     void crear_sin_cedula_devuelve_201() throws Exception {
-        when(personaService.create(any(PersonRequest.class))).thenReturn(respuesta());
+        when(personaService.create(any(PersonRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)

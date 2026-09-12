@@ -62,7 +62,7 @@ class StockMovementControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    private StockMovementResponse respuesta() {
+    private StockMovementResponse response() {
         return new StockMovementResponse(1L, 1L, "Balón N5", MovementType.ENTRADA, 10,
                 "Compra inicial", "recepcion@sged.test", Instant.now());
     }
@@ -71,7 +71,7 @@ class StockMovementControllerTest {
     @DisplayName("GET /api/inventario/movimientos - lista paginada")
     void listar_devuelve_200() throws Exception {
         when(movimientoStockService.listPaged(any()))
-                .thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/inventario/movimientos"))
                 .andExpect(status().isOk())
@@ -82,7 +82,7 @@ class StockMovementControllerTest {
     @DisplayName("GET /api/inventario/movimientos/articulo/{id} - filtra por articulo")
     void listarPorArticulo_devuelve_200() throws Exception {
         when(movimientoStockService.listByItem(eq(1L), any()))
-                .thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/inventario/movimientos/articulo/1"))
                 .andExpect(status().isOk());
@@ -93,7 +93,7 @@ class StockMovementControllerTest {
     void registrar_usa_el_username_autenticado() throws Exception {
         autenticarComo("recepcion@sged.test");
         when(movimientoStockService.register(any(StockMovementRequest.class), eq("recepcion@sged.test")))
-                .thenReturn(respuesta());
+                .thenReturn(response());
 
         mockMvc.perform(post("/api/inventario/movimientos")
                         .contentType(MediaType.APPLICATION_JSON)

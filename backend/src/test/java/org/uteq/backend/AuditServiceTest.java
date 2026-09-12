@@ -69,7 +69,7 @@ class AuditServiceTest {
         autenticarComo("ana.torres", "ADMINISTRADOR");
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.empty());
 
-        servicio.recordEvent("EDITAR", "Lesion", 45L, "editó Lesion #45");
+        servicio.recordEvent("EDITAR", "Injury", 45L, "editó Injury #45");
 
         ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
@@ -77,7 +77,7 @@ class AuditServiceTest {
         assertEquals("ana.torres", guardada.getUsuarioNombre());
         assertEquals("ADMINISTRADOR", guardada.getRol());
         assertEquals("EDITAR", guardada.getAccion());
-        assertEquals("Lesion", guardada.getEntidad());
+        assertEquals("Injury", guardada.getEntidad());
         assertEquals(45L, guardada.getEntidadId());
     }
 
@@ -101,7 +101,7 @@ class AuditServiceTest {
         when(usuarioRepository.findByUsername("ana.torres")).thenReturn(Optional.empty());
         when(auditoriaRepository.save(any())).thenThrow(new RuntimeException("DB caida"));
 
-        servicio.recordEvent("EDITAR", "Lesion", 45L, "editó Lesion #45");
+        servicio.recordEvent("EDITAR", "Injury", 45L, "editó Injury #45");
 
     }
 
@@ -111,12 +111,12 @@ class AuditServiceTest {
         var pageable = PageRequest.of(0, 20);
         var fila = AuditLog.builder()
                 .idAuditoria(1L).usuarioNombre("ana.torres").rol("ADMINISTRADOR")
-                .accion("EDITAR").entidad("Lesion").entidadId(45L)
-                .descripcion("editó Lesion #45").build();
+                .accion("EDITAR").entidad("Injury").entidadId(45L)
+                .descripcion("editó Injury #45").build();
         when(auditoriaRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of(fila)));
 
-        var resultado = servicio.search("ana", "EDITAR", "Lesion", null, null, pageable);
+        var resultado = servicio.search("ana", "EDITAR", "Injury", null, null, pageable);
 
         assertEquals(1, resultado.getTotalElements());
         assertEquals("ana.torres", resultado.getContent().get(0).usuario());
@@ -128,7 +128,7 @@ class AuditServiceTest {
     void registrarSinAutenticacionUsaDesconocido() {
         when(usuarioRepository.findByUsername("desconocido")).thenReturn(Optional.empty());
 
-        servicio.recordEvent("EDITAR", "Lesion", 45L, "editó Lesion #45");
+        servicio.recordEvent("EDITAR", "Injury", 45L, "editó Injury #45");
 
         ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
         verify(auditoriaRepository).save(captor.capture());
@@ -171,7 +171,7 @@ class AuditServiceTest {
         when(auditoriaRepository.findAll(any(Specification.class), eq(pageable)))
                 .thenReturn(new PageImpl<>(List.of()));
 
-        servicio.search("ana", "EDITAR", "Lesion",
+        servicio.search("ana", "EDITAR", "Injury",
                 OffsetDateTime.now().minusDays(1), OffsetDateTime.now(), pageable);
 
         ArgumentCaptor<Specification> captor = ArgumentCaptor.forClass(Specification.class);

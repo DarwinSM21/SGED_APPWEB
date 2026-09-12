@@ -9,8 +9,8 @@ import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
-import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.coach.entity.Coach;
+import org.uteq.backend.deportivo.coach.repository.CoachRepository;
 import org.uteq.backend.inventario.item.entity.Item;
 import org.uteq.backend.inventario.item.repository.ItemRepository;
 import org.uteq.backend.inventario.assignment.dto.AssignmentDtos.*;
@@ -35,7 +35,7 @@ public class AssignmentService {
     private final AssignmentRepository asignacionRepository;
     private final ItemRepository articuloRepository;
     private final StudentRepository estudianteRepository;
-    private final EntrenadorRepository entrenadorRepository;
+    private final CoachRepository coachRepository;
     private final UserAccountRepository usuarioRepository;
 
     /**
@@ -190,9 +190,9 @@ public class AssignmentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
     }
 
-    private Entrenador findCoach(Long id) {
-        return entrenadorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Entrenador no encontrado con ID: " + id));
+    private Coach findCoach(Long id) {
+        return coachRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Coach no encontrado con ID: " + id));
     }
 
     private UserAccount findUser(String username) {

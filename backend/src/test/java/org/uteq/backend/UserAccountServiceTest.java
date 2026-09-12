@@ -15,7 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.coach.repository.CoachRepository;
 import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
@@ -55,7 +55,7 @@ class UserAccountServiceTest {
     @Spy
     private PasswordPolicy passwordPolicy = new PasswordPolicy();
     @Mock
-    private EntrenadorRepository entrenadorRepository;
+    private CoachRepository coachRepository;
     @Mock
     private GuardianRepository representanteRepository;
     @Mock
@@ -305,7 +305,7 @@ class UserAccountServiceTest {
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
-        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(coachRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(representanteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(rolRepository.findByName("ENTRENADOR")).thenReturn(Optional.of(entrenador));
         when(usuarioRepository.save(any(UserAccount.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -325,7 +325,7 @@ class UserAccountServiceTest {
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
-        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(true);
+        when(coachRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.update(1L, request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -359,7 +359,7 @@ class UserAccountServiceTest {
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(true);
-        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(coachRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(representanteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(rolRepository.findByName("ESTUDIANTE")).thenReturn(Optional.of(estudiante));
         when(passwordEncoder.encode("clave123")).thenReturn("hash");
@@ -378,7 +378,7 @@ class UserAccountServiceTest {
         when(personaRepository.findById(1L)).thenReturn(Optional.of(persona()));
         when(estadoGeneralRepository.findById(1L)).thenReturn(Optional.of(estadoActivo()));
         when(estudianteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
-        when(entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(1L)).thenReturn(false);
+        when(coachRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(false);
         when(representanteRepository.existsByPerson_IdAndActiveTrue(1L)).thenReturn(true);
 
         assertThatThrownBy(() -> usuarioService.create(request))

@@ -14,17 +14,17 @@ import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.asistencia.entity.Asistencia;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
-import org.uteq.backend.deportivo.evaluacion.entity.DetalleEvaluacion;
-import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionDiaria;
-import org.uteq.backend.deportivo.evaluacion.entity.EvaluacionEstudiante;
-import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
-import org.uteq.backend.deportivo.posicion.entity.Posicion;
+import org.uteq.backend.deportivo.attendance.entity.Attendance;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.session.entity.TrainingSession;
+import org.uteq.backend.deportivo.evaluation.entity.EvaluationDetail;
+import org.uteq.backend.deportivo.evaluation.entity.DailyEvaluation;
+import org.uteq.backend.deportivo.evaluation.entity.StudentEvaluation;
+import org.uteq.backend.deportivo.evaluation.repository.StudentEvaluationRepository;
+import org.uteq.backend.deportivo.injury.entity.Injury;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
+import org.uteq.backend.deportivo.position.entity.Position;
 import org.uteq.backend.reportes.service.ReportPdfService;
 import org.uteq.backend.reportes.service.ReportService;
 import org.uteq.backend.seguridad.person.entity.Person;
@@ -45,16 +45,16 @@ import static org.mockito.Mockito.when;
 class ReportServiceTest {
     @Mock private StudentRepository estudianteRepository;
     @Mock private PaymentRepository pagoRepository;
-    @Mock private AsistenciaRepository asistenciaRepository;
-    @Mock private LesionRepository lesionRepository;
-    @Mock private EvaluacionEstudianteRepository evaluacionEstudianteRepository;
+    @Mock private AttendanceRepository attendanceRepository;
+    @Mock private InjuryRepository injuryRepository;
+    @Mock private StudentEvaluationRepository studentEvaluationRepository;
 
     private ReportService servicio;
 
     @BeforeEach
     void setUp() {
         servicio = new ReportService(new ReportPdfService(), estudianteRepository,
-                pagoRepository, asistenciaRepository, lesionRepository, evaluacionEstudianteRepository);
+                pagoRepository, attendanceRepository, injuryRepository, studentEvaluationRepository);
     }
 
     private Person persona(String nombre, String apellido) {
@@ -65,7 +65,7 @@ class ReportServiceTest {
         return Student.builder()
                 .id(id)
                 .person(persona("Ana", "Torres"))
-                .category(Categoria.builder().idCategoria(1L).nombre(categoria).build())
+                .category(Category.builder().idCategoria(1L).nombre(categoria).build())
                 .studentCode("EST-2026-0001")
                 .enrollmentDate(LocalDate.of(2026, 1, 10))
                 .active(true)
@@ -119,7 +119,7 @@ class ReportServiceTest {
     @Test
     @DisplayName("lesiones sin resultados lanza 404")
     void injuriesNoResultsReturns404() {
-        when(lesionRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
+        when(injuryRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
 
         assertThrows(ResourceNotFoundException.class,
                 () -> servicio.injuries(null, null, null, null));
@@ -128,22 +128,22 @@ class ReportServiceTest {
     @Test
     @DisplayName("lesiones con resultados genera un PDF valido, incluyendo lesiones activas")
     void injuriesWithResultsGeneratesPdf() {
-        Lesion lesion = Lesion.builder()
+        Injury lesion = Injury.builder()
                 .estudiante(estudiante(1L, "SUB-12"))
                 .descripcion("Esguince de tobillo")
                 .fechaLesion(LocalDate.of(2026, 8, 1))
                 .build();
-        when(lesionRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(lesion)));
+        when(injuryRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of(lesion)));
 
         byte[] pdf = servicio.injuries(null, null, null, null);
 
         assertTrue(pdf.length > 0);
     }
 
-    private Asistencia asistencia(Student estudiante, LocalDate fecha, String estado, String metodo) {
-        return Asistencia.builder()
+    private Attendance asistencia(Student estudiante, LocalDate fecha, String estado, String metodo) {
+        return Attendance.builder()
                 .estudiante(estudiante)
-                .sesion(SesionEntrenamiento.builder().fecha(fecha).build())
+                .sesion(TrainingSession.builder().fecha(fecha).build())
                 .estado(estado)
                 .metodo(metodo)
                 .build();
@@ -152,7 +152,7 @@ class ReportServiceTest {
     @Test
     @DisplayName("asistencias sin resultados lanza 404")
     void attendancesNoResultsReturns404() {
-        when(asistenciaRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(attendanceRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         assertThrows(ResourceNotFoundException.class,
@@ -162,8 +162,8 @@ class ReportServiceTest {
     @Test
     @DisplayName("asistencias con resultados genera un PDF valido")
     void attendancesWithResultsGeneratesPdf() {
-        Asistencia a = asistencia(estudiante(1L, "SUB-12"), LocalDate.of(2026, 8, 2), "PRESENTE", "MANUAL");
-        when(asistenciaRepository.findAll(any(Specification.class), any(Pageable.class)))
+        Attendance a = asistencia(estudiante(1L, "SUB-12"), LocalDate.of(2026, 8, 2), "PRESENTE", "MANUAL");
+        when(attendanceRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(a)));
 
         byte[] pdf = servicio.attendances(null, null, null, null);
@@ -171,20 +171,20 @@ class ReportServiceTest {
         assertTrue(pdf.length > 0);
     }
 
-    private EvaluacionEstudiante evaluacion(Student estudiante, LocalDate fecha, BigDecimal puntaje) {
-        return EvaluacionEstudiante.builder()
+    private StudentEvaluation evaluacion(Student estudiante, LocalDate fecha, BigDecimal puntaje) {
+        return StudentEvaluation.builder()
                 .estudiante(estudiante)
-                .categoriaDia(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
-                .posicionJugada(Posicion.builder().nombre("Delantero").build())
-                .evaluacion(EvaluacionDiaria.builder().fecha(fecha).build())
-                .detalles(List.of(DetalleEvaluacion.builder().puntaje(puntaje).build()))
+                .categoriaDia(Category.builder().idCategoria(1L).nombre("SUB-12").build())
+                .posicionJugada(Position.builder().nombre("Delantero").build())
+                .evaluacion(DailyEvaluation.builder().fecha(fecha).build())
+                .detalles(List.of(EvaluationDetail.builder().puntaje(puntaje).build()))
                 .build();
     }
 
     @Test
     @DisplayName("evaluaciones sin resultados lanza 404")
     void evaluationsNoResultsReturns404() {
-        when(evaluacionEstudianteRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(studentEvaluationRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         assertThrows(ResourceNotFoundException.class,
@@ -194,9 +194,9 @@ class ReportServiceTest {
     @Test
     @DisplayName("evaluaciones con resultados genera un PDF valido con promedio")
     void evaluationsWithResultsGeneratesPdf() {
-        EvaluacionEstudiante ee = evaluacion(estudiante(1L, "SUB-12"), LocalDate.of(2026, 8, 3),
+        StudentEvaluation ee = evaluacion(estudiante(1L, "SUB-12"), LocalDate.of(2026, 8, 3),
                 new BigDecimal("8.50"));
-        when(evaluacionEstudianteRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(studentEvaluationRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(ee)));
 
         byte[] pdf = servicio.evaluations(null, null, null, null);
@@ -228,14 +228,14 @@ class ReportServiceTest {
     @Test
     @DisplayName("lesion dada de alta aparece como tal y no como activa")
     void injuryResolvedShowsAsResolved() {
-        Lesion lesion = Lesion.builder()
+        Injury lesion = Injury.builder()
                 .estudiante(estudiante(1L, "SUB-12"))
                 .descripcion("Esguince")
                 .fechaLesion(LocalDate.of(2026, 7, 1))
                 .fechaEstimadaRetorno(LocalDate.of(2026, 7, 15))
                 .fechaAlta(LocalDate.of(2026, 7, 20))
                 .build();
-        when(lesionRepository.findAll(any(Specification.class), any(Pageable.class)))
+        when(injuryRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(lesion)));
 
         byte[] pdf = servicio.injuries(null, null, null, null);

@@ -9,8 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
-import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.coach.entity.Coach;
+import org.uteq.backend.deportivo.coach.repository.CoachRepository;
 import org.uteq.backend.inventario.item.entity.Item;
 import org.uteq.backend.inventario.item.entity.Item.ItemType;
 import org.uteq.backend.inventario.item.repository.ItemRepository;
@@ -39,7 +39,7 @@ class AssignmentServiceTest {
     @Mock private AssignmentRepository asignacionRepository;
     @Mock private ItemRepository articuloRepository;
     @Mock private StudentRepository estudianteRepository;
-    @Mock private EntrenadorRepository entrenadorRepository;
+    @Mock private CoachRepository coachRepository;
     @Mock private UserAccountRepository usuarioRepository;
 
     @InjectMocks
@@ -61,9 +61,9 @@ class AssignmentServiceTest {
         return Student.builder().id(5L).person(persona).build();
     }
 
-    private Entrenador entrenador() {
+    private Coach entrenador() {
         Person persona = Person.builder().name("Carlos").lastName("Ruiz").build();
-        return Entrenador.builder().idEntrenador(7L).persona(persona).build();
+        return Coach.builder().idEntrenador(7L).persona(persona).build();
     }
 
     private UserAccount registrador() {
@@ -128,7 +128,7 @@ class AssignmentServiceTest {
     void crear_asignacion_a_entrenador() {
         Item articulo = uniformeConStock(10);
         when(articuloRepository.findById(1L)).thenReturn(Optional.of(articulo));
-        when(entrenadorRepository.findById(7L)).thenReturn(Optional.of(entrenador()));
+        when(coachRepository.findById(7L)).thenReturn(Optional.of(entrenador()));
         stubGuardarAsignacion();
 
         AssignmentRequest request = new AssignmentRequest(1L, 2, RecipientType.ENTRENADOR, null, 7L, null, null);

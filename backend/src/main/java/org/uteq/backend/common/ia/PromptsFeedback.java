@@ -29,9 +29,9 @@ final class PromptsFeedback {
           .append("de repetirlos: quien lo lee no sabe si un 5.5 es bueno o malo. Di en que ")
           .append("viene mejor y en que le cuesta mas, sin emitir un veredicto sobre el ")
           .append("chico.\n\n");
-        sb.append("Categoria: ").append(p.category()).append('\n');
+        sb.append("Category: ").append(p.category()).append('\n');
         if (p.position() != null) {
-            sb.append("Posicion en la que juega: ").append(p.position()).append('\n');
+            sb.append("Position en la que juega: ").append(p.position()).append('\n');
         }
         sb.append("Promedio por criterio (sobre 10): ").append(format(p.scores())).append('\n');
         if (!p.previousScores().isEmpty()) {

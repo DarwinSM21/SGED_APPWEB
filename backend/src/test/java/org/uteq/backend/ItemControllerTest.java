@@ -48,7 +48,7 @@ class ItemControllerTest {
                 .build();
     }
 
-    private ItemResponse respuesta() {
+    private ItemResponse response() {
         return new ItemResponse(1L, "Balón N5", ItemType.BALON, null, null,
                 10, 3, "unidad", true, Instant.now());
     }
@@ -57,7 +57,7 @@ class ItemControllerTest {
     @DisplayName("GET /api/inventario/articulos - lista paginada")
     void listarPaginado_devuelve_200() throws Exception {
         when(articuloService.listPaged(any()))
-                .thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/inventario/articulos"))
                 .andExpect(status().isOk())
@@ -67,7 +67,7 @@ class ItemControllerTest {
     @Test
     @DisplayName("GET /api/inventario/articulos/activos - lista sin paginar")
     void listarActivos_devuelve_200() throws Exception {
-        when(articuloService.listActive()).thenReturn(List.of(respuesta()));
+        when(articuloService.listActive()).thenReturn(List.of(response()));
 
         mockMvc.perform(get("/api/inventario/articulos/activos"))
                 .andExpect(status().isOk())
@@ -77,7 +77,7 @@ class ItemControllerTest {
     @Test
     @DisplayName("GET /api/inventario/articulos/stock-bajo - devuelve el resumen")
     void stockBajo_devuelve_200() throws Exception {
-        when(articuloService.lowStock()).thenReturn(new LowStockResponse(1, List.of(respuesta())));
+        when(articuloService.lowStock()).thenReturn(new LowStockResponse(1, List.of(response())));
 
         mockMvc.perform(get("/api/inventario/articulos/stock-bajo"))
                 .andExpect(status().isOk())
@@ -96,7 +96,7 @@ class ItemControllerTest {
     @Test
     @DisplayName("POST /api/inventario/articulos - crea y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        when(articuloService.create(any(ItemRequest.class))).thenReturn(respuesta());
+        when(articuloService.create(any(ItemRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/inventario/articulos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +117,7 @@ class ItemControllerTest {
     @Test
     @DisplayName("PUT /api/inventario/articulos/{id} - edita y devuelve 200")
     void editar_devuelve_200() throws Exception {
-        when(articuloService.update(eq(1L), any(ItemRequest.class))).thenReturn(respuesta());
+        when(articuloService.update(eq(1L), any(ItemRequest.class))).thenReturn(response());
 
         mockMvc.perform(put("/api/inventario/articulos/1")
                         .contentType(MediaType.APPLICATION_JSON)

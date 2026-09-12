@@ -9,8 +9,8 @@ import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
-import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+import org.uteq.backend.deportivo.session.entity.TrainingSession;
+import org.uteq.backend.deportivo.session.repository.TrainingSessionRepository;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MyTeamService {
     private final StudentRepository estudianteRepository;
-    private final SesionEntrenamientoRepository sesionRepository;
+    private final TrainingSessionRepository sesionRepository;
 
     /**
      * Arma la vista de equipo del estudiante dueño de la cuenta indicada.
@@ -65,8 +65,8 @@ public class MyTeamService {
 
     private AssignedCoachResponse nextCoachOf(Long idCategoria) {
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
-        List<SesionEntrenamiento> proximas = sesionRepository
-                .findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+        List<TrainingSession> proximas = sesionRepository
+                .findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                         idCategoria, hoy, PageRequest.of(0, 1));
         if (proximas.isEmpty()) {
             return null;

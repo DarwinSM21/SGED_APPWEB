@@ -49,7 +49,7 @@ class UserAccountControllerTest {
                 .build();
     }
 
-    private UserAccountResponse respuesta() {
+    private UserAccountResponse response() {
         return new UserAccountResponse(1L, 1L, "Ana", "Torres", "ana@sged.test", 1L, "ACTIVO",
                 "ana.torres", List.of(), null, true, OffsetDateTime.now());
     }
@@ -57,7 +57,7 @@ class UserAccountControllerTest {
     @Test
     @DisplayName("GET /api/usuarios - lista paginada")
     void listar_devuelve_200() throws Exception {
-        when(usuarioService.list(any())).thenReturn(new UserAccountPageResponse<>(List.of(respuesta()), 0, 10, 1, 1));
+        when(usuarioService.list(any())).thenReturn(new UserAccountPageResponse<>(List.of(response()), 0, 10, 1, 1));
 
         mockMvc.perform(get("/api/usuarios"))
                 .andExpect(status().isOk())
@@ -76,7 +76,7 @@ class UserAccountControllerTest {
     @Test
     @DisplayName("POST /api/usuarios - crea y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        when(usuarioService.create(any(UserAccountRequest.class))).thenReturn(respuesta());
+        when(usuarioService.create(any(UserAccountRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)

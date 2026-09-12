@@ -11,8 +11,8 @@ import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.Zones;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -43,8 +43,8 @@ import java.util.Set;
 public class AlertService {
     private final StudentRepository estudianteRepository;
     private final PaymentRepository pagoRepository;
-    private final LesionRepository lesionRepository;
-    private final AsistenciaRepository asistenciaRepository;
+    private final InjuryRepository injuryRepository;
+    private final AttendanceRepository attendanceRepository;
 
     /** Por debajo de este porcentaje la asistencia se considera un problema. */
     @Value("${alertas.umbral-asistencia:75}")
@@ -77,7 +77,7 @@ public class AlertService {
 
         Set<Long> alDia = new HashSet<>(
                 pagoRepository.idsWithMembershipCovered(PaymentType.MEMBRESIA, anio, mes));
-        Set<Long> lesionados = new HashSet<>(lesionRepository.idsEstudiantesLesionados());
+        Set<Long> lesionados = new HashSet<>(injuryRepository.injuredStudentIds());
 
         LocalDate corte = hoy.minusDays(1);
         LocalDate desde = hoy.minusDays(diasAsistencia);
@@ -113,7 +113,7 @@ public class AlertService {
     // acusarlo de algo que no hizo.
     private Map<Long, BigDecimal> percentagesByStudent(LocalDate desde, LocalDate corte) {
         Map<Long, BigDecimal> porcentajes = new HashMap<>();
-        for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {
+        for (Object[] fila : attendanceRepository.activeSummary(desde, corte)) {
             long programadas = ((Number) fila[1]).longValue();
             if (programadas == 0) continue;
             long presentes = ((Number) fila[2]).longValue();

@@ -64,7 +64,7 @@ class AssignmentControllerTest {
         SecurityContextHolder.getContext().setAuthentication(auth);
     }
 
-    private AssignmentResponse respuesta() {
+    private AssignmentResponse response() {
         return new AssignmentResponse(1L, 1L, "Balón N5", 1, RecipientType.ESTUDIANTE,
                 5L, "Andres Vera", null, null, LocalDate.now(), null, null,
                 AssignmentStatus.ASIGNADO, "recepcion@sged.test", null, Instant.now());
@@ -74,7 +74,7 @@ class AssignmentControllerTest {
     @DisplayName("GET /api/inventario/asignaciones - lista paginada")
     void listar_devuelve_200() throws Exception {
         when(asignacionService.listPaged(any()))
-                .thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/inventario/asignaciones"))
                 .andExpect(status().isOk())
@@ -85,7 +85,7 @@ class AssignmentControllerTest {
     @DisplayName("GET /api/inventario/asignaciones/estudiante/{id} - filtra por estudiante")
     void listarPorEstudiante_devuelve_200() throws Exception {
         when(asignacionService.listByStudent(eq(5L), any()))
-                .thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/inventario/asignaciones/estudiante/5"))
                 .andExpect(status().isOk())
@@ -96,7 +96,7 @@ class AssignmentControllerTest {
     @DisplayName("GET /api/inventario/asignaciones/entrenador/{id} - filtra por entrenador")
     void listarPorEntrenador_devuelve_200() throws Exception {
         when(asignacionService.listByCoach(eq(3L), any()))
-                .thenReturn(new PageImpl<>(List.of(respuesta()), PageRequest.of(0, 10), 1));
+                .thenReturn(new PageImpl<>(List.of(response()), PageRequest.of(0, 10), 1));
 
         mockMvc.perform(get("/api/inventario/asignaciones/entrenador/3"))
                 .andExpect(status().isOk());
@@ -107,7 +107,7 @@ class AssignmentControllerTest {
     void crear_usa_el_username_autenticado() throws Exception {
         autenticarComo("recepcion@sged.test");
         when(asignacionService.create(any(AssignmentRequest.class), eq("recepcion@sged.test")))
-                .thenReturn(respuesta());
+                .thenReturn(response());
 
         mockMvc.perform(post("/api/inventario/asignaciones")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -132,7 +132,7 @@ class AssignmentControllerTest {
     @Test
     @DisplayName("PATCH /api/inventario/asignaciones/{id}/devolver - marca la devolucion")
     void devolver_devuelve_200() throws Exception {
-        when(asignacionService.registerReturn(eq(1L), any())).thenReturn(respuesta());
+        when(asignacionService.registerReturn(eq(1L), any())).thenReturn(response());
 
         mockMvc.perform(patch("/api/inventario/asignaciones/1/devolver")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -23,7 +23,7 @@ import org.uteq.backend.academico.guardian.dto.LinkRequest;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.academico.guardian.service.GuardianService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
+import org.uteq.backend.deportivo.category.entity.Category;
 import org.uteq.backend.seguridad.person.entity.Person;
 import org.uteq.backend.seguridad.person.repository.PersonRepository;
 import org.uteq.backend.seguridad.role.entity.Role;
@@ -75,7 +75,7 @@ class GuardianServiceTest {
         return Student.builder()
                 .id(id)
                 .person(Person.builder().name(nombre).lastName("Hijo").build())
-                .category(Categoria.builder().idCategoria(1L).nombre("SUB-12").build())
+                .category(Category.builder().idCategoria(1L).nombre("SUB-12").build())
                 .build();
     }
 

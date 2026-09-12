@@ -1,0 +1,54 @@
+package org.uteq.backend.deportivo.match.dto;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
+
+public class RosterDtos {
+    public record CalledUpPlayer(
+            Long idEstudiante,
+            String nombreCompleto,
+            String posicion,
+            Long idPosicion,
+            boolean titular,
+            BigDecimal promedio,
+            long presencias,
+            long entrenamientos
+    ) {}
+
+    public record UnavailablePlayer(
+            Long idEstudiante,
+            String nombreCompleto,
+            String motivo
+    ) {}
+
+    public record PerformanceWindow(
+            int semanas,
+            LocalDate desde,
+            LocalDate hasta,
+            long entrenamientos
+    ) {}
+
+    public record LineupResponse(
+            Long idPartido,
+            Long idCategoria,
+            String categoria,
+            LocalDate fecha,
+            boolean guardada,
+            Short valoracion,
+            String observacion,
+            PerformanceWindow ventana,
+            List<CalledUpPlayer> titulares,
+            List<CalledUpPlayer> suplentes,
+            List<CalledUpPlayer> disponibles,
+            List<UnavailablePlayer> noConvocables,
+            int cupoTitulares,
+            boolean cerrado
+    ) {}
+
+    public record LineupFeedbackResponse(
+            String comentario,
+            boolean disponible,
+            String motivo
+    ) {}
+}

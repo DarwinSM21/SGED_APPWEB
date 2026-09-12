@@ -14,10 +14,10 @@ import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.AIFeedbackGenerator;
 import org.uteq.backend.common.ia.AnonymousPlayerProfile;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.evaluation.repository.StudentEvaluationRepository;
+import org.uteq.backend.deportivo.injury.entity.Injury;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -44,9 +44,9 @@ public class StudentReportService {
     private final GuardianRepository representanteRepository;
     private final GuardianStudentRepository vinculoRepository;
     private final StudentRepository estudianteRepository;
-    private final LesionRepository lesionRepository;
-    private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
-    private final AsistenciaRepository asistenciaRepository;
+    private final InjuryRepository injuryRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
+    private final AttendanceRepository attendanceRepository;
     private final AIFeedbackGenerator generadorFeedback;
 
     /**
@@ -170,8 +170,8 @@ public class StudentReportService {
                 .anyMatch(InjurySummaryResponse::activa);
 
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
-        long asistencias = asistenciaRepository
-                .contarAsistenciasDesde(informe.idEstudiante(), hoy.minusDays(30));
+        long asistencias = attendanceRepository
+                .countSince(informe.idEstudiante(), hoy.minusDays(30));
 
         var perfil = new AnonymousPlayerProfile(
                 "Jugador",
@@ -190,22 +190,22 @@ public class StudentReportService {
     private StudentReportResponse buildReport(Student estudiante) {
         Long idEstudiante = estudiante.getId();
 
-        List<CriterionAverageResponse> promedios = evaluacionEstudianteRepository
-                .promedioHistoricoPorCriterio(idEstudiante).stream()
+        List<CriterionAverageResponse> promedios = studentEvaluationRepository
+                .historicalAverageByCriterion(idEstudiante).stream()
                 .map(fila -> new CriterionAverageResponse(
                         (String) fila[0],
                         fila[1] == null ? 0.0 : ((Number) fila[1]).doubleValue()))
                 .toList();
 
-        List<InjurySummaryResponse> lesiones = lesionRepository
-                .findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, Pageable.unpaged())
+        List<InjurySummaryResponse> lesiones = injuryRepository
+                .findByStudentOrderByInjuryDateDesc(idEstudiante, Pageable.unpaged())
                 .getContent().stream()
                 .map(this::toInjurySummary)
                 .toList();
 
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
-        BigDecimal porcentajeAsistencia = asistenciaRepository
-                .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);
+        BigDecimal porcentajeAsistencia = attendanceRepository
+                .calculateAttendancePercentage(idEstudiante, hoy.minusDays(30), hoy);
 
         return new StudentReportResponse(
                 idEstudiante,
@@ -221,9 +221,9 @@ public class StudentReportService {
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un representante asociado a esta cuenta"));
     }
 
-    private InjurySummaryResponse toInjurySummary(Lesion l) {
+    private InjurySummaryResponse toInjurySummary(Injury l) {
         return new InjurySummaryResponse(
                 l.getIdLesion(), l.getDescripcion(), l.getFechaLesion(),
-                l.getFechaEstimadaRetorno(), l.getFechaAlta(), l.estaActiva());
+                l.getFechaEstimadaRetorno(), l.getFechaAlta(), l.isActive());
     }
 }

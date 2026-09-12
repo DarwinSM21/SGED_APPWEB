@@ -43,7 +43,7 @@ class AuditControllerTest {
 
     private AuditLogResponse fila() {
         return new AuditLogResponse(1L, OffsetDateTime.now(), "ana.torres", "ADMINISTRADOR",
-                "EDITAR", "Lesion", 45L, "editó Lesion #45");
+                "EDITAR", "Injury", 45L, "editó Injury #45");
     }
 
     @Test
@@ -56,22 +56,22 @@ class AuditControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].usuario").value("ana.torres"))
                 .andExpect(jsonPath("$.content[0].accion").value("EDITAR"))
-                .andExpect(jsonPath("$.content[0].entidad").value("Lesion"));
+                .andExpect(jsonPath("$.content[0].entidad").value("Injury"));
     }
 
     @Test
     @DisplayName("GET /api/admin/auditorias reenvia los filtros de query al servicio")
     void listarConFiltros() throws Exception {
-        when(auditoriaService.search(eq("ana"), eq("EDITAR"), eq("Lesion"), any(), any(), any()))
+        when(auditoriaService.search(eq("ana"), eq("EDITAR"), eq("Injury"), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(fila()), PageRequest.of(0, 20), 1));
 
         mockMvc.perform(get("/api/admin/auditorias")
                         .param("usuario", "ana")
                         .param("accion", "EDITAR")
-                        .param("entidad", "Lesion")
+                        .param("entidad", "Injury")
                         .param("fechaDesde", "2026-08-01")
                         .param("fechaHasta", "2026-08-14"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].descripcion").value("editó Lesion #45"));
+                .andExpect(jsonPath("$.content[0].descripcion").value("editó Injury #45"));
     }
 }

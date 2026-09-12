@@ -49,7 +49,7 @@ class GuardianControllerTest {
                 .build();
     }
 
-    private GuardianResponse respuesta() {
+    private GuardianResponse response() {
         return new GuardianResponse(1L, 1L, "Ana", "Vera", "1234567890", "ana@sged.test",
                 1L, "ana.vera@sged.test", "Madre", "0999999999", true, Instant.now(), List.of());
     }
@@ -57,7 +57,7 @@ class GuardianControllerTest {
     @Test
     @DisplayName("GET /api/representantes - lista paginada")
     void listar_devuelve_200() throws Exception {
-        when(representanteService.list(any())).thenReturn(new GuardianPageResponse<>(List.of(respuesta()), 0, 10, 1, 1));
+        when(representanteService.list(any())).thenReturn(new GuardianPageResponse<>(List.of(response()), 0, 10, 1, 1));
 
         mockMvc.perform(get("/api/representantes"))
                 .andExpect(status().isOk())
@@ -76,7 +76,7 @@ class GuardianControllerTest {
     @Test
     @DisplayName("POST /api/representantes - crea y devuelve 201")
     void crear_devuelve_201() throws Exception {
-        when(representanteService.create(any(GuardianRequest.class))).thenReturn(respuesta());
+        when(representanteService.create(any(GuardianRequest.class))).thenReturn(response());
 
         mockMvc.perform(post("/api/representantes")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -106,7 +106,7 @@ class GuardianControllerTest {
     @Test
     @DisplayName("POST /api/representantes/{id}/estudiantes/{idEstudiante} - vincula y devuelve 200")
     void vincularEstudiante_devuelve_200() throws Exception {
-        when(representanteService.linkStudent(eq(1L), eq(10L), any())).thenReturn(respuesta());
+        when(representanteService.linkStudent(eq(1L), eq(10L), any())).thenReturn(response());
 
         mockMvc.perform(post("/api/representantes/1/estudiantes/10")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -117,7 +117,7 @@ class GuardianControllerTest {
     @Test
     @DisplayName("POST /api/representantes/{id}/estudiantes/{idEstudiante} - sin cuerpo tambien vincula")
     void vincularEstudiante_sin_cuerpo_devuelve_200() throws Exception {
-        when(representanteService.linkStudent(eq(1L), eq(10L), any())).thenReturn(respuesta());
+        when(representanteService.linkStudent(eq(1L), eq(10L), any())).thenReturn(response());
 
         mockMvc.perform(post("/api/representantes/1/estudiantes/10"))
                 .andExpect(status().isOk());

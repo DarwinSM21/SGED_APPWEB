@@ -10,12 +10,12 @@ import org.uteq.backend.academico.student.entity.Student;
 import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.student.service.MyTeamService;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.entrenador.entity.Entrenador;
-import org.uteq.backend.deportivo.especialidad.entity.Especialidad;
-import org.uteq.backend.deportivo.posicion.entity.Posicion;
-import org.uteq.backend.deportivo.sesion.entity.SesionEntrenamiento;
-import org.uteq.backend.deportivo.sesion.repository.SesionEntrenamientoRepository;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.coach.entity.Coach;
+import org.uteq.backend.deportivo.specialty.entity.Specialty;
+import org.uteq.backend.deportivo.position.entity.Position;
+import org.uteq.backend.deportivo.session.entity.TrainingSession;
+import org.uteq.backend.deportivo.session.repository.TrainingSessionRepository;
 import org.uteq.backend.seguridad.person.entity.Person;
 
 import java.time.LocalDate;
@@ -32,20 +32,20 @@ import static org.mockito.Mockito.when;
 class MyTeamServiceTest {
 
     @Mock private StudentRepository estudianteRepository;
-    @Mock private SesionEntrenamientoRepository sesionRepository;
+    @Mock private TrainingSessionRepository sesionRepository;
 
     @InjectMocks private MyTeamService servicio;
 
     private static final Long ID_CATEGORIA = 3L;
 
-    private Categoria categoria() {
-        return Categoria.builder()
+    private Category categoria() {
+        return Category.builder()
                 .idCategoria(ID_CATEGORIA).nombre("SUB-12")
                 .edadMin((short) 10).edadMax((short) 12).descripcion("Sub 12 anios")
                 .build();
     }
 
-    private Student estudiante(Long id, String nombre, Posicion posicion) {
+    private Student estudiante(Long id, String nombre, Position posicion) {
         return Student.builder()
                 .id(id)
                 .person(Person.builder().name(nombre).lastName("Perez").build())
@@ -68,7 +68,7 @@ class MyTeamServiceTest {
     void sinPosicionAsignada() {
         var yo = estudiante(1L, "Juan", null);
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
-        when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+        when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
         when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
@@ -83,7 +83,7 @@ class MyTeamServiceTest {
     void sinSesionFutura() {
         var yo = estudiante(1L, "Juan", null);
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
-        when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+        when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
         when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
@@ -96,12 +96,12 @@ class MyTeamServiceTest {
     @Test
     @DisplayName("companeros excluye al propio estudiante y trae nombre + posicion de los demas")
     void companerosExcluyeAlPropioEstudiante() {
-        var posicionDelantero = Posicion.builder().nombre("Delantero").abreviatura("DC").build();
+        var posicionDelantero = Position.builder().nombre("Delantero").abreviatura("DC").build();
         var yo = estudiante(1L, "Juan", null);
         var companero = estudiante(2L, "Carlos", posicionDelantero);
 
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
-        when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+        when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
         when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of(companero));
@@ -117,19 +117,19 @@ class MyTeamServiceTest {
     @DisplayName("el entrenador es el de la sesion futura mas proxima, con su especialidad")
     void entrenadorDeLaProximaSesion() {
         var yo = estudiante(1L, "Juan", null);
-        var especialidad = Especialidad.builder().nombre("Tecnico").build();
-        var entrenador = Entrenador.builder()
+        var especialidad = Specialty.builder().nombre("Tecnico").build();
+        var entrenador = Coach.builder()
                 .idEntrenador(9L)
                 .persona(Person.builder().name("Pedro").lastName("Gomez").build())
                 .especialidad(especialidad)
                 .build();
-        var proximaSesion = SesionEntrenamiento.builder()
+        var proximaSesion = TrainingSession.builder()
                 .idSesion(50L).categoria(categoria()).entrenador(entrenador)
                 .fecha(LocalDate.of(2026, 8, 20))
                 .build();
 
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
-        when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+        when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of(proximaSesion));
         when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
@@ -146,7 +146,7 @@ class MyTeamServiceTest {
     void categoriaConDatosCompletos() {
         var yo = estudiante(1L, "Juan", null);
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
-        when(sesionRepository.findByCategoriaIdCategoriaAndFechaGreaterThanEqualOrderByFechaAscHoraInicioAsc(
+        when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
         when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());

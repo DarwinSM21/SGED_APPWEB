@@ -18,7 +18,7 @@ class PromptsFeedbackTest {
 
         String prompt = PromptsFeedback.forPlayer(perfil);
 
-        assertThat(prompt).contains("Posicion en la que juega: Mediocentro");
+        assertThat(prompt).contains("Position en la que juega: Mediocentro");
     }
 
     @Test
@@ -29,7 +29,7 @@ class PromptsFeedbackTest {
 
         String prompt = PromptsFeedback.forPlayer(perfil);
 
-        assertThat(prompt).doesNotContain("Posicion en la que juega");
+        assertThat(prompt).doesNotContain("Position en la que juega");
     }
 
     @Test
