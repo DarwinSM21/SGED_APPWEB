@@ -144,7 +144,6 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Mediciones crudas: `docs/mediciones/` (perf, sec, sus, lighthouse, jacoco)
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
-* Video de demostración: PENDIENTE (enlace) — falta grabarlo y enlazarlo
 * DOI Zenodo del software: [`10.5281/zenodo.22714477`](https://doi.org/10.5281/zenodo.22714477) — nueva versión publicada el 2026-09-11 sobre el concept DOI `10.5281/zenodo.21713239`, correspondiente al corte `v1.0.0` vigente de `DarwinSM21/SGED_APPWEB` (el DOI anterior, `10.5281/zenodo.22635766`, quedó retirado/tombstone en Zenodo por haberse publicado como depósito separado en vez de nueva versión de la misma serie; no debe citarse)
 * DOI Zenodo del *dataset*: [`10.5281/zenodo.22422305`](https://doi.org/10.5281/zenodo.22422305) — publicado, versión 1.0.0, CC BY 4.0
 * Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
