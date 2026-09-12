@@ -39,12 +39,14 @@ reflejar trabajo real.
 
 | Integrante | Commits | Líneas escritas | Archivos escritos |
 |---|---:|---:|---:|
-| Pallo Pinto Alejandro Daniel | 229 | 81 997 | 1 944 |
-| Arcalle Grefa Darwin Orlando | 116 | 51 106 | 994 |
-| Velez Lopez Ricardo Elias | 55 | 9 200 | 189 |
-| **Total** | **400** | **142 303** | **3 127** |
+| Pallo Pinto Alejandro Daniel | 233 | 81 207 | 791 |
+| Arcalle Grefa Darwin Orlando | 127 | 66 876 | 777 |
+| Velez Lopez Ricardo Elias | 55 | 9 532 | 134 |
+| **Total** | **415** | **157 615** | **1 702** |
 
-_Medido 2026-09-11 sobre `main` (commit `f7d71d1`). El conteo de Arcalle Grefa
+_Medido 2026-09-12 sobre `main` (commit `3594767`). "Archivos escritos" cuenta
+rutas distintas tocadas por cada integrante (no eventos de cambio repetidos).
+El conteo de Arcalle Grefa
 Darwin Orlando suma los commits de sus dos correos vinculados a la misma
 cuenta de GitHub (`darcalleg@uteq.edu.ec` y `darwinarcalle@gmail.com`; ver
 nota más abajo)._
