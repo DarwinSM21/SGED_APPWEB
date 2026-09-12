@@ -31,10 +31,10 @@ public class StockMovement {
     @Column(name = "tipo_movimiento", nullable = false, length = 10)
     private MovementType movementType;
 
-    @Column(nullable = false)
+    @Column(name = "cantidad", nullable = false)
     private Integer quantity;
 
-    @Column(length = 255)
+    @Column(name = "motivo", length = 255)
     private String reason;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

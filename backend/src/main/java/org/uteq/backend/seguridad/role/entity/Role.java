@@ -17,9 +17,9 @@ public class Role {
     @Column(name = "id_rol")
     private Long id;
 
-    @Column(nullable = false, length = 50)
+    @Column(name = "nombre", nullable = false, length = 50)
     private String name;
 
-    @Column(length = 255)
+    @Column(name = "descripcion", length = 255)
     private String description;
 }

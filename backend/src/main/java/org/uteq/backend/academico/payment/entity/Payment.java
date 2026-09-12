@@ -31,14 +31,16 @@ public class Payment {
     private Student student;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "tipo", nullable = false, length = 20)
     private PaymentType type;
 
+    @Column(name = "anio")
     private Short year;
 
+    @Column(name = "mes")
     private Short month;
 
-    @Column(nullable = false, precision = 8, scale = 2)
+    @Column(name = "monto", nullable = false, precision = 8, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "fecha_pago", nullable = false)

@@ -33,7 +33,7 @@ public class Assignment {
     @JoinColumn(name = "id_articulo", nullable = false)
     private Item item;
 
-    @Column(nullable = false)
+    @Column(name = "cantidad", nullable = false)
     private Integer quantity;
 
     @Enumerated(EnumType.STRING)
@@ -59,7 +59,7 @@ public class Assignment {
     private LocalDate actualReturnDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
+    @Column(name = "estado", nullable = false, length = 15)
     @Builder.Default
     private AssignmentStatus status = AssignmentStatus.ASIGNADO;
 
@@ -67,7 +67,7 @@ public class Assignment {
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)
     private UserAccount registeredBy;
 
-    @Column(length = 255)
+    @Column(name = "observaciones", length = 255)
     private String notes;
 
     @CreationTimestamp

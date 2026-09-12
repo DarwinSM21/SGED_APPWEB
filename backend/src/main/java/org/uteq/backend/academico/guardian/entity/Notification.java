@@ -31,13 +31,13 @@ public class Notification {
     private Student student;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "tipo", nullable = false, length = 20)
     private Type type;
 
-    @Column(nullable = false, columnDefinition = "text")
+    @Column(name = "mensaje", nullable = false, columnDefinition = "text")
     private String message;
 
-    @Column(nullable = false)
+    @Column(name = "leida", nullable = false)
     @Builder.Default
     private Boolean read = false;
 

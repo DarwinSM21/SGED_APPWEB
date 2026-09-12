@@ -23,17 +23,17 @@ public class Item {
     @Column(name = "id_articulo")
     private Long id;
 
-    @Column(nullable = false, length = 150)
+    @Column(name = "nombre", nullable = false, length = 150)
     private String name;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(name = "tipo", nullable = false, length = 20)
     private ItemType type;
 
-    @Column(length = 20)
+    @Column(name = "talla", length = 20)
     private String size;
 
-    @Column(length = 255)
+    @Column(name = "descripcion", length = 255)
     private String description;
 
     @Column(name = "stock_actual", nullable = false)
@@ -48,7 +48,7 @@ public class Item {
     @Builder.Default
     private String unitOfMeasure = "unidad";
 
-    @Column(nullable = false)
+    @Column(name = "activo", nullable = false)
     @Builder.Default
     private Boolean active = true;
 
