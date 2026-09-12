@@ -7,6 +7,28 @@ cuándo y en qué commit), ver
 [`docs/requisitos/CHANGELOG-REQ.md`](docs/requisitos/CHANGELOG-REQ.md) —
 complementario a este, no un duplicado.
 
+## [v1.0.0] - 2026-09-12
+
+Corte defendido, actualizado sobre el corte del 2026-09-11 (mismo tag,
+reasignado — ver [VERSIONING.md](VERSIONING.md)).
+
+### Añadido
+- **RF-11c** declarado en el SRS (v1.10): compuerta de consentimiento en
+  el alta de datos físico-deportivos, con `Estado` y `Condición de
+  cierre` explícitos — antes vivía como nota de prosa en RF-11b.
+- **Firma del docente-director** en el acta de aprobación del SRS
+  (`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`, firma electrónica del
+  2026-09-12); §7 del SRS actualizado con la firma real.
+
+### Cambiado
+- **DOI de Zenodo del software** (Punto 9 de la rúbrica): nueva versión
+  publicada el 2026-09-12 sobre el concept DOI `10.5281/zenodo.21713239`,
+  republicando el *release* de `v1.0.0` ya sobre el commit del corte
+  firmado por el docente. DOI vigente: `10.5281/zenodo.22730565`, supera
+  a `10.5281/zenodo.22714477` (corte 2026-09-11) de la misma serie.
+  Actualizado en `CITATION.cff`, `README.md`, `VERSIONING.md`,
+  `docs/checklists/fair.md` y `docs/informe/main.tex`.
+
 ## [v1.0.0] - 2026-09-11
 
 Corte defendido de la Entrega Final (la rúbrica del examen evalúa el

@@ -23,8 +23,10 @@ a inglés, 2026-09-11). `v1.0.1`, `v1.0.2` y `v1.0.3` sí conservan el corte
 que se entregó en su fecha y no se mueven, para que el estado declarado en
 cada uno siga siendo verificable contra lo que ese tag realmente contiene;
 son puntos de referencia históricos, no el corte vigente. El DOI de Zenodo
-del software está anclado a `v1.0.0` (`10.5281/zenodo.22714477`, corte
-2026-09-11).
+del software está anclado a `v1.0.0` (`10.5281/zenodo.22730565`, corte
+2026-09-12 — nueva versión republicando el *release* de `v1.0.0` sobre el
+commit del corte firmado por el docente; supera a `10.5281/zenodo.22714477`,
+corte 2026-09-11, de la misma serie).
 
 ## Criterios verificados antes de crear `v0.9.0-rc`
 
