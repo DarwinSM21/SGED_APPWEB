@@ -30,9 +30,9 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 | Protocolo de medición Cap. 4 — **4.2, 4.3, 4.5, 4.6, 4.7** | ✅ cumplen |
 | **4.4** — ZAP autenticado con *active scan* (local) | ✅ cerrado (2026-09-11); corrigió un defecto real (`500`→`405`) |
 
-**Único pendiente de TODO el plan — tarea del docente, no del equipo:**
+**Firma del docente-director recibida, 2026-09-12 — cierra el único pendiente.**
 
-> La **firma presencial del Dr. Gleiston Guerrero** en la fila del docente evaluador de la tabla §7 "Aprobación" del SRS (hoy en blanco). Al firmarla: regenerar `docs/requisitos/SRS.pdf` con `npx --yes md-to-pdf docs/requisitos/SRS.md`. `SRS-v1.0.0.pdf` no se toca (es la foto de la etiqueta `v1.0.0`).
+> El Ing. Gleiston Cicerón Guerrero Ulloa, Ph.D. suscribió electrónicamente el acta de aprobación del SRS (`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`); §7 del SRS actualizado con la fila real y `docs/requisitos/SRS.pdf` regenerado (SRS 1.9→1.10). El acta aprueba el documento como especificación válida y registra mérito por el cierre de los hallazgos éticos con código/migraciones/pruebas verificables. Trae una única observación, calificada por el propio acta como "de sincronización, que no afecta a la coherencia interna del documento": el ejemplar firmado corresponde a la v1.8; el repositorio incorporó **RF-11c** después de generarse ese PDF, así que la aprobación alcanza a la v1.8 tal como fue presentada — el acta indica que si se quiere que la firma cubra también RF-11c, el documento debe regenerarse y someterse de nuevo. El equipo documenta esto en §7 del SRS en vez de reabrir un ciclo de firma por un requisito `Planificado` que no bloquea la entrega. Las otras dos recomendaciones del acta (explicitar Implementado vs. Verificado; convertir la nota de RF-11b en requisito con estado y condición de cierre) ya estaban resueltas en el repositorio — §1.3 desde la v1.7, RF-11c desde la v1.9 — antes de recibirse la firma; el desfase es solo de cuándo se generó el PDF que el docente revisó frente al estado en vivo del repositorio.
 
 **Limitaciones declaradas (no bloquean la entrega, quedan como trabajo futuro):** ninguna.
 
