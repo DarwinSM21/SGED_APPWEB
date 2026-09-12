@@ -973,12 +973,22 @@ directa (Alta→\emph{Must}, Media→\emph{Should}, Baja→\emph{Could}), y
 las 11 que no tenían ningún campo de prioridad (RF-17 a RF-22 y RF-31 a
 RF-35, el módulo deportivo más reciente), a las que se les asignó una
 prioridad real según su rol en el flujo operativo, no una inferencia
-retroactiva. \emph{Won't (esta entrega)} se reserva para los
-requisitos explícitamente pausados por una razón declarada, no
-simplemente atrasados: RF-11b (peso/altura, pausado por el hallazgo H-06
-de \ruta{ETHICS.md}). El módulo \texttt{equipo} (esquema versionado,
-sin API por decisión) no tiene RF formal propio, por lo que no entra en
-esta tabla — ver el hallazgo C10 del checklist INCOSE (Anexo~F).
+retroactiva. \emph{Won't (esta entrega)} se reservó en ese momento para
+RF-11b (peso/altura), pausado por el hallazgo H-06 de \ruta{ETHICS.md}.
+El módulo \texttt{equipo} (esquema versionado, sin API por decisión) no
+tiene RF formal propio, por lo que no entra en esta tabla — ver el
+hallazgo C10 del checklist INCOSE (Anexo~F).
+
+\textbf{Actualización (2026-09-08/09):} H-06 se resolvió — finalidad y
+base legal documentadas, lectura restringida a
+\texttt{ADMINISTRADOR}/\texttt{ENTRENADOR} y consentimiento de alcance
+propio (\texttt{DATOS\_FISICO\_DEPORTIVOS}), sección~\ref{sec:etica} —
+y RF-11b pasa de \emph{Won't} a \emph{Should}, con prueba dedicada
+(\texttt{StudentControllerTest.datos\_fisicos\_solo\_para\_administrador\_y\_entrenador}).
+La revisión del docente del 2026-09-10 sobre esta misma nota dejó abierta
+la decisión de no forzar ese consentimiento como precondición del alta;
+el SRS la convierte en requisito propio, \textbf{RF-11c}, declarado
+\emph{Planificado} con condición de cierre explícita — no reabre H-06.
 
 \begin{table}[htbp]
 \centering
@@ -989,14 +999,20 @@ esta tabla — ver el hallazgo C10 del checklist INCOSE (Anexo~F).
 \textbf{Categoría MoSCoW} & \textbf{Cantidad} & \textbf{Fuente} \\
 \midrule
 Must & 22 & RF-01,02,03,05,06,08,09,10,11,12,13,16,17,18,19,23,27,28,29,31,33,34 \\
-Should & 11 & RF-04,14,15,20,21,22,24,25,30,32,35 \\
+Should & 12 & RF-04,11b,14,15,20,21,22,24,25,30,32,35 \\
 Could & 2 & RF-07,26 \\
-Won't (esta entrega, declarado) & 1 & RF-11b \\
 \midrule
 \textbf{Total de requisitos funcionales} & \textbf{36} & RF-01 a RF-35 + RF-11b \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\textbf{Nota (2026-09-08/09):} esta tabla reflejaba el corte del
+2026-09-04, cuando RF-11b estaba en \emph{Won't} por el hallazgo H-06
+abierto; con H-06 resuelto, RF-11b pasa a \emph{Should} y la fila
+\emph{Won't} queda vacía. RF-11c, declarado después (2026-09-12) para la
+compuerta de consentimiento en el alta, no forma parte de este corte de
+36 RF — ver la actualización más arriba.
 
 \textbf{Hallazgo cerrado} (Tabla~\ref{tab:moscow}): los 36 requisitos
 funcionales tienen hoy prioridad MoSCoW explícita en el SRS, ninguno
@@ -1119,7 +1135,7 @@ Restricciones de diseño (RD) & 3 \\
 RF en estado Implementado & 34 (94{,}4\,\%) \\
 RF en estado Modelado (solo esquema) & 2 (5{,}6\,\%) \\
 RF en estado Planificado & 0 \\
-RF con verificación de prueba nombrada explícitamente & 33 de 36 (91{,}7\,\%)$^\ast$ \\
+RF con verificación de prueba nombrada explícitamente & 34 de 36 (94{,}4\,\%)$^\ast$ \\
 RF con prioridad MoSCoW formal declarada & 36 de 36 (100\,\%) \\
 Historias de usuario & 14 (\textsc{hu}-01 a \textsc{hu}-14) \\
 Casos de uso detallados / identificados & 9 detallados + 6 identificados \\
@@ -1129,14 +1145,15 @@ Tasa de estabilidad (sobre el rango cubierto) & 63{,}6\,\% \\
 \end{tabular}
 \end{table}
 
-$^\ast$Los tres sin prueba: RF-20 y RF-21 (estado Modelado — la
+$^\ast$Los dos sin prueba: RF-20 y RF-21 (estado Modelado — la
 "verificación" en el SRS describe la restricción de esquema, no todavía
-una prueba de API porque el \emph{endpoint} no existe) y RF-11b (sin
-prueba dedicada por el hallazgo ético H-06, sección~\ref{sec:ingenieria-requisitos}).
+una prueba de API porque el \emph{endpoint} no existe). RF-11b ya tiene
+prueba dedicada desde que se resolvió H-06
+(\texttt{StudentControllerTest.datos\_fisicos\_solo\_para\_administrador\_y\_entrenador}).
 
 Este capítulo satisface las nueve características INCOSE v4 de un
-requisito individual de forma desigual: fuerte en \emph{Verifiable} (33
-de 36 entradas del SRS nombran su prueba, las tres restantes declaradas
+requisito individual de forma desigual: fuerte en \emph{Verifiable} (34
+de 36 entradas del SRS nombran su prueba, las dos restantes declaradas
 sin prueba por una razón concreta —arriba—, no por omisión) y en
 \emph{Correct} (cada corrección se documenta con su razón, nunca se
 sobreescribe en silencio); ya cerrado en la dimensión de prioridad
@@ -3041,6 +3058,7 @@ misma serie y conserva su propio DOI de versión
 
 % ============================================================
 \section{Consideraciones éticas}
+\label{sec:etica}
 
 El sistema trata datos personales de niños, niñas y adolescentes: nombres,
 cédula, fecha de nacimiento, asistencia con hora y lugar, y evaluaciones
@@ -3415,12 +3433,18 @@ y \ruta{VERSIONING.md} ya declaran abiertos.
     identificativos por valores neutros y borra el texto libre sobre el
     menor, conservando claves foráneas y estadísticas agregadas
     (hallazgo H-03, requisito RF-50).
-  \item \textbf{Base legal documentada para peso y altura.} Estos dos
-    campos son datos de salud de un menor sin finalidad de uso
-    verificada, en el esquema pero sin ningún \emph{endpoint} de escritura
-    confirmado (hallazgo H-06). La línea de trabajo es doble: documentar
-    una finalidad concreta con consentimiento separado, o directamente no
-    exponerlos por API si ninguna funcionalidad prevista los necesita.
+  \item \textbf{Base legal documentada para peso y altura (resuelto el
+    2026-09-09; RF-11c declarado el 2026-09-12).} Estos dos campos son
+    datos de salud de un menor; se documentó su finalidad (seguimiento
+    físico-deportivo, sin ranking ni decisiones automatizadas) y su base
+    legal (consentimiento del representante con alcance propio
+    \texttt{DATOS\_FISICO\_DEPORTIVOS}, registrado por RF-39), y la
+    lectura del \emph{endpoint} de escritura ya existente se restringió a
+    \texttt{ADMINISTRADOR}/\texttt{ENTRENADOR} (hallazgo H-06, requisito
+    RF-11b, sección~\ref{sec:etica}). Queda una línea de trabajo menor,
+    ya declarada como requisito propio y no como comentario suelto: RF-11c
+    exigirá ese consentimiento como precondición del alta, en vez de
+    admitirlo de forma incondicional como hoy.
   \item \textbf{Validación y protección de la cédula.} Hoy es un
     \texttt{VARCHAR(10)} sin validación de dígito verificador, sin
     restricción de unicidad y sin cifrado en reposo (hallazgo H-01) — más
@@ -3879,8 +3903,8 @@ C3 \emph{Unambiguous} & \cumple & Patrón sintáctico ISO/IEC/IEEE~29148:2018 ap
 C4 \emph{Complete} & \cumple & Los 36 RF tienen hoy campo \texttt{Prioridad:} y \texttt{MoSCoW:} explícitos (sección~\ref{sec:ingenieria-requisitos}); cerrado el 2026-09-04 \\
 C5 \emph{Singular} & \cumple & Ningún RF combina dos comportamientos verificables por separado; revisión manual línea por línea \\
 C6 \emph{Feasible} & \cumple & 34 de 36 RF en estado Implementado son la prueba directa de factibilidad \\
-C7 \emph{Verifiable} & \cumple & 33 de 36 RF referencian una prueba automatizada nombrada explícitamente en su entrada del SRS; los tres restantes declaran por qué no la tienen \\
-C8 \emph{Correct} & \parcial & RF-11b (peso/altura) es correcto técnicamente pero su base legal no está resuelta (hallazgo H-06) \\
+C7 \emph{Verifiable} & \cumple & 34 de 36 RF referencian una prueba automatizada nombrada explícitamente en su entrada del SRS; los dos restantes declaran por qué no la tienen \\
+C8 \emph{Correct} & \cumple & RF-11b (peso/altura) correcto y con base legal documentada (hallazgo H-06 resuelto, sección~\ref{sec:etica}); el endurecimiento de la compuerta en el alta queda declarado como RF-11c, sin bloquear la entrega \\
 C9 \emph{Conforming} & \cumple & Los 36 RF siguen el mismo patrón \emph{``[condición] [sujeto] deberá [acción] [objeto] [restricción]''} \\
 \bottomrule
 \end{tabular}
@@ -3905,15 +3929,15 @@ C15 \emph{Correct} & \parcial & Mientras C11 no se cierre, ``el conjunto'' no ti
 \end{tabular}
 \end{table}
 
-\textbf{Resumen:} 11 de 15 características en \cumple, 4 en \parcial,
-0 en \emph{No cumple} —una más en \cumple que en la medición anterior,
-al cerrarse C4 con el campo \texttt{MoSCoW:} explícito. Las cuatro
-parciales restantes ya no comparten una única causa: C8 depende de
-resolver el hallazgo ético H-06 (RF-11b); C10 y C11 dependen de que se
-sincronicen \ruta{historias-usuario.md} y \ruta{casos-uso.md} con el
-SRS y de que el módulo \texttt{Equipo} obtenga un RF formal —pendiente
-concreto declarado en la sección~\ref{sec:ingenieria-requisitos}—; C15
-es consecuencia directa de C11.
+\textbf{Resumen:} 12 de 15 características en \cumple, 3 en \parcial,
+0 en \emph{No cumple} —dos más en \cumple que en la medición anterior,
+al cerrarse C4 con el campo \texttt{MoSCoW:} explícito y C8 al resolverse
+el hallazgo ético H-06 (2026-09-08/09). Las tres parciales restantes
+comparten una misma causa: C10 y C11 dependen de que se sincronicen
+\ruta{historias-usuario.md} y \ruta{casos-uso.md} con el SRS y de que el
+módulo \texttt{Equipo} obtenga un RF formal —pendiente concreto
+declarado en la sección~\ref{sec:ingenieria-requisitos}—; C15 es
+consecuencia directa de C11.
 
 \subsection*{Anexo G --- Matriz de trazabilidad completa}
 \addcontentsline{toc}{subsection}{Anexo G --- Matriz de trazabilidad completa}
@@ -3997,8 +4021,11 @@ RF-35 & Historial de asistencia de una sesión de entrenamiento & N/A & N/A & Im
 $^\dagger$Estado con una salvedad temporal o de alcance que no cabe en
 esta columna; el texto completo está en la columna \texttt{estado} de
 \ruta{docs/trazabilidad/matriz.csv}. Las más relevantes: RF-11b está
-implementado sin resolución ética (hallazgo H-06,
-sección~\ref{sec:ingenieria-requisitos}); RF-19 cubre QR y registro
+implementado con el hallazgo ético H-06 ya resuelto (base legal y
+restricción de lectura por rol, sección~\ref{sec:etica}); el
+endurecimiento de la compuerta de consentimiento en el alta queda
+declarado como RF-11c, fuera de esta tabla (ver
+\ruta{docs/trazabilidad/matriz.csv} y el SRS); RF-19 cubre QR y registro
 manual, con RFID pendiente por falta de lector físico; RF-22 notifica
 solo dentro de la aplicación, no por correo/SMS/\emph{push}
 (sección~\ref{sec:trabajo-futuro}); el módulo \texttt{Equipo} tiene
