@@ -17,10 +17,10 @@ import org.uteq.backend.academico.guardian.repository.GuardianStudentRepository;
 import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
-import org.uteq.backend.deportivo.categoria.entity.Categoria;
-import org.uteq.backend.deportivo.categoria.repository.CategoriaRepository;
-import org.uteq.backend.deportivo.posicion.entity.Posicion;
-import org.uteq.backend.deportivo.posicion.repository.PosicionRepository;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.category.repository.CategoryRepository;
+import org.uteq.backend.deportivo.position.entity.Position;
+import org.uteq.backend.deportivo.position.repository.PositionRepository;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
 import org.uteq.backend.seguridad.status.repository.GeneralStatusRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
@@ -51,9 +51,9 @@ import java.util.Optional;
 public class StudentService {
     private final StudentRepository estudianteRepository;
     private final PersonRepository personaRepository;
-    private final CategoriaRepository categoriaRepository;
+    private final CategoryRepository categoryRepository;
     private final GeneralStatusRepository estadoGeneralRepository;
-    private final PosicionRepository posicionRepository;
+    private final PositionRepository positionRepository;
     private final GuardianStudentRepository representanteEstudianteRepository;
 
     private final StudentAccessService estudianteAccesoService;
@@ -127,7 +127,7 @@ public class StudentService {
             }
 
             // Estaba inactivo: se reactiva y se actualiza con los datos nuevos.
-<span class="fc" id="L130">            Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="fc" id="L130">            Category categoria = categoryRepository.findById(request.idCategoria())</span>
 <span class="pc" id="L131">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
 
 <span class="fc" id="L133">            GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())</span>
@@ -154,7 +154,7 @@ public class StudentService {
 <span class="fc" id="L154">        Person persona = personaRepository.findById(request.idPersona())</span>
 <span class="pc" id="L155">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Persona no encontrada con ID: &quot; + request.idPersona()));</span>
 
-<span class="fc" id="L157">        Categoria categoria = categoriaRepository.findById(request.idCategoria())</span>
+<span class="fc" id="L157">        Category categoria = categoryRepository.findById(request.idCategoria())</span>
 <span class="pc" id="L158">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada: &quot; + request.idCategoria()));</span>
 
 <span class="fc" id="L160">        validateAgeInCategory(persona, categoria);</span>
@@ -284,7 +284,7 @@ public class StudentService {
      * @throws IllegalArgumentException si la edad queda fuera del rango
      *                                  {@code [edadMin, edadMax]}
      */
-    private void validateAgeInCategory(Person persona, Categoria categoria) {
+    private void validateAgeInCategory(Person persona, Category categoria) {
 <span class="fc" id="L288">        LocalDate nacimiento = persona.getBirthDate();</span>
 <span class="pc bpc" id="L289" title="2 of 6 branches missed.">        if (nacimiento == null || categoria.getEdadMin() == null || categoria.getEdadMax() == null) {</span>
 <span class="fc" id="L290">            return;</span>
@@ -303,7 +303,7 @@ public class StudentService {
 <span class="pc bpc" id="L303" title="1 of 2 branches missed.">        if (estudiante.getCategory().getIdCategoria().equals(idCategoriaNueva)) {</span>
 <span class="fc" id="L304">            return;</span>
         }
-<span class="nc" id="L306">        Categoria categoria = categoriaRepository.findById(idCategoriaNueva)</span>
+<span class="nc" id="L306">        Category categoria = categoryRepository.findById(idCategoriaNueva)</span>
 <span class="nc" id="L307">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Categoría no encontrada: &quot; + idCategoriaNueva));</span>
 <span class="nc" id="L308">        validateAgeInCategory(estudiante.getPerson(), categoria);</span>
 <span class="nc" id="L309">        estudiante.setCategory(categoria);</span>
@@ -329,11 +329,11 @@ public class StudentService {
 <span class="nc" id="L329">        estudiante.setPosition(resolvePosition(idPosicionNueva));</span>
 <span class="nc" id="L330">    }</span>
 
-    private Posicion resolvePosition(Long idPosicion) {
+    private Position resolvePosition(Long idPosicion) {
 <span class="pc bpc" id="L333" title="1 of 2 branches missed.">        if (idPosicion == null) {</span>
 <span class="fc" id="L334">            return null;</span>
         }
-<span class="nc" id="L336">        return posicionRepository.findById(idPosicion)</span>
+<span class="nc" id="L336">        return positionRepository.findById(idPosicion)</span>
 <span class="nc" id="L337">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Posición no encontrada: &quot; + idPosicion));</span>
     }
 
@@ -426,7 +426,7 @@ public class StudentService {
      * @param idCategoria identificador de la categoría
      */
     @Audited(action = &quot;EDITAR&quot;, entity = &quot;Estudiante&quot;,
-            descriptionSpel = &quot;'desactivó los estudiantes de la Categoria #' + #p0&quot;)
+            descriptionSpel = &quot;'desactivó los estudiantes de la Category #' + #p0&quot;)
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public void deactivateByCategory(Long idCategoria) {

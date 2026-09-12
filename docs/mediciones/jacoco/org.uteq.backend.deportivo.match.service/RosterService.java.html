@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RosterService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.match.service</a> &gt; <span class="el_source">RosterService.java</span></div><h1>RosterService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.match.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.academico.student.entity.Student;
+import org.uteq.backend.academico.student.repository.StudentRepository;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
+import org.uteq.backend.common.ia.AIFeedbackGenerator;
+import org.uteq.backend.common.ia.AnonymousPlayerProfile;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.evaluation.repository.StudentEvaluationRepository;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
+import org.uteq.backend.deportivo.match.dto.RosterDtos.CalledUpPlayer;
+import org.uteq.backend.deportivo.match.dto.RosterDtos.UnavailablePlayer;
+import org.uteq.backend.deportivo.match.dto.RosterDtos.PerformanceWindow;
+import org.uteq.backend.deportivo.match.entity.Match;
+import org.uteq.backend.deportivo.match.repository.MatchRepository;
+import org.uteq.backend.deportivo.session.repository.TrainingSessionRepository;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Sugerencia de once para un partido. &lt;b&gt;La IA no elige a los jugadores.&lt;/b&gt;
+ * La selección sale de una regla explícita y reproducible a mano:
+ * &lt;ol&gt;
+ *   &lt;li&gt;El universo es el plantel activo de la categoría que juega.&lt;/li&gt;
+ *   &lt;li&gt;Queda fuera quien arrastra una lesión activa y quien no pisó un solo
+ *       entrenamiento en la ventana; los dos se muestran con el motivo.&lt;/li&gt;
+ *   &lt;li&gt;Se ordena por el promedio de las últimas semanas (no el histórico),
+ *       desempatando por presencias y después por id, para que dos llamadas
+ *       con los mismos datos devuelvan lo mismo.&lt;/li&gt;
+ *   &lt;li&gt;Se titulariza al mejor de cada posición nominal, no a los once
+ *       mejores promedios (eso podía sugerir dos porteros).&lt;/li&gt;
+ * &lt;/ol&gt;
+ *
+ * &lt;p&gt;El modelo de lenguaje solo redacta un comentario sobre un once ya
+ * decidido, y solo cuando se le pide.
+ */
+@Service
+@RequiredArgsConstructor
+public class RosterService {
+    private final MatchRepository matchRepository;
+    private final StudentRepository estudianteRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
+    private final AttendanceRepository attendanceRepository;
+    private final TrainingSessionRepository sesionRepository;
+    private final InjuryRepository injuryRepository;
+    private final AIFeedbackGenerator generadorFeedback;
+
+    /** Cupo de titulares del once. */
+    @Value(&quot;${plantilla.titulares:11}&quot;)
+    private int cantidadTitulares;
+
+    /** Cuántas semanas hacia atrás se miran. Cuatro es un mes de entrenamientos. */
+    @Value(&quot;${plantilla.semanas-rendimiento:4}&quot;)
+    private int semanasRendimiento;
+
+    /**
+     * Cupo de titulares configurado.
+     *
+     * @return el número de titulares del once
+     */
+    public int starterQuota() {
+<span class="nc" id="L76">        return cantidadTitulares;</span>
+    }
+
+    /**
+     * Calcula la convocatoria sugerida para un partido por su identificador.
+     *
+     * @param idPartido identificador del partido
+     * @return la convocatoria sugerida (no se guarda sola)
+     * @throws ResourceNotFoundException si el partido no existe
+     */
+    @Transactional(readOnly = true)
+    public Roster calculate(Long idPartido) {
+<span class="fc" id="L88">        Match partido = matchRepository.findWithCategoryById(idPartido)</span>
+<span class="fc" id="L89">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No existe el partido &quot; + idPartido));</span>
+<span class="fc" id="L90">        return calculate(partido);</span>
+    }
+
+    /**
+     * Calcula la convocatoria sugerida para un partido ya cargado. Es la
+     * &lt;em&gt;sugerencia&lt;/em&gt;: no se guarda sola, para no convertir una
+     * recomendación en hecho histórico sin que nadie lo decida.
+     *
+     * @param partido partido para el que se calcula
+     * @return titulares por puesto, suplentes, no convocables con su motivo,
+     *         y los promedios y presencias ya consultados
+     */
+    @Transactional(readOnly = true)
+    public Roster calculate(Match partido) {
+<span class="fc" id="L104">        Long idCategoria = partido.getCategoria().getIdCategoria();</span>
+<span class="fc" id="L105">        LocalDate hasta = partido.getFecha();</span>
+<span class="fc" id="L106">        LocalDate desde = hasta.minusWeeks(semanasRendimiento);</span>
+
+<span class="fc" id="L108">        long entrenamientos = sesionRepository</span>
+<span class="fc" id="L109">                .countByCategoryAndDateBetween(idCategoria, desde, hasta);</span>
+<span class="fc" id="L110">        PerformanceWindow ventana =</span>
+                new PerformanceWindow(semanasRendimiento, desde, hasta, entrenamientos);
+
+<span class="fc" id="L113">        List&lt;Student&gt; plantel = estudianteRepository</span>
+<span class="fc" id="L114">                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(idCategoria);</span>
+<span class="pc bpc" id="L115" title="1 of 2 branches missed.">        if (plantel.isEmpty()) {</span>
+<span class="nc" id="L116">            return new Roster(partido, ventana, List.of(), List.of(), List.of(),</span>
+<span class="nc" id="L117">                    Map.of(), Map.of(), entrenamientos);</span>
+        }
+
+<span class="fc" id="L120">        List&lt;Long&gt; ids = plantel.stream().map(Student::getId).toList();</span>
+<span class="fc" id="L121">        Map&lt;Long, BigDecimal&gt; promedios = averagesOf(ids, desde, hasta);</span>
+<span class="fc" id="L122">        Map&lt;Long, Long&gt; presencias = presencesOf(ids, desde, hasta);</span>
+<span class="fc" id="L123">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(injuryRepository.injuredStudentIds());</span>
+
+<span class="fc" id="L125">        List&lt;Student&gt; convocables = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L126">        List&lt;UnavailablePlayer&gt; fuera = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L127" title="All 2 branches covered.">        for (Student e : plantel) {</span>
+<span class="fc" id="L128">            Long id = e.getId();</span>
+<span class="fc bfc" id="L129" title="All 2 branches covered.">            if (lesionados.contains(id)) {</span>
+<span class="fc" id="L130">                fuera.add(new UnavailablePlayer(id, nameOf(e), &quot;Lesión activa&quot;));</span>
+            // Si la categoría no tuvo entrenamientos en la ventana, nadie pudo
+            // asistir; castigar por eso a todo el plantel dejaría al entrenador
+            // sin nadie a quien alinear.
+<span class="fc bfc" id="L134" title="All 4 branches covered.">            } else if (entrenamientos &gt; 0 &amp;&amp; presencias.getOrDefault(id, 0L) == 0L) {</span>
+<span class="fc" id="L135">                fuera.add(new UnavailablePlayer(id, nameOf(e),</span>
+                        &quot;No entrenó en las últimas &quot; + semanasRendimiento + &quot; semanas&quot;));
+            } else {
+<span class="fc" id="L138">                convocables.add(e);</span>
+            }
+<span class="fc" id="L140">        }</span>
+
+<span class="fc" id="L142">        convocables.sort(byPerformance(promedios, presencias));</span>
+
+<span class="fc" id="L144">        Map&lt;Long, CalledUpPlayer&gt; titularPorPuesto = new LinkedHashMap&lt;&gt;();</span>
+<span class="fc" id="L145">        List&lt;CalledUpPlayer&gt; suplentes = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">        for (Student e : convocables) {</span>
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">            Long idPosicion = e.getPosition() == null ? null : e.getPosition().getIdPosicion();</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">            boolean hayCupo = titularPorPuesto.size() &lt; cantidadTitulares;</span>
+<span class="pc bpc" id="L149" title="2 of 6 branches missed.">            boolean titulariza = idPosicion != null &amp;&amp; hayCupo &amp;&amp; !titularPorPuesto.containsKey(idPosicion);</span>
+<span class="fc" id="L150">            CalledUpPlayer fila =</span>
+<span class="fc" id="L151">                    toCalledUpPlayer(e, idPosicion, titulariza, promedios, presencias, entrenamientos);</span>
+<span class="fc bfc" id="L152" title="All 2 branches covered.">            if (titulariza) {</span>
+<span class="fc" id="L153">                titularPorPuesto.put(idPosicion, fila);</span>
+            } else {
+<span class="fc" id="L155">                suplentes.add(fila);</span>
+            }
+<span class="fc" id="L157">        }</span>
+
+<span class="fc" id="L159">        return new Roster(partido, ventana,</span>
+<span class="fc" id="L160">                new ArrayList&lt;&gt;(titularPorPuesto.values()), suplentes, fuera,</span>
+                promedios, presencias, entrenamientos);
+    }
+
+    /**
+     * Comentario del modelo sobre un once ya decidido. Se pide a demanda.
+     * Solo se envían datos seudonimizados (&quot;Jugador 1&quot;, su categoría, su
+     * puesto y sus números): ningún nombre sale del sistema.
+     *
+     * @param titulares once sobre el que comentar
+     * @param categoria categoría del equipo
+     * @return el comentario generado, con su disponibilidad y motivo
+     */
+    public AIFeedbackGenerator.FeedbackResult comment(
+            List&lt;CalledUpPlayer&gt; titulares, String categoria) {
+<span class="nc" id="L175">        List&lt;AnonymousPlayerProfile&gt; perfiles = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L176" title="All 2 branches missed.">        for (int i = 0; i &lt; titulares.size(); i++) {</span>
+<span class="nc" id="L177">            CalledUpPlayer t = titulares.get(i);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">            double promedio = t.promedio() == null ? 0.0 : t.promedio().doubleValue();</span>
+<span class="nc" id="L179">            perfiles.add(new AnonymousPlayerProfile(</span>
+<span class="nc" id="L180">                    &quot;Jugador &quot; + (i + 1), categoria, t.posicion(),</span>
+<span class="nc" id="L181">                    Map.of(&quot;Promedio acumulado&quot;, promedio,</span>
+<span class="nc" id="L182">                            &quot;Entrenamientos asistidos&quot;, (double) t.presencias()),</span>
+<span class="nc" id="L183">                    Map.of(), null, false));</span>
+        }
+<span class="nc" id="L185">        return generadorFeedback.generateLineupComment(perfiles);</span>
+    }
+
+    // Promedio primero, presencias después, id al final. El desempate por id
+    // no es cosmético: sin él, dos llamadas con los mismos datos podrían
+    // devolver onces distintos.
+    private Comparator&lt;Student&gt; byPerformance(Map&lt;Long, BigDecimal&gt; promedios,
+                                                  Map&lt;Long, Long&gt; presencias) {
+<span class="fc" id="L193">        return Comparator</span>
+<span class="fc" id="L194">                .comparing((Student e) -&gt; promedios.getOrDefault(</span>
+<span class="fc" id="L195">                        e.getId(), BigDecimal.ZERO)).reversed()</span>
+<span class="fc" id="L196">                .thenComparing(Comparator.comparingLong(</span>
+<span class="fc" id="L197">                        (Student e) -&gt; presencias.getOrDefault(e.getId(), 0L)).reversed())</span>
+<span class="fc" id="L198">                .thenComparing(Student::getId);</span>
+    }
+
+    private Map&lt;Long, BigDecimal&gt; averagesOf(List&lt;Long&gt; ids, LocalDate desde, LocalDate hasta) {
+<span class="fc" id="L202">        Map&lt;Long, BigDecimal&gt; promedios = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">        for (Object[] fila : studentEvaluationRepository.averageInWindow(ids, desde, hasta)) {</span>
+<span class="pc bpc" id="L204" title="1 of 2 branches missed.">            if (fila[1] == null) {</span>
+<span class="nc" id="L205">                continue;</span>
+            }
+<span class="fc" id="L207">            promedios.put((Long) fila[0], BigDecimal.valueOf(((Number) fila[1]).doubleValue())</span>
+<span class="fc" id="L208">                    .setScale(1, RoundingMode.HALF_UP));</span>
+<span class="fc" id="L209">        }</span>
+<span class="fc" id="L210">        return promedios;</span>
+    }
+
+    private Map&lt;Long, Long&gt; presencesOf(List&lt;Long&gt; ids, LocalDate desde, LocalDate hasta) {
+<span class="fc" id="L214">        Map&lt;Long, Long&gt; presencias = new HashMap&lt;&gt;();</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        for (Object[] fila : attendanceRepository.presencesInWindow(ids, desde, hasta)) {</span>
+<span class="fc" id="L216">            presencias.put((Long) fila[0], ((Number) fila[1]).longValue());</span>
+<span class="fc" id="L217">        }</span>
+<span class="fc" id="L218">        return presencias;</span>
+    }
+
+    /**
+     * Construye la fila de un jugador convocado.
+     *
+     * @param e              estudiante
+     * @param idPosicion     puesto de &lt;em&gt;ese&lt;/em&gt; partido, que no tiene por
+     *                       qué ser la posición nominal del estudiante
+     * @param titular        {@code true} si entra como titular
+     * @param promedios      promedios por estudiante ya consultados
+     * @param presencias     presencias por estudiante ya consultadas
+     * @param entrenamientos entrenamientos de la categoría en la ventana
+     * @return la fila del jugador ({@code promedio} es {@code null}, no
+     *         {@code 0.0}, si no lo evaluaron)
+     */
+    public CalledUpPlayer toCalledUpPlayer(Student e, Long idPosicion, boolean titular,
+                                       Map&lt;Long, BigDecimal&gt; promedios, Map&lt;Long, Long&gt; presencias,
+                                       long entrenamientos) {
+<span class="fc" id="L237">        String abreviatura = null;</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">        if (idPosicion != null) {</span>
+<span class="fc" id="L239">            var nominal = e.getPosition();</span>
+<span class="pc bpc" id="L240" title="2 of 4 branches missed.">            abreviatura = nominal != null &amp;&amp; idPosicion.equals(nominal.getIdPosicion())</span>
+<span class="pc" id="L241">                    ? nominal.getAbreviatura() : null;</span>
+        }
+<span class="fc" id="L243">        return new CalledUpPlayer(</span>
+<span class="fc" id="L244">                e.getId(), nameOf(e), abreviatura, idPosicion, titular,</span>
+<span class="fc" id="L245">                promedios.get(e.getId()),</span>
+<span class="fc" id="L246">                presencias.getOrDefault(e.getId(), 0L),</span>
+                entrenamientos);
+    }
+
+    /**
+     * Nombre completo de un estudiante ({@code &quot;Nombre Apellido&quot;}).
+     *
+     * @param e estudiante
+     * @return el nombre completo
+     */
+    public static String nameOf(Student e) {
+<span class="fc" id="L257">        return e.getPerson().getName() + &quot; &quot; + e.getPerson().getLastName();</span>
+    }
+
+    /**
+     * Resultado del cálculo de convocatoria. Lleva además los promedios y
+     * presencias ya consultados para que quien tenga que rearmar filas no
+     * vuelva a golpear la base con las mismas dos consultas.
+     *
+     * @param partido        partido para el que se calculó
+     * @param ventana        ventana de rendimiento evaluada
+     * @param titulares      once sugerido
+     * @param suplentes      convocables que no entraron al once
+     * @param noConvocables  jugadores fuera, con su motivo
+     * @param promedios      promedio en la ventana por estudiante
+     * @param presencias     presencias en la ventana por estudiante
+     * @param entrenamientos entrenamientos de la categoría en la ventana
+     */
+<span class="fc" id="L274">    public record Roster(</span>
+            Match partido,
+            PerformanceWindow ventana,
+            List&lt;CalledUpPlayer&gt; titulares,
+            List&lt;CalledUpPlayer&gt; suplentes,
+            List&lt;UnavailablePlayer&gt; noConvocables,
+            Map&lt;Long, BigDecimal&gt; promedios,
+            Map&lt;Long, Long&gt; presencias,
+            long entrenamientos
+    ) {}
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

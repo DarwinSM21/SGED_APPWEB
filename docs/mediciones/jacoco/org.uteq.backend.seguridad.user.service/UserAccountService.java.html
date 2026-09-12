@@ -13,7 +13,7 @@ import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.guardian.repository.GuardianRepository;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.config.RedisCacheConfig;
-import org.uteq.backend.deportivo.entrenador.repository.EntrenadorRepository;
+import org.uteq.backend.deportivo.coach.repository.CoachRepository;
 import org.uteq.backend.seguridad.audit.aop.Audited;
 import org.uteq.backend.seguridad.auth.PasswordPolicy;
 import org.uteq.backend.seguridad.status.entity.GeneralStatus;
@@ -48,7 +48,7 @@ public class UserAccountService {
     private final RoleRepository rolRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordPolicy passwordPolicy;
-    private final EntrenadorRepository entrenadorRepository;
+    private final CoachRepository coachRepository;
     private final GuardianRepository representanteRepository;
     private final StudentRepository estudianteRepository;
 
@@ -100,7 +100,7 @@ public class UserAccountService {
      *                                      rol no es coherente con la ficha
      * @throws ResourceNotFoundException si la persona o el estado no existen
      */
-    // linkExistingRecord puede mutar Student/Entrenador (Representante
+    // linkExistingRecord puede mutar Student/Coach (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
@@ -161,7 +161,7 @@ public class UserAccountService {
      *                                      está ocupado o el rol no es
      *                                      coherente con la ficha
      */
-    // linkExistingRecord puede mutar Student/Entrenador (Representante
+    // linkExistingRecord puede mutar Student/Coach (Representante
     // no tiene caché propia todavía): sin evictar esas listas quedarían con el
     // dato viejo —sin cuenta vinculada— hasta que expire el TTL.
     @Caching(evict = {
@@ -244,7 +244,7 @@ public class UserAccountService {
 <span class="fc" id="L244">        return toResponse(usuarioRepository.save(usuario));</span>
     }
 
-    // R-09 (informe de evaluación de calidad): extraído de editar() para bajar
+    // R-09 (informe de evaluación de calidad): extraído de update() para bajar
     // su complejidad ciclomática. &quot;password en blanco&quot; significa &quot;no cambiarla&quot;.
     private void updatePasswordIfApplicable(UserAccount usuario, String nuevaPassword) {
 <span class="pc bpc" id="L250" title="1 of 4 branches missed.">        if (nuevaPassword != null &amp;&amp; !nuevaPassword.isBlank()) {</span>
@@ -296,7 +296,7 @@ public class UserAccountService {
 <span class="fc" id="L296">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de estudiante activa: su cuenta solo puede tener el rol ESTUDIANTE&quot;);
         }
-<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (entrenadorRepository.existsByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        if (coachRepository.existsByPerson_IdAndActiveTrue(idPersona)</span>
 <span class="pc bpc" id="L300" title="1 of 2 branches missed.">                &amp;&amp; !&quot;ENTRENADOR&quot;.equals(rol)) {</span>
 <span class="fc" id="L301">            throw new IllegalArgumentException(</span>
                     &quot;La persona tiene una ficha de entrenador activa: su cuenta solo puede tener el rol ENTRENADOR&quot;);
@@ -325,9 +325,9 @@ public class UserAccountService {
 <span class="fc" id="L325">            case &quot;ESTUDIANTE&quot; -&gt; estudianteRepository.findByPerson_IdAndActiveTrue(idPersona)</span>
 <span class="pc bnc" id="L326" title="All 2 branches missed.">                    .filter(e -&gt; e.getUserAccount() == null)</span>
 <span class="pc" id="L327">                    .ifPresent(e -&gt; { e.setUserAccount(usuario); estudianteRepository.save(e); });</span>
-<span class="fc" id="L328">            case &quot;ENTRENADOR&quot; -&gt; entrenadorRepository.findByPersona_IdPersonaAndActivoTrue(idPersona)</span>
+<span class="fc" id="L328">            case &quot;ENTRENADOR&quot; -&gt; coachRepository.findByPerson_IdAndActiveTrue(idPersona)</span>
 <span class="pc bnc" id="L329" title="All 2 branches missed.">                    .filter(e -&gt; e.getUsuario() == null)</span>
-<span class="pc" id="L330">                    .ifPresent(e -&gt; { e.setUsuario(usuario); entrenadorRepository.save(e); });</span>
+<span class="pc" id="L330">                    .ifPresent(e -&gt; { e.setUsuario(usuario); coachRepository.save(e); });</span>
 <span class="nc" id="L331">            case &quot;REPRESENTANTE&quot; -&gt; representanteRepository.findByPerson_IdAndActiveTrue(idPersona)</span>
 <span class="nc bnc" id="L332" title="All 2 branches missed.">                    .filter(r -&gt; r.getUserAccount() == null)</span>
 <span class="nc" id="L333">                    .ifPresent(r -&gt; { r.setUserAccount(usuario); representanteRepository.save(r); });</span>

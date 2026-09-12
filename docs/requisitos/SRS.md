@@ -511,10 +511,10 @@ categorías deportivas, cada una definida por un nombre y un rango de edad
 
 - **Prioridad:** Alta (bloquea RF-10/RF-11) · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Método de verificación:** Test
-- **Origen:** `CategoriaController` (`/api/categorias`, 6 endpoints) —
-  `deportivo/categoria/controller/CategoriaController.java`
-- **Verificación:** `CategoriaServiceTest` (9 pruebas: paginación, alta,
-  edición, baja lógica, validación de rango de edad), `CategoriaControllerTest`
+- **Origen:** `CategoryController` (`/api/categorias`, 6 endpoints) —
+  `deportivo/category/controller/CategoryController.java`
+- **Verificación:** `CategoryServiceTest` (9 pruebas: paginación, alta,
+  edición, baja lógica, validación de rango de edad), `CategoryControllerTest`
   (7 pruebas: 200/201/204/400/404/422).
 
 ---
@@ -546,7 +546,7 @@ alta hecha en `POST /api/auth/registro`) de forma independiente.*
   activa de Estudiante/Entrenador/Representante, su cuenta solo admite
   el rol correspondiente; sin fichas activas admite cualquiera (lo que
   permite crear la cuenta ENTRENADOR antes de la ficha). La guarda
-  simétrica vive en `StudentService.crear`. Ver
+  simétrica vive en `StudentService.create`. Ver
   `docs/superpowers/specs/2026-08-12-validaciones-rol-usuario-design.md`
   y `2026-08-12-coherencia-rol-y-vinculo-representante-design.md`.
 
@@ -604,20 +604,20 @@ registrarse dos veces como entrenador.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado (cambió de Modelado) · **MoSCoW:** Must
 - **Método de verificación:** Test
-- **Origen:** `EntrenadorController` (`/api/entrenadores`, 5 endpoints) —
-  `deportivo/entrenador/controller/EntrenadorController.java`
+- **Origen:** `CoachController` (`/api/entrenadores`, 5 endpoints) —
+  `deportivo/coach/controller/CoachController.java`
 - **Esquema:** `deportivo.entrenadores`, con `UNIQUE` sobre `id_persona` **e**
   `id_usuario` (el vínculo con `Usuario` es nuevo respecto a la v1.0 de este
   documento).
-- **Verificación:** `EntrenadorServiceTest` (7 pruebas: paginación con
+- **Verificación:** `CoachServiceTest` (7 pruebas: paginación con
   mapeo de persona/usuario, persona duplicada, usuario duplicado, alta
-  válida, especialidad inexistente, baja lógica), `EntrenadorControllerTest`
+  válida, especialidad inexistente, baja lógica), `CoachControllerTest`
   (5 pruebas: 200/201/204/404/422).
 
 > **Actualizado 2026-08-12.** `especialidad` pasó de texto libre a un
 > catálogo (`deportivo.especialidades`, FK `id_especialidad`, nullable) —
-> ver `EspecialidadController`/`EspecialidadService` y
-> `EspecialidadServiceTest`. El formulario de alta de entrenador en el
+> ver `SpecialtyController`/`SpecialtyService` y
+> `SpecialtyServiceTest`. El formulario de alta de entrenador en el
 > frontend pasó de un input de texto a un `<select>` poblado desde
 > `GET /api/especialidades/activas`.
 
@@ -630,8 +630,8 @@ igual a la hora de inicio.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de él se generan las sesiones (RF-18).
 - **Método de verificación:** Demostración
-- **Origen:** `HorarioController` (`/api/horarios`, 4 endpoints) — `deportivo/horario/controller/HorarioController.java`
-- **Verificación:** `HorarioServiceTest`, `HorarioControllerTest`
+- **Origen:** `ScheduleController` (`/api/horarios`, 4 endpoints) — `deportivo/schedule/controller/ScheduleController.java`
+- **Verificación:** `ScheduleServiceTest`, `ScheduleControllerTest`
 
 `POST/GET /api/horarios`, `DELETE /api/horarios/{id}` (baja lógica), todos
 `hasRole('ENTRENADOR')` y acotados al propio entrenador autenticado (404 si
@@ -649,13 +649,13 @@ estados PROGRAMADA, EN_CURSO, FINALIZADA y CANCELADA.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — de ella dependen asistencia (RF-19) e historial (RF-35).
 - **Método de verificación:** Demostración
-- **Origen:** `SesionEntrenamientoController` (`/api/sesiones`, 4 endpoints)
-- **Verificación:** `SesionEntrenamientoServiceTest`, `SesionEntrenamientoControllerTest`
+- **Origen:** `TrainingSessionController` (`/api/sesiones`, 4 endpoints)
+- **Verificación:** `TrainingSessionServiceTest`, `TrainingSessionControllerTest`
 
 `POST /api/sesiones` (jornada extra, fuera del horario fijo), `GET
 /api/sesiones/hoy` y `/mias`. Estos dos últimos generan primero, de forma
 idempotente, la sesión de hoy de cada horario fijo activo que caiga en el
-día (`HorarioService.generarSesionesDeHoy()`) antes de listar — así ni el
+día (`ScheduleService.generateScheduledSessions()`) antes de listar — así ni el
 entrenador ni recepción dependen de que alguien cree la sesión a mano.
 Esquema: `deportivo.sesiones_entrenamiento`, con restricción `CHECK` sobre
 `estado` y FK opcional `id_horario` hacia el horario que la originó (null
@@ -681,8 +681,8 @@ mismo estudiante en la misma sesión.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — precondición de notificaciones (RF-22) e historial (RF-35).
 - **Método de verificación:** Demostración
-- **Origen:** `AsistenciaQrController` (`POST /api/asistencias/qr/marcar`) · `AsistenciaSesionController.pasarLista` (`PUT /api/asistencias/sesion/{id}`)
-- **Verificación:** `AsistenciaServiceTest.marcarPorQr_marca_presente_dentro_de_tolerancia`
+- **Origen:** `AttendanceQrController` (`POST /api/asistencias/qr/marcar`) · `SessionAttendanceController.takeAttendance` (`PUT /api/asistencias/sesion/{id}`)
+- **Verificación:** `AttendanceServiceTest.marcarPorQr_marca_presente_dentro_de_tolerancia`
 
 **RF-19b — Registro de asistencia por RFID**
 *El sistema deberá admitir el marcaje de asistencia mediante lector RFID
@@ -731,10 +731,10 @@ misma evaluación.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should
 - **Método de verificación:** Test
-- **Origen:** `EvaluacionDiariaController` (`GET /api/evaluaciones/sesion/{idSesion}`,
+- **Origen:** `DailyEvaluationController` (`GET /api/evaluaciones/sesion/{idSesion}`,
   `PUT /api/evaluaciones/sesion/{idSesion}/jugadores`,
   `POST /api/evaluaciones/sesion/{idSesion}/finalizar`)
-- **Verificación:** `EvaluacionDiariaServiceTest`, `EvaluacionDiariaControllerTest`.
+- **Verificación:** `DailyEvaluationServiceTest`, `DailyEvaluationControllerTest`.
 
 Esquema: `deportivo.evaluaciones_diarias`, `deportivo.criterios_evaluacion`,
 `deportivo.detalle_evaluacion`, con `CHECK (puntaje >= 0)` y
@@ -767,8 +767,8 @@ categoría y registrar su resultado después de jugado.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — base del dominio de partidos (RF-34).
 - **Método de verificación:** Demostración
-- **Origen:** `PartidoController` (`/api/partidos`, 4 endpoints) — `deportivo/partido/controller/PartidoController.java`
-- **Verificación:** `PartidoServiceTest`, `PartidoControllerTest`
+- **Origen:** `MatchController` (`/api/partidos`, 4 endpoints) — `deportivo/match/controller/MatchController.java`
+- **Verificación:** `MatchServiceTest`, `MatchControllerTest`
 
 `deportivo.partidos` (`GET-POST-PUT-DELETE /api/partidos`). Los goles admiten
 nulo y no tienen valor por defecto: un partido recién agendado no va 0-0,
@@ -789,8 +789,8 @@ modificarlo y guardar la formación con la que efectivamente jugó.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — regla de negocio central del módulo deportivo (tope de once titulares, exclusión por lesión).
 - **Método de verificación:** Demostración
-- **Origen:** `PartidoController` (`GET/PUT/DELETE /api/partidos/{id}/alineacion`, junto a la agenda de partidos)
-- **Verificación:** `AlineacionServiceTest`, `PartidoControllerTest`
+- **Origen:** `MatchController` (`GET/PUT/DELETE /api/partidos/{id}/alineacion`, junto a la agenda de partidos)
+- **Verificación:** `LineupServiceTest`, `MatchControllerTest`
 
 `deportivo.alineaciones` + `deportivo.alineacion_jugador`
 (`GET-PUT-DELETE /api/partidos/{id}/alineacion`).
@@ -827,8 +827,8 @@ quiénes no.*
 
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should — reporte sobre datos que ya existen por RF-19.
 - **Método de verificación:** Demostración
-- **Origen:** `SesionEntrenamientoController.historial` (`GET /api/sesiones/{id}/historial`)
-- **Verificación:** `SesionEntrenamientoServiceTest.historialCuentaCadaEstadoPorSeparado`
+- **Origen:** `TrainingSessionController.history` (`GET /api/sesiones/{id}/historial`)
+- **Verificación:** `TrainingSessionServiceTest.historialCuentaCadaEstadoPorSeparado`
 
 `GET /api/sesiones/{id}/historial`. Se parte del **plantel** de la categoría
 y no de las filas de asistencia: si nadie pasó lista, la tabla está vacía y
@@ -852,8 +852,8 @@ El rol REPRESENTANTE, el vínculo con sus representados y la tabla de
 consentimientos que este requisito exige como precondición (hallazgo H-04 de
 `docs/etica/ETHICS.md`) existen desde 2026-08-03. La notificación en sí es
 **en-app** (tabla `academico.notificaciones`, `NotificationService`): al
-marcar asistencia (`AsistenciaService.marcarPorQr`) o registrar una lesión
-(`LesionService.registrar`) se crea una fila por cada representante con
+marcar asistencia (`AttendanceService.markByQr`) o registrar una lesión
+(`InjuryService.register`) se crea una fila por cada representante con
 vínculo activo, visible en `GET /api/representante/notificaciones` y
 marcable como leída. No es correo/SMS/push — este proyecto no tiene
 infraestructura de envío externo, y agregarla requeriría credenciales que
@@ -911,14 +911,14 @@ permitir darla de alta cuando el estudiante se recupera.*
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — condiciona la exclusión de lesionados en RF-34 y es dato de salud sensible (ver ETHICS.md).
 - **Método de verificación:** Demostración
 
-Esquema: `deportivo.lesiones` (`LesionController`, `LesionService`); el
+Esquema: `deportivo.lesiones` (`InjuryController`, `InjuryService`); el
 backend ya existía de una revisión anterior, pero sin frontend que lo
 consumiera. Se agregaron los botones "Marcar lesión" / "Dar de alta" a la
 pantalla de Evaluación diaria del entrenador, y se endureció
-`LesionController.registrar`: el `idEntrenador` de una cuenta ENTRENADOR
+`InjuryController.register`: el `idEntrenador` de una cuenta ENTRENADOR
 ya no sale del cuerpo de la petición (que un entrenador podía manipular
 para registrar una lesión "a nombre de" otro), sino que se resuelve del
-token autenticado, mismo criterio que `SesionEntrenamientoController`.
+token autenticado, mismo criterio que `TrainingSessionController`.
 
 ---
 
@@ -1171,11 +1171,11 @@ posiciones activas.*
 - **Prioridad:** Media (bloquea RF-16 y RF-34) · **Estado:** ✅ Implementado ·
   **MoSCoW:** Should
 - **Método de verificación:** Test
-- **Origen:** `EspecialidadController` (`/api/especialidades`, 6 rutas; CRUD
+- **Origen:** `SpecialtyController` (`/api/especialidades`, 6 rutas; CRUD
   `hasRole('ADMINISTRADOR')`, `GET /activas` abierto a los tres roles de
-  gestión) y `PosicionController` (`GET /api/posiciones/activas`).
-- **Verificación:** `EspecialidadServiceTest`, `EspecialidadControllerTest`,
-  `PosicionControllerTest`.
+  gestión) y `PositionController` (`GET /api/posiciones/activas`).
+- **Verificación:** `SpecialtyServiceTest`, `SpecialtyControllerTest`,
+  `PositionControllerTest`.
 
 ---
 
@@ -1187,10 +1187,10 @@ propia asistencia.*
 - **Prioridad:** Media · **Estado:** ✅ Implementado · **MoSCoW:** Should —
   reporte sobre datos que ya existen por RF-19a.
 - **Método de verificación:** Test
-- **Origen:** `GET /api/asistencias/mapa` — `ResumenAsistenciaController`
+- **Origen:** `GET /api/asistencias/mapa` — `AttendanceSummaryController`
   (`ADMINISTRADOR`, `ENTRENADOR`); `GET /api/estudiante/mi-asistencia` —
-  `MiAsistenciaController` (`ESTUDIANTE`).
-- **Verificación:** `ResumenAsistenciaControllerTest`, `MiAsistenciaControllerTest`.
+  `MyAttendanceController` (`ESTUDIANTE`).
+- **Verificación:** `AttendanceSummaryControllerTest`, `MyAttendanceControllerTest`.
 
 ---
 
@@ -1655,8 +1655,8 @@ igual o superior al 70 %, verificada automáticamente en la construcción.*
   primero se detectó una regresión real a 39,8 % (los 5 recursos nuevos de
   la reestructuración — Categoria, Entrenador, Usuario, Persona,
 EstadoGeneral — no tenían ninguna prueba propia); se agregaron 57 pruebas
-   nuevas (`CategoriaServiceTest`, `CategoriaControllerTest`,
-   `EntrenadorServiceTest`, `EntrenadorControllerTest`, `UserAccountServiceTest`,
+   nuevas (`CategoryServiceTest`, `CategoryControllerTest`,
+   `CoachServiceTest`, `CoachControllerTest`, `UserAccountServiceTest`,
    `UserAccountControllerTest`, `PersonServiceTest`, `PersonControllerTest`,
    `GeneralStatusServiceTest`, `GeneralStatusControllerTest`) y la cobertura
   subió a 72,5 %.
@@ -1751,9 +1751,9 @@ restringida a los roles del cuerpo técnico y de coordinación
 - **Método de verificación:** Inspección; Test
 - **Origen y controles:**
   - **Límite de longitud en el servidor:** `@Size(max = 1000)` en la descripción
-    de lesión (`RegistrarLesionRequest`); `@Size(max = 255)` en la observación de
-    asistencia (`PasarListaDtos.MarcaAsistencia`); guarda de 2000 caracteres en
-    `EvaluacionDiariaService.finalizar` para la observación general.
+    de lesión (`RegisterInjuryRequest`); `@Size(max = 255)` en la observación de
+    asistencia (`TakeAttendanceDtos.AttendanceMark`); guarda de 2000 caracteres en
+    `DailyEvaluationService.finish` para la observación general.
   - **Límite a nivel de motor** (defensa en profundidad y cobertura de
     `observaciones_estudiante`, que aún no tiene código JPA): migración
     `V25__limite_texto_libre_menores.sql` con `CHECK (char_length(...) <= 2000)`
@@ -1761,16 +1761,16 @@ restringida a los roles del cuerpo técnico y de coordinación
     `deportivo.observaciones_estudiante.texto`, y `<= 1000` en
     `deportivo.lesiones.descripcion` (la observación de asistencia ya es
     `VARCHAR(255)`).
-  - **Control de acceso:** `EvaluacionDiariaController` y las vías de asistencia
-    están `@PreAuthorize` a `ADMINISTRADOR`/`ENTRENADOR`; `LesionController` a
+  - **Control de acceso:** `DailyEvaluationController` y las vías de asistencia
+    están `@PreAuthorize` a `ADMINISTRADOR`/`ENTRENADOR`; `InjuryController` a
     `ENTRENADOR`. Ningún otro rol accede al texto.
   - **Guía de redacción en la interfaz:** el punto de captura de texto libre que
     existe hoy —el formulario de lesión de la pantalla de evaluación diaria—
     muestra una guía (`evaluacion-diaria.component`): "anotá solo lo relacionado
     con la lesión, evitá juicios de valor, datos de salud no verificados y
     comentarios sobre terceros", con contador de caracteres y `maxlength`.
-- **Verificación:** `EvaluacionDiariaServiceTest.observacionGeneralConTopeDeLongitud`
-  (rechaza 2001 caracteres); `LesionControllerTest` cubre el `@Size` de la
+- **Verificación:** `DailyEvaluationServiceTest.observacionGeneralConTopeDeLongitud`
+  (rechaza 2001 caracteres); `InjuryControllerTest` cubre el `@Size` de la
   descripción; `evaluacion-diaria.component.spec` (`RNF-25: … descripción
   demasiado larga no llama al backend`); inspección de los `@PreAuthorize`.
 - **Nota:** responde al punto A2 de la revisión de septiembre; cierra **H-02**.
@@ -1865,10 +1865,10 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 
 | Entidad | Estados | Transiciones válidas | Disparador | Comentario |
 |---|---|---|---|---|
-| `deportivo.sesiones_entrenamiento.estado` | `PROGRAMADA` → `EN_CURSO` → `FINALIZADA` / `CANCELADA` | `PROGRAMADA`→`EN_CURSO` (inicio real), `EN_CURSO`→`FINALIZADA` (cierre), `PROGRAMADA`/`EN_CURSO`→`CANCELADA` (anulación) | `SesionEntrenamientoService.crear`/`hoy` (las crean en `PROGRAMADA`); inicio y anulación sin endpoint aún — el cierre del flujo diario pasa por `EvaluacionDiariaController.finalizar` | `EN_CURSO`→`CANCELADA` no permitido; `FINALIZADA` es terminal; hoy la sesión queda en `PROGRAMADA` |
-| `deportivo.asistencias.estado` | `PRESENTE`, `TARDE`, `AUSENTE`, `JUSTIFICADO`, `SIN_REGISTRO` | `SIN_REGISTRO`→cualquier otro (upsert idempotente); `PRESENTE`/`TARDE`/`JUSTIFICADO`↔️`AUSENTE` (corrección entrenador) | `AsistenciaQrController` (`POST /api/asistencias/qr/marcar`), `AsistenciaSesionController.pasarLista` (`PUT /api/asistencias/sesion/{id}`) | `SIN_REGISTRO` es estado inicial implícito (no almacenado); `hora_entrada` solo en QR |
-| `deportivo.partidos.estado` (calculado) | `PENDIENTE` (sin marcador) / `GANADO` / `EMPATADO` / `PERDIDO` | Automático según `marcador_local` / `marcador_visitante` al `PUT` | `PartidoController.actualizarResultado` | No se almacena: se deriva de los goles; `NULL` = no jugado |
-| `deportivo.alineaciones.estado` | `SUGERIDA` / `CONFIRMADA` | `SUGERIDA`→`CONFIRMADA` (entrenador guarda) | `PartidoController` (`PUT /api/partidos/{id}/alineacion`) | Si ya existe `CONFIRMADA`, la sugerencia no sobrescribe |
+| `deportivo.sesiones_entrenamiento.estado` | `PROGRAMADA` → `EN_CURSO` → `FINALIZADA` / `CANCELADA` | `PROGRAMADA`→`EN_CURSO` (inicio real), `EN_CURSO`→`FINALIZADA` (cierre), `PROGRAMADA`/`EN_CURSO`→`CANCELADA` (anulación) | `TrainingSessionService.create`/`todaysSessions` (las crean en `PROGRAMADA`); inicio y anulación sin endpoint aún — el cierre del flujo diario pasa por `DailyEvaluationController.finish` | `EN_CURSO`→`CANCELADA` no permitido; `FINALIZADA` es terminal; hoy la sesión queda en `PROGRAMADA` |
+| `deportivo.asistencias.estado` | `PRESENTE`, `TARDE`, `AUSENTE`, `JUSTIFICADO`, `SIN_REGISTRO` | `SIN_REGISTRO`→cualquier otro (upsert idempotente); `PRESENTE`/`TARDE`/`JUSTIFICADO`↔️`AUSENTE` (corrección entrenador) | `AttendanceQrController` (`POST /api/asistencias/qr/marcar`), `SessionAttendanceController.takeAttendance` (`PUT /api/asistencias/sesion/{id}`) | `SIN_REGISTRO` es estado inicial implícito (no almacenado); `hora_entrada` solo en QR |
+| `deportivo.partidos.estado` (calculado) | `PENDIENTE` (sin marcador) / `GANADO` / `EMPATADO` / `PERDIDO` | Automático según `marcador_local` / `marcador_visitante` al `PUT` | `MatchController.registerResult` | No se almacena: se deriva de los goles; `NULL` = no jugado |
+| `deportivo.alineaciones.estado` | `SUGERIDA` / `CONFIRMADA` | `SUGERIDA`→`CONFIRMADA` (entrenador guarda) | `MatchController` (`PUT /api/partidos/{id}/alineacion`) | Si ya existe `CONFIRMADA`, la sugerencia no sobrescribe |
 | `academico.estudiantes.activo` | `TRUE` (activo) / `FALSE` (baja lógica) | `TRUE`→`FALSE` (DELETE lógico); `FALSE`→`TRUE` (reactivación admin) | `StudentController.delete` (`DELETE /api/estudiantes/{id}`), `StudentController.reactivate` (`POST /api/estudiantes/{id}/reactivar`) | Baja lógica preserva historial (FKs) |
 | `seguridad.usuarios.activo` | `TRUE` / `FALSE` | `TRUE`→`FALSE` (baja), `FALSE`→`TRUE` (reactivar) | `UserAccountController.reactivar` | Coherencia rol↔ficha: reactivar valida ficha activa |
 | `seguridad.tokens_revocados` (JTI) | `VIGENTE` / `REVOCADO` (TTL = resto de vida del token) | `VIGENTE`→`REVOCADO` (logout) | `AuthController.logout` | Redis TTL auto-expira; `REVOCADO` = denegado en filtro JWT |
@@ -1895,17 +1895,17 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | `PersonController` | `GET/POST/PUT/DELETE /api/personas` | ✅ |  | ✅ |  |  |
 | `UserAccountController` | `GET/POST/PUT/DELETE /api/usuarios` | ✅ |  |  |  |  |
 | `GeneralStatusController` | `GET /api/estados-generales` | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `CategoriaController` | `GET/POST/PUT/DELETE /api/categorias` | ✅ | ✅ |  |  |  |
-| `EntrenadorController` | `GET/POST/PUT/DELETE /api/entrenadores` | ✅ | ✅ |  |  |  |
-| `HorarioController` | `GET/POST/DELETE /api/horarios` |  | ✅ (propias) |  |  |  |
-| `SesionEntrenamientoController` | `GET/POST /api/sesiones` | ✅ | ✅ (propias/hoy) | ✅ |  |  |
-| `SesionEntrenamientoController` | `GET /api/sesiones/{id}/historial` | ✅ | ✅ | ✅ | ✅ |  |
-| `AsistenciaSesionController` | `PUT /api/asistencias/sesion/{id}` (QR/manual) | ✅ | ✅ | ✅ |  | ✅ (QR propio) |
-| `AsistenciaSesionController` | `GET /api/asistencias/sesion/{id}` | ✅ | ✅ | ✅ |  |  |
-| `EvaluacionDiariaController` | `GET/PUT/POST /api/evaluaciones/sesion/{id}` |  | ✅ (propias) |  |  |  |
-| `PartidoController` | `GET/POST/PUT/DELETE /api/partidos` | ✅ | ✅ (propias) |  |  |  |
-| `PartidoController` | `GET/PUT/DELETE /api/partidos/{id}/alineacion` | ✅ | ✅ (propias) |  |  | |
-| `LesionController` | `POST /api/lesiones` |  | ✅ (propias) |  |  |  |
+| `CategoryController` | `GET/POST/PUT/DELETE /api/categorias` | ✅ | ✅ |  |  |  |
+| `CoachController` | `GET/POST/PUT/DELETE /api/entrenadores` | ✅ | ✅ |  |  |  |
+| `ScheduleController` | `GET/POST/DELETE /api/horarios` |  | ✅ (propias) |  |  |  |
+| `TrainingSessionController` | `GET/POST /api/sesiones` | ✅ | ✅ (propias/hoy) | ✅ |  |  |
+| `TrainingSessionController` | `GET /api/sesiones/{id}/historial` | ✅ | ✅ | ✅ | ✅ |  |
+| `SessionAttendanceController` | `PUT /api/asistencias/sesion/{id}` (QR/manual) | ✅ | ✅ | ✅ |  | ✅ (QR propio) |
+| `SessionAttendanceController` | `GET /api/asistencias/sesion/{id}` | ✅ | ✅ | ✅ |  |  |
+| `DailyEvaluationController` | `GET/PUT/POST /api/evaluaciones/sesion/{id}` |  | ✅ (propias) |  |  |  |
+| `MatchController` | `GET/POST/PUT/DELETE /api/partidos` | ✅ | ✅ (propias) |  |  |  |
+| `MatchController` | `GET/PUT/DELETE /api/partidos/{id}/alineacion` | ✅ | ✅ (propias) |  |  | |
+| `InjuryController` | `POST /api/lesiones` |  | ✅ (propias) |  |  |  |
 | `GuardianController` | `GET/POST/PUT/DELETE /api/representantes` | ✅ |  |  |  |  |
 | `GuardianReportController` | `GET /api/representante/notificaciones` |  |  |  | ✅ (propias) |  |
 | `ConsentController` | `POST/DELETE /api/consentimientos` | ✅ |  |  | ✅ (propios) |  |
@@ -2002,7 +2002,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.3 | 2026-09-04 | Entrega Final (`v1.0.0`) | Campo **MoSCoW** explícito en los 36 RF (11 no tenían prioridad formal); matriz de trazabilidad ampliada a 50 filas. |
 | 1.4 | 2026-09-07 | Entrega Final (`v1.0.0`) | Revisión contra ISO/IEC/IEEE 29148:2018 (M5–M21): estados y rutas al día con el código en inglés, campo **Método de verificación** en cada RF, esquema `inventario` en §2.1, RF-11b como decisión ética abierta, fila **RF-36** (módulo de equipos, Planificado), columna `estado` de la matriz normalizada al vocabulario del §1.3, secciones nuevas **§4.5 Interfaces externas**, **§4.6 Máquinas de estado**, **§4.7 Matriz de permisos** y **§4.8 correspondencia con el Anexo C**. Adiciones (A21, A22): **RNF-14** política de contraseñas unificada, **RF-37** restablecimiento de contraseña por enlace y **RNF-15** correo saliente (matriz de trazabilidad: 53 filas). |
 | 1.5 | 2026-09-07 | Entrega Final (`v1.0.0`) | Cierra los puntos **A1–A20** de la misma revisión: se especifican 11 RF de código ya construido sin requisito — **§3.5** (RF-38 pagos, RF-39 consentimiento, RF-40 informes al representante, RF-41 representantes como recurso, RF-42 consulta de auditoría, RF-43 reportes en PDF, RF-44 exportación de datos propios, RF-45 alertas, RF-46 catálogos especialidad/posición, RF-47 resumen/autoconsulta de asistencia, RF-48 observaciones de texto libre) — y 9 RNF: **RNF-16** frontera de datos al LLM, **RNF-17** protección de datos de menores, **RNF-18** usabilidad SUS y **RNF-19** accesibilidad (nueva **§4.9**), **RNF-20** quality gate SonarQube, **RNF-21** certificado TLS de producción, **RNF-22** conservación y supresión, **RNF-23** indisponibilidad de Redis, **RNF-24** respaldo y recuperación (matriz: 73 filas). |
-| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `EvaluacionDiariaService.finalizar`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (supresión / anonimización): procedimiento almacenado versionado `academico.sp_anonimizar_estudiante` (migración `V27`) + `POST /api/estudiantes/{id}/anonimizar` restringido a ADMINISTRADOR y auditado (`@Audited "ANONIMIZAR"`) — sustituye los datos identificativos de la persona por valores neutros, borra el texto libre sobre el menor y da de baja lógica la ficha, conservando FKs y agregados → ✅ Implementado. Con esto cierran **H-01**, **H-02**, **H-03** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
+| 1.6 | 2026-09-08 | Entrega Final (`v1.0.2`) | Revisión **M1–M9**: matriz corregida (RF-38/RF-43 con comas entrecomilladas, división **RF-19a/RF-19b**, columna `observaciones`, estados solo del vocabulario Implementado/Modelado/Planificado, retirada la fila huérfana RF-36), citas de clases de prueba y controladores al día con el código en inglés, **Método de verificación** con vocabulario cerrado {Test, Demostración, Análisis, Inspección} en los 73 requisitos, plantilla uniforme del módulo deportivo (títulos sin estado, campo **Estado** en la línea Prioridad), decisión RF-48 (M7) documentada y cabecera con el commit a defender. Puntos **A3** y **A4** de la revisión de septiembre: **RNF-23** dividido en **RNF-23a** (autenticación falla-cerrado, Implementado) y **RNF-23b** (degradación de la caché de listados con `CacheErrorHandler`, Planificado, con criterio y condición de cierre); **RNF-24** reforzado con destino de almacenamiento fijado, PITR del proveedor declarado, **RPO ≤ 24 h** explícito y evidencia archivada de restauración cronometrada. Punto **A2**: los hallazgos de `ETHICS.md` pasan de riesgo declarado a requisito con criterio de cierre — nueva **§3.6** con **RF-49** (H-01, cédula opcional y validada), **RF-50** (H-03, supresión/anonimización), **RF-51** (H-04/H-07, consentimiento como compuerta del envío) y **RNF-25** (H-02, control del texto libre); **RNF-17** reescrito como paraguas con la tabla hallazgo→requisito. Cierre **A1**: el validador comprueba que toda ruta de archivo citada en el SRS exista en disco (detectó y corrigió la cita de un diseño IA inexistente y `nginx/default.conf`→`frontend/nginx.conf`); **RNF-23b** con fecha objetivo fijada (**2026-09-15**, antes de la defensa). **M7 decidido (2026-09-08):** **RF-11b** (peso y altura) se conserva con finalidad, base legal (consentimiento del representante, alcance físico-deportivo, LOPDP) y conservación documentadas; cierra el hallazgo H-06. **Implementación (2026-09-08):** **RNF-23b** (`CacheErrorHandler` en `RedisCacheConfig`), **RNF-25** completo (topes de longitud en servidor —`@Size` de lesión y asistencia, guarda en `DailyEvaluationService.finish`— y a nivel de motor —`V25__limite_texto_libre_menores.sql`—, control de acceso ya restringido, y **guía de redacción en el formulario de lesión** de la pantalla de evaluación diaria con contador y `maxlength`), **RF-11b/H-06** (lectura de peso/altura restringida a ADMINISTRADOR/ENTRENADOR en `StudentController`) y **RF-51** (ya estaba: `NotificationService` consulta el consentimiento antes de crear la notificación) → los cuatro pasan a ✅ Implementado y **RF-48** sale de MoSCoW Won't. y **RF-49** (cédula opcional + validación de dígito verificador `@Cedula` + índice único parcial `V26`; las cédulas de seed se cargan por SQL directo y no se validan) → ✅ Implementado. **RF-50** (supresión / anonimización): procedimiento almacenado versionado `academico.sp_anonimizar_estudiante` (migración `V27`) + `POST /api/estudiantes/{id}/anonimizar` restringido a ADMINISTRADOR y auditado (`@Audited "ANONIMIZAR"`) — sustituye los datos identificativos de la persona por valores neutros, borra el texto libre sobre el menor y da de baja lógica la ficha, conservando FKs y agregados → ✅ Implementado. Con esto cierran **H-01**, **H-02**, **H-03** y **H-04**, y **RF-48** sale de MoSCoW Won't. |
 | 1.7 | 2026-09-10 | Entrega Final (`v1.0.3`) | Revisión del SRS v1.6 del docente (**M1–M3**). **M1** — la etiqueta pasa de `v1.0.2` (commit `bd16891`, que quedó ~30 confirmaciones por detrás de `main`) a **`v1.0.3`** sobre el commit de cierre real; cabecera, §7, `docs/informe/caratula-standalone.tex`, `docs/informe/main.tex` y `README.md` actualizados. **M2** — §1.3 explica por qué el vocabulario de estados tiene tres valores y no cuatro: "Implementado" ya exige prueba automatizada que pasa en CI dentro del umbral de cobertura (`mvn verify`, 84,66 % líneas / 71,24 % ramas), de modo que equivale a "verificado"; se añade el recuento del corpus (75 Implementado / 3 Modelado / 1 Planificado sobre 79 filas). **M3** — §3.6 deja de estar marcada "(nuevo en esta revisión)" y se referencia desde el encabezado de §3 y desde RF-48; RF-48 gana una línea formal **"Condición de cierre"**; nuevo **RNF-26** — verificación del correo de contacto por doble opt-in, que cierra el hallazgo **H-09**. **Implementado el 2026-09-10:** migración `V28` (`seguridad.personas.correo_verificado`, con *grandfathering* de las filas existentes), `EmailVerificationTokenStore` (Redis), `EmailVerificationService` disparado al crear una persona y al cambiar su correo, `POST /api/auth/confirmar-correo`, pantalla `/#/confirmar-correo`, y compuerta en `PasswordResetService` (no se emite el enlace de RF-37 a un correo no verificado); ~20 pruebas nuevas (backend + frontend). `ETHICS.md` 1.7→1.8 (§4 retitulada "Hallazgos y estado de cierre", H-04 y H-09 reescritos, H-09 marcado resuelto). Matriz de trazabilidad: 79 filas (RNF-26). |
 | 1.8 | 2026-09-11 | Entrega Final (`v1.0.0`) | Revisión contra `Rubrica_ExamenFinal_SGED.pdf` (18 puntos, criterios de piso). **Punto 6** — la etiqueta que el docente revisa según esa rúbrica es `v1.0.0` (no `v1.0.3`); estaba 403 commits detrás de `main`, se movió al commit de cierre real. **E1** — se completa el renombrado a inglés de los ~40 métodos en español que quedaban fuera de `deportivo` (`seguridad.auth`, `academico`, `reportes`, `seguridad.audit`/`user`); `deportivo` queda para el resto del equipo por acuerdo explícito de reparto. **E2** — se corrige `{@link PasswordResetService#solicitar}` en `EmailVerificationService`, que citaba el nombre anterior al rename y rompía `mvn javadoc:javadoc`; el comando vuelve a compilar sin errores. **Punto 2** — la cifra de cobertura citada en §1.3 no coincidía con `docs/mediciones/jacoco/jacoco.csv` (84,66 %/71,24 % citado vs. 87,47 %/72,10 % en el CSV committeado); se regeneran ambos desde la misma corrida (665 pruebas, 0 fallos, 216 clases) y quedan sincronizados en 88,35 % líneas / 74,20 % ramas. |
 

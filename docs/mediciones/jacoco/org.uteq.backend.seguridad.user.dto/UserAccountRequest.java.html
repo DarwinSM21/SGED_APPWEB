@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Size;
         @NotNull(message = &quot;El ID de estado general es obligatorio&quot;) Long idEstadoGeneral,
         @NotBlank(message = &quot;El nombre de usuario es obligatorio&quot;)
         @Size(min = 4, max = 50, message = &quot;El username debe tener entre 4 y 50 caracteres&quot;) String username,
-        // Puede venir en blanco al editar (&quot;no cambiarla&quot;); si trae valor, lo
+        // Puede venir en blanco al update (&quot;no cambiarla&quot;); si trae valor, lo
         // valida PasswordPolicy (RNF-14) en UserAccountService.
         String password,
         String rol

@@ -11,8 +11,8 @@ import org.uteq.backend.academico.student.repository.StudentRepository;
 import org.uteq.backend.academico.payment.entity.Payment.PaymentType;
 import org.uteq.backend.academico.payment.repository.PaymentRepository;
 import org.uteq.backend.common.Zones;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -43,8 +43,8 @@ import java.util.Set;
 public class AlertService {
     private final StudentRepository estudianteRepository;
     private final PaymentRepository pagoRepository;
-    private final LesionRepository lesionRepository;
-    private final AsistenciaRepository asistenciaRepository;
+    private final InjuryRepository injuryRepository;
+    private final AttendanceRepository attendanceRepository;
 
     /** Por debajo de este porcentaje la asistencia se considera un problema. */
     @Value(&quot;${alertas.umbral-asistencia:75}&quot;)
@@ -77,7 +77,7 @@ public class AlertService {
 
 <span class="fc" id="L78">        Set&lt;Long&gt; alDia = new HashSet&lt;&gt;(</span>
 <span class="fc" id="L79">                pagoRepository.idsWithMembershipCovered(PaymentType.MEMBRESIA, anio, mes));</span>
-<span class="fc" id="L80">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(lesionRepository.idsEstudiantesLesionados());</span>
+<span class="fc" id="L80">        Set&lt;Long&gt; lesionados = new HashSet&lt;&gt;(injuryRepository.injuredStudentIds());</span>
 
 <span class="fc" id="L82">        LocalDate corte = hoy.minusDays(1);</span>
 <span class="fc" id="L83">        LocalDate desde = hoy.minusDays(diasAsistencia);</span>
@@ -113,7 +113,7 @@ public class AlertService {
     // acusarlo de algo que no hizo.
     private Map&lt;Long, BigDecimal&gt; percentagesByStudent(LocalDate desde, LocalDate corte) {
 <span class="fc" id="L115">        Map&lt;Long, BigDecimal&gt; porcentajes = new HashMap&lt;&gt;();</span>
-<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (Object[] fila : asistenciaRepository.resumenAsistenciaDeActivos(desde, corte)) {</span>
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (Object[] fila : attendanceRepository.activeSummary(desde, corte)) {</span>
 <span class="fc" id="L117">            long programadas = ((Number) fila[1]).longValue();</span>
 <span class="fc bfc" id="L118" title="All 2 branches covered.">            if (programadas == 0) continue;</span>
 <span class="fc" id="L119">            long presentes = ((Number) fila[2]).longValue();</span>

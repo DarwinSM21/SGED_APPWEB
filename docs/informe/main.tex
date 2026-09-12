@@ -1352,11 +1352,11 @@ solo su interior.
                minimum height=1.15cm, align=center, font=\small},
   flecha/.style={-{Latex[length=2.5mm]}, thick, color=uteqverde}
 ]
-\node[caja] (nav) {Navegador\\\footnotesize (SPA Angular)};
+\node[caja] (nav) {Browser\\\footnotesize (Angular SPA)};
 \node[caja, right=2.2cm of nav] (ngx) {nginx\\\footnotesize :4200 / :8443 TLS};
 \node[caja, right=2.2cm of ngx] (api) {Spring Boot\\\footnotesize :8080};
-\node[caja, below=1.5cm of api] (pg) {PostgreSQL 16\\\footnotesize esquemas seguridad/deportivo};
-\node[caja, left=2.2cm of pg] (rd) {Redis 7\\\footnotesize caché + revocación JTI};
+\node[caja, below=1.5cm of api] (pg) {PostgreSQL 16\\\footnotesize security/sports schemas};
+\node[caja, left=2.2cm of pg] (rd) {Redis 7\\\footnotesize cache + JTI revocation};
 
 \draw[flecha] (nav) -- node[above, font=\scriptsize]{HTTPS} (ngx);
 \draw[flecha] (ngx) -- node[above, font=\scriptsize]{HTTP} (api);

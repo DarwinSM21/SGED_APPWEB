@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MatchService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.match.service</a> &gt; <span class="el_source">MatchService.java</span></div><h1>MatchService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.match.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
+import org.uteq.backend.deportivo.category.entity.Category;
+import org.uteq.backend.deportivo.category.repository.CategoryRepository;
+import org.uteq.backend.deportivo.evaluation.repository.LineupRepository;
+import org.uteq.backend.deportivo.match.dto.MatchDtos.CreateMatchRequest;
+import org.uteq.backend.deportivo.match.dto.MatchDtos.MatchPageResponse;
+import org.uteq.backend.deportivo.match.dto.MatchDtos.MatchResponse;
+import org.uteq.backend.deportivo.match.dto.MatchDtos.ResultRequest;
+import org.uteq.backend.deportivo.match.entity.Match;
+import org.uteq.backend.deportivo.match.repository.MatchRepository;
+import org.uteq.backend.seguridad.audit.aop.Audited;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.time.Instant;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
+
+/**
+ * Alta, agenda e historial de partidos. Un partido con resultado queda
+ * cerrado y solo se puede editar tras reabrirlo; el resultado ({@code
+ * GANADO} / {@code EMPATADO} / {@code PERDIDO}) se calcula, no se guarda.
+ */
+@Service
+@RequiredArgsConstructor
+public class MatchService {
+    private final MatchRepository matchRepository;
+    private final CategoryRepository categoryRepository;
+    private final LineupRepository lineupRepository;
+    private final UserAccountRepository usuarioRepository;
+
+    /**
+     * Lista paginada de partidos, opcionalmente filtrada por categoría,
+     * anotando cada uno con si tiene alineación y cuántos titulares.
+     *
+     * @param idCategoria categoría por la que filtrar, o {@code null} para
+     *                    todas
+     * @param pagina      número de página (se acota a {@code &gt;= 0})
+     * @param tamano      tamaño de página (se acota a {@code [1, 100]})
+     * @return la página de partidos
+     */
+    @Transactional(readOnly = true)
+    public MatchPageResponse list(Long idCategoria, int pagina, int tamano) {
+<span class="fc" id="L54">        var pageable = PageRequest.of(Math.max(pagina, 0), Math.min(Math.max(tamano, 1), 100));</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">        Page&lt;Match&gt; page = idCategoria == null</span>
+<span class="fc" id="L56">                ? matchRepository.findAllOrderByDateDescTimeDesc(pageable)</span>
+<span class="pc" id="L57">                : matchRepository.findByCategoryOrderByDateDescTimeDesc(idCategoria, pageable);</span>
+
+<span class="fc" id="L59">        List&lt;MatchResponse&gt; contenido = withLineup(page.getContent());</span>
+<span class="fc" id="L60">        return new MatchPageResponse(contenido, page.getNumber(), page.getSize(),</span>
+<span class="fc" id="L61">                page.getTotalElements(), page.getTotalPages());</span>
+    }
+
+    /**
+     * Detalle de un partido.
+     *
+     * @param idPartido identificador del partido
+     * @return el partido, con su estado de alineación y resultado
+     * @throws ResourceNotFoundException si no existe
+     */
+    @Transactional(readOnly = true)
+    public MatchResponse findById(Long idPartido) {
+<span class="fc" id="L73">        Match p = matchRepository.findWithCategoryById(idPartido)</span>
+<span class="pc" id="L74">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No existe el partido &quot; + idPartido));</span>
+<span class="fc" id="L75">        return withLineup(List.of(p)).get(0);</span>
+    }
+
+    /**
+     * Agenda un partido para una categoría activa.
+     *
+     * @param request categoría, fecha, hora y observación
+     * @return el partido creado
+     * @throws ResourceNotFoundException si la categoría no existe
+     * @throws IllegalArgumentException     si la categoría está inactiva
+     */
+    @Audited(action = &quot;CREAR&quot;, entity = &quot;Match&quot;, idSpel = &quot;#result.idPartido&quot;,
+            descriptionSpel = &quot;'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha&quot;)
+    @Transactional
+    public MatchResponse create(CreateMatchRequest request) {
+<span class="fc" id="L90">        Category categoria = categoryRepository.findById(request.idCategoria())</span>
+<span class="pc" id="L91">                .orElseThrow(() -&gt; new ResourceNotFoundException(</span>
+<span class="nc" id="L92">                        &quot;No existe la categoría &quot; + request.idCategoria()));</span>
+<span class="pc bpc" id="L93" title="1 of 2 branches missed.">        if (!Boolean.TRUE.equals(categoria.getActivo())) {</span>
+<span class="fc" id="L94">            throw new IllegalArgumentException(</span>
+<span class="fc" id="L95">                    &quot;La categoría &quot; + categoria.getNombre() + &quot; está inactiva&quot;);</span>
+        }
+
+<span class="nc" id="L98">        Match guardado = matchRepository.save(Match.builder()</span>
+<span class="nc" id="L99">                .categoria(categoria)</span>
+<span class="nc" id="L100">                .fecha(request.fecha())</span>
+<span class="nc" id="L101">                .hora(request.hora())</span>
+<span class="nc" id="L102">                .observacion(request.observacion())</span>
+<span class="nc" id="L103">                .cerrado(false)</span>
+<span class="nc" id="L104">                .build());</span>
+<span class="nc" id="L105">        return toResponse(guardado, false, 0);</span>
+    }
+
+    /**
+     * Carga el marcador de un partido y lo cierra. El marcador llega después
+     * de jugar, por eso va en su propia operación y no en la creación.
+     *
+     * @param idPartido identificador del partido
+     * @param request   goles a favor, en contra y observación opcional
+     * @return el partido cerrado
+     * @throws ResourceNotFoundException si el partido no existe
+     * @throws IllegalArgumentException     si el partido ya estaba cerrado
+     */
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Match&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'cargó el resultado del partido ' + #p0 + ' y lo cerró'&quot;)
+    @Transactional
+    public MatchResponse registerResult(Long idPartido, ResultRequest request) {
+<span class="fc" id="L122">        Match p = matchRepository.findWithCategoryById(idPartido)</span>
+<span class="pc" id="L123">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No existe el partido &quot; + idPartido));</span>
+
+<span class="nc" id="L125">        requireOpen(p);</span>
+
+<span class="nc" id="L127">        p.setGolesFavor(request.golesFavor());</span>
+<span class="nc" id="L128">        p.setGolesContra(request.golesContra());</span>
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (request.observacion() != null) {</span>
+<span class="nc" id="L130">            p.setObservacion(request.observacion());</span>
+        }
+<span class="nc" id="L132">        p.setCerrado(true);</span>
+<span class="nc" id="L133">        p.setCerradoEn(Instant.now());</span>
+<span class="nc" id="L134">        p.setCerradoPorIdUsuario(currentUserId());</span>
+<span class="nc" id="L135">        matchRepository.save(p);</span>
+<span class="nc" id="L136">        return findById(idPartido);</span>
+    }
+
+    /**
+     * Reabre un partido cerrado para corregir el resultado o la alineación.
+     *
+     * @param idPartido identificador del partido
+     * @return el partido reabierto
+     * @throws ResourceNotFoundException si el partido no existe
+     * @throws IllegalArgumentException     si el partido no estaba cerrado
+     */
+    @Audited(action = &quot;EDITAR&quot;, entity = &quot;Match&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'reabrio el partido ' + #p0 + ' para corregirlo'&quot;)
+    @Transactional
+    public MatchResponse reopen(Long idPartido) {
+<span class="nc" id="L151">        Match p = matchRepository.findWithCategoryById(idPartido)</span>
+<span class="nc" id="L152">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No existe el partido &quot; + idPartido));</span>
+
+<span class="nc bnc" id="L154" title="All 2 branches missed.">        if (!p.isClosed()) {</span>
+<span class="nc" id="L155">            throw new IllegalArgumentException(&quot;Este partido no está cerrado&quot;);</span>
+        }
+
+<span class="nc" id="L158">        p.setCerrado(false);</span>
+<span class="nc" id="L159">        p.setCerradoEn(null);</span>
+<span class="nc" id="L160">        p.setCerradoPorIdUsuario(null);</span>
+<span class="nc" id="L161">        matchRepository.save(p);</span>
+<span class="nc" id="L162">        return findById(idPartido);</span>
+    }
+
+    /**
+     * Verifica que un partido esté abierto (no cerrado por resultado).
+     *
+     * @param p partido a comprobar
+     * @throws IllegalArgumentException si el partido está cerrado
+     */
+    public void requireOpen(Match p) {
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        if (p.isClosed()) {</span>
+<span class="nc" id="L173">            throw new IllegalArgumentException(</span>
+                    &quot;El partido está cerrado. Para corregirlo, reabrilo primero.&quot;);
+        }
+<span class="nc" id="L176">    }</span>
+
+    private Long currentUserId() {
+<span class="nc" id="L179">        var auth = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc bnc" id="L180" title="All 4 branches missed.">        if (auth == null || auth.getName() == null) {</span>
+<span class="nc" id="L181">            return null;</span>
+        }
+<span class="nc" id="L183">        return usuarioRepository.findByUsernameIgnoreCaseAndActiveTrue(auth.getName())</span>
+<span class="nc" id="L184">                .map(u -&gt; u.getId())</span>
+<span class="nc" id="L185">                .orElse(null);</span>
+    }
+
+    /**
+     * Elimina un partido. La alineación cae con él ({@code ON DELETE
+     * CASCADE}): sin partido no significa nada.
+     *
+     * @param idPartido identificador del partido
+     * @throws ResourceNotFoundException si no existe
+     * @throws IllegalArgumentException     si el partido está cerrado
+     */
+    @Audited(action = &quot;ELIMINAR&quot;, entity = &quot;Match&quot;, idSpel = &quot;#p0&quot;,
+            descriptionSpel = &quot;'eliminó el partido ' + #p0&quot;)
+    @Transactional
+    public void delete(Long idPartido) {
+<span class="nc" id="L200">        Match p = matchRepository.findById(idPartido)</span>
+<span class="nc" id="L201">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No existe el partido &quot; + idPartido));</span>
+
+<span class="nc" id="L203">        requireOpen(p);</span>
+
+<span class="nc" id="L205">        matchRepository.delete(p);</span>
+<span class="nc" id="L206">    }</span>
+
+    // Anota cada partido con si tiene alineación y cuántos titulares, en dos
+    // consultas para toda la página en vez de dos por fila.
+    private List&lt;MatchResponse&gt; withLineup(List&lt;Match&gt; partidos) {
+<span class="pc bpc" id="L211" title="1 of 2 branches missed.">        if (partidos.isEmpty()) {</span>
+<span class="nc" id="L212">            return List.of();</span>
+        }
+<span class="fc" id="L214">        List&lt;Long&gt; ids = partidos.stream().map(Match::getIdPartido).toList();</span>
+<span class="fc" id="L215">        Map&lt;Long, Integer&gt; titulares = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L216">        Set&lt;Long&gt; conAlineacion = new HashSet&lt;&gt;();</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        for (Object[] fila : lineupRepository.countStartersByMatch(ids)) {</span>
+<span class="fc" id="L218">            Long id = (Long) fila[0];</span>
+<span class="fc" id="L219">            conAlineacion.add(id);</span>
+<span class="pc bpc" id="L220" title="1 of 2 branches missed.">            titulares.put(id, fila[1] == null ? 0 : ((Number) fila[1]).intValue());</span>
+<span class="fc" id="L221">        }</span>
+<span class="fc" id="L222">        return partidos.stream()</span>
+<span class="fc" id="L223">                .map(p -&gt; toResponse(p, conAlineacion.contains(p.getIdPartido()),</span>
+<span class="fc" id="L224">                        titulares.getOrDefault(p.getIdPartido(), 0)))</span>
+<span class="fc" id="L225">                .toList();</span>
+    }
+
+    private MatchResponse toResponse(Match p, boolean tieneAlineacion, int titulares) {
+<span class="fc" id="L229">        return new MatchResponse(</span>
+<span class="fc" id="L230">                p.getIdPartido(),</span>
+<span class="fc" id="L231">                p.getCategoria().getIdCategoria(),</span>
+<span class="fc" id="L232">                p.getCategoria().getNombre(),</span>
+<span class="fc" id="L233">                p.getFecha(), p.getHora(),</span>
+<span class="fc" id="L234">                p.getGolesFavor(), p.getGolesContra(), p.getObservacion(),</span>
+<span class="fc" id="L235">                resultOf(p), tieneAlineacion, titulares,</span>
+<span class="fc" id="L236">                p.isClosed(), p.getCerradoEn());</span>
+    }
+
+    // Se calcula, no se guarda: almacenar &quot;GANADO&quot; junto al marcador abre la
+    // puerta a que un día digan cosas distintas.
+    private String resultOf(Match p) {
+<span class="fc bfc" id="L242" title="All 2 branches covered.">        if (!p.hasResult()) {</span>
+<span class="fc" id="L243">            return &quot;PENDIENTE&quot;;</span>
+        }
+<span class="fc" id="L245">        int diferencia = p.getGolesFavor() - p.getGolesContra();</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (diferencia &gt; 0) {</span>
+<span class="fc" id="L247">            return &quot;GANADO&quot;;</span>
+        }
+<span class="fc bfc" id="L249" title="All 2 branches covered.">        return diferencia == 0 ? &quot;EMPATADO&quot; : &quot;PERDIDO&quot;;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

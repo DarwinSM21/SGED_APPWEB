@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CoachController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.coach.controller</a> &gt; <span class="el_source">CoachController.java</span></div><h1>CoachController.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.coach.controller;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+import org.uteq.backend.deportivo.coach.dto.CoachPageResponse;
+import org.uteq.backend.deportivo.coach.dto.CoachRequest;
+import org.uteq.backend.deportivo.coach.dto.CoachResponse;
+import org.uteq.backend.deportivo.coach.service.CoachService;
+
+/**
+ * CRUD de {@code Coach}. El alta y la baja crean o retiran el vínculo
+ * con una cuenta de usuario, por lo que son operaciones de
+ * {@code ADMINISTRADOR}; la consulta la comparten {@code ADMINISTRADOR},
+ * {@code ENTRENADOR} y {@code RECEPCIONISTA} (esta última necesita listar
+ * entrenadores para asignarles artículos de inventario).
+ */
+@RestController
+@RequestMapping(&quot;/api/entrenadores&quot;)
+@RequiredArgsConstructor
+public class CoachController {
+    private final CoachService coachService;
+
+    /**
+     * Lista paginada de entrenadores.
+     *
+     * @param pageable paginación; por defecto 10 por página
+     * @return {@code 200 OK} con la página
+     */
+    @GetMapping
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;CoachPageResponse&lt;CoachResponse&gt;&gt; list(
+            @PageableDefault(size = 10) Pageable pageable) {
+<span class="fc" id="L39">        return ResponseEntity.ok(coachService.list(pageable));</span>
+    }
+
+    /**
+     * Busca un entrenador por su identificador.
+     *
+     * @param id identificador del entrenador
+     * @return {@code 200 OK} con el entrenador
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si no existe ({@code 404})
+     */
+    @GetMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasAnyRole('ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA')&quot;)
+    public ResponseEntity&lt;CoachResponse&gt; findById(@PathVariable Long id) {
+<span class="nc" id="L53">        return ResponseEntity.ok(coachService.findById(id));</span>
+    }
+
+    /**
+     * Registra un entrenador sobre una persona y una cuenta ya creadas.
+     *
+     * @param request persona, usuario, especialidad y datos profesionales;
+     *                validado con {@code @Valid}
+     * @return {@code 201 Created} con el entrenador registrado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si la persona, el usuario o la especialidad no existen
+     *         ({@code 404})
+     * @throws IllegalArgumentException si la persona o el usuario ya están
+     *         asignados, o el usuario no tiene rol {@code ENTRENADOR}
+     *         ({@code 422})
+     */
+    @PostMapping
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;CoachResponse&gt; create(@Valid @RequestBody CoachRequest request) {
+<span class="fc" id="L72">        return ResponseEntity.status(HttpStatus.CREATED).body(coachService.create(request));</span>
+    }
+
+    /**
+     * Actualiza la especialidad y los datos profesionales de un entrenador.
+     *
+     * @param id      identificador del entrenador a editar
+     * @param request datos nuevos; validado con {@code @Valid}
+     * @return {@code 200 OK} con el entrenador actualizado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si el entrenador o la especialidad no existen ({@code 404})
+     */
+    @PutMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;CoachResponse&gt; update(
+            @PathVariable Long id,
+            @Valid @RequestBody CoachRequest request) {
+<span class="nc" id="L89">        return ResponseEntity.ok(coachService.update(id, request));</span>
+    }
+
+    /**
+     * Reactiva un entrenador dado de baja.
+     *
+     * @param id identificador del entrenador
+     * @return {@code 200 OK} con el entrenador reactivado
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si no existe ({@code 404})
+     * @throws IllegalArgumentException si ya está activo ({@code 422})
+     */
+    @PostMapping(&quot;/{id}/reactivar&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;CoachResponse&gt; reactivate(@PathVariable Long id) {
+<span class="nc" id="L104">        return ResponseEntity.ok(coachService.reactivate(id));</span>
+    }
+
+    /**
+     * Baja lógica de un entrenador.
+     *
+     * @param id identificador del entrenador
+     * @return {@code 204 No Content}
+     * @throws org.uteq.backend.common.exception.ResourceNotFoundException
+     *         si no existe ({@code 404})
+     */
+    @DeleteMapping(&quot;/{id}&quot;)
+    @PreAuthorize(&quot;hasRole('ADMINISTRADOR')&quot;)
+    public ResponseEntity&lt;Void&gt; delete(@PathVariable Long id) {
+<span class="fc" id="L118">        coachService.delete(id);</span>
+<span class="fc" id="L119">        return ResponseEntity.noContent().build();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

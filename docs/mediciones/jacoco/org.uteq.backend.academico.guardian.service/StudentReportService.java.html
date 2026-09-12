@@ -14,10 +14,10 @@ import org.uteq.backend.common.Zones;
 import org.uteq.backend.common.exception.ResourceNotFoundException;
 import org.uteq.backend.common.ia.AIFeedbackGenerator;
 import org.uteq.backend.common.ia.AnonymousPlayerProfile;
-import org.uteq.backend.deportivo.asistencia.repository.AsistenciaRepository;
-import org.uteq.backend.deportivo.evaluacion.repository.EvaluacionEstudianteRepository;
-import org.uteq.backend.deportivo.lesion.entity.Lesion;
-import org.uteq.backend.deportivo.lesion.repository.LesionRepository;
+import org.uteq.backend.deportivo.attendance.repository.AttendanceRepository;
+import org.uteq.backend.deportivo.evaluation.repository.StudentEvaluationRepository;
+import org.uteq.backend.deportivo.injury.entity.Injury;
+import org.uteq.backend.deportivo.injury.repository.InjuryRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -44,9 +44,9 @@ public class StudentReportService {
     private final GuardianRepository representanteRepository;
     private final GuardianStudentRepository vinculoRepository;
     private final StudentRepository estudianteRepository;
-    private final LesionRepository lesionRepository;
-    private final EvaluacionEstudianteRepository evaluacionEstudianteRepository;
-    private final AsistenciaRepository asistenciaRepository;
+    private final InjuryRepository injuryRepository;
+    private final StudentEvaluationRepository studentEvaluationRepository;
+    private final AttendanceRepository attendanceRepository;
     private final AIFeedbackGenerator generadorFeedback;
 
     /**
@@ -170,8 +170,8 @@ public class StudentReportService {
 <span class="fc" id="L170">                .anyMatch(InjurySummaryResponse::activa);</span>
 
 <span class="fc" id="L172">        LocalDate hoy = LocalDate.now(Zones.ECUADOR);</span>
-<span class="fc" id="L173">        long asistencias = asistenciaRepository</span>
-<span class="fc" id="L174">                .contarAsistenciasDesde(informe.idEstudiante(), hoy.minusDays(30));</span>
+<span class="fc" id="L173">        long asistencias = attendanceRepository</span>
+<span class="fc" id="L174">                .countSince(informe.idEstudiante(), hoy.minusDays(30));</span>
 
 <span class="fc" id="L176">        var perfil = new AnonymousPlayerProfile(</span>
                 &quot;Jugador&quot;,
@@ -190,22 +190,22 @@ public class StudentReportService {
     private StudentReportResponse buildReport(Student estudiante) {
 <span class="fc" id="L191">        Long idEstudiante = estudiante.getId();</span>
 
-<span class="fc" id="L193">        List&lt;CriterionAverageResponse&gt; promedios = evaluacionEstudianteRepository</span>
-<span class="fc" id="L194">                .promedioHistoricoPorCriterio(idEstudiante).stream()</span>
+<span class="fc" id="L193">        List&lt;CriterionAverageResponse&gt; promedios = studentEvaluationRepository</span>
+<span class="fc" id="L194">                .historicalAverageByCriterion(idEstudiante).stream()</span>
 <span class="fc" id="L195">                .map(fila -&gt; new CriterionAverageResponse(</span>
                         (String) fila[0],
 <span class="pc bpc" id="L197" title="1 of 2 branches missed.">                        fila[1] == null ? 0.0 : ((Number) fila[1]).doubleValue()))</span>
 <span class="fc" id="L198">                .toList();</span>
 
-<span class="fc" id="L200">        List&lt;InjurySummaryResponse&gt; lesiones = lesionRepository</span>
-<span class="fc" id="L201">                .findByEstudianteIdEstudianteOrderByFechaLesionDesc(idEstudiante, Pageable.unpaged())</span>
+<span class="fc" id="L200">        List&lt;InjurySummaryResponse&gt; lesiones = injuryRepository</span>
+<span class="fc" id="L201">                .findByStudentOrderByInjuryDateDesc(idEstudiante, Pageable.unpaged())</span>
 <span class="fc" id="L202">                .getContent().stream()</span>
 <span class="fc" id="L203">                .map(this::toInjurySummary)</span>
 <span class="fc" id="L204">                .toList();</span>
 
 <span class="fc" id="L206">        LocalDate hoy = LocalDate.now(Zones.ECUADOR);</span>
-<span class="fc" id="L207">        BigDecimal porcentajeAsistencia = asistenciaRepository</span>
-<span class="fc" id="L208">                .calcularPorcentajeAsistencia(idEstudiante, hoy.minusDays(30), hoy);</span>
+<span class="fc" id="L207">        BigDecimal porcentajeAsistencia = attendanceRepository</span>
+<span class="fc" id="L208">                .calculateAttendancePercentage(idEstudiante, hoy.minusDays(30), hoy);</span>
 
 <span class="fc" id="L210">        return new StudentReportResponse(</span>
                 idEstudiante,
@@ -221,10 +221,10 @@ public class StudentReportService {
 <span class="fc" id="L221">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;No hay un representante asociado a esta cuenta&quot;));</span>
     }
 
-    private InjurySummaryResponse toInjurySummary(Lesion l) {
+    private InjurySummaryResponse toInjurySummary(Injury l) {
 <span class="fc" id="L225">        return new InjurySummaryResponse(</span>
 <span class="fc" id="L226">                l.getIdLesion(), l.getDescripcion(), l.getFechaLesion(),</span>
-<span class="fc" id="L227">                l.getFechaEstimadaRetorno(), l.getFechaAlta(), l.estaActiva());</span>
+<span class="fc" id="L227">                l.getFechaEstimadaRetorno(), l.getFechaAlta(), l.isActive());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

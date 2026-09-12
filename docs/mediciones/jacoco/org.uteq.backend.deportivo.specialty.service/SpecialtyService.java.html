@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SpecialtyService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">backend</a> &gt; <a href="index.source.html" class="el_package">org.uteq.backend.deportivo.specialty.service</a> &gt; <span class="el_source">SpecialtyService.java</span></div><h1>SpecialtyService.java</h1><pre class="source lang-java linenums">package org.uteq.backend.deportivo.specialty.service;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.uteq.backend.common.exception.ResourceNotFoundException;
+import org.uteq.backend.deportivo.specialty.dto.SpecialtyRequest;
+import org.uteq.backend.deportivo.specialty.dto.SpecialtyResponse;
+import org.uteq.backend.deportivo.specialty.entity.Specialty;
+import org.uteq.backend.deportivo.specialty.repository.SpecialtyRepository;
+
+import java.util.List;
+
+/**
+ * Lógica de negocio del catálogo de especialidades de entrenador. Las bajas
+ * son lógicas ({@code activo = false}); la unicidad del nombre se valida en
+ * el servicio, sin distinción de mayúsculas.
+ */
+@Service
+@RequiredArgsConstructor
+public class SpecialtyService {
+
+    private final SpecialtyRepository specialtyRepository;
+
+    /**
+     * Lista paginada de especialidades activas.
+     *
+     * @param pageable paginación y orden
+     * @return la página solicitada, mapeada a {@link SpecialtyResponse}
+     */
+    @Transactional(readOnly = true)
+    public Page&lt;SpecialtyResponse&gt; findPaged(Pageable pageable) {
+<span class="fc" id="L35">        return specialtyRepository.findActiveTrue(pageable).map(this::toResponse);</span>
+    }
+
+    /**
+     * Lista completa de especialidades activas, sin paginar.
+     *
+     * @return todas las especialidades activas
+     */
+    @Transactional(readOnly = true)
+    public List&lt;SpecialtyResponse&gt; findAllActive() {
+<span class="fc" id="L45">        return specialtyRepository.findActiveTrue().stream()</span>
+<span class="fc" id="L46">                .map(this::toResponse)</span>
+<span class="fc" id="L47">                .toList();</span>
+    }
+
+    /**
+     * Busca una especialidad por su identificador.
+     *
+     * @param id identificador de la especialidad
+     * @return la especialidad encontrada
+     * @throws ResourceNotFoundException si no existe
+     */
+    @Transactional(readOnly = true)
+    public SpecialtyResponse findById(Long id) {
+<span class="fc" id="L59">        Specialty especialidad = specialtyRepository.findById(id)</span>
+<span class="pc" id="L60">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Specialty no encontrada con ID: &quot; + id));</span>
+<span class="nc" id="L61">        return toResponse(especialidad);</span>
+    }
+
+    /**
+     * Crea una especialidad.
+     *
+     * @param request nombre de la especialidad
+     * @return la especialidad creada
+     * @throws IllegalArgumentException si ya existe una con ese nombre
+     */
+    @Transactional
+    public SpecialtyResponse create(SpecialtyRequest request) {
+<span class="fc bfc" id="L73" title="All 2 branches covered.">        if (specialtyRepository.existsByNameIgnoreCase(request.nombre())) {</span>
+<span class="fc" id="L74">            throw new IllegalArgumentException(&quot;Ya existe una especialidad con ese nombre&quot;);</span>
+        }
+
+<span class="fc" id="L77">        Specialty especialidad = Specialty.builder()</span>
+<span class="fc" id="L78">                .nombre(request.nombre())</span>
+<span class="fc" id="L79">                .activo(true)</span>
+<span class="fc" id="L80">                .build();</span>
+
+<span class="fc" id="L82">        return toResponse(specialtyRepository.save(especialidad));</span>
+    }
+
+    /**
+     * Actualiza el nombre de una especialidad.
+     *
+     * @param id      identificador de la especialidad a editar
+     * @param request datos nuevos
+     * @return la especialidad actualizada
+     * @throws ResourceNotFoundException si no existe
+     * @throws IllegalArgumentException     si el nombre nuevo pertenece a
+     *                                      otra especialidad
+     */
+    @Transactional
+    public SpecialtyResponse update(Long id, SpecialtyRequest request) {
+<span class="fc" id="L97">        Specialty especialidad = specialtyRepository.findById(id)</span>
+<span class="pc" id="L98">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Specialty no encontrada con ID: &quot; + id));</span>
+
+<span class="pc bpc" id="L100" title="1 of 2 branches missed.">        if (!especialidad.getNombre().equalsIgnoreCase(request.nombre())</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">                &amp;&amp; specialtyRepository.existsByNameIgnoreCase(request.nombre())) {</span>
+<span class="nc" id="L102">            throw new IllegalArgumentException(&quot;Ya existe una especialidad con ese nombre&quot;);</span>
+        }
+
+<span class="fc" id="L105">        especialidad.setNombre(request.nombre());</span>
+
+<span class="fc" id="L107">        return toResponse(specialtyRepository.save(especialidad));</span>
+    }
+
+    /**
+     * Baja lógica de una especialidad ({@code activo = false}).
+     *
+     * @param id identificador de la especialidad
+     * @throws ResourceNotFoundException si no existe
+     */
+    @Transactional
+    public void delete(Long id) {
+<span class="fc" id="L118">        Specialty especialidad = specialtyRepository.findById(id)</span>
+<span class="pc" id="L119">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Specialty no encontrada con ID: &quot; + id));</span>
+<span class="fc" id="L120">        especialidad.setActivo(false);</span>
+<span class="fc" id="L121">        specialtyRepository.save(especialidad);</span>
+<span class="fc" id="L122">    }</span>
+
+    private SpecialtyResponse toResponse(Specialty especialidad) {
+<span class="fc" id="L125">        return new SpecialtyResponse(</span>
+<span class="fc" id="L126">                especialidad.getIdEspecialidad(),</span>
+<span class="fc" id="L127">                especialidad.getNombre(),</span>
+<span class="fc" id="L128">                especialidad.getActivo(),</span>
+<span class="fc" id="L129">                especialidad.getCreatedAt()</span>
+        );
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
