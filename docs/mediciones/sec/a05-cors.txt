@@ -1,0 +1,49 @@
+# Evidencia OWASP A05 - Security Misconfiguration (CORS, Punto 16)
+# Fecha: 2026-09-13T04:55:50Z | Commit: 04ec02c | contra el despliegue real: https://sged-backend-2p05.onrender.com
+# curl: curl 8.21.0 (x86_64-w64-mingw32) libcurl/8.21.0 Schannel zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 WinLDAP
+#
+# Config leida (backend/src/main/java/org/uteq/backend/config/SecurityConfig.java):
+#   allowedOriginPatterns = origenes exactos desde CORS_ALLOWED_ORIGIN_PATTERNS,
+#   sin comodin de dominio (nada de "*" ni "*.onrender.com").
+#   render.yaml fija CORS_ALLOWED_ORIGIN_PATTERNS="https://sged-frontend-r2rs.onrender.com"
+#   (el unico origen de produccion), con allowCredentials(true).
+#
+# Prueba contra el despliegue: origen NO permitido -> debe rechazarse.
+
+-- curl -i -X OPTIONS https://sged-backend-2p05.onrender.com/api/auth/ping -H "Origin: https://evil-attacker.example.com" -H "Access-Control-Request-Method: GET" --
+HTTP/1.1 403 Forbidden
+vary: Origin
+vary: Access-Control-Request-Method
+vary: Access-Control-Request-Headers
+content-security-policy: default-src 'self'; frame-ancestors 'none'
+x-content-type-options: nosniff
+x-frame-options: DENY
+x-xss-protection: 0
+
+Invalid CORS request
+
+-- curl -i https://sged-backend-2p05.onrender.com/api/auth/ping -H "Origin: https://evil-attacker.example.com" --
+HTTP/1.1 403 Forbidden
+vary: Origin
+vary: Access-Control-Request-Method
+vary: Access-Control-Request-Headers
+
+Invalid CORS request
+
+# Contraste: el mismo endpoint con el origen SI permitido (para probar que
+# no es un rechazo global roto, sino un filtro que distingue el origen).
+
+-- curl -i https://sged-backend-2p05.onrender.com/api/auth/ping -H "Origin: https://sged-frontend-r2rs.onrender.com" --
+HTTP/1.1 200 OK
+access-control-allow-credentials: true
+access-control-allow-origin: https://sged-frontend-r2rs.onrender.com
+vary: Access-Control-Request-Method
+vary: Access-Control-Request-Headers
+
+pong
+
+# Conclusion: el origen no permitido recibe 403 "Invalid CORS request" sin
+# cabecera Access-Control-Allow-Origin (el navegador bloquea la lectura de
+# la respuesta); el origen real recibe 200 con
+# Access-Control-Allow-Origin exacto y Access-Control-Allow-Credentials.
+# Ningun comodin activo contra el despliegue real.

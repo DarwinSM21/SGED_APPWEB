@@ -2197,7 +2197,7 @@ análisis estático y escaneo automático (sección~\ref{sec:zap-spotbugs}):
 A01 Control de acceso & \ok & \texttt{403} en las 7 operaciones administrativas y \texttt{200} en las lecturas permitidas — tras corregir un defecto real, §\ref{sec:a01-falso-correcto} \\
 A02 Fallos criptográficos & \ok & TLS 1.3 en \texttt{:8443}; BCrypt coste 12 \\
 A03 Inyección & \ok & \texttt{422} ante entrada malformada; sin SQL dinámico \\
-A05 Configuración & \ok & CSP, HSTS, \texttt{nosniff}, \texttt{X-Frame-Options: DENY} \\
+A05 Configuración & \ok & CSP, HSTS, \texttt{nosniff}, \texttt{X-Frame-Options: DENY}; CORS a origen exacto, sin comodín, probado contra el despliegue real (§\ref{sec:cors}) \\
 A07 Fallos de autenticación & \ok & Bloqueo exacto en el sexto intento (\texttt{429}) \\
 A09 Registro y monitoreo & \ok & \texttt{AUTH\_LOGIN\_OK/FAIL} con IP, marca de tiempo y sujeto \\
 \bottomrule
@@ -2218,6 +2218,43 @@ Content-Type: application/problem+json
   "detail": "Demasiados intentos fallidos. Intente mas tarde."
 }
 \end{lstlisting}
+
+\subsubsection{CORS a origen exacto, verificado contra el despliegue}
+\label{sec:cors}
+
+El origen cruzado (CORS) queda restringido a los orígenes exactos que
+usa el sistema, sin comodín de dominio: \texttt{SecurityConfig} arma
+\texttt{CorsConfigurationSource} con \texttt{setAllowedOriginPatterns}
+sobre la lista de \texttt{CORS\_ALLOWED\_ORIGIN\_PATTERNS} (nunca
+\texttt{"*"} ni \texttt{"*.onrender.com"} — ese comodín habilitaría
+credenciales cruzadas desde cualquier otro servicio de Render, no solo
+el propio), y en producción (\texttt{render.yaml}) esa variable trae un
+único valor: el origen real del frontend desplegado.
+
+No basta con leer la configuración: se probó contra el despliegue real
+enviando una petición con un origen no autorizado
+(\ruta{docs/mediciones/sec/a05-cors.txt}). El resultado:
+
+\begin{lstlisting}[caption={CORS contra un origen no autorizado, despliegue real},label={lst:cors-rechazo}]
+$ curl -i https://sged-backend-2p05.onrender.com/api/auth/ping \
+    -H "Origin: https://evil-attacker.example.com"
+HTTP/1.1 403 Forbidden
+Invalid CORS request
+
+$ curl -i https://sged-backend-2p05.onrender.com/api/auth/ping \
+    -H "Origin: https://sged-frontend-r2rs.onrender.com"
+HTTP/1.1 200 OK
+Access-Control-Allow-Origin: https://sged-frontend-r2rs.onrender.com
+Access-Control-Allow-Credentials: true
+\end{lstlisting}
+
+El origen no autorizado recibe \texttt{403} sin cabecera
+\texttt{Access-Control-Allow-Origin} (el navegador bloquearía la
+lectura de la respuesta aunque el servidor la enviara); el origen real
+recibe \texttt{200} con esa cabecera y con
+\texttt{Access-Control-Allow-Credentials}. El filtro distingue el
+origen — no es un rechazo global que también bloquearía al frontend
+legítimo.
 
 \subsubsection{Una auditoría que no auditaba lo que decía auditar}
 \label{sec:a01-falso-correcto}
