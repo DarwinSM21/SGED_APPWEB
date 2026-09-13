@@ -14,22 +14,18 @@ pide esta vista.
 
 **Nota sobre `deportivo`:** los nombres de clase y atributo de ese
 dominio (`Coach`, `Category`, `TrainingSession`, `Attendance`,
-`DailyEvaluation`, `StudentEvaluation`) están traducidos al inglés en
-este diagrama por completitud documental, pero el código Java real de
-`deportivo` todavía usa los nombres en español (`Entrenador`, `Categoria`,
-`SesionEntrenamiento`, `Asistencia`, `EvaluacionDiaria`,
-`EvaluacionEstudiante`) — ese renombrado de código es un trabajo aparte,
-pendiente de reparto con el equipo. Este diagrama refleja el diseño
-objetivo, no necesariamente el estado exacto del código a la fecha.
+`DailyEvaluation`, `StudentEvaluation`) ya coinciden con el código Java
+real tras el renombrado a inglés del Punto E1 de la rúbrica (antes de
+esa corrección, `deportivo` usaba nombres en español como `Entrenador`,
+`Categoria`, `SesionEntrenamiento`, `Asistencia`, `EvaluacionDiaria`,
+`EvaluacionEstudiante`).
 
 ## Alcance
 
 Cubre los agregados mínimos de los cuatro dominios que pide la guía:
 **Person, UserAccount y Role** (seguridad); **Student, Guardian y
 Payment** (académico); **Coach, Category, TrainingSession,
-Attendance y DailyEvaluation** (deportivo — nombres traducidos solo en
-este diagrama; el código Java de `deportivo` sigue en español, pendiente
-de reparto con el equipo); **Item,
+Attendance y DailyEvaluation** (deportivo); **Item,
 StockMovement y Assignment** (inventario). Se agregan
 **GuardianStudent** (la clase de asociación real entre Guardian y
 Student — sin ella la relación \*-a-\* no se puede dibujar con fidelidad)
@@ -37,9 +33,9 @@ y **StudentEvaluation** (el detalle por jugador dentro de una
 DailyEvaluation).
 
 Quedan fuera, a propósito, los catálogos de apoyo (`GeneralStatus`,
-`Posicion`, `Especialidad`, `Horario`, `Lesion`, `AuditLog`,
-`Consent`, `Notification`, `CriterioEvaluacion`,
-`DetalleEvaluacion`): añadirlos no cambia la estructura del dominio y
+`Position`, `Specialty`, `Schedule`, `Injury`, `AuditLog`,
+`Consent`, `Notification`, `EvaluationCriterion`,
+`EvaluationDetail`): añadirlos no cambia la estructura del dominio y
 harían el diagrama ilegible. Están documentados en
 `docs/basedatos/DATA-DICTIONARY.md`.
 
@@ -48,9 +44,8 @@ getter/setter público generado por Lombok (`@Getter @Setter`), así que
 listarlos uno a uno no aportaría información — no se muestran. Las únicas
 operaciones que se listan son las dos que sí tienen comportamiento propio
 más allá de acceso a datos: `Attendance.enablesEvaluation()` y
-`DailyEvaluation.isFinished()` (en el código real, todavía
-`Asistencia.habilitaEvaluacion()` / `EvaluacionDiaria.estaFinalizada()`
-hasta que se traduzca `deportivo`).
+`DailyEvaluation.isFinished()`, que ya coinciden con el código real tras
+el renombrado a inglés del Punto E1.
 
 ## Diagrama
 

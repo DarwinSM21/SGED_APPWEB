@@ -35,7 +35,7 @@ public class StudentAccessService {
     private final PasswordPolicy passwordPolicy;
 
     /**
-     * Guarda simétrica a {@code UserAccountService.validarRolCoherente}: si la
+     * Guarda simétrica a {@code UserAccountService.validateRoleCoherent}: si la
      * persona ya tiene cuenta, esa cuenta tiene que ser de estudiante. Sin
      * cuenta no hay nada que validar.
      *

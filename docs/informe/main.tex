@@ -1428,10 +1428,10 @@ verificable en el diagrama, no solo declarada en el texto.
 
 Dos detalles del diagrama de la Figura~\ref{fig:c4-l3} merecen lectura
 explícita. Primero,
-\texttt{EstudianteRepository} es el único repositorio que invoca
+\texttt{StudentRepository} es el único repositorio que invoca
 procedimientos almacenados (sección~\ref{sec:acceso-datos}): el resto usa
 Spring Data JPA puro, que es exactamente el reparto que exige la estrategia
-híbrida. Segundo, \texttt{EstudianteService} depende del repositorio del
+híbrida. Segundo, \texttt{StudentService} depende del repositorio del
 dominio deportivo para resolver la categoría por clave foránea; esa flecha
 cruzando de \texttt{academico} a \texttt{deportivo} es la consecuencia
 directa de haber normalizado la categoría, y es la clase de acoplamiento

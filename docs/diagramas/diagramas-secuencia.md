@@ -18,14 +18,16 @@ autenticación con JWT en cookie `HttpOnly` (CU-01), alta de estudiante
 Cada diagrama refleja el código tal como quedó después del plan de
 corrección de este mismo informe (`AuthController`/`AuthService`
 divididos por R-03; `StudentAccessService` extraído por R-06), no un
-estado anterior. **Excepción:** el flujo 3 usa nombres de clase en
-inglés (`AttendanceQrController`, `QrAttendanceService`,
-`AttendanceService`, `TrainingSessionRepository`,
-`MarkAttendanceComponent`) que todavía no existen en el código —
-`deportivo` sigue en español ahí — porque este diagrama, igual que
-`docs/diagramas/diagrama-clases.md`, traduce ese dominio solo a nivel de
-documentación, adelantándose al renombrado de código pendiente de
-reparto con el equipo.
+estado anterior. Los tres flujos usan los nombres reales de clase y
+método del backend tras el renombrado a inglés del Punto E1
+(`AttendanceQrController`, `QrAttendanceService`, `AttendanceService`,
+`TrainingSessionRepository`, etc., ya coinciden con el código). **Única
+excepción:** el flujo 3 rotula al componente del estudiante como
+`MarkAttendanceComponent`, nombre que todavía no existe en el
+frontend — el componente Angular real sigue llamándose
+`MarcarAsistenciaComponent`, porque el renombrado a inglés del Punto E1
+alcanzó solo al backend; el de los componentes Angular es un trabajo
+aparte, pendiente de reparto con el equipo.
 
 ---
 
@@ -78,8 +80,8 @@ sequenceDiagram
             JWT-->>AS: refreshToken
             AS-->>AC: LoginResult(accessToken, refreshToken, session)
             AC->>AC: setAuthCookies() — Set-Cookie sged_access + sged_refresh (HttpOnly, Secure, SameSite=Strict)
-            AC-->>LC: 200 OK { username, nombre, rol } (no token in the body)
-            LC->>LC: router.navigate(homeRouteForRole(rol))
+            AC-->>LC: 200 OK { username, name, role } (no token in the body)
+            LC->>LC: router.navigate(homeRouteForRole(role))
         end
     end
 ```
@@ -108,10 +110,10 @@ sequenceDiagram
     participant PR as PersonRepository
     participant CR as CategoryRepository
 
-    A->>EC: POST /api/estudiantes {idPersona, idCategoria, codigoEstudiante, ...}
+    A->>EC: POST /api/estudiantes {personId, categoryId, studentCode, ...}
     EC->>ES: create(request)
-    ES->>EAS: validateConsistencyWithStudentRecord(idPersona)
-    EAS->>UR: findByPersona_IdPersonaAndActivoTrue(idPersona)
+    ES->>EAS: validateConsistencyWithStudentRecord(personId)
+    EAS->>UR: findByPerson_IdAndActiveTrue(personId)
 
     alt the person has an active account with another role
         UR-->>EAS: UserAccount (role != ESTUDIANTE)
@@ -121,7 +123,7 @@ sequenceDiagram
     else no account, or account already has role ESTUDIANTE
         UR-->>EAS: Optional.empty() / UserAccount(ESTUDIANTE)
         EAS-->>ES: (continues)
-        ES->>ER: findByPersona_IdPersona(idPersona)
+        ES->>ER: findByPerson_Id(personId)
 
         alt an ACTIVE record already exists
             ER-->>ES: Student(active=true)
@@ -129,18 +131,18 @@ sequenceDiagram
             EC-->>A: 400 Bad Request
         else an INACTIVE record exists (previous soft delete)
             ER-->>ES: Student(active=false)
-            ES->>CR: findById(idCategoria)
+            ES->>CR: findById(categoryId)
             CR-->>ES: Category
             ES->>ER: save(reactivated student: category, code, active=true)
             ER-->>ES: Student
             ES-->>EC: StudentResponse
             EC-->>A: 201 Created
         else never had a record
-            ES->>ER: existsByCodigoEstudiante(codigo)
+            ES->>ER: existsByStudentCode(studentCode)
             ER-->>ES: false
-            ES->>PR: findById(idPersona)
+            ES->>PR: findById(personId)
             PR-->>ES: Person
-            ES->>CR: findById(idCategoria)
+            ES->>CR: findById(categoryId)
             CR-->>ES: Category
             ES->>ER: save(new Student)
             ER-->>ES: Student
@@ -189,19 +191,19 @@ sequenceDiagram
 
     R->>Pantalla: opens the session's QR
     loop every few seconds (rotation)
-        Pantalla->>AQC: POST /asistencias/qr/sesion/{idSesion}/token
-        AQC->>QRS: issue(idSesion)
-        QRS->>Redis: SET qr:asistencia:{token} = idSesion (TTL 60s)
-        QRS-->>AQC: TokenQr(token, ttl)
+        Pantalla->>AQC: POST /api/asistencias/qr/sesion/{sessionId}/token
+        AQC->>QRS: issue(sessionId)
+        QRS->>Redis: SET qr:attendance:{token} = sessionId (TTL 60s)
+        QRS-->>AQC: QrToken(token, expiresInSeconds)
         AQC-->>Pantalla: 200 OK
         Pantalla->>Pantalla: renders the QR with the new token
     end
 
     E->>MAC: scans the QR with the camera
     MAC->>MAC: jsQR decodes the token (100% client-side)
-    MAC->>AQC: POST /asistencias/qr/marcar {token}
+    MAC->>AQC: POST /api/asistencias/qr/marcar {token}
     AQC->>QRS: redeem(token)
-    QRS->>Redis: GETDEL qr:asistencia:{token}
+    QRS->>Redis: GETDEL qr:attendance:{token}
 
     alt token does not exist or already expired/used
         Redis-->>QRS: null
@@ -209,10 +211,10 @@ sequenceDiagram
         AQC-->>MAC: 410 Gone
         MAC-->>E: "That code already expired or was already used"
     else token still valid
-        Redis-->>QRS: idSesion
-        QRS-->>AQC: Optional(idSesion)
-        AQC->>AS: checkInByQr(username, idSesion)
-        AS->>ER: findByUsuario_Username(username)
+        Redis-->>QRS: sessionId
+        QRS-->>AQC: Optional(sessionId)
+        AQC->>AS: markByQr(username, sessionId)
+        AS->>ER: findByUserAccount_Username(username)
         ER-->>AS: Student
 
         alt already checked in for this session
@@ -224,14 +226,14 @@ sequenceDiagram
             AQC-->>MAC: 400 Bad Request
             MAC-->>E: (generic failure message)
         else valid
-            AS->>SR: findById(idSesion)
+            AS->>SR: findById(sessionId)
             SR-->>AS: TrainingSession
             AS->>AS: calculateStatus(startTime, now) → PRESENTE | TARDE
             AS->>AS: save(Attendance)
             AS->>NS: notifyAttendance(student, status)
             NS-->>AS: (catches its own errors: if notifying fails, attendance was already saved)
             AS-->>AQC: Attendance
-            AQC-->>MAC: 201 Created { estado }
+            AQC-->>MAC: 201 Created { status }
             MAC-->>E: "Present!" / "Marked as late"
         end
     end
