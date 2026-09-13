@@ -25,6 +25,18 @@ import os
 import re
 import sys
 
+# Sin esto, en Windows sys.stdout.encoding puede caer en cp1252 (segun la
+# codepage de la consola) en vez de UTF-8, y los mensajes VIOLACION con
+# tildes salen mal codificados -- inofensivo para el codigo de salida, pero
+# rompe cualquier comprobacion de texto (grep, CI, un revisor) que espere
+# UTF-8. reconfigure() existe desde Python 3.7; si el stream no lo soporta
+# (poco probable), seguimos sin romper la ejecucion.
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
+
 MATRIZ = sys.argv[1] if len(sys.argv) > 1 else "docs/trazabilidad/matriz.csv"
 SRS = sys.argv[2] if len(sys.argv) > 2 else "docs/requisitos/SRS.md"
 TEST_ROOT = "backend/src/test"
