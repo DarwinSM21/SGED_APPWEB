@@ -6,8 +6,14 @@ import org.uteq.backend.deportivo.position.entity.Position;
 
 import java.util.List;
 
+/**
+ * Acceso al catálogo de posiciones de juego (ej. portero, defensa).
+ */
 public interface PositionRepository extends JpaRepository<Position, Long> {
 
+    /**
+     * @return las posiciones activas, ordenadas por identificador ascendente
+     */
     @Query("SELECT p FROM Position p WHERE p.activo = true ORDER BY p.idPosicion ASC")
     List<Position> findActiveOrderByIdAsc();
 }

@@ -33,6 +33,15 @@ public interface ConsentRepository extends JpaRepository<Consent, Long> {
      * @param alcance alcance del consentimiento (ej. {@code DATOS_FISICO_DEPORTIVOS})
      * @return el consentimiento vigente para ese alcance, si existe
      */
+    /**
+     * Consentimiento vigente (no revocado) de un representante sobre un
+     * estudiante para un alcance puntual.
+     *
+     * @param idRepresentante identificador del representante
+     * @param idEstudiante identificador del estudiante
+     * @param alcance alcance del consentimiento (ej. {@code DATOS_FISICO_DEPORTIVOS})
+     * @return el consentimiento vigente para ese alcance, si existe
+     */
     @Query("SELECT c FROM Consent c WHERE c.guardian.id = :idRepresentante AND c.student.id = :idEstudiante "
             + "AND c.scope = :alcance AND c.revokedAt IS NULL")
     Optional<Consent> findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(

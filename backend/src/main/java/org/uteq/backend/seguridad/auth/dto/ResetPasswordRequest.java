@@ -9,8 +9,8 @@ import jakarta.validation.constraints.NotBlank;
  * "distinta del nombre de usuario" necesita el usuario, que aquí se resuelve
  * del token, no del cuerpo.
  *
- * @param token         token recibido en el enlace de restablecimiento
- * @param nuevaPassword contraseña nueva elegida por el usuario
+ * @param token       token recibido en el enlace de restablecimiento
+ * @param newPassword contraseña nueva elegida por el usuario
  */
 public record ResetPasswordRequest(
         @NotBlank String token,

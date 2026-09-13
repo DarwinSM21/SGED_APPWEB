@@ -88,7 +88,7 @@ public class QrAttendanceService {
      * cuándo volver a pedirlo.
      *
      * @param token             valor a codificar como QR
-     * @param expiraEnSegundos  segundos restantes de validez
+     * @param expiresInSeconds  segundos restantes de validez
      */
     public record QrToken(String token, int expiresInSeconds) {}
 }

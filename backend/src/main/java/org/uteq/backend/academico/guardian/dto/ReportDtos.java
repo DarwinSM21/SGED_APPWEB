@@ -14,8 +14,8 @@ public final class ReportDtos {
     ) {}
 
     /**
-     * @param criterio nombre del criterio de evaluación
-     * @param promedio promedio de ese criterio en el período del reporte, o {@code null} sin evaluaciones
+     * @param criterion nombre del criterio de evaluación
+     * @param average promedio de ese criterio en el período del reporte, o {@code null} sin evaluaciones
      */
     public record CriterionAverageResponse(String criterion, Double average) {}
 

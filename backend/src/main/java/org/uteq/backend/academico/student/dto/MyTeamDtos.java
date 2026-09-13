@@ -13,21 +13,21 @@ public final class MyTeamDtos {
     ) {}
 
     /**
-     * @param nombre nombre de la posición
-     * @param abreviatura abreviatura de la posición (ej. para el marcador del equipo)
+     * @param name nombre de la posición
+     * @param abbreviation abreviatura de la posición (ej. para el marcador del equipo)
      */
     public record PositionResponse(String name, String abbreviation) {}
 
     /**
-     * @param nombre nombre del entrenador asignado
-     * @param especialidad especialidad del entrenador
+     * @param name nombre del entrenador asignado
+     * @param specialty especialidad del entrenador
      */
     public record AssignedCoachResponse(String name, String specialty) {}
 
     /**
-     * @param idEstudiante identificador del compañero de equipo
-     * @param nombre nombre del compañero de equipo
-     * @param posicion posición del compañero, o {@code null} si no tiene una asignada
+     * @param studentId identificador del compañero de equipo
+     * @param name nombre del compañero de equipo
+     * @param position posición del compañero, o {@code null} si no tiene una asignada
      */
     public record TeammateResponse(Long studentId, String name, String position) {}
 

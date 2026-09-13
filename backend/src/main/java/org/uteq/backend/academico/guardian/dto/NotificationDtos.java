@@ -19,7 +19,7 @@ public final class NotificationDtos {
     ) {}
 
     /**
-     * @param noLeidas cantidad de notificaciones sin leer del representante
+     * @param unread cantidad de notificaciones sin leer del representante
      */
     public record UnreadCountResponse(long unread) {}
 }

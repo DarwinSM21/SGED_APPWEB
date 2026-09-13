@@ -262,14 +262,14 @@ public class RosterService {
      * presencias ya consultados para que quien tenga que rearmar filas no
      * vuelva a golpear la base con las mismas dos consultas.
      *
-     * @param partido        partido para el que se calculó
-     * @param ventana        ventana de rendimiento evaluada
-     * @param titulares      once sugerido
-     * @param suplentes      convocables que no entraron al once
-     * @param noConvocables  jugadores fuera, con su motivo
-     * @param promedios      promedio en la ventana por estudiante
-     * @param presencias     presencias en la ventana por estudiante
-     * @param entrenamientos entrenamientos de la categoría en la ventana
+     * @param match             partido para el que se calculó
+     * @param window            ventana de rendimiento evaluada
+     * @param starters          once sugerido
+     * @param substitutes       convocables que no entraron al once
+     * @param notCallable       jugadores fuera, con su motivo
+     * @param averages          promedio en la ventana por estudiante
+     * @param attendanceRecords presencias en la ventana por estudiante
+     * @param trainingSessions  entrenamientos de la categoría en la ventana
      */
     public record Roster(
             Match match,

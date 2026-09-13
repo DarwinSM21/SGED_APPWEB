@@ -80,7 +80,7 @@ public class AttendanceQrController {
     /**
      * Respuesta de {@link #markAttendance}.
      *
-     * @param estado estado de asistencia resuelto ({@code PRESENTE} /
+     * @param status estado de asistencia resuelto ({@code PRESENTE} /
      *               {@code TARDE})
      */
     public record MarkQrResponse(String status) {}
