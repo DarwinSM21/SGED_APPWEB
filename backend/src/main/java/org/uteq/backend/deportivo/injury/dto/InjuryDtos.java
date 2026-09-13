@@ -6,9 +6,11 @@ import jakarta.validation.constraints.Size;
 
 import java.time.LocalDate;
 
+/** Contenedor de los DTO del dominio de lesiones. */
 public final class InjuryDtos {
     private InjuryDtos() {}
 
+    /** Datos para registrar una lesión nueva. */
     public record RegisterInjuryRequest(
             @NotNull Long studentId,
             Long coachId,
@@ -17,8 +19,10 @@ public final class InjuryDtos {
             LocalDate estimatedReturnDate
     ) {}
 
+    /** Fecha de alta médica que cierra una lesión activa. */
     public record DischargeRequest(LocalDate dischargeDate) {}
 
+    /** Vista de una lesión para el cliente. */
     public record InjuryResponse(
             Long injuryId,
             Long studentId,
