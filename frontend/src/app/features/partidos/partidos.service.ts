@@ -21,8 +21,8 @@ export class PartidosService {
     return this.http.post<Partido>(this.apiUrl, partido);
   }
 
-  registrarResultado(idPartido: number, resultado: Resultado): Observable<Partido> {
-    return this.http.put<Partido>(`${this.apiUrl}/${idPartido}/resultado`, resultado);
+  registrarResultado(idPartido: number, result: Resultado): Observable<Partido> {
+    return this.http.put<Partido>(`${this.apiUrl}/${idPartido}/resultado`, result);
   }
 
   reabrir(idPartido: number): Observable<Partido> {
@@ -37,10 +37,10 @@ export class PartidosService {
     return this.http.get<Alineacion>(`${this.apiUrl}/${idPartido}/alineacion`);
   }
 
-  guardarAlineacion(idPartido: number, jugadores: JugadorEnCancha[],
-                    valoracion: number | null, observacion: string | null): Observable<Alineacion> {
+  guardarAlineacion(idPartido: number, players: JugadorEnCancha[],
+                    rating: number | null, note: string | null): Observable<Alineacion> {
     return this.http.put<Alineacion>(`${this.apiUrl}/${idPartido}/alineacion`,
-      { jugadores, valoracion, observacion });
+      { players, rating, note });
   }
 
   restablecerAlineacion(idPartido: number): Observable<Alineacion> {

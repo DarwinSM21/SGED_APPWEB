@@ -11,9 +11,9 @@ import { BuscadorOpcionesComponent, OpcionBuscable } from '../../core/buscador-o
 type TipoReporte = 'estudiantes-fichas' | 'pagos' | 'asistencias' | 'evaluaciones' | 'lesiones';
 
 interface TarjetaReporte {
-  tipo: TipoReporte;
+  type: TipoReporte;
   titulo: string;
-  descripcion: string;
+  description: string;
   archivo: string;
   conCategoria: boolean;
   conActivo: boolean;
@@ -21,15 +21,15 @@ interface TarjetaReporte {
 }
 
 const TARJETAS: TarjetaReporte[] = [
-  { tipo: 'estudiantes-fichas', titulo: 'Fichas de estudiantes', descripcion: 'Listado de estudiantes con categoría y estado.',
+  { type: 'estudiantes-fichas', titulo: 'Fichas de estudiantes', description: 'Listado de estudiantes con categoría y estado.',
     archivo: 'fichas-estudiantes.pdf', conCategoria: true, conActivo: true, roles: ['ADMINISTRADOR', 'RECEPCIONISTA', 'ENTRENADOR'] },
-  { tipo: 'pagos', titulo: 'Pagos', descripcion: 'Historial de pagos por estudiante y período.',
+  { type: 'pagos', titulo: 'Pagos', description: 'Historial de pagos por estudiante y período.',
     archivo: 'pagos.pdf', conCategoria: false, conActivo: false, roles: ['ADMINISTRADOR', 'RECEPCIONISTA'] },
-  { tipo: 'asistencias', titulo: 'Asistencias', descripcion: 'Asistencia a sesiones por estudiante o categoría.',
+  { type: 'asistencias', titulo: 'Asistencias', description: 'Asistencia a sesiones por estudiante o categoría.',
     archivo: 'asistencias.pdf', conCategoria: true, conActivo: false, roles: ['ADMINISTRADOR', 'ENTRENADOR'] },
-  { tipo: 'evaluaciones', titulo: 'Evaluaciones', descripcion: 'Resultados de evaluación diaria por estudiante o categoría.',
+  { type: 'evaluaciones', titulo: 'Evaluaciones', description: 'Resultados de evaluación diaria por estudiante o categoría.',
     archivo: 'evaluaciones.pdf', conCategoria: true, conActivo: false, roles: ['ADMINISTRADOR', 'ENTRENADOR'] },
-  { tipo: 'lesiones', titulo: 'Lesiones', descripcion: 'Lesiones registradas por estudiante o categoría.',
+  { type: 'lesiones', titulo: 'Lesiones', description: 'Lesiones registradas por estudiante o categoría.',
     archivo: 'lesiones.pdf', conCategoria: true, conActivo: false, roles: ['ADMINISTRADOR', 'ENTRENADOR'] },
 ];
 
@@ -45,27 +45,27 @@ const TARJETAS: TarjetaReporte[] = [
       </div>
 
       <div class="grid">
-        @for (t of tarjetas(); track t.tipo) {
+        @for (t of tarjetas(); track t.type) {
           <div class="card tarjeta">
             <h2 class="tarjeta__titulo">{{ t.titulo }}</h2>
-            <p class="tarjeta__descripcion">{{ t.descripcion }}</p>
+            <p class="tarjeta__descripcion">{{ t.description }}</p>
 
             <app-buscador-opciones
               etiqueta="Estudiante (opcional)"
               marcador="Todos — escribe un nombre para filtrar…"
               [opciones]="opcionesEstudiantes()"
-              [textoSeleccionado]="nombreDe(filtros[t.tipo].estudianteId)"
-              (seleccionada)="filtros[t.tipo].estudianteId = $event.id"
-              (limpiada)="filtros[t.tipo].estudianteId = null" />
+              [textoSeleccionado]="nombreDe(filtros[t.type].estudianteId)"
+              (seleccionada)="filtros[t.type].estudianteId = $event.id"
+              (limpiada)="filtros[t.type].estudianteId = null" />
 
             @if (t.conCategoria) {
-              <label class="field" [attr.for]="t.tipo + '-categoria'">
+              <label class="field" [attr.for]="t.type + '-categoria'">
                 <span class="field__label">Categoría (opcional)</span>
                 <span class="field__control">
-                  <select [id]="t.tipo + '-categoria'" [(ngModel)]="filtros[t.tipo].categoria" [name]="t.tipo + '-categoria'">
+                  <select [id]="t.type + '-categoria'" [(ngModel)]="filtros[t.type].category" [name]="t.type + '-categoria'">
                     <option [ngValue]="null">Todas</option>
-                    @for (c of categorias(); track c.idCategoria) {
-                      <option [ngValue]="c.idCategoria">{{ c.nombre }}</option>
+                    @for (c of categorias(); track c.categoryId) {
+                      <option [ngValue]="c.categoryId">{{ c.name }}</option>
                     }
                   </select>
                 </span>
@@ -73,10 +73,10 @@ const TARJETAS: TarjetaReporte[] = [
             }
 
             @if (t.conActivo) {
-              <label class="field" [attr.for]="t.tipo + '-activo'">
+              <label class="field" [attr.for]="t.type + '-activo'">
                 <span class="field__label">Estado (opcional)</span>
                 <span class="field__control">
-                  <select [id]="t.tipo + '-activo'" [(ngModel)]="filtros[t.tipo].activo" [name]="t.tipo + '-activo'">
+                  <select [id]="t.type + '-activo'" [(ngModel)]="filtros[t.type].active" [name]="t.type + '-activo'">
                     <option [ngValue]="null">Todos</option>
                     <option [ngValue]="true">Activos</option>
                     <option [ngValue]="false">Inactivos</option>
@@ -85,23 +85,23 @@ const TARJETAS: TarjetaReporte[] = [
               </label>
             }
 
-            @if (t.tipo !== 'estudiantes-fichas') {
+            @if (t.type !== 'estudiantes-fichas') {
               <div class="fila-fechas">
-                <label class="field" [attr.for]="t.tipo + '-desde'">
+                <label class="field" [attr.for]="t.type + '-desde'">
                   <span class="field__label">Desde</span>
-                  <span class="field__control"><input [id]="t.tipo + '-desde'" type="date" [(ngModel)]="filtros[t.tipo].fechaDesde" [name]="t.tipo + '-desde'" /></span>
+                  <span class="field__control"><input [id]="t.type + '-desde'" type="date" [(ngModel)]="filtros[t.type].fechaDesde" [name]="t.type + '-desde'" /></span>
                 </label>
-                <label class="field" [attr.for]="t.tipo + '-hasta'">
+                <label class="field" [attr.for]="t.type + '-hasta'">
                   <span class="field__label">Hasta</span>
-                  <span class="field__control"><input [id]="t.tipo + '-hasta'" type="date" [(ngModel)]="filtros[t.tipo].fechaHasta" [name]="t.tipo + '-hasta'" /></span>
+                  <span class="field__control"><input [id]="t.type + '-hasta'" type="date" [(ngModel)]="filtros[t.type].fechaHasta" [name]="t.type + '-hasta'" /></span>
                 </label>
               </div>
             }
 
-            @if (error()[t.tipo]) { <div class="alert alert--danger">{{ error()[t.tipo] }}</div> }
+            @if (error()[t.type]) { <div class="alert alert--danger">{{ error()[t.type] }}</div> }
 
-            <button type="button" class="btn btn--primary btn--block" [disabled]="generando()[t.tipo]" (click)="generar(t)">
-              @if (generando()[t.tipo]) {
+            <button type="button" class="btn btn--primary btn--block" [disabled]="generando()[t.type]" (click)="generar(t)">
+              @if (generando()[t.type]) {
                 <span class="spinner"></span> Generando…
               } @else {
                 Generar PDF
@@ -133,58 +133,58 @@ export class ReportesComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   readonly tarjetas = computed(() => {
-    const rol = this.authService.currentUser()?.rol;
+    const rol = this.authService.currentUser()?.role;
     return TARJETAS.filter((t) => rol && t.roles.includes(rol));
   });
 
-  readonly estudiantes = signal<EstudianteOpcionReporte[]>([]);
+  readonly students = signal<EstudianteOpcionReporte[]>([]);
 
   readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
-    this.estudiantes().map((e) => ({ id: e.idEstudiante, titulo: e.nombreCompleto })));
+    this.students().map((e) => ({ id: e.studentId, titulo: e.fullName })));
 
   nombreDe(id: number | null | undefined): string | null {
     if (id === null || id === undefined) return null;
-    return this.estudiantes().find((e) => e.idEstudiante === id)?.nombreCompleto ?? null;
+    return this.students().find((e) => e.studentId === id)?.fullName ?? null;
   }
   readonly categorias = signal<CategoriaOpcionReporte[]>([]);
   readonly generando = signal<Record<string, boolean>>({});
   readonly error = signal<Record<string, string>>({});
 
   filtros: Record<TipoReporte, FiltrosReporte> = {
-    'estudiantes-fichas': { categoria: null, activo: null },
+    'estudiantes-fichas': { category: null, active: null },
     pagos: { estudianteId: null, fechaDesde: '', fechaHasta: '' },
-    asistencias: { estudianteId: null, categoria: null, fechaDesde: '', fechaHasta: '' },
-    evaluaciones: { estudianteId: null, categoria: null, fechaDesde: '', fechaHasta: '' },
-    lesiones: { estudianteId: null, categoria: null, fechaDesde: '', fechaHasta: '' },
+    asistencias: { estudianteId: null, category: null, fechaDesde: '', fechaHasta: '' },
+    evaluaciones: { estudianteId: null, category: null, fechaDesde: '', fechaHasta: '' },
+    lesiones: { estudianteId: null, category: null, fechaDesde: '', fechaHasta: '' },
   };
 
   ngOnInit(): void {
-    this.servicio.listarEstudiantes().subscribe({ next: (e) => this.estudiantes.set(e), error: () => {} });
+    this.servicio.listarEstudiantes().subscribe({ next: (e) => this.students.set(e), error: () => {} });
     this.servicio.categoriasActivas().subscribe({ next: (c) => this.categorias.set(c), error: () => {} });
   }
 
   generar(tarjeta: TarjetaReporte): void {
-    this.generando.update((g) => ({ ...g, [tarjeta.tipo]: true }));
-    this.error.update((e) => ({ ...e, [tarjeta.tipo]: '' }));
+    this.generando.update((g) => ({ ...g, [tarjeta.type]: true }));
+    this.error.update((e) => ({ ...e, [tarjeta.type]: '' }));
 
-    const filtros = this.filtros[tarjeta.tipo];
+    const filtros = this.filtros[tarjeta.type];
     const solicitud = {
       'estudiantes-fichas': () => this.servicio.estudiantesFichas(filtros),
       pagos: () => this.servicio.pagos(filtros),
       asistencias: () => this.servicio.asistencias(filtros),
       evaluaciones: () => this.servicio.evaluaciones(filtros),
       lesiones: () => this.servicio.lesiones(filtros),
-    }[tarjeta.tipo]();
+    }[tarjeta.type]();
 
     solicitud.subscribe({
       next: (blob) => {
         descargarBlob(blob, tarjeta.archivo);
-        this.generando.update((g) => ({ ...g, [tarjeta.tipo]: false }));
+        this.generando.update((g) => ({ ...g, [tarjeta.type]: false }));
       },
       error: (err) => {
-        this.generando.update((g) => ({ ...g, [tarjeta.tipo]: false }));
+        this.generando.update((g) => ({ ...g, [tarjeta.type]: false }));
         this.mensajeDeError(err).then((mensaje) =>
-          this.error.update((e) => ({ ...e, [tarjeta.tipo]: mensaje })));
+          this.error.update((e) => ({ ...e, [tarjeta.type]: mensaje })));
       },
     });
   }

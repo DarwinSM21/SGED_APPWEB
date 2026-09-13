@@ -50,15 +50,15 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
               <span class="field__label">Usuario o correo</span>
               <span class="field__control">
                 <input id="identificador" type="text" name="identificador"
-                       [(ngModel)]="identificador" required
+                       [(ngModel)]="identifier" required
                        autocapitalize="off" autocorrect="off" spellcheck="false"
-                       placeholder="tu.usuario@uteq.edu.ec" />
+                       placeholder="tu.user@uteq.edu.ec" />
               </span>
             </label>
 
             @if (fallo(); as f) {
               <div class="alert alert--danger" role="alert" aria-live="assertive">
-                <span class="fallo-que">{{ f.mensaje }}</span>
+                <span class="fallo-que">{{ f.message }}</span>
                 @if (f.sugerencia) { <span class="fallo-como">{{ f.sugerencia }}</span> }
               </div>
             }
@@ -80,7 +80,7 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
 export class RecuperarComponent {
   private readonly authService = inject(AuthService);
 
-  identificador = '';
+  identifier = '';
   readonly loading = signal(false);
   readonly enviado = signal(false);
   readonly fallo = signal<Diagnostico | null>(null);
@@ -89,9 +89,9 @@ export class RecuperarComponent {
     if (this.loading()) {
       return;
     }
-    const identificador = this.identificador.trim();
+    const identificador = this.identifier.trim();
     if (!identificador) {
-      this.fallo.set({ origen: 'peticion', mensaje: 'Escribe tu usuario o tu correo' });
+      this.fallo.set({ origen: 'peticion', message: 'Escribe tu usuario o tu correo' });
       return;
     }
 

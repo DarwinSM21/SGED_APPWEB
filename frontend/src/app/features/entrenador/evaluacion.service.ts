@@ -16,7 +16,7 @@ export class EvaluacionService {
 
   private temporizadores = new Map<number, ReturnType<typeof setTimeout>>();
 
-  readonly estado = signal<EstadoGuardado>('guardado');
+  readonly status = signal<EstadoGuardado>('guardado');
   readonly pendientes = signal<number>(0);
   readonly hayPendientes = computed(() => this.pendientes() > 0);
 
@@ -33,17 +33,17 @@ export class EvaluacionService {
     return this.http.get<PosicionOpcion[]>('/api/posiciones/activas');
   }
 
-  actualizarPosicionEstudiante(idEstudiante: number, idPosicion: number | null): Observable<void> {
-    return this.http.put<void>(`/api/estudiantes/${idEstudiante}/posicion`, { idPosicion });
+  actualizarPosicionEstudiante(idEstudiante: number, positionId: number | null): Observable<void> {
+    return this.http.put<void>(`/api/estudiantes/${idEstudiante}/posicion`, { positionId });
   }
 
-  finalizar(idSesion: number, observacionGeneral: string): Observable<void> {
+  finalizar(idSesion: number, generalNote: string): Observable<void> {
     return this.http.post<void>(
-      `${this.apiUrl}/sesion/${idSesion}/finalizar`, observacionGeneral);
+      `${this.apiUrl}/sesion/${idSesion}/finalizar`, generalNote);
   }
 
-  registrarLesion(idEstudiante: number, descripcion: string, fechaEstimadaRetorno?: string): Observable<Lesion> {
-    return this.http.post<Lesion>('/api/lesiones', { idEstudiante, descripcion, fechaEstimadaRetorno });
+  registrarLesion(idEstudiante: number, description: string, estimatedReturnDate?: string): Observable<Lesion> {
+    return this.http.post<Lesion>('/api/lesiones', { studentId: idEstudiante, description, estimatedReturnDate });
   }
 
   darDeAltaLesion(idLesion: number): Observable<Lesion> {
@@ -51,30 +51,30 @@ export class EvaluacionService {
   }
 
   guardarConRetardo(idSesion: number, request: GuardarJugadorRequest): void {
-    const anterior = this.temporizadores.get(request.idEstudiante);
+    const anterior = this.temporizadores.get(request.studentId);
     if (anterior) {
       clearTimeout(anterior);
     }
-    this.estado.set('guardando');
-    this.temporizadores.set(request.idEstudiante, setTimeout(
+    this.status.set('guardando');
+    this.temporizadores.set(request.studentId, setTimeout(
       () => this.enviar(idSesion, request), EvaluacionService.RETARDO_MS));
   }
 
   private enviar(idSesion: number, request: GuardarJugadorRequest): void {
-    this.temporizadores.delete(request.idEstudiante);
+    this.temporizadores.delete(request.studentId);
 
     this.http.put<void>(`${this.apiUrl}/sesion/${idSesion}/jugadores`, request)
       .pipe(
         tap(() => {
-          this.quitarDeCola(request.idEstudiante);
-          this.estado.set(this.hayPendientes() ? 'pendiente' : 'guardado');
+          this.quitarDeCola(request.studentId);
+          this.status.set(this.hayPendientes() ? 'pendiente' : 'guardado');
         }),
         catchError((err) => {
           if (err.status >= 400 && err.status < 500) {
-            this.estado.set('error');
+            this.status.set('error');
           } else {
             this.encolar(idSesion, request);
-            this.estado.set('pendiente');
+            this.status.set('pendiente');
           }
           return of(void 0);
         }),
@@ -87,9 +87,9 @@ export class EvaluacionService {
     if (cola.size === 0) {
       return;
     }
-    this.estado.set('guardando');
+    this.status.set('guardando');
     for (const [, entrada] of cola) {
-      this.enviar(entrada.idSesion, entrada.request);
+      this.enviar(entrada.sessionId, entrada.request);
     }
   }
 
@@ -113,9 +113,9 @@ export class EvaluacionService {
     this.pendientes.set(cola.size);
   }
 
-  private encolar(idSesion: number, request: GuardarJugadorRequest): void {
+  private encolar(sessionId: number, request: GuardarJugadorRequest): void {
     const cola = this.leerCola();
-    cola.set(request.idEstudiante, { idSesion, request });
+    cola.set(request.studentId, { sessionId, request });
     this.escribirCola(cola);
   }
 
@@ -128,6 +128,6 @@ export class EvaluacionService {
 }
 
 interface EntradaCola {
-  idSesion: number;
+  sessionId: number;
   request: GuardarJugadorRequest;
 }

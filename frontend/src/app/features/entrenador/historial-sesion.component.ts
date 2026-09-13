@@ -42,52 +42,52 @@ const COLOR_ESTADO: Record<string, string> = {
       } @else if (historial(); as h) {
         <header class="cabecera">
           <div>
-            <h1>{{ h.categoria }} · {{ h.fecha }}</h1>
+            <h1>{{ h.category }} · {{ h.date }}</h1>
             <p class="subt">
-              {{ h.entrenador }}
-              @if (h.horaInicio) { · {{ horaCorta(h.horaInicio) }}@if (h.horaFin) {–{{ horaCorta(h.horaFin) }}} }
-              @if (h.campo) { · {{ h.campo }} }
+              {{ h.coach }}
+              @if (h.startTime) { · {{ horaCorta(h.startTime) }}@if (h.endTime) {–{{ horaCorta(h.endTime) }}} }
+              @if (h.field) { · {{ h.field }} }
             </p>
           </div>
-          <a class="btn btn--ghost btn--sm" [routerLink]="['/entrenador/sesion', h.idSesion]">
-            {{ h.tieneEvaluacion ? 'Ver evaluación' : 'Evaluar' }}
+          <a class="btn btn--ghost btn--sm" [routerLink]="['/entrenador/sesion', h.sessionId]">
+            {{ h.hasEvaluation ? 'Ver evaluación' : 'Evaluar' }}
           </a>
         </header>
 
         <section class="resumen">
           <div class="dato dato--fuerte">
-            <span class="cifra">{{ h.resumen.presentes + h.resumen.tarde }}</span>
+            <span class="cifra">{{ h.summary.present + h.summary.late }}</span>
             <span class="rotulo">entrenaron</span>
           </div>
           <div class="dato">
-            <span class="cifra">{{ h.resumen.convocados }}</span>
+            <span class="cifra">{{ h.summary.calledUp }}</span>
             <span class="rotulo">convocados</span>
           </div>
           <div class="dato">
-            <span class="cifra">{{ h.resumen.tarde }}</span>
+            <span class="cifra">{{ h.summary.late }}</span>
             <span class="rotulo">tarde</span>
           </div>
           <div class="dato">
-            <span class="cifra">{{ h.resumen.ausentes }}</span>
+            <span class="cifra">{{ h.summary.absentees }}</span>
             <span class="rotulo">ausentes</span>
           </div>
           <div class="dato">
-            <span class="cifra">{{ h.resumen.justificados }}</span>
+            <span class="cifra">{{ h.summary.excused }}</span>
             <span class="rotulo">justificados</span>
           </div>
-          @if (h.resumen.sinRegistro > 0) {
+          @if (h.summary.withoutRecord > 0) {
             <div class="dato dato--aviso">
-              <span class="cifra">{{ h.resumen.sinRegistro }}</span>
+              <span class="cifra">{{ h.summary.withoutRecord }}</span>
               <span class="rotulo">sin registro</span>
             </div>
           }
         </section>
 
-        @if (h.resumen.sinRegistro === h.resumen.convocados && h.resumen.convocados > 0) {
+        @if (h.summary.withoutRecord === h.summary.calledUp && h.summary.calledUp > 0) {
           <p class="alert alert--warning">
             Nadie pasó lista en esta sesión. Eso no es lo mismo que “no vino nadie”:
             sin registro, la asistencia de ese día no cuenta para nada.
-            <a [routerLink]="['/entrenador/sesion', h.idSesion, 'asistencia']">Pasar lista ahora</a>
+            <a [routerLink]="['/entrenador/sesion', h.sessionId, 'asistencia']">Pasar lista ahora</a>
           </p>
         }
 
@@ -98,10 +98,10 @@ const COLOR_ESTADO: Record<string, string> = {
           }
         </div>
 
-        @if (h.asistencias.length > UMBRAL_BUSCADOR) {
+        @if (h.attendances.length > UMBRAL_BUSCADOR) {
           <input class="buscar" type="search" [ngModel]="busqueda()"
                  (ngModelChange)="busqueda.set($event)"
-                 [attr.placeholder]="'Buscar entre ' + h.asistencias.length + ' convocados…'"
+                 [attr.placeholder]="'Buscar entre ' + h.attendances.length + ' convocados…'"
                  aria-label="Buscar jugador" />
         }
 
@@ -113,26 +113,26 @@ const COLOR_ESTADO: Record<string, string> = {
             </p>
           } @else {
             <div class="lista-scroll">
-            @for (f of visibles(); track f.idEstudiante) {
+            @for (f of visibles(); track f.studentId) {
               <div class="fila">
-                <span class="avatar avatar--muted">{{ iniciales(f.nombreCompleto) }}</span>
+                <span class="avatar avatar--muted">{{ iniciales(f.fullName) }}</span>
                 <div class="fila-info">
                   <span class="nombre">
-                    {{ f.nombreCompleto }}
-                    @if (f.posicion) { <span class="puesto">{{ f.posicion }}</span> }
+                    {{ f.fullName }}
+                    @if (f.position) { <span class="puesto">{{ f.position }}</span> }
                   </span>
-                  @if (f.observacion) { <span class="obs">{{ f.observacion }}</span> }
+                  @if (f.note) { <span class="obs">{{ f.note }}</span> }
                 </div>
                 <span class="hora">
-                  @if (f.horaEntrada) {
-                    {{ horaCorta(f.horaEntrada) }}
+                  @if (f.checkInTime) {
+                    {{ horaCorta(f.checkInTime) }}
                     <span class="metodo" title="Lo midió el lector de QR">QR</span>
-                  } @else if (f.metodo === 'MANUAL') {
+                  } @else if (f.method === 'MANUAL') {
                     <span class="metodo" title="Lo marcó el entrenador a mano">manual</span>
                   }
                 </span>
-                <span class="badge" [class]="'badge badge--' + color(f.estado)">
-                  {{ etiqueta(f.estado) }}
+                <span class="badge" [class]="'badge badge--' + color(f.status)">
+                  {{ etiqueta(f.status) }}
                 </span>
               </div>
             }
@@ -156,7 +156,7 @@ const COLOR_ESTADO: Record<string, string> = {
                 gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
     h1 { font-size: 1.15rem; }
     .subt { margin-top: .3rem; color: var(--color-text-muted); font-size: .85rem; }
-    .resumen { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .summary { display: flex; gap: .55rem; flex-wrap: wrap; margin-bottom: 1rem; }
     .dato { flex: 1 1 82px; padding: .65rem .5rem; text-align: center;
             background: var(--color-surface); border: 1px solid var(--color-border-light);
             border-radius: var(--radius-md); }
@@ -182,13 +182,13 @@ const COLOR_ESTADO: Record<string, string> = {
             border-bottom: 1px solid var(--color-border-light); font-size: .9rem; }
     .fila:last-child { border-bottom: none; }
     .fila-info { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-    .nombre { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .puesto { font-size: .7rem; color: var(--color-text-faint); margin-left: .35rem;
               font-family: ui-monospace, monospace; }
     .obs { font-size: .74rem; color: var(--color-text-muted); }
-    .hora { font-size: .76rem; color: var(--color-text-muted); white-space: nowrap;
+    .time { font-size: .76rem; color: var(--color-text-muted); white-space: nowrap;
             font-variant-numeric: tabular-nums; }
-    .metodo { font-size: .65rem; text-transform: uppercase; letter-spacing: .05em;
+    .method { font-size: .65rem; text-transform: uppercase; letter-spacing: .05em;
               color: var(--color-text-faint); margin-left: .25rem; }
     .aviso { color: var(--color-text-muted); font-size: .88rem; padding: .5rem 0; }
   `],
@@ -222,18 +222,18 @@ export class HistorialSesionComponent implements OnInit {
     if (!h) return [];
     const texto = this.busqueda().trim().toLowerCase();
     const porNombre = (f: FilaAsistenciaHistorial) =>
-      !texto || f.nombreCompleto.toLowerCase().includes(texto);
+      !texto || f.fullName.toLowerCase().includes(texto);
     switch (this.filtro()) {
       case 'ENTRENARON':
-        return h.asistencias.filter((f) => porNombre(f)
-          && (f.estado === 'PRESENTE' || f.estado === 'TARDE'));
+        return h.attendances.filter((f) => porNombre(f)
+          && (f.status === 'PRESENTE' || f.status === 'TARDE'));
       case 'FALTARON':
-        return h.asistencias.filter((f) => porNombre(f)
-          && (f.estado === 'AUSENTE' || f.estado === 'JUSTIFICADO'));
+        return h.attendances.filter((f) => porNombre(f)
+          && (f.status === 'AUSENTE' || f.status === 'JUSTIFICADO'));
       case 'SIN_REGISTRO':
-        return h.asistencias.filter((f) => porNombre(f) && f.estado === 'SIN_REGISTRO');
+        return h.attendances.filter((f) => porNombre(f) && f.status === 'SIN_REGISTRO');
       default:
-        return h.asistencias.filter(porNombre);
+        return h.attendances.filter(porNombre);
     }
   });
 

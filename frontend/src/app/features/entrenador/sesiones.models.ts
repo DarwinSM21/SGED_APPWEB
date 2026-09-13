@@ -1,90 +1,90 @@
 export interface Sesion {
-  idSesion: number;
-  categoria: string;
-  entrenador: string;
-  fecha: string;
-  horaInicio: string | null;
-  horaFin: string | null;
-  campo: string | null;
-  estado: string;
-  tieneEvaluacion: boolean;
+  sessionId: number;
+  category: string;
+  coach: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  field: string | null;
+  status: string;
+  hasEvaluation: boolean;
 }
 
 export interface CategoriaOpcion {
-  idCategoria: number;
-  nombre: string;
-  edadMin?: number;
-  edadMax?: number;
+  categoryId: number;
+  name: string;
+  minAge?: number;
+  maxAge?: number;
 }
 
 export interface SesionCrearRequest {
-  idCategoria: number;
-  fecha: string;
-  horaInicio: string;
-  horaFin: string;
-  campo: string | null;
+  categoryId: number;
+  date: string;
+  startTime: string;
+  endTime: string;
+  field: string | null;
 }
 
 export interface Horario {
-  idHorario: number;
-  idCategoria: number;
-  categoria: string;
-  diaSemana: number;
-  horaInicio: string;
-  horaFin: string;
-  campo: string | null;
-  descripcion: string | null;
-  activo: boolean;
-  chocaCon: string | null;
+  scheduleId: number;
+  categoryId: number;
+  category: string;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  field: string | null;
+  description: string | null;
+  active: boolean;
+  conflictsWith: string | null;
 }
 
 export interface HorarioCrearRequest {
-  idCategoria: number;
-  diaSemana: number;
-  horaInicio: string;
-  horaFin: string;
-  campo: string | null;
-  descripcion: string | null;
+  categoryId: number;
+  dayOfWeek: number;
+  startTime: string;
+  endTime: string;
+  field: string | null;
+  description: string | null;
 }
 
 export const DIAS_SEMANA = [
-  { valor: 1, nombre: 'Lunes' },
-  { valor: 2, nombre: 'Martes' },
-  { valor: 3, nombre: 'Miércoles' },
-  { valor: 4, nombre: 'Jueves' },
-  { valor: 5, nombre: 'Viernes' },
-  { valor: 6, nombre: 'Sábado' },
-  { valor: 7, nombre: 'Domingo' },
+  { valor: 1, name: 'Lunes' },
+  { valor: 2, name: 'Martes' },
+  { valor: 3, name: 'Miércoles' },
+  { valor: 4, name: 'Jueves' },
+  { valor: 5, name: 'Viernes' },
+  { valor: 6, name: 'Sábado' },
+  { valor: 7, name: 'Domingo' },
 ];
 
 export interface FilaAsistenciaHistorial {
-  idEstudiante: number;
-  nombreCompleto: string;
-  posicion: string | null;
-  estado: string;
-  horaEntrada: string | null;
-  metodo: string | null;
-  observacion: string | null;
+  studentId: number;
+  fullName: string;
+  position: string | null;
+  status: string;
+  checkInTime: string | null;
+  method: string | null;
+  note: string | null;
 }
 
 export interface HistorialSesion {
-  idSesion: number;
-  categoria: string;
-  entrenador: string;
-  fecha: string;
-  horaInicio: string | null;
-  horaFin: string | null;
-  campo: string | null;
-  estado: string;
-  tieneEvaluacion: boolean;
-  estadoEvaluacion: string | null;
-  resumen: {
-    convocados: number;
-    presentes: number;
-    tarde: number;
-    ausentes: number;
-    justificados: number;
-    sinRegistro: number;
+  sessionId: number;
+  category: string;
+  coach: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  field: string | null;
+  status: string;
+  hasEvaluation: boolean;
+  evaluationStatus: string | null;
+  summary: {
+    calledUp: number;
+    present: number;
+    late: number;
+    absentees: number;
+    excused: number;
+    withoutRecord: number;
   };
-  asistencias: FilaAsistenciaHistorial[];
+  attendances: FilaAsistenciaHistorial[];
 }

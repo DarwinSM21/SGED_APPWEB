@@ -1,30 +1,30 @@
 
 export interface CategoriaDetalle {
-  nombre: string;
-  edadMin: number | null;
-  edadMax: number | null;
-  descripcion: string | null;
+  name: string;
+  minAge: number | null;
+  maxAge: number | null;
+  description: string | null;
 }
 
 export interface PosicionResumen {
-  nombre: string;
-  abreviatura: string | null;
+  name: string;
+  abbreviation: string | null;
 }
 
 export interface EntrenadorAsignado {
-  nombre: string;
-  especialidad: string | null;
+  name: string;
+  specialty: string | null;
 }
 
 export interface Companero {
-  idEstudiante: number;
-  nombre: string;
-  posicion: string | null;
+  studentId: number;
+  name: string;
+  position: string | null;
 }
 
 export interface MiEquipo {
-  categoria: CategoriaDetalle;
-  posicion: PosicionResumen | null;
-  entrenador: EntrenadorAsignado | null;
-  companeros: Companero[];
+  category: CategoriaDetalle;
+  position: PosicionResumen | null;
+  coach: EntrenadorAsignado | null;
+  teammates: Companero[];
 }

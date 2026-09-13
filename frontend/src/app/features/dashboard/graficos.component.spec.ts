@@ -4,7 +4,7 @@ import { GraficosIngresosComponent } from './graficos.component';
 import { HistoricoIngresos, IngresoMes } from './dashboard.models';
 
 function mes(anio: number, m: number, total: number, pagos = 1): IngresoMes {
-  return { anio, mes: m, total, cantidadPagos: pagos };
+  return { anio, month: m, total, paymentCount: pagos };
 }
 
 function serie(meses: IngresoMes[]): HistoricoIngresos {
@@ -12,8 +12,8 @@ function serie(meses: IngresoMes[]): HistoricoIngresos {
   return {
     meses,
     total: meses.reduce((a, m) => a + m.total, 0),
-    promedioMensual: meses.reduce((a, m) => a + m.total, 0) / Math.max(1, meses.length),
-    mejorMes: conMovimiento.length
+    monthlyAverage: meses.reduce((a, m) => a + m.total, 0) / Math.max(1, meses.length),
+    bestMonth: conMovimiento.length
       ? conMovimiento.reduce((a, b) => (b.total > a.total ? b : a))
       : null,
   };

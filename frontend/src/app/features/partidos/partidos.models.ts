@@ -1,95 +1,95 @@
 export interface Partido {
-  idPartido: number;
-  idCategoria: number;
-  categoria: string;
-  fecha: string;
-  hora: string | null;
-  golesFavor: number | null;
-  golesContra: number | null;
-  observacion: string | null;
-  resultado: 'GANADO' | 'EMPATADO' | 'PERDIDO' | 'PENDIENTE';
-  tieneAlineacion: boolean;
-  titulares: number;
-  cerrado: boolean;
-  cerradoEn: string | null;
+  matchId: number;
+  categoryId: number;
+  category: string;
+  date: string;
+  time: string | null;
+  goalsFor: number | null;
+  goalsAgainst: number | null;
+  note: string | null;
+  result: 'GANADO' | 'EMPATADO' | 'PERDIDO' | 'PENDIENTE';
+  hasLineup: boolean;
+  starters: number;
+  closed: boolean;
+  closedAt: string | null;
 }
 
 export interface PartidoPage {
-  contenido: Partido[];
-  pagina: number;
-  tamano: number;
-  total: number;
-  totalPaginas: number;
+  content: Partido[];
+  pageNumber: number;
+  pageSize: number;
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface CrearPartido {
-  idCategoria: number;
-  fecha: string;
-  hora: string | null;
-  observacion: string | null;
+  categoryId: number;
+  date: string;
+  time: string | null;
+  note: string | null;
 }
 
 export interface Resultado {
-  golesFavor: number;
-  golesContra: number;
-  observacion: string | null;
+  goalsFor: number;
+  goalsAgainst: number;
+  note: string | null;
 }
 
 export interface JugadorConvocado {
-  idEstudiante: number;
-  nombreCompleto: string;
-  posicion: string | null;
-  idPosicion: number | null;
-  titular: boolean;
-  promedio: number | null;
-  presencias: number;
-  entrenamientos: number;
+  studentId: number;
+  fullName: string;
+  position: string | null;
+  positionId: number | null;
+  starter: boolean;
+  average: number | null;
+  attendanceRecords: number;
+  trainingSessions: number;
 }
 
 export interface NoConvocable {
-  idEstudiante: number;
-  nombreCompleto: string;
-  motivo: string;
+  studentId: number;
+  fullName: string;
+  reason: string;
 }
 
 export interface VentanaRendimiento {
-  semanas: number;
-  desde: string;
-  hasta: string;
-  entrenamientos: number;
+  weeks: number;
+  from: string;
+  to: string;
+  trainingSessions: number;
 }
 
 export interface Alineacion {
-  idPartido: number;
-  idCategoria: number;
-  categoria: string;
-  fecha: string;
-  guardada: boolean;
-  valoracion: number | null;
-  observacion: string | null;
-  ventana: VentanaRendimiento;
-  titulares: JugadorConvocado[];
-  suplentes: JugadorConvocado[];
-  disponibles: JugadorConvocado[];
-  noConvocables: NoConvocable[];
-  cupoTitulares: number;
-  cerrado: boolean;
+  matchId: number;
+  categoryId: number;
+  category: string;
+  date: string;
+  saved: boolean;
+  rating: number | null;
+  note: string | null;
+  window: VentanaRendimiento;
+  starters: JugadorConvocado[];
+  substitutes: JugadorConvocado[];
+  available: JugadorConvocado[];
+  notCallable: NoConvocable[];
+  starterSlots: number;
+  closed: boolean;
 }
 
 export interface JugadorEnCancha {
-  idEstudiante: number;
-  idPosicion: number | null;
-  titular: boolean;
+  studentId: number;
+  positionId: number | null;
+  starter: boolean;
 }
 
 export interface FeedbackAlineacion {
-  comentario: string | null;
-  disponible: boolean;
-  motivo: string | null;
+  comment: string | null;
+  available: boolean;
+  reason: string | null;
 }
 
 export interface Posicion {
-  idPosicion: number;
-  nombre: string;
-  abreviatura: string;
+  positionId: number;
+  name: string;
+  abbreviation: string;
 }

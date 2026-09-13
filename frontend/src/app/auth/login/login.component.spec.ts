@@ -27,7 +27,7 @@ describe('LoginComponent', () => {
   });
 
   it('login exitoso navega a la ruta segun el rol devuelto', () => {
-    authServiceMock.login.mockReturnValue(of({ username: 'admin@sged.test', nombre: 'Admin', rol: 'ADMINISTRADOR' }));
+    authServiceMock.login.mockReturnValue(of({ username: 'admin@sged.test', name: 'Admin', role: 'ADMINISTRADOR' }));
     component.username = 'admin@sged.test';
     component.password = 'Admin2026!';
 
@@ -38,7 +38,7 @@ describe('LoginComponent', () => {
   });
 
   it('login exitoso de un ESTUDIANTE navega a marcar-asistencia', () => {
-    authServiceMock.login.mockReturnValue(of({ username: 'est@sged.test', nombre: 'Est', rol: 'ESTUDIANTE' }));
+    authServiceMock.login.mockReturnValue(of({ username: 'est@sged.test', name: 'Est', role: 'ESTUDIANTE' }));
     component.username = 'est@sged.test';
     component.password = 'clave123';
 
@@ -54,7 +54,7 @@ describe('LoginComponent', () => {
 
     component.onSubmit();
 
-    expect(component.fallo()?.mensaje).toBe('Usuario o contraseña incorrectos');
+    expect(component.fallo()?.message).toBe('Usuario o contraseña incorrectos');
     expect(component.password).toBe('');
     expect(component.loading()).toBe(false);
   });
@@ -68,7 +68,7 @@ describe('LoginComponent', () => {
 
     component.onSubmit();
 
-    expect(component.fallo()?.mensaje).toBe('Intenta de nuevo en 15 minutos.');
+    expect(component.fallo()?.message).toBe('Intenta de nuevo en 15 minutos.');
   });
 
   it('sin conexion (status 0) muestra el mensaje de servidor inalcanzable', () => {
@@ -78,11 +78,11 @@ describe('LoginComponent', () => {
 
     component.onSubmit();
 
-    expect(component.fallo()?.mensaje).toBe('No se pudo contactar al servidor');
+    expect(component.fallo()?.message).toBe('No se pudo contactar al servidor');
   });
 
   it('un doble envio mientras carga no dispara una segunda llamada al backend', () => {
-    authServiceMock.login.mockReturnValue(of({ username: 'admin@sged.test', nombre: 'Admin', rol: 'ADMINISTRADOR' }));
+    authServiceMock.login.mockReturnValue(of({ username: 'admin@sged.test', name: 'Admin', role: 'ADMINISTRADOR' }));
     component.username = 'admin@sged.test';
     component.password = 'Admin2026!';
 

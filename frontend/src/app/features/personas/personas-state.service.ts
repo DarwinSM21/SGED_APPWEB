@@ -11,7 +11,7 @@ export class PersonasStateService {
 
   readonly personasBase = signal<PersonaResponse[]>([]);
   readonly usuarios = signal<UsuarioResponse[]>([]);
-  readonly estudiantes = signal<EstudianteResponse[]>([]);
+  readonly students = signal<EstudianteResponse[]>([]);
   readonly entrenadores = signal<EntrenadorResponse[]>([]);
   readonly representantes = signal<RepresentanteResponse[]>([]);
   readonly categorias = signal<CategoriaOpcion[]>([]);
@@ -20,14 +20,14 @@ export class PersonasStateService {
   readonly cargando = signal(true);
 
   readonly personas = computed<PersonaConEstado[]>(() => {
-    const usuarios = this.usuarios(), estudiantes = this.estudiantes(),
+    const usuarios = this.usuarios(), estudiantes = this.students(),
       entrenadores = this.entrenadores(), representantes = this.representantes();
     return this.personasBase().map((persona) => ({
       persona,
-      usuario: usuarios.find((u) => u.idPersona === persona.idPersona) ?? null,
-      estudiante: estudiantes.find((e) => e.idPersona === persona.idPersona && e.activo) ?? null,
-      entrenador: entrenadores.find((e) => e.idPersona === persona.idPersona) ?? null,
-      representante: representantes.find((r) => r.idPersona === persona.idPersona) ?? null,
+      user: usuarios.find((u) => u.personId === persona.personId) ?? null,
+      student: estudiantes.find((e) => e.personId === persona.personId && e.active) ?? null,
+      coach: entrenadores.find((e) => e.personId === persona.personId) ?? null,
+      representante: representantes.find((r) => r.personId === persona.personId) ?? null,
     }));
   });
 
@@ -36,20 +36,20 @@ export class PersonasStateService {
   readonly mostrandoDetalle = computed(() => this.seleccionada() !== null || this.esNueva());
 
   readonly representantesDelEstudiante = computed(() => {
-    const idEstudiante = this.seleccionada()?.estudiante?.idEstudiante;
+    const idEstudiante = this.seleccionada()?.student?.studentId;
     if (idEstudiante === undefined) return [];
-    return this.representantes().filter((r) => r.activo).flatMap((r) => {
-      const vinculo = r.representados.find((e) => e.idEstudiante === idEstudiante);
+    return this.representantes().filter((r) => r.active).flatMap((r) => {
+      const vinculo = r.wards.find((e) => e.studentId === idEstudiante);
       return vinculo
-        ? [{ idRepresentante: r.idRepresentante, nombre: r.nombre, apellido: r.apellido,
-             relacion: vinculo.relacion, contactoPrincipal: vinculo.contactoPrincipal }]
+        ? [{ guardianId: r.guardianId, name: r.name, lastName: r.lastName,
+             relationship: vinculo.relationship, primaryContact: vinculo.primaryContact }]
         : [];
     });
   });
 
   readonly representantesDisponibles = computed(() => {
-    const yaVinculados = new Set(this.representantesDelEstudiante().map((v) => v.idRepresentante));
-    return this.representantes().filter((r) => r.activo && !yaVinculados.has(r.idRepresentante));
+    const yaVinculados = new Set(this.representantesDelEstudiante().map((v) => v.guardianId));
+    return this.representantes().filter((r) => r.active && !yaVinculados.has(r.guardianId));
   });
 
   cargarDatosIniciales(): void {
@@ -61,7 +61,7 @@ export class PersonasStateService {
 
   cargarPersonas(mantenerSeleccion = false): void {
     this.cargando.set(true);
-    const idSeleccionado = this.seleccionada()?.persona?.idPersona ?? null;
+    const idSeleccionado = this.seleccionada()?.persona?.personId ?? null;
 
     this.servicio.listarPersonas().subscribe({
       next: (pagina) => { this.personasBase.set(pagina.content); this.cargando.set(false); this.reaplicarSeleccion(mantenerSeleccion, idSeleccionado); },
@@ -72,7 +72,7 @@ export class PersonasStateService {
       error: () => {},
     });
     this.servicio.listarEstudiantes().subscribe({
-      next: (pagina) => { this.estudiantes.set(pagina.content); this.reaplicarSeleccion(mantenerSeleccion, idSeleccionado); },
+      next: (pagina) => { this.students.set(pagina.content); this.reaplicarSeleccion(mantenerSeleccion, idSeleccionado); },
       error: () => {},
     });
     this.servicio.listarEntrenadores().subscribe({
@@ -87,7 +87,7 @@ export class PersonasStateService {
 
   private reaplicarSeleccion(mantenerSeleccion: boolean, idSeleccionado: number | null): void {
     if (!mantenerSeleccion || idSeleccionado === null) return;
-    const actualizada = this.personas().find((p) => p.persona.idPersona === idSeleccionado);
+    const actualizada = this.personas().find((p) => p.persona.personId === idSeleccionado);
     if (actualizada) this.seleccionada.set(actualizada);
   }
 
@@ -102,6 +102,6 @@ export class PersonasStateService {
   }
 
   buscarPorIdPersona(idPersona: number): PersonaConEstado | undefined {
-    return this.personas().find((x) => x.persona.idPersona === idPersona);
+    return this.personas().find((x) => x.persona.personId === idPersona);
   }
 }

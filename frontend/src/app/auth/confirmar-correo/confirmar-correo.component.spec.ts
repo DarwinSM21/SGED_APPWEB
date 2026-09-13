@@ -56,6 +56,6 @@ describe('ConfirmarCorreoComponent', () => {
     const component = crear();
 
     expect(component.estado()).toBe('error');
-    expect(component.fallo()?.mensaje).toBe('enlace invalido');
+    expect(component.fallo()?.message).toBe('enlace invalido');
   });
 });

@@ -37,10 +37,10 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
               o pide que se te reenvíe.
             </p>
             <a class="btn btn--primary btn--block" routerLink="/login">Ir al inicio de sesión</a>
-          } @else if (estado() === 'confirmando') {
+          } @else if (status() === 'confirmando') {
             <h2>Confirmando tu correo…</h2>
             <p class="auth-card__subtitle"><span class="spinner"></span> Un momento.</p>
-          } @else if (estado() === 'ok') {
+          } @else if (status() === 'ok') {
             <h2>Correo confirmado</h2>
             <p class="auth-card__subtitle">
               Tu dirección quedó verificada. Ya puedes usar el restablecimiento de
@@ -50,7 +50,7 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
           } @else {
             <h2>No se pudo confirmar</h2>
             <div class="alert alert--danger" role="alert" aria-live="assertive">
-              <span class="fallo-que">{{ fallo()?.mensaje }}</span>
+              <span class="fallo-que">{{ fallo()?.message }}</span>
               @if (fallo()?.sugerencia) { <span class="fallo-como">{{ fallo()?.sugerencia }}</span> }
               <span class="fallo-como">El enlace pudo haber expirado o ya haberse usado.</span>
             </div>
@@ -66,7 +66,7 @@ export class ConfirmarCorreoComponent implements OnInit {
 
   readonly token = inject(ActivatedRoute).snapshot.queryParamMap.get('token') ?? '';
 
-  readonly estado = signal<'confirmando' | 'ok' | 'error'>('confirmando');
+  readonly status = signal<'confirmando' | 'ok' | 'error'>('confirmando');
   readonly fallo = signal<Diagnostico | null>(null);
 
   ngOnInit() {
@@ -74,10 +74,10 @@ export class ConfirmarCorreoComponent implements OnInit {
       return;
     }
     this.authService.confirmarCorreo(this.token).subscribe({
-      next: () => this.estado.set('ok'),
+      next: () => this.status.set('ok'),
       error: (err) => {
         this.fallo.set(diagnosticar(err));
-        this.estado.set('error');
+        this.status.set('error');
       },
     });
   }

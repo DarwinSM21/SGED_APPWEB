@@ -14,25 +14,25 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Representante</h3>
       @if (persona()?.representante; as rep) {
-        <p class="resumen-seccion">{{ rep.parentesco || 'sin parentesco' }} · {{ rep.representados.length }} representado(s)</p>
+        <p class="resumen-seccion">{{ rep.relationship || 'sin parentesco' }} · {{ rep.wards.length }} representado(s)</p>
 
-        @if (rep.representados.length) {
+        @if (rep.wards.length) {
           <ul class="vinculos">
-            @for (r of rep.representados; track r.idEstudiante) {
+            @for (r of rep.wards; track r.studentId) {
               <li class="vinculo">
                 <div class="vinculo__quien">
-                  <span class="vinculo__nombre">{{ r.nombreCompleto }}</span>
+                  <span class="vinculo__nombre">{{ r.fullName }}</span>
                   <span class="vinculo__meta">
-                    {{ r.categoria }}
-                    @if (r.relacion) { · {{ r.relacion }} }
-                    @if (r.contactoPrincipal) { <span class="badge badge--info">contacto principal</span> }
+                    {{ r.category }}
+                    @if (r.relationship) { · {{ r.relationship }} }
+                    @if (r.primaryContact) { <span class="badge badge--info">contacto principal</span> }
                   </span>
                 </div>
                 <app-confirmar-accion etiqueta="Quitar"
-                                      [pregunta]="'¿Quitarle el acceso a ' + r.nombreCompleto + '?'"
+                                      [pregunta]="'¿Quitarle el acceso a ' + r.fullName + '?'"
                                       textoConfirmar="Sí, quitar" enCurso="Quitando…"
                                       [ocupado]="guardando()"
-                                      (confirmado)="desvincular(rep.idRepresentante, r.idEstudiante)" />
+                                      (confirmado)="desvincular(rep.guardianId, r.studentId)" />
               </li>
             }
           </ul>
@@ -44,25 +44,25 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           <div class="fila-2">
             <label class="field" for="vin-estudiante"><span class="field__label">Agregar representado</span>
               <span class="field__control">
-                <select id="vin-estudiante" [(ngModel)]="formVinculo.idEstudiante" name="vin-estudiante">
+                <select id="vin-estudiante" [(ngModel)]="formVinculo.studentId" name="vin-estudiante">
                   <option [ngValue]="null">Elegí un estudiante…</option>
-                  @for (e of sinVincular(); track e.idEstudiante) {
-                    <option [ngValue]="e.idEstudiante">{{ e.apellidoPersona }} {{ e.nombrePersona }} · {{ e.nombreCategoria }}</option>
+                  @for (e of sinVincular(); track e.studentId) {
+                    <option [ngValue]="e.studentId">{{ e.personLastName }} {{ e.personName }} · {{ e.categoryName }}</option>
                   }
                 </select>
               </span></label>
             <label class="field" for="vin-relacion"><span class="field__label">Relación</span>
-              <span class="field__control"><input id="vin-relacion" [(ngModel)]="formVinculo.relacion" name="vin-relacion" placeholder="Madre, padre, tutor…" /></span></label>
+              <span class="field__control"><input id="vin-relacion" [(ngModel)]="formVinculo.relationship" name="vin-relacion" placeholder="Madre, padre, tutor…" /></span></label>
           </div>
           <label class="check" for="vin-principal">
-            <input id="vin-principal" type="checkbox" [(ngModel)]="formVinculo.contactoPrincipal" name="vin-principal" />
+            <input id="vin-principal" type="checkbox" [(ngModel)]="formVinculo.primaryContact" name="vin-principal" />
             <span>Es el contacto principal de este estudiante</span>
           </label>
           @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
           <div class="acciones">
             <button class="btn btn--primary btn--sm" type="button"
-                    [disabled]="guardando() || formVinculo.idEstudiante === null"
-                    (click)="vincular(rep.idRepresentante)">
+                    [disabled]="guardando() || formVinculo.studentId === null"
+                    (click)="vincular(rep.guardianId)">
               @if (guardando()) { <span class="spinner"></span> Vinculando… } @else { Vincular }
             </button>
           </div>
@@ -71,12 +71,12 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           <p class="aviso">No quedan estudiantes activos sin vincular a este representante.</p>
         }
 
-      } @else if (persona()?.usuario) {
+      } @else if (persona()?.user) {
         <div class="fila-2">
           <label class="field" for="rep-parentesco"><span class="field__label">Parentesco</span>
-            <span class="field__control"><input id="rep-parentesco" [(ngModel)]="formRepresentante.parentesco" name="rep-parentesco" placeholder="Madre, padre, tutor…" /></span></label>
+            <span class="field__control"><input id="rep-parentesco" [(ngModel)]="formRepresentante.relationship" name="rep-parentesco" placeholder="Madre, padre, tutor…" /></span></label>
           <label class="field" for="rep-telefono"><span class="field__label">Teléfono de contacto</span>
-            <span class="field__control"><input id="rep-telefono" [(ngModel)]="formRepresentante.telefonoContacto" name="rep-telefono" /></span></label>
+            <span class="field__control"><input id="rep-telefono" [(ngModel)]="formRepresentante.contactPhone" name="rep-telefono" /></span></label>
         </div>
         @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
         <div class="acciones">
@@ -108,16 +108,16 @@ export class FichaRepresentanteComponent {
   readonly sinVincular = computed(() => {
     const rep = this.persona()?.representante;
     if (!rep) return [];
-    const yaEstan = new Set(rep.representados.map((r) => r.idEstudiante));
-    return this.state.estudiantes()
-      .filter((e) => e.activo && !yaEstan.has(e.idEstudiante))
-      .sort((a, b) => (a.apellidoPersona + ' ' + a.nombrePersona)
-        .localeCompare(b.apellidoPersona + ' ' + b.nombrePersona, 'es'));
+    const yaEstan = new Set(rep.wards.map((r) => r.studentId));
+    return this.state.students()
+      .filter((e) => e.active && !yaEstan.has(e.studentId))
+      .sort((a, b) => (a.personLastName + ' ' + a.personName)
+        .localeCompare(b.personLastName + ' ' + b.personName, 'es'));
   });
 
-  formRepresentante: { parentesco: string; telefonoContacto: string } = { parentesco: '', telefonoContacto: '' };
-  formVinculo: { idEstudiante: number | null; relacion: string; contactoPrincipal: boolean } =
-    { idEstudiante: null, relacion: '', contactoPrincipal: false };
+  formRepresentante: { relationship: string; contactPhone: string } = { relationship: '', contactPhone: '' };
+  formVinculo: { studentId: number | null; relationship: string; primaryContact: boolean } =
+    { studentId: null, relationship: '', primaryContact: false };
 
   readonly guardando = signal(false);
   readonly error = signal('');
@@ -125,21 +125,21 @@ export class FichaRepresentanteComponent {
   constructor() {
     effect(() => {
       this.state.seleccionada();
-      this.formRepresentante = { parentesco: '', telefonoContacto: '' };
-      this.formVinculo = { idEstudiante: null, relacion: '', contactoPrincipal: false };
+      this.formRepresentante = { relationship: '', contactPhone: '' };
+      this.formVinculo = { studentId: null, relationship: '', primaryContact: false };
       this.error.set('');
     });
   }
 
   crear(): void {
     const actual = this.persona()!;
-    if (!actual.usuario) return;
+    if (!actual.user) return;
     this.guardando.set(true);
     this.error.set('');
     this.servicio.crearRepresentante({
-      idPersona: actual.persona.idPersona, idUsuario: actual.usuario.idUsuario,
-      parentesco: this.formRepresentante.parentesco || null, telefonoContacto: this.formRepresentante.telefonoContacto || null,
-      idsEstudiantesIniciales: [],
+      personId: actual.persona.personId, userId: actual.user.userId,
+      relationship: this.formRepresentante.relationship || null, contactPhone: this.formRepresentante.contactPhone || null,
+      initialStudentIds: [],
     }).subscribe({
       next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
       error: (err) => { this.guardando.set(false); this.error.set(mensajeDeError(err)); },
@@ -147,27 +147,27 @@ export class FichaRepresentanteComponent {
   }
 
   vincular(idRepresentante: number): void {
-    const idEstudiante = this.formVinculo.idEstudiante;
+    const idEstudiante = this.formVinculo.studentId;
     if (idEstudiante === null) return;
     this.guardando.set(true);
     this.error.set('');
     this.servicio.vincularEstudianteARepresentante(idRepresentante, idEstudiante, {
-      relacion: this.formVinculo.relacion || null,
-      contactoPrincipal: this.formVinculo.contactoPrincipal,
+      relationship: this.formVinculo.relationship || null,
+      primaryContact: this.formVinculo.primaryContact,
     }).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.formVinculo = { idEstudiante: null, relacion: '', contactoPrincipal: false };
+        this.formVinculo = { studentId: null, relationship: '', primaryContact: false };
         this.state.cargarPersonas(true);
       },
       error: (err) => { this.guardando.set(false); this.error.set(mensajeDeError(err)); },
     });
   }
 
-  desvincular(idRepresentante: number, idEstudiante: number): void {
+  desvincular(idRepresentante: number, studentId: number): void {
     this.guardando.set(true);
     this.error.set('');
-    this.servicio.desvincularEstudianteDeRepresentante(idRepresentante, idEstudiante).subscribe({
+    this.servicio.desvincularEstudianteDeRepresentante(idRepresentante, studentId).subscribe({
       next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
       error: (err) => { this.guardando.set(false); this.error.set(mensajeDeError(err)); },
     });

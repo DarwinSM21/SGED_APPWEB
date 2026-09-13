@@ -2,90 +2,90 @@
 export type TipoArticulo = 'UNIFORME' | 'BALON' | 'IMPLEMENTO' | 'OTRO';
 
 export interface ArticuloRequest {
-  nombre: string;
-  tipo: TipoArticulo;
-  talla: string | null;
-  descripcion: string | null;
-  stockMinimo: number;
-  unidadMedida: string | null;
+  name: string;
+  type: TipoArticulo;
+  size: string | null;
+  description: string | null;
+  minimumStock: number;
+  unitOfMeasure: string | null;
 }
 
 export interface ArticuloResponse {
-  idArticulo: number;
-  nombre: string;
-  tipo: TipoArticulo;
-  talla: string | null;
-  descripcion: string | null;
-  stockActual: number;
-  stockMinimo: number;
-  unidadMedida: string;
-  activo: boolean;
+  itemId: number;
+  name: string;
+  type: TipoArticulo;
+  size: string | null;
+  description: string | null;
+  currentStock: number;
+  minimumStock: number;
+  unitOfMeasure: string;
+  active: boolean;
   createdAt: string;
 }
 
 export interface StockBajoResponse {
-  total: number;
-  articulos: ArticuloResponse[];
+  totalElements: number;
+  items: ArticuloResponse[];
 }
 
 export type TipoMovimiento = 'ENTRADA' | 'SALIDA' | 'AJUSTE';
 
 export interface MovimientoRequest {
-  idArticulo: number;
-  tipoMovimiento: TipoMovimiento;
-  cantidad: number;
-  motivo: string | null;
+  itemId: number;
+  movementType: TipoMovimiento;
+  quantity: number;
+  reason: string | null;
 }
 
 export interface MovimientoResponse {
-  idMovimiento: number;
-  idArticulo: number;
-  articulo: string;
-  tipoMovimiento: TipoMovimiento;
-  cantidad: number;
-  motivo: string | null;
-  registradoPor: string;
-  fechaMovimiento: string;
+  movementId: number;
+  itemId: number;
+  item: string;
+  movementType: TipoMovimiento;
+  quantity: number;
+  reason: string | null;
+  registeredBy: string;
+  movementDate: string;
 }
 
 export type TipoDestinatario = 'ESTUDIANTE' | 'ENTRENADOR';
 export type EstadoAsignacion = 'ASIGNADO' | 'DEVUELTO' | 'PERDIDO';
 
 export interface AsignacionRequest {
-  idArticulo: number;
-  cantidad: number;
-  tipoDestinatario: TipoDestinatario;
-  idEstudiante: number | null;
-  idEntrenador: number | null;
-  fechaDevolucionEsperada: string | null;
-  observaciones: string | null;
+  itemId: number;
+  quantity: number;
+  recipientType: TipoDestinatario;
+  studentId: number | null;
+  coachId: number | null;
+  expectedReturnDate: string | null;
+  notes: string | null;
 }
 
 export interface DevolucionRequest {
-  estado: 'DEVUELTO' | 'PERDIDO';
-  observaciones: string | null;
+  status: 'DEVUELTO' | 'PERDIDO';
+  notes: string | null;
 }
 
 export interface AsignacionResponse {
-  idAsignacion: number;
-  idArticulo: number;
-  articulo: string;
-  cantidad: number;
-  tipoDestinatario: TipoDestinatario;
-  idEstudiante: number | null;
-  estudiante: string | null;
-  idEntrenador: number | null;
-  entrenador: string | null;
-  fechaAsignacion: string;
-  fechaDevolucionEsperada: string | null;
-  fechaDevolucionReal: string | null;
-  estado: EstadoAsignacion;
-  registradoPor: string;
-  observaciones: string | null;
+  assignmentId: number;
+  itemId: number;
+  item: string;
+  quantity: number;
+  recipientType: TipoDestinatario;
+  studentId: number | null;
+  student: string | null;
+  coachId: number | null;
+  coach: string | null;
+  assignmentDate: string;
+  expectedReturnDate: string | null;
+  actualReturnDate: string | null;
+  status: EstadoAsignacion;
+  registeredBy: string;
+  notes: string | null;
   createdAt: string;
 }
 
 export interface PersonaOpcion {
   id: number;
-  nombreCompleto: string;
+  fullName: string;
 }

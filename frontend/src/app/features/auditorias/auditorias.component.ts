@@ -23,13 +23,13 @@ const TAMANO_PAGINA = 20;
         <label class="field" for="usuario">
           <span class="field__label">Usuario</span>
           <span class="field__control">
-            <input id="usuario" type="text" placeholder="Buscar por usuario…" [(ngModel)]="filtros.usuario" name="usuario" (change)="buscar(0)" />
+            <input id="usuario" type="text" placeholder="Buscar por usuario…" [(ngModel)]="filtros.user" name="usuario" (change)="buscar(0)" />
           </span>
         </label>
         <label class="field" for="accion">
           <span class="field__label">Acción</span>
           <span class="field__control">
-            <select id="accion" [(ngModel)]="filtros.accion" name="accion" (change)="buscar(0)">
+            <select id="accion" [(ngModel)]="filtros.action" name="accion" (change)="buscar(0)">
               <option value="">Todas</option>
               @for (a of acciones; track a) { <option [value]="a">{{ a }}</option> }
             </select>
@@ -38,7 +38,7 @@ const TAMANO_PAGINA = 20;
         <label class="field" for="entidad">
           <span class="field__label">Entidad</span>
           <span class="field__control">
-            <input id="entidad" type="text" placeholder="Ej. Lesion, Pago…" [(ngModel)]="filtros.entidad" name="entidad" (change)="buscar(0)" />
+            <input id="entidad" type="text" placeholder="Ej. Lesion, Pago…" [(ngModel)]="filtros.entity" name="entidad" (change)="buscar(0)" />
           </span>
         </label>
         <label class="field" for="fechaDesde">
@@ -59,7 +59,7 @@ const TAMANO_PAGINA = 20;
       <div class="card tabla-card">
         @if (cargando()) {
           <app-cargando />
-        } @else if (filas().length === 0) {
+        } @else if (rows().length === 0) {
           <div class="vacio">
             <p class="vacio__titulo">Sin resultados</p>
             <p class="vacio__texto">No hay auditorías que coincidan con los filtros seleccionados.</p>
@@ -69,25 +69,25 @@ const TAMANO_PAGINA = 20;
             <div class="fila fila--encabezado">
               <span>Fecha</span><span>Usuario</span><span>Rol</span><span>Acción</span><span>Entidad</span><span>Descripción</span>
             </div>
-            @for (a of filas(); track a.id) {
+            @for (a of rows(); track a.id) {
               <div class="fila">
-                <span class="fecha">{{ fechaHora(a.fecha) }}</span>
-                <span>{{ a.usuario }}</span>
-                <span>{{ a.rol ?? '-' }}</span>
-                <span class="badge" [class.badge--success]="a.accion === 'CREAR'" [class.badge--info]="a.accion === 'EDITAR'"
-                      [class.badge--danger]="a.accion === 'ELIMINAR' || a.accion === 'LOGIN_FALLIDO'">
-                  {{ a.accion }}
+                <span class="fecha">{{ fechaHora(a.date) }}</span>
+                <span>{{ a.user }}</span>
+                <span>{{ a.role ?? '-' }}</span>
+                <span class="badge" [class.badge--success]="a.action === 'CREAR'" [class.badge--info]="a.action === 'EDITAR'"
+                      [class.badge--danger]="a.action === 'ELIMINAR' || a.action === 'LOGIN_FALLIDO'">
+                  {{ a.action }}
                 </span>
-                <span>{{ a.entidad ?? '-' }}</span>
-                <span class="descripcion">{{ a.descripcion }}</span>
+                <span>{{ a.entity ?? '-' }}</span>
+                <span class="descripcion">{{ a.description }}</span>
               </div>
             }
           </div>
 
           <div class="paginacion">
             <button type="button" class="btn btn--ghost" [disabled]="pagina() === 0" (click)="buscar(pagina() - 1)">Anterior</button>
-            <span class="paginacion__info">Página {{ pagina() + 1 }} de {{ totalPaginas() || 1 }} · {{ totalElementos() }} registros</span>
-            <button type="button" class="btn btn--ghost" [disabled]="pagina() + 1 >= totalPaginas()" (click)="buscar(pagina() + 1)">Siguiente</button>
+            <span class="paginacion__info">Página {{ pagina() + 1 }} de {{ totalPages() || 1 }} · {{ totalElementos() }} registros</span>
+            <button type="button" class="btn btn--ghost" [disabled]="pagina() + 1 >= totalPages()" (click)="buscar(pagina() + 1)">Siguiente</button>
           </div>
         }
       </div>
@@ -106,8 +106,8 @@ const TAMANO_PAGINA = 20;
     .fila { display: grid; grid-template-columns: 140px 130px 110px 100px 120px 1fr; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid var(--color-border-light); align-items: center; }
     .fila:last-child { border-bottom: none; }
     .fila--encabezado { font-weight: 700; color: var(--color-text-faint); font-size: .72rem; text-transform: uppercase; letter-spacing: .03em; }
-    .fecha { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
-    .descripcion { color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .date { color: var(--color-text-muted); font-variant-numeric: tabular-nums; }
+    .description { color: var(--color-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .vacio { text-align: center; padding: 2rem .5rem; }
     .vacio__titulo { font-weight: 700; font-size: .95rem; }
     .vacio__texto { color: var(--color-text-muted); font-size: .85rem; margin-top: .25rem; }
@@ -128,9 +128,9 @@ export class AuditoriasComponent implements OnInit {
   readonly acciones = ACCIONES;
   filtros: FiltrosAuditoria = {};
 
-  readonly filas = signal<AuditoriaResponse[]>([]);
+  readonly rows = signal<AuditoriaResponse[]>([]);
   readonly pagina = signal(0);
-  readonly totalPaginas = signal(0);
+  readonly totalPages = signal(0);
   readonly totalElementos = signal(0);
   readonly cargando = signal(true);
 
@@ -142,9 +142,9 @@ export class AuditoriasComponent implements OnInit {
     this.cargando.set(true);
     this.servicio.listar(this.filtros, pagina, TAMANO_PAGINA).subscribe({
       next: (respuesta) => {
-        this.filas.set(respuesta.content);
+        this.rows.set(respuesta.content);
         this.pagina.set(respuesta.number);
-        this.totalPaginas.set(respuesta.totalPages);
+        this.totalPages.set(respuesta.totalPages);
         this.totalElementos.set(respuesta.totalElements);
         this.cargando.set(false);
       },

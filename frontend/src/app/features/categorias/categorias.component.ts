@@ -11,7 +11,7 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
 const FORMATO_NOMBRE = /^\s*sub[\s-]?\d{1,2}\s*$/i;
 
 const FORMULARIO_VACIO: CategoriaRequest = {
-  nombre: '', edadMin: null, edadMax: null, descripcion: null,
+  name: '', minAge: null, maxAge: null, description: null,
 };
 
 @Component({
@@ -39,7 +39,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
           <label class="field" for="cat-nombre">
             <span class="field__label">Nombre</span>
             <span class="field__control">
-              <input id="cat-nombre" [(ngModel)]="formulario.nombre" name="cat-nombre"
+              <input id="cat-nombre" [(ngModel)]="formulario.name" name="cat-nombre"
                      placeholder="SUB-14" maxlength="10" inputmode="text"
                      (blur)="normalizarNombre()" />
             </span>
@@ -50,7 +50,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
             <span class="field__label">Edad mínima</span>
             <span class="field__control">
               <input id="cat-min" type="number" min="4" max="99"
-                     [(ngModel)]="formulario.edadMin" name="cat-min" />
+                     [(ngModel)]="formulario.minAge" name="cat-min" />
             </span>
           </label>
 
@@ -58,7 +58,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
             <span class="field__label">Edad máxima</span>
             <span class="field__control">
               <input id="cat-max" type="number" min="4" max="99"
-                     [(ngModel)]="formulario.edadMax" name="cat-max" />
+                     [(ngModel)]="formulario.maxAge" name="cat-max" />
             </span>
           </label>
         </div>
@@ -66,7 +66,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
         <label class="field" for="cat-desc">
           <span class="field__label">Descripción (opcional)</span>
           <span class="field__control">
-            <input id="cat-desc" [(ngModel)]="formulario.descripcion" name="cat-desc"
+            <input id="cat-desc" [(ngModel)]="formulario.description" name="cat-desc"
                    placeholder="Iniciación, formativa…" maxlength="255" />
           </span>
         </label>
@@ -97,24 +97,24 @@ const FORMULARIO_VACIO: CategoriaRequest = {
                                 : 'Todavía no hay categorías registradas.' }}
           </p>
         } @else {
-          @for (c of categorias(); track c.idCategoria) {
-            <div class="fila-categoria" [class.fila-categoria--inactiva]="!c.activo">
+          @for (c of categorias(); track c.categoryId) {
+            <div class="fila-categoria" [class.fila-categoria--inactiva]="!c.active">
               <div class="info">
                 <span class="nombre">
-                  {{ c.nombre }}
-                  @if (!c.activo) { <span class="badge badge--neutral">inactiva</span> }
+                  {{ c.name }}
+                  @if (!c.active) { <span class="badge badge--neutral">inactiva</span> }
                 </span>
                 <span class="detalle">
-                  {{ c.edadMin }} a {{ c.edadMax }} años
-                  @if (c.descripcion) { · {{ c.descripcion }} }
+                  {{ c.minAge }} a {{ c.maxAge }} años
+                  @if (c.description) { · {{ c.description }} }
                 </span>
               </div>
               @if (puedeGestionar()) {
               <div class="botones">
                 <button class="btn btn--ghost btn--sm" type="button" (click)="editar(c)">Editar</button>
-                @if (c.activo) {
+                @if (c.active) {
                   <app-confirmar-accion etiqueta="Desactivar"
-                                        [pregunta]="'¿Desactivar ' + c.nombre + '? Deja de aparecer para asignar estudiantes.'"
+                                        [pregunta]="'¿Desactivar ' + c.name + '? Deja de aparecer para asignar estudiantes.'"
                                         textoConfirmar="Sí, desactivar" enCurso="Desactivando…"
                                         [ocupado]="guardando()" (confirmado)="desactivar(c)" />
                 } @else {
@@ -130,7 +130,7 @@ const FORMULARIO_VACIO: CategoriaRequest = {
     </div>
   `,
   styles: [`
-    .contenido { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+    .content { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem; }
     .subtitulo-pantalla { margin: .2rem 0 1.2rem; font-size: .86rem; color: var(--color-text-muted); }
     .formulario { padding: 1.2rem 1.4rem; margin-bottom: 1.25rem; }
     .titulo-card { font-size: 1rem; margin-bottom: .9rem; }
@@ -146,9 +146,9 @@ const FORMULARIO_VACIO: CategoriaRequest = {
       padding: .7rem 0; border-bottom: 1px solid var(--color-border-light);
     }
     .fila-categoria:last-child { border-bottom: none; }
-    .fila-categoria--inactiva .nombre, .fila-categoria--inactiva .detalle { color: var(--color-text-faint); }
+    .fila-categoria--inactiva .name, .fila-categoria--inactiva .detalle { color: var(--color-text-faint); }
     .info { display: flex; flex-direction: column; gap: .15rem; flex: 1; min-width: 0; }
-    .nombre { font-weight: 600; display: flex; align-items: center; gap: .5rem; }
+    .name { font-weight: 600; display: flex; align-items: center; gap: .5rem; }
     .detalle { font-size: .8rem; color: var(--color-text-muted); }
     .botones { display: flex; gap: .4rem; flex-shrink: 0; }
   `],
@@ -158,7 +158,7 @@ export class CategoriasComponent implements OnInit {
   private readonly authService = inject(AuthService);
 
   readonly puedeGestionar = computed(() =>
-    this.authService.currentUser()?.rol === 'ADMINISTRADOR');
+    this.authService.currentUser()?.role === 'ADMINISTRADOR');
 
   readonly categorias = signal<Categoria[]>([]);
   readonly cargando = signal(true);
@@ -169,19 +169,19 @@ export class CategoriasComponent implements OnInit {
 
   formulario: CategoriaRequest = { ...FORMULARIO_VACIO };
 
-  readonly activas = computed(() => this.categorias().filter((c) => c.activo).length);
+  readonly activas = computed(() => this.categorias().filter((c) => c.active).length);
   readonly inactivas = computed(() => this.categorias().length - this.activas());
 
   normalizarNombre(): void {
-    const digitos = this.formulario.nombre.replace(/\D+/g, '');
-    if (digitos) this.formulario.nombre = 'SUB-' + digitos;
+    const digitos = this.formulario.name.replace(/\D+/g, '');
+    if (digitos) this.formulario.name = 'SUB-' + digitos;
   }
 
   formularioValido(): boolean {
     const f = this.formulario;
-    return FORMATO_NOMBRE.test(f.nombre.trim())
-      && f.edadMin !== null && f.edadMax !== null
-      && f.edadMin >= 4 && f.edadMax > f.edadMin;
+    return FORMATO_NOMBRE.test(f.name.trim())
+      && f.minAge !== null && f.maxAge !== null
+      && f.minAge >= 4 && f.maxAge > f.minAge;
   }
 
   ngOnInit(): void {
@@ -203,13 +203,13 @@ export class CategoriasComponent implements OnInit {
 
     const enEdicion = this.editando();
     const peticion = enEdicion
-      ? this.servicio.editar(enEdicion.idCategoria, this.formulario)
+      ? this.servicio.editar(enEdicion.categoryId, this.formulario)
       : this.servicio.crear(this.formulario);
 
     peticion.subscribe({
       next: (c) => {
         this.guardando.set(false);
-        this.exito.set(enEdicion ? `Categoría "${c.nombre}" actualizada` : `Categoría "${c.nombre}" creada`);
+        this.exito.set(enEdicion ? `Categoría "${c.name}" actualizada` : `Categoría "${c.name}" creada`);
         this.cancelar();
         this.cargar();
       },
@@ -223,7 +223,7 @@ export class CategoriasComponent implements OnInit {
   editar(c: Categoria): void {
     this.editando.set(c);
     this.formulario = {
-      nombre: c.nombre, edadMin: c.edadMin, edadMax: c.edadMax, descripcion: c.descripcion,
+      name: c.name, minAge: c.minAge, maxAge: c.maxAge, description: c.description,
     };
     this.error.set('');
     this.exito.set('');
@@ -237,10 +237,10 @@ export class CategoriasComponent implements OnInit {
   desactivar(c: Categoria): void {
     this.guardando.set(true);
     this.error.set('');
-    this.servicio.desactivar(c.idCategoria).subscribe({
+    this.servicio.desactivar(c.categoryId).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.exito.set(`"${c.nombre}" quedó inactiva; los estudiantes que ya la tenían no se tocan`);
+        this.exito.set(`"${c.name}" quedó inactiva; los estudiantes que ya la tenían no se tocan`);
         this.cargar();
       },
       error: (e) => {
@@ -253,10 +253,10 @@ export class CategoriasComponent implements OnInit {
   reactivar(c: Categoria): void {
     this.guardando.set(true);
     this.error.set('');
-    this.servicio.reactivar(c.idCategoria).subscribe({
+    this.servicio.reactivar(c.categoryId).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.exito.set(`"${c.nombre}" volvió a estar activa`);
+        this.exito.set(`"${c.name}" volvió a estar activa`);
         this.cargar();
       },
       error: (e) => {

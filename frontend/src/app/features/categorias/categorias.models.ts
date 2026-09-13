@@ -1,19 +1,19 @@
 
 export interface Categoria {
-  idCategoria: number;
-  nombre: string;
-  edadMin: number;
-  edadMax: number;
-  descripcion: string | null;
-  activo: boolean;
+  categoryId: number;
+  name: string;
+  minAge: number;
+  maxAge: number;
+  description: string | null;
+  active: boolean;
   createdAt: string;
 }
 
 export interface CategoriaRequest {
-  nombre: string;
-  edadMin: number | null;
-  edadMax: number | null;
-  descripcion: string | null;
+  name: string;
+  minAge: number | null;
+  maxAge: number | null;
+  description: string | null;
 }
 
 export interface PaginaCategorias {

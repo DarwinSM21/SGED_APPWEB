@@ -27,9 +27,9 @@ import { horaCorta } from '../../core/formato-texto';
         <div class="card selector">
           <span class="selector__etiqueta">Sesión</span>
           <select [ngModel]="idSesionSeleccionada()" (ngModelChange)="seleccionar($event)" name="sesion">
-            @for (s of sesiones(); track s.idSesion) {
-              <option [value]="s.idSesion">
-                {{ s.categoria }} · {{ s.entrenador }}{{ s.horaInicio ? ' · ' + horaCorta(s.horaInicio) : '' }}
+            @for (s of sesiones(); track s.sessionId) {
+              <option [value]="s.sessionId">
+                {{ s.category }} · {{ s.coach }}{{ s.startTime ? ' · ' + horaCorta(s.startTime) : '' }}
               </option>
             }
           </select>
@@ -90,7 +90,7 @@ export class RecepcionComponent implements OnInit, OnDestroy {
         this.sesiones.set(sesiones);
         this.cargandoSesiones.set(false);
         if (sesiones.length > 0) {
-          this.seleccionar(sesiones[0].idSesion);
+          this.seleccionar(sesiones[0].sessionId);
         }
       },
       error: (e) => {
@@ -115,12 +115,12 @@ export class RecepcionComponent implements OnInit, OnDestroy {
     this.error.set(null);
 
     this.servicio.emitirToken(idSesion).subscribe({
-      next: async ({ token, expiraEnSegundos }) => {
+      next: async ({ token, expiresInSeconds }) => {
         this.cargandoToken.set(false);
         this.qrDataUrl.set(await toDataURL(token, { margin: 1, width: 320 }));
-        this.iniciarCuentaRegresiva(expiraEnSegundos);
+        this.iniciarCuentaRegresiva(expiresInSeconds);
 
-        const renovarEnMs = Math.max(expiraEnSegundos * 0.8, 5) * 1000;
+        const renovarEnMs = Math.max(expiresInSeconds * 0.8, 5) * 1000;
         this.intervaloRenovacion = setTimeout(() => this.pedirYPintarToken(idSesion), renovarEnMs);
       },
       error: (e) => {

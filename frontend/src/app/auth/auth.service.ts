@@ -9,22 +9,22 @@ export interface LoginRequest {
 }
 
 export interface RegisterRequest {
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  correo: string;
-  fechaNacimiento: string;
+  name: string;
+  lastName: string;
+  nationalId: string;
+  email: string;
+  birthDate: string;
   username: string;
   password: string;
-  rol?: string;
+  role?: string;
 }
 
 export interface AuthResponse {
   username: string;
-  nombre: string;
-  rol: string;
-  idPersona?: number;
-  idUsuario?: number;
+  name: string;
+  role: string;
+  personId?: number;
+  userId?: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -65,13 +65,13 @@ export class AuthService {
    * Pide un enlace de restablecimiento (RF-37). El backend responde siempre
    * 202, exista o no la cuenta, así que el resultado no revela nada.
    */
-  solicitarRecuperacion(identificador: string) {
-    return this.http.post<{ mensaje: string }>(`${this.apiUrl}/forgot`, { identificador });
+  solicitarRecuperacion(identifier: string) {
+    return this.http.post<{ message: string }>(`${this.apiUrl}/forgot`, { identifier });
   }
 
   /** Fija la contraseña nueva a partir del token del enlace (RF-37). */
-  restablecerPassword(token: string, nuevaPassword: string) {
-    return this.http.post<void>(`${this.apiUrl}/reset`, { token, nuevaPassword });
+  restablecerPassword(token: string, newPassword: string) {
+    return this.http.post<void>(`${this.apiUrl}/reset`, { token, newPassword });
   }
 
   /**

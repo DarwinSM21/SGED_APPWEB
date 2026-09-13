@@ -27,7 +27,7 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
       } @else if (nomina(); as n) {
-        <a class="btn btn--ghost volver" [routerLink]="['/entrenador/sesion', n.idSesion]">
+        <a class="btn btn--ghost volver" [routerLink]="['/entrenador/sesion', n.sessionId]">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
           Volver a la evaluación
         </a>
@@ -36,19 +36,19 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
           <div>
             <h1>Lista de asistencia</h1>
             <p class="subt">
-              {{ n.categoria }} · {{ n.fecha }}
-              @if (n.horaInicio) { · {{ hora(n.horaInicio) }} }
+              {{ n.category }} · {{ n.date }}
+              @if (n.startTime) { · {{ hora(n.startTime) }} }
             </p>
           </div>
           <div class="resumen" aria-live="polite">
-            <span class="conteo">{{ presentes() }}<span class="de">/{{ n.filas.length }}</span></span>
+            <span class="conteo">{{ presentes() }}<span class="de">/{{ n.rows.length }}</span></span>
             <span class="conteo-etiqueta">en la cancha</span>
           </div>
         </header>
 
         @if (!n.editable) {
-          <p class="alert alert--warning">{{ n.motivoNoEditable }}</p>
-        } @else if (n.filas.length > 0) {
+          <p class="alert alert--warning">{{ n.nonEditableReason }}</p>
+        } @else if (n.rows.length > 0) {
           <div class="atajos">
             <span class="atajos-titulo">Empezar por:</span>
             @for (e of estados; track e.valor) {
@@ -59,57 +59,57 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
         }
 
         <ul class="nomina">
-          @for (f of n.filas; track f.idEstudiante) {
-            <li class="fila" [class.fila--sin-marcar]="!marcas()[f.idEstudiante]">
+          @for (f of n.rows; track f.studentId) {
+            <li class="fila" [class.fila--sin-marcar]="!marks()[f.studentId]">
               <div class="quien">
-                <span class="avatar">{{ iniciales(f.nombreCompleto) }}</span>
+                <span class="avatar">{{ iniciales(f.fullName) }}</span>
                 <div>
-                  <span class="nombre">{{ f.nombreCompleto }}</span>
-                  @if (f.metodo === 'QR' && f.horaEntrada) {
+                  <span class="nombre">{{ f.fullName }}</span>
+                  @if (f.method === 'QR' && f.checkInTime) {
                     <span class="origen" title="Lo marcó el propio estudiante al escanear el QR">
-                      escaneó a las {{ hora(f.horaEntrada) }}
+                      escaneó a las {{ hora(f.checkInTime) }}
                     </span>
-                  } @else if (!marcas()[f.idEstudiante]) {
+                  } @else if (!marks()[f.studentId]) {
                     <span class="origen origen--pendiente">sin marcar</span>
                   }
                 </div>
               </div>
 
-              <div class="opciones" role="group" [attr.aria-label]="'Asistencia de ' + f.nombreCompleto">
+              <div class="opciones" role="group" [attr.aria-label]="'Asistencia de ' + f.fullName">
                 @for (e of estados; track e.valor) {
                   <button type="button"
-                          [class]="claseOpcion(f.idEstudiante, e.valor)"
+                          [class]="claseOpcion(f.studentId, e.valor)"
                           [disabled]="!n.editable"
-                          [attr.aria-pressed]="marcas()[f.idEstudiante] === e.valor"
-                          (click)="marcar(f.idEstudiante, e.valor)">
+                          [attr.aria-pressed]="marks()[f.studentId] === e.valor"
+                          (click)="marcar(f.studentId, e.valor)">
                     <span class="opcion-larga">{{ e.etiqueta }}</span>
                     <span class="opcion-corta" aria-hidden="true">{{ e.corta }}</span>
                   </button>
                 }
               </div>
 
-              @if (necesitaNota(f.idEstudiante)) {
+              @if (necesitaNota(f.studentId)) {
                 <input class="nota" type="text" maxlength="255"
                        [disabled]="!n.editable"
-                       [ngModel]="notas()[f.idEstudiante] ?? ''"
-                       (ngModelChange)="anotar(f.idEstudiante, $event)"
-                       [placeholder]="marcas()[f.idEstudiante] === 'JUSTIFICADO'
+                       [ngModel]="notas()[f.studentId] ?? ''"
+                       (ngModelChange)="anotar(f.studentId, $event)"
+                       [placeholder]="marks()[f.studentId] === 'JUSTIFICADO'
                           ? 'Motivo de la justificación' : 'Observación (opcional)'" />
               }
             </li>
           }
         </ul>
 
-        @if (n.filas.length === 0) {
+        @if (n.rows.length === 0) {
           <p class="alert alert--info">
-            No hay estudiantes activos en {{ n.categoria }}. Matricula estudiantes en esta
+            No hay estudiantes activos en {{ n.category }}. Matricula estudiantes en esta
             categoría desde Personas y aparecerán aquí.
           </p>
         }
 
-        @if (n.editable && n.filas.length > 0) {
+        @if (n.editable && n.rows.length > 0) {
           <div class="pie">
-            @if (mensaje(); as m) { <span class="ok">{{ m }}</span> }
+            @if (message(); as m) { <span class="ok">{{ m }}</span> }
             <button type="button" class="btn btn--primary"
                     [disabled]="!hayCambios() || guardando()"
                     (click)="guardar()">
@@ -127,7 +127,7 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
     .cabecera { display: flex; justify-content: space-between; align-items: flex-end; gap: 1rem; margin-bottom: 1.25rem; }
     h1 { font-size: 1.4rem; margin: 0; }
     .subt { color: var(--color-text-muted); font-size: .88rem; margin: .25rem 0 0; }
-    .resumen { text-align: right; }
+    .summary { text-align: right; }
     .conteo { font-size: 1.75rem; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
     .conteo .de { font-size: 1rem; font-weight: 500; color: var(--color-text-faint); }
     .conteo-etiqueta { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); margin-top: .2rem; }
@@ -143,7 +143,7 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
     .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
               background: var(--color-border-light); color: var(--color-text-muted);
               font-size: .74rem; font-weight: 600; flex-shrink: 0; }
-    .nombre { display: block; font-weight: 500; font-size: .92rem; }
+    .name { display: block; font-weight: 500; font-size: .92rem; }
     .origen { font-size: .72rem; color: var(--color-text-faint); }
     .origen--pendiente { color: var(--color-warning-text); }
     .opciones { display: flex; gap: 2px; }
@@ -186,19 +186,19 @@ export class ListaAsistenciaComponent {
   readonly cargando = signal(true);
   readonly guardando = signal(false);
   readonly error = signal<string | null>(null);
-  readonly mensaje = signal<string | null>(null);
+  readonly message = signal<string | null>(null);
   readonly nomina = signal<Nomina | null>(null);
 
-  readonly marcas = signal<Record<number, EstadoAsistencia | undefined>>({});
+  readonly marks = signal<Record<number, EstadoAsistencia | undefined>>({});
   readonly notas = signal<Record<number, string>>({});
   private original: Record<number, EstadoAsistencia | undefined> = {};
   private notasOriginales: Record<number, string> = {};
 
   readonly presentes = computed(() =>
-    Object.values(this.marcas()).filter((e) => e === 'PRESENTE' || e === 'TARDE').length);
+    Object.values(this.marks()).filter((e) => e === 'PRESENTE' || e === 'TARDE').length);
 
   readonly hayCambios = computed(() => {
-    const m = this.marcas();
+    const m = this.marks();
     const n = this.notas();
     const ids = new Set([...Object.keys(m), ...Object.keys(this.original)].map(Number));
     for (const id of ids) {
@@ -224,59 +224,59 @@ export class ListaAsistenciaComponent {
   }
 
   private recibir(n: Nomina): void {
-    const marcas: Record<number, EstadoAsistencia | undefined> = {};
+    const marks: Record<number, EstadoAsistencia | undefined> = {};
     const notas: Record<number, string> = {};
-    for (const f of n.filas) {
-      if (f.estado) marcas[f.idEstudiante] = f.estado;
-      if (f.observacion) notas[f.idEstudiante] = f.observacion;
+    for (const f of n.rows) {
+      if (f.status) marks[f.studentId] = f.status;
+      if (f.note) notas[f.studentId] = f.note;
     }
     this.nomina.set(n);
-    this.marcas.set(marcas);
+    this.marks.set(marks);
     this.notas.set(notas);
-    this.original = { ...marcas };
+    this.original = { ...marks };
     this.notasOriginales = { ...notas };
     this.cargando.set(false);
   }
 
-  claseOpcion(idEstudiante: number, estado: EstadoAsistencia): string {
-    const activa = this.marcas()[idEstudiante] === estado ? ' opcion--activa' : '';
-    return `opcion opcion--${estado.toLowerCase()}${activa}`;
+  claseOpcion(idEstudiante: number, status: EstadoAsistencia): string {
+    const activa = this.marks()[idEstudiante] === status ? ' opcion--activa' : '';
+    return `opcion opcion--${status.toLowerCase()}${activa}`;
   }
 
-  marcar(idEstudiante: number, estado: EstadoAsistencia): void {
-    this.mensaje.set(null);
-    this.marcas.update((m) => ({ ...m, [idEstudiante]: estado }));
+  marcar(idEstudiante: number, status: EstadoAsistencia): void {
+    this.message.set(null);
+    this.marks.update((m) => ({ ...m, [idEstudiante]: status }));
   }
 
   marcarTodos(estado: EstadoAsistencia): void {
     const n = this.nomina();
     if (!n) return;
-    this.mensaje.set(null);
+    this.message.set(null);
     const m: Record<number, EstadoAsistencia> = {};
-    for (const f of n.filas) m[f.idEstudiante] = estado;
-    this.marcas.set(m);
+    for (const f of n.rows) m[f.studentId] = estado;
+    this.marks.set(m);
   }
 
-  anotar(idEstudiante: number, texto: string): void {
-    this.notas.update((n) => ({ ...n, [idEstudiante]: texto }));
+  anotar(idEstudiante: number, text: string): void {
+    this.notas.update((n) => ({ ...n, [idEstudiante]: text }));
   }
 
   necesitaNota(idEstudiante: number): boolean {
-    const e = this.marcas()[idEstudiante];
+    const e = this.marks()[idEstudiante];
     return e === 'AUSENTE' || e === 'JUSTIFICADO' || e === 'TARDE';
   }
 
   guardar(): void {
     const n = this.nomina();
     if (!n) return;
-    const m = this.marcas();
+    const m = this.marks();
     const notas = this.notas();
-    const marcas = n.filas
-      .filter((f) => m[f.idEstudiante])
+    const marcas = n.rows
+      .filter((f) => m[f.studentId])
       .map((f) => ({
-        idEstudiante: f.idEstudiante,
-        estado: m[f.idEstudiante]!,
-        observacion: notas[f.idEstudiante]?.trim() || null,
+        studentId: f.studentId,
+        status: m[f.studentId]!,
+        note: notas[f.studentId]?.trim() || null,
       }));
 
     if (marcas.length === 0) {
@@ -286,11 +286,11 @@ export class ListaAsistenciaComponent {
 
     this.guardando.set(true);
     this.error.set(null);
-    this.servicio.pasarLista(n.idSesion, marcas).subscribe({
+    this.servicio.pasarLista(n.sessionId, marcas).subscribe({
       next: (actualizada) => {
         this.recibir(actualizada);
         this.guardando.set(false);
-        this.mensaje.set('Lista guardada');
+        this.message.set('Lista guardada');
       },
       error: (e) => {
         this.error.set(e?.error?.detail ?? 'No se pudo guardar la lista.');

@@ -35,7 +35,7 @@ const NOMBRES_MES = [
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
               </span>
               <div>
-                <p class="kpi__valor">{{ estudiantesActivos() ?? '—' }}</p>
+                <p class="kpi__valor">{{ activeStudents() ?? '—' }}</p>
                 <p class="kpi__etiqueta">Estudiantes activos</p>
               </div>
             </div>
@@ -105,8 +105,8 @@ const NOMBRES_MES = [
         @if (esAdministrador() && historico() && alertas(); as a) {
           <app-graficos-ingresos
             [datos]="historico()!"
-            [estudiantesActivos]="a.estudiantesActivos"
-            [pendientes]="a.conMensualidadPendiente" />
+            [estudiantesActivos]="a.activeStudents"
+            [pendientes]="a.withPendingMembership" />
         }
 
         @if (esOperativo() && mapa(); as m) {
@@ -119,53 +119,53 @@ const NOMBRES_MES = [
               <div>
                 <h2>Requieren atención</h2>
                 <p class="panel-alertas__sub">
-                  {{ a.totalEnRiesgo }} de {{ a.estudiantesActivos }} estudiantes ·
-                  cuota de {{ nombreMes(a.mes) }} {{ a.anio }}
+                  {{ a.totalAtRisk }} de {{ a.activeStudents }} estudiantes ·
+                  cuota de {{ nombreMes(a.month) }} {{ a.year }}
                 </p>
               </div>
-              @if (a.estudiantes.length > 0) {
+              @if (a.students.length > 0) {
                 <div class="resumen-alertas">
-                  @if (a.conMensualidadPendiente > 0) {
-                    <span class="chip chip--dinero">{{ a.conMensualidadPendiente }} deben cuota</span>
+                  @if (a.withPendingMembership > 0) {
+                    <span class="chip chip--dinero">{{ a.withPendingMembership }} deben cuota</span>
                   }
-                  @if (a.conAsistenciaBaja > 0) {
-                    <span class="chip chip--falta">{{ a.conAsistenciaBaja }} asistencia &lt; {{ a.umbralAsistencia }}%</span>
+                  @if (a.withLowAttendance > 0) {
+                    <span class="chip chip--falta">{{ a.withLowAttendance }} asistencia &lt; {{ a.attendanceThreshold }}%</span>
                   }
-                  @if (a.conLesionActiva > 0) {
-                    <span class="chip chip--lesion">{{ a.conLesionActiva }} lesionados</span>
+                  @if (a.withActiveInjury > 0) {
+                    <span class="chip chip--lesion">{{ a.withActiveInjury }} lesionados</span>
                   }
                 </div>
               }
             </div>
 
-            @if (a.estudiantes.length === 0) {
+            @if (a.students.length === 0) {
               <div class="todo-en-orden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 <p>Nadie con cuota pendiente, asistencia baja ni lesiones activas.</p>
               </div>
             } @else {
-              @for (e of a.estudiantes; track e.idEstudiante) {
-                <div class="fila-alerta" [attr.data-severidad]="e.totalAlertas">
+              @for (e of a.students; track e.studentId) {
+                <div class="fila-alerta" [attr.data-severidad]="e.totalAlerts">
                   <span class="franja"></span>
-                  <span class="avatar avatar--muted">{{ iniciales(e.nombreCompleto) }}</span>
+                  <span class="avatar avatar--muted">{{ iniciales(e.fullName) }}</span>
                   <div class="alerta-info">
-                    <span class="alerta-nombre">{{ e.nombreCompleto }}</span>
-                    <span class="alerta-categoria">{{ e.categoria ?? 'sin categoría' }}</span>
+                    <span class="alerta-nombre">{{ e.fullName }}</span>
+                    <span class="alerta-categoria">{{ e.category ?? 'sin categoría' }}</span>
                   </div>
                   <div class="alerta-motivos">
-                    @if (e.mensualidadPendiente) { <span class="chip chip--dinero">Debe cuota</span> }
-                    @if (e.asistenciaBaja) {
-                      <span class="chip chip--falta">Asistencia {{ e.porcentajeAsistencia | number: '1.0-0' }}%</span>
+                    @if (e.pendingMembershipFee) { <span class="chip chip--dinero">Debe cuota</span> }
+                    @if (e.lowAttendance) {
+                      <span class="chip chip--falta">Asistencia {{ e.attendancePercentage | number: '1.0-0' }}%</span>
                     }
-                    @if (e.lesionActiva) { <span class="chip chip--lesion">Lesión activa</span> }
+                    @if (e.activeInjury) { <span class="chip chip--lesion">Lesión activa</span> }
                   </div>
                 </div>
               }
 
-              @if (a.totalEnRiesgo > a.estudiantes.length) {
+              @if (a.totalAtRisk > a.students.length) {
                 <p class="panel-alertas__resto">
-                  Se muestran los {{ a.estudiantes.length }} casos más urgentes de
-                  {{ a.totalEnRiesgo }}. Los contadores de arriba sí cuentan a todos.
+                  Se muestran los {{ a.students.length }} casos más urgentes de
+                  {{ a.totalAtRisk }}. Los contadores de arriba sí cuentan a todos.
                   <a routerLink="/reportes">Ver el listado completo en Reportes</a>
                 </p>
               }
@@ -186,19 +186,19 @@ const NOMBRES_MES = [
               <p>No hay entrenamientos programados para hoy.</p>
             </div>
           } @else {
-            @for (s of sesiones(); track s.idSesion) {
-              <a class="sesion" [routerLink]="['/entrenador/sesion', s.idSesion]">
-                <span class="avatar avatar--muted">{{ iniciales(s.entrenador) }}</span>
+            @for (s of sesiones(); track s.sessionId) {
+              <a class="sesion" [routerLink]="['/entrenador/sesion', s.sessionId]">
+                <span class="avatar avatar--muted">{{ iniciales(s.coach) }}</span>
                 <div class="sesion-info">
-                  <span class="categoria">{{ s.categoria }}</span>
+                  <span class="categoria">{{ s.category }}</span>
                   <span class="detalle">
-                    {{ s.entrenador }}
-                    @if (s.horaInicio) { · {{ horaCorta(s.horaInicio) }} }
-                    @if (s.campo) { · {{ s.campo }} }
+                    {{ s.coach }}
+                    @if (s.startTime) { · {{ horaCorta(s.startTime) }} }
+                    @if (s.field) { · {{ s.field }} }
                   </span>
                 </div>
-                <span class="badge" [class.badge--warning]="s.tieneEvaluacion" [class.badge--info]="!s.tieneEvaluacion">
-                  {{ s.tieneEvaluacion ? 'En evaluación' : 'Sin iniciar' }}
+                <span class="badge" [class.badge--warning]="s.hasEvaluation" [class.badge--info]="!s.hasEvaluation">
+                  {{ s.hasEvaluation ? 'En evaluación' : 'Sin iniciar' }}
                 </span>
                 <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
@@ -214,7 +214,7 @@ const NOMBRES_MES = [
     </div>
   `,
   styles: [`
-    .contenido { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
+    .content { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem 3rem; }
     .titulo-panel { font-size: 1.2rem; margin-bottom: 1.1rem; }
     .accesos { display: flex; flex-wrap: wrap; gap: .7rem; margin-bottom: 1.5rem; }
     .acceso {
@@ -232,7 +232,7 @@ const NOMBRES_MES = [
     }
     .panel-alertas__cabecera h2 { font-size: 1rem; }
     .panel-alertas__sub { margin: .2rem 0 0; font-size: .78rem; color: var(--color-text-muted); }
-    .resumen-alertas { display: flex; flex-wrap: wrap; gap: .4rem; }
+    .summary-alertas { display: flex; flex-wrap: wrap; gap: .4rem; }
     .panel-alertas__resto {
       margin: .9rem 0 0; padding-top: .75rem; font-size: .78rem;
       color: var(--color-text-muted); line-height: 1.5;
@@ -310,7 +310,7 @@ const NOMBRES_MES = [
     .sesion:last-child { margin-bottom: 0; }
     .sesion:hover { background: var(--color-primary-50); border-color: var(--color-primary-100); }
     .sesion-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-    .categoria { font-weight: 600; font-size: .92rem; }
+    .category { font-weight: 600; font-size: .92rem; }
     .detalle { font-size: .78rem; color: var(--color-text-muted); }
     .chevron { width: 18px; height: 18px; color: var(--color-text-faint); flex-shrink: 0; }
   `]
@@ -325,28 +325,28 @@ export class DashboardComponent implements OnInit {
   readonly sesiones = signal<SesionHoy[]>([]);
   readonly cargandoSesiones = signal(false);
   readonly lesionesActivas = signal<number | null>(null);
-  readonly estudiantesActivos = signal<number | null>(null);
+  readonly activeStudents = signal<number | null>(null);
   readonly alertas = signal<PanelAlertas | null>(null);
   readonly historico = signal<HistoricoIngresos | null>(null);
   readonly mapa = signal<MapaAsistencia | null>(null);
 
   readonly esOperativo = computed(() => {
-    const rol = this.usuario()?.rol;
+    const rol = this.usuario()?.role;
     return rol === 'ADMINISTRADOR' || rol === 'ENTRENADOR';
   });
-  readonly esAdministrador = computed(() => this.usuario()?.rol === 'ADMINISTRADOR');
-  readonly esEntrenador = computed(() => this.usuario()?.rol === 'ENTRENADOR');
+  readonly esAdministrador = computed(() => this.usuario()?.role === 'ADMINISTRADOR');
+  readonly esEntrenador = computed(() => this.usuario()?.role === 'ENTRENADOR');
 
   readonly horaCorta = horaCorta;
 
   readonly totalSesiones = computed(() => this.sesiones().length);
-  readonly sesionesEnEvaluacion = computed(() => this.sesiones().filter((s) => s.tieneEvaluacion).length);
+  readonly sesionesEnEvaluacion = computed(() => this.sesiones().filter((s) => s.hasEvaluation).length);
   readonly sesionesSinIniciar = computed(() => this.totalSesiones() - this.sesionesEnEvaluacion());
 
   ngOnInit() {
     this.authService.getProfile().subscribe({
       next: () => {
-        const rolActual = this.usuario()?.rol;
+        const rolActual = this.usuario()?.role;
 
         const destinoPropio = homeRouteForRole(rolActual);
         if (destinoPropio !== '/dashboard') {
@@ -390,7 +390,7 @@ export class DashboardComponent implements OnInit {
 
   private cargarConteoDeEstudiantes(): void {
     this.http.get<PaginaLigera>('/api/estudiantes?size=1').subscribe({
-      next: (pagina) => { this.estudiantesActivos.set(pagina.totalElements); },
+      next: (pagina) => { this.activeStudents.set(pagina.totalElements); },
       error: () => {},
     });
   }

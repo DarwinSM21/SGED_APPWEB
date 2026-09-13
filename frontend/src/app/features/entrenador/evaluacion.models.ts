@@ -1,63 +1,63 @@
 
 export interface CriterioResponse {
-  idCriterio: number;
-  nombre: string;
-  descripcion: string | null;
-  puntajeMaximo: number;
+  criterionId: number;
+  name: string;
+  description: string | null;
+  maxScore: number;
 }
 
 export interface JugadorEvaluable {
-  idEstudiante: number;
-  nombreCompleto: string;
-  categoria: string;
-  idPosicion: number | null;
-  posicion: string | null;
-  estadoAsistencia: string | null;
-  puntajes: Record<string, number>;
-  precargado: boolean;
-  lesionado: boolean;
-  idLesion: number | null;
-  puedeEvaluarse: boolean;
-  motivoBloqueo: string | null;
+  studentId: number;
+  fullName: string;
+  category: string;
+  positionId: number | null;
+  position: string | null;
+  attendanceStatus: string | null;
+  scores: Record<string, number>;
+  preloaded: boolean;
+  injured: boolean;
+  injuryId: number | null;
+  canBeEvaluated: boolean;
+  blockReason: string | null;
 }
 
 export interface EvaluacionSesion {
-  idEvaluacion: number;
-  idSesion: number;
-  fecha: string;
-  categoria: string;
-  estado: 'BORRADOR' | 'FINALIZADA';
-  criterios: CriterioResponse[];
-  jugadores: JugadorEvaluable[];
-  observacionGeneral: string | null;
+  evaluationId: number;
+  sessionId: number;
+  date: string;
+  category: string;
+  status: 'BORRADOR' | 'FINALIZADA';
+  criteria: CriterioResponse[];
+  players: JugadorEvaluable[];
+  generalNote: string | null;
 }
 
 export interface PuntajeCriterio {
-  idCriterio: number;
-  puntaje: number;
+  criterionId: number;
+  score: number;
 }
 
 export interface GuardarJugadorRequest {
-  idEstudiante: number;
-  idPosicionJugada: number | null;
-  puntajes: PuntajeCriterio[];
+  studentId: number;
+  lineupPositionId: number | null;
+  scores: PuntajeCriterio[];
 }
 
 export interface PosicionOpcion {
-  idPosicion: number;
-  nombre: string;
-  abreviatura: string | null;
+  positionId: number;
+  name: string;
+  abbreviation: string | null;
 }
 
 export interface Lesion {
-  idLesion: number;
-  idEstudiante: number;
-  estudiante: string;
-  descripcion: string;
-  fechaLesion: string;
-  fechaEstimadaRetorno: string | null;
-  fechaAlta: string | null;
-  activa: boolean;
+  injuryId: number;
+  studentId: number;
+  student: string;
+  description: string;
+  injuryDate: string;
+  estimatedReturnDate: string | null;
+  dischargeDate: string | null;
+  active: boolean;
 }
 
 export type EstadoGuardado = 'guardado' | 'guardando' | 'pendiente' | 'error';

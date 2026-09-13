@@ -14,7 +14,7 @@ export function mensajeDeError(err: unknown, porDefecto?: string): string {
     return porDefecto;
   }
 
-  return d.sugerencia ? `${d.mensaje}. ${d.sugerencia}` : d.mensaje;
+  return d.sugerencia ? `${d.message}. ${d.sugerencia}` : d.message;
 }
 
 function tieneDetalle(cuerpo: { detail?: unknown } | null | undefined): boolean {

@@ -14,16 +14,16 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
   template: `
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Cuenta de usuario</h3>
-      @if (persona()?.usuario; as u) {
+      @if (persona()?.user; as u) {
         @if (!editando()) {
           <p class="resumen-seccion">
             {{ u.username }} · {{ u.roles.join(', ') || 'sin rol' }} ·
-            <span class="badge" [class.badge--success]="u.activo" [class.badge--danger]="!u.activo">
-              {{ u.activo ? 'activa' : 'inactiva' }}
+            <span class="badge" [class.badge--success]="u.active" [class.badge--danger]="!u.active">
+              {{ u.active ? 'activa' : 'inactiva' }}
             </span>
           </p>
 
-          @if (!u.activo) {
+          @if (!u.active) {
             <p class="aviso">
               Esta cuenta no puede iniciar sesión. Sus sesiones abiertas dejaron de funcionar en el momento
               en que se la desactivó: la consulta que resuelve al usuario filtra por cuenta activa, así que
@@ -36,13 +36,13 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           <div class="acciones">
             <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()" (click)="iniciarEdicion(u)">Editar cuenta</button>
 
-            @if (u.activo) {
+            @if (u.active) {
               <app-confirmar-accion etiqueta="Desactivar cuenta"
                                     pregunta="Va a perder el acceso ahora mismo, incluso con la sesión abierta."
                                     textoConfirmar="Sí, desactivar" enCurso="Desactivando…"
-                                    [ocupado]="guardando()" (confirmado)="desactivar(u.idUsuario)" />
+                                    [ocupado]="guardando()" (confirmado)="desactivar(u.userId)" />
             } @else {
-              <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="reactivar(u.idUsuario)">
+              <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="reactivar(u.userId)">
                 @if (guardando()) { <span class="spinner"></span> Activando… } @else { Activar cuenta }
               </button>
             }
@@ -56,7 +56,7 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           </div>
           <label class="field" for="u-rol-editar"><span class="field__label">Rol</span>
             <span class="field__control">
-              <select id="u-rol-editar" [(ngModel)]="formUsuario.rol" name="u-rol-editar">
+              <select id="u-rol-editar" [(ngModel)]="formUsuario.role" name="u-rol-editar">
                 @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
               </select>
             </span>
@@ -64,7 +64,7 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           @if (error()) { <div class="alert alert--danger" role="alert">{{ error() }}</div> }
           <div class="acciones">
             <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardando()" (click)="cancelarEdicion()">Cancelar</button>
-            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="guardarEdicion(u.idUsuario)">
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardando()" (click)="guardarEdicion(u.userId)">
               @if (guardando()) { <span class="spinner"></span> Guardando… } @else { Guardar }
             </button>
           </div>
@@ -78,7 +78,7 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
         </div>
         <label class="field" for="u-rol"><span class="field__label">Rol</span>
           <span class="field__control">
-            <select id="u-rol" [(ngModel)]="formUsuario.rol" name="u-rol">
+            <select id="u-rol" [(ngModel)]="formUsuario.role" name="u-rol">
               @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
             </select>
           </span>
@@ -101,7 +101,7 @@ export class CuentaUsuarioComponent {
   readonly roles = ROLES_USUARIO;
   readonly persona = computed(() => this.state.seleccionada());
 
-  formUsuario: { username: string; password: string; rol: RolUsuario } = { username: '', password: '', rol: 'ENTRENADOR' };
+  formUsuario: { username: string; password: string; role: RolUsuario } = { username: '', password: '', role: 'ENTRENADOR' };
   readonly guardando = signal(false);
   readonly error = signal('');
   readonly editando = signal(false);
@@ -109,19 +109,19 @@ export class CuentaUsuarioComponent {
   constructor() {
     effect(() => {
       this.state.seleccionada();
-      this.formUsuario = { username: '', password: '', rol: 'ENTRENADOR' };
+      this.formUsuario = { username: '', password: '', role: 'ENTRENADOR' };
       this.error.set('');
       this.editando.set(false);
     });
   }
 
   crear(): void {
-    const idPersona = this.persona()!.persona.idPersona;
+    const personId = this.persona()!.persona.personId;
     this.guardando.set(true);
     this.error.set('');
     this.servicio.crearUsuario({
-      idPersona, idEstadoGeneral: ESTADO_GENERAL_ACTIVO,
-      username: this.formUsuario.username, password: this.formUsuario.password, rol: this.formUsuario.rol,
+      personId, generalStatusId: ESTADO_GENERAL_ACTIVO,
+      username: this.formUsuario.username, password: this.formUsuario.password, role: this.formUsuario.role,
     }).subscribe({
       next: () => { this.guardando.set(false); this.state.cargarPersonas(true); },
       error: (err) => this.manejarError(err),
@@ -147,7 +147,7 @@ export class CuentaUsuarioComponent {
   }
 
   iniciarEdicion(u: UsuarioResponse): void {
-    this.formUsuario = { username: u.username, password: '', rol: (u.roles[0] as RolUsuario) ?? 'ENTRENADOR' };
+    this.formUsuario = { username: u.username, password: '', role: (u.roles[0] as RolUsuario) ?? 'ENTRENADOR' };
     this.error.set('');
     this.editando.set(true);
   }
@@ -158,13 +158,13 @@ export class CuentaUsuarioComponent {
   }
 
   guardarEdicion(idUsuario: number): void {
-    const idPersona = this.persona()!.persona.idPersona;
-    const u = this.persona()!.usuario!;
+    const personId = this.persona()!.persona.personId;
+    const u = this.persona()!.user!;
     this.guardando.set(true);
     this.error.set('');
     this.servicio.editarUsuario(idUsuario, {
-      idPersona, idEstadoGeneral: u.idEstadoGeneral,
-      username: this.formUsuario.username, password: this.formUsuario.password || null, rol: this.formUsuario.rol,
+      personId, generalStatusId: u.generalStatusId,
+      username: this.formUsuario.username, password: this.formUsuario.password || null, role: this.formUsuario.role,
     }).subscribe({
       next: () => { this.guardando.set(false); this.editando.set(false); this.state.cargarPersonas(true); },
       error: (err) => this.manejarError(err),

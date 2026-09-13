@@ -18,5 +18,5 @@ import { PersonasRecepcionComponent } from './personas-recepcion.component';
 })
 export class PersonasComponent {
   private readonly auth = inject(AuthService);
-  readonly esAdministrador = computed(() => this.auth.currentUser()?.rol === 'ADMINISTRADOR');
+  readonly esAdministrador = computed(() => this.auth.currentUser()?.role === 'ADMINISTRADOR');
 }

@@ -1,18 +1,18 @@
 export interface EstudianteOpcionReporte {
-  idEstudiante: number;
-  nombreCompleto: string;
-  categoria: string;
+  studentId: number;
+  fullName: string;
+  category: string;
 }
 
 export interface CategoriaOpcionReporte {
-  idCategoria: number;
-  nombre: string;
+  categoryId: number;
+  name: string;
 }
 
 export interface FiltrosReporte {
   estudianteId?: number | null;
-  categoria?: number | null;
-  activo?: boolean | null;
+  category?: number | null;
+  active?: boolean | null;
   fechaDesde?: string;
   fechaHasta?: string;
 }

@@ -41,12 +41,12 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             <div class="fila-2">
               <label class="field" for="af-nombre">
                 <span class="field__label">Nombre</span>
-                <span class="field__control"><input id="af-nombre" [(ngModel)]="formArticulo.nombre" name="af-nombre" /></span>
+                <span class="field__control"><input id="af-nombre" [(ngModel)]="formArticulo.name" name="af-nombre" /></span>
               </label>
               <label class="field" for="af-tipo">
                 <span class="field__label">Tipo</span>
                 <span class="field__control">
-                  <select id="af-tipo" [(ngModel)]="formArticulo.tipo" name="af-tipo">
+                  <select id="af-tipo" [(ngModel)]="formArticulo.type" name="af-tipo">
                     <option value="UNIFORME">Uniforme</option>
                     <option value="BALON">Balón</option>
                     <option value="IMPLEMENTO">Implemento</option>
@@ -58,22 +58,22 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             <div class="fila-2">
               <label class="field" for="af-talla">
                 <span class="field__label">Talla (opcional)</span>
-                <span class="field__control"><input id="af-talla" [(ngModel)]="formArticulo.talla" name="af-talla" /></span>
+                <span class="field__control"><input id="af-talla" [(ngModel)]="formArticulo.size" name="af-talla" /></span>
               </label>
               <label class="field" for="af-stockMinimo">
                 <span class="field__label">Stock mínimo (umbral de alerta, no la cantidad inicial)</span>
-                <span class="field__control"><input id="af-stockMinimo" type="number" min="0" [(ngModel)]="formArticulo.stockMinimo" name="af-stockMinimo" /></span>
+                <span class="field__control"><input id="af-stockMinimo" type="number" min="0" [(ngModel)]="formArticulo.minimumStock" name="af-stockMinimo" /></span>
               </label>
             </div>
             <label class="field" for="af-descripcion">
               <span class="field__label">Descripción (opcional)</span>
-              <span class="field__control"><input id="af-descripcion" [(ngModel)]="formArticulo.descripcion" name="af-descripcion" /></span>
+              <span class="field__control"><input id="af-descripcion" [(ngModel)]="formArticulo.description" name="af-descripcion" /></span>
             </label>
             <div class="acciones">
               @if (idArticuloEditando() !== null) {
                 <button class="btn btn--ghost" type="button" (click)="cancelarEdicionArticulo()">Cancelar</button>
               }
-              <button class="btn btn--primary" type="button" [disabled]="guardandoArticulo() || !formArticulo.nombre" (click)="guardarArticulo()">
+              <button class="btn btn--primary" type="button" [disabled]="guardandoArticulo() || !formArticulo.name" (click)="guardarArticulo()">
                 @if (guardandoArticulo()) { <span class="spinner"></span> Guardando… } @else { {{ idArticuloEditando() === null ? 'Registrar' : 'Guardar cambios' }} }
               </button>
             </div>
@@ -96,26 +96,26 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
           @if (errorArticulo()) { <div class="alert alert--danger" role="alert">{{ errorArticulo() }}</div> }
           @if (cargandoArticulos()) {
             <app-cargando />
-          } @else if (articulos().length === 0) {
+          } @else if (items().length === 0) {
             <p class="aviso">Sin artículos registrados todavía.</p>
           } @else {
             <div class="tabla">
-              @for (a of articulos(); track a.idArticulo) {
-                <div class="fila-articulo" [class.fila-articulo--bajo]="a.stockActual <= a.stockMinimo">
-                  <span class="badge">{{ etiquetaTipo(a.tipo) }}</span>
-                  <span class="nombre-articulo">{{ a.nombre }}@if (a.talla) { · {{ a.talla }} }</span>
-                  <span class="stock-articulo">{{ a.stockActual }} {{ a.unidadMedida }}</span>
-                  @if (!a.activo) { <span class="badge badge--danger">De baja</span> }
+              @for (a of items(); track a.itemId) {
+                <div class="fila-articulo" [class.fila-articulo--bajo]="a.currentStock <= a.minimumStock">
+                  <span class="badge">{{ etiquetaTipo(a.type) }}</span>
+                  <span class="nombre-articulo">{{ a.name }}@if (a.size) { · {{ a.size }} }</span>
+                  <span class="stock-articulo">{{ a.currentStock }} {{ a.unitOfMeasure }}</span>
+                  @if (!a.active) { <span class="badge badge--danger">De baja</span> }
                   @if (puedeGestionarCatalogo()) {
-                    @if (a.activo) {
+                    @if (a.active) {
                       <button class="btn btn--ghost btn--pequeno" type="button" (click)="editarArticulo(a)">Editar</button>
                       <app-confirmar-accion etiqueta="Baja"
-                                            [pregunta]="'¿Dar de baja ' + a.nombre + '?'"
+                                            [pregunta]="'¿Dar de baja ' + a.name + '?'"
                                             textoConfirmar="Sí, dar de baja" enCurso="Dando de baja…"
                                             [ocupado]="guardandoArticulo()" (confirmado)="eliminarArticulo(a)" />
                     } @else {
                       <app-confirmar-accion etiqueta="Reactivar" [peligrosa]="false"
-                                            [pregunta]="'¿Volver a poner ' + a.nombre + ' en el catálogo?'"
+                                            [pregunta]="'¿Volver a poner ' + a.name + ' en el catálogo?'"
                                             textoConfirmar="Sí, reactivar" enCurso="Reactivando…"
                                             [ocupado]="guardandoArticulo()" (confirmado)="reactivarArticulo(a)" />
                     }
@@ -134,10 +134,10 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             <label class="field" for="mf-articulo">
               <span class="field__label">Artículo</span>
               <span class="field__control">
-                <select id="mf-articulo" [(ngModel)]="formMovimiento.idArticulo" name="mf-articulo">
+                <select id="mf-articulo" [(ngModel)]="formMovimiento.itemId" name="mf-articulo">
                   <option [ngValue]="null" disabled>Selecciona…</option>
-                  @for (a of articulos(); track a.idArticulo) {
-                    <option [ngValue]="a.idArticulo">{{ a.nombre }} (stock: {{ a.stockActual }})</option>
+                  @for (a of items(); track a.itemId) {
+                    <option [ngValue]="a.itemId">{{ a.name }} (stock: {{ a.currentStock }})</option>
                   }
                 </select>
               </span>
@@ -145,7 +145,7 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             <label class="field" for="mf-tipo">
               <span class="field__label">Tipo</span>
               <span class="field__control">
-                <select id="mf-tipo" [(ngModel)]="formMovimiento.tipoMovimiento" name="mf-tipo">
+                <select id="mf-tipo" [(ngModel)]="formMovimiento.movementType" name="mf-tipo">
                   <option value="ENTRADA">Entrada</option>
                   <option value="SALIDA">Salida</option>
                   <option value="AJUSTE">Ajuste</option>
@@ -156,15 +156,15 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
           <div class="fila-2">
             <label class="field" for="mf-cantidad">
               <span class="field__label">Cantidad</span>
-              <span class="field__control"><input id="mf-cantidad" type="number" min="1" [(ngModel)]="formMovimiento.cantidad" name="mf-cantidad" /></span>
+              <span class="field__control"><input id="mf-cantidad" type="number" min="1" [(ngModel)]="formMovimiento.quantity" name="mf-cantidad" /></span>
             </label>
             <label class="field" for="mf-motivo">
               <span class="field__label">Motivo (opcional)</span>
-              <span class="field__control"><input id="mf-motivo" [(ngModel)]="formMovimiento.motivo" name="mf-motivo" /></span>
+              <span class="field__control"><input id="mf-motivo" [(ngModel)]="formMovimiento.reason" name="mf-motivo" /></span>
             </label>
           </div>
           <div class="acciones">
-            <button class="btn btn--primary" type="button" [disabled]="guardandoMovimiento() || !formMovimiento.idArticulo || !formMovimiento.cantidad" (click)="registrarMovimiento()">
+            <button class="btn btn--primary" type="button" [disabled]="guardandoMovimiento() || !formMovimiento.itemId || !formMovimiento.quantity" (click)="registrarMovimiento()">
               @if (guardandoMovimiento()) { <span class="spinner"></span> Guardando… } @else { Registrar movimiento }
             </button>
           </div>
@@ -176,14 +176,14 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
           } @else if (movimientos().length === 0) {
             <p class="aviso">Sin movimientos registrados todavía.</p>
           } @else {
-            @for (m of movimientos(); track m.idMovimiento) {
+            @for (m of movimientos(); track m.movementId) {
               <div class="fila-movimiento">
-                <span class="badge" [class.badge--success]="m.tipoMovimiento === 'ENTRADA'" [class.badge--danger]="m.tipoMovimiento === 'SALIDA'" [class.badge--info]="m.tipoMovimiento === 'AJUSTE'">
-                  {{ m.tipoMovimiento }}
+                <span class="badge" [class.badge--success]="m.movementType === 'ENTRADA'" [class.badge--danger]="m.movementType === 'SALIDA'" [class.badge--info]="m.movementType === 'AJUSTE'">
+                  {{ m.movementType }}
                 </span>
-                <span class="nombre-articulo">{{ m.articulo }}</span>
-                <span class="cantidad-movimiento">{{ m.cantidad }}</span>
-                <span class="meta-movimiento">{{ m.registradoPor }} · {{ fechaHora(m.fechaMovimiento) }}</span>
+                <span class="nombre-articulo">{{ m.item }}</span>
+                <span class="cantidad-movimiento">{{ m.quantity }}</span>
+                <span class="meta-movimiento">{{ m.registeredBy }} · {{ fechaHora(m.movementDate) }}</span>
               </div>
             }
           }
@@ -197,41 +197,41 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             <label class="field" for="asf-articulo">
               <span class="field__label">Artículo</span>
               <span class="field__control">
-                <select id="asf-articulo" [(ngModel)]="formAsignacion.idArticulo" name="asf-articulo">
+                <select id="asf-articulo" [(ngModel)]="formAsignacion.itemId" name="asf-articulo">
                   <option [ngValue]="null" disabled>Selecciona…</option>
-                  @for (a of articulos(); track a.idArticulo) {
-                    <option [ngValue]="a.idArticulo">{{ a.nombre }} (stock: {{ a.stockActual }})</option>
+                  @for (a of items(); track a.itemId) {
+                    <option [ngValue]="a.itemId">{{ a.name }} (stock: {{ a.currentStock }})</option>
                   }
                 </select>
               </span>
             </label>
             <label class="field" for="asf-cantidad">
               <span class="field__label">Cantidad</span>
-              <span class="field__control"><input id="asf-cantidad" type="number" min="1" [(ngModel)]="formAsignacion.cantidad" name="asf-cantidad" /></span>
+              <span class="field__control"><input id="asf-cantidad" type="number" min="1" [(ngModel)]="formAsignacion.quantity" name="asf-cantidad" /></span>
             </label>
           </div>
           <div class="tabs tabs--secundario">
-            <button type="button" class="tab" [class.tab--activo]="formAsignacion.tipoDestinatario === 'ESTUDIANTE'" (click)="cambiarTipoDestinatario('ESTUDIANTE')">Estudiante</button>
-            <button type="button" class="tab" [class.tab--activo]="formAsignacion.tipoDestinatario === 'ENTRENADOR'" (click)="cambiarTipoDestinatario('ENTRENADOR')">Entrenador</button>
+            <button type="button" class="tab" [class.tab--activo]="formAsignacion.recipientType === 'ESTUDIANTE'" (click)="cambiarTipoDestinatario('ESTUDIANTE')">Estudiante</button>
+            <button type="button" class="tab" [class.tab--activo]="formAsignacion.recipientType === 'ENTRENADOR'" (click)="cambiarTipoDestinatario('ENTRENADOR')">Entrenador</button>
           </div>
           <label class="field" for="asf-destinatario">
-            <span class="field__label">{{ formAsignacion.tipoDestinatario === 'ESTUDIANTE' ? 'Estudiante' : 'Entrenador' }}</span>
+            <span class="field__label">{{ formAsignacion.recipientType === 'ESTUDIANTE' ? 'Estudiante' : 'Entrenador' }}</span>
             <span class="field__control">
               <select id="asf-destinatario" [(ngModel)]="formAsignacion.idDestinatario" name="asf-destinatario">
                 <option [ngValue]="null" disabled>Selecciona…</option>
                 @for (p of opcionesDestinatario(); track p.id) {
-                  <option [ngValue]="p.id">{{ p.nombreCompleto }}</option>
+                  <option [ngValue]="p.id">{{ p.fullName }}</option>
                 }
               </select>
             </span>
           </label>
           <label class="field" for="asf-observaciones">
             <span class="field__label">Observaciones (opcional)</span>
-            <span class="field__control"><input id="asf-observaciones" [(ngModel)]="formAsignacion.observaciones" name="asf-observaciones" /></span>
+            <span class="field__control"><input id="asf-observaciones" [(ngModel)]="formAsignacion.notes" name="asf-observaciones" /></span>
           </label>
           <div class="acciones">
             <button class="btn btn--primary" type="button"
-                    [disabled]="guardandoAsignacion() || !formAsignacion.idArticulo || !formAsignacion.idDestinatario"
+                    [disabled]="guardandoAsignacion() || !formAsignacion.itemId || !formAsignacion.idDestinatario"
                     (click)="crearAsignacion()">
               @if (guardandoAsignacion()) { <span class="spinner"></span> Guardando… } @else { Asignar }
             </button>
@@ -244,15 +244,15 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
           } @else if (asignaciones().length === 0) {
             <p class="aviso">Sin asignaciones registradas todavía.</p>
           } @else {
-            @for (a of asignaciones(); track a.idAsignacion) {
+            @for (a of asignaciones(); track a.assignmentId) {
               <div class="fila-asignacion">
-                <span class="badge" [class.badge--info]="a.estado === 'ASIGNADO'" [class.badge--success]="a.estado === 'DEVUELTO'" [class.badge--danger]="a.estado === 'PERDIDO'">
-                  {{ a.estado }}
+                <span class="badge" [class.badge--info]="a.status === 'ASIGNADO'" [class.badge--success]="a.status === 'DEVUELTO'" [class.badge--danger]="a.status === 'PERDIDO'">
+                  {{ a.status }}
                 </span>
-                <span class="nombre-articulo">{{ a.articulo }} × {{ a.cantidad }}</span>
-                <span class="destinatario-asignacion">{{ a.estudiante ?? a.entrenador }}</span>
-                <span class="meta-movimiento">{{ a.fechaAsignacion }}</span>
-                @if (a.estado === 'ASIGNADO') {
+                <span class="nombre-articulo">{{ a.item }} × {{ a.quantity }}</span>
+                <span class="destinatario-asignacion">{{ a.student ?? a.coach }}</span>
+                <span class="meta-movimiento">{{ a.assignmentDate }}</span>
+                @if (a.status === 'ASIGNADO') {
                   <button class="btn btn--ghost btn--pequeno" type="button" (click)="devolver(a, 'DEVUELTO')">Devuelto</button>
                   <button class="btn btn--ghost btn--pequeno" type="button" (click)="devolver(a, 'PERDIDO')">Perdido</button>
                 }
@@ -288,8 +288,8 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
     .cabecera-catalogo { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
     .toggle-bajas { display: flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--color-text-muted); }
     .fila-articulo--bajo .stock-articulo { color: var(--color-danger-600, #c0392b); font-weight: 700; }
-    .nombre-articulo, .destinatario-asignacion { flex: 1; }
-    .stock-articulo, .cantidad-movimiento { font-weight: 600; }
+    .name-articulo, .destinatario-asignacion { flex: 1; }
+    .stock-articulo, .quantity-movimiento { font-weight: 600; }
     .meta-movimiento { color: var(--color-text-faint); font-size: .8rem; }
     .alert--warning { background: #fff8e1; color: #8a6100; border: 1px solid #f0d98c; padding: .6rem .9rem; border-radius: var(--radius-sm); font-size: .85rem; }
     .badge--danger { background: #fdecea; color: #c0392b; }
@@ -301,27 +301,27 @@ export class InventarioComponent implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly servicio = inject(InventarioService);
 
-  readonly rol = computed(() => this.auth.currentUser()?.rol ?? '');
+  readonly rol = computed(() => this.auth.currentUser()?.role ?? '');
   readonly puedeGestionarCatalogo = computed(() => this.rol() === 'ADMINISTRADOR' || this.rol() === 'RECEPCIONISTA');
 
   readonly tabsVisibles = computed<Tab[]>(() =>
     this.rol() === 'ENTRENADOR' ? ['asignaciones'] : ['articulos', 'movimientos', 'asignaciones']);
   readonly tabActiva = signal<Tab>('articulos');
 
-  readonly articulos = signal<ArticuloResponse[]>([]);
+  readonly items = signal<ArticuloResponse[]>([]);
   readonly mostrarBajas = signal(false);
   readonly cargandoArticulos = signal(true);
   readonly stockBajoTotal = signal(0);
 
   readonly idArticuloEditando = signal<number | null>(null);
-  formArticulo = { nombre: '', tipo: 'IMPLEMENTO' as TipoArticulo, talla: '', descripcion: '', stockMinimo: 0, unidadMedida: 'unidad' };
+  formArticulo = { name: '', type: 'IMPLEMENTO' as TipoArticulo, size: '', description: '', minimumStock: 0, unitOfMeasure: 'unidad' };
   readonly guardandoArticulo = signal(false);
   readonly errorArticulo = signal('');
 
   readonly movimientos = signal<MovimientoResponse[]>([]);
   readonly cargandoMovimientos = signal(true);
-  formMovimiento: { idArticulo: number | null; tipoMovimiento: TipoMovimiento; cantidad: number | null; motivo: string } =
-    { idArticulo: null, tipoMovimiento: 'ENTRADA', cantidad: null, motivo: '' };
+  formMovimiento: { itemId: number | null; movementType: TipoMovimiento; quantity: number | null; reason: string } =
+    { itemId: null, movementType: 'ENTRADA', quantity: null, reason: '' };
   readonly guardandoMovimiento = signal(false);
   readonly errorMovimiento = signal('');
 
@@ -330,9 +330,9 @@ export class InventarioComponent implements OnInit {
   readonly estudiantesOpcion = signal<PersonaOpcion[]>([]);
   readonly entrenadoresOpcion = signal<PersonaOpcion[]>([]);
   readonly opcionesDestinatario = computed(() =>
-    this.formAsignacion.tipoDestinatario === 'ESTUDIANTE' ? this.estudiantesOpcion() : this.entrenadoresOpcion());
-  formAsignacion: { idArticulo: number | null; cantidad: number | null; tipoDestinatario: TipoDestinatario; idDestinatario: number | null; observaciones: string } =
-    { idArticulo: null, cantidad: 1, tipoDestinatario: 'ESTUDIANTE', idDestinatario: null, observaciones: '' };
+    this.formAsignacion.recipientType === 'ESTUDIANTE' ? this.estudiantesOpcion() : this.entrenadoresOpcion());
+  formAsignacion: { itemId: number | null; quantity: number | null; recipientType: TipoDestinatario; idDestinatario: number | null; notes: string } =
+    { itemId: null, quantity: 1, recipientType: 'ESTUDIANTE', idDestinatario: null, notes: '' };
   readonly guardandoAsignacion = signal(false);
   readonly errorAsignacion = signal('');
 
@@ -355,7 +355,7 @@ export class InventarioComponent implements OnInit {
     this.servicio.listarEntrenadoresOpcion().subscribe({ next: (e) => this.entrenadoresOpcion.set(e) });
 
     if (this.puedeGestionarCatalogo()) {
-      this.servicio.stockBajo().subscribe({ next: (r) => this.stockBajoTotal.set(r.total) });
+      this.servicio.stockBajo().subscribe({ next: (r) => this.stockBajoTotal.set(r.totalElements) });
     }
   }
 
@@ -365,14 +365,14 @@ export class InventarioComponent implements OnInit {
 
     if (this.mostrarBajas()) {
       this.servicio.listarArticulosConBajas().subscribe({
-        next: (pagina) => { this.articulos.set(pagina.content); this.cargandoArticulos.set(false); },
+        next: (pagina) => { this.items.set(pagina.content); this.cargandoArticulos.set(false); },
         error: (e) => { this.errorArticulo.set(this.mensajeDeError(e)); this.cargandoArticulos.set(false); },
       });
       return;
     }
 
     this.servicio.listarArticulosActivos().subscribe({
-      next: (a) => { this.articulos.set(a); this.cargandoArticulos.set(false); },
+      next: (a) => { this.items.set(a); this.cargandoArticulos.set(false); },
       error: (e) => { this.errorArticulo.set(this.mensajeDeError(e)); this.cargandoArticulos.set(false); },
     });
   }
@@ -385,7 +385,7 @@ export class InventarioComponent implements OnInit {
   reactivarArticulo(a: ArticuloResponse): void {
     this.guardandoArticulo.set(true);
     this.errorArticulo.set('');
-    this.servicio.reactivarArticulo(a.idArticulo).subscribe({
+    this.servicio.reactivarArticulo(a.itemId).subscribe({
       next: () => { this.guardandoArticulo.set(false); this.cargarArticulos(); },
       error: (e) => { this.guardandoArticulo.set(false); this.errorArticulo.set(this.mensajeDeError(e)); },
     });
@@ -400,33 +400,33 @@ export class InventarioComponent implements OnInit {
   }
 
   cambiarTipoDestinatario(tipo: TipoDestinatario): void {
-    this.formAsignacion.tipoDestinatario = tipo;
+    this.formAsignacion.recipientType = tipo;
     this.formAsignacion.idDestinatario = null;
   }
 
   editarArticulo(a: ArticuloResponse): void {
-    this.idArticuloEditando.set(a.idArticulo);
-    this.formArticulo = { nombre: a.nombre, tipo: a.tipo, talla: a.talla ?? '', descripcion: a.descripcion ?? '', stockMinimo: a.stockMinimo, unidadMedida: a.unidadMedida };
+    this.idArticuloEditando.set(a.itemId);
+    this.formArticulo = { name: a.name, type: a.type, size: a.size ?? '', description: a.description ?? '', minimumStock: a.minimumStock, unitOfMeasure: a.unitOfMeasure };
     this.errorArticulo.set('');
   }
 
   cancelarEdicionArticulo(): void {
     this.idArticuloEditando.set(null);
-    this.formArticulo = { nombre: '', tipo: 'IMPLEMENTO', talla: '', descripcion: '', stockMinimo: 0, unidadMedida: 'unidad' };
+    this.formArticulo = { name: '', type: 'IMPLEMENTO', size: '', description: '', minimumStock: 0, unitOfMeasure: 'unidad' };
   }
 
   guardarArticulo(): void {
-    if (!this.formArticulo.nombre) return;
+    if (!this.formArticulo.name) return;
     this.guardandoArticulo.set(true);
     this.errorArticulo.set('');
 
     const request = {
-      nombre: this.formArticulo.nombre,
-      tipo: this.formArticulo.tipo,
-      talla: this.formArticulo.talla || null,
-      descripcion: this.formArticulo.descripcion || null,
-      stockMinimo: this.formArticulo.stockMinimo,
-      unidadMedida: this.formArticulo.unidadMedida || null,
+      name: this.formArticulo.name,
+      type: this.formArticulo.type,
+      size: this.formArticulo.size || null,
+      description: this.formArticulo.description || null,
+      minimumStock: this.formArticulo.minimumStock,
+      unitOfMeasure: this.formArticulo.unitOfMeasure || null,
     };
 
     const idEditando = this.idArticuloEditando();
@@ -435,8 +435,8 @@ export class InventarioComponent implements OnInit {
     peticion.subscribe({
       next: (articulo) => {
         this.guardandoArticulo.set(false);
-        const lista = this.articulos().filter((a) => a.idArticulo !== articulo.idArticulo);
-        this.articulos.set([...lista, articulo].sort((a, b) => a.nombre.localeCompare(b.nombre)));
+        const lista = this.items().filter((a) => a.itemId !== articulo.itemId);
+        this.items.set([...lista, articulo].sort((a, b) => a.name.localeCompare(b.name)));
         this.cancelarEdicionArticulo();
       },
       error: (err) => { this.guardandoArticulo.set(false); this.errorArticulo.set(this.mensajeDeError(err)); },
@@ -446,66 +446,66 @@ export class InventarioComponent implements OnInit {
   eliminarArticulo(a: ArticuloResponse): void {
     this.guardandoArticulo.set(true);
     this.errorArticulo.set('');
-    this.servicio.eliminarArticulo(a.idArticulo).subscribe({
+    this.servicio.eliminarArticulo(a.itemId).subscribe({
       next: () => { this.guardandoArticulo.set(false); this.cargarArticulos(); },
       error: (e) => { this.guardandoArticulo.set(false); this.errorArticulo.set(this.mensajeDeError(e)); },
     });
   }
 
   registrarMovimiento(): void {
-    const { idArticulo, tipoMovimiento, cantidad, motivo } = this.formMovimiento;
-    if (idArticulo === null || !cantidad) return;
+    const { itemId, movementType, quantity, reason } = this.formMovimiento;
+    if (itemId === null || !quantity) return;
     this.guardandoMovimiento.set(true);
     this.errorMovimiento.set('');
 
-    this.servicio.registrarMovimiento({ idArticulo, tipoMovimiento, cantidad, motivo: motivo || null }).subscribe({
+    this.servicio.registrarMovimiento({ itemId, movementType, quantity, reason: reason || null }).subscribe({
       next: (movimiento) => {
         this.guardandoMovimiento.set(false);
         this.movimientos.set([movimiento, ...this.movimientos()]);
-        this.actualizarStockLocal(idArticulo, tipoMovimiento === 'SALIDA' ? -cantidad : cantidad);
-        this.formMovimiento = { idArticulo: null, tipoMovimiento: 'ENTRADA', cantidad: null, motivo: '' };
+        this.actualizarStockLocal(itemId, movementType === 'SALIDA' ? -quantity : quantity);
+        this.formMovimiento = { itemId: null, movementType: 'ENTRADA', quantity: null, reason: '' };
       },
       error: (err) => { this.guardandoMovimiento.set(false); this.errorMovimiento.set(this.mensajeDeError(err)); },
     });
   }
 
   crearAsignacion(): void {
-    const { idArticulo, cantidad, tipoDestinatario, idDestinatario, observaciones } = this.formAsignacion;
-    if (idArticulo === null || !cantidad || idDestinatario === null) return;
+    const { itemId, quantity, recipientType, idDestinatario, notes } = this.formAsignacion;
+    if (itemId === null || !quantity || idDestinatario === null) return;
     this.guardandoAsignacion.set(true);
     this.errorAsignacion.set('');
 
     this.servicio.crearAsignacion({
-      idArticulo, cantidad, tipoDestinatario,
-      idEstudiante: tipoDestinatario === 'ESTUDIANTE' ? idDestinatario : null,
-      idEntrenador: tipoDestinatario === 'ENTRENADOR' ? idDestinatario : null,
-      fechaDevolucionEsperada: null,
-      observaciones: observaciones || null,
+      itemId, quantity, recipientType,
+      studentId: recipientType === 'ESTUDIANTE' ? idDestinatario : null,
+      coachId: recipientType === 'ENTRENADOR' ? idDestinatario : null,
+      expectedReturnDate: null,
+      notes: notes || null,
     }).subscribe({
       next: (asignacion) => {
         this.guardandoAsignacion.set(false);
         this.asignaciones.set([asignacion, ...this.asignaciones()]);
-        this.actualizarStockLocal(idArticulo, -cantidad);
-        this.formAsignacion = { idArticulo: null, cantidad: 1, tipoDestinatario, idDestinatario: null, observaciones: '' };
+        this.actualizarStockLocal(itemId, -quantity);
+        this.formAsignacion = { itemId: null, quantity: 1, recipientType, idDestinatario: null, notes: '' };
       },
       error: (err) => { this.guardandoAsignacion.set(false); this.errorAsignacion.set(this.mensajeDeError(err)); },
     });
   }
 
-  devolver(a: AsignacionResponse, estado: EstadoAsignacion & ('DEVUELTO' | 'PERDIDO')): void {
+  devolver(a: AsignacionResponse, status: EstadoAsignacion & ('DEVUELTO' | 'PERDIDO')): void {
     this.errorAsignacion.set('');
-    this.servicio.devolverAsignacion(a.idAsignacion, { estado, observaciones: null }).subscribe({
+    this.servicio.devolverAsignacion(a.assignmentId, { status, notes: null }).subscribe({
       next: (actualizada) => {
-        this.asignaciones.set(this.asignaciones().map((x) => x.idAsignacion === actualizada.idAsignacion ? actualizada : x));
-        if (estado === 'DEVUELTO') this.actualizarStockLocal(a.idArticulo, a.cantidad);
+        this.asignaciones.set(this.asignaciones().map((x) => x.assignmentId === actualizada.assignmentId ? actualizada : x));
+        if (status === 'DEVUELTO') this.actualizarStockLocal(a.itemId, a.quantity);
       },
       error: (err) => this.errorAsignacion.set(this.mensajeDeError(err)),
     });
   }
 
   private actualizarStockLocal(idArticulo: number, delta: number): void {
-    this.articulos.set(this.articulos().map((art) =>
-      art.idArticulo === idArticulo ? { ...art, stockActual: art.stockActual + delta } : art));
+    this.items.set(this.items().map((art) =>
+      art.itemId === idArticulo ? { ...art, currentStock: art.currentStock + delta } : art));
   }
 
   private mensajeDeError(err: unknown): string {

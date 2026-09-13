@@ -155,10 +155,10 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
 
         @if (usuario(); as u) {
           <div class="sidebar__usuario">
-            <span class="avatar">{{ iniciales(u.nombre) }}</span>
+            <span class="avatar">{{ iniciales(u.name) }}</span>
             <span class="sidebar__usuario-texto">
-              <span class="nombre">{{ u.nombre }}</span>
-              <span class="rol">{{ u.rol }}</span>
+              <span class="nombre">{{ u.name }}</span>
+              <span class="rol">{{ u.role }}</span>
             </span>
             <button class="btn btn--ghost btn--icono" (click)="logout()" aria-label="Cerrar sesión" title="Cerrar sesión">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
@@ -203,7 +203,7 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     }
     .sidebar__item svg { width: 19px; height: 19px; flex-shrink: 0; }
     .sidebar__item:hover { background: var(--color-border-light); color: var(--color-text); }
-    .sidebar__item.activo { background: var(--color-primary-50); color: var(--color-primary-700); }
+    .sidebar__item.active { background: var(--color-primary-50); color: var(--color-primary-700); }
     .sidebar__colapsar {
       display: flex; align-items: center; gap: .75rem; padding: .6rem .75rem; margin-top: .5rem;
       border: none; background: none; border-radius: var(--radius-sm); cursor: pointer;
@@ -214,8 +214,8 @@ const NAV_POR_ROL: Record<string, NavItem[]> = {
     .sidebar__colapsar svg { width: 17px; height: 17px; flex-shrink: 0; }
     .sidebar__usuario { display: flex; align-items: center; gap: .6rem; padding-top: 1rem; border-top: 1px solid var(--color-border-light); }
     .sidebar__usuario-texto { display: flex; flex-direction: column; flex: 1; min-width: 0; line-height: 1.25; }
-    .sidebar__usuario-texto .nombre { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .sidebar__usuario-texto .rol { font-size: .72rem; color: var(--color-text-faint); text-transform: capitalize; }
+    .sidebar__usuario-texto .name { font-size: .82rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar__usuario-texto .role { font-size: .72rem; color: var(--color-text-faint); text-transform: capitalize; }
     .btn--icono { padding: .5rem; flex-shrink: 0; }
     .btn--icono svg { width: 17px; height: 17px; }
     .shell__contenido { flex: 1; min-width: 0; }
@@ -274,7 +274,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   private readonly actualizaciones = inject(SwUpdate);
 
   readonly usuario = this.authService.currentUser;
-  readonly navItems = computed<NavItem[]>(() => NAV_POR_ROL[this.usuario()?.rol ?? ''] ?? []);
+  readonly navItems = computed<NavItem[]>(() => NAV_POR_ROL[this.usuario()?.role ?? ''] ?? []);
 
   readonly colapsada = signal(localStorage.getItem(CLAVE_COLAPSADA) === 'true');
   readonly menuMovilAbierto = signal(false);
@@ -282,7 +282,7 @@ export class AppShellComponent implements OnInit, OnDestroy {
   readonly ahora = signal(new Date());
   private intervaloReloj?: ReturnType<typeof setInterval>;
 
-  readonly primerNombre = computed(() => this.usuario()?.nombre?.split(' ')[0] ?? '');
+  readonly primerNombre = computed(() => this.usuario()?.name?.split(' ')[0] ?? '');
   readonly horaActual = computed(() =>
     relojEn12(this.ahora()));
   readonly fechaHoy = computed(() =>

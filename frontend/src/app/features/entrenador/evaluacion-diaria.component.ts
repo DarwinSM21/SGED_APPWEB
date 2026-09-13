@@ -40,13 +40,13 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
       } @else if (sesion(); as s) {
         <div class="banner">
           <div>
-            <p class="banner-titulo">Evaluación diaria — {{ s.categoria }}</p>
+            <p class="banner-titulo">Evaluación diaria — {{ s.category }}</p>
             <p class="banner-sub">
               {{ fechaFormateada() }}
               @if (hayPrecargados()) { · Valores heredados del día anterior }
             </p>
           </div>
-          @if (s.estado === 'BORRADOR') {
+          @if (s.status === 'BORRADOR') {
             <button class="btn btn--primary" (click)="finalizar()" [disabled]="finalizando()">
               @if (finalizando()) { <span class="spinner"></span> Finalizando… } @else { Finalizar sesión }
             </button>
@@ -61,29 +61,29 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
 
         @if (errorPosicion()) { <p class="alert alert--danger">{{ errorPosicion() }}</p> }
 
-        @for (j of s.jugadores; track j.idEstudiante) {
-          <article class="card jugador" [class.bloqueado]="!j.puedeEvaluarse">
-            <button type="button" class="jugador-cabecera" (click)="alternar(j.idEstudiante)"
-                    [attr.aria-expanded]="estaExpandido(j.idEstudiante)">
-              <span class="avatar" [class.avatar--muted]="!j.puedeEvaluarse">{{ iniciales(j.nombreCompleto) }}</span>
+        @for (j of s.players; track j.studentId) {
+          <article class="card jugador" [class.bloqueado]="!j.canBeEvaluated">
+            <button type="button" class="jugador-cabecera" (click)="alternar(j.studentId)"
+                    [attr.aria-expanded]="estaExpandido(j.studentId)">
+              <span class="avatar" [class.avatar--muted]="!j.canBeEvaluated">{{ iniciales(j.fullName) }}</span>
               <span class="jugador-info">
-                <span class="nombre">{{ j.nombreCompleto }}</span>
+                <span class="nombre">{{ j.fullName }}</span>
                 <span class="categoria-chica">
-                  {{ j.categoria }}
-                  @if (j.lesionado) { · <span class="texto-lesion">Lesionado</span> }
-                  @if (j.precargado && j.puedeEvaluarse) { · Valores heredados }
+                  {{ j.category }}
+                  @if (j.injured) { · <span class="texto-lesion">Lesionado</span> }
+                  @if (j.preloaded && j.canBeEvaluated) { · Valores heredados }
                 </span>
               </span>
-              <span class="badge" [class]="'estado-' + (j.estadoAsistencia ?? 'sin_marcar').toLowerCase()">
-                {{ etiquetaEstado(j.estadoAsistencia) }}
+              <span class="badge" [class]="'estado-' + (j.attendanceStatus ?? 'sin_marcar').toLowerCase()">
+                {{ etiquetaEstado(j.attendanceStatus) }}
               </span>
-              <svg class="chevron" [class.abierto]="estaExpandido(j.idEstudiante)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              <svg class="chevron" [class.abierto]="estaExpandido(j.studentId)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
             </button>
 
-            @if (estaExpandido(j.idEstudiante)) {
+            @if (estaExpandido(j.studentId)) {
               <div class="panel-lesion">
-                @if (!j.lesionado) {
-                  @if (formularioLesionAbierto() === j.idEstudiante) {
+                @if (!j.injured) {
+                  @if (formularioLesionAbierto() === j.studentId) {
                     <div class="form-lesion">
                       <label class="campo-lesion">
                         <span>Descripción</span>
@@ -110,17 +110,17 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
                       </div>
                     </div>
                   } @else {
-                    <button type="button" class="btn btn--ghost btn--sm" (click)="abrirFormularioLesion(j.idEstudiante)">
+                    <button type="button" class="btn btn--ghost btn--sm" (click)="abrirFormularioLesion(j.studentId)">
                       Marcar lesión
                     </button>
                   }
                 } @else {
                   <div class="lesion-activa">
-                    @if (errorLesion() && dandoDeAlta() === j.idEstudiante) {
+                    @if (errorLesion() && dandoDeAlta() === j.studentId) {
                       <p class="alert alert--danger">{{ errorLesion() }}</p>
                     }
-                    <button type="button" class="btn btn--secondary btn--sm" (click)="darDeAlta(j)" [disabled]="dandoDeAlta() === j.idEstudiante">
-                      @if (dandoDeAlta() === j.idEstudiante) { <span class="spinner"></span> Dando de alta… } @else { Dar de alta }
+                    <button type="button" class="btn btn--secondary btn--sm" (click)="darDeAlta(j)" [disabled]="dandoDeAlta() === j.studentId">
+                      @if (dandoDeAlta() === j.studentId) { <span class="spinner"></span> Dando de alta… } @else { Dar de alta }
                     </button>
                   </div>
                 }
@@ -129,34 +129,34 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
               <label class="campo-posicion">
                 <span>Posición</span>
                 <select
-                  [ngModel]="j.idPosicion"
+                  [ngModel]="j.positionId"
                   (ngModelChange)="cambiarPosicion(j, $event)"
-                  [disabled]="guardandoPosicion() === j.idEstudiante"
-                  [attr.aria-label]="'Posición de ' + j.nombreCompleto">
+                  [disabled]="guardandoPosicion() === j.studentId"
+                  [attr.aria-label]="'Posición de ' + j.fullName">
                   <option [ngValue]="null">Sin posición</option>
-                  @for (p of posiciones(); track p.idPosicion) {
-                    <option [ngValue]="p.idPosicion">{{ p.nombre }} ({{ p.abreviatura }})</option>
+                  @for (p of posiciones(); track p.positionId) {
+                    <option [ngValue]="p.positionId">{{ p.name }} ({{ p.abbreviation }})</option>
                   }
                 </select>
               </label>
 
-              @if (!j.puedeEvaluarse) {
-                <p class="motivo">{{ j.motivoBloqueo }}</p>
+              @if (!j.canBeEvaluated) {
+                <p class="motivo">{{ j.blockReason }}</p>
               } @else {
                 <div class="criterios">
-                  @for (c of s.criterios; track c.idCriterio) {
+                  @for (c of s.criteria; track c.criterionId) {
                     <label class="criterio">
                       <span class="criterio-nombre">
-                        {{ c.nombre }}
-                        <b>{{ valor(j, c.nombre) }}/{{ c.puntajeMaximo }}</b>
+                        {{ c.name }}
+                        <b>{{ valor(j, c.name) }}/{{ c.maxScore }}</b>
                       </span>
                       <input
                         type="range"
-                        min="0" [max]="c.puntajeMaximo" step="0.5"
-                        [ngModel]="valor(j, c.nombre)"
-                        (ngModelChange)="cambiar(j, c.nombre, c.idCriterio, $event)"
-                        [disabled]="s.estado === 'FINALIZADA'"
-                        [attr.aria-label]="c.nombre + ' de ' + j.nombreCompleto" />
+                        min="0" [max]="c.maxScore" step="0.5"
+                        [ngModel]="valor(j, c.name)"
+                        (ngModelChange)="cambiar(j, c.name, c.criterionId, $event)"
+                        [disabled]="s.status === 'FINALIZADA'"
+                        [attr.aria-label]="c.name + ' de ' + j.fullName" />
                       <span class="escala"><span>Bajo</span><span>Medio</span><span>Alto</span></span>
                     </label>
                   }
@@ -171,7 +171,7 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
           </div>
         }
 
-        <a class="btn btn--secondary btn--block pasar-lista" [routerLink]="['/entrenador/sesion', s.idSesion, 'asistencia']">
+        <a class="btn btn--secondary btn--block pasar-lista" [routerLink]="['/entrenador/sesion', s.sessionId, 'asistencia']">
           Pasar lista de asistencia
         </a>
       }
@@ -188,13 +188,13 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
     }
     .banner-titulo { font-weight: 700; color: var(--color-primary-700); font-size: .95rem; }
     .banner-sub { margin-top: .2rem; font-size: .8rem; color: var(--color-info-text); }
-    .estado-guardado {
+    .status-guardado {
       display: flex; align-items: center; gap: .4rem;
       font-size: .78rem; margin: 0 .1rem .9rem; color: var(--color-success-text); font-weight: 600;
     }
     .punto-estado { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-    .estado-guardado.trabajando { color: var(--color-warning-text); }
-    .estado-guardado.pendiente { color: var(--color-danger-text); }
+    .status-guardado.trabajando { color: var(--color-warning-text); }
+    .status-guardado.pendiente { color: var(--color-danger-text); }
     .aviso { padding: .75rem .1rem; color: var(--color-text-muted); }
     .vacio {
       display: flex; flex-direction: column; align-items: center; gap: .65rem;
@@ -210,30 +210,30 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
       text-align: left; font: inherit; color: inherit;
     }
     .jugador-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-    .nombre { font-weight: 600; }
-    .categoria-chica { font-size: .76rem; color: var(--color-text-muted); }
-    .texto-lesion { color: var(--color-danger-text); font-weight: 700; }
-    .badge.estado-presente { background: var(--color-success-bg); color: var(--color-success-text); }
-    .badge.estado-tarde { background: var(--color-warning-bg); color: var(--color-warning-text); }
-    .badge.estado-ausente, .badge.estado-justificado, .badge.estado-sin_marcar { background: var(--color-neutral-bg); color: var(--color-neutral-text); }
+    .name { font-weight: 600; }
+    .category-chica { font-size: .76rem; color: var(--color-text-muted); }
+    .text-lesion { color: var(--color-danger-text); font-weight: 700; }
+    .badge.status-presente { background: var(--color-success-bg); color: var(--color-success-text); }
+    .badge.status-tarde { background: var(--color-warning-bg); color: var(--color-warning-text); }
+    .badge.status-ausente, .badge.status-justificado, .badge.status-sin_marcar { background: var(--color-neutral-bg); color: var(--color-neutral-text); }
     .chevron { width: 19px; height: 19px; color: var(--color-text-faint); flex-shrink: 0; transition: transform .15s; }
     .chevron.abierto { transform: rotate(90deg); }
-    .motivo { margin: 0 .95rem .9rem; color: var(--color-text-muted); font-size: .875rem; }
-    .campo-posicion {
+    .reason { margin: 0 .95rem .9rem; color: var(--color-text-muted); font-size: .875rem; }
+    .field-posicion {
       display: flex; flex-direction: column; gap: .35rem; font-size: .8rem; font-weight: 600;
       color: var(--color-text); padding: .8rem .95rem 0; border-top: 1px solid var(--color-border-light);
     }
-    .campo-posicion select {
+    .field-posicion select {
       border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
       padding: .5rem .6rem; font-size: .85rem; font-family: inherit;
       background: var(--color-surface); color: var(--color-text);
     }
-    .criterios { padding: .2rem .95rem .95rem; }
+    .criteria { padding: .2rem .95rem .95rem; }
     .panel-lesion { padding: .7rem .95rem; border-top: 1px solid var(--color-border-light); }
     .btn--sm { padding: .4rem .8rem; font-size: .8rem; }
     .form-lesion { display: flex; flex-direction: column; gap: .7rem; }
-    .campo-lesion { display: flex; flex-direction: column; gap: .35rem; font-size: .8rem; font-weight: 600; color: var(--color-text); }
-    .campo-lesion textarea, .campo-lesion input {
+    .field-lesion { display: flex; flex-direction: column; gap: .35rem; font-size: .8rem; font-weight: 600; color: var(--color-text); }
+    .field-lesion textarea, .field-lesion input {
       border: 1.5px solid var(--color-border); border-radius: var(--radius-sm);
       padding: .6rem .7rem; font-size: .85rem; font-family: inherit;
       background: var(--color-surface); color: var(--color-text); resize: vertical;
@@ -245,9 +245,9 @@ const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
     .guia-texto-libre .contador { display: block; margin-top: .2rem; font-variant-numeric: tabular-nums; }
     .acciones-lesion { display: flex; gap: .5rem; }
     .lesion-activa { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
-    .criterio { display: block; margin-top: .9rem; }
-    .criterio-nombre { display: flex; justify-content: space-between; font-size: .875rem; margin-bottom: .3rem; }
-    .criterio-nombre b { color: var(--color-primary-600); }
+    .criterion { display: block; margin-top: .9rem; }
+    .criterion-nombre { display: flex; justify-content: space-between; font-size: .875rem; margin-bottom: .3rem; }
+    .criterion-nombre b { color: var(--color-primary-600); }
     .escala { display: flex; justify-content: space-between; font-size: .68rem; color: var(--color-text-faint); margin-top: .15rem; }
 
     input[type=range] {
@@ -295,18 +295,18 @@ export class EvaluacionDiariaComponent implements OnInit {
   readonly dandoDeAlta = signal<number | null>(null);
   readonly errorLesion = signal('');
 
-  private idSesion!: number;
+  private sessionId!: number;
 
   readonly hayPrecargados = computed(() =>
-    (this.sesion()?.jugadores ?? []).some((j) => j.precargado && j.puedeEvaluarse));
+    (this.sesion()?.players ?? []).some((j) => j.preloaded && j.canBeEvaluated));
 
   readonly fechaFormateada = computed(() => {
     const s = this.sesion();
-    return s ? formatearFechaEs(s.fecha) : '';
+    return s ? formatearFechaEs(s.date) : '';
   });
 
   readonly claseEstado = computed(() => {
-    switch (this.servicio.estado()) {
+    switch (this.servicio.status()) {
       case 'guardado': return '';
       case 'guardando': return 'trabajando';
       default: return 'pendiente';
@@ -314,7 +314,7 @@ export class EvaluacionDiariaComponent implements OnInit {
   });
 
   readonly textoEstado = computed(() => {
-    switch (this.servicio.estado()) {
+    switch (this.servicio.status()) {
       case 'guardado': return 'Todo guardado';
       case 'guardando': return 'Guardando…';
       case 'pendiente': return `Sin conexión · ${this.servicio.pendientes()} por enviar`;
@@ -323,9 +323,9 @@ export class EvaluacionDiariaComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.idSesion = Number(this.ruta.snapshot.paramMap.get('idSesion'));
+    this.sessionId = Number(this.ruta.snapshot.paramMap.get('idSesion'));
     this.servicio.posicionesActivas().subscribe({ next: (p) => this.posiciones.set(p) });
-    this.servicio.abrirSesion(this.idSesion).subscribe({
+    this.servicio.abrirSesion(this.sessionId).subscribe({
       next: (s) => {
         this.sesion.set(s);
         this.cargando.set(false);
@@ -353,42 +353,42 @@ export class EvaluacionDiariaComponent implements OnInit {
     this.expandidos.set(actuales);
   }
 
-  valor(jugador: JugadorEvaluable, criterio: string): number {
-    return jugador.puntajes[criterio] ?? 0;
+  valor(jugador: JugadorEvaluable, criterion: string): number {
+    return jugador.scores[criterion] ?? 0;
   }
 
-  cambiar(jugador: JugadorEvaluable, criterio: string, idCriterio: number, valor: number): void {
-    jugador.puntajes = { ...jugador.puntajes, [criterio]: valor };
+  cambiar(jugador: JugadorEvaluable, criterion: string, criterionId: number, valor: number): void {
+    jugador.scores = { ...jugador.scores, [criterion]: valor };
 
-    jugador.precargado = false;
+    jugador.preloaded = false;
 
     const s = this.sesion();
     if (!s) { return; }
 
-    this.servicio.guardarConRetardo(this.idSesion, {
-      idEstudiante: jugador.idEstudiante,
-      idPosicionJugada: jugador.idPosicion,
-      puntajes: s.criterios.map((c) => ({
-        idCriterio: c.idCriterio,
-        puntaje: jugador.puntajes[c.nombre] ?? 0,
+    this.servicio.guardarConRetardo(this.sessionId, {
+      studentId: jugador.studentId,
+      lineupPositionId: jugador.positionId,
+      scores: s.criteria.map((c) => ({
+        criterionId: c.criterionId,
+        score: jugador.scores[c.name] ?? 0,
       })),
     });
   }
 
-  cambiarPosicion(jugador: JugadorEvaluable, idPosicion: number | null): void {
-    const anterior = { idPosicion: jugador.idPosicion, posicion: jugador.posicion };
-    jugador.idPosicion = idPosicion;
-    jugador.posicion = idPosicion === null
+  cambiarPosicion(jugador: JugadorEvaluable, positionId: number | null): void {
+    const anterior = { positionId: jugador.positionId, position: jugador.position };
+    jugador.positionId = positionId;
+    jugador.position = positionId === null
       ? null
-      : (this.posiciones().find((p) => p.idPosicion === idPosicion)?.nombre ?? null);
+      : (this.posiciones().find((p) => p.positionId === positionId)?.name ?? null);
 
-    this.guardandoPosicion.set(jugador.idEstudiante);
+    this.guardandoPosicion.set(jugador.studentId);
     this.errorPosicion.set(null);
-    this.servicio.actualizarPosicionEstudiante(jugador.idEstudiante, idPosicion).subscribe({
+    this.servicio.actualizarPosicionEstudiante(jugador.studentId, positionId).subscribe({
       next: () => this.guardandoPosicion.set(null),
       error: (err) => {
-        jugador.idPosicion = anterior.idPosicion;
-        jugador.posicion = anterior.posicion;
+        jugador.positionId = anterior.positionId;
+        jugador.position = anterior.position;
         this.guardandoPosicion.set(null);
         this.errorPosicion.set(mensajeDeError(err, 'No se pudo guardar la posición.'));
       },
@@ -399,10 +399,10 @@ export class EvaluacionDiariaComponent implements OnInit {
     const s = this.sesion();
     if (!s || this.finalizando()) return;
     this.finalizando.set(true);
-    this.servicio.finalizar(this.idSesion, s.observacionGeneral ?? '').subscribe({
+    this.servicio.finalizar(this.sessionId, s.generalNote ?? '').subscribe({
       next: () => {
         this.finalizando.set(false);
-        this.sesion.set({ ...s, estado: 'FINALIZADA' });
+        this.sesion.set({ ...s, status: 'FINALIZADA' });
       },
       error: (e) => { this.finalizando.set(false); },
     });
@@ -434,11 +434,11 @@ export class EvaluacionDiariaComponent implements OnInit {
     this.guardandoLesion.set(true);
 
     this.servicio.registrarLesion(
-      jugador.idEstudiante, descripcion, this.fechaRetornoLesion() || undefined,
+      jugador.studentId, descripcion, this.fechaRetornoLesion() || undefined,
     ).subscribe({
       next: (lesion) => {
-        jugador.lesionado = true;
-        jugador.idLesion = lesion.idLesion;
+        jugador.injured = true;
+        jugador.injuryId = lesion.injuryId;
         this.guardandoLesion.set(false);
         this.formularioLesionAbierto.set(null);
       },
@@ -450,14 +450,14 @@ export class EvaluacionDiariaComponent implements OnInit {
   }
 
   darDeAlta(jugador: JugadorEvaluable): void {
-    if (!jugador.idLesion || this.dandoDeAlta() === jugador.idEstudiante) return;
+    if (!jugador.injuryId || this.dandoDeAlta() === jugador.studentId) return;
     this.errorLesion.set('');
-    this.dandoDeAlta.set(jugador.idEstudiante);
+    this.dandoDeAlta.set(jugador.studentId);
 
-    this.servicio.darDeAltaLesion(jugador.idLesion).subscribe({
+    this.servicio.darDeAltaLesion(jugador.injuryId).subscribe({
       next: () => {
-        jugador.lesionado = false;
-        jugador.idLesion = null;
+        jugador.injured = false;
+        jugador.injuryId = null;
         this.dandoDeAlta.set(null);
       },
       error: (err) => {

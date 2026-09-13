@@ -1,64 +1,64 @@
 export interface EstudianteEnRiesgo {
-  idEstudiante: number;
-  nombreCompleto: string;
-  categoria: string | null;
-  mensualidadPendiente: boolean;
-  asistenciaBaja: boolean;
-  porcentajeAsistencia: number | null;
-  lesionActiva: boolean;
-  totalAlertas: number;
+  studentId: number;
+  fullName: string;
+  category: string | null;
+  pendingMembershipFee: boolean;
+  lowAttendance: boolean;
+  attendancePercentage: number | null;
+  activeInjury: boolean;
+  totalAlerts: number;
 }
 
 export interface PanelAlertas {
-  anio: number;
-  mes: number;
-  umbralAsistencia: number;
-  estudiantesActivos: number;
-  conMensualidadPendiente: number;
-  conAsistenciaBaja: number;
-  conLesionActiva: number;
-  totalEnRiesgo: number;
-  estudiantes: EstudianteEnRiesgo[];
+  year: number;
+  month: number;
+  attendanceThreshold: number;
+  activeStudents: number;
+  withPendingMembership: number;
+  withLowAttendance: number;
+  withActiveInjury: number;
+  totalAtRisk: number;
+  students: EstudianteEnRiesgo[];
 }
 
 export interface IngresoMes {
-  anio: number;
-  mes: number;
+  year: number;
+  month: number;
   total: number;
-  cantidadPagos: number;
+  paymentCount: number;
 }
 
 export interface HistoricoIngresos {
-  meses: IngresoMes[];
+  months: IngresoMes[];
   total: number;
-  promedioMensual: number;
-  mejorMes: IngresoMes | null;
+  monthlyAverage: number;
+  bestMonth: IngresoMes | null;
 }
 
 export interface SesionHoy {
-  idSesion: number;
-  categoria: string;
-  entrenador: string;
-  fecha: string;
-  horaInicio: string | null;
-  horaFin: string | null;
-  campo: string | null;
-  estado: string;
-  tieneEvaluacion: boolean;
+  sessionId: number;
+  category: string;
+  coach: string;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  field: string | null;
+  status: string;
+  hasEvaluation: boolean;
 }
 
 export interface DiaAsistencia {
-  fecha: string;
-  presentes: number;
-  esperados: number;
-  porcentaje: number;
+  date: string;
+  present: number;
+  expected: number;
+  percentage: number;
 }
 
 export interface MapaAsistencia {
-  desde: string;
-  hasta: string;
-  dias: DiaAsistencia[];
-  promedio: number;
-  mejorDia: DiaAsistencia | null;
-  peorDia: DiaAsistencia | null;
+  from: string;
+  to: string;
+  days: DiaAsistencia[];
+  average: number;
+  bestDay: DiaAsistencia | null;
+  worstDay: DiaAsistencia | null;
 }

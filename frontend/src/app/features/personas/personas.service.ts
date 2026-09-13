@@ -114,12 +114,12 @@ export class PersonasService {
     return this.http.post<RepresentanteResponse>('/api/representantes', request);
   }
 
-  vincularEstudianteARepresentante(idRepresentante: number, idEstudiante: number, request: VinculoRequest) {
+  vincularEstudianteARepresentante(idRepresentante: number, studentId: number, request: VinculoRequest) {
     return this.http.post<RepresentanteResponse>(
-      `/api/representantes/${idRepresentante}/estudiantes/${idEstudiante}`, request);
+      `/api/representantes/${idRepresentante}/estudiantes/${studentId}`, request);
   }
 
-  desvincularEstudianteDeRepresentante(idRepresentante: number, idEstudiante: number) {
-    return this.http.delete<void>(`/api/representantes/${idRepresentante}/estudiantes/${idEstudiante}`);
+  desvincularEstudianteDeRepresentante(idRepresentante: number, studentId: number) {
+    return this.http.delete<void>(`/api/representantes/${idRepresentante}/estudiantes/${studentId}`);
   }
 }

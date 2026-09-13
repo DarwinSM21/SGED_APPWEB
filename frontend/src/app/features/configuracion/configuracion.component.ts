@@ -139,7 +139,7 @@ type Seccion = 'apariencia' | 'acerca-de' | 'privacidad' | 'mis-datos';
     .tab:hover { background: var(--color-border-light); color: var(--color-text); }
     .tab--activa { background: var(--color-primary-50); color: var(--color-primary-700); }
     @media (max-width: 720px) { .tabs { flex-direction: row; flex-wrap: wrap; } }
-    .contenido { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
+    .content { padding: 1.5rem; display: flex; flex-direction: column; gap: 1.1rem; }
     .titulo-card { font-size: 1.1rem; }
     .grupo { display: flex; flex-direction: column; gap: .5rem; }
     .grupo__etiqueta { font-size: .82rem; font-weight: 600; color: var(--color-text); }

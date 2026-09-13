@@ -4,7 +4,7 @@ import { roleGuard } from './role.guard';
 import { AuthService } from './auth.service';
 
 describe('roleGuard', () => {
-  let authServiceMock: { currentUser: () => { rol: string } | null };
+  let authServiceMock: { currentUser: () => { role: string } | null };
   let router: Router;
 
   function configurar(rol: string | null) {

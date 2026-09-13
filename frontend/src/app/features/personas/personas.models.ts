@@ -1,24 +1,24 @@
 
 export interface PersonaRequest {
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  correo: string;
-  telefono: string | null;
-  foto: string | null;
-  fechaNacimiento: string;
+  name: string;
+  lastName: string;
+  nationalId: string;
+  email: string;
+  phone: string | null;
+  photo: string | null;
+  birthDate: string;
 }
 
 export interface PersonaResponse {
-  idPersona: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  correo: string;
-  telefono: string | null;
-  foto: string | null;
-  fechaNacimiento: string;
-  activo: boolean;
+  personId: number;
+  name: string;
+  lastName: string;
+  nationalId: string;
+  email: string;
+  phone: string | null;
+  photo: string | null;
+  birthDate: string;
+  active: boolean;
   createdAt: string;
 }
 
@@ -26,68 +26,68 @@ export const ROLES_USUARIO = ['ADMINISTRADOR', 'ENTRENADOR', 'RECEPCIONISTA', 'R
 export type RolUsuario = typeof ROLES_USUARIO[number];
 
 export interface UsuarioRequest {
-  idPersona: number;
-  idEstadoGeneral: number;
+  personId: number;
+  generalStatusId: number;
   username: string;
   password: string | null;
-  rol: string | null;
+  role: string | null;
 }
 
 export interface UsuarioResponse {
-  idUsuario: number;
-  idPersona: number;
-  nombrePersona: string;
-  apellidoPersona: string;
-  correoPersona: string;
-  idEstadoGeneral: number;
-  estadoGeneralNombre: string;
+  userId: number;
+  personId: number;
+  personName: string;
+  personLastName: string;
+  personEmail: string;
+  generalStatusId: number;
+  generalStatusName: string;
   username: string;
   roles: string[];
-  ultimoAcceso: string | null;
-  activo: boolean;
+  lastAccess: string | null;
+  active: boolean;
   createdAt: string;
 }
 
 export interface CategoriaOpcion {
-  idCategoria: number;
-  nombre: string;
+  categoryId: number;
+  name: string;
 }
 
 export interface EstudianteRequest {
-  idPersona: number;
-  idCategoria: number;
-  idEstadoGeneral: number;
-  codigoEstudiante: string;
-  fechaIngreso: string;
-  peso: number | null;
-  altura: number | null;
-  idPosicion: number | null;
+  personId: number;
+  categoryId: number;
+  generalStatusId: number;
+  studentCode: string;
+  enrollmentDate: string;
+  weight: number | null;
+  height: number | null;
+  positionId: number | null;
 }
 
 export interface EstudianteResponse {
-  idEstudiante: number;
-  idPersona: number;
-  idCategoria: number;
-  idEstadoGeneral: number;
-  nombrePersona: string;
-  apellidoPersona: string;
-  nombreCategoria: string;
-  nombreEstadoGeneral: string;
-  codigoEstudiante: string;
-  fechaIngreso: string;
-  peso: number | null;
-  altura: number | null;
-  idPosicion: number | null;
-  nombrePosicion: string | null;
-  abreviaturaPosicion: string | null;
-  activo: boolean;
+  studentId: number;
+  personId: number;
+  categoryId: number;
+  generalStatusId: number;
+  personName: string;
+  personLastName: string;
+  categoryName: string;
+  generalStatusName: string;
+  studentCode: string;
+  enrollmentDate: string;
+  weight: number | null;
+  height: number | null;
+  positionId: number | null;
+  positionName: string | null;
+  positionAbbreviation: string | null;
+  active: boolean;
   createdAt: string;
 }
 
 export interface PosicionOpcion {
-  idPosicion: number;
-  nombre: string;
-  abreviatura: string;
+  positionId: number;
+  name: string;
+  abbreviation: string;
 }
 
 export interface HabilitarAccesoRequest {
@@ -96,77 +96,77 @@ export interface HabilitarAccesoRequest {
 }
 
 export interface EspecialidadOpcion {
-  idEspecialidad: number;
-  nombre: string;
+  specialtyId: number;
+  name: string;
 }
 
 export interface EntrenadorRequest {
-  idPersona: number;
-  idUsuario: number;
-  idEspecialidad: number | null;
-  experienciaAnios: number | null;
-  certificacion: string | null;
+  personId: number;
+  userId: number;
+  specialtyId: number | null;
+  yearsOfExperience: number | null;
+  certification: string | null;
 }
 
 export interface EntrenadorResponse {
-  idEntrenador: number;
-  idPersona: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  correo: string;
-  telefono: string | null;
-  idUsuario: number;
+  coachId: number;
+  personId: number;
+  name: string;
+  lastName: string;
+  nationalId: string;
+  email: string;
+  phone: string | null;
+  userId: number;
   username: string;
-  idEspecialidad: number | null;
-  nombreEspecialidad: string | null;
-  experienciaAnios: number | null;
-  certificacion: string | null;
-  activo: boolean;
+  specialtyId: number | null;
+  specialtyName: string | null;
+  yearsOfExperience: number | null;
+  certification: string | null;
+  active: boolean;
   createdAt: string;
 }
 
 export interface RepresentanteRequest {
-  idPersona: number;
-  idUsuario: number;
-  parentesco: string | null;
-  telefonoContacto: string | null;
-  idsEstudiantesIniciales: number[];
+  personId: number;
+  userId: number;
+  relationship: string | null;
+  contactPhone: string | null;
+  initialStudentIds: number[];
 }
 
 export interface EstudianteVinculado {
-  idEstudiante: number;
-  nombreCompleto: string;
-  categoria: string;
-  relacion: string | null;
-  contactoPrincipal: boolean;
+  studentId: number;
+  fullName: string;
+  category: string;
+  relationship: string | null;
+  primaryContact: boolean;
 }
 
 export interface VinculoRequest {
-  relacion: string | null;
-  contactoPrincipal: boolean;
+  relationship: string | null;
+  primaryContact: boolean;
 }
 
 export interface RepresentanteResponse {
-  idRepresentante: number;
-  idPersona: number;
-  nombre: string;
-  apellido: string;
-  cedula: string;
-  correo: string;
-  idUsuario: number;
+  guardianId: number;
+  personId: number;
+  name: string;
+  lastName: string;
+  nationalId: string;
+  email: string;
+  userId: number;
   username: string;
-  parentesco: string | null;
-  telefonoContacto: string | null;
-  activo: boolean;
+  relationship: string | null;
+  contactPhone: string | null;
+  active: boolean;
   createdAt: string;
-  representados: EstudianteVinculado[];
+  wards: EstudianteVinculado[];
 }
 
 export interface PersonaConEstado {
   persona: PersonaResponse;
-  usuario: UsuarioResponse | null;
-  estudiante: EstudianteResponse | null;
-  entrenador: EntrenadorResponse | null;
+  user: UsuarioResponse | null;
+  student: EstudianteResponse | null;
+  coach: EntrenadorResponse | null;
   representante: RepresentanteResponse | null;
 }

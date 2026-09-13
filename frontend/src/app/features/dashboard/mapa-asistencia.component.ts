@@ -31,7 +31,7 @@ function nivelDe(porcentaje: number): number {
 
 interface Celda { iso: string; dia: DiaAsistencia | null; nivel: number; }
 interface Fila { etiqueta: string; celdas: Celda[]; }
-interface Globo { texto: string; detalle: string; x: number; y: number; debajo: boolean; }
+interface Globo { text: string; detalle: string; x: number; y: number; debajo: boolean; }
 
 @Component({
   selector: 'app-mapa-asistencia',
@@ -43,22 +43,22 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
         <div>
           <h2>Pulso de asistencia</h2>
           <p class="mapa__sub">
-            {{ datos().dias.length }} días de entrenamiento · promedio {{ datos().promedio | number: '1.0-0' }}%
+            {{ datos().days.length }} días de entrenamiento · promedio {{ datos().average | number: '1.0-0' }}%
           </p>
         </div>
         <div class="mapa__extremos">
-          @if (datos().mejorDia; as mejor) {
+          @if (datos().bestDay; as mejor) {
             <span class="extremo">
               <span class="extremo__etiqueta">mejor día</span>
-              <strong>{{ fechaCorta(mejor.fecha) }}</strong>
-              <span class="extremo__cifra">{{ mejor.porcentaje | number: '1.0-0' }}%</span>
+              <strong>{{ fechaCorta(mejor.date) }}</strong>
+              <span class="extremo__cifra">{{ mejor.percentage | number: '1.0-0' }}%</span>
             </span>
           }
-          @if (datos().peorDia; as peor) {
+          @if (datos().worstDay; as peor) {
             <span class="extremo">
               <span class="extremo__etiqueta">más flojo</span>
-              <strong>{{ fechaCorta(peor.fecha) }}</strong>
-              <span class="extremo__cifra">{{ peor.porcentaje | number: '1.0-0' }}%</span>
+              <strong>{{ fechaCorta(peor.date) }}</strong>
+              <span class="extremo__cifra">{{ peor.percentage | number: '1.0-0' }}%</span>
             </span>
           }
         </div>
@@ -68,7 +68,7 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
         <div class="cuerpo" (pointerleave)="globo.set(null)">
           <div class="meses">
             @for (m of meses(); track m.columna) {
-              <span class="mes-etiqueta" [style.grid-column]="m.columna + 1">{{ m.texto }}</span>
+              <span class="mes-etiqueta" [style.grid-column]="m.columna + 1">{{ m.text }}</span>
             }
           </div>
 
@@ -93,7 +93,7 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
           @if (globo(); as g) {
             <div class="globo" [class.globo--debajo]="g.debajo"
                  [style.left.px]="g.x" [style.top.px]="g.y">
-              <strong>{{ g.texto }}</strong>
+              <strong>{{ g.text }}</strong>
               <span>{{ g.detalle }}</span>
             </div>
           }
@@ -130,12 +130,12 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
               </tr>
             </thead>
             <tbody>
-              @for (d of datos().dias; track d.fecha) {
+              @for (d of datos().days; track d.date) {
                 <tr>
-                  <th scope="row">{{ fechaCorta(d.fecha) }}</th>
-                  <td>{{ d.presentes }}</td>
-                  <td>{{ d.esperados }}</td>
-                  <td>{{ d.porcentaje | number: '1.0-0' }}%</td>
+                  <th scope="row">{{ fechaCorta(d.date) }}</th>
+                  <td>{{ d.present }}</td>
+                  <td>{{ d.expected }}</td>
+                  <td>{{ d.percentage | number: '1.0-0' }}%</td>
                 </tr>
               }
             </tbody>
@@ -161,13 +161,13 @@ interface Globo { texto: string; detalle: string; x: number; y: number; debajo: 
       display: grid; grid-template-columns: 26px auto; gap: 4px 6px;
       grid-template-areas: ". meses" "dias rejilla";
     }
-    .meses {
+    .months {
       grid-area: meses; display: grid; grid-auto-flow: column;
       grid-auto-columns: 17px; gap: 4px; height: 12px;
     }
-    .mes-etiqueta { font-size: .66rem; color: var(--color-text-faint); white-space: nowrap; }
-    .dias-semana { grid-area: dias; display: grid; grid-auto-rows: 17px; gap: 4px; }
-    .dias-semana span {
+    .month-etiqueta { font-size: .66rem; color: var(--color-text-faint); white-space: nowrap; }
+    .days-semana { grid-area: dias; display: grid; grid-auto-rows: 17px; gap: 4px; }
+    .days-semana span {
       font-size: .62rem; color: var(--color-text-faint);
       display: flex; align-items: center; justify-content: flex-end;
     }
@@ -237,25 +237,25 @@ export class MapaAsistenciaComponent {
 
   private readonly porFecha = computed(() => {
     const mapa = new Map<string, DiaAsistencia>();
-    for (const d of this.datos().dias) mapa.set(d.fecha, d);
+    for (const d of this.datos().days) mapa.set(d.date, d);
     return mapa;
   });
 
   private readonly primerLunes = computed(() => {
-    const inicio = aFecha(this.datos().desde);
+    const inicio = aFecha(this.datos().from);
     inicio.setDate(inicio.getDate() - (diaIso(inicio) - 1));
     return inicio;
   });
 
   readonly semanas = computed(() => {
-    const fin = aFecha(this.datos().hasta);
+    const fin = aFecha(this.datos().to);
     const dias = Math.floor((fin.getTime() - this.primerLunes().getTime()) / MS_DIA);
     return Math.max(1, Math.floor(dias / 7) + 1);
   });
 
   private readonly diasConSesion = computed(() => {
     const presentes = new Set<number>();
-    for (const d of this.datos().dias) presentes.add(diaIso(aFecha(d.fecha)));
+    for (const d of this.datos().days) presentes.add(diaIso(aFecha(d.date)));
     return presentes.size === 0 ? [1, 2, 3, 4, 5] : [...presentes].sort((a, b) => a - b);
   });
 
@@ -271,7 +271,7 @@ export class MapaAsistenciaComponent {
         f.setDate(lunes.getDate() + semana * 7 + (iso - 1));
         const clave = aIso(f);
         const dia = porFecha.get(clave) ?? null;
-        celdas.push({ iso: clave, dia, nivel: dia ? nivelDe(dia.porcentaje) : 0 });
+        celdas.push({ iso: clave, dia, nivel: dia ? nivelDe(dia.percentage) : 0 });
       }
       return { etiqueta: DIAS_ISO[iso - 1], celdas };
     });
@@ -279,14 +279,14 @@ export class MapaAsistenciaComponent {
 
   readonly meses = computed(() => {
     const lunes = this.primerLunes();
-    const etiquetas: { texto: string; columna: number }[] = [];
+    const etiquetas: { text: string; columna: number }[] = [];
     let ultimoMes = -1;
     for (let semana = 0; semana < this.semanas(); semana++) {
       const f = new Date(lunes);
       f.setDate(lunes.getDate() + semana * 7);
       if (f.getMonth() !== ultimoMes) {
         ultimoMes = f.getMonth();
-        etiquetas.push({ texto: MESES[ultimoMes], columna: semana });
+        etiquetas.push({ text: MESES[ultimoMes], columna: semana });
       }
     }
     return etiquetas;
@@ -297,9 +297,9 @@ export class MapaAsistenciaComponent {
     const elemento = evento.target as HTMLElement;
     const primeraFila = elemento.offsetTop <= elemento.offsetHeight;
     this.globo.set({
-      texto: this.fechaCorta(celda.dia.fecha),
-      detalle: celda.dia.presentes + ' de ' + celda.dia.esperados
-        + ' · ' + Math.round(celda.dia.porcentaje) + '%',
+      text: this.fechaCorta(celda.dia.date),
+      detalle: celda.dia.present + ' de ' + celda.dia.expected
+        + ' · ' + Math.round(celda.dia.percentage) + '%',
       x: elemento.offsetLeft + elemento.offsetWidth / 2,
       y: primeraFila ? elemento.offsetTop + elemento.offsetHeight : elemento.offsetTop,
       debajo: primeraFila,
@@ -316,7 +316,7 @@ export class MapaAsistenciaComponent {
   }
 
   etiquetaAccesible(dia: DiaAsistencia): string {
-    return this.fechaCorta(dia.fecha) + ': ' + dia.presentes + ' de ' + dia.esperados
-      + ' presentes, ' + Math.round(dia.porcentaje) + ' por ciento';
+    return this.fechaCorta(dia.date) + ': ' + dia.present + ' de ' + dia.expected
+      + ' presentes, ' + Math.round(dia.percentage) + ' por ciento';
   }
 }

@@ -4,8 +4,8 @@ import { map } from 'rxjs';
 import { EstudianteOpcionPago, IngresosMes, PagoResponse, RegistrarDiarioRequest, RegistrarMembresiaRequest } from './pagos.models';
 
 interface EstudiantePagina {
-  content: { idEstudiante: number; nombrePersona: string; apellidoPersona: string;
-             nombreCategoria: string; fechaIngreso: string }[];
+  content: { studentId: number; personName: string; personLastName: string;
+             categoryName: string; enrollmentDate: string }[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -17,10 +17,10 @@ export class PagosService {
       map((pagina) =>
         pagina.content.map(
           (e): EstudianteOpcionPago => ({
-            idEstudiante: e.idEstudiante,
-            nombreCompleto: `${e.nombrePersona} ${e.apellidoPersona}`,
-            categoria: e.nombreCategoria,
-            fechaIngreso: e.fechaIngreso,
+            studentId: e.studentId,
+            fullName: `${e.personName} ${e.personLastName}`,
+            category: e.categoryName,
+            enrollmentDate: e.enrollmentDate,
           }),
         ),
       ),
@@ -31,8 +31,8 @@ export class PagosService {
     return this.http.post<PagoResponse[]>('/api/pagos/membresia', request);
   }
 
-  anular(idPago: number, motivo: string) {
-    return this.http.post<PagoResponse>(`/api/pagos/${idPago}/anular`, { motivo });
+  anular(idPago: number, reason: string) {
+    return this.http.post<PagoResponse>(`/api/pagos/${idPago}/anular`, { reason });
   }
 
   registrarDiario(request: RegistrarDiarioRequest) {

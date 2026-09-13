@@ -74,7 +74,7 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle>
               </svg>
               <input id="username" type="text" [(ngModel)]="username" name="username"
-                     placeholder="tu.usuario@uteq.edu.ec"
+                     placeholder="tu.user@uteq.edu.ec"
                      required autocomplete="username" autofocus
                      autocapitalize="off" autocorrect="off" spellcheck="false" />
             </span>
@@ -104,7 +104,7 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
             <div class="alert" role="alert" aria-live="assertive"
                  [class.alert--danger]="f.origen === 'peticion' || f.origen === 'servidor'"
                  [class.alert--warning]="f.origen === 'dispositivo' || f.origen === 'camino'">
-              <span class="fallo-que">{{ f.mensaje }}</span>
+              <span class="fallo-que">{{ f.message }}</span>
               @if (f.sugerencia) {
                 <span class="fallo-como">{{ f.sugerencia }}</span>
               }
@@ -148,7 +148,7 @@ export class LoginComponent {
     const username = this.username.trim();
 
     if (!username || !this.password) {
-      this.fallo.set({ origen: 'peticion', mensaje: !username
+      this.fallo.set({ origen: 'peticion', message: !username
         ? 'Escribe tu usuario'
         : 'Escribe tu contraseña' });
       return;
@@ -158,7 +158,7 @@ export class LoginComponent {
     this.fallo.set(null);
     this.authService.login({ username, password: this.password }).subscribe({
       next: (usuario) => {
-        this.router.navigate([homeRouteForRole(usuario.rol)]);
+        this.router.navigate([homeRouteForRole(usuario.role)]);
       },
       error: (err) => {
         this.loading.set(false);

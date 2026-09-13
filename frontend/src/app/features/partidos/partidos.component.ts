@@ -39,8 +39,8 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
               <span class="field__label">Categoría</span>
               <select class="field__control" [(ngModel)]="nuevaCategoria" name="categoria">
                 <option [ngValue]="null" disabled>Elegí una categoría</option>
-                @for (c of categorias(); track c.idCategoria) {
-                  <option [ngValue]="c.idCategoria">{{ c.nombre }}</option>
+                @for (c of categorias(); track c.categoryId) {
+                  <option [ngValue]="c.categoryId">{{ c.name }}</option>
                 }
               </select>
             </label>
@@ -76,8 +76,8 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
           <select class="field__control" [ngModel]="filtroCategoria()"
                   (ngModelChange)="filtrar($event)" name="filtro">
             <option [ngValue]="null">Todas</option>
-            @for (c of categorias(); track c.idCategoria) {
-              <option [ngValue]="c.idCategoria">{{ c.nombre }}</option>
+            @for (c of categorias(); track c.categoryId) {
+              <option [ngValue]="c.categoryId">{{ c.name }}</option>
             }
           </select>
         </label>
@@ -97,50 +97,50 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
         </div>
       } @else {
         <ul class="lista">
-          @for (p of partidos(); track p.idPartido) {
-            <li class="partido" [class.partido--jugado]="p.resultado !== 'PENDIENTE'">
+          @for (p of partidos(); track p.matchId) {
+            <li class="partido" [class.match--jugado]="p.result !== 'PENDIENTE'">
               <div class="partido__fecha">
-                <span class="dia">{{ diaDe(p.fecha) }}</span>
-                <span class="mes">{{ mesDe(p.fecha) }}</span>
+                <span class="dia">{{ diaDe(p.date) }}</span>
+                <span class="mes">{{ mesDe(p.date) }}</span>
               </div>
 
               <div class="partido__cuerpo">
                 <div class="partido__titulo">
-                  <strong>{{ p.categoria }}</strong>
-                  <span class="badge" [class]="'badge badge--' + colorDe(p.resultado)">
+                  <strong>{{ p.category }}</strong>
+                  <span class="badge" [class]="'badge badge--' + colorDe(p.result)">
                     {{ etiquetaDe(p) }}
                   </span>
-                  @if (p.cerrado) {
-                    <span class="candado" [title]="'Cerrado el ' + fechaHora(p.cerradoEn!)">Cerrado</span>
+                  @if (p.closed) {
+                    <span class="candado" [title]="'Cerrado el ' + fechaHora(p.closedAt!)">Cerrado</span>
                   }
                 </div>
                 <p class="partido__meta">
-                  @if (p.hora) { {{ horaCorta(p.hora) }} · }
-                  @if (p.tieneAlineacion) {
-                    {{ p.titulares }} titular{{ p.titulares === 1 ? '' : 'es' }} confirmado{{ p.titulares === 1 ? '' : 's' }}
+                  @if (p.time) { {{ horaCorta(p.time) }} · }
+                  @if (p.hasLineup) {
+                    {{ p.starters }} titular{{ p.starters === 1 ? '' : 'es' }} confirmado{{ p.starters === 1 ? '' : 's' }}
                   } @else {
                     sin plantilla armada
                   }
-                  @if (p.observacion) { · {{ p.observacion }} }
+                  @if (p.note) { · {{ p.note }} }
                 </p>
               </div>
 
               <div class="partido__acciones">
-                <a class="btn btn--ghost btn--sm" [routerLink]="['/partidos', p.idPartido, 'alineacion']">
-                  {{ p.cerrado ? 'Ver lo que pasó' : (p.tieneAlineacion ? 'Ver plantilla' : 'Generar plantilla') }}
+                <a class="btn btn--ghost btn--sm" [routerLink]="['/partidos', p.matchId, 'alineacion']">
+                  {{ p.closed ? 'Ver lo que pasó' : (p.hasLineup ? 'Ver plantilla' : 'Generar plantilla') }}
                 </a>
 
-                @if (p.cerrado) {
+                @if (p.closed) {
                   <app-confirmar-accion etiqueta="Reabrir" [peligrosa]="false"
                                         pregunta="Vas a poder cambiar el marcador y la plantilla. Queda registrado quién lo reabrió."
                                         textoConfirmar="Sí, reabrir" enCurso="Reabriendo…"
                                         [ocupado]="guardando()" (confirmado)="reabrir(p)" />
-                } @else if (editandoResultado() === p.idPartido) {
+                } @else if (editandoResultado() === p.matchId) {
                   <div class="marcador">
-                    <input class="gol" type="number" min="0" max="99" [(ngModel)]="golesFavor"
+                    <input class="gol" type="number" min="0" max="99" [(ngModel)]="goalsFor"
                            name="gf" aria-label="Goles a favor" />
                     <span class="guion">–</span>
-                    <input class="gol" type="number" min="0" max="99" [(ngModel)]="golesContra"
+                    <input class="gol" type="number" min="0" max="99" [(ngModel)]="goalsAgainst"
                            name="gc" aria-label="Goles en contra" />
                     <button type="button" class="btn btn--primary btn--sm"
                             [disabled]="guardando()" (click)="guardarResultado(p)">Guardar y cerrar</button>
@@ -155,13 +155,13 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
           }
         </ul>
 
-        @if (totalPaginas() > 1) {
+        @if (totalPages() > 1) {
           <nav class="paginacion">
             <button type="button" class="btn btn--ghost btn--sm"
                     [disabled]="pagina() === 0" (click)="irA(pagina() - 1)">‹ Anterior</button>
-            <span>Página {{ pagina() + 1 }} de {{ totalPaginas() }}</span>
+            <span>Página {{ pagina() + 1 }} de {{ totalPages() }}</span>
             <button type="button" class="btn btn--ghost btn--sm"
-                    [disabled]="pagina() + 1 >= totalPaginas()" (click)="irA(pagina() + 1)">Siguiente ›</button>
+                    [disabled]="pagina() + 1 >= totalPages()" (click)="irA(pagina() + 1)">Siguiente ›</button>
           </nav>
         }
       }
@@ -185,14 +185,14 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
     .vacio h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
     .vacio p { color: var(--color-text-muted); font-size: .88rem; max-width: 46ch; margin: 0 auto; }
     .lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .6rem; }
-    .partido { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem;
+    .match { display: flex; align-items: center; gap: 1rem; padding: .85rem 1rem;
                background: var(--color-surface); border: 1px solid var(--color-border-light);
                border-radius: var(--radius-md); flex-wrap: wrap; }
-    .partido--jugado { border-left: 3px solid var(--color-border); }
+    .match--jugado { border-left: 3px solid var(--color-border); }
     .partido__fecha { display: flex; flex-direction: column; align-items: center;
                       min-width: 44px; line-height: 1.1; }
     .dia { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-    .mes { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
+    .month { font-size: .68rem; text-transform: uppercase; letter-spacing: .06em;
            color: var(--color-text-muted); }
     .partido__cuerpo { flex: 1 1 200px; min-width: 0; }
     .partido__titulo { display: flex; align-items: center; gap: .55rem; flex-wrap: wrap; }
@@ -224,7 +224,7 @@ export class PartidosComponent implements OnInit {
   readonly guardando = signal(false);
 
   readonly pagina = signal(0);
-  readonly totalPaginas = signal(1);
+  readonly totalPages = signal(1);
   readonly filtroCategoria = signal<number | null>(null);
 
   readonly mostrandoFormulario = signal(false);
@@ -235,8 +235,8 @@ export class PartidosComponent implements OnInit {
   nuevaObservacion = '';
 
   readonly editandoResultado = signal<number | null>(null);
-  golesFavor: number | null = null;
-  golesContra: number | null = null;
+  goalsFor: number | null = null;
+  goalsAgainst: number | null = null;
 
   private readonly MESES = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN',
                             'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
@@ -254,8 +254,8 @@ export class PartidosComponent implements OnInit {
     this.error.set(null);
     this.servicio.listar(this.filtroCategoria(), this.pagina()).subscribe({
       next: (page) => {
-        this.partidos.set(page.contenido);
-        this.totalPaginas.set(Math.max(page.totalPaginas, 1));
+        this.partidos.set(page.content);
+        this.totalPages.set(Math.max(page.totalPages, 1));
         this.cargando.set(false);
       },
       error: (e) => {
@@ -282,10 +282,10 @@ export class PartidosComponent implements OnInit {
     this.guardando.set(true);
     this.errorFormulario.set(null);
     this.servicio.crear({
-      idCategoria: this.nuevaCategoria,
-      fecha: this.nuevaFecha,
-      hora: this.nuevaHora || null,
-      observacion: this.nuevaObservacion.trim() || null,
+      categoryId: this.nuevaCategoria,
+      date: this.nuevaFecha,
+      time: this.nuevaHora || null,
+      note: this.nuevaObservacion.trim() || null,
     }).subscribe({
       next: () => {
         this.guardando.set(false);
@@ -303,18 +303,18 @@ export class PartidosComponent implements OnInit {
   }
 
   editarResultado(p: Partido): void {
-    this.editandoResultado.set(p.idPartido);
-    this.golesFavor = p.golesFavor;
-    this.golesContra = p.golesContra;
+    this.editandoResultado.set(p.matchId);
+    this.goalsFor = p.goalsFor;
+    this.goalsAgainst = p.goalsAgainst;
   }
 
   reabrir(p: Partido): void {
     this.guardando.set(true);
     this.error.set(null);
-    this.servicio.reabrir(p.idPartido).subscribe({
+    this.servicio.reabrir(p.matchId).subscribe({
       next: (actualizado) => {
         this.partidos.set(this.partidos().map(
-          (x) => (x.idPartido === actualizado.idPartido ? actualizado : x)));
+          (x) => (x.matchId === actualizado.matchId ? actualizado : x)));
         this.guardando.set(false);
       },
       error: (e) => {
@@ -327,20 +327,20 @@ export class PartidosComponent implements OnInit {
   guardarResultado(p: Partido): void {
     if (this.guardando()) return;
 
-    if (this.golesFavor == null || this.golesContra == null) {
+    if (this.goalsFor == null || this.goalsAgainst == null) {
       this.error.set('Cargá los dos marcadores, el propio y el del rival.');
       return;
     }
     this.guardando.set(true);
     this.error.set(null);
-    this.servicio.registrarResultado(p.idPartido, {
-      golesFavor: this.golesFavor,
-      golesContra: this.golesContra,
-      observacion: null,
+    this.servicio.registrarResultado(p.matchId, {
+      goalsFor: this.goalsFor,
+      goalsAgainst: this.goalsAgainst,
+      note: null,
     }).subscribe({
       next: (actualizado) => {
         this.partidos.set(this.partidos().map(
-          (x) => (x.idPartido === actualizado.idPartido ? actualizado : x)));
+          (x) => (x.matchId === actualizado.matchId ? actualizado : x)));
         this.editandoResultado.set(null);
         this.guardando.set(false);
       },
@@ -371,14 +371,14 @@ export class PartidosComponent implements OnInit {
   }
 
   etiquetaDe(p: Partido): string {
-    if (p.resultado === 'PENDIENTE') return 'Por jugar';
-    return `${p.golesFavor} – ${p.golesContra}`;
+    if (p.result === 'PENDIENTE') return 'Por jugar';
+    return `${p.goalsFor} – ${p.goalsAgainst}`;
   }
 
-  colorDe(resultado: Partido['resultado']): string {
-    if (resultado === 'GANADO') return 'success';
-    if (resultado === 'PERDIDO') return 'danger';
-    if (resultado === 'EMPATADO') return 'warning';
+  colorDe(result: Partido['result']): string {
+    if (result === 'GANADO') return 'success';
+    if (result === 'PERDIDO') return 'danger';
+    if (result === 'EMPATADO') return 'warning';
     return 'info';
   }
 }

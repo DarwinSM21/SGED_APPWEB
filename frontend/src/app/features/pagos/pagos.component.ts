@@ -32,11 +32,11 @@ const NOMBRES_MES = [
         </span>
         <div class="kpi-ingresos__info">
           <span class="kpi-ingresos__etiqueta">
-            @if (ingresosMes(); as ing) { Ingresos de {{ nombreMes(ing.mes) }} } @else { Ingresos del mes }
+            @if (ingresosMes(); as ing) { Ingresos de {{ nombreMes(ing.month) }} } @else { Ingresos del mes }
           </span>
           <strong class="kpi-ingresos__monto">{{ (ingresosMes()?.total ?? 0) | number: '1.2-2' }}</strong>
           <span class="kpi-ingresos__caption">
-            @if ((ingresosMes()?.cantidadPagos ?? 0) === 1) { 1 pago registrado } @else { {{ ingresosMes()?.cantidadPagos ?? 0 }} pagos registrados }
+            @if ((ingresosMes()?.paymentCount ?? 0) === 1) { 1 pago registrado } @else { {{ ingresosMes()?.paymentCount ?? 0 }} pagos registrados }
           </span>
         </div>
       </div>
@@ -45,7 +45,7 @@ const NOMBRES_MES = [
         <div class="card formulario">
           <h2 class="titulo-card">Registro de Membresía</h2>
 
-          @if (idEstudiante() === null) {
+          @if (studentId() === null) {
             <app-buscador-opciones
               etiqueta="Estudiante"
               marcador="Escribe el nombre o la categoría…"
@@ -54,12 +54,12 @@ const NOMBRES_MES = [
               (seleccionada)="seleccionarEstudiante($event.id)" />
           } @else if (estudianteSeleccionado(); as est) {
             <div class="chip-estudiante">
-              <span class="avatar">{{ iniciales(est.nombreCompleto) }}</span>
+              <span class="avatar">{{ iniciales(est.fullName) }}</span>
               <span class="chip-estudiante__info">
                 <span class="chip-estudiante__etiqueta">Estudiante seleccionado</span>
-                <span class="chip-estudiante__nombre">{{ est.nombreCompleto }}</span>
+                <span class="chip-estudiante__nombre">{{ est.fullName }}</span>
               </span>
-              <span class="badge badge--info">Categoría: {{ est.categoria }}</span>
+              <span class="badge badge--info">Categoría: {{ est.category }}</span>
               <button type="button" class="btn btn--ghost btn--cambiar" (click)="cambiarEstudiante()">Cambiar</button>
             </div>
 
@@ -74,7 +74,7 @@ const NOMBRES_MES = [
                 <label class="field" for="anio">
                   <span class="field__label">Año</span>
                   <span class="field__control">
-                    <select id="anio" [(ngModel)]="anio" name="anio">
+                    <select id="anio" [(ngModel)]="year" name="anio">
                       @for (a of aniosDisponibles; track a) {
                         <option [ngValue]="a">{{ a }}</option>
                       }
@@ -97,7 +97,7 @@ const NOMBRES_MES = [
                 </button>
               </div>
               <div class="meses">
-                @for (m of meses; track m) {
+                @for (m of months; track m) {
                   <button type="button" class="pill-mes"
                           [class.pill-mes--activo]="mesesSeleccionados().has(m)"
                           [class.pill-mes--bloqueado]="!mesDisponible(m)"
@@ -161,7 +161,7 @@ const NOMBRES_MES = [
           }
         </div>
 
-        @if (idEstudiante() !== null) {
+        @if (studentId() !== null) {
           <div class="columna-historial">
             <div class="card historial">
               <h2 class="titulo-card">Historial de pagos</h2>
@@ -180,28 +180,28 @@ const NOMBRES_MES = [
                   <p class="vacio__texto">Los registros de pagos recientes para este estudiante aparecerán aquí.</p>
                 </div>
               } @else {
-                @for (p of historial(); track p.idPago) {
-                  <div class="fila-pago" [class.fila-pago--anulada]="p.anuladoEn">
+                @for (p of historial(); track p.paymentId) {
+                  <div class="fila-pago" [class.fila-pago--anulada]="p.voidedAt">
                     <span class="badge"
-                          [class.badge--info]="p.tipo === 'MEMBRESIA' && !p.anuladoEn"
-                          [class.badge--success]="p.tipo === 'DIARIO' && !p.anuladoEn"
-                          [class.badge--neutral]="!!p.anuladoEn">
-                      {{ p.tipo === 'MEMBRESIA' ? (nombreMes(p.mes!) + ' ' + p.anio) : 'Diario' }}
+                          [class.badge--info]="p.type === 'MEMBRESIA' && !p.voidedAt"
+                          [class.badge--success]="p.type === 'DIARIO' && !p.voidedAt"
+                          [class.badge--neutral]="!!p.voidedAt">
+                      {{ p.type === 'MEMBRESIA' ? (nombreMes(p.month!) + ' ' + p.year) : 'Diario' }}
                     </span>
-                    <span class="monto-pago">{{ p.monto | number: '1.2-2' }}</span>
-                    <span class="fecha-pago">{{ p.fechaPago }}</span>
-                    @if (p.anuladoEn) {
+                    <span class="monto-pago">{{ p.amount | number: '1.2-2' }}</span>
+                    <span class="fecha-pago">{{ p.paymentDate }}</span>
+                    @if (p.voidedAt) {
                       <span class="badge badge--danger">Anulado</span>
                     } @else {
                       <button type="button" class="btn btn--ghost btn--sm"
-                              [disabled]="anulando() === p.idPago" (click)="pedirAnulacion(p)">
-                        {{ anulando() === p.idPago ? 'Anulando…' : 'Anular' }}
+                              [disabled]="anulando() === p.paymentId" (click)="pedirAnulacion(p)">
+                        {{ anulando() === p.paymentId ? 'Anulando…' : 'Anular' }}
                       </button>
                     }
                   </div>
-                  @if (p.anuladoEn) {
+                  @if (p.voidedAt) {
                     <p class="motivo-anulacion">
-                      {{ p.motivoAnulacion }} — {{ p.anuladoPor }}
+                      {{ p.voidReason }} — {{ p.voidedBy }}
                     </p>
                   }
                 }
@@ -260,10 +260,10 @@ const NOMBRES_MES = [
       transition: background var(--transition), color var(--transition), box-shadow var(--transition);
     }
     .segmento--activo { background: var(--gradient-primary); color: #fff; box-shadow: var(--shadow-sm); }
-    .meses-encabezado { display: flex; align-items: baseline; justify-content: space-between; }
+    .months-encabezado { display: flex; align-items: baseline; justify-content: space-between; }
     .enlace { border: none; background: none; color: var(--color-primary-600); font-size: .8rem; font-weight: 700; cursor: pointer; padding: 0; }
     .enlace:hover { text-decoration: underline; }
-    .meses { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .months { display: flex; flex-wrap: wrap; gap: .5rem; }
     .pill-mes--bloqueado {
       opacity: .45; cursor: not-allowed; text-decoration: line-through;
     }
@@ -277,27 +277,27 @@ const NOMBRES_MES = [
     }
     .pill-mes svg { width: 13px; height: 13px; flex-shrink: 0; }
     .pill-mes--activo { border-color: var(--color-primary-500); background: var(--color-primary-50); color: var(--color-primary-700); }
-    .resumen-total {
+    .summary-total {
       display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
       background: var(--color-bg); border-radius: var(--radius-sm); padding: .9rem 1.1rem;
     }
-    .resumen-total__info { display: flex; flex-direction: column; gap: .15rem; }
-    .resumen-total__etiqueta { font-size: .78rem; color: var(--color-text-muted); }
-    .resumen-total__monto { font-size: 1.3rem; color: var(--color-text); }
-    .resumen-total__caption { font-size: .75rem; color: var(--color-text-faint); }
-    .resumen-total .btn { flex-shrink: 0; }
+    .summary-total__info { display: flex; flex-direction: column; gap: .15rem; }
+    .summary-total__etiqueta { font-size: .78rem; color: var(--color-text-muted); }
+    .summary-total__monto { font-size: 1.3rem; color: var(--color-text); }
+    .summary-total__caption { font-size: .75rem; color: var(--color-text-faint); }
+    .summary-total .btn { flex-shrink: 0; }
     .columna-historial { display: flex; flex-direction: column; gap: 1rem; }
     .historial { padding: 1.25rem 1.5rem; }
     .fila-pago--anulada { opacity: .6; }
-    .fila-pago--anulada .monto-pago { text-decoration: line-through; }
-    .motivo-anulacion {
+    .fila-pago--anulada .amount-pago { text-decoration: line-through; }
+    .reason-anulacion {
       margin: -.2rem 0 .5rem; padding-left: .2rem;
       font-size: .74rem; color: var(--color-text-faint);
     }
     .fila-pago { display: flex; align-items: center; gap: .75rem; padding: .55rem 0; border-bottom: 1px solid var(--color-border-light); font-size: .88rem; }
     .fila-pago:last-child { border-bottom: none; }
-    .monto-pago { font-weight: 600; flex: 1; }
-    .fecha-pago { color: var(--color-text-faint); font-size: .8rem; }
+    .amount-pago { font-weight: 600; flex: 1; }
+    .date-pago { color: var(--color-text-faint); font-size: .8rem; }
     .vacio { display: flex; flex-direction: column; align-items: center; text-align: center; gap: .3rem; padding: 1.5rem .5rem; }
     .vacio__icono {
       width: 52px; height: 52px; border-radius: 50%; background: var(--color-bg); color: var(--color-text-faint);
@@ -312,25 +312,25 @@ const NOMBRES_MES = [
 export class PagosComponent implements OnInit {
   private readonly servicio = inject(PagosService);
 
-  readonly estudiantes = signal<EstudianteOpcionPago[]>([]);
+  readonly students = signal<EstudianteOpcionPago[]>([]);
   readonly cargandoEstudiantes = signal(true);
-  readonly idEstudiante = signal<number | null>(null);
+  readonly studentId = signal<number | null>(null);
   readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
-    this.estudiantes().map((e) => ({
-      id: e.idEstudiante,
-      titulo: e.nombreCompleto,
-      subtitulo: e.categoria,
+    this.students().map((e) => ({
+      id: e.studentId,
+      titulo: e.fullName,
+      subtitulo: e.category,
     })));
 
   readonly estudianteSeleccionado = computed(() =>
-    this.estudiantes().find((e) => e.idEstudiante === this.idEstudiante()) ?? null,
+    this.students().find((e) => e.studentId === this.studentId()) ?? null,
   );
 
   readonly tipo = signal<'MEMBRESIA' | 'DIARIO'>('MEMBRESIA');
-  readonly meses = Array.from({ length: 12 }, (_, i) => i + 1);
+  readonly months = Array.from({ length: 12 }, (_, i) => i + 1);
   readonly mesesSeleccionados = signal<Set<number>>(new Set());
   readonly todosLosMesesSeleccionados = computed(() => {
-    const disponibles = this.meses.filter((m) => this.mesDisponible(m));
+    const disponibles = this.months.filter((m) => this.mesDisponible(m));
     return disponibles.length > 0 && disponibles.every((m) => this.mesesSeleccionados().has(m));
   });
 
@@ -338,7 +338,7 @@ export class PagosComponent implements OnInit {
     const actual = new Date().getFullYear();
     return [actual - 1, actual, actual + 1];
   })();
-  anio = new Date().getFullYear();
+  year = new Date().getFullYear();
   readonly mesActual = new Date().getMonth() + 1;
   montoMembresia: number | null = null;
   montoDiario: number | null = null;
@@ -354,7 +354,7 @@ export class PagosComponent implements OnInit {
 
   ngOnInit(): void {
     this.servicio.listarEstudiantes().subscribe({
-      next: (estudiantes) => { this.estudiantes.set(estudiantes); this.cargandoEstudiantes.set(false); },
+      next: (estudiantes) => { this.students.set(estudiantes); this.cargandoEstudiantes.set(false); },
       error: () => this.cargandoEstudiantes.set(false),
     });
     this.cargarIngresosMes();
@@ -368,14 +368,14 @@ export class PagosComponent implements OnInit {
   }
 
   seleccionarEstudiante(id: number): void {
-    this.idEstudiante.set(id);
+    this.studentId.set(id);
     this.error.set('');
     this.exito.set('');
     this.cargarHistorial(id);
   }
 
   cambiarEstudiante(): void {
-    this.idEstudiante.set(null);
+    this.studentId.set(null);
     this.mesesSeleccionados.set(new Set());
     this.montoMembresia = null;
     this.montoDiario = null;
@@ -398,8 +398,8 @@ export class PagosComponent implements OnInit {
     const est = this.estudianteSeleccionado();
     if (!est) return null;
 
-    const [anioIngreso, mesIngreso] = est.fechaIngreso.split('-').map(Number);
-    if (this.anio < anioIngreso || (this.anio === anioIngreso && mes < mesIngreso)) {
+    const [anioIngreso, mesIngreso] = est.enrollmentDate.split('-').map(Number);
+    if (this.year < anioIngreso || (this.year === anioIngreso && mes < mesIngreso)) {
       return 'Antes de su ingreso';
     }
     return null;
@@ -412,7 +412,7 @@ export class PagosComponent implements OnInit {
   readonly mesesPagados = computed(() => {
     const pagados = new Set<number>();
     for (const p of this.historial()) {
-      if (p.tipo === 'MEMBRESIA' && p.anio === this.anio && p.mes) pagados.add(p.mes);
+      if (p.type === 'MEMBRESIA' && p.year === this.year && p.month) pagados.add(p.month);
     }
     return pagados;
   });
@@ -420,7 +420,7 @@ export class PagosComponent implements OnInit {
   readonly tieneMembresiaVigente = computed(() => {
     const hoy = new Date();
     return this.historial().some((p) =>
-      p.tipo === 'MEMBRESIA' && p.anio === hoy.getFullYear() && p.mes === hoy.getMonth() + 1);
+      p.type === 'MEMBRESIA' && p.year === hoy.getFullYear() && p.month === hoy.getMonth() + 1);
   });
 
   alternarMes(mes: number): void {
@@ -432,7 +432,7 @@ export class PagosComponent implements OnInit {
   }
 
   alternarTodosLosMeses(): void {
-    const disponibles = this.meses.filter((m) => this.mesDisponible(m));
+    const disponibles = this.months.filter((m) => this.mesDisponible(m));
     const todosPuestos = disponibles.every((m) => this.mesesSeleccionados().has(m));
     this.mesesSeleccionados.set(todosPuestos ? new Set() : new Set(disponibles));
   }
@@ -455,21 +455,21 @@ export class PagosComponent implements OnInit {
   }
 
   registrarMembresia(): void {
-    const idEstudiante = this.idEstudiante();
-    if (idEstudiante === null || !this.montoMembresia) return;
+    const studentId = this.studentId();
+    if (studentId === null || !this.montoMembresia) return;
     this.guardando.set(true);
     this.error.set('');
     this.exito.set('');
 
     this.servicio.registrarMembresia({
-      idEstudiante, anio: this.anio, meses: Array.from(this.mesesSeleccionados()),
-      monto: this.montoMembresia, fechaPago: null,
+      studentId, year: this.year, months: Array.from(this.mesesSeleccionados()),
+      amount: this.montoMembresia, paymentDate: null,
     }).subscribe({
       next: () => {
         this.guardando.set(false);
         this.exito.set('Membresía registrada');
         this.mesesSeleccionados.set(new Set());
-        this.cargarHistorial(idEstudiante);
+        this.cargarHistorial(studentId);
         this.cargarIngresosMes();
       },
       error: (err) => { this.guardando.set(false); this.error.set(this.mensajeDeError(err)); },
@@ -487,17 +487,17 @@ export class PagosComponent implements OnInit {
       return;
     }
 
-    const idEstudiante = this.idEstudiante();
-    if (idEstudiante === null) return;
+    const studentId = this.studentId();
+    if (studentId === null) return;
 
-    this.anulando.set(pago.idPago);
+    this.anulando.set(pago.paymentId);
     this.error.set('');
     this.exito.set('');
-    this.servicio.anular(pago.idPago, motivo.trim()).subscribe({
+    this.servicio.anular(pago.paymentId, motivo.trim()).subscribe({
       next: () => {
         this.anulando.set(null);
         this.exito.set('Pago anulado. Queda en el historial y ya no cuenta en los totales.');
-        this.cargarHistorial(idEstudiante);
+        this.cargarHistorial(studentId);
       },
       error: (e) => {
         this.anulando.set(null);
@@ -507,18 +507,18 @@ export class PagosComponent implements OnInit {
   }
 
   registrarDiario(): void {
-    const idEstudiante = this.idEstudiante();
-    if (idEstudiante === null || !this.montoDiario) return;
+    const studentId = this.studentId();
+    if (studentId === null || !this.montoDiario) return;
     this.guardando.set(true);
     this.error.set('');
     this.exito.set('');
 
-    this.servicio.registrarDiario({ idEstudiante, monto: this.montoDiario, fechaPago: null }).subscribe({
+    this.servicio.registrarDiario({ studentId, amount: this.montoDiario, paymentDate: null }).subscribe({
       next: () => {
         this.guardando.set(false);
         this.exito.set('Pago diario registrado');
         this.montoDiario = null;
-        this.cargarHistorial(idEstudiante);
+        this.cargarHistorial(studentId);
         this.cargarIngresosMes();
       },
       error: (err) => { this.guardando.set(false); this.error.set(this.mensajeDeError(err)); },

@@ -72,7 +72,7 @@ import { Diagnostico, diagnosticar } from '../../core/diagnostico-error';
 
             @if (fallo(); as f) {
               <div class="alert alert--danger" role="alert" aria-live="assertive">
-                <span class="fallo-que">{{ f.mensaje }}</span>
+                <span class="fallo-que">{{ f.message }}</span>
                 @if (f.sugerencia) { <span class="fallo-como">{{ f.sugerencia }}</span> }
                 @if (tokenRoto()) {
                   <span class="fallo-como"><a routerLink="/recuperar">Solicitar un enlace nuevo</a></span>

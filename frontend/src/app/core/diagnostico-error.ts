@@ -4,7 +4,7 @@ export type OrigenFallo = 'dispositivo' | 'camino' | 'servidor' | 'peticion';
 
 export interface Diagnostico {
   origen: OrigenFallo;
-  mensaje: string;
+  message: string;
   sugerencia?: string;
 }
 
@@ -20,7 +20,7 @@ export function diagnosticar(err: unknown): Diagnostico {
   if (!(err instanceof HttpErrorResponse)) {
     return {
       origen: 'servidor',
-      mensaje: 'Ocurrió un error inesperado',
+      message: 'Ocurrió un error inesperado',
       sugerencia: 'Vuelve a intentarlo; si persiste, avisa a quien administra el sistema.',
     };
   }
@@ -28,7 +28,7 @@ export function diagnosticar(err: unknown): Diagnostico {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return {
       origen: 'dispositivo',
-      mensaje: 'Este dispositivo no tiene conexión',
+      message: 'Este dispositivo no tiene conexión',
       sugerencia: 'Revisa el wifi o los datos móviles y vuelve a intentarlo.',
     };
   }
@@ -36,7 +36,7 @@ export function diagnosticar(err: unknown): Diagnostico {
   if (respondioAlgoQueNoEsElBackend(err)) {
     return {
       origen: 'camino',
-      mensaje: 'No se llegó hasta el servidor',
+      message: 'No se llegó hasta el servidor',
       sugerencia: 'Respondió un intermediario de la red, no el sistema. Comprueba la dirección o la conexión de la red.',
     };
   }
@@ -45,37 +45,37 @@ export function diagnosticar(err: unknown): Diagnostico {
     case 0:
       return {
         origen: 'camino',
-        mensaje: 'No se pudo contactar al servidor',
+        message: 'No se pudo contactar al servidor',
         sugerencia: 'Comprueba que el sistema esté encendido y que la dirección sea la correcta.',
       };
 
     case 401:
-      return { origen: 'peticion', mensaje: 'Usuario o contraseña incorrectos' };
+      return { origen: 'peticion', message: 'Usuario o contraseña incorrectos' };
 
     case 403:
       return {
         origen: 'peticion',
-        mensaje: 'Esta cuenta no tiene permiso para entrar aquí',
+        message: 'Esta cuenta no tiene permiso para entrar aquí',
       };
 
     case 400:
     case 422:
       return {
         origen: 'peticion',
-        mensaje: leerDetalle(err) ?? 'Revisa los datos del formulario',
+        message: leerDetalle(err) ?? 'Revisa los datos del formulario',
       };
 
     case 429:
       return {
         origen: 'peticion',
-        mensaje: leerDetalle(err) ?? 'Demasiados intentos seguidos',
+        message: leerDetalle(err) ?? 'Demasiados intentos seguidos',
         sugerencia: 'Espera unos minutos antes de volver a intentarlo.',
       };
 
     case 404:
       return {
         origen: 'servidor',
-        mensaje: 'El servidor no reconoce esta operación',
+        message: 'El servidor no reconoce esta operación',
         sugerencia: 'Puede que la aplicación y el servidor estén en versiones distintas: recarga la página.',
       };
 
@@ -84,7 +84,7 @@ export function diagnosticar(err: unknown): Diagnostico {
     case 504:
       return {
         origen: 'servidor',
-        mensaje: 'El servidor está encendido pero la aplicación no responde',
+        message: 'El servidor está encendido pero la aplicación no responde',
         sugerencia: 'Suele durar poco. Espera unos segundos y vuelve a intentarlo.',
       };
 
@@ -92,11 +92,11 @@ export function diagnosticar(err: unknown): Diagnostico {
       if (err.status >= 500) {
         return {
           origen: 'servidor',
-          mensaje: leerDetalle(err) ?? 'Error interno del servidor',
+          message: leerDetalle(err) ?? 'Error interno del servidor',
           sugerencia: 'No es problema tuyo. Si sigue ocurriendo, avisa a quien administra el sistema.',
         };
       }
-      return { origen: 'peticion', mensaje: leerDetalle(err) ?? 'No se pudo completar la operación' };
+      return { origen: 'peticion', message: leerDetalle(err) ?? 'No se pudo completar la operación' };
   }
 }
 

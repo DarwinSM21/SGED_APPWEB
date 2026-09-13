@@ -10,10 +10,10 @@ import {
 
 interface PaginaEstudiantes {
   content: {
-    idEstudiante: number;
-    nombrePersona: string;
-    apellidoPersona: string;
-    nombreCategoria: string | null;
+    studentId: number;
+    personName: string;
+    personLastName: string;
+    categoryName: string | null;
   }[];
 }
 
@@ -28,9 +28,9 @@ export class ConsentimientosService {
   estudiantes() {
     return this.http.get<PaginaEstudiantes>('/api/estudiantes?size=200').pipe(
       map((p): EstudianteOpcion[] => p.content.map((e) => ({
-        idEstudiante: e.idEstudiante,
-        nombreCompleto: `${e.nombrePersona} ${e.apellidoPersona}`,
-        categoria: e.nombreCategoria,
+        studentId: e.studentId,
+        fullName: `${e.personName} ${e.personLastName}`,
+        category: e.categoryName,
       }))),
     );
   }

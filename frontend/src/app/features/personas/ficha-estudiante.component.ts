@@ -14,12 +14,12 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
   template: `
     <div class="bloque bloque--separado">
       <h3 class="subtitulo-seccion">Ficha de estudiante</h3>
-      @if (persona()?.estudiante; as e) {
+      @if (persona()?.student; as e) {
         @if (!editandoEstudiante()) {
           <p class="resumen-seccion">
-            {{ e.codigoEstudiante }} · {{ e.nombreCategoria }}
-            @if (e.abreviaturaPosicion) { · {{ e.abreviaturaPosicion }} }
-            · {{ e.activo ? 'activo' : 'inactivo' }}
+            {{ e.studentCode }} · {{ e.categoryName }}
+            @if (e.positionAbbreviation) { · {{ e.positionAbbreviation }} }
+            · {{ e.active ? 'activo' : 'inactivo' }}
           </p>
           <div class="acciones">
             <button class="btn btn--ghost btn--sm" type="button" (click)="iniciarEdicionEstudiante(e)">Editar ficha</button>
@@ -28,29 +28,29 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           <div class="fila-2">
             <label class="field" for="e-categoria-editar"><span class="field__label">Categoría</span>
               <span class="field__control">
-                <select id="e-categoria-editar" [(ngModel)]="formEstudiante.idCategoria" name="e-categoria-editar">
+                <select id="e-categoria-editar" [(ngModel)]="formEstudiante.categoryId" name="e-categoria-editar">
                   <option [ngValue]="null" disabled>Selecciona…</option>
-                  @for (c of state.categorias(); track c.idCategoria) { <option [ngValue]="c.idCategoria">{{ c.nombre }}</option> }
+                  @for (c of state.categorias(); track c.categoryId) { <option [ngValue]="c.categoryId">{{ c.name }}</option> }
                 </select>
               </span></label>
             <label class="field" for="e-codigo-editar"><span class="field__label">Código</span>
-              <span class="field__control"><input id="e-codigo-editar" [(ngModel)]="formEstudiante.codigoEstudiante" name="e-codigo-editar" /></span></label>
+              <span class="field__control"><input id="e-codigo-editar" [(ngModel)]="formEstudiante.studentCode" name="e-codigo-editar" /></span></label>
           </div>
           <div class="fila-2">
             <label class="field" for="e-ingreso-editar"><span class="field__label">Fecha de ingreso</span>
-              <span class="field__control"><input id="e-ingreso-editar" type="date" [(ngModel)]="formEstudiante.fechaIngreso" name="e-ingreso-editar" /></span></label>
+              <span class="field__control"><input id="e-ingreso-editar" type="date" [(ngModel)]="formEstudiante.enrollmentDate" name="e-ingreso-editar" /></span></label>
             <label class="field" for="e-posicion-editar"><span class="field__label">Posición</span>
               <span class="field__control">
-                <select id="e-posicion-editar" [(ngModel)]="formEstudiante.idPosicion" name="e-posicion-editar">
+                <select id="e-posicion-editar" [(ngModel)]="formEstudiante.positionId" name="e-posicion-editar">
                   <option [ngValue]="null">Sin posición</option>
-                  @for (p of state.posiciones(); track p.idPosicion) { <option [ngValue]="p.idPosicion">{{ p.nombre }} ({{ p.abreviatura }})</option> }
+                  @for (p of state.posiciones(); track p.positionId) { <option [ngValue]="p.positionId">{{ p.name }} ({{ p.abbreviation }})</option> }
                 </select>
               </span></label>
           </div>
           @if (errorEstudiante()) { <div class="alert alert--danger" role="alert">{{ errorEstudiante() }}</div> }
           <div class="acciones">
             <button class="btn btn--ghost btn--sm" type="button" [disabled]="guardandoEstudiante()" (click)="cancelarEdicionEstudiante()">Cancelar</button>
-            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardandoEstudiante()" (click)="guardarEdicionEstudiante(e.idEstudiante)">
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardandoEstudiante()" (click)="guardarEdicionEstudiante(e.studentId)">
               @if (guardandoEstudiante()) { <span class="spinner"></span> Guardando… } @else { Guardar }
             </button>
           </div>
@@ -61,16 +61,16 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
           <p class="aviso">Este estudiante todavía no tiene representantes asignados.</p>
         } @else {
           <div class="lista-vinculos">
-            @for (v of state.representantesDelEstudiante(); track v.idRepresentante) {
+            @for (v of state.representantesDelEstudiante(); track v.guardianId) {
               <div class="fila-vinculo">
-                <span class="col-principal">{{ v.nombre }} {{ v.apellido }}</span>
-                <span class="col-secundaria">{{ v.relacion || 'sin relación' }}</span>
-                @if (v.contactoPrincipal) { <span class="badge badge--info">Contacto principal</span> }
+                <span class="col-principal">{{ v.name }} {{ v.lastName }}</span>
+                <span class="col-secundaria">{{ v.relationship || 'sin relación' }}</span>
+                @if (v.primaryContact) { <span class="badge badge--info">Contacto principal</span> }
                 <app-confirmar-accion etiqueta="Desvincular"
-                                      [pregunta]="'¿Quitarle el acceso a ' + v.nombre + ' ' + v.apellido + '?'"
+                                      [pregunta]="'¿Quitarle el acceso a ' + v.name + ' ' + v.lastName + '?'"
                                       textoConfirmar="Sí, quitar" enCurso="Quitando…"
                                       [ocupado]="guardandoVinculo()"
-                                      (confirmado)="desvincularRepresentante(v.idRepresentante, e.idEstudiante)" />
+                                      (confirmado)="desvincularRepresentante(v.guardianId, e.studentId)" />
               </div>
             }
           </div>
@@ -82,20 +82,20 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
               etiqueta="Agregar representante"
               marcador="Busca por nombre o apellido…"
               [opciones]="opcionesRepresentantes()"
-              [textoSeleccionado]="nombreRepresentante(formVinculo.idRepresentante)"
-              (seleccionada)="formVinculo.idRepresentante = $event.id"
-              (limpiada)="formVinculo.idRepresentante = null" />
+              [textoSeleccionado]="nombreRepresentante(formVinculo.guardianId)"
+              (seleccionada)="formVinculo.guardianId = $event.id"
+              (limpiada)="formVinculo.guardianId = null" />
             <label class="field" for="v-relacion"><span class="field__label">Relación</span>
-              <span class="field__control"><input id="v-relacion" [(ngModel)]="formVinculo.relacion" name="v-relacion" placeholder="Madre, padre, tutor…" /></span></label>
+              <span class="field__control"><input id="v-relacion" [(ngModel)]="formVinculo.relationship" name="v-relacion" placeholder="Madre, padre, tutor…" /></span></label>
           </div>
           <label class="toggle-inactivos">
-            <input type="checkbox" [(ngModel)]="formVinculo.contactoPrincipal" name="v-principal" />
+            <input type="checkbox" [(ngModel)]="formVinculo.primaryContact" name="v-principal" />
             Contacto principal
           </label>
           @if (errorVinculo()) { <div class="alert alert--danger" role="alert">{{ errorVinculo() }}</div> }
           <div class="acciones">
-            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardandoVinculo() || formVinculo.idRepresentante === null"
-                    (click)="vincularRepresentante(e.idEstudiante)">
+            <button class="btn btn--primary btn--sm" type="button" [disabled]="guardandoVinculo() || formVinculo.guardianId === null"
+                    (click)="vincularRepresentante(e.studentId)">
               @if (guardandoVinculo()) { <span class="spinner"></span> Vinculando… } @else { Vincular }
             </button>
           </div>
@@ -111,26 +111,26 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
         <div class="fila-2">
           <label class="field" for="e-categoria"><span class="field__label">Categoría</span>
             <span class="field__control">
-              <select id="e-categoria" [(ngModel)]="formEstudiante.idCategoria" name="e-categoria">
+              <select id="e-categoria" [(ngModel)]="formEstudiante.categoryId" name="e-categoria">
                 <option [ngValue]="null" disabled>Selecciona…</option>
-                @for (c of state.categorias(); track c.idCategoria) { <option [ngValue]="c.idCategoria">{{ c.nombre }}</option> }
+                @for (c of state.categorias(); track c.categoryId) { <option [ngValue]="c.categoryId">{{ c.name }}</option> }
               </select>
             </span></label>
           <label class="field" for="e-codigo"><span class="field__label">Código</span>
             <span class="field__control">
-              <input id="e-codigo" [(ngModel)]="formEstudiante.codigoEstudiante" name="e-codigo" readonly
+              <input id="e-codigo" [(ngModel)]="formEstudiante.studentCode" name="e-codigo" readonly
                      [placeholder]="pidiendoCodigo() ? 'Generando…' : 'Se genera al guardar'" />
             </span>
             <span class="field__hint">Lo genera el sistema, no hace falta escribirlo.</span></label>
         </div>
         <div class="fila-2">
           <label class="field" for="e-ingreso"><span class="field__label">Fecha de ingreso</span>
-            <span class="field__control"><input id="e-ingreso" type="date" [(ngModel)]="formEstudiante.fechaIngreso" name="e-ingreso" /></span></label>
+            <span class="field__control"><input id="e-ingreso" type="date" [(ngModel)]="formEstudiante.enrollmentDate" name="e-ingreso" /></span></label>
           <label class="field" for="e-posicion"><span class="field__label">Posición (opcional)</span>
             <span class="field__control">
-              <select id="e-posicion" [(ngModel)]="formEstudiante.idPosicion" name="e-posicion">
+              <select id="e-posicion" [(ngModel)]="formEstudiante.positionId" name="e-posicion">
                 <option [ngValue]="null">Sin posición todavía</option>
-                @for (p of state.posiciones(); track p.idPosicion) { <option [ngValue]="p.idPosicion">{{ p.nombre }} ({{ p.abreviatura }})</option> }
+                @for (p of state.posiciones(); track p.positionId) { <option [ngValue]="p.positionId">{{ p.name }} ({{ p.abbreviation }})</option> }
               </select>
             </span></label>
         </div>
@@ -158,14 +158,14 @@ import { ConfirmarAccionComponent } from '../../core/confirmar-accion.component'
 export class FichaEstudianteComponent {
   readonly opcionesRepresentantes = computed<OpcionBuscable[]>(() =>
     this.state.representantesDisponibles().map((r) => ({
-      id: r.idRepresentante,
-      titulo: r.nombre + ' ' + r.apellido,
+      id: r.guardianId,
+      titulo: r.name + ' ' + r.lastName,
     })));
 
   nombreRepresentante(id: number | null): string | null {
     if (id === null) return null;
-    const r = this.state.representantesDisponibles().find((x) => x.idRepresentante === id);
-    return r ? r.nombre + ' ' + r.apellido : null;
+    const r = this.state.representantesDisponibles().find((x) => x.guardianId === id);
+    return r ? r.name + ' ' + r.lastName : null;
   }
 
   readonly state = inject(PersonasStateService);
@@ -174,37 +174,37 @@ export class FichaEstudianteComponent {
   readonly persona = computed(() => this.state.seleccionada());
 
   readonly representantesActivos = computed(() =>
-    this.state.representantes().filter((r) => r.activo).length);
+    this.state.representantes().filter((r) => r.active).length);
 
   readonly rolIncoherente = computed(() => {
-    const usuario = this.persona()?.usuario;
+    const usuario = this.persona()?.user;
     if (!usuario || usuario.roles.includes('ESTUDIANTE')) return null;
     return usuario.roles[0] ?? null;
   });
 
-  formEstudiante: { idCategoria: number | null; codigoEstudiante: string; fechaIngreso: string; idPosicion: number | null } =
-    { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10), idPosicion: null };
+  formEstudiante: { categoryId: number | null; studentCode: string; enrollmentDate: string; positionId: number | null } =
+    { categoryId: null, studentCode: '', enrollmentDate: new Date().toISOString().slice(0, 10), positionId: null };
   readonly guardandoEstudiante = signal(false);
   readonly errorEstudiante = signal('');
   readonly editandoEstudiante = signal(false);
   readonly pidiendoCodigo = signal(false);
-  private pesoAlturaEditando: { peso: number | null; altura: number | null } = { peso: null, altura: null };
+  private pesoAlturaEditando: { weight: number | null; height: number | null } = { weight: null, height: null };
 
-  formVinculo: { idRepresentante: number | null; relacion: string; contactoPrincipal: boolean } =
-    { idRepresentante: null, relacion: '', contactoPrincipal: false };
+  formVinculo: { guardianId: number | null; relationship: string; primaryContact: boolean } =
+    { guardianId: null, relationship: '', primaryContact: false };
   readonly guardandoVinculo = signal(false);
   readonly errorVinculo = signal('');
 
   constructor() {
     effect(() => {
       const seleccionada = this.state.seleccionada();
-      this.formEstudiante = { idCategoria: null, codigoEstudiante: '', fechaIngreso: new Date().toISOString().slice(0, 10), idPosicion: null };
-      this.formVinculo = { idRepresentante: null, relacion: '', contactoPrincipal: false };
+      this.formEstudiante = { categoryId: null, studentCode: '', enrollmentDate: new Date().toISOString().slice(0, 10), positionId: null };
+      this.formVinculo = { guardianId: null, relationship: '', primaryContact: false };
       this.errorEstudiante.set('');
       this.errorVinculo.set('');
       this.editandoEstudiante.set(false);
 
-      if (seleccionada && !seleccionada.estudiante && !this.rolIncoherente()) {
+      if (seleccionada && !seleccionada.student && !this.rolIncoherente()) {
         this.pedirCodigoSugerido();
       }
     });
@@ -213,17 +213,17 @@ export class FichaEstudianteComponent {
   private pedirCodigoSugerido(): void {
     this.pidiendoCodigo.set(true);
     this.servicio.siguienteCodigoEstudiante(new Date().getFullYear()).subscribe({
-      next: (codigo) => { this.pidiendoCodigo.set(false); this.formEstudiante.codigoEstudiante = codigo.trim(); },
+      next: (codigo) => { this.pidiendoCodigo.set(false); this.formEstudiante.studentCode = codigo.trim(); },
       error: () => { this.pidiendoCodigo.set(false); },
     });
   }
 
-  iniciarEdicionEstudiante(e: { idCategoria: number; codigoEstudiante: string; fechaIngreso: string; idPosicion: number | null; peso: number | null; altura: number | null }): void {
+  iniciarEdicionEstudiante(e: { categoryId: number; studentCode: string; enrollmentDate: string; positionId: number | null; weight: number | null; height: number | null }): void {
     this.formEstudiante = {
-      idCategoria: e.idCategoria, codigoEstudiante: e.codigoEstudiante,
-      fechaIngreso: e.fechaIngreso, idPosicion: e.idPosicion,
+      categoryId: e.categoryId, studentCode: e.studentCode,
+      enrollmentDate: e.enrollmentDate, positionId: e.positionId,
     };
-    this.pesoAlturaEditando = { peso: e.peso, altura: e.altura };
+    this.pesoAlturaEditando = { weight: e.weight, height: e.height };
     this.errorEstudiante.set('');
     this.editandoEstudiante.set(true);
   }
@@ -234,13 +234,13 @@ export class FichaEstudianteComponent {
   }
 
   guardarEdicionEstudiante(idEstudiante: number): void {
-    if (this.formEstudiante.idCategoria === null) return;
+    if (this.formEstudiante.categoryId === null) return;
     this.guardandoEstudiante.set(true);
     this.errorEstudiante.set('');
     this.servicio.editarEstudiante(idEstudiante, {
-      idPersona: this.persona()!.persona.idPersona, idCategoria: this.formEstudiante.idCategoria, idEstadoGeneral: ESTADO_GENERAL_ACTIVO,
-      codigoEstudiante: this.formEstudiante.codigoEstudiante, fechaIngreso: this.formEstudiante.fechaIngreso,
-      peso: this.pesoAlturaEditando.peso, altura: this.pesoAlturaEditando.altura, idPosicion: this.formEstudiante.idPosicion,
+      personId: this.persona()!.persona.personId, categoryId: this.formEstudiante.categoryId, generalStatusId: ESTADO_GENERAL_ACTIVO,
+      studentCode: this.formEstudiante.studentCode, enrollmentDate: this.formEstudiante.enrollmentDate,
+      weight: this.pesoAlturaEditando.weight, height: this.pesoAlturaEditando.height, positionId: this.formEstudiante.positionId,
     }).subscribe({
       next: () => { this.guardandoEstudiante.set(false); this.editandoEstudiante.set(false); this.state.cargarPersonas(true); },
       error: (err) => { this.guardandoEstudiante.set(false); this.errorEstudiante.set(mensajeDeError(err)); },
@@ -248,14 +248,14 @@ export class FichaEstudianteComponent {
   }
 
   crearEstudiante(): void {
-    if (this.formEstudiante.idCategoria === null) return;
-    const idPersona = this.persona()!.persona.idPersona;
+    if (this.formEstudiante.categoryId === null) return;
+    const personId = this.persona()!.persona.personId;
     this.guardandoEstudiante.set(true);
     this.errorEstudiante.set('');
     this.servicio.crearEstudiante({
-      idPersona, idCategoria: this.formEstudiante.idCategoria, idEstadoGeneral: ESTADO_GENERAL_ACTIVO,
-      codigoEstudiante: this.formEstudiante.codigoEstudiante, fechaIngreso: this.formEstudiante.fechaIngreso,
-      peso: null, altura: null, idPosicion: this.formEstudiante.idPosicion,
+      personId, categoryId: this.formEstudiante.categoryId, generalStatusId: ESTADO_GENERAL_ACTIVO,
+      studentCode: this.formEstudiante.studentCode, enrollmentDate: this.formEstudiante.enrollmentDate,
+      weight: null, height: null, positionId: this.formEstudiante.positionId,
     }).subscribe({
       next: () => { this.guardandoEstudiante.set(false); this.state.cargarPersonas(true); },
       error: (err) => { this.guardandoEstudiante.set(false); this.errorEstudiante.set(mensajeDeError(err)); },
@@ -263,25 +263,25 @@ export class FichaEstudianteComponent {
   }
 
   vincularRepresentante(idEstudiante: number): void {
-    const idRepresentante = this.formVinculo.idRepresentante;
+    const idRepresentante = this.formVinculo.guardianId;
     if (idRepresentante === null) return;
     this.guardandoVinculo.set(true);
     this.errorVinculo.set('');
     this.servicio.vincularEstudianteARepresentante(idRepresentante, idEstudiante, {
-      relacion: this.formVinculo.relacion || null,
-      contactoPrincipal: this.formVinculo.contactoPrincipal,
+      relationship: this.formVinculo.relationship || null,
+      primaryContact: this.formVinculo.primaryContact,
     }).subscribe({
       next: () => {
         this.guardandoVinculo.set(false);
-        this.formVinculo = { idRepresentante: null, relacion: '', contactoPrincipal: false };
+        this.formVinculo = { guardianId: null, relationship: '', primaryContact: false };
         this.state.cargarPersonas(true);
       },
       error: (err) => { this.guardandoVinculo.set(false); this.errorVinculo.set(mensajeDeError(err)); },
     });
   }
 
-  desvincularRepresentante(idRepresentante: number, idEstudiante: number): void {
-    this.servicio.desvincularEstudianteDeRepresentante(idRepresentante, idEstudiante).subscribe({
+  desvincularRepresentante(idRepresentante: number, studentId: number): void {
+    this.servicio.desvincularEstudianteDeRepresentante(idRepresentante, studentId).subscribe({
       next: () => this.state.cargarPersonas(true),
       error: (err) => this.errorVinculo.set(mensajeDeError(err)),
     });

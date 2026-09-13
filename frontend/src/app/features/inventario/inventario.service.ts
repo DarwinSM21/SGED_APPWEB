@@ -65,16 +65,16 @@ export class InventarioService {
   }
 
   listarEstudiantesOpcion() {
-    return this.http.get<Pagina<{ idEstudiante: number; nombrePersona: string; apellidoPersona: string }>>('/api/estudiantes?size=200').pipe(
+    return this.http.get<Pagina<{ studentId: number; personName: string; personLastName: string }>>('/api/estudiantes?size=200').pipe(
       map((pagina): PersonaOpcion[] =>
-        pagina.content.map((e) => ({ id: e.idEstudiante, nombreCompleto: `${e.nombrePersona} ${e.apellidoPersona}` }))),
+        pagina.content.map((e) => ({ id: e.studentId, fullName: `${e.personName} ${e.personLastName}` }))),
     );
   }
 
   listarEntrenadoresOpcion() {
-    return this.http.get<Pagina<{ idEntrenador: number; nombre: string; apellido: string }>>('/api/entrenadores?size=200').pipe(
+    return this.http.get<Pagina<{ coachId: number; name: string; lastName: string }>>('/api/entrenadores?size=200').pipe(
       map((pagina): PersonaOpcion[] =>
-        pagina.content.map((e) => ({ id: e.idEntrenador, nombreCompleto: `${e.nombre} ${e.apellido}` }))),
+        pagina.content.map((e) => ({ id: e.coachId, fullName: `${e.name} ${e.lastName}` }))),
     );
   }
 }

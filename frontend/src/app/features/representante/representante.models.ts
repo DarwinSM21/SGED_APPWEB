@@ -1,45 +1,45 @@
 
 export interface EstudianteResumen {
-  idEstudiante: number;
-  nombreCompleto: string;
-  categoria: string;
+  studentId: number;
+  fullName: string;
+  category: string;
 }
 
 export interface PromedioCriterio {
-  criterio: string;
-  promedio: number;
+  criterion: string;
+  average: number;
 }
 
 export interface LesionResumen {
-  idLesion: number;
-  descripcion: string;
-  fechaLesion: string;
-  fechaEstimadaRetorno: string | null;
-  fechaAlta: string | null;
-  activa: boolean;
+  injuryId: number;
+  description: string;
+  injuryDate: string;
+  estimatedReturnDate: string | null;
+  dischargeDate: string | null;
+  active: boolean;
 }
 
 export interface InformeEstudiante {
-  idEstudiante: number;
-  nombreCompleto: string;
-  categoria: string;
-  promediosPorCriterio: PromedioCriterio[];
-  historialLesiones: LesionResumen[];
-  porcentajeAsistencia: number | null;
+  studentId: number;
+  fullName: string;
+  category: string;
+  averagesByCriterion: PromedioCriterio[];
+  injuryHistory: LesionResumen[];
+  attendancePercentage: number | null;
 }
 
 export interface Notificacion {
-  idNotificacion: number;
-  idEstudiante: number;
-  estudiante: string;
-  tipo: 'ASISTENCIA' | 'LESION';
-  mensaje: string;
-  leida: boolean;
-  creadaEn: string;
+  notificationId: number;
+  studentId: number;
+  student: string;
+  type: 'ASISTENCIA' | 'LESION';
+  message: string;
+  read: boolean;
+  createdAt: string;
 }
 
 export interface ComentarioInforme {
-  comentario: string | null;
-  disponible: boolean;
-  motivo: string | null;
+  comment: string | null;
+  available: boolean;
+  reason: string | null;
 }

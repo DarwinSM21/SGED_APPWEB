@@ -23,20 +23,20 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
               <span class="badge badge--warning">{{ noLeidas() }} sin leer</span>
             }
           </div>
-          @for (n of notificaciones(); track n.idNotificacion) {
-            <button type="button" class="notificacion-fila" [class.no-leida]="!n.leida" (click)="marcarLeida(n)">
-              <span class="notificacion-icono" [class.notificacion-icono--lesion]="n.tipo === 'LESION'">
-                @if (n.tipo === 'LESION') {
+          @for (n of notificaciones(); track n.notificationId) {
+            <button type="button" class="notificacion-fila" [class.no-leida]="!n.read" (click)="marcarLeida(n)">
+              <span class="notificacion-icono" [class.notificacion-icono--lesion]="n.type === 'LESION'">
+                @if (n.type === 'LESION') {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
                 } @else {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                 }
               </span>
               <span class="notificacion-texto">
-                <span class="notificacion-mensaje">{{ n.mensaje }}</span>
-                <span class="notificacion-fecha">{{ fechaHora(n.creadaEn) }}</span>
+                <span class="notificacion-mensaje">{{ n.message }}</span>
+                <span class="notificacion-fecha">{{ fechaHora(n.createdAt) }}</span>
               </span>
-              @if (!n.leida) { <span class="punto-no-leida" title="Sin leer"></span> }
+              @if (!n.read) { <span class="punto-no-leida" title="Sin leer"></span> }
             </button>
           }
         </div>
@@ -46,7 +46,7 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
         <app-cargando />
       } @else if (error()) {
         <p class="alert alert--danger">{{ error() }}</p>
-      } @else if (representados().length === 0) {
+      } @else if (wards().length === 0) {
         <div class="card vacio">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>
           <p>Todavía no tienes representados vinculados. Contacta a un administrador.</p>
@@ -54,13 +54,13 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
       } @else {
         <div class="cuerpo">
           <div class="lista-representados">
-            @for (r of representados(); track r.idEstudiante) {
-              <button type="button" class="tarjeta-representado" [class.activa]="idSeleccionado() === r.idEstudiante"
-                      (click)="seleccionar(r.idEstudiante)">
-                <span class="avatar">{{ iniciales(r.nombreCompleto) }}</span>
+            @for (r of wards(); track r.studentId) {
+              <button type="button" class="tarjeta-representado" [class.active]="idSeleccionado() === r.studentId"
+                      (click)="seleccionar(r.studentId)">
+                <span class="avatar">{{ iniciales(r.fullName) }}</span>
                 <span class="tarjeta-representado__info">
-                  <span class="nombre">{{ r.nombreCompleto }}</span>
-                  <span class="categoria">{{ r.categoria }}</span>
+                  <span class="nombre">{{ r.fullName }}</span>
+                  <span class="categoria">{{ r.category }}</span>
                 </span>
               </button>
             }
@@ -70,33 +70,33 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
             @if (cargandoInforme()) {
               <app-cargando mensaje="Cargando informe…" />
             } @else if (informe(); as inf) {
-              <h2>{{ inf.nombreCompleto }}</h2>
-              <p class="categoria-detalle">{{ inf.categoria }}</p>
+              <h2>{{ inf.fullName }}</h2>
+              <p class="categoria-detalle">{{ inf.category }}</p>
 
               <div class="asistencia-resumen">
                 <span class="asistencia-etiqueta">Asistencia (últimos 30 días)</span>
-                @if (inf.porcentajeAsistencia === null) {
+                @if (inf.attendancePercentage === null) {
                   <span class="badge badge--info">Sin sesiones en el rango</span>
                 } @else {
-                  <span class="badge" [class.badge--success]="inf.porcentajeAsistencia >= 75" [class.badge--warning]="inf.porcentajeAsistencia < 75">
-                    {{ inf.porcentajeAsistencia | number: '1.0-0' }}%
+                  <span class="badge" [class.badge--success]="inf.attendancePercentage >= 75" [class.badge--warning]="inf.attendancePercentage < 75">
+                    {{ inf.attendancePercentage | number: '1.0-0' }}%
                   </span>
                 }
               </div>
 
               <div class="bloque-comentario">
                 <button type="button" class="btn btn--secondary btn--sm"
-                        (click)="pedirComentario(inf.idEstudiante)"
-                        [disabled]="cargandoComentario() || inf.promediosPorCriterio.length === 0">
+                        (click)="pedirComentario(inf.studentId)"
+                        [disabled]="cargandoComentario() || inf.averagesByCriterion.length === 0">
                   @if (cargandoComentario()) { <span class="spinner"></span> Redactando… }
                   @else { ✦ Explicame estos números }
                 </button>
 
-                @if (comentario(); as c) {
-                  <p class="comentario" [class.comentario--sin]="!c.disponible">
-                    {{ c.disponible ? c.comentario : c.motivo }}
+                @if (comment(); as c) {
+                  <p class="comentario" [class.comment--sin]="!c.available">
+                    {{ c.available ? c.comment : c.reason }}
                   </p>
-                  @if (c.disponible) {
+                  @if (c.available) {
                     <p class="comentario-nota">
                       Redactado automáticamente a partir de los mismos números de abajo.
                       Ante cualquier duda, hablá con el entrenador.
@@ -106,30 +106,30 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
               </div>
 
               <h3>Promedio histórico por criterio</h3>
-              @if (inf.promediosPorCriterio.length === 0) {
+              @if (inf.averagesByCriterion.length === 0) {
                 <p class="aviso">Todavía no hay evaluaciones registradas.</p>
               } @else {
                 <div class="criterios">
-                  @for (p of inf.promediosPorCriterio; track p.criterio) {
+                  @for (p of inf.averagesByCriterion; track p.criterion) {
                     <div class="criterio-fila">
-                      <span>{{ p.criterio }}</span>
-                      <span class="badge badge--info">{{ p.promedio | number: '1.1-1' }}</span>
+                      <span>{{ p.criterion }}</span>
+                      <span class="badge badge--info">{{ p.average | number: '1.1-1' }}</span>
                     </div>
                   }
                 </div>
               }
 
               <h3>Historial de lesiones</h3>
-              @if (inf.historialLesiones.length === 0) {
+              @if (inf.injuryHistory.length === 0) {
                 <p class="aviso">Sin lesiones registradas.</p>
               } @else {
-                @for (l of inf.historialLesiones; track l.idLesion) {
+                @for (l of inf.injuryHistory; track l.injuryId) {
                   <div class="lesion-fila">
-                    <span class="badge" [class.badge--danger]="l.activa" [class.badge--success]="!l.activa">
-                      {{ l.activa ? 'Activa' : 'De alta' }}
+                    <span class="badge" [class.badge--danger]="l.active" [class.badge--success]="!l.active">
+                      {{ l.active ? 'Activa' : 'De alta' }}
                     </span>
-                    <span class="lesion-descripcion">{{ l.descripcion }}</span>
-                    <span class="lesion-fecha">{{ l.fechaLesion }}</span>
+                    <span class="lesion-descripcion">{{ l.description }}</span>
+                    <span class="lesion-fecha">{{ l.injuryDate }}</span>
                   </div>
                 }
               }
@@ -179,13 +179,13 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
       transition: border-color var(--transition), background var(--transition);
     }
     .tarjeta-representado:hover { border-color: var(--color-primary-200); }
-    .tarjeta-representado.activa { border-color: var(--color-primary-500); background: var(--color-primary-50); }
+    .tarjeta-representado.active { border-color: var(--color-primary-500); background: var(--color-primary-50); }
     .tarjeta-representado__info { display: flex; flex-direction: column; min-width: 0; }
-    .tarjeta-representado__info .nombre { font-weight: 600; font-size: .9rem; }
-    .tarjeta-representado__info .categoria { font-size: .78rem; color: var(--color-text-muted); }
+    .tarjeta-representado__info .name { font-weight: 600; font-size: .9rem; }
+    .tarjeta-representado__info .category { font-size: .78rem; color: var(--color-text-muted); }
     .detalle { flex: 2 1 380px; min-width: 300px; padding: 1.5rem; }
     .detalle h2 { font-size: 1.1rem; margin-bottom: .2rem; }
-    .categoria-detalle { color: var(--color-text-muted); font-size: .85rem; margin-bottom: 1.25rem; }
+    .category-detalle { color: var(--color-text-muted); font-size: .85rem; margin-bottom: 1.25rem; }
     .asistencia-resumen {
       display: flex; align-items: center; justify-content: space-between; gap: .75rem;
       padding: .7rem .85rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm);
@@ -196,13 +196,13 @@ import { fechaHoraCorta } from '../../core/formato-fecha';
     .detalle h3:first-of-type { margin-top: 0; }
     .bloque-comentario { margin: 1rem 0 1.25rem; padding-bottom: 1rem;
                          border-bottom: 1px solid var(--color-border-light); }
-    .comentario { margin: .7rem 0 0; font-size: .92rem; line-height: 1.6;
+    .comment { margin: .7rem 0 0; font-size: .92rem; line-height: 1.6;
                   color: var(--color-text); }
-    .comentario--sin { font-size: .85rem; color: var(--color-text-muted); }
-    .comentario-nota { margin: .45rem 0 0; font-size: .74rem;
+    .comment--sin { font-size: .85rem; color: var(--color-text-muted); }
+    .comment-nota { margin: .45rem 0 0; font-size: .74rem;
                        color: var(--color-text-faint); line-height: 1.5; }
-    .criterios { display: flex; flex-direction: column; gap: .4rem; }
-    .criterio-fila {
+    .criteria { display: flex; flex-direction: column; gap: .4rem; }
+    .criterion-fila {
       display: flex; justify-content: space-between; align-items: center;
       padding: .55rem .7rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); font-size: .9rem;
     }
@@ -219,26 +219,26 @@ export class RepresentanteComponent implements OnInit {
 
   private readonly servicio = inject(RepresentanteService);
 
-  readonly representados = signal<EstudianteResumen[]>([]);
+  readonly wards = signal<EstudianteResumen[]>([]);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
 
   readonly idSeleccionado = signal<number | null>(null);
   readonly informe = signal<InformeEstudiante | null>(null);
   readonly cargandoInforme = signal(false);
-  readonly comentario = signal<ComentarioInforme | null>(null);
+  readonly comment = signal<ComentarioInforme | null>(null);
   readonly cargandoComentario = signal(false);
 
   readonly notificaciones = signal<Notificacion[]>([]);
-  readonly noLeidas = computed(() => this.notificaciones().filter((n) => !n.leida).length);
+  readonly noLeidas = computed(() => this.notificaciones().filter((n) => !n.read).length);
 
   ngOnInit(): void {
     this.servicio.misRepresentados().subscribe({
       next: (representados) => {
-        this.representados.set(representados);
+        this.wards.set(representados);
         this.cargando.set(false);
         if (representados.length > 0) {
-          this.seleccionar(representados[0].idEstudiante);
+          this.seleccionar(representados[0].studentId);
         }
       },
       error: (e) => {
@@ -254,10 +254,10 @@ export class RepresentanteComponent implements OnInit {
   }
 
   marcarLeida(n: Notificacion): void {
-    if (n.leida) return;
+    if (n.read) return;
     this.notificaciones.update((actuales) =>
-      actuales.map((x) => (x.idNotificacion === n.idNotificacion ? { ...x, leida: true } : x)));
-    this.servicio.marcarLeida(n.idNotificacion).subscribe({ error: () => {} });
+      actuales.map((x) => (x.notificationId === n.notificationId ? { ...x, read: true } : x)));
+    this.servicio.marcarLeida(n.notificationId).subscribe({ error: () => {} });
   }
 
   seleccionar(idEstudiante: number): void {
@@ -265,7 +265,7 @@ export class RepresentanteComponent implements OnInit {
     this.cargandoInforme.set(true);
     this.informe.set(null);
 
-    this.comentario.set(null);
+    this.comment.set(null);
 
     this.servicio.informeDe(idEstudiante).subscribe({
       next: (informe) => {
@@ -286,10 +286,10 @@ export class RepresentanteComponent implements OnInit {
     if (this.cargandoComentario()) return;
     this.cargandoComentario.set(true);
     this.servicio.comentarioDe(idEstudiante).subscribe({
-      next: (c) => { this.comentario.set(c); this.cargandoComentario.set(false); },
+      next: (c) => { this.comment.set(c); this.cargandoComentario.set(false); },
       error: () => {
-        this.comentario.set({ comentario: null, disponible: false,
-          motivo: 'No se pudo generar el resumen en este momento.' });
+        this.comment.set({ comment: null, available: false,
+          reason: 'No se pudo generar el resumen en este momento.' });
         this.cargandoComentario.set(false);
       },
     });

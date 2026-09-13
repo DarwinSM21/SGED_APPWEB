@@ -28,9 +28,9 @@ const ETIQUETA_ZONA: Record<ZonaCancha, string> = {
 };
 
 interface Puesto {
-  idPosicion: number;
-  abreviatura: string;
-  nombre: string;
+  positionId: number;
+  abbreviation: string;
+  name: string;
   zona: ZonaCancha;
   x: number;
   y: number;
@@ -38,8 +38,8 @@ interface Puesto {
 }
 
 type Seleccion =
-  | { tipo: 'jugador'; idEstudiante: number; origen: 'cancha' | 'banco' }
-  | { tipo: 'puesto'; idPosicion: number }
+  | { type: 'jugador'; studentId: number; origen: 'cancha' | 'banco' }
+  | { type: 'puesto'; positionId: number }
   | null;
 
 @Component({
@@ -62,25 +62,25 @@ type Seleccion =
           <div>
             <h1>Plantilla del partido</h1>
             <p class="subt">
-              {{ a.categoria }} · {{ a.fecha }} ·
-              @if (a.cerrado) {
+              {{ a.category }} · {{ a.date }} ·
+              @if (a.closed) {
                 <strong>el once que jugó</strong>
-              } @else if (a.guardada) {
+              } @else if (a.saved) {
                 <strong>la formación que armaste</strong>
               } @else {
                 sugerencia del sistema
               }
             </p>
-            @if (a.cerrado) {
+            @if (a.closed) {
               <p class="cerrado-aviso">
                 Este partido está cerrado: se consulta, no se edita.
                 Para corregirlo, reabrilo desde la lista de partidos.
               </p>
             }
             <p class="ventana">
-              Calculada con {{ a.ventana.entrenamientos }}
-              entrenamiento{{ a.ventana.entrenamientos === 1 ? '' : 's' }} de las últimas
-              {{ a.ventana.semanas }} semanas ({{ a.ventana.desde }} a {{ a.ventana.hasta }}):
+              Calculada con {{ a.window.trainingSessions }}
+              entrenamiento{{ a.window.trainingSessions === 1 ? '' : 's' }} de las últimas
+              {{ a.window.weeks }} semanas ({{ a.window.from }} a {{ a.window.to }}):
               promedio de evaluación primero, asistencia para desempatar.
             </p>
           </div>
@@ -92,8 +92,8 @@ type Seleccion =
         </header>
 
         @if (feedback(); as f) {
-          <div class="alert" [class.alert--info]="f.disponible" [class.alert--warning]="!f.disponible">
-            {{ f.disponible ? f.comentario : ('IA no disponible: ' + f.motivo) }}
+          <div class="alert" [class.alert--info]="f.available" [class.alert--warning]="!f.available">
+            {{ f.available ? f.comment : ('IA no disponible: ' + f.reason) }}
           </div>
         }
 
@@ -104,11 +104,11 @@ type Seleccion =
           <div class="card vacio">
             <h2>No hay a quién convocar</h2>
             <p>
-              @if (a.noConvocables.length > 0) {
-                Los {{ a.noConvocables.length }} jugadores de {{ a.categoria }} están fuera:
+              @if (a.notCallable.length > 0) {
+                Los {{ a.notCallable.length }} jugadores de {{ a.category }} están fuera:
                 mirá los motivos más abajo.
               } @else {
-                No hay estudiantes activos en {{ a.categoria }}.
+                No hay estudiantes activos en {{ a.category }}.
               }
             </p>
           </div>
@@ -133,7 +133,7 @@ type Seleccion =
               <rect x="100" y="500" width="200" height="60" fill="none" stroke="#ffffff66" stroke-width="2" />
               <rect x="160" y="536" width="80" height="24" fill="none" stroke="#ffffff66" stroke-width="2" />
 
-              @for (p of puestos(); track p.idPosicion) {
+              @for (p of puestos(); track p.positionId) {
                 <g class="puesto"
                    [class.puesto--vacio]="!p.jugador"
                    [class.puesto--elegido]="estaElegido(p)"
@@ -148,18 +148,18 @@ type Seleccion =
                             [attr.stroke]="COLOR_ZONA[p.zona]" stroke-width="4" />
                     <text [attr.x]="p.x" [attr.y]="p.y + 5" text-anchor="middle"
                           font-size="13" font-weight="700" fill="#1f2937">
-                      {{ iniciales(p.jugador.nombreCompleto) }}
+                      {{ iniciales(p.jugador.fullName) }}
                     </text>
                     <text [attr.x]="p.x" [attr.y]="p.y + 38" text-anchor="middle"
                           font-size="12" fill="#ffffff" font-weight="600">
-                      {{ apellido(p.jugador.nombreCompleto) }}
+                      {{ apellido(p.jugador.fullName) }}
                     </text>
                   } @else {
                     <circle [attr.cx]="p.x" [attr.cy]="p.y" r="22" fill="#ffffff22"
                             stroke="#ffffffaa" stroke-width="2" stroke-dasharray="4 4" />
                     <text [attr.x]="p.x" [attr.y]="p.y + 5" text-anchor="middle"
                           font-size="11" font-weight="700" fill="#ffffffcc">
-                      {{ p.abreviatura }}
+                      {{ p.abbreviation }}
                     </text>
                   }
                 </g>
@@ -177,12 +177,12 @@ type Seleccion =
 
             <p class="instruccion">
               @if (seleccion(); as s) {
-                @if (s.tipo === 'jugador') {
-                  <strong>{{ apellido(nombreDe(s.idEstudiante)) }}</strong> está elegido.
+                @if (s.type === 'jugador') {
+                  <strong>{{ apellido(nombreDe(s.studentId)) }}</strong> está elegido.
                   Tocá un hueco libre para moverlo, otro jugador para intercambiarlos,
                   o alguien del banco para hacer el cambio.
                 } @else {
-                  Hueco <strong>{{ abreviaturaDe(s.idPosicion) }}</strong> elegido.
+                  Hueco <strong>{{ abreviaturaDe(s.positionId) }}</strong> elegido.
                   Tocá a quien lo va a ocupar.
                 }
                 <button type="button" class="btn btn--ghost btn--sm" (click)="limpiarSeleccion()">Cancelar</button>
@@ -195,27 +195,27 @@ type Seleccion =
           <div class="panel-lateral">
             @if (detalle(); as d) {
               <aside class="card detalle-panel">
-                <h2>{{ d.nombreCompleto }}</h2>
+                <h2>{{ d.fullName }}</h2>
                 <p class="posicion-detalle">
-                  {{ d.posicion ? etiquetaCompleta(d.posicion) : 'Sin posición registrada' }}
+                  {{ d.position ? etiquetaCompleta(d.position) : 'Sin posición registrada' }}
                 </p>
                 <div class="numeros">
                   <div class="numero">
-                    <span class="valor">{{ d.promedio ?? '—' }}</span>
+                    <span class="valor">{{ d.average ?? '—' }}</span>
                     <span class="unidad">promedio {{ ventanaCorta() }}</span>
                   </div>
                   <div class="numero">
-                    <span class="valor">{{ d.presencias }}<span class="de">/{{ d.entrenamientos }}</span></span>
+                    <span class="valor">{{ d.attendanceRecords }}<span class="de">/{{ d.trainingSessions }}</span></span>
                     <span class="unidad">entrenamientos</span>
                   </div>
                 </div>
-                @if (d.promedio === null) {
+                @if (d.average === null) {
                   <p class="sin-nota">Todavía no lo evaluaron en esta ventana.</p>
                 }
-                @if (estaEnCancha(d.idEstudiante)) {
+                @if (estaEnCancha(d.studentId)) {
                   <button type="button" class="btn btn--ghost btn--sm btn--block"
                           [disabled]="soloLectura()"
-                          (click)="sacarAlBanco(d.idEstudiante)">
+                          (click)="sacarAlBanco(d.studentId)">
                     Sacar al banco
                   </button>
                 }
@@ -243,17 +243,17 @@ type Seleccion =
                 }
 
                 <div class="banco-lista">
-                @for (s of bancoVisible(); track s.idEstudiante) {
+                @for (s of bancoVisible(); track s.studentId) {
                   <button type="button" class="suplente" [disabled]="soloLectura()"
-                          [class.suplente--elegido]="esElegido(s.idEstudiante)"
+                          [class.suplente--elegido]="esElegido(s.studentId)"
                           (click)="tocarBanco(s)">
-                    <span class="avatar avatar--muted">{{ iniciales(s.nombreCompleto) }}</span>
+                    <span class="avatar avatar--muted">{{ iniciales(s.fullName) }}</span>
                     <span class="suplente-nombre">
-                      {{ s.nombreCompleto }}
-                      @if (s.posicion) { <span class="puesto-banco">{{ s.posicion }}</span> }
+                      {{ s.fullName }}
+                      @if (s.position) { <span class="puesto-banco">{{ s.position }}</span> }
                     </span>
                     <span class="suplente-num">
-                      {{ s.promedio ?? '—' }} · {{ s.presencias }}/{{ s.entrenamientos }}
+                      {{ s.average ?? '—' }} · {{ s.attendanceRecords }}/{{ s.trainingSessions }}
                     </span>
                   </button>
                 }
@@ -268,13 +268,13 @@ type Seleccion =
               }
             </section>
 
-            @if (a.noConvocables.length > 0) {
+            @if (a.notCallable.length > 0) {
               <section class="card fuera">
                 <h2>No pueden jugar</h2>
-                @for (n of a.noConvocables; track n.idEstudiante) {
+                @for (n of a.notCallable; track n.studentId) {
                   <div class="fuera-fila">
-                    <span class="fuera-nombre">{{ n.nombreCompleto }}</span>
-                    <span class="badge badge--warning">{{ n.motivo }}</span>
+                    <span class="fuera-nombre">{{ n.fullName }}</span>
+                    <span class="badge badge--warning">{{ n.reason }}</span>
                   </div>
                 }
               </section>
@@ -285,28 +285,28 @@ type Seleccion =
               <div class="estrellas" role="group" aria-label="Valoración de la formación">
                 @for (v of estrellas; track v) {
                   <button type="button" class="estrella" [disabled]="soloLectura()"
-                          [class.estrella--activa]="(valoracion() ?? 0) >= v"
-                          [attr.aria-pressed]="valoracion() === v"
+                          [class.estrella--activa]="(rating() ?? 0) >= v"
+                          [attr.aria-pressed]="rating() === v"
                           [attr.aria-label]="v + ' de 5'"
                           (click)="calificar(v)">★</button>
                 }
-                @if (valoracion()) { <span class="val-num">{{ valoracion() }}/5</span> }
+                @if (rating()) { <span class="val-num">{{ rating() }}/5</span> }
               </div>
 
               <input class="obs" type="text" maxlength="500"
-                     [ngModel]="observacion()"
-                     (ngModelChange)="observacion.set($event); sinGuardar.set(true)"
+                     [ngModel]="note()"
+                     (ngModelChange)="note.set($event); sinGuardar.set(true)"
                      placeholder="Por qué este once (opcional)" />
 
-              @if (mensaje(); as m) { <p class="ok">{{ m }}</p> }
+              @if (message(); as m) { <p class="ok">{{ m }}</p> }
 
-              @if (!a.cerrado) {
+              @if (!a.closed) {
                 <div class="acciones">
                   <button type="button" class="btn btn--primary btn--block"
                           [disabled]="guardando()" (click)="guardar()">
                     {{ guardando() ? 'Guardando…' : (sinGuardar() ? 'Guardar plantilla' : 'Guardar de nuevo') }}
                   </button>
-                  @if (a.guardada) {
+                  @if (a.saved) {
                     <button type="button" class="btn btn--ghost btn--block"
                             [disabled]="guardando()" (click)="restablecer()">
                       Volver a la sugerencia del sistema
@@ -326,20 +326,20 @@ type Seleccion =
     .cabecera { display: flex; justify-content: space-between; align-items: flex-start;
                 gap: 1rem; flex-wrap: wrap; margin-bottom: .9rem; }
     h1 { font-size: 1.15rem; }
-    .cerrado-aviso { font-size: .82rem; color: var(--color-text-muted); margin: .35rem 0 0;
+    .closed-aviso { font-size: .82rem; color: var(--color-text-muted); margin: .35rem 0 0;
                      padding: .4rem .6rem; border-left: 3px solid var(--color-border);
                      background: var(--color-border-light); border-radius: 0 4px 4px 0; }
     .puesto--fijo { cursor: default; }
     .subt { margin-top: .3rem; color: var(--color-text-muted); font-size: .85rem; }
-    .ventana { margin-top: .35rem; font-size: .78rem; color: var(--color-text-faint);
+    .window { margin-top: .35rem; font-size: .78rem; color: var(--color-text-faint);
                max-width: 56ch; line-height: 1.45; }
     .alert--info { background: var(--color-primary-50); color: var(--color-primary-700); }
     .vacio { text-align: center; padding: 2rem 1.5rem; margin-bottom: 1rem; }
     .vacio h2 { font-size: 1.05rem; margin: 0 0 .5rem; }
     .vacio p { color: var(--color-text-muted); font-size: .88rem; max-width: 46ch; margin: 0 auto; }
     .cuerpo { display: flex; gap: 1.1rem; flex-wrap: wrap; margin-top: 1rem; align-items: flex-start; }
-    .campo-envoltura { flex: 1 1 320px; min-width: 280px; }
-    .campo { width: 100%; height: auto; display: block; box-shadow: var(--shadow-md);
+    .field-envoltura { flex: 1 1 320px; min-width: 280px; }
+    .field { width: 100%; height: auto; display: block; box-shadow: var(--shadow-md);
              border-radius: 12px; touch-action: manipulation; }
     .puesto { cursor: pointer; }
     .puesto circle { transition: stroke-width .15s, opacity .15s; }
@@ -359,7 +359,7 @@ type Seleccion =
                      flex-direction: column; gap: 1.1rem; }
     .detalle-panel { padding: 1.15rem 1.2rem; }
     .detalle-panel h2 { font-size: 1.02rem; margin-bottom: .25rem; }
-    .posicion-detalle { color: var(--color-text-muted); font-size: .82rem; margin-bottom: .9rem; }
+    .position-detalle { color: var(--color-text-muted); font-size: .82rem; margin-bottom: .9rem; }
     .numeros { display: flex; gap: 1.4rem; margin-bottom: .6rem; }
     .numero { display: flex; flex-direction: column; }
     .numero .valor { font-size: 1.55rem; font-weight: 700; color: var(--color-primary-600);
@@ -430,31 +430,31 @@ export class AlineacionComponent implements OnInit {
   readonly UMBRAL_BUSCADOR = 12;
   private readonly TOPE_BANCO = 60;
 
-  readonly valoracion = signal<number | null>(null);
-  readonly observacion = signal('');
+  readonly rating = signal<number | null>(null);
+  readonly note = signal('');
   readonly sinGuardar = signal(false);
   readonly guardando = signal(false);
   readonly cargando = signal(true);
   readonly error = signal<string | null>(null);
   readonly aviso = signal<string | null>(null);
-  readonly mensaje = signal<string | null>(null);
+  readonly message = signal<string | null>(null);
   readonly cargandoFeedback = signal(false);
   readonly feedback = signal<FeedbackAlineacion | null>(null);
 
-  private idPartido = 0;
+  private matchId = 0;
 
   readonly puestos = computed<Puesto[]>(() => {
     const ocupados = this.enCanchaPorPuesto();
     return this.catalogo().map((p) => {
-      const coord = COORDENADA_POR_ABREVIATURA[p.abreviatura] ?? { x: 200, y: 280 };
+      const coord = COORDENADA_POR_ABREVIATURA[p.abbreviation] ?? { x: 200, y: 280 };
       return {
-        idPosicion: p.idPosicion,
-        abreviatura: p.abreviatura,
-        nombre: p.nombre,
-        zona: zonaDe(p.abreviatura),
+        positionId: p.positionId,
+        abbreviation: p.abbreviation,
+        name: p.name,
+        zona: zonaDe(p.abbreviation),
         x: coord.x,
         y: coord.y,
-        jugador: ocupados.get(p.idPosicion) ?? null,
+        jugador: ocupados.get(p.positionId) ?? null,
       };
     });
   });
@@ -464,25 +464,25 @@ export class AlineacionComponent implements OnInit {
   readonly bancoVisible = computed<JugadorConvocado[]>(() => {
     const texto = this.filtroBanco().trim().toLowerCase();
     const lista = texto
-      ? this.banco().filter((j) => j.nombreCompleto.toLowerCase().includes(texto)
-          || (j.posicion ?? '').toLowerCase().includes(texto))
+      ? this.banco().filter((j) => j.fullName.toLowerCase().includes(texto)
+          || (j.position ?? '').toLowerCase().includes(texto))
       : this.banco();
     return lista.slice(0, this.TOPE_BANCO);
   });
 
   readonly detalle = computed<JugadorConvocado | null>(() => {
     const s = this.seleccion();
-    if (!s || s.tipo !== 'jugador') return null;
-    return this.buscar(s.idEstudiante);
+    if (!s || s.type !== 'jugador') return null;
+    return this.buscar(s.studentId);
   });
 
   readonly ventanaCorta = computed(() => {
     const a = this.alineacion();
-    return a ? `de ${a.ventana.semanas} semanas` : '';
+    return a ? `de ${a.window.weeks} semanas` : '';
   });
 
   ngOnInit(): void {
-    this.idPartido = Number(this.ruta.snapshot.paramMap.get('idPartido'));
+    this.matchId = Number(this.ruta.snapshot.paramMap.get('idPartido'));
     this.cargar();
   }
 
@@ -490,7 +490,7 @@ export class AlineacionComponent implements OnInit {
     this.cargando.set(true);
     this.error.set(null);
     forkJoin({
-      alineacion: this.servicio.alineacion(this.idPartido),
+      alineacion: this.servicio.alineacion(this.matchId),
       posiciones: this.servicio.posiciones(),
     }).subscribe({
       next: ({ alineacion, posiciones }) => {
@@ -512,18 +512,18 @@ export class AlineacionComponent implements OnInit {
 
     const sinPuesto: JugadorConvocado[] = [];
     const porPuesto = new Map<number, JugadorConvocado>();
-    for (const t of a.titulares) {
-      if (t.idPosicion != null && !porPuesto.has(t.idPosicion)) {
-        porPuesto.set(t.idPosicion, t);
+    for (const t of a.starters) {
+      if (t.positionId != null && !porPuesto.has(t.positionId)) {
+        porPuesto.set(t.positionId, t);
       } else {
         sinPuesto.push(t);
       }
     }
 
     this.enCanchaPorPuesto.set(porPuesto);
-    this.banco.set([...sinPuesto, ...a.suplentes, ...a.disponibles]);
-    this.valoracion.set(a.valoracion);
-    this.observacion.set(a.observacion ?? '');
+    this.banco.set([...sinPuesto, ...a.substitutes, ...a.available]);
+    this.rating.set(a.rating);
+    this.note.set(a.note ?? '');
     this.seleccion.set(null);
     this.filtroBanco.set('');
     this.sinGuardar.set(false);
@@ -540,13 +540,13 @@ export class AlineacionComponent implements OnInit {
 
   private tocarPuestoInterno(p: Puesto): void {
     const s = this.seleccion();
-    this.mensaje.set(null);
+    this.message.set(null);
 
-    if (s?.tipo === 'jugador') {
-      const jugador = this.buscar(s.idEstudiante);
+    if (s?.type === 'jugador') {
+      const jugador = this.buscar(s.studentId);
       if (!jugador) { this.seleccion.set(null); return; }
 
-      if (p.jugador?.idEstudiante === s.idEstudiante) { this.seleccion.set(null); return; }
+      if (p.jugador?.studentId === s.studentId) { this.seleccion.set(null); return; }
 
       if (s.origen === 'banco') {
         this.meterDesdeBanco(jugador, p);
@@ -558,16 +558,16 @@ export class AlineacionComponent implements OnInit {
       return;
     }
 
-    if (s?.tipo === 'puesto') {
+    if (s?.type === 'puesto') {
       this.seleccion.set(p.jugador
-        ? { tipo: 'jugador', idEstudiante: p.jugador.idEstudiante, origen: 'cancha' }
-        : { tipo: 'puesto', idPosicion: p.idPosicion });
+        ? { type: 'jugador', studentId: p.jugador.studentId, origen: 'cancha' }
+        : { type: 'puesto', positionId: p.positionId });
       return;
     }
 
     this.seleccion.set(p.jugador
-      ? { tipo: 'jugador', idEstudiante: p.jugador.idEstudiante, origen: 'cancha' }
-      : { tipo: 'puesto', idPosicion: p.idPosicion });
+      ? { type: 'jugador', studentId: p.jugador.studentId, origen: 'cancha' }
+      : { type: 'puesto', positionId: p.positionId });
   }
 
   tocarBanco(s: JugadorConvocado): void {
@@ -577,10 +577,10 @@ export class AlineacionComponent implements OnInit {
 
   private tocarBancoInterno(jugador: JugadorConvocado): void {
     const s = this.seleccion();
-    this.mensaje.set(null);
+    this.message.set(null);
 
-    if (s?.tipo === 'jugador' && s.origen === 'cancha') {
-      const puesto = this.puestoDe(s.idEstudiante);
+    if (s?.type === 'jugador' && s.origen === 'cancha') {
+      const puesto = this.puestoDe(s.studentId);
       if (puesto) {
         this.meterDesdeBanco(jugador, puesto);
         this.seleccion.set(null);
@@ -589,8 +589,8 @@ export class AlineacionComponent implements OnInit {
       }
     }
 
-    if (s?.tipo === 'puesto') {
-      const puesto = this.puestos().find((p) => p.idPosicion === s.idPosicion);
+    if (s?.type === 'puesto') {
+      const puesto = this.puestos().find((p) => p.positionId === s.positionId);
       if (puesto) {
         this.meterDesdeBanco(jugador, puesto);
         this.seleccion.set(null);
@@ -599,40 +599,40 @@ export class AlineacionComponent implements OnInit {
       }
     }
 
-    this.seleccion.set(s?.tipo === 'jugador' && s.idEstudiante === jugador.idEstudiante
+    this.seleccion.set(s?.type === 'jugador' && s.studentId === jugador.studentId
       ? null
-      : { tipo: 'jugador', idEstudiante: jugador.idEstudiante, origen: 'banco' });
+      : { type: 'jugador', studentId: jugador.studentId, origen: 'banco' });
   }
 
   private meterDesdeBanco(entra: JugadorConvocado, destino: Puesto): void {
     const puestos = new Map(this.enCanchaPorPuesto());
-    const sale = puestos.get(destino.idPosicion) ?? null;
+    const sale = puestos.get(destino.positionId) ?? null;
 
-    puestos.set(destino.idPosicion, { ...entra, idPosicion: destino.idPosicion,
-      posicion: destino.abreviatura, titular: true });
+    puestos.set(destino.positionId, { ...entra, positionId: destino.positionId,
+      position: destino.abbreviation, starter: true });
 
-    const banco = this.banco().filter((b) => b.idEstudiante !== entra.idEstudiante);
-    if (sale) banco.unshift({ ...sale, titular: false });
+    const banco = this.banco().filter((b) => b.studentId !== entra.studentId);
+    if (sale) banco.unshift({ ...sale, starter: false });
 
     this.enCanchaPorPuesto.set(puestos);
     this.banco.set(banco);
   }
 
   private moverEnCancha(jugador: JugadorConvocado, destino: Puesto): void {
-    const origen = this.puestoDe(jugador.idEstudiante);
+    const origen = this.puestoDe(jugador.studentId);
     if (!origen) return;
 
     const puestos = new Map(this.enCanchaPorPuesto());
-    const otro = puestos.get(destino.idPosicion) ?? null;
+    const otro = puestos.get(destino.positionId) ?? null;
 
-    puestos.set(destino.idPosicion, { ...jugador, idPosicion: destino.idPosicion,
-      posicion: destino.abreviatura, titular: true });
+    puestos.set(destino.positionId, { ...jugador, positionId: destino.positionId,
+      position: destino.abbreviation, starter: true });
 
     if (otro) {
-      puestos.set(origen.idPosicion, { ...otro, idPosicion: origen.idPosicion,
-        posicion: origen.abreviatura, titular: true });
+      puestos.set(origen.positionId, { ...otro, positionId: origen.positionId,
+        position: origen.abbreviation, starter: true });
     } else {
-      puestos.delete(origen.idPosicion);
+      puestos.delete(origen.positionId);
     }
     this.enCanchaPorPuesto.set(puestos);
   }
@@ -647,19 +647,19 @@ export class AlineacionComponent implements OnInit {
     if (!puesto || !puesto.jugador) return;
 
     const puestos = new Map(this.enCanchaPorPuesto());
-    puestos.delete(puesto.idPosicion);
+    puestos.delete(puesto.positionId);
     this.enCanchaPorPuesto.set(puestos);
-    this.banco.set([{ ...puesto.jugador, titular: false }, ...this.banco()]);
+    this.banco.set([{ ...puesto.jugador, starter: false }, ...this.banco()]);
     this.seleccion.set(null);
     this.sinGuardar.set(true);
-    this.mensaje.set(null);
+    this.message.set(null);
   }
 
   limpiarSeleccion(): void {
     this.seleccion.set(null);
   }
 
-  readonly soloLectura = computed(() => this.alineacion()?.cerrado === true);
+  readonly soloLectura = computed(() => this.alineacion()?.closed === true);
 
   guardar(): void {
     if (this.soloLectura()) return;
@@ -667,9 +667,9 @@ export class AlineacionComponent implements OnInit {
 
     const jugadores: JugadorEnCancha[] = [
       ...this.enCancha().map((t) => ({
-        idEstudiante: t.idEstudiante, idPosicion: t.idPosicion, titular: true })),
+        studentId: t.studentId, positionId: t.positionId, starter: true })),
       ...this.banco().map((b) => ({
-        idEstudiante: b.idEstudiante, idPosicion: b.idPosicion, titular: false })),
+        studentId: b.studentId, positionId: b.positionId, starter: false })),
     ];
     if (jugadores.length === 0) {
       this.error.set('No hay a quién convocar todavía.');
@@ -678,13 +678,13 @@ export class AlineacionComponent implements OnInit {
 
     this.guardando.set(true);
     this.error.set(null);
-    this.servicio.guardarAlineacion(this.idPartido, jugadores,
-                                    this.valoracion(), this.observacion().trim() || null)
+    this.servicio.guardarAlineacion(this.matchId, jugadores,
+                                    this.rating(), this.note().trim() || null)
       .subscribe({
         next: (a) => {
           this.recibir(a);
           this.guardando.set(false);
-          this.mensaje.set('Plantilla guardada');
+          this.message.set('Plantilla guardada');
         },
         error: (e) => {
           this.guardando.set(false);
@@ -697,11 +697,11 @@ export class AlineacionComponent implements OnInit {
     if (this.soloLectura()) return;
     if (this.guardando()) return;
     this.guardando.set(true);
-    this.servicio.restablecerAlineacion(this.idPartido).subscribe({
+    this.servicio.restablecerAlineacion(this.matchId).subscribe({
       next: (a) => {
         this.recibir(a);
         this.guardando.set(false);
-        this.mensaje.set('Se volvió a la sugerencia del sistema');
+        this.message.set('Se volvió a la sugerencia del sistema');
       },
       error: (e) => {
         this.guardando.set(false);
@@ -716,30 +716,30 @@ export class AlineacionComponent implements OnInit {
   }
 
   private calificarInterno(valor: number): void {
-    this.valoracion.set(this.valoracion() === valor ? null : valor);
+    this.rating.set(this.rating() === valor ? null : valor);
     this.sinGuardar.set(true);
   }
 
   pedirFeedback(): void {
     this.cargandoFeedback.set(true);
-    this.servicio.feedback(this.idPartido).subscribe({
+    this.servicio.feedback(this.matchId).subscribe({
       next: (f) => { this.feedback.set(f); this.cargandoFeedback.set(false); },
       error: () => {
-        this.feedback.set({ comentario: null, disponible: false,
-          motivo: 'No se pudo contactar al servicio' });
+        this.feedback.set({ comment: null, available: false,
+          reason: 'No se pudo contactar al servicio' });
         this.cargandoFeedback.set(false);
       },
     });
   }
 
   private buscar(idEstudiante: number): JugadorConvocado | null {
-    return this.enCancha().find((t) => t.idEstudiante === idEstudiante)
-      ?? this.banco().find((b) => b.idEstudiante === idEstudiante)
+    return this.enCancha().find((t) => t.studentId === idEstudiante)
+      ?? this.banco().find((b) => b.studentId === idEstudiante)
       ?? null;
   }
 
   private puestoDe(idEstudiante: number): Puesto | null {
-    return this.puestos().find((p) => p.jugador?.idEstudiante === idEstudiante) ?? null;
+    return this.puestos().find((p) => p.jugador?.studentId === idEstudiante) ?? null;
   }
 
   estaEnCancha(idEstudiante: number): boolean {
@@ -749,25 +749,25 @@ export class AlineacionComponent implements OnInit {
   estaElegido(p: Puesto): boolean {
     const s = this.seleccion();
     if (!s) return false;
-    if (s.tipo === 'puesto') return s.idPosicion === p.idPosicion;
-    return p.jugador?.idEstudiante === s.idEstudiante;
+    if (s.type === 'puesto') return s.positionId === p.positionId;
+    return p.jugador?.studentId === s.studentId;
   }
 
   esElegido(idEstudiante: number): boolean {
     const s = this.seleccion();
-    return s?.tipo === 'jugador' && s.idEstudiante === idEstudiante;
+    return s?.type === 'jugador' && s.studentId === idEstudiante;
   }
 
   nombreDe(idEstudiante: number): string {
-    return this.buscar(idEstudiante)?.nombreCompleto ?? '';
+    return this.buscar(idEstudiante)?.fullName ?? '';
   }
 
   abreviaturaDe(idPosicion: number): string {
-    return this.catalogo().find((p) => p.idPosicion === idPosicion)?.abreviatura ?? '';
+    return this.catalogo().find((p) => p.positionId === idPosicion)?.abbreviation ?? '';
   }
 
   rotuloPuesto(p: Puesto): string {
-    return p.jugador ? `${p.nombre}: ${p.jugador.nombreCompleto}` : `${p.nombre}: libre`;
+    return p.jugador ? `${p.name}: ${p.jugador.fullName}` : `${p.name}: libre`;
   }
 
   iniciales(nombre: string): string {

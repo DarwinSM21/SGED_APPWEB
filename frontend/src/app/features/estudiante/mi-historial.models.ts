@@ -1,13 +1,13 @@
 
 export interface Asistencia {
-  idAsistencia: number;
-  fecha: string;
-  categoria: string;
-  horaEntrada: string | null;
-  estado: 'PRESENTE' | 'TARDE';
+  attendanceId: number;
+  date: string;
+  category: string;
+  checkInTime: string | null;
+  status: 'PRESENTE' | 'TARDE';
 }
 
 export interface MiHistorial {
-  asistencias: Asistencia[];
-  porcentajeUltimos30Dias: number | null;
+  attendances: Asistencia[];
+  percentageLast30Days: number | null;
 }

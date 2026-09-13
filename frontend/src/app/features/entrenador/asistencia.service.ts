@@ -11,7 +11,7 @@ export class AsistenciaSesionService {
     return this.http.get<Nomina>(`/api/asistencias/sesion/${idSesion}`);
   }
 
-  pasarLista(idSesion: number, marcas: MarcaAsistencia[]): Observable<Nomina> {
-    return this.http.put<Nomina>(`/api/asistencias/sesion/${idSesion}`, { marcas });
+  pasarLista(idSesion: number, marks: MarcaAsistencia[]): Observable<Nomina> {
+    return this.http.put<Nomina>(`/api/asistencias/sesion/${idSesion}`, { marks });
   }
 }

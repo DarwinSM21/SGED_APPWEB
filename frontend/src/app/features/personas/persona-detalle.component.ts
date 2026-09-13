@@ -11,10 +11,10 @@ import { FichaRepresentanteComponent } from './ficha-representante.component';
 import { mensajeDeError } from '../../core/mensaje-error';
 
 type FormularioPersona = {
-  nombre: string; apellido: string; cedula: string; correo: string; telefono: string; fechaNacimiento: string;
+  name: string; lastName: string; nationalId: string; email: string; phone: string; birthDate: string;
 };
 
-const PERSONA_VACIA: FormularioPersona = { nombre: '', apellido: '', cedula: '', correo: '', telefono: '', fechaNacimiento: '' };
+const PERSONA_VACIA: FormularioPersona = { name: '', lastName: '', nationalId: '', email: '', phone: '', birthDate: '' };
 
 @Component({
   selector: 'app-persona-detalle',
@@ -25,26 +25,26 @@ const PERSONA_VACIA: FormularioPersona = { nombre: '', apellido: '', cedula: '',
       @if (!state.mostrandoDetalle()) {
         <p class="aviso">Seleccioná una persona de la lista, o creá una nueva.</p>
       } @else {
-        <h2 class="subtitulo">{{ state.esNueva() ? 'Nueva persona' : formPersona.nombre + ' ' + formPersona.apellido }}</h2>
+        <h2 class="subtitulo">{{ state.esNueva() ? 'Nueva persona' : formPersona.name + ' ' + formPersona.lastName }}</h2>
 
         <form class="bloque" (ngSubmit)="guardarPersona()">
           <div class="fila-2">
             <label class="field" for="p-nombre"><span class="field__label">Nombre</span>
-              <span class="field__control"><input id="p-nombre" [(ngModel)]="formPersona.nombre" name="p-nombre" required /></span></label>
+              <span class="field__control"><input id="p-nombre" [(ngModel)]="formPersona.name" name="p-nombre" required /></span></label>
             <label class="field" for="p-apellido"><span class="field__label">Apellido</span>
-              <span class="field__control"><input id="p-apellido" [(ngModel)]="formPersona.apellido" name="p-apellido" required /></span></label>
+              <span class="field__control"><input id="p-apellido" [(ngModel)]="formPersona.lastName" name="p-apellido" required /></span></label>
           </div>
           <div class="fila-2">
             <label class="field" for="p-cedula"><span class="field__label">Cédula</span>
-              <span class="field__control"><input id="p-cedula" [(ngModel)]="formPersona.cedula" name="p-cedula" required pattern="\\d{10}" maxlength="10" /></span></label>
+              <span class="field__control"><input id="p-cedula" [(ngModel)]="formPersona.nationalId" name="p-cedula" required pattern="\\d{10}" maxlength="10" /></span></label>
             <label class="field" for="p-fecha"><span class="field__label">Fecha de nacimiento</span>
-              <span class="field__control"><input id="p-fecha" type="date" [(ngModel)]="formPersona.fechaNacimiento" name="p-fecha" required /></span></label>
+              <span class="field__control"><input id="p-fecha" type="date" [(ngModel)]="formPersona.birthDate" name="p-fecha" required /></span></label>
           </div>
           <div class="fila-2">
             <label class="field" for="p-correo"><span class="field__label">Correo</span>
-              <span class="field__control"><input id="p-correo" type="email" [(ngModel)]="formPersona.correo" name="p-correo" required /></span></label>
+              <span class="field__control"><input id="p-correo" type="email" [(ngModel)]="formPersona.email" name="p-correo" required /></span></label>
             <label class="field" for="p-telefono"><span class="field__label">Teléfono</span>
-              <span class="field__control"><input id="p-telefono" [(ngModel)]="formPersona.telefono" name="p-telefono" /></span></label>
+              <span class="field__control"><input id="p-telefono" [(ngModel)]="formPersona.phone" name="p-telefono" /></span></label>
           </div>
           @if (errorPersona()) { <div class="alert alert--danger" role="alert">{{ errorPersona() }}</div> }
           <div class="acciones">
@@ -96,13 +96,13 @@ export class PersonaDetalleComponent {
   readonly guardandoPersona = signal(false);
   readonly errorPersona = signal('');
 
-  readonly rolCuenta = computed(() => this.state.seleccionada()?.usuario?.roles[0] ?? null);
+  readonly rolCuenta = computed(() => this.state.seleccionada()?.user?.roles[0] ?? null);
 
   readonly fichaExistente = computed(() => {
     const p = this.state.seleccionada();
     if (!p) return null;
-    if (p.estudiante) return 'ESTUDIANTE';
-    if (p.entrenador) return 'ENTRENADOR';
+    if (p.student) return 'ESTUDIANTE';
+    if (p.coach) return 'ENTRENADOR';
     if (p.representante) return 'REPRESENTANTE';
     return null;
   });
@@ -133,8 +133,8 @@ export class PersonaDetalleComponent {
       const esNueva = this.state.esNueva();
       if (seleccionada) {
         this.formPersona = {
-          nombre: seleccionada.persona.nombre, apellido: seleccionada.persona.apellido, cedula: seleccionada.persona.cedula,
-          correo: seleccionada.persona.correo, telefono: seleccionada.persona.telefono ?? '', fechaNacimiento: seleccionada.persona.fechaNacimiento,
+          name: seleccionada.persona.name, lastName: seleccionada.persona.lastName, nationalId: seleccionada.persona.nationalId,
+          email: seleccionada.persona.email, phone: seleccionada.persona.phone ?? '', birthDate: seleccionada.persona.birthDate,
         };
       } else if (esNueva) {
         this.formPersona = { ...PERSONA_VACIA };
@@ -147,9 +147,9 @@ export class PersonaDetalleComponent {
     this.guardandoPersona.set(true);
     this.errorPersona.set('');
     const request = {
-      nombre: this.formPersona.nombre, apellido: this.formPersona.apellido, cedula: this.formPersona.cedula,
-      correo: this.formPersona.correo, telefono: this.formPersona.telefono || null, foto: null,
-      fechaNacimiento: this.formPersona.fechaNacimiento,
+      name: this.formPersona.name, lastName: this.formPersona.lastName, nationalId: this.formPersona.nationalId,
+      email: this.formPersona.email, phone: this.formPersona.phone || null, photo: null,
+      birthDate: this.formPersona.birthDate,
     };
 
     if (this.state.esNueva()) {
@@ -158,14 +158,14 @@ export class PersonaDetalleComponent {
           this.guardandoPersona.set(false);
           this.state.esNueva.set(false);
           this.state.cargarPersonas();
-          this.state.seleccionar({ persona: creada, usuario: null, estudiante: null, entrenador: null, representante: null });
+          this.state.seleccionar({ persona: creada, user: null, student: null, coach: null, representante: null });
         },
         error: (err) => this.manejarError(err),
       });
       return;
     }
 
-    const idPersona = this.state.seleccionada()!.persona.idPersona;
+    const idPersona = this.state.seleccionada()!.persona.personId;
     this.servicio.editarPersona(idPersona, request).subscribe({
       next: () => { this.guardandoPersona.set(false); this.state.cargarPersonas(true); },
       error: (err) => this.manejarError(err),

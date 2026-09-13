@@ -24,19 +24,19 @@ import { inicialesDe } from '../../core/formato-texto';
           <div class="tarjetas-resumen">
             <div class="card tarjeta-resumen">
               <span class="tarjeta-resumen__etiqueta">Mi categoría</span>
-              <span class="tarjeta-resumen__valor">{{ eq.categoria.nombre }}</span>
-              @if (eq.categoria.edadMin !== null && eq.categoria.edadMax !== null) {
-                <span class="tarjeta-resumen__detalle">{{ eq.categoria.edadMin }}–{{ eq.categoria.edadMax }} años</span>
+              <span class="tarjeta-resumen__valor">{{ eq.category.name }}</span>
+              @if (eq.category.minAge !== null && eq.category.maxAge !== null) {
+                <span class="tarjeta-resumen__detalle">{{ eq.category.minAge }}–{{ eq.category.maxAge }} años</span>
               }
-              @if (eq.categoria.descripcion) {
-                <span class="tarjeta-resumen__detalle">{{ eq.categoria.descripcion }}</span>
+              @if (eq.category.description) {
+                <span class="tarjeta-resumen__detalle">{{ eq.category.description }}</span>
               }
             </div>
 
             <div class="card tarjeta-resumen">
               <span class="tarjeta-resumen__etiqueta">Mi posición</span>
-              @if (eq.posicion) {
-                <span class="tarjeta-resumen__valor">{{ eq.posicion.nombre }}</span>
+              @if (eq.position) {
+                <span class="tarjeta-resumen__valor">{{ eq.position.name }}</span>
               } @else {
                 <span class="tarjeta-resumen__vacio">Sin posición asignada todavía</span>
               }
@@ -44,10 +44,10 @@ import { inicialesDe } from '../../core/formato-texto';
 
             <div class="card tarjeta-resumen">
               <span class="tarjeta-resumen__etiqueta">Mi entrenador</span>
-              @if (eq.entrenador) {
-                <span class="tarjeta-resumen__valor">{{ eq.entrenador.nombre }}</span>
-                @if (eq.entrenador.especialidad) {
-                  <span class="tarjeta-resumen__detalle">{{ eq.entrenador.especialidad }}</span>
+              @if (eq.coach) {
+                <span class="tarjeta-resumen__valor">{{ eq.coach.name }}</span>
+                @if (eq.coach.specialty) {
+                  <span class="tarjeta-resumen__detalle">{{ eq.coach.specialty }}</span>
                 }
               } @else {
                 <span class="tarjeta-resumen__vacio">Sin sesiones programadas todavía</span>
@@ -62,40 +62,40 @@ import { inicialesDe } from '../../core/formato-texto';
 
             <div class="asistencia-resumen">
               <span class="asistencia-etiqueta">Asistencia (últimos 30 días)</span>
-              @if (inf.porcentajeAsistencia === null) {
+              @if (inf.attendancePercentage === null) {
                 <span class="badge badge--info">Sin sesiones en el rango</span>
               } @else {
-                <span class="badge" [class.badge--success]="inf.porcentajeAsistencia >= 75" [class.badge--warning]="inf.porcentajeAsistencia < 75">
-                  {{ inf.porcentajeAsistencia | number: '1.0-0' }}%
+                <span class="badge" [class.badge--success]="inf.attendancePercentage >= 75" [class.badge--warning]="inf.attendancePercentage < 75">
+                  {{ inf.attendancePercentage | number: '1.0-0' }}%
                 </span>
               }
             </div>
 
             <h3>Promedio histórico por criterio</h3>
-            @if (inf.promediosPorCriterio.length === 0) {
+            @if (inf.averagesByCriterion.length === 0) {
               <p class="aviso">Todavía no hay evaluaciones registradas.</p>
             } @else {
               <div class="criterios">
-                @for (p of inf.promediosPorCriterio; track p.criterio) {
+                @for (p of inf.averagesByCriterion; track p.criterion) {
                   <div class="criterio-fila">
-                    <span>{{ p.criterio }}</span>
-                    <span class="badge badge--info">{{ p.promedio | number: '1.1-1' }}</span>
+                    <span>{{ p.criterion }}</span>
+                    <span class="badge badge--info">{{ p.average | number: '1.1-1' }}</span>
                   </div>
                 }
               </div>
             }
 
             <h3>Historial de lesiones</h3>
-            @if (inf.historialLesiones.length === 0) {
+            @if (inf.injuryHistory.length === 0) {
               <p class="aviso">Sin lesiones registradas.</p>
             } @else {
-              @for (l of inf.historialLesiones; track l.idLesion) {
+              @for (l of inf.injuryHistory; track l.injuryId) {
                 <div class="lesion-fila">
-                  <span class="badge" [class.badge--danger]="l.activa" [class.badge--success]="!l.activa">
-                    {{ l.activa ? 'Activa' : 'De alta' }}
+                  <span class="badge" [class.badge--danger]="l.active" [class.badge--success]="!l.active">
+                    {{ l.active ? 'Activa' : 'De alta' }}
                   </span>
-                  <span class="lesion-descripcion">{{ l.descripcion }}</span>
-                  <span class="lesion-fecha">{{ l.fechaLesion }}</span>
+                  <span class="lesion-descripcion">{{ l.description }}</span>
+                  <span class="lesion-fecha">{{ l.injuryDate }}</span>
                 </div>
               }
             }
@@ -105,15 +105,15 @@ import { inicialesDe } from '../../core/formato-texto';
         <div class="card companeros">
           <h2>Compañeros de equipo</h2>
           @if (equipo(); as eq) {
-            @if (eq.companeros.length === 0) {
+            @if (eq.teammates.length === 0) {
               <p class="aviso">Todavía no hay otros compañeros en tu categoría.</p>
             } @else {
-              @for (c of eq.companeros; track c.idEstudiante) {
+              @for (c of eq.teammates; track c.studentId) {
                 <div class="companero-fila">
-                  <span class="avatar">{{ iniciales(c.nombre) }}</span>
+                  <span class="avatar">{{ iniciales(c.name) }}</span>
                   <span class="companero-info">
-                    <span class="nombre">{{ c.nombre }}</span>
-                    @if (c.posicion) { <span class="posicion">{{ c.posicion }}</span> }
+                    <span class="nombre">{{ c.name }}</span>
+                    @if (c.position) { <span class="posicion">{{ c.position }}</span> }
                   </span>
                 </div>
               }
@@ -146,8 +146,8 @@ import { inicialesDe } from '../../core/formato-texto';
     .asistencia-etiqueta { font-size: .85rem; color: var(--color-text-muted); }
     .detalle h3 { font-size: .88rem; color: var(--color-text-muted); margin: 1.1rem 0 .6rem; text-transform: uppercase; letter-spacing: .03em; }
     .detalle h3:first-of-type { margin-top: 0; }
-    .criterios { display: flex; flex-direction: column; gap: .4rem; }
-    .criterio-fila {
+    .criteria { display: flex; flex-direction: column; gap: .4rem; }
+    .criterion-fila {
       display: flex; justify-content: space-between; align-items: center;
       padding: .55rem .7rem; border: 1px solid var(--color-border-light); border-radius: var(--radius-sm); font-size: .9rem;
     }
@@ -157,13 +157,13 @@ import { inicialesDe } from '../../core/formato-texto';
     }
     .lesion-descripcion { flex: 1; min-width: 0; }
     .lesion-fecha { color: var(--color-text-faint); font-size: .78rem; white-space: nowrap; }
-    .companeros { padding: 1.5rem; }
-    .companeros h2 { font-size: 1.05rem; margin-bottom: 1rem; }
+    .teammates { padding: 1.5rem; }
+    .teammates h2 { font-size: 1.05rem; margin-bottom: 1rem; }
     .companero-fila { display: flex; align-items: center; gap: .7rem; padding: .6rem 0; border-top: 1px solid var(--color-border-light); }
     .companero-fila:first-of-type { border-top: none; }
     .companero-info { display: flex; flex-direction: column; min-width: 0; }
-    .companero-info .nombre { font-weight: 600; font-size: .9rem; }
-    .companero-info .posicion { font-size: .78rem; color: var(--color-text-muted); }
+    .companero-info .name { font-weight: 600; font-size: .9rem; }
+    .companero-info .position { font-size: .78rem; color: var(--color-text-muted); }
   `]
 })
 export class MiEquipoComponent implements OnInit {

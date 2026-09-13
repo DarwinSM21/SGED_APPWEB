@@ -17,10 +17,10 @@ describe('FichaEstudianteComponent', () => {
 
   const personaSinFicha: PersonaConEstado = {
     persona: {
-      idPersona: 1, nombre: 'Ana', apellido: 'Vera', cedula: '0912345678', correo: 'ana@sged.test',
-      telefono: null, foto: null, fechaNacimiento: '2012-05-10', activo: true, createdAt: '2026-01-01T00:00:00Z',
+      personId: 1, name: 'Ana', lastName: 'Vera', nationalId: '0912345678', email: 'ana@sged.test',
+      phone: null, photo: null, birthDate: '2012-05-10', active: true, createdAt: '2026-01-01T00:00:00Z',
     },
-    usuario: null, estudiante: null, entrenador: null, representante: null,
+    user: null, student: null, coach: null, representante: null,
   };
 
   beforeEach(async () => {
@@ -42,7 +42,7 @@ describe('FichaEstudianteComponent', () => {
   });
 
   it('sin categoria seleccionada no llama al backend', () => {
-    component.formEstudiante.idCategoria = null;
+    component.formEstudiante.categoryId = null;
 
     component.crearEstudiante();
 
@@ -52,14 +52,14 @@ describe('FichaEstudianteComponent', () => {
   it('con categoria valida crea la ficha con el idPersona de la persona seleccionada', () => {
     servicioMock.crearEstudiante.mockReturnValue(of({}));
     vi.spyOn(state, 'cargarPersonas').mockImplementation(() => {});
-    component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10', idPosicion: null };
+    component.formEstudiante = { categoryId: 3, studentCode: 'EST-2026-001', enrollmentDate: '2026-08-10', positionId: null };
 
     component.crearEstudiante();
 
     expect(servicioMock.crearEstudiante).toHaveBeenCalledWith({
-      idPersona: 1, idCategoria: 3, idEstadoGeneral: 1,
-      codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10',
-      peso: null, altura: null, idPosicion: null,
+      personId: 1, categoryId: 3, generalStatusId: 1,
+      studentCode: 'EST-2026-001', enrollmentDate: '2026-08-10',
+      weight: null, height: null, positionId: null,
     });
     expect(component.guardandoEstudiante()).toBe(false);
     expect(state.cargarPersonas).toHaveBeenCalledWith(true);
@@ -69,7 +69,7 @@ describe('FichaEstudianteComponent', () => {
     servicioMock.crearEstudiante.mockReturnValue(throwError(() => new HttpErrorResponse({
       status: 409, error: { detail: 'El código ya existe.' },
     })));
-    component.formEstudiante = { idCategoria: 3, codigoEstudiante: 'EST-2026-001', fechaIngreso: '2026-08-10', idPosicion: null };
+    component.formEstudiante = { categoryId: 3, studentCode: 'EST-2026-001', enrollmentDate: '2026-08-10', positionId: null };
 
     component.crearEstudiante();
 
@@ -78,12 +78,12 @@ describe('FichaEstudianteComponent', () => {
   });
 
   it('cambiar de persona seleccionada pide un codigo nuevo al servidor', () => {
-    component.formEstudiante.codigoEstudiante = 'algo-a-medio-escribir';
+    component.formEstudiante.studentCode = 'algo-a-medio-escribir';
 
-    state.seleccionar({ ...personaSinFicha, persona: { ...personaSinFicha.persona, idPersona: 2 } });
+    state.seleccionar({ ...personaSinFicha, persona: { ...personaSinFicha.persona, personId: 2 } });
     fixture.detectChanges();
 
     expect(servicioMock.siguienteCodigoEstudiante).toHaveBeenCalled();
-    expect(component.formEstudiante.codigoEstudiante).toBe('EST-2026-0007');
+    expect(component.formEstudiante.studentCode).toBe('EST-2026-0007');
   });
 });

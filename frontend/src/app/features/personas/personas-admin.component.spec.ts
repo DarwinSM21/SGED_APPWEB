@@ -9,17 +9,17 @@ describe('PersonasAdminComponent', () => {
   let servicioMock: Partial<PersonasService>;
 
   const persona1: PersonaResponse = {
-    idPersona: 1, nombre: 'Ana', apellido: 'Vera', cedula: '0912345678', correo: 'ana@sged.test',
-    telefono: null, foto: null, fechaNacimiento: '2010-01-01', activo: true, createdAt: '2026-01-01T00:00:00Z',
+    personId: 1, name: 'Ana', lastName: 'Vera', nationalId: '0912345678', email: 'ana@sged.test',
+    phone: null, photo: null, birthDate: '2010-01-01', active: true, createdAt: '2026-01-01T00:00:00Z',
   };
   const persona2: PersonaResponse = {
-    idPersona: 2, nombre: 'Luis', apellido: 'Mora', cedula: '0987654321', correo: 'luis@sged.test',
-    telefono: null, foto: null, fechaNacimiento: '2011-01-01', activo: true, createdAt: '2026-01-01T00:00:00Z',
+    personId: 2, name: 'Luis', lastName: 'Mora', nationalId: '0987654321', email: 'luis@sged.test',
+    phone: null, photo: null, birthDate: '2011-01-01', active: true, createdAt: '2026-01-01T00:00:00Z',
   };
   const usuario1: UsuarioResponse = {
-    idUsuario: 10, idPersona: 1, nombrePersona: 'Ana', apellidoPersona: 'Vera', correoPersona: 'ana@sged.test',
-    idEstadoGeneral: 1, estadoGeneralNombre: 'Activo', username: 'ana@sged.test', roles: ['ESTUDIANTE'],
-    ultimoAcceso: null, activo: true, createdAt: '2026-01-01T00:00:00Z',
+    userId: 10, personId: 1, personName: 'Ana', personLastName: 'Vera', personEmail: 'ana@sged.test',
+    generalStatusId: 1, generalStatusName: 'Activo', username: 'ana@sged.test', roles: ['ESTUDIANTE'],
+    lastAccess: null, active: true, createdAt: '2026-01-01T00:00:00Z',
   };
 
   beforeEach(async () => {

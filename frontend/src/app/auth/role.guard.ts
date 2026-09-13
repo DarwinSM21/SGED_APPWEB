@@ -7,7 +7,7 @@ export function roleGuard(rolesPermitidos: string[]): CanActivateFn {
     const authService = inject(AuthService);
     const router = inject(Router);
 
-    const rol = authService.currentUser()?.rol;
+    const rol = authService.currentUser()?.role;
     if (rol && rolesPermitidos.includes(rol)) {
       return true;
     }

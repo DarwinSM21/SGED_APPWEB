@@ -49,7 +49,7 @@ describe('BuscadorOpcionesComponent', () => {
 
   it('vuelve a la primera fila al cambiar la busqueda', () => {
     componente.abrir();
-    componente.activa.set(3);
+    componente.active.set(3);
     escribir('sub-12');
 
     expect(componente.activa()).toBe(0);

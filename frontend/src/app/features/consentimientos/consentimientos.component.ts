@@ -16,9 +16,9 @@ const ALCANCES_SUGERIDOS = [
 ];
 
 interface RepresentanteDelEstudiante {
-  idRepresentante: number;
-  nombre: string;
-  relacion: string | null;
+  guardianId: number;
+  name: string;
+  relationship: string | null;
   consentimientos: Consentimiento[];
   vigente: Consentimiento | null;
 }
@@ -62,7 +62,7 @@ interface RepresentanteDelEstudiante {
           (limpiada)="limpiarEstudiante()" />
       </section>
 
-      @if (idEstudiante() !== null) {
+      @if (studentId() !== null) {
         <section class="card bloque">
           @if (cargandoConsentimientos()) {
             <app-cargando />
@@ -77,17 +77,17 @@ interface RepresentanteDelEstudiante {
           } @else {
             <h2 class="titulo-card">Representantes de {{ nombreEstudianteElegido() }}</h2>
 
-            @for (r of representantes(); track r.idRepresentante) {
+            @for (r of representantes(); track r.guardianId) {
               <div class="fila-rep">
                 <div class="rep-info">
-                  <span class="rep-nombre">{{ r.nombre }}</span>
-                  <span class="rep-relacion">{{ r.relacion ?? 'sin relación registrada' }}</span>
+                  <span class="rep-nombre">{{ r.name }}</span>
+                  <span class="rep-relacion">{{ r.relationship ?? 'sin relación registrada' }}</span>
                 </div>
 
                 <div class="rep-estado">
                   @if (r.vigente; as c) {
-                    <span class="badge badge--success">{{ c.alcance }} · vigente</span>
-                    <span class="desde">desde {{ fechaHora(c.otorgadoEn) }}</span>
+                    <span class="badge badge--success">{{ c.scope }} · vigente</span>
+                    <span class="desde">desde {{ fechaHora(c.grantedAt) }}</span>
                   } @else {
                     <span class="badge badge--neutral">sin consentimiento vigente</span>
                   }
@@ -96,12 +96,12 @@ interface RepresentanteDelEstudiante {
                 <div class="rep-acciones">
                   @if (r.vigente; as c) {
                     <app-confirmar-accion etiqueta="Revocar"
-                                          [pregunta]="'¿Revocar el consentimiento de ' + r.nombre + '? No se deshace: habria que otorgar uno nuevo.'"
+                                          [pregunta]="'¿Revocar el consentimiento de ' + r.name + '? No se deshace: habria que otorgar uno nuevo.'"
                                           textoConfirmar="Sí, revocar" enCurso="Revocando…"
-                                          [ocupado]="guardando()" (confirmado)="revocar(c, r.nombre)" />
+                                          [ocupado]="guardando()" (confirmado)="revocar(c, r.name)" />
                   } @else {
                     <button class="btn btn--primary btn--sm" type="button"
-                            [disabled]="guardando() || !alcance.trim()"
+                            [disabled]="guardando() || !scope.trim()"
                             (click)="otorgar(r)">Otorgar</button>
                   }
                 </div>
@@ -110,11 +110,11 @@ interface RepresentanteDelEstudiante {
               @if (historial(r).length > 0) {
                 <details class="historial">
                   <summary>Historial ({{ historial(r).length }} revocado{{ historial(r).length === 1 ? '' : 's' }})</summary>
-                  @for (c of historial(r); track c.idConsentimiento) {
+                  @for (c of historial(r); track c.consentId) {
                     <div class="historial__fila">
-                      <span>{{ c.alcance }}</span>
+                      <span>{{ c.scope }}</span>
                       <span class="historial__fechas">
-                        {{ fechaHora(c.otorgadoEn) }} → revocado {{ fechaHora(c.revocadoEn) }}
+                        {{ fechaHora(c.grantedAt) }} → revocado {{ fechaHora(c.revokedAt) }}
                       </span>
                     </div>
                   }
@@ -126,7 +126,7 @@ interface RepresentanteDelEstudiante {
               <label class="field" for="alcance">
                 <span class="field__label">Alcance a otorgar</span>
                 <span class="field__control">
-                  <input id="alcance" [(ngModel)]="alcance" name="alcance"
+                  <input id="alcance" [(ngModel)]="scope" name="alcance"
                          list="alcances-sugeridos" maxlength="50" />
                 </span>
               </label>
@@ -144,7 +144,7 @@ interface RepresentanteDelEstudiante {
     </div>
   `,
   styles: [`
-    .contenido { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem; }
+    .content { max-width: 880px; margin: 0 auto; padding: 1.5rem 1.25rem; }
     .subtitulo-pantalla { margin: .2rem 0 1rem; font-size: .86rem; color: var(--color-text-muted); }
     .nota {
       display: flex; gap: .6rem; align-items: flex-start;
@@ -166,7 +166,7 @@ interface RepresentanteDelEstudiante {
     .rep-nombre { font-weight: 600; }
     .rep-relacion { font-size: .78rem; color: var(--color-text-muted); }
     .rep-estado { display: flex; flex-direction: column; align-items: flex-end; gap: .15rem; }
-    .desde { font-size: .74rem; color: var(--color-text-faint); }
+    .from { font-size: .74rem; color: var(--color-text-faint); }
     .rep-acciones { flex-shrink: 0; }
     .historial { margin: 0 0 .4rem; padding-left: .2rem; }
     .historial summary { font-size: .76rem; color: var(--color-text-muted); cursor: pointer; }
@@ -175,8 +175,8 @@ interface RepresentanteDelEstudiante {
       font-size: .78rem; padding: .3rem 0 .3rem .8rem;
     }
     .historial__fechas { color: var(--color-text-faint); }
-    .alcance { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--color-border-light); }
-    .alcance .field { margin-bottom: .4rem; max-width: 340px; }
+    .scope { margin-top: 1rem; padding-top: .9rem; border-top: 1px solid var(--color-border-light); }
+    .scope .field { margin-bottom: .4rem; max-width: 340px; }
     .alcance__pie { margin: 0; font-size: .76rem; color: var(--color-text-faint); }
   `],
 })
@@ -186,12 +186,12 @@ export class ConsentimientosComponent implements OnInit {
   readonly alcancesSugeridos = ALCANCES_SUGERIDOS;
   readonly fechaHora = fechaHoraCorta;
 
-  alcance = ALCANCES_SUGERIDOS[0];
+  scope = ALCANCES_SUGERIDOS[0];
 
-  readonly estudiantes = signal<EstudianteOpcion[]>([]);
+  readonly students = signal<EstudianteOpcion[]>([]);
   readonly todosLosRepresentantes = signal<RepresentanteConVinculos[]>([]);
   readonly consentimientos = signal<Consentimiento[]>([]);
-  readonly idEstudiante = signal<number | null>(null);
+  readonly studentId = signal<number | null>(null);
 
   readonly cargandoCatalogos = signal(true);
   readonly cargandoConsentimientos = signal(false);
@@ -200,31 +200,31 @@ export class ConsentimientosComponent implements OnInit {
   readonly exito = signal('');
 
   readonly opcionesEstudiantes = computed<OpcionBuscable[]>(() =>
-    this.estudiantes().map((e) => ({
-      id: e.idEstudiante,
-      titulo: e.nombreCompleto,
-      subtitulo: e.categoria ?? undefined,
+    this.students().map((e) => ({
+      id: e.studentId,
+      titulo: e.fullName,
+      subtitulo: e.category ?? undefined,
     })));
 
   readonly nombreEstudianteElegido = computed(() => {
-    const id = this.idEstudiante();
+    const id = this.studentId();
     if (id === null) return null;
-    return this.estudiantes().find((e) => e.idEstudiante === id)?.nombreCompleto ?? null;
+    return this.students().find((e) => e.studentId === id)?.fullName ?? null;
   });
 
   readonly representantes = computed<RepresentanteDelEstudiante[]>(() => {
-    const id = this.idEstudiante();
+    const id = this.studentId();
     if (id === null) return [];
     const deEsteEstudiante = this.consentimientos();
 
     return this.todosLosRepresentantes().flatMap((r) => {
-      const vinculo = r.representados.find((e) => e.idEstudiante === id);
+      const vinculo = r.wards.find((e) => e.studentId === id);
       if (!vinculo) return [];
-      const suyos = deEsteEstudiante.filter((c) => c.idRepresentante === r.idRepresentante);
+      const suyos = deEsteEstudiante.filter((c) => c.guardianId === r.guardianId);
       return [{
-        idRepresentante: r.idRepresentante,
-        nombre: `${r.nombre} ${r.apellido}`,
-        relacion: vinculo.relacion,
+        guardianId: r.guardianId,
+        name: `${r.name} ${r.lastName}`,
+        relationship: vinculo.relationship,
         consentimientos: suyos,
         vigente: suyos.find((c) => c.vigente) ?? null,
       }];
@@ -237,7 +237,7 @@ export class ConsentimientosComponent implements OnInit {
 
   ngOnInit(): void {
     this.servicio.estudiantes().subscribe({
-      next: (e) => { this.estudiantes.set(e); this.cargandoCatalogos.set(false); },
+      next: (e) => { this.students.set(e); this.cargandoCatalogos.set(false); },
       error: (e) => { this.error.set(mensajeDeError(e, 'No se pudo cargar la lista de estudiantes')); this.cargandoCatalogos.set(false); },
     });
     this.servicio.representantes().subscribe({
@@ -247,14 +247,14 @@ export class ConsentimientosComponent implements OnInit {
   }
 
   elegirEstudiante(id: number): void {
-    this.idEstudiante.set(id);
+    this.studentId.set(id);
     this.error.set('');
     this.exito.set('');
     this.cargarConsentimientos(id);
   }
 
   limpiarEstudiante(): void {
-    this.idEstudiante.set(null);
+    this.studentId.set(null);
     this.consentimientos.set([]);
   }
 
@@ -270,20 +270,20 @@ export class ConsentimientosComponent implements OnInit {
   }
 
   otorgar(r: RepresentanteDelEstudiante): void {
-    const id = this.idEstudiante();
+    const id = this.studentId();
     if (id === null) return;
 
     this.guardando.set(true);
     this.error.set('');
     this.exito.set('');
     this.servicio.otorgar({
-      idRepresentante: r.idRepresentante,
-      idEstudiante: id,
-      alcance: this.alcance.trim(),
+      guardianId: r.guardianId,
+      studentId: id,
+      scope: this.scope.trim(),
     }).subscribe({
       next: () => {
         this.guardando.set(false);
-        this.exito.set(`${r.nombre} autorizó "${this.alcance.trim()}" para ${this.nombreEstudianteElegido()}`);
+        this.exito.set(`${r.name} autorizó "${this.scope.trim()}" para ${this.nombreEstudianteElegido()}`);
         this.cargarConsentimientos(id);
       },
       error: (e) => {
@@ -294,17 +294,17 @@ export class ConsentimientosComponent implements OnInit {
   }
 
   revocar(c: Consentimiento, nombreRepresentante: string): void {
-    const id = this.idEstudiante();
+    const id = this.studentId();
     if (id === null) return;
 
     this.guardando.set(true);
     this.error.set('');
     this.exito.set('');
-    this.servicio.revocar(c.idConsentimiento).subscribe({
+    this.servicio.revocar(c.consentId).subscribe({
       next: () => {
         this.guardando.set(false);
 
-        this.exito.set(`Se revocó "${c.alcance}" de ${nombreRepresentante}; queda en el historial`);
+        this.exito.set(`Se revocó "${c.scope}" de ${nombreRepresentante}; queda en el historial`);
         this.cargarConsentimientos(id);
       },
       error: (e) => {

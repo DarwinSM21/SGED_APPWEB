@@ -3,13 +3,13 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 
 export interface AuditoriaResponse {
   id: number;
-  fecha: string;
-  usuario: string;
-  rol: string | null;
-  accion: string;
-  entidad: string | null;
-  entidadId: number | null;
-  descripcion: string;
+  date: string;
+  user: string;
+  role: string | null;
+  action: string;
+  entity: string | null;
+  entityId: number | null;
+  description: string;
 }
 
 export interface AuditoriaPagina {
@@ -21,9 +21,9 @@ export interface AuditoriaPagina {
 }
 
 export interface FiltrosAuditoria {
-  usuario?: string;
-  accion?: string;
-  entidad?: string;
+  user?: string;
+  action?: string;
+  entity?: string;
   fechaDesde?: string;
   fechaHasta?: string;
 }
@@ -34,9 +34,9 @@ export class AuditoriaService {
 
   listar(filtros: FiltrosAuditoria, page: number, size: number) {
     let params = new HttpParams().set('page', page).set('size', size);
-    if (filtros.usuario) params = params.set('usuario', filtros.usuario);
-    if (filtros.accion) params = params.set('accion', filtros.accion);
-    if (filtros.entidad) params = params.set('entidad', filtros.entidad);
+    if (filtros.user) params = params.set('usuario', filtros.user);
+    if (filtros.action) params = params.set('accion', filtros.action);
+    if (filtros.entity) params = params.set('entidad', filtros.entity);
     if (filtros.fechaDesde) params = params.set('fechaDesde', filtros.fechaDesde);
     if (filtros.fechaHasta) params = params.set('fechaHasta', filtros.fechaHasta);
 

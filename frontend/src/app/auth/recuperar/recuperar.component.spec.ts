@@ -24,8 +24,8 @@ describe('RecuperarComponent', () => {
   });
 
   it('envia la solicitud y muestra la confirmacion generica', () => {
-    authServiceMock.solicitarRecuperacion.mockReturnValue(of({ mensaje: 'ok' }));
-    component.identificador = '  ana@sged.test ';
+    authServiceMock.solicitarRecuperacion.mockReturnValue(of({ message: 'ok' }));
+    component.identifier = '  ana@sged.test ';
 
     component.onSubmit();
 
@@ -34,18 +34,18 @@ describe('RecuperarComponent', () => {
   });
 
   it('identificador en blanco no llama al backend', () => {
-    component.identificador = '   ';
+    component.identifier = '   ';
 
     component.onSubmit();
 
     expect(authServiceMock.solicitarRecuperacion).not.toHaveBeenCalled();
-    expect(component.fallo()?.mensaje).toContain('usuario');
+    expect(component.fallo()?.message).toContain('usuario');
   });
 
   it('un error del servidor se muestra y no marca como enviado', () => {
     authServiceMock.solicitarRecuperacion.mockReturnValue(
       throwError(() => new HttpErrorResponse({ status: 500 })));
-    component.identificador = 'ana@sged.test';
+    component.identifier = 'ana@sged.test';
 
     component.onSubmit();
 
@@ -55,8 +55,8 @@ describe('RecuperarComponent', () => {
   });
 
   it('no dispara una segunda llamada mientras carga', () => {
-    authServiceMock.solicitarRecuperacion.mockReturnValue(of({ mensaje: 'ok' }));
-    component.identificador = 'ana@sged.test';
+    authServiceMock.solicitarRecuperacion.mockReturnValue(of({ message: 'ok' }));
+    component.identifier = 'ana@sged.test';
     component.loading.set(true);
 
     component.onSubmit();

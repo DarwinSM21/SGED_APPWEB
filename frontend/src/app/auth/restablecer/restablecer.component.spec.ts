@@ -85,7 +85,7 @@ describe('RestablecerComponent', () => {
     component.onSubmit();
 
     expect(component.tokenRoto()).toBe(true);
-    expect(component.fallo()?.mensaje).toBe('enlace invalido');
+    expect(component.fallo()?.message).toBe('enlace invalido');
   });
 
   it('un 422 no marca el token como roto', () => {

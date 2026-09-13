@@ -45,7 +45,7 @@ import { ChangeDetectionStrategy, Component, OnDestroy, OnInit, input, signal } 
       color: var(--oro-texto);
       user-select: none;
     }
-    .texto { font-size: .88rem; color: var(--color-text-muted); }
+    .text { font-size: .88rem; color: var(--color-text-muted); }
 
     :host {
       --oro: #C9A227;

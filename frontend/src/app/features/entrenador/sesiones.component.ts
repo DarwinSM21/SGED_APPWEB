@@ -74,10 +74,10 @@ function fechaHoyIso(): string {
               <label class="field" for="diaSemana">
                 <span class="field__label">Día</span>
                 <span class="field__control">
-                  <select id="diaSemana" [ngModel]="diaSemana" (ngModelChange)="diaSemana = $event" name="diaSemana" required>
+                  <select id="diaSemana" [ngModel]="dayOfWeek" (ngModelChange)="dayOfWeek = $event" name="diaSemana" required>
                     <option [ngValue]="null" disabled>Selecciona...</option>
                     @for (d of diasSemana; track d.valor) {
-                      <option [ngValue]="d.valor">{{ d.nombre }}</option>
+                      <option [ngValue]="d.valor">{{ d.name }}</option>
                     }
                   </select>
                 </span>
@@ -110,20 +110,20 @@ function fechaHoyIso(): string {
 
         @if (horarios().length > 0) {
           <div class="lista-horarios">
-            @for (h of horarios(); track h.idHorario) {
-              <div class="fila-horario" [class.fila-horario--choca]="h.chocaCon">
-                <span class="badge badge--info">{{ nombreDia(h.diaSemana) }}</span>
+            @for (h of horarios(); track h.scheduleId) {
+              <div class="fila-horario" [class.fila-horario--choca]="h.conflictsWith">
+                <span class="badge badge--info">{{ nombreDia(h.dayOfWeek) }}</span>
                 <span class="horario-info">
-                  {{ h.categoria }} · {{ horaCorta(h.horaInicio) }}–{{ horaCorta(h.horaFin) }}{{ h.campo ? ' · ' + h.campo : '' }}
-                  @if (h.chocaCon) {
-                    <span class="choque">Se cruza con {{ h.chocaCon }} — no podés estar en dos canchas a la vez</span>
+                  {{ h.category }} · {{ horaCorta(h.startTime) }}–{{ horaCorta(h.endTime) }}{{ h.field ? ' · ' + h.field : '' }}
+                  @if (h.conflictsWith) {
+                    <span class="choque">Se cruza con {{ h.conflictsWith }} — no podés estar en dos canchas a la vez</span>
                   }
                 </span>
                 <button type="button" class="btn btn--ghost btn--sm" (click)="editarHorario(h)">Editar</button>
                 <app-confirmar-accion etiqueta="Quitar"
                                       pregunta="¿Quitar este horario? Las sesiones ya generadas no se borran."
                                       textoConfirmar="Sí, quitar" enCurso="Quitando…"
-                                      [ocupado]="guardandoHorario()" (confirmado)="onDesactivarHorario(h.idHorario)" />
+                                      [ocupado]="guardandoHorario()" (confirmado)="onDesactivarHorario(h.scheduleId)" />
               </div>
             }
           </div>
@@ -141,13 +141,13 @@ function fechaHoyIso(): string {
               etiqueta="Categoría"
               marcador="Escribe SUB para ver todas…"
               [opciones]="opcionesCategorias()"
-              [textoSeleccionado]="nombreCategoria(idCategoria)"
-              (seleccionada)="idCategoria = $event.id"
-              (limpiada)="idCategoria = null" />
+              [textoSeleccionado]="nombreCategoria(categoryId)"
+              (seleccionada)="categoryId = $event.id"
+              (limpiada)="categoryId = null" />
             <label class="field" for="fecha">
               <span class="field__label">Fecha</span>
               <span class="field__control">
-                <input id="fecha" type="date" [(ngModel)]="fecha" name="fecha" required />
+                <input id="fecha" type="date" [(ngModel)]="date" name="fecha" required />
               </span>
             </label>
           </div>
@@ -156,13 +156,13 @@ function fechaHoyIso(): string {
             <label class="field" for="horaInicio">
               <span class="field__label">Hora de inicio</span>
               <span class="field__control">
-                <input id="horaInicio" type="time" [(ngModel)]="horaInicio" name="horaInicio" required />
+                <input id="horaInicio" type="time" [(ngModel)]="startTime" name="horaInicio" required />
               </span>
             </label>
             <label class="field" for="horaFin">
               <span class="field__label">Hora de fin</span>
               <span class="field__control">
-                <input id="horaFin" type="time" [(ngModel)]="horaFin" name="horaFin" required />
+                <input id="horaFin" type="time" [(ngModel)]="endTime" name="horaFin" required />
               </span>
             </label>
           </div>
@@ -170,7 +170,7 @@ function fechaHoyIso(): string {
           <label class="field" for="campo">
             <span class="field__label">Campo / cancha (opcional)</span>
             <span class="field__control">
-              <input id="campo" type="text" [(ngModel)]="campo" name="campo" />
+              <input id="campo" type="text" [(ngModel)]="field" name="campo" />
             </span>
           </label>
 
@@ -193,24 +193,24 @@ function fechaHoyIso(): string {
             <p>Todavía no tienes sesiones registradas. Crea la primera con el botón de arriba.</p>
           </div>
         } @else {
-          @for (s of sesiones(); track s.idSesion) {
+          @for (s of sesiones(); track s.sessionId) {
             <div class="sesion-fila">
-              <a class="sesion" [routerLink]="['/entrenador/sesion', s.idSesion]">
-                <span class="avatar avatar--muted">{{ iniciales(s.categoria) }}</span>
+              <a class="sesion" [routerLink]="['/entrenador/sesion', s.sessionId]">
+                <span class="avatar avatar--muted">{{ iniciales(s.category) }}</span>
                 <div class="sesion-info">
-                  <span class="categoria">{{ s.categoria }} · {{ s.fecha }}</span>
+                  <span class="categoria">{{ s.category }} · {{ s.date }}</span>
                   <span class="detalle">
-                    @if (s.horaInicio) { {{ horaCorta(s.horaInicio) }} }
-                    @if (s.campo) { · {{ s.campo }} }
+                    @if (s.startTime) { {{ horaCorta(s.startTime) }} }
+                    @if (s.field) { · {{ s.field }} }
                   </span>
                 </div>
-                <span class="badge" [class.badge--warning]="s.tieneEvaluacion" [class.badge--info]="!s.tieneEvaluacion">
-                  {{ s.tieneEvaluacion ? 'En evaluación' : 'Sin iniciar' }}
+                <span class="badge" [class.badge--warning]="s.hasEvaluation" [class.badge--info]="!s.hasEvaluation">
+                  {{ s.hasEvaluation ? 'En evaluación' : 'Sin iniciar' }}
                 </span>
                 <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
               </a>
               <a class="btn btn--ghost btn--sm ver-historial"
-                 [routerLink]="['/entrenador/sesion', s.idSesion, 'historial']">
+                 [routerLink]="['/entrenador/sesion', s.sessionId, 'historial']">
                 Quiénes fueron
               </a>
             </div>
@@ -267,7 +267,7 @@ function fechaHoyIso(): string {
     .sesion:last-child { margin-bottom: 0; }
     .sesion:hover { background: var(--color-primary-50); border-color: var(--color-primary-100); }
     .sesion-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
-    .categoria { font-weight: 600; font-size: .92rem; }
+    .category { font-weight: 600; font-size: .92rem; }
     .detalle { font-size: .78rem; color: var(--color-text-muted); }
     .chevron { width: 18px; height: 18px; color: var(--color-text-faint); flex-shrink: 0; }
   `]
@@ -282,29 +282,29 @@ export class SesionesComponent implements OnInit {
   readonly categorias = signal<CategoriaOpcion[]>([]);
   readonly errorCategorias = signal<string>('');
 
-  readonly esEntrenador = computed(() => this.authService.currentUser()?.rol === 'ENTRENADOR');
+  readonly esEntrenador = computed(() => this.authService.currentUser()?.role === 'ENTRENADOR');
 
   readonly opcionesCategorias = computed<OpcionBuscable[]>(() =>
     this.categorias().map((c) => ({
-      id: c.idCategoria,
-      titulo: c.nombre,
-      subtitulo: c.edadMin && c.edadMax ? `${c.edadMin} a ${c.edadMax} años` : undefined,
+      id: c.categoryId,
+      titulo: c.name,
+      subtitulo: c.minAge && c.maxAge ? `${c.minAge} a ${c.maxAge} años` : undefined,
     })));
 
   nombreCategoria(id: number | null): string | null {
     if (id == null) return null;
-    return this.categorias().find((c) => c.idCategoria === id)?.nombre ?? null;
+    return this.categorias().find((c) => c.categoryId === id)?.name ?? null;
   }
   readonly cargando = signal(false);
   readonly guardando = signal(false);
   readonly error = signal('');
   readonly mostrarFormulario = signal(false);
 
-  idCategoria: number | null = null;
-  fecha = fechaHoyIso();
-  horaInicio = '';
-  horaFin = '';
-  campo = '';
+  categoryId: number | null = null;
+  date = fechaHoyIso();
+  startTime = '';
+  endTime = '';
+  field = '';
 
   readonly horarios = signal<Horario[]>([]);
   readonly mostrarFormularioHorario = signal(false);
@@ -314,7 +314,7 @@ export class SesionesComponent implements OnInit {
   readonly diasSemana = DIAS_SEMANA;
 
   idCategoriaHorario: number | null = null;
-  diaSemana: number | null = null;
+  dayOfWeek: number | null = null;
   horaInicioHorario = '';
   horaFinHorario = '';
   campoHorario = '';
@@ -344,11 +344,11 @@ export class SesionesComponent implements OnInit {
   }
 
   onCrear(): void {
-    if (!this.idCategoria || !this.fecha || !this.horaInicio || !this.horaFin) {
+    if (!this.categoryId || !this.date || !this.startTime || !this.endTime) {
       this.error.set('Completa categoría, fecha y horas.');
       return;
     }
-    if (this.horaFin <= this.horaInicio) {
+    if (this.endTime <= this.startTime) {
       this.error.set('La hora de fin debe ser posterior a la de inicio.');
       return;
     }
@@ -356,20 +356,20 @@ export class SesionesComponent implements OnInit {
     this.guardando.set(true);
     this.error.set('');
     this.sesionesService.crear({
-      idCategoria: this.idCategoria,
-      fecha: this.fecha,
-      horaInicio: this.horaInicio,
-      horaFin: this.horaFin,
-      campo: this.campo || null,
+      categoryId: this.categoryId,
+      date: this.date,
+      startTime: this.startTime,
+      endTime: this.endTime,
+      field: this.field || null,
     }).subscribe({
       next: () => {
         this.guardando.set(false);
         this.mostrarFormulario.set(false);
-        this.idCategoria = null;
-        this.fecha = fechaHoyIso();
-        this.horaInicio = '';
-        this.horaFin = '';
-        this.campo = '';
+        this.categoryId = null;
+        this.date = fechaHoyIso();
+        this.startTime = '';
+        this.endTime = '';
+        this.field = '';
         this.cargarSesiones();
       },
       error: (err) => {
@@ -412,12 +412,12 @@ export class SesionesComponent implements OnInit {
   }
 
   editarHorario(h: Horario): void {
-    this.editandoHorario.set(h.idHorario);
-    this.idCategoriaHorario = h.idCategoria;
-    this.diaSemana = h.diaSemana;
-    this.horaInicioHorario = (h.horaInicio ?? '').slice(0, 5);
-    this.horaFinHorario = (h.horaFin ?? '').slice(0, 5);
-    this.campoHorario = h.campo ?? '';
+    this.editandoHorario.set(h.scheduleId);
+    this.idCategoriaHorario = h.categoryId;
+    this.dayOfWeek = h.dayOfWeek;
+    this.horaInicioHorario = (h.startTime ?? '').slice(0, 5);
+    this.horaFinHorario = (h.endTime ?? '').slice(0, 5);
+    this.campoHorario = h.field ?? '';
     this.errorHorario.set('');
     this.mostrarFormularioHorario.set(true);
     this.cargarCategorias();
@@ -426,14 +426,14 @@ export class SesionesComponent implements OnInit {
   private limpiarFormularioHorario(): void {
     this.editandoHorario.set(null);
     this.idCategoriaHorario = null;
-    this.diaSemana = null;
+    this.dayOfWeek = null;
     this.horaInicioHorario = '';
     this.horaFinHorario = '';
     this.campoHorario = '';
   }
 
   onCrearHorario(): void {
-    if (!this.idCategoriaHorario || !this.diaSemana || !this.horaInicioHorario || !this.horaFinHorario) {
+    if (!this.idCategoriaHorario || !this.dayOfWeek || !this.horaInicioHorario || !this.horaFinHorario) {
       this.errorHorario.set('Completa categoría, día y horas.');
       return;
     }
@@ -445,12 +445,12 @@ export class SesionesComponent implements OnInit {
     this.guardandoHorario.set(true);
     this.errorHorario.set('');
     const cuerpo = {
-      idCategoria: this.idCategoriaHorario,
-      diaSemana: this.diaSemana,
-      horaInicio: this.horaInicioHorario,
-      horaFin: this.horaFinHorario,
-      campo: this.campoHorario || null,
-      descripcion: null,
+      categoryId: this.idCategoriaHorario,
+      dayOfWeek: this.dayOfWeek,
+      startTime: this.horaInicioHorario,
+      endTime: this.horaFinHorario,
+      field: this.campoHorario || null,
+      description: null,
     };
     const idEnEdicion = this.editandoHorario();
     const peticion = idEnEdicion
@@ -481,6 +481,6 @@ export class SesionesComponent implements OnInit {
   }
 
   nombreDia(dia: number): string {
-    return this.diasSemana.find((d) => d.valor === dia)?.nombre ?? String(dia);
+    return this.diasSemana.find((d) => d.valor === dia)?.name ?? String(dia);
   }
 }

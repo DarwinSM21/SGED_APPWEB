@@ -34,14 +34,14 @@ const MAXIMO_VISIBLE = 50;
             autocomplete="off"
             [attr.aria-expanded]="abierto()"
             [attr.aria-controls]="idLista"
-            [attr.aria-activedescendant]="abierto() && activa() >= 0 ? idOpcion(activa()) : null"
+            [attr.aria-activedescendant]="abierto() && active() >= 0 ? idOpcion(active()) : null"
             [placeholder]="marcador()"
-            [value]="abierto() ? texto() : (textoSeleccionado() ?? '')"
+            [value]="abierto() ? text() : (textoSeleccionado() ?? '')"
             [disabled]="cargando()"
             (input)="alEscribir($event)"
             (focus)="abrir()"
             (keydown)="alTeclear($event)" />
-          @if (texto() || textoSeleccionado()) {
+          @if (text() || textoSeleccionado()) {
             <button type="button" class="field__toggle" aria-label="Limpiar selección"
                     (click)="limpiar()">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -59,16 +59,16 @@ const MAXIMO_VISIBLE = 50;
              caeria en el vacio. -->
         <ul class="lista" [id]="idLista" role="listbox" (mousedown)="$event.preventDefault()">
           @if (filtradas().length === 0) {
-            <li class="lista__vacio">Sin resultados para “{{ texto() }}”</li>
+            <li class="lista__vacio">Sin resultados para “{{ text() }}”</li>
           } @else {
             @for (o of filtradas(); track o.id; let i = $index) {
               <li class="lista__opcion"
                   [id]="idOpcion(i)"
                   role="option"
-                  [attr.aria-selected]="i === activa()"
-                  [class.lista__opcion--activa]="i === activa()"
+                  [attr.aria-selected]="i === active()"
+                  [class.lista__opcion--activa]="i === active()"
                   (click)="elegir(o)"
-                  (pointerenter)="activa.set(i)">
+                  (pointerenter)="active.set(i)">
                 <span class="lista__titulo">{{ o.titulo }}</span>
                 @if (o.subtitulo) { <span class="lista__subtitulo">{{ o.subtitulo }}</span> }
               </li>
@@ -120,9 +120,9 @@ export class BuscadorOpcionesComponent {
 
   private readonly campo = viewChild<ElementRef<HTMLInputElement>>('campo');
 
-  readonly texto = signal('');
+  readonly text = signal('');
   readonly abierto = signal(false);
-  readonly activa = signal(0);
+  readonly active = signal(0);
 
   private readonly sufijo = Math.random().toString(36).slice(2, 8);
   readonly idInput = 'buscador-' + this.sufijo;
@@ -133,7 +133,7 @@ export class BuscadorOpcionesComponent {
   }
 
   private readonly coincidentes = computed(() => {
-    const consulta = normalizar(this.texto().trim());
+    const consulta = normalizar(this.text().trim());
     if (!consulta) return this.opciones();
     return this.opciones().filter((o) =>
       normalizar(o.titulo + ' ' + (o.subtitulo ?? '')).includes(consulta));
@@ -143,16 +143,16 @@ export class BuscadorOpcionesComponent {
   readonly ocultas = computed(() => Math.max(0, this.coincidentes().length - MAXIMO_VISIBLE));
 
   abrir(): void {
-    this.texto.set('');
+    this.text.set('');
     this.abierto.set(true);
-    this.activa.set(0);
+    this.active.set(0);
   }
 
   alEscribir(evento: Event): void {
-    this.texto.set((evento.target as HTMLInputElement).value);
+    this.text.set((evento.target as HTMLInputElement).value);
     this.abierto.set(true);
 
-    this.activa.set(0);
+    this.active.set(0);
   }
 
   alTeclear(evento: KeyboardEvent): void {
@@ -167,11 +167,11 @@ export class BuscadorOpcionesComponent {
       if (!this.abierto()) { this.abrir(); return; }
       if (total === 0) return;
       const paso = evento.key === 'ArrowDown' ? 1 : -1;
-      this.activa.set((this.activa() + paso + total) % total);
+      this.active.set((this.active() + paso + total) % total);
       return;
     }
     if (evento.key === 'Enter') {
-      const elegida = this.filtradas()[this.activa()];
+      const elegida = this.filtradas()[this.active()];
       if (this.abierto() && elegida) {
         evento.preventDefault();
         this.elegir(elegida);
@@ -181,12 +181,12 @@ export class BuscadorOpcionesComponent {
 
   elegir(opcion: OpcionBuscable): void {
     this.abierto.set(false);
-    this.texto.set('');
+    this.text.set('');
     this.seleccionada.emit(opcion);
   }
 
   limpiar(): void {
-    this.texto.set('');
+    this.text.set('');
     this.limpiada.emit();
     this.abierto.set(true);
     this.campo()?.nativeElement.focus();

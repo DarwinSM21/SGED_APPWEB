@@ -4,7 +4,7 @@ import { map } from 'rxjs';
 import { CategoriaOpcionReporte, EstudianteOpcionReporte, FiltrosReporte } from './reportes.models';
 
 interface EstudiantePagina {
-  content: { idEstudiante: number; nombrePersona: string; apellidoPersona: string; nombreCategoria: string }[];
+  content: { studentId: number; personName: string; personLastName: string; categoryName: string }[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -16,9 +16,9 @@ export class ReportesService {
       map((pagina) =>
         pagina.content.map(
           (e): EstudianteOpcionReporte => ({
-            idEstudiante: e.idEstudiante,
-            nombreCompleto: `${e.nombrePersona} ${e.apellidoPersona}`,
-            categoria: e.nombreCategoria,
+            studentId: e.studentId,
+            fullName: `${e.personName} ${e.personLastName}`,
+            category: e.categoryName,
           }),
         ),
       ),
@@ -31,8 +31,8 @@ export class ReportesService {
 
   estudiantesFichas(filtros: FiltrosReporte) {
     let params = new HttpParams();
-    if (filtros.categoria) params = params.set('categoria', filtros.categoria);
-    if (filtros.activo !== null && filtros.activo !== undefined) params = params.set('activo', filtros.activo);
+    if (filtros.category) params = params.set('categoria', filtros.category);
+    if (filtros.active !== null && filtros.active !== undefined) params = params.set('activo', filtros.active);
     return this.http.get('/api/reportes/estudiantes-fichas', { params, responseType: 'blob' });
   }
 
@@ -62,7 +62,7 @@ export class ReportesService {
 
   private paramsConCategoria(filtros: FiltrosReporte): HttpParams {
     let params = this.paramsComunes(filtros);
-    if (filtros.categoria) params = params.set('categoria', filtros.categoria);
+    if (filtros.category) params = params.set('categoria', filtros.category);
     return params;
   }
 }

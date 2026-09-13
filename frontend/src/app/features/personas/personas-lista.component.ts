@@ -19,15 +19,15 @@ import { PersonaConEstado } from './personas.models';
         <app-cargando />
       } @else {
         <div class="lista-personas">
-          @for (p of personasFiltradas(); track p.persona.idPersona) {
-            <button type="button" class="fila-persona" [class.fila-persona--activa]="state.seleccionada()?.persona?.idPersona === p.persona.idPersona"
+          @for (p of personasFiltradas(); track p.persona.personId) {
+            <button type="button" class="fila-persona" [class.fila-persona--activa]="state.seleccionada()?.persona?.personId === p.persona.personId"
                     (click)="state.seleccionar(p)">
-              <span class="nombre-persona">{{ p.persona.nombre }} {{ p.persona.apellido }}</span>
-              <span class="cedula-persona">{{ p.persona.cedula }}</span>
+              <span class="nombre-persona">{{ p.persona.name }} {{ p.persona.lastName }}</span>
+              <span class="cedula-persona">{{ p.persona.nationalId }}</span>
               <span class="badges-persona">
                 @if (rolAparte(p); as rol) { <span class="badge badge--info">{{ rol }}</span> }
-                @if (p.estudiante) { <span class="badge badge--success">Estudiante</span> }
-                @if (p.entrenador) { <span class="badge badge--success">Entrenador</span> }
+                @if (p.student) { <span class="badge badge--success">Estudiante</span> }
+                @if (p.coach) { <span class="badge badge--success">Entrenador</span> }
                 @if (p.representante) { <span class="badge badge--success">Representante</span> }
               </span>
             </button>
@@ -48,8 +48,8 @@ import { PersonaConEstado } from './personas.models';
     }
     .fila-persona:hover { background: var(--color-border-light); }
     .fila-persona--activa { background: var(--color-primary-50); }
-    .nombre-persona { font-weight: 600; font-size: .88rem; }
-    .cedula-persona { font-size: .78rem; color: var(--color-text-faint); }
+    .name-persona { font-weight: 600; font-size: .88rem; }
+    .nationalId-persona { font-size: .78rem; color: var(--color-text-faint); }
   `],
 })
 export class PersonasListaComponent {
@@ -58,11 +58,11 @@ export class PersonasListaComponent {
   readonly busqueda = signal('');
 
   rolAparte(p: PersonaConEstado): string | null {
-    const rol = p.usuario?.roles[0] ?? null;
-    if (!p.usuario) return null;
+    const rol = p.user?.roles[0] ?? null;
+    if (!p.user) return null;
     if (!rol) return 'sin rol';
-    const ficha = p.estudiante ? 'ESTUDIANTE'
-      : p.entrenador ? 'ENTRENADOR'
+    const ficha = p.student ? 'ESTUDIANTE'
+      : p.coach ? 'ENTRENADOR'
       : p.representante ? 'REPRESENTANTE'
       : null;
     return rol === ficha ? null : rol;
@@ -72,6 +72,6 @@ export class PersonasListaComponent {
     const q = this.busqueda().trim().toLowerCase();
     if (!q) return this.state.personas();
     return this.state.personas().filter((p) =>
-      `${p.persona.nombre} ${p.persona.apellido}`.toLowerCase().includes(q) || p.persona.cedula.includes(q));
+      `${p.persona.name} ${p.persona.lastName}`.toLowerCase().includes(q) || p.persona.nationalId.includes(q));
   });
 }
