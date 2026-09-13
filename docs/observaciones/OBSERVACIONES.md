@@ -6,9 +6,19 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 
 ---
 
-## Estado final (2026-09-11)
+## Estado final (2026-09-11, superado el 2026-09-12 — ver más abajo)
 
-`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`. CI en verde. Corte defendido: etiqueta **`v1.0.3`** (apunta al mismo commit que `main`).
+`main` == `origin/main` en `github.com/DarwinSM21/SGED_APPWEB`. CI en verde. Corte defendido en ese momento: etiqueta **`v1.0.3`** (apunta al mismo commit que `main`).
+
+> **Actualización, 2026-09-12 — corte defendido vigente: `v1.0.0`.** Tras
+> recibirse la firma del docente-director (ver más abajo), `v1.0.0` se
+> reasignó al commit que la incorpora, tal como describe la "Excepción
+> declarada" de [`VERSIONING.md`](../../VERSIONING.md): es el único tag de
+> la familia que se mueve a propósito porque la rúbrica del examen final
+> evalúa literalmente el commit al que apunte en el momento del cierre.
+> `v1.0.3` sigue siendo válido como punto de referencia histórico (10-sep),
+> pero ya no es el corte final — `v1.0.0` lo supera al incluir la firma del
+> acta de aprobación del SRS.
 
 > **Revisión del SRS v1.6 del docente (M1–M3), 2026-09-10 — cerrada.** Ver la sección [Revisión SRS v1.6 — M1/M2/M3](#revisión-srs-v16--m1m2m3-2026-09-10) al final. M1: etiqueta movida al cierre real (`v1.0.3`). M2: §1.3 del SRS explica el vocabulario de estados. M3: `RNF-26` convierte el hallazgo **H-09** en requisito **e implementado** (doble opt-in del correo: `V28`, token de un solo uso, `POST /api/auth/confirmar-correo`, compuerta en `/forgot`); RF-48 gana "Condición de cierre"; `ETHICS.md` v1.9 — **H-01…H-09 cerrados**.
 >

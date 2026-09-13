@@ -99,6 +99,11 @@ administrador (`FichaEstudianteComponent` da de alta la ficha;
 `CuentaUsuarioComponent`/el botón de acceso crean la cuenta después,
 solo si se pide).
 
+> `ESTUDIANTE` en el diagrama es el valor literal del enum Java
+> `RecipientType` (`@Enumerated(EnumType.STRING)`), no texto libre del
+> diagrama — ver la nota sobre enums sin traducir en
+> [`diagrama-clases.md`](diagrama-clases.md).
+
 ```mermaid
 sequenceDiagram
     actor A as Administrator/Receptionist
@@ -174,6 +179,10 @@ Dos roles con permisos distintos: **recepción** emite el token
 propia sesión autenticada. El QR nunca contiene datos personales, solo
 un identificador opaco con vencimiento corto en Redis (ver
 `QrAsistenciaService`).
+
+> `PRESENTE` / `TARDE` son los valores literales del enum Java de estado
+> de asistencia, igual que `ESTUDIANTE` en el diagrama anterior — ver la
+> nota sobre enums sin traducir en [`diagrama-clases.md`](diagrama-clases.md).
 
 ```mermaid
 sequenceDiagram

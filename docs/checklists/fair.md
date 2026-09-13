@@ -84,14 +84,14 @@ intención, solo por evidencia — mismo criterio que ya aplica
 
 | Principio | Cumplidos | Pendientes | Nota |
 |---|---|---|---|
-| Findable | 5/6 | DOI del software aún resuelve a v0.9.0-rc (pendiente re-publicar en Zenodo) | |
+| Findable | 6/6 | — | |
 | Accessible | 4/4 | — | |
 | Interoperable | 3/4 | Esquema unificado de reportes (no bloqueante) | |
 | Reusable | 5/5 | — | |
 
 **Lectura honesta:** el software y el dataset ya son razonablemente FAIR.
-Lo que resta en Findable es que el DOI del software en Zenodo aún resuelve
-a la versión `v0.9.0-rc` en vez de `v1.0.0`; requiere re-publicar la
-versión en Zenodo (acción externa, no depende del código). Interoperable
+Findable ya cierra: el DOI del software en Zenodo fue re-publicado y
+ahora resuelve a `v1.0.0` (`10.5281/zenodo.22730565`), no a la versión
+`v0.9.0-rc` de antes — ver `CITATION.cff` y `README.md`. Interoperable
 tiene un pendiente menor (esquema unificado de reportes) que no bloquea
 la evaluación.

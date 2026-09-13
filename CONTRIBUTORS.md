@@ -22,16 +22,16 @@ verificable de la persona, no una partición exclusiva por rol.
 
 | Rol CRediT | Integrante(s) | Cobertura |
 |---|---|---|
-| Conceptualization | Ricardo (55), Darwin (136) | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
+| Conceptualization | Ricardo (55), Darwin (144) | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
 | Data curation | Alejandro (233) | Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. |
 | Formal analysis | Alejandro (233) | Análisis estadístico de los datos de rendimiento y usabilidad (intervalos, distribución t). |
 | Funding acquisition | — | No aplica (proyecto académico sin financiación externa). |
-| Investigation | Darwin (136) | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. |
+| Investigation | Darwin (144) | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. |
 | Methodology | Ricardo (55) | Proceso de investigación (DSR) y protocolo de medición. |
-| Project administration | Darwin (136) | Administración del proyecto, calendario y gestión de entregas. |
+| Project administration | Darwin (144) | Administración del proyecto, calendario y gestión de entregas. |
 | Resources | Ricardo (55) | Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. |
-| Software | Alejandro (233), Ricardo (55), Darwin (136) | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
-| Supervision | Darwin (136) | Coordinación del equipo y seguimiento del repositorio. |
+| Software | Alejandro (233), Ricardo (55), Darwin (144) | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
+| Supervision | Darwin (144) | Coordinación del equipo y seguimiento del repositorio. |
 | Validation | Alejandro (233), Ricardo (55) | Pruebas de cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. |
 | Visualization | Alejandro (233) | Diagramas C4 y de arquitectura del sistema. |
 | Writing – original draft | Alejandro (233) | Redacción del informe, del documento de requisitos (SRS) y de la documentación técnica. |
@@ -46,14 +46,16 @@ reflejar trabajo real.
 
 | Integrante | Commits | Líneas escritas | Archivos escritos |
 |---|---:|---:|---:|
-| Pallo Pinto Alejandro Daniel | 233 | 82 050 | 792 |
-| Arcalle Grefa Darwin Orlando | 136 | 60 993 | 776 |
-| Velez Lopez Ricardo Elias | 55 | 11 912 | 153 |
-| **Total** | **424** | **154 955** | **1 721** |
+| Pallo Pinto Alejandro Daniel | 233 | 107 074 | 772 |
+| Arcalle Grefa Darwin Orlando | 144 | 93 526 | 867 |
+| Velez Lopez Ricardo Elias | 55 | 9 835 | 137 |
+| **Total** | **432** | **210 435** | **1 776** |
 
-_Medido 2026-09-12 sobre `main` (commit `6fd0581`). "Archivos escritos" cuenta
-rutas distintas tocadas por cada integrante (no eventos de cambio repetidos).
-El conteo de Arcalle Grefa
+_Medido 2026-09-13 sobre `main` (commit `215a4ec`; la medición anterior,
+`6fd0581`, quedó 8 commits atrás tras la ronda de correcciones de
+naming/Javadoc/diagramas). "Archivos escritos" cuenta rutas distintas
+tocadas por cada integrante (no eventos de cambio repetidos). El conteo de
+Arcalle Grefa
 Darwin Orlando suma los commits de sus dos correos vinculados a la misma
 cuenta de GitHub (`darcalleg@uteq.edu.ec` y `darwinarcalle@gmail.com`; ver
 nota más abajo). Estas cifras cambian con cada commit nuevo por diseño —

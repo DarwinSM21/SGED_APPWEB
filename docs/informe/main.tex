@@ -2233,7 +2233,7 @@ el propio), y en producción (\texttt{render.yaml}) esa variable trae un
 
 No basta con leer la configuración: se probó contra el despliegue real
 enviando una petición con un origen no autorizado
-(\ruta{docs/mediciones/sec/a05-cors.txt}). El resultado:
+(\ruta{docs/mediciones/sec/a05-cors.txt}). El resultado (Listado~\ref{lst:cors-rechazo}):
 
 \begin{lstlisting}[caption={CORS contra un origen no autorizado, despliegue real},label={lst:cors-rechazo}]
 $ curl -i https://sged-backend-2p05.onrender.com/api/auth/ping \
