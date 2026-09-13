@@ -17,58 +17,58 @@ public final class PaymentDtos {
     private PaymentDtos() {}
 
     public record RegisterMembershipRequest(
-            @NotNull Long idEstudiante,
-            @NotNull @Min(2020) @Max(2100) Integer anio,
-            @NotEmpty List<@Min(1) @Max(12) Integer> meses,
-            @NotNull @DecimalMin(value = "0.01") BigDecimal monto,
-            LocalDate fechaPago
+            @NotNull Long studentId,
+            @NotNull @Min(2020) @Max(2100) Integer year,
+            @NotEmpty List<@Min(1) @Max(12) Integer> months,
+            @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
+            LocalDate paymentDate
     ) {}
 
     public record RegisterDailyRequest(
-            @NotNull Long idEstudiante,
-            @NotNull @DecimalMin(value = "0.01") BigDecimal monto,
-            LocalDate fechaPago
+            @NotNull Long studentId,
+            @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
+            LocalDate paymentDate
     ) {}
 
     public record PaymentResponse(
-            Long idPago,
-            Long idEstudiante,
-            String estudiante,
-            PaymentType tipo,
-            Integer anio,
-            Integer mes,
-            BigDecimal monto,
-            LocalDate fechaPago,
-            String registradoPor,
-            java.time.OffsetDateTime anuladoEn,
-            String anuladoPor,
-            String motivoAnulacion
+            Long paymentId,
+            Long studentId,
+            String student,
+            PaymentType type,
+            Integer year,
+            Integer month,
+            BigDecimal amount,
+            LocalDate paymentDate,
+            String registeredBy,
+            java.time.OffsetDateTime voidedAt,
+            String voidedBy,
+            String voidReason
     ) {
         /**
          * @return {@code true} si el pago no fue anulado
          */
-        public boolean vigente() {
-            return anuladoEn == null;
+        public boolean active() {
+            return voidedAt == null;
         }
     }
 
     public record CancelPaymentRequest(
             @NotBlank(message = "Indica por qué se anula el pago")
             @Size(max = 255, message = "El motivo no puede superar los 255 caracteres")
-            String motivo
+            String reason
     ) {}
 
     public record MonthlyIncomeResponse(
-            Integer anio,
-            Integer mes,
+            Integer year,
+            Integer month,
             BigDecimal total,
-            Long cantidadPagos
+            Long paymentCount
     ) {}
 
     public record IncomeHistoryResponse(
-            List<MonthlyIncomeResponse> meses,
+            List<MonthlyIncomeResponse> months,
             BigDecimal total,
-            BigDecimal promedioMensual,
-            MonthlyIncomeResponse mejorMes
+            BigDecimal monthlyAverage,
+            MonthlyIncomeResponse bestMonth
     ) {}
 }

@@ -60,9 +60,9 @@ class ItemServiceTest {
 
         ItemResponse resultado = articuloService.create(request);
 
-        assertThat(resultado.stockActual()).isZero();
-        assertThat(resultado.stockMinimo()).isEqualTo(5);
-        assertThat(resultado.unidadMedida()).isEqualTo("unidad");
+        assertThat(resultado.currentStock()).isZero();
+        assertThat(resultado.minimumStock()).isEqualTo(5);
+        assertThat(resultado.unitOfMeasure()).isEqualTo("unidad");
     }
 
     @Test
@@ -84,9 +84,9 @@ class ItemServiceTest {
         ItemRequest request = new ItemRequest("Balón N°5 (renombrado)", ItemType.BALON, null, null, 4, "unidad");
         ItemResponse resultado = articuloService.update(1L, request);
 
-        assertThat(resultado.nombre()).isEqualTo("Balón N°5 (renombrado)");
-        assertThat(resultado.stockMinimo()).isEqualTo(4);
-        assertThat(resultado.stockActual()).isEqualTo(10);
+        assertThat(resultado.name()).isEqualTo("Balón N°5 (renombrado)");
+        assertThat(resultado.minimumStock()).isEqualTo(4);
+        assertThat(resultado.currentStock()).isEqualTo(10);
     }
 
     @Test
@@ -110,7 +110,7 @@ class ItemServiceTest {
         Page<ItemResponse> resultado = articuloService.listPaged(PageRequest.of(0, 10));
 
         assertThat(resultado.getTotalElements()).isEqualTo(1);
-        assertThat(resultado.getContent().get(0).nombre()).isEqualTo("Balón N°5");
+        assertThat(resultado.getContent().get(0).name()).isEqualTo("Balón N°5");
     }
 
     @Test
@@ -123,9 +123,9 @@ class ItemServiceTest {
 
         LowStockResponse resultado = articuloService.lowStock();
 
-        assertThat(resultado.total()).isEqualTo(1L);
-        assertThat(resultado.articulos()).hasSize(1);
-        assertThat(resultado.articulos().get(0).stockActual()).isEqualTo(2);
+        assertThat(resultado.totalElements()).isEqualTo(1L);
+        assertThat(resultado.items()).hasSize(1);
+        assertThat(resultado.items().get(0).currentStock()).isEqualTo(2);
     }
 
     @Test
@@ -136,8 +136,8 @@ class ItemServiceTest {
 
         LowStockResponse resultado = articuloService.lowStock();
 
-        assertThat(resultado.total()).isZero();
-        assertThat(resultado.articulos()).isEmpty();
+        assertThat(resultado.totalElements()).isZero();
+        assertThat(resultado.items()).isEmpty();
     }
 
     @Test
@@ -148,7 +148,7 @@ class ItemServiceTest {
 
         ItemResponse resultado = articuloService.create(request);
 
-        assertThat(resultado.unidadMedida()).isEqualTo("caja");
+        assertThat(resultado.unitOfMeasure()).isEqualTo("caja");
     }
 
     @Test
@@ -161,7 +161,7 @@ class ItemServiceTest {
         ItemRequest request = new ItemRequest("Balón N°5", ItemType.BALON, null, null, 4, "   ");
         ItemResponse resultado = articuloService.update(1L, request);
 
-        assertThat(resultado.unidadMedida()).isEqualTo("unidad");
+        assertThat(resultado.unitOfMeasure()).isEqualTo("unidad");
     }
 
     @Test
@@ -174,7 +174,7 @@ class ItemServiceTest {
 
         ItemResponse resultado = articuloService.reactivate(1L);
 
-        assertThat(resultado.activo()).isTrue();
+        assertThat(resultado.active()).isTrue();
     }
 
     @Test

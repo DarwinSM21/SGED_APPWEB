@@ -153,7 +153,7 @@ public class StudentController {
     @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'ENTRENADOR')")
     public ResponseEntity<StudentResponse> updatePosition(
             @PathVariable Long id, @RequestBody UpdatePositionRequest request) {
-        return ResponseEntity.ok(estudianteService.updatePosition(id, request.idPosicion()));
+        return ResponseEntity.ok(estudianteService.updatePosition(id, request.positionId()));
     }
 
     /**

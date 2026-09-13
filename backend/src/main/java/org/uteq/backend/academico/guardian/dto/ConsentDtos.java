@@ -10,19 +10,19 @@ public final class ConsentDtos {
     private ConsentDtos() {}
 
     public record GrantConsentRequest(
-            @NotNull Long idRepresentante,
-            @NotNull Long idEstudiante,
-            @NotBlank String alcance
+            @NotNull Long guardianId,
+            @NotNull Long studentId,
+            @NotBlank String scope
     ) {}
 
     public record ConsentResponse(
-            Long idConsentimiento,
-            Long idRepresentante,
-            Long idEstudiante,
-            String alcance,
-            OffsetDateTime otorgadoEn,
-            String registradoPorUsername,
-            OffsetDateTime revocadoEn,
+            Long consentId,
+            Long guardianId,
+            Long studentId,
+            String scope,
+            OffsetDateTime grantedAt,
+            String registeredByUsername,
+            OffsetDateTime revokedAt,
             boolean vigente
     ) {}
 }

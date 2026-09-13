@@ -87,9 +87,9 @@ public class LineupService {
     @Transactional
     public LineupResponse save(Long idPartido, SaveLineupRequest request) {
         Roster convocatoria = rosterService.calculate(idPartido);
-        Match partido = convocatoria.partido();
+        Match partido = convocatoria.match();
         matchService.requireOpen(partido);
-        Long idCategoria = partido.getCategoria().getIdCategoria();
+        Long idCategoria = partido.getCategoria().getCategoryId();
 
         Set<Long> lesionados = new HashSet<>(injuryRepository.injuredStudentIds());
         Set<Long> vistos = new LinkedHashSet<>();
@@ -97,34 +97,34 @@ public class LineupService {
         int titulares = 0;
 
         List<LineupPlayer> nuevos = new ArrayList<>();
-        for (PlayerOnField j : request.jugadores()) {
-            if (!vistos.add(j.idEstudiante())) {
+        for (PlayerOnField j : request.players()) {
+            if (!vistos.add(j.studentId())) {
                 throw new IllegalArgumentException("Un jugador no puede estar dos veces en la alineación");
             }
 
-            Student estudiante = estudianteRepository.findByIdAndActiveTrue(j.idEstudiante())
+            Student estudiante = estudianteRepository.findByIdAndActiveTrue(j.studentId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Estudiante no encontrado o inactivo: " + j.idEstudiante()));
+                            "Estudiante no encontrado o inactivo: " + j.studentId()));
             String nombre = RosterService.nameOf(estudiante);
 
             Long categoriaDelJugador = estudiante.getCategory() == null
-                    ? null : estudiante.getCategory().getIdCategoria();
+                    ? null : estudiante.getCategory().getCategoryId();
             if (!idCategoria.equals(categoriaDelJugador)) {
                 throw new IllegalArgumentException(
                         nombre + " no pertenece a la categoría " + partido.getCategoria().getNombre());
             }
 
-            if (lesionados.contains(j.idEstudiante())) {
+            if (lesionados.contains(j.studentId())) {
                 throw new IllegalArgumentException(nombre + " arrastra una lesión activa y no puede jugar");
             }
 
-            boolean esTitular = Boolean.TRUE.equals(j.titular());
+            boolean esTitular = Boolean.TRUE.equals(j.starter());
             Position posicion = null;
-            if (j.idPosicion() != null) {
-                posicion = positionRepository.findById(j.idPosicion())
+            if (j.positionId() != null) {
+                posicion = positionRepository.findById(j.positionId())
                         .orElseThrow(() -> new ResourceNotFoundException(
-                                "Position no encontrada: " + j.idPosicion()));
-                if (esTitular && puestoOcupado.put(j.idPosicion(), j.idEstudiante()) != null) {
+                                "Position no encontrada: " + j.positionId()));
+                if (esTitular && puestoOcupado.put(j.positionId(), j.studentId()) != null) {
                     throw new IllegalArgumentException(
                             "Dos titulares no pueden ocupar el puesto " + posicion.getAbreviatura());
                 }
@@ -143,8 +143,8 @@ public class LineupService {
 
         Lineup alineacion = lineupRepository.findByMatch_Id(idPartido)
                 .orElseGet(() -> Lineup.builder().partido(partido).build());
-        alineacion.setValoracion(request.valoracion());
-        alineacion.setObservacion(request.observacion());
+        alineacion.setValoracion(request.rating());
+        alineacion.setObservacion(request.note());
 
         if (!alineacion.getJugadores().isEmpty()) {
             // Vaciar y volver a llenar en el mismo flush hace que Hibernate
@@ -173,7 +173,7 @@ public class LineupService {
      */
     @Transactional
     public LineupResponse reset(Long idPartido) {
-        matchService.requireOpen(rosterService.calculate(idPartido).partido());
+        matchService.requireOpen(rosterService.calculate(idPartido).match());
         lineupRepository.findByMatch_Id(idPartido).ifPresent(lineupRepository::delete);
         return view(idPartido);
     }
@@ -189,17 +189,17 @@ public class LineupService {
     @Transactional(readOnly = true)
     public LineupFeedbackResponse feedback(Long idPartido) {
         LineupResponse actual = view(idPartido);
-        if (actual.titulares().isEmpty()) {
+        if (actual.starters().isEmpty()) {
             return new LineupFeedbackResponse(null, false, "No hay alineación que comentar");
         }
-        var resultado = rosterService.comment(actual.titulares(), actual.categoria());
+        var resultado = rosterService.comment(actual.starters(), actual.category());
         return new LineupFeedbackResponse(
                 resultado.text(), resultado.isAvailable(), resultado.reason());
     }
 
     private LineupResponse fromSaved(Roster c, Lineup a) {
-        Map<Long, BigDecimal> promedios = c.promedios();
-        Map<Long, Long> presencias = c.presencias();
+        Map<Long, BigDecimal> promedios = c.averages();
+        Map<Long, Long> presencias = c.attendanceRecords();
 
         List<CalledUpPlayer> titulares = new ArrayList<>();
         List<CalledUpPlayer> suplentes = new ArrayList<>();
@@ -211,12 +211,12 @@ public class LineupService {
             boolean titular = Boolean.TRUE.equals(j.getTitular());
             Long idPosicion = j.getPosicion() == null ? null : j.getPosicion().getIdPosicion();
             CalledUpPlayer fila = rosterService.toCalledUpPlayer(
-                    e, idPosicion, titular, promedios, presencias, c.entrenamientos());
+                    e, idPosicion, titular, promedios, presencias, c.trainingSessions());
 
             if (j.getPosicion() != null) {
-                fila = new CalledUpPlayer(fila.idEstudiante(), fila.nombreCompleto(),
+                fila = new CalledUpPlayer(fila.studentId(), fila.fullName(),
                         j.getPosicion().getAbreviatura(), idPosicion, titular,
-                        fila.promedio(), fila.presencias(), fila.entrenamientos());
+                        fila.average(), fila.attendanceRecords(), fila.trainingSessions());
             }
             (titular ? titulares : suplentes).add(fila);
         }
@@ -227,36 +227,36 @@ public class LineupService {
 
     private LineupResponse fromSuggestion(Roster c) {
         Set<Long> yaEstan = new HashSet<>();
-        c.titulares().forEach(t -> yaEstan.add(t.idEstudiante()));
-        c.suplentes().forEach(s -> yaEstan.add(s.idEstudiante()));
-        return response(c, false, null, null, c.titulares(), c.suplentes(), yaEstan);
+        c.starters().forEach(t -> yaEstan.add(t.studentId()));
+        c.substitutes().forEach(s -> yaEstan.add(s.studentId()));
+        return response(c, false, null, null, c.starters(), c.substitutes(), yaEstan);
     }
 
     private LineupResponse response(Roster c, boolean guardada, Short valoracion,
                                          String observacion, List<CalledUpPlayer> titulares,
                                          List<CalledUpPlayer> suplentes, Set<Long> yaEstan) {
         List<CalledUpPlayer> disponibles = new ArrayList<>();
-        for (CalledUpPlayer j : c.titulares()) {
-            if (!yaEstan.contains(j.idEstudiante())) {
+        for (CalledUpPlayer j : c.starters()) {
+            if (!yaEstan.contains(j.studentId())) {
                 disponibles.add(withoutStarterFlag(j));
             }
         }
-        for (CalledUpPlayer j : c.suplentes()) {
-            if (!yaEstan.contains(j.idEstudiante())) {
+        for (CalledUpPlayer j : c.substitutes()) {
+            if (!yaEstan.contains(j.studentId())) {
                 disponibles.add(withoutStarterFlag(j));
             }
         }
 
-        Match p = c.partido();
+        Match p = c.match();
         return new LineupResponse(
-                p.getIdPartido(), p.getCategoria().getIdCategoria(), p.getCategoria().getNombre(),
-                p.getFecha(), guardada, valoracion, observacion, c.ventana(),
-                titulares, suplentes, disponibles, c.noConvocables(), cupoTitulares,
+                p.getIdPartido(), p.getCategoria().getCategoryId(), p.getCategoria().getNombre(),
+                p.getFecha(), guardada, valoracion, observacion, c.window(),
+                titulares, suplentes, disponibles, c.notCallable(), cupoTitulares,
                 p.isClosed());
     }
 
     private CalledUpPlayer withoutStarterFlag(CalledUpPlayer j) {
-        return new CalledUpPlayer(j.idEstudiante(), j.nombreCompleto(), j.posicion(),
-                j.idPosicion(), false, j.promedio(), j.presencias(), j.entrenamientos());
+        return new CalledUpPlayer(j.studentId(), j.fullName(), j.position(),
+                j.positionId(), false, j.average(), j.attendanceRecords(), j.trainingSessions());
     }
 }

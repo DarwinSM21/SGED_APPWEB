@@ -14,12 +14,12 @@ import org.uteq.backend.common.validation.NationalId;
 import java.time.LocalDate;
 
 public record RegisterRequest(
-        @NotBlank @Size(min = 2, max = 100) String nombre,
-        @NotBlank @Size(min = 2, max = 100) String apellido,
-        @NationalId String cedula,
-        @NotBlank @Email @Size(max = 200) String correo,
-        @NotNull @Past @JsonFormat(pattern = "yyyy-MM-dd") LocalDate fechaNacimiento,
+        @NotBlank @Size(min = 2, max = 100) String name,
+        @NotBlank @Size(min = 2, max = 100) String lastName,
+        @NationalId String nationalId,
+        @NotBlank @Email @Size(max = 200) String email,
+        @NotNull @Past @JsonFormat(pattern = "yyyy-MM-dd") LocalDate birthDate,
         @NotBlank @Email @Size(max = 50) String username,
         @NotBlank String password,
-        @NotBlank(message = "El rol es obligatorio") String rol
+        @NotBlank(message = "El rol es obligatorio") String role
 ) {}

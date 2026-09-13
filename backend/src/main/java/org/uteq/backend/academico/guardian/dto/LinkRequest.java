@@ -4,6 +4,6 @@ import jakarta.validation.constraints.Size;
 
 public record LinkRequest(
         @Size(max = 50, message = "La relación no puede superar los 50 caracteres")
-        String relacion,
-        Boolean contactoPrincipal
+        String relationship,
+        Boolean primaryContact
 ) {}

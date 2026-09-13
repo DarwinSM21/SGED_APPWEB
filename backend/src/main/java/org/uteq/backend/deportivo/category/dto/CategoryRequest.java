@@ -8,12 +8,12 @@ public record CategoryRequest(
 
         @Pattern(regexp = "(?i)^\\s*sub[\\s-]?\\d{1,2}\\s*$",
                  message = "El nombre debe tener el formato SUB-12")
-        String nombre,
+        String name,
         @NotNull(message = "La edad mínima es obligatoria")
         @Min(value = 4, message = "La edad mínima debe ser al menos 4 años")
-        Short edadMin,
+        Short minAge,
         @NotNull(message = "La edad máxima es obligatoria")
-        Short edadMax,
+        Short maxAge,
         @Size(max = 255, message = "La descripción no puede superar los 255 caracteres")
-        String descripcion
+        String description
 ) {}

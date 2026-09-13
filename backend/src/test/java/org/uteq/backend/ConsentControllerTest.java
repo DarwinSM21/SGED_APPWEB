@@ -68,9 +68,9 @@ class ConsentControllerTest {
 
         mockMvc.perform(post("/api/consentimientos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idRepresentante\":1,\"idEstudiante\":10,\"alcance\":\"INFORMES\"}"))
+                        .content("{\"guardianId\":1,\"studentId\":10,\"scope\":\"INFORMES\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.registradoPorUsername").value("admin@sged.test"))
+                .andExpect(jsonPath("$.registeredByUsername").value("admin@sged.test"))
                 .andExpect(jsonPath("$.vigente").value(true));
     }
 
@@ -91,6 +91,6 @@ class ConsentControllerTest {
 
         mockMvc.perform(get("/api/consentimientos/estudiante/10"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].idEstudiante").value(10));
+                .andExpect(jsonPath("$[0].studentId").value(10));
     }
 }

@@ -13,27 +13,27 @@ public final class StockMovementDtos {
 
     public record StockMovementRequest(
             @NotNull(message = "El artículo es obligatorio")
-            Long idArticulo,
+            Long itemId,
 
             @NotNull(message = "El tipo de movimiento es obligatorio")
-            MovementType tipoMovimiento,
+            MovementType movementType,
 
             @NotNull(message = "La cantidad es obligatoria")
             @Min(value = 1, message = "La cantidad debe ser mayor a cero")
-            Integer cantidad,
+            Integer quantity,
 
             @Size(max = 255, message = "El motivo no puede superar los 255 caracteres")
-            String motivo
+            String reason
     ) {}
 
     public record StockMovementResponse(
-            Long idMovimiento,
-            Long idArticulo,
-            String articulo,
-            MovementType tipoMovimiento,
-            Integer cantidad,
-            String motivo,
-            String registradoPor,
-            Instant fechaMovimiento
+            Long movementId,
+            Long itemId,
+            String item,
+            MovementType movementType,
+            Integer quantity,
+            String reason,
+            String registeredBy,
+            Instant movementDate
     ) {}
 }

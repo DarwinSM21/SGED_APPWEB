@@ -9,10 +9,10 @@ import lombok.*;
 @NoArgsConstructor
 public class SessionResponse {
     private String username;
-    private String nombre;
-    private String rol;
+    private String name;
+    private String role;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Long idPersona;
+    private Long personId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private Long idUsuario;
+    private Long userId;
 }

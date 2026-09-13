@@ -106,8 +106,8 @@ class AuthServiceTest {
         assertThat(resultado.accessToken()).isEqualTo("mock-jwt-token");
         assertThat(resultado.refreshToken()).isEqualTo("mock-refresh-token");
         assertThat(resultado.session().getUsername()).isEqualTo("admin@test.com");
-        assertThat(resultado.session().getNombre()).isEqualTo("Admin SGED");
-        assertThat(resultado.session().getRol()).isEqualTo("ADMINISTRADOR");
+        assertThat(resultado.session().getName()).isEqualTo("Admin SGED");
+        assertThat(resultado.session().getRole()).isEqualTo("ADMINISTRADOR");
     }
 
     @Test
@@ -126,7 +126,7 @@ class AuthServiceTest {
         AuthService.LoginResult resultado = authService.login(
                 new LoginRequest("sinficha@test.com", "Admin2026!"), "127.0.0.1");
 
-        assertThat(resultado.session().getNombre()).isEqualTo("sinficha@test.com");
+        assertThat(resultado.session().getName()).isEqualTo("sinficha@test.com");
     }
 
     @Test
@@ -221,8 +221,8 @@ class AuthServiceTest {
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getUsername()).isEqualTo("new@test.com");
-        assertThat(resultado.get().getNombre()).isEqualTo("Test User");
-        assertThat(resultado.get().getRol()).isEqualTo("ENTRENADOR");
+        assertThat(resultado.get().getName()).isEqualTo("Test User");
+        assertThat(resultado.get().getRole()).isEqualTo("ENTRENADOR");
     }
 
     @Test
@@ -334,8 +334,8 @@ class AuthServiceTest {
 
         assertThat(resultado).isPresent();
         assertThat(resultado.get().getUsername()).isEqualTo("admin@test.com");
-        assertThat(resultado.get().getNombre()).isEqualTo("Admin SGED");
-        assertThat(resultado.get().getRol()).isEqualTo("ADMINISTRADOR");
+        assertThat(resultado.get().getName()).isEqualTo("Admin SGED");
+        assertThat(resultado.get().getRole()).isEqualTo("ADMINISTRADOR");
     }
 
     @Test
@@ -349,7 +349,7 @@ class AuthServiceTest {
         Optional<SessionResponse> resultado = authService.getCurrentSession();
 
         assertThat(resultado).isPresent();
-        assertThat(resultado.get().getNombre()).isEqualTo("huerfano@test.com");
+        assertThat(resultado.get().getName()).isEqualTo("huerfano@test.com");
     }
 
     @Test

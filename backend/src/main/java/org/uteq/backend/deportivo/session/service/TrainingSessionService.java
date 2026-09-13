@@ -71,7 +71,7 @@ public class TrainingSessionService {
             sesiones = entrenador == null
                     ? List.of()
                     : sesionRepository.findByDateOrderByStartTimeAsc(hoy).stream()
-                        .filter(s -> s.getEntrenador().getIdEntrenador().equals(entrenador.getIdEntrenador()))
+                        .filter(s -> s.getEntrenador().getCoachId().equals(entrenador.getCoachId()))
                         .toList();
         }
 
@@ -106,7 +106,7 @@ public class TrainingSessionService {
         }
 
         Page<TrainingSession> pagina = sesionRepository.sessionsByCoach(
-                entrenador.getIdEntrenador(), PageRequest.of(page, size));
+                entrenador.getCoachId(), PageRequest.of(page, size));
         return pagina.map(this::toResponse).getContent();
     }
 
@@ -131,16 +131,16 @@ public class TrainingSessionService {
             throw new ResourceNotFoundException("No hay un entrenador asociado a esta cuenta");
         }
 
-        if (!request.horaFin().isAfter(request.horaInicio())) {
+        if (!request.endTime().isAfter(request.startTime())) {
             throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
         }
 
-        Category categoria = categoryRepository.findById(request.idCategoria())
+        Category categoria = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Category no encontrada con id: " + request.idCategoria()));
+                        "Category no encontrada con id: " + request.categoryId()));
 
-        if (sesionRepository.hasOverlap(request.idCategoria(), request.fecha(),
-                                          request.horaInicio(), request.horaFin())) {
+        if (sesionRepository.hasOverlap(request.categoryId(), request.date(),
+                                          request.startTime(), request.endTime())) {
             throw new IllegalArgumentException(
                     "Ya hay una sesión de esa categoría ese día en ese horario");
         }
@@ -148,10 +148,10 @@ public class TrainingSessionService {
         TrainingSession sesion = TrainingSession.builder()
                 .entrenador(entrenador)
                 .categoria(categoria)
-                .fecha(request.fecha())
-                .horaInicio(request.horaInicio())
-                .horaFin(request.horaFin())
-                .campo(request.campo())
+                .fecha(request.date())
+                .horaInicio(request.startTime())
+                .horaFin(request.endTime())
+                .campo(request.field())
                 .estado("PROGRAMADA")
                 .build();
 
@@ -181,8 +181,8 @@ public class TrainingSessionService {
         }
 
         List<Student> plantel = estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(
-                        s.getCategoria().getIdCategoria());
+                .findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(
+                        s.getCategoria().getCategoryId());
 
         List<SessionHistoryResponse.AttendanceRow> filas = new ArrayList<>();
         int presentes = 0, tarde = 0, ausentes = 0, justificados = 0, sinRegistro = 0;

@@ -70,12 +70,12 @@ public class SpecialtyService {
      */
     @Transactional
     public SpecialtyResponse create(SpecialtyRequest request) {
-        if (specialtyRepository.existsByNameIgnoreCase(request.nombre())) {
+        if (specialtyRepository.existsByNameIgnoreCase(request.name())) {
             throw new IllegalArgumentException("Ya existe una especialidad con ese nombre");
         }
 
         Specialty especialidad = Specialty.builder()
-                .nombre(request.nombre())
+                .nombre(request.name())
                 .activo(true)
                 .build();
 
@@ -97,12 +97,12 @@ public class SpecialtyService {
         Specialty especialidad = specialtyRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Specialty no encontrada con ID: " + id));
 
-        if (!especialidad.getNombre().equalsIgnoreCase(request.nombre())
-                && specialtyRepository.existsByNameIgnoreCase(request.nombre())) {
+        if (!especialidad.getNombre().equalsIgnoreCase(request.name())
+                && specialtyRepository.existsByNameIgnoreCase(request.name())) {
             throw new IllegalArgumentException("Ya existe una especialidad con ese nombre");
         }
 
-        especialidad.setNombre(request.nombre());
+        especialidad.setNombre(request.name());
 
         return toResponse(specialtyRepository.save(especialidad));
     }

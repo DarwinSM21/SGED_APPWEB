@@ -101,7 +101,7 @@ public class RosterService {
      */
     @Transactional(readOnly = true)
     public Roster calculate(Match partido) {
-        Long idCategoria = partido.getCategoria().getIdCategoria();
+        Long idCategoria = partido.getCategoria().getCategoryId();
         LocalDate hasta = partido.getFecha();
         LocalDate desde = hasta.minusWeeks(semanasRendimiento);
 
@@ -111,7 +111,7 @@ public class RosterService {
                 new PerformanceWindow(semanasRendimiento, desde, hasta, entrenamientos);
 
         List<Student> plantel = estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(idCategoria);
+                .findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(idCategoria);
         if (plantel.isEmpty()) {
             return new Roster(partido, ventana, List.of(), List.of(), List.of(),
                     Map.of(), Map.of(), entrenamientos);
@@ -175,11 +175,11 @@ public class RosterService {
         List<AnonymousPlayerProfile> perfiles = new ArrayList<>();
         for (int i = 0; i < titulares.size(); i++) {
             CalledUpPlayer t = titulares.get(i);
-            double promedio = t.promedio() == null ? 0.0 : t.promedio().doubleValue();
+            double promedio = t.average() == null ? 0.0 : t.average().doubleValue();
             perfiles.add(new AnonymousPlayerProfile(
-                    "Jugador " + (i + 1), categoria, t.posicion(),
+                    "Jugador " + (i + 1), categoria, t.position(),
                     Map.of("Promedio acumulado", promedio,
-                            "Entrenamientos asistidos", (double) t.presencias()),
+                            "Entrenamientos asistidos", (double) t.attendanceRecords()),
                     Map.of(), null, false));
         }
         return generadorFeedback.generateLineupComment(perfiles);
@@ -272,13 +272,13 @@ public class RosterService {
      * @param entrenamientos entrenamientos de la categoría en la ventana
      */
     public record Roster(
-            Match partido,
-            PerformanceWindow ventana,
-            List<CalledUpPlayer> titulares,
-            List<CalledUpPlayer> suplentes,
-            List<UnavailablePlayer> noConvocables,
-            Map<Long, BigDecimal> promedios,
-            Map<Long, Long> presencias,
-            long entrenamientos
+            Match match,
+            PerformanceWindow window,
+            List<CalledUpPlayer> starters,
+            List<CalledUpPlayer> substitutes,
+            List<UnavailablePlayer> notCallable,
+            Map<Long, BigDecimal> averages,
+            Map<Long, Long> attendanceRecords,
+            long trainingSessions
     ) {}
 }

@@ -13,26 +13,26 @@ public record PersonRequest(
 
         @NotBlank(message = "El nombre es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")
-        String nombre,
+        String name,
 
         @NotBlank(message = "El apellido es obligatorio")
         @Size(max = 100, message = "El apellido no puede superar los 100 caracteres")
-        String apellido,
+        String lastName,
 
         @NationalId
-        String cedula,
+        String nationalId,
 
         @NotBlank(message = "El correo es obligatorio")
         @Email(message = "Debe ingresar un correo electrónico válido")
         @Size(max = 200, message = "El correo no puede superar los 200 caracteres")
-        String correo,
+        String email,
 
         @Size(max = 15, message = "El teléfono no puede superar los 15 caracteres")
-        String telefono,
+        String phone,
 
-        String foto,
+        String photo,
 
         @NotNull(message = "La fecha de nacimiento es obligatoria")
         @Past(message = "La fecha de nacimiento debe ser una fecha pasada")
-        LocalDate fechaNacimiento
+        LocalDate birthDate
 ) {}

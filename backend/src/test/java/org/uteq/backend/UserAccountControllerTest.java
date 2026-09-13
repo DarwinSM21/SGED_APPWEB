@@ -80,7 +80,7 @@ class UserAccountControllerTest {
 
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":1,\"idEstadoGeneral\":1,\"username\":\"ana.torres\",\"password\":\"clave123\"}"))
+                        .content("{\"personId\":1,\"generalStatusId\":1,\"username\":\"ana.torres\",\"password\":\"clave123\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value("ana.torres"));
     }
@@ -93,7 +93,7 @@ class UserAccountControllerTest {
 
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":1,\"idEstadoGeneral\":1,\"username\":\"ana.torres\",\"password\":\"clave123\"}"))
+                        .content("{\"personId\":1,\"generalStatusId\":1,\"username\":\"ana.torres\",\"password\":\"clave123\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -106,7 +106,7 @@ class UserAccountControllerTest {
 
         mockMvc.perform(post("/api/usuarios")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":1,\"idEstadoGeneral\":1,\"username\":\"abcd\",\"password\":\"12\"}"))
+                        .content("{\"personId\":1,\"generalStatusId\":1,\"username\":\"abcd\",\"password\":\"12\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 

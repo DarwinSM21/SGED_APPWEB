@@ -11,5 +11,5 @@ import jakarta.validation.constraints.Size;
  *                      dos coincidió ni si existe una cuenta
  */
 public record ForgotPasswordRequest(
-        @NotBlank @Size(max = 200) String identificador
+        @NotBlank @Size(max = 200) String identifier
 ) {}

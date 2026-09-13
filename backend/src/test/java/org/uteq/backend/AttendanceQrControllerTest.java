@@ -78,7 +78,7 @@ class AttendanceQrControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"token-bueno\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.estado").value("PRESENTE"));
+                .andExpect(jsonPath("$.status").value("PRESENTE"));
     }
 
     @Test

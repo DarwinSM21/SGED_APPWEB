@@ -64,7 +64,7 @@ class AuthControllerTest {
     @Test
     void loginDelegaEnAuthServiceYPonelasCookies() throws Exception {
         SessionResponse sesion = SessionResponse.builder()
-                .username("admin@test.com").nombre("Admin SGED").rol("ADMINISTRADOR").build();
+                .username("admin@test.com").name("Admin SGED").role("ADMINISTRADOR").build();
         when(authService.login(any(LoginRequest.class), anyString()))
                 .thenReturn(new AuthService.LoginResult("mock-jwt-token", "mock-refresh-token", sesion));
         when(jwtService.getExpirationMs()).thenReturn(900_000L);
@@ -77,8 +77,8 @@ class AuthControllerTest {
                         .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("admin@test.com"))
-                .andExpect(jsonPath("$.nombre").value("Admin SGED"))
-                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"))
+                .andExpect(jsonPath("$.name").value("Admin SGED"))
+                .andExpect(jsonPath("$.role").value("ADMINISTRADOR"))
                 .andExpect(jsonPath("$.accessToken").doesNotExist())
                 .andExpect(jsonPath("$.refreshToken").doesNotExist())
                 .andExpect(cookie().exists("sged_access"))
@@ -103,7 +103,7 @@ class AuthControllerTest {
     @Test
     void registroSinCedulaNiFechaNacimientoNoLlegaAlServicio() throws Exception {
         String cuerpoIncompleto = """
-                {"nombre":"Test","apellido":"User",
+                {"name":"Test","lastName":"User",
                  "username":"nuevo@test.com","password":"password123"}
                 """;
 
@@ -118,8 +118,8 @@ class AuthControllerTest {
     @Test
     void registroSinRolDa422() throws Exception {
         String cuerpoSinRol = """
-                {"nombre":"Test","apellido":"User","cedula":"0912345675",
-                 "correo":"sinrol@test.com","fechaNacimiento":"2000-01-01",
+                {"name":"Test","lastName":"User","nationalId":"0912345675",
+                 "email":"sinrol@test.com","birthDate":"2000-01-01",
                  "username":"sinrol@test.com","password":"password123"}
                 """;
 
@@ -196,23 +196,23 @@ class AuthControllerTest {
     @Test
     void meAutenticadoDevuelveLaSesion() throws Exception {
         SessionResponse sesion = SessionResponse.builder()
-                .username("admin@test.com").nombre("Admin SGED").rol("ADMINISTRADOR").build();
+                .username("admin@test.com").name("Admin SGED").role("ADMINISTRADOR").build();
         when(authService.getCurrentSession()).thenReturn(Optional.of(sesion));
 
         mockMvc.perform(get("/api/auth/me"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.username").value("admin@test.com"))
-                .andExpect(jsonPath("$.nombre").value("Admin SGED"))
-                .andExpect(jsonPath("$.rol").value("ADMINISTRADOR"));
+                .andExpect(jsonPath("$.name").value("Admin SGED"))
+                .andExpect(jsonPath("$.role").value("ADMINISTRADOR"));
     }
 
     @Test
     void forgotDevuelve202YMensajeGenerico() throws Exception {
         mockMvc.perform(post("/api/auth/forgot")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identificador\":\"ana@test.com\"}"))
+                        .content("{\"identifier\":\"ana@test.com\"}"))
                 .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.mensaje").exists());
+                .andExpect(jsonPath("$.message").exists());
 
         verify(passwordResetService).request("ana@test.com");
         verify(resetRequestLimitService).record("ana@test.com", "127.0.0.1");
@@ -223,7 +223,7 @@ class AuthControllerTest {
         // el servicio no lanza para identificador desconocido; el controlador responde igual
         mockMvc.perform(post("/api/auth/forgot")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identificador\":\"nadie@test.com\"}"))
+                        .content("{\"identifier\":\"nadie@test.com\"}"))
                 .andExpect(status().isAccepted());
     }
 
@@ -234,7 +234,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/forgot")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"identificador\":\"ana@test.com\"}"))
+                        .content("{\"identifier\":\"ana@test.com\"}"))
                 .andExpect(status().isTooManyRequests());
 
         verify(passwordResetService, never()).request(anyString());
@@ -244,7 +244,7 @@ class AuthControllerTest {
     void resetConTokenValidoDa204() throws Exception {
         mockMvc.perform(post("/api/auth/reset")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"token\":\"tok\",\"nuevaPassword\":\"clave1234\"}"))
+                        .content("{\"token\":\"tok\",\"newPassword\":\"clave1234\"}"))
                 .andExpect(status().isNoContent());
 
         verify(passwordResetService).reset("tok", "clave1234");
@@ -257,7 +257,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/reset")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"token\":\"malo\",\"nuevaPassword\":\"clave1234\"}"))
+                        .content("{\"token\":\"malo\",\"newPassword\":\"clave1234\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -268,7 +268,7 @@ class AuthControllerTest {
 
         mockMvc.perform(post("/api/auth/reset")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"token\":\"tok\",\"nuevaPassword\":\"corta1\"}"))
+                        .content("{\"token\":\"tok\",\"newPassword\":\"corta1\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 

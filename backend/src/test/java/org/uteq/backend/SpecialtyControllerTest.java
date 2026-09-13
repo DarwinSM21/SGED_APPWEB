@@ -57,7 +57,7 @@ class SpecialtyControllerTest {
 
         mockMvc.perform(get("/api/especialidades"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombre").value("Portero"));
+                .andExpect(jsonPath("$.content[0].name").value("Portero"));
     }
 
     @Test
@@ -67,7 +67,7 @@ class SpecialtyControllerTest {
 
         mockMvc.perform(get("/api/especialidades/activas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].idEspecialidad").value(1));
+                .andExpect(jsonPath("$[0].specialtyId").value(1));
     }
 
     @Test
@@ -86,9 +86,9 @@ class SpecialtyControllerTest {
 
         mockMvc.perform(post("/api/especialidades")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Portero\"}"))
+                        .content("{\"name\":\"Portero\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Portero"));
+                .andExpect(jsonPath("$.name").value("Portero"));
     }
 
     @Test
@@ -96,7 +96,7 @@ class SpecialtyControllerTest {
     void crear_con_nombre_en_blanco_da_422() throws Exception {
         mockMvc.perform(post("/api/especialidades")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"\"}"))
+                        .content("{\"name\":\"\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -108,7 +108,7 @@ class SpecialtyControllerTest {
 
         mockMvc.perform(put("/api/especialidades/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Portero\"}"))
+                        .content("{\"name\":\"Portero\"}"))
                 .andExpect(status().isOk());
     }
 

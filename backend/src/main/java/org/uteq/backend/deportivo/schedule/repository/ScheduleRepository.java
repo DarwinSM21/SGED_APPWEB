@@ -10,19 +10,19 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
-    @Query("SELECT h FROM Schedule h WHERE h.entrenador.idEntrenador = :idEntrenador AND h.activo = true ORDER BY h.diaSemana ASC, h.horaInicio ASC")
+    @Query("SELECT h FROM Schedule h WHERE h.entrenador.coachId = :idEntrenador AND h.activo = true ORDER BY h.diaSemana ASC, h.horaInicio ASC")
     List<Schedule> findActiveByCoachOrderByDayAndStartTime(@Param("idEntrenador") Long idEntrenador);
 
     @Query("SELECT h FROM Schedule h WHERE h.activo = true AND h.diaSemana = :diaSemana")
     List<Schedule> findActiveByDayOfWeek(@Param("diaSemana") Short diaSemana);
 
-    @Query("SELECT h FROM Schedule h WHERE h.idHorario = :idHorario AND h.entrenador.idEntrenador = :idEntrenador")
+    @Query("SELECT h FROM Schedule h WHERE h.idHorario = :idHorario AND h.entrenador.coachId = :idEntrenador")
     Optional<Schedule> findByIdAndCoachId(@Param("idHorario") Long idHorario, @Param("idEntrenador") Long idEntrenador);
 
     @Query("""
            SELECT h FROM Schedule h
             JOIN FETCH h.categoria
-            WHERE h.entrenador.idEntrenador = :idEntrenador
+            WHERE h.entrenador.coachId = :idEntrenador
               AND h.diaSemana = :diaSemana
               AND h.activo = true
               AND h.idHorario <> :idExcluir

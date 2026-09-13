@@ -114,10 +114,10 @@ public class StudentService {
     @CacheEvict(value = RedisCacheConfig.CACHE_STUDENTS, allEntries = true)
     @Transactional
     public StudentResponse create(StudentRequest request) {
-        estudianteAccesoService.validateConsistencyWithStudentRecord(request.idPersona());
+        estudianteAccesoService.validateConsistencyWithStudentRecord(request.personId());
 
         // 1. ¿La persona YA tiene un registro como estudiante (activo o inactivo)?
-        Optional<Student> estudianteExistente = estudianteRepository.findByPerson_Id(request.idPersona());
+        Optional<Student> estudianteExistente = estudianteRepository.findByPerson_Id(request.personId());
 
         if (estudianteExistente.isPresent()) {
             Student est = estudianteExistente.get();
@@ -127,19 +127,19 @@ public class StudentService {
             }
 
             // Estaba inactivo: se reactiva y se actualiza con los datos nuevos.
-            Category categoria = categoryRepository.findById(request.idCategoria())
-                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
+            Category categoria = categoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.categoryId()));
 
-            GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                    .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
+            GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.generalStatusId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.generalStatusId()));
 
             est.setCategory(categoria);
             est.setGeneralStatus(estadoGeneral);
-            est.setStudentCode(request.codigoEstudiante());
-            est.setEnrollmentDate(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR));
-            est.setWeight(request.peso());
-            est.setHeight(request.altura());
-            est.setPosition(resolvePosition(request.idPosicion()));
+            est.setStudentCode(request.studentCode());
+            est.setEnrollmentDate(request.enrollmentDate() != null ? request.enrollmentDate() : LocalDate.now(Zones.ECUADOR));
+            est.setWeight(request.weight());
+            est.setHeight(request.height());
+            est.setPosition(resolvePosition(request.positionId()));
             est.setActive(true);
 
             est = estudianteRepository.save(est);
@@ -147,30 +147,30 @@ public class StudentService {
         }
 
         // 2. La persona nunca fue estudiante: se crea un registro desde cero.
-        if (estudianteRepository.existsByStudentCode(request.codigoEstudiante())) {
-            throw new IllegalArgumentException("El código de estudiante '" + request.codigoEstudiante() + "' ya se encuentra en uso.");
+        if (estudianteRepository.existsByStudentCode(request.studentCode())) {
+            throw new IllegalArgumentException("El código de estudiante '" + request.studentCode() + "' ya se encuentra en uso.");
         }
 
-        Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.personId())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + request.personId()));
 
-        Category categoria = categoryRepository.findById(request.idCategoria())
-                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.idCategoria()));
+        Category categoria = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada: " + request.categoryId()));
 
         validateAgeInCategory(persona, categoria);
 
-        GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.idEstadoGeneral()));
+        GeneralStatus estadoGeneral = estadoGeneralRepository.findById(request.generalStatusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estado General no encontrado: " + request.generalStatusId()));
 
         Student estudiante = Student.builder()
                 .person(persona)
                 .category(categoria)
                 .generalStatus(estadoGeneral)
-                .studentCode(request.codigoEstudiante())
-                .enrollmentDate(request.fechaIngreso() != null ? request.fechaIngreso() : LocalDate.now(Zones.ECUADOR))
-                .weight(request.peso())
-                .height(request.altura())
-                .position(resolvePosition(request.idPosicion()))
+                .studentCode(request.studentCode())
+                .enrollmentDate(request.enrollmentDate() != null ? request.enrollmentDate() : LocalDate.now(Zones.ECUADOR))
+                .weight(request.weight())
+                .height(request.height())
+                .position(resolvePosition(request.positionId()))
                 .active(true)
                 .build();
 
@@ -202,21 +202,21 @@ public class StudentService {
                         "Estudiante no encontrado con id: " + id));
 
         // Si cambia de código, ese código no puede pertenecer a otro estudiante.
-        if (estudianteRepository.existsByStudentCodeAndIdNot(request.codigoEstudiante(), id)) {
-            throw new IllegalArgumentException("El código '" + request.codigoEstudiante() + "' ya está asignado a otro estudiante.");
+        if (estudianteRepository.existsByStudentCodeAndIdNot(request.studentCode(), id)) {
+            throw new IllegalArgumentException("El código '" + request.studentCode() + "' ya está asignado a otro estudiante.");
         }
 
-        reassignPersonIfChanged(estudiante, request.idPersona());
-        reassignCategoryIfChanged(estudiante, request.idCategoria());
-        reassignGeneralStatusIfChanged(estudiante, request.idEstadoGeneral());
-        reassignPositionIfChanged(estudiante, request.idPosicion());
+        reassignPersonIfChanged(estudiante, request.personId());
+        reassignCategoryIfChanged(estudiante, request.categoryId());
+        reassignGeneralStatusIfChanged(estudiante, request.generalStatusId());
+        reassignPositionIfChanged(estudiante, request.positionId());
 
-        estudiante.setStudentCode(request.codigoEstudiante());
-        if (request.fechaIngreso() != null) {
-            estudiante.setEnrollmentDate(request.fechaIngreso());
+        estudiante.setStudentCode(request.studentCode());
+        if (request.enrollmentDate() != null) {
+            estudiante.setEnrollmentDate(request.enrollmentDate());
         }
-        estudiante.setWeight(request.peso());
-        estudiante.setHeight(request.altura());
+        estudiante.setWeight(request.weight());
+        estudiante.setHeight(request.height());
 
         estudiante = estudianteRepository.save(estudiante);
 
@@ -300,7 +300,7 @@ public class StudentService {
     }
 
     private void reassignCategoryIfChanged(Student estudiante, Long idCategoriaNueva) {
-        if (estudiante.getCategory().getIdCategoria().equals(idCategoriaNueva)) {
+        if (estudiante.getCategory().getCategoryId().equals(idCategoriaNueva)) {
             return;
         }
         Category categoria = categoryRepository.findById(idCategoriaNueva)
@@ -496,7 +496,7 @@ public class StudentService {
         return new StudentResponse(
                 e.getId(),
                 e.getPerson() != null ? e.getPerson().getId() : null,
-                e.getCategory() != null ? e.getCategory().getIdCategoria() : null,
+                e.getCategory() != null ? e.getCategory().getCategoryId() : null,
                 e.getGeneralStatus() != null ? e.getGeneralStatus().getId() : null,
                 e.getPerson() != null ? e.getPerson().getName() : null,
                 e.getPerson() != null ? e.getPerson().getLastName() : null,

@@ -9,31 +9,31 @@ public final class AttendanceDtos {
     private AttendanceDtos() {}
 
     public record AttendanceResponse(
-            Long idAsistencia,
-            LocalDate fecha,
-            String categoria,
-            LocalTime horaEntrada,
-            String estado
+            Long attendanceId,
+            LocalDate date,
+            String category,
+            LocalTime checkInTime,
+            String status
     ) {}
 
     public record MyHistoryResponse(
-            List<AttendanceResponse> asistencias,
-            BigDecimal porcentajeUltimos30Dias
+            List<AttendanceResponse> attendances,
+            BigDecimal percentageLast30Days
     ) {}
 
     public record AttendanceDayResponse(
-            LocalDate fecha,
-            long presentes,
-            long esperados,
-            BigDecimal porcentaje
+            LocalDate date,
+            long present,
+            long expected,
+            BigDecimal percentage
     ) {}
 
     public record AttendanceMapResponse(
-            LocalDate desde,
-            LocalDate hasta,
-            List<AttendanceDayResponse> dias,
-            BigDecimal promedio,
-            AttendanceDayResponse mejorDia,
-            AttendanceDayResponse peorDia
+            LocalDate from,
+            LocalDate to,
+            List<AttendanceDayResponse> days,
+            BigDecimal average,
+            AttendanceDayResponse bestDay,
+            AttendanceDayResponse worstDay
     ) {}
 }

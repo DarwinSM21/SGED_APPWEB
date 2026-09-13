@@ -59,7 +59,7 @@ class DailyEvaluationServiceTest {
         return Student.builder()
                 .id(ID_ESTUDIANTE)
                 .person(Person.builder().name("Juan").lastName("Perez").build())
-                .category(Category.builder().idCategoria(3L).nombre("SUB-12").build())
+                .category(Category.builder().categoryId(3L).nombre("SUB-12").build())
                 .build();
     }
 
@@ -214,7 +214,7 @@ class DailyEvaluationServiceTest {
     @Test
     @DisplayName("abrir trae el idLesion del jugador con lesion activa, y null para el que no la tiene")
     void abrirTraeIdLesionDelJugadorLesionado() {
-        var categoria = Category.builder().idCategoria(3L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(3L).nombre("SUB-12").build();
         var sesion = TrainingSession.builder()
                 .idSesion(ID_SESION).categoria(categoria).fecha(LocalDate.of(2026, 8, 14)).build();
 
@@ -227,16 +227,16 @@ class DailyEvaluationServiceTest {
                 .thenReturn(List.of());
         when(attendanceRepository.findBySession_Id(ID_SESION))
                 .thenReturn(List.of(asistenciaCon(Attendance.ESTADO_PRESENTE)));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(3L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(3L))
                 .thenReturn(List.of(estudiante()));
         when(studentEvaluationRepository.findByEvaluation_IdAndStudent_Id(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
 
         var respuesta = servicio.open(ID_SESION);
 
-        assertEquals(1, respuesta.jugadores().size());
-        var jugador = respuesta.jugadores().get(0);
-        assertTrue(jugador.lesionado());
-        assertEquals(77L, jugador.idLesion());
+        assertEquals(1, respuesta.players().size());
+        var jugador = respuesta.players().get(0);
+        assertTrue(jugador.injured());
+        assertEquals(77L, jugador.injuryId());
     }
 }

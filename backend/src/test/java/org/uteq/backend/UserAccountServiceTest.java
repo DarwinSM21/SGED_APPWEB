@@ -94,7 +94,7 @@ class UserAccountServiceTest {
 
         assertThat(resultado.totalElements()).isEqualTo(1);
         assertThat(resultado.content().get(0).username()).isEqualTo("ana.torres");
-        assertThat(resultado.content().get(0).estadoGeneralNombre()).isEqualTo("ACTIVO");
+        assertThat(resultado.content().get(0).generalStatusName()).isEqualTo("ACTIVO");
     }
 
     @Test
@@ -108,7 +108,7 @@ class UserAccountServiceTest {
         UserAccountPageResponse<UserAccountResponse> resultado = usuarioService.list(PageRequest.of(0, 10));
 
         assertThat(resultado.content()).hasSize(1);
-        assertThat(resultado.content().get(0).activo()).isFalse();
+        assertThat(resultado.content().get(0).active()).isFalse();
     }
 
     @Test
@@ -121,7 +121,7 @@ class UserAccountServiceTest {
 
         UserAccountResponse resultado = usuarioService.reactivate(1L);
 
-        assertThat(resultado.activo()).isTrue();
+        assertThat(resultado.active()).isTrue();
         assertThat(apagado.getActive()).isTrue();
     }
 
@@ -184,7 +184,7 @@ class UserAccountServiceTest {
 
         UserAccountResponse resultado = usuarioService.create(request);
 
-        assertThat(resultado.idUsuario()).isEqualTo(2L);
+        assertThat(resultado.userId()).isEqualTo(2L);
         assertThat(resultado.username()).isEqualTo("nuevo.usuario");
         assertThat(resultado.roles()).isEmpty();
         verify(passwordEncoder).encode("clave123");

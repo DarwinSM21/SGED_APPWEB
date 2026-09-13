@@ -206,7 +206,7 @@ class AttendanceServiceTest {
         Student e = estudiante();
         TrainingSession sesion = TrainingSession.builder()
                 .idSesion(1L).fecha(LocalDate.of(2026, 8, 10))
-                .categoria(Category.builder().idCategoria(1L).nombre("SUB-12").build())
+                .categoria(Category.builder().categoryId(1L).nombre("SUB-12").build())
                 .build();
         Attendance asistencia = Attendance.builder()
                 .idAsistencia(50L).sesion(sesion).estudiante(e)
@@ -221,10 +221,10 @@ class AttendanceServiceTest {
 
         var respuesta = attendanceService.myAttendances("andres@sged.test");
 
-        assertThat(respuesta.asistencias()).hasSize(1);
-        assertThat(respuesta.asistencias().get(0).categoria()).isEqualTo("SUB-12");
-        assertThat(respuesta.asistencias().get(0).estado()).isEqualTo(Attendance.ESTADO_PRESENTE);
-        assertThat(respuesta.porcentajeUltimos30Dias()).isEqualByComparingTo("80.00");
+        assertThat(respuesta.attendances()).hasSize(1);
+        assertThat(respuesta.attendances().get(0).category()).isEqualTo("SUB-12");
+        assertThat(respuesta.attendances().get(0).status()).isEqualTo(Attendance.ESTADO_PRESENTE);
+        assertThat(respuesta.percentageLast30Days()).isEqualByComparingTo("80.00");
     }
 
     private Object[] fila(LocalDate fecha, long presentes, long esperados) {
@@ -239,10 +239,10 @@ class AttendanceServiceTest {
 
         var mapa = attendanceService.attendanceMap(30);
 
-        assertThat(mapa.dias()).hasSize(1);
-        assertThat(mapa.dias().get(0).presentes()).isEqualTo(14);
-        assertThat(mapa.dias().get(0).esperados()).isEqualTo(20);
-        assertThat(mapa.dias().get(0).porcentaje()).isEqualByComparingTo("70.00");
+        assertThat(mapa.days()).hasSize(1);
+        assertThat(mapa.days().get(0).present()).isEqualTo(14);
+        assertThat(mapa.days().get(0).expected()).isEqualTo(20);
+        assertThat(mapa.days().get(0).percentage()).isEqualByComparingTo("70.00");
     }
 
     @Test
@@ -270,9 +270,9 @@ class AttendanceServiceTest {
 
         var mapa = attendanceService.attendanceMap(30);
 
-        assertThat(mapa.promedio()).isEqualByComparingTo("80.00");
-        assertThat(mapa.mejorDia().porcentaje()).isEqualByComparingTo("100.00");
-        assertThat(mapa.peorDia().porcentaje()).isEqualByComparingTo("60.00");
+        assertThat(mapa.average()).isEqualByComparingTo("80.00");
+        assertThat(mapa.bestDay().percentage()).isEqualByComparingTo("100.00");
+        assertThat(mapa.worstDay().percentage()).isEqualByComparingTo("60.00");
     }
 
     @Test
@@ -281,9 +281,9 @@ class AttendanceServiceTest {
 
         var mapa = attendanceService.attendanceMap(30);
 
-        assertThat(mapa.dias()).isEmpty();
-        assertThat(mapa.promedio()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(mapa.mejorDia()).isNull();
-        assertThat(mapa.peorDia()).isNull();
+        assertThat(mapa.days()).isEmpty();
+        assertThat(mapa.average()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(mapa.bestDay()).isNull();
+        assertThat(mapa.worstDay()).isNull();
     }
 }

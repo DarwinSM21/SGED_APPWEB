@@ -37,7 +37,7 @@ class MatchServiceTest {
 
     private static final Long ID_PARTIDO = 7L;
     private final Category categoria = Category.builder()
-            .idCategoria(3L).nombre("SUB-14").activo(true).build();
+            .categoryId(3L).nombre("SUB-14").activo(true).build();
 
     private Match conMarcador(Short favor, Short contra) {
         return Match.builder().idPartido(ID_PARTIDO).categoria(categoria)
@@ -54,28 +54,28 @@ class MatchServiceTest {
     void sinMarcadorEsPendiente() {
         devuelve(conMarcador(null, null));
 
-        assertEquals("PENDIENTE", servicio.findById(ID_PARTIDO).resultado());
+        assertEquals("PENDIENTE", servicio.findById(ID_PARTIDO).result());
     }
 
     @Test
     @DisplayName("el resultado se deduce del marcador")
     void resultadoSeDeduce() {
         devuelve(conMarcador((short) 3, (short) 1));
-        assertEquals("GANADO", servicio.findById(ID_PARTIDO).resultado());
+        assertEquals("GANADO", servicio.findById(ID_PARTIDO).result());
 
         reset(matchRepository, lineupRepository);
         devuelve(conMarcador((short) 2, (short) 2));
-        assertEquals("EMPATADO", servicio.findById(ID_PARTIDO).resultado());
+        assertEquals("EMPATADO", servicio.findById(ID_PARTIDO).result());
 
         reset(matchRepository, lineupRepository);
         devuelve(conMarcador((short) 0, (short) 1));
-        assertEquals("PERDIDO", servicio.findById(ID_PARTIDO).resultado());
+        assertEquals("PERDIDO", servicio.findById(ID_PARTIDO).result());
     }
 
     @Test
     @DisplayName("no se agenda un partido de una categoria dada de baja")
     void categoriaInactiva() {
-        Category inactiva = Category.builder().idCategoria(4L).nombre("SUB-9").activo(false).build();
+        Category inactiva = Category.builder().categoryId(4L).nombre("SUB-9").activo(false).build();
         when(categoryRepository.findById(4L)).thenReturn(Optional.of(inactiva));
 
         var request = new CreateMatchRequest(4L, LocalDate.of(2026, 8, 29), null, null);
@@ -106,8 +106,8 @@ class MatchServiceTest {
         var respuesta = servicio.list(null, 0, 20);
 
         verify(lineupRepository, times(1)).countStartersByMatch(any());
-        assertTrue(respuesta.contenido().get(0).tieneAlineacion());
-        assertEquals(11, respuesta.contenido().get(0).titulares());
-        assertFalse(respuesta.contenido().get(1).tieneAlineacion());
+        assertTrue(respuesta.content().get(0).hasLineup());
+        assertEquals(11, respuesta.content().get(0).starters());
+        assertFalse(respuesta.content().get(1).hasLineup());
     }
 }

@@ -68,14 +68,14 @@ public class ItemService {
     @Transactional
     public ItemResponse create(ItemRequest request) {
         Item articulo = Item.builder()
-                .name(request.nombre())
-                .type(request.tipo())
-                .size(request.talla())
-                .description(request.descripcion())
+                .name(request.name())
+                .type(request.type())
+                .size(request.size())
+                .description(request.description())
                 .currentStock(0)
-                .minimumStock(request.stockMinimo())
-                .unitOfMeasure(request.unidadMedida() != null && !request.unidadMedida().isBlank()
-                        ? request.unidadMedida() : "unidad")
+                .minimumStock(request.minimumStock())
+                .unitOfMeasure(request.unitOfMeasure() != null && !request.unitOfMeasure().isBlank()
+                        ? request.unitOfMeasure() : "unidad")
                 .active(true)
                 .build();
 
@@ -96,13 +96,13 @@ public class ItemService {
     public ItemResponse update(Long id, ItemRequest request) {
         Item articulo = findEntity(id);
 
-        articulo.setName(request.nombre());
-        articulo.setType(request.tipo());
-        articulo.setSize(request.talla());
-        articulo.setDescription(request.descripcion());
-        articulo.setMinimumStock(request.stockMinimo());
-        if (request.unidadMedida() != null && !request.unidadMedida().isBlank()) {
-            articulo.setUnitOfMeasure(request.unidadMedida());
+        articulo.setName(request.name());
+        articulo.setType(request.type());
+        articulo.setSize(request.size());
+        articulo.setDescription(request.description());
+        articulo.setMinimumStock(request.minimumStock());
+        if (request.unitOfMeasure() != null && !request.unitOfMeasure().isBlank()) {
+            articulo.setUnitOfMeasure(request.unitOfMeasure());
         }
 
         return toResponse(articuloRepository.save(articulo));

@@ -57,16 +57,16 @@ class TrainingSessionServiceTest {
 
     private Coach entrenador(long id, String nombre) {
         return Coach.builder()
-                .idEntrenador(id)
+                .coachId(id)
                 .persona(Person.builder().name(nombre).lastName("Apellido").build())
                 .build();
     }
 
     private TrainingSession sesionDe(Coach e) {
         return TrainingSession.builder()
-                .idSesion(e.getIdEntrenador() * 100)
+                .idSesion(e.getCoachId() * 100)
                 .entrenador(e)
-                .categoria(Category.builder().idCategoria(1L).nombre("SUB-12").build())
+                .categoria(Category.builder().categoryId(1L).nombre("SUB-12").build())
                 .estado("PROGRAMADA")
                 .build();
     }
@@ -86,7 +86,7 @@ class TrainingSessionServiceTest {
         List<SessionTodayResponse> resultado = sesionService.todaysSessions("carlos@sged.test", false);
 
         assertThat(resultado).hasSize(1);
-        assertThat(resultado.get(0).entrenador()).isEqualTo("Carlos Apellido");
+        assertThat(resultado.get(0).coach()).isEqualTo("Carlos Apellido");
     }
 
     @Test
@@ -129,7 +129,7 @@ class TrainingSessionServiceTest {
 
         List<SessionTodayResponse> resultado = sesionService.todaysSessions("admin@sged.test", true);
 
-        assertThat(resultado.get(0).tieneEvaluacion()).isTrue();
+        assertThat(resultado.get(0).hasEvaluation()).isTrue();
     }
 
     @Test
@@ -178,7 +178,7 @@ class TrainingSessionServiceTest {
     @DisplayName("crear persiste la sesion a nombre del entrenador dueno del username, no de uno enviado en el request")
     void crearUsaElEntrenadorDelUsername() {
         var yo = entrenador(1L, "Carlos");
-        var categoria = Category.builder().idCategoria(5L).nombre("SUB-15").build();
+        var categoria = Category.builder().categoryId(5L).nombre("SUB-15").build();
 
         when(coachRepository.findByUserAccount_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
         when(categoryRepository.findById(5L)).thenReturn(Optional.of(categoria));
@@ -194,8 +194,8 @@ class TrainingSessionServiceTest {
 
         SessionTodayResponse creada = sesionService.create("carlos@sged.test", request);
 
-        assertThat(creada.categoria()).isEqualTo("SUB-15");
-        assertThat(creada.entrenador()).isEqualTo("Carlos Apellido");
+        assertThat(creada.category()).isEqualTo("SUB-15");
+        assertThat(creada.coach()).isEqualTo("Carlos Apellido");
     }
 
     @Test
@@ -233,11 +233,11 @@ class TrainingSessionServiceTest {
         var yo = entrenador(1L, "Carlos");
         when(coachRepository.findByUserAccount_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
         when(categoryRepository.findById(5L))
-                .thenReturn(Optional.of(Category.builder().idCategoria(5L).nombre("SUB-15").build()));
+                .thenReturn(Optional.of(Category.builder().categoryId(5L).nombre("SUB-15").build()));
 
         var request = new SessionCreateRequest(5L, LocalDate.of(2026, 8, 10),
                 LocalTime.of(16, 0), LocalTime.of(17, 0), null);
-        when(sesionRepository.hasOverlap(5L, request.fecha(), request.horaInicio(), request.horaFin()))
+        when(sesionRepository.hasOverlap(5L, request.date(), request.startTime(), request.endTime()))
                 .thenReturn(true);
 
         assertThatThrownBy(() -> sesionService.create("carlos@sged.test", request))
@@ -268,7 +268,7 @@ class TrainingSessionServiceTest {
     @DisplayName("historial cuenta presentes, tarde, ausentes, justificados y sin registro por separado")
     void historialCuentaCadaEstadoPorSeparado() {
         var yo = entrenador(1L, "Carlos");
-        var categoria = Category.builder().idCategoria(1L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(1L).nombre("SUB-12").build();
         var sesion = TrainingSession.builder()
                 .idSesion(500L).entrenador(yo).categoria(categoria).estado("PROGRAMADA")
                 .fecha(LocalDate.of(2026, 8, 10))
@@ -281,7 +281,7 @@ class TrainingSessionServiceTest {
         Student ausente = estudianteDe(3L, "Cindy", null);
         Student justificado = estudianteDe(4L, "Dario", null);
         Student sinRegistro = estudianteDe(5L, "Eva", null);
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(1L))
                 .thenReturn(List.of(presente, tarde, ausente, justificado, sinRegistro));
 
         when(attendanceRepository.sessionHistory(500L)).thenReturn(List.of(
@@ -297,38 +297,38 @@ class TrainingSessionServiceTest {
 
         SessionHistoryResponse r = sesionService.history(500L);
 
-        assertThat(r.resumen().convocados()).isEqualTo(5);
-        assertThat(r.resumen().presentes()).isEqualTo(1);
-        assertThat(r.resumen().tarde()).isEqualTo(1);
-        assertThat(r.resumen().ausentes()).isEqualTo(1);
-        assertThat(r.resumen().justificados()).isEqualTo(1);
-        assertThat(r.resumen().sinRegistro()).isEqualTo(1);
-        assertThat(r.tieneEvaluacion()).isFalse();
-        assertThat(r.estadoEvaluacion()).isNull();
+        assertThat(r.summary().calledUp()).isEqualTo(5);
+        assertThat(r.summary().present()).isEqualTo(1);
+        assertThat(r.summary().late()).isEqualTo(1);
+        assertThat(r.summary().absentees()).isEqualTo(1);
+        assertThat(r.summary().excused()).isEqualTo(1);
+        assertThat(r.summary().withoutRecord()).isEqualTo(1);
+        assertThat(r.hasEvaluation()).isFalse();
+        assertThat(r.evaluationStatus()).isNull();
 
-        var filaPresente = r.asistencias().stream()
-                .filter(f -> f.idEstudiante().equals(1L)).findFirst().orElseThrow();
-        assertThat(filaPresente.posicion()).isEqualTo("POR");
-        assertThat(filaPresente.metodo()).isEqualTo("QR");
+        var filaPresente = r.attendances().stream()
+                .filter(f -> f.studentId().equals(1L)).findFirst().orElseThrow();
+        assertThat(filaPresente.position()).isEqualTo("POR");
+        assertThat(filaPresente.method()).isEqualTo("QR");
 
-        var filaSinRegistro = r.asistencias().stream()
-                .filter(f -> f.idEstudiante().equals(5L)).findFirst().orElseThrow();
-        assertThat(filaSinRegistro.estado()).isEqualTo("SIN_REGISTRO");
-        assertThat(filaSinRegistro.posicion()).isNull();
+        var filaSinRegistro = r.attendances().stream()
+                .filter(f -> f.studentId().equals(5L)).findFirst().orElseThrow();
+        assertThat(filaSinRegistro.status()).isEqualTo("SIN_REGISTRO");
+        assertThat(filaSinRegistro.position()).isNull();
     }
 
     @Test
     @DisplayName("historial tambien incluye a quien registro asistencia pero ya no esta en el plantel activo")
     void historialIncluyeAQuienYaNoEstaEnElPlantelActivo() {
         var yo = entrenador(1L, "Carlos");
-        var categoria = Category.builder().idCategoria(1L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(1L).nombre("SUB-12").build();
         var sesion = TrainingSession.builder()
                 .idSesion(501L).entrenador(yo).categoria(categoria).estado("FINALIZADA")
                 .build();
         when(sesionRepository.findById(501L)).thenReturn(Optional.of(sesion));
 
         // Plantel activo vacio: el estudiante se dio de baja despues de la sesion.
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(1L))
                 .thenReturn(List.of());
 
         Student deBaja = estudianteDe(9L, "Fabio", null);
@@ -339,11 +339,11 @@ class TrainingSessionServiceTest {
 
         SessionHistoryResponse r = sesionService.history(501L);
 
-        assertThat(r.resumen().convocados()).isEqualTo(1);
-        assertThat(r.resumen().presentes()).isEqualTo(1);
-        assertThat(r.asistencias()).hasSize(1);
-        assertThat(r.asistencias().get(0).idEstudiante()).isEqualTo(9L);
-        assertThat(r.tieneEvaluacion()).isTrue();
-        assertThat(r.estadoEvaluacion()).isEqualTo("CERRADA");
+        assertThat(r.summary().calledUp()).isEqualTo(1);
+        assertThat(r.summary().present()).isEqualTo(1);
+        assertThat(r.attendances()).hasSize(1);
+        assertThat(r.attendances().get(0).studentId()).isEqualTo(9L);
+        assertThat(r.hasEvaluation()).isTrue();
+        assertThat(r.evaluationStatus()).isEqualTo("CERRADA");
     }
 }

@@ -48,7 +48,7 @@ class AttendanceSummaryControllerTest {
 
         mockMvc.perform(get("/api/asistencias/mapa"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.promedio").value(82.5));
+                .andExpect(jsonPath("$.average").value(82.5));
 
         verify(attendanceService).attendanceMap(35);
     }

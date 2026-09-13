@@ -63,7 +63,7 @@ class AssignmentServiceTest {
 
     private Coach entrenador() {
         Person persona = Person.builder().name("Carlos").lastName("Ruiz").build();
-        return Coach.builder().idEntrenador(7L).persona(persona).build();
+        return Coach.builder().coachId(7L).persona(persona).build();
     }
 
     private UserAccount registrador() {
@@ -92,8 +92,8 @@ class AssignmentServiceTest {
         AssignmentResponse resultado = asignacionService.create(request, "recepcion");
 
         assertThat(articulo.getCurrentStock()).isEqualTo(9);
-        assertThat(resultado.estado()).isEqualTo(AssignmentStatus.ASIGNADO);
-        assertThat(resultado.estudiante()).isEqualTo("Juan Perez");
+        assertThat(resultado.status()).isEqualTo(AssignmentStatus.ASIGNADO);
+        assertThat(resultado.student()).isEqualTo("Juan Perez");
     }
 
     @Test
@@ -134,8 +134,8 @@ class AssignmentServiceTest {
         AssignmentRequest request = new AssignmentRequest(1L, 2, RecipientType.ENTRENADOR, null, 7L, null, null);
         AssignmentResponse resultado = asignacionService.create(request, "recepcion");
 
-        assertThat(resultado.entrenador()).isEqualTo("Carlos Ruiz");
-        assertThat(resultado.estudiante()).isNull();
+        assertThat(resultado.coach()).isEqualTo("Carlos Ruiz");
+        assertThat(resultado.student()).isNull();
         verifyNoInteractions(estudianteRepository);
     }
 
@@ -161,9 +161,9 @@ class AssignmentServiceTest {
         ReturnRequest request = new ReturnRequest(AssignmentStatus.DEVUELTO, "en buen estado");
         AssignmentResponse resultado = asignacionService.registerReturn(100L, request);
 
-        assertThat(resultado.estado()).isEqualTo(AssignmentStatus.DEVUELTO);
+        assertThat(resultado.status()).isEqualTo(AssignmentStatus.DEVUELTO);
         assertThat(asignacion.getItem().getCurrentStock()).isEqualTo(10);
-        assertThat(resultado.fechaDevolucionReal()).isNotNull();
+        assertThat(resultado.actualReturnDate()).isNotNull();
     }
 
     @Test
@@ -176,7 +176,7 @@ class AssignmentServiceTest {
         ReturnRequest request = new ReturnRequest(AssignmentStatus.PERDIDO, "no se recupero");
         AssignmentResponse resultado = asignacionService.registerReturn(100L, request);
 
-        assertThat(resultado.estado()).isEqualTo(AssignmentStatus.PERDIDO);
+        assertThat(resultado.status()).isEqualTo(AssignmentStatus.PERDIDO);
         assertThat(asignacion.getItem().getCurrentStock()).isEqualTo(9);
     }
 

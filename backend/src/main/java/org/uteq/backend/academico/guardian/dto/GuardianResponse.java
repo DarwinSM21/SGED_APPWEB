@@ -4,25 +4,25 @@ import java.time.Instant;
 import java.util.List;
 
 public record GuardianResponse(
-        Long idRepresentante,
-        Long idPersona,
-        String nombre,
-        String apellido,
-        String cedula,
-        String correo,
-        Long idUsuario,
+        Long guardianId,
+        Long personId,
+        String name,
+        String lastName,
+        String nationalId,
+        String email,
+        Long userId,
         String username,
-        String parentesco,
-        String telefonoContacto,
-        Boolean activo,
+        String relationship,
+        String contactPhone,
+        Boolean active,
         Instant createdAt,
-        List<LinkedStudentResponse> representados
+        List<LinkedStudentResponse> wards
 ) {
     public record LinkedStudentResponse(
-            Long idEstudiante,
-            String nombreCompleto,
-            String categoria,
-            String relacion,
-            Boolean contactoPrincipal
+            Long studentId,
+            String fullName,
+            String category,
+            String relationship,
+            Boolean primaryContact
     ) {}
 }

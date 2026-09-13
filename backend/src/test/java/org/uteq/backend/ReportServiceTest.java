@@ -65,7 +65,7 @@ class ReportServiceTest {
         return Student.builder()
                 .id(id)
                 .person(persona("Ana", "Torres"))
-                .category(Category.builder().idCategoria(1L).nombre(categoria).build())
+                .category(Category.builder().categoryId(1L).nombre(categoria).build())
                 .studentCode("EST-2026-0001")
                 .enrollmentDate(LocalDate.of(2026, 1, 10))
                 .active(true)
@@ -174,7 +174,7 @@ class ReportServiceTest {
     private StudentEvaluation evaluacion(Student estudiante, LocalDate fecha, BigDecimal puntaje) {
         return StudentEvaluation.builder()
                 .estudiante(estudiante)
-                .categoriaDia(Category.builder().idCategoria(1L).nombre("SUB-12").build())
+                .categoriaDia(Category.builder().categoryId(1L).nombre("SUB-12").build())
                 .posicionJugada(Position.builder().nombre("Delantero").build())
                 .evaluacion(DailyEvaluation.builder().fecha(fecha).build())
                 .detalles(List.of(EvaluationDetail.builder().puntaje(puntaje).build()))

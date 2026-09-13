@@ -119,7 +119,7 @@ class AuditServiceTest {
         var resultado = servicio.search("ana", "EDITAR", "Injury", null, null, pageable);
 
         assertEquals(1, resultado.getTotalElements());
-        assertEquals("ana.torres", resultado.getContent().get(0).usuario());
+        assertEquals("ana.torres", resultado.getContent().get(0).user());
         verify(auditoriaRepository, never()).save(any());
     }
 

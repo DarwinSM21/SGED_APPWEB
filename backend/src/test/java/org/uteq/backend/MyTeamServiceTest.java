@@ -40,7 +40,7 @@ class MyTeamServiceTest {
 
     private Category categoria() {
         return Category.builder()
-                .idCategoria(ID_CATEGORIA).nombre("SUB-12")
+                .categoryId(ID_CATEGORIA).nombre("SUB-12")
                 .edadMin((short) 10).edadMax((short) 12).descripcion("Sub 12 anios")
                 .build();
     }
@@ -70,12 +70,12 @@ class MyTeamServiceTest {
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
 
-        assertThat(equipo.posicion()).isNull();
+        assertThat(equipo.position()).isNull();
     }
 
     @Test
@@ -85,12 +85,12 @@ class MyTeamServiceTest {
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
 
-        assertThat(equipo.entrenador()).isNull();
+        assertThat(equipo.coach()).isNull();
     }
 
     @Test
@@ -103,14 +103,14 @@ class MyTeamServiceTest {
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of(companero));
 
         var equipo = servicio.myTeam("juan@sged.test");
 
-        assertThat(equipo.companeros()).hasSize(1);
-        assertThat(equipo.companeros().get(0).nombre()).isEqualTo("Carlos Perez");
-        assertThat(equipo.companeros().get(0).posicion()).isEqualTo("Delantero");
+        assertThat(equipo.teammates()).hasSize(1);
+        assertThat(equipo.teammates().get(0).name()).isEqualTo("Carlos Perez");
+        assertThat(equipo.teammates().get(0).position()).isEqualTo("Delantero");
     }
 
     @Test
@@ -119,7 +119,7 @@ class MyTeamServiceTest {
         var yo = estudiante(1L, "Juan", null);
         var especialidad = Specialty.builder().nombre("Tecnico").build();
         var entrenador = Coach.builder()
-                .idEntrenador(9L)
+                .coachId(9L)
                 .persona(Person.builder().name("Pedro").lastName("Gomez").build())
                 .especialidad(especialidad)
                 .build();
@@ -131,14 +131,14 @@ class MyTeamServiceTest {
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of(proximaSesion));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
 
-        assertThat(equipo.entrenador()).isNotNull();
-        assertThat(equipo.entrenador().nombre()).isEqualTo("Pedro Gomez");
-        assertThat(equipo.entrenador().especialidad()).isEqualTo("Tecnico");
+        assertThat(equipo.coach()).isNotNull();
+        assertThat(equipo.coach().name()).isEqualTo("Pedro Gomez");
+        assertThat(equipo.coach().specialty()).isEqualTo("Tecnico");
     }
 
     @Test
@@ -148,14 +148,14 @@ class MyTeamServiceTest {
         when(estudianteRepository.findByUserAccount_Username("juan@sged.test")).thenReturn(Optional.of(yo));
         when(sesionRepository.findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
                 eq(ID_CATEGORIA), any(), any())).thenReturn(List.of());
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueAndIdNot(ID_CATEGORIA, 1L))
                 .thenReturn(List.of());
 
         var equipo = servicio.myTeam("juan@sged.test");
 
-        assertThat(equipo.categoria().nombre()).isEqualTo("SUB-12");
-        assertThat(equipo.categoria().edadMin()).isEqualTo(10);
-        assertThat(equipo.categoria().edadMax()).isEqualTo(12);
-        assertThat(equipo.categoria().descripcion()).isEqualTo("Sub 12 anios");
+        assertThat(equipo.category().name()).isEqualTo("SUB-12");
+        assertThat(equipo.category().minAge()).isEqualTo(10);
+        assertThat(equipo.category().maxAge()).isEqualTo(12);
+        assertThat(equipo.category().description()).isEqualTo("Sub 12 anios");
     }
 }

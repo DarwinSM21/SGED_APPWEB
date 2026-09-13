@@ -51,9 +51,9 @@ class LineupServiceTest {
     private static final Long ID_CATEGORIA = 3L;
 
     private final Category categoria = Category.builder()
-            .idCategoria(ID_CATEGORIA).nombre("SUB-14").activo(true).build();
+            .categoryId(ID_CATEGORIA).nombre("SUB-14").activo(true).build();
     private final Category otraCategoria = Category.builder()
-            .idCategoria(99L).nombre("SUB-17").activo(true).build();
+            .categoryId(99L).nombre("SUB-17").activo(true).build();
 
     @BeforeEach
     void configurar() {
@@ -177,11 +177,11 @@ class LineupServiceTest {
 
         var respuesta = servicio.view(ID_PARTIDO);
 
-        assertFalse(respuesta.guardada(),
+        assertFalse(respuesta.saved(),
                 "confundir la sugerencia con la decision del entrenador borraria la diferencia "
                         + "entre 'jugo con este once' y 'el sistema lo propuso y nadie miro'");
-        assertEquals("SUB-14", respuesta.categoria());
-        assertEquals(11, respuesta.cupoTitulares());
+        assertEquals("SUB-14", respuesta.category());
+        assertEquals(11, respuesta.starterSlots());
     }
 
     @Test
@@ -195,6 +195,6 @@ class LineupServiceTest {
         var respuesta = servicio.reset(ID_PARTIDO);
 
         verify(lineupRepository).delete(guardada);
-        assertFalse(respuesta.guardada());
+        assertFalse(respuesta.saved());
     }
 }

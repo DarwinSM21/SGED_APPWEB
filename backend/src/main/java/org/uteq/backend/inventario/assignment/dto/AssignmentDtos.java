@@ -14,42 +14,42 @@ public final class AssignmentDtos {
 
     public record AssignmentRequest(
             @NotNull(message = "El artículo es obligatorio")
-            Long idArticulo,
+            Long itemId,
             @NotNull(message = "La cantidad es obligatoria")
             @Min(value = 1, message = "La cantidad debe ser mayor a cero")
-            Integer cantidad,
+            Integer quantity,
             @NotNull(message = "El tipo de destinatario es obligatorio")
-            RecipientType tipoDestinatario,
-            Long idEstudiante,
-            Long idEntrenador,
-            LocalDate fechaDevolucionEsperada,
+            RecipientType recipientType,
+            Long studentId,
+            Long coachId,
+            LocalDate expectedReturnDate,
             @Size(max = 255, message = "Las observaciones no pueden superar los 255 caracteres")
-            String observaciones
+            String notes
     ) {}
 
     public record ReturnRequest(
             @NotNull(message = "El estado de devolución es obligatorio")
-            AssignmentStatus estado,
+            AssignmentStatus status,
             @Size(max = 255, message = "Las observaciones no pueden superar los 255 caracteres")
-            String observaciones
+            String notes
     ) {}
 
     public record AssignmentResponse(
-            Long idAsignacion,
-            Long idArticulo,
-            String articulo,
-            Integer cantidad,
-            RecipientType tipoDestinatario,
-            Long idEstudiante,
-            String estudiante,
-            Long idEntrenador,
-            String entrenador,
-            LocalDate fechaAsignacion,
-            LocalDate fechaDevolucionEsperada,
-            LocalDate fechaDevolucionReal,
-            AssignmentStatus estado,
-            String registradoPor,
-            String observaciones,
+            Long assignmentId,
+            Long itemId,
+            String item,
+            Integer quantity,
+            RecipientType recipientType,
+            Long studentId,
+            String student,
+            Long coachId,
+            String coach,
+            LocalDate assignmentDate,
+            LocalDate expectedReturnDate,
+            LocalDate actualReturnDate,
+            AssignmentStatus status,
+            String registeredBy,
+            String notes,
             Instant createdAt
     ) {}
 }

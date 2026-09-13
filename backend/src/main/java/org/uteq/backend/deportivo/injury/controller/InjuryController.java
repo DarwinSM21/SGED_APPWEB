@@ -86,8 +86,8 @@ public class InjuryController {
     @Transactional
     public ResponseEntity<InjuryResponse> register(@Valid @RequestBody RegisterInjuryRequest request) {
         var lesion = injuryService.register(
-                request.idEstudiante(), effectiveCoachId(request.idEntrenador()), request.descripcion(),
-                request.fechaLesion(), request.fechaEstimadaRetorno());
+                request.studentId(), effectiveCoachId(request.coachId()), request.description(),
+                request.injuryDate(), request.estimatedReturnDate());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(lesion));
     }
 
@@ -107,7 +107,7 @@ public class InjuryController {
     @Transactional
     public ResponseEntity<InjuryResponse> discharge(@PathVariable Long idLesion,
                                                     @RequestBody(required = false) DischargeRequest request) {
-        var fecha = request == null ? null : request.fechaAlta();
+        var fecha = request == null ? null : request.dischargeDate();
         return ResponseEntity.ok(toResponse(injuryService.discharge(idLesion, fecha)));
     }
 
@@ -126,7 +126,7 @@ public class InjuryController {
         }
         return coachRepository.findByUserAccount_Username(auth.getName())
                 .orElseThrow(() -> new ResourceNotFoundException("No hay un entrenador asociado a esta cuenta"))
-                .getIdEntrenador();
+                .getCoachId();
     }
 
     private InjuryResponse toResponse(Injury l) {

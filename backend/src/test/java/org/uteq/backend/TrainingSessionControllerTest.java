@@ -97,7 +97,7 @@ class TrainingSessionControllerTest {
 
         mockMvc.perform(get("/api/sesiones/hoy"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].entrenador").value("Carlos"));
+                .andExpect(jsonPath("$[0].coach").value("Carlos"));
 
         verify(sesionService).todaysSessions("carlos@sged.test", false);
     }
@@ -125,9 +125,9 @@ class TrainingSessionControllerTest {
 
         mockMvc.perform(post("/api/sesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idCategoria\":5,\"fecha\":\"2026-08-10\",\"horaInicio\":\"16:00:00\",\"horaFin\":\"17:30:00\",\"campo\":\"Cancha 1\"}"))
+                        .content("{\"categoryId\":5,\"date\":\"2026-08-10\",\"startTime\":\"16:00:00\",\"endTime\":\"17:30:00\",\"field\":\"Cancha 1\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.entrenador").value("Carlos"));
+                .andExpect(jsonPath("$.coach").value("Carlos"));
 
         verify(sesionService).create(eq("carlos@sged.test"), any());
     }

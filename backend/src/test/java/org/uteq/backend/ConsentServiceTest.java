@@ -93,9 +93,9 @@ class ConsentServiceTest {
 
         ConsentResponse resultado = consentimientoService.grant(request, "admin");
 
-        assertThat(resultado.idConsentimiento()).isEqualTo(7L);
+        assertThat(resultado.consentId()).isEqualTo(7L);
         assertThat(resultado.vigente()).isTrue();
-        assertThat(resultado.registradoPorUsername()).isEqualTo("admin");
+        assertThat(resultado.registeredByUsername()).isEqualTo("admin");
     }
 
     @Test

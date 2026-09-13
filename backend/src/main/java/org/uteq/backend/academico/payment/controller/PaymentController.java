@@ -47,8 +47,8 @@ public class PaymentController {
     @Transactional
     public ResponseEntity<List<PaymentResponse>> registerMembership(@Valid @RequestBody RegisterMembershipRequest request) {
         var pagos = pagoService.registerMembership(
-                request.idEstudiante(), request.anio(), request.meses(),
-                request.monto(), request.fechaPago(), authenticatedUsername());
+                request.studentId(), request.year(), request.months(),
+                request.amount(), request.paymentDate(), authenticatedUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(pagos.stream().map(this::toResponse).toList());
     }
 
@@ -65,7 +65,7 @@ public class PaymentController {
     @Transactional
     public ResponseEntity<PaymentResponse> registerDaily(@Valid @RequestBody RegisterDailyRequest request) {
         var pago = pagoService.registerDaily(
-                request.idEstudiante(), request.monto(), request.fechaPago(), authenticatedUsername());
+                request.studentId(), request.amount(), request.paymentDate(), authenticatedUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(pago));
     }
 
@@ -87,7 +87,7 @@ public class PaymentController {
     public ResponseEntity<PaymentResponse> cancel(@PathVariable Long idPago,
                                                @Valid @RequestBody CancelPaymentRequest request) {
         return ResponseEntity.ok(toResponse(
-                pagoService.cancel(idPago, request.motivo(), authenticatedUsername())));
+                pagoService.cancel(idPago, request.reason(), authenticatedUsername())));
     }
 
     /**

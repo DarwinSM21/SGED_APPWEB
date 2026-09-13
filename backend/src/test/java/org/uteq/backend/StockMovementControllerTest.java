@@ -75,7 +75,7 @@ class StockMovementControllerTest {
 
         mockMvc.perform(get("/api/inventario/movimientos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].articulo").value("Balón N5"));
+                .andExpect(jsonPath("$.content[0].item").value("Balón N5"));
     }
 
     @Test
@@ -97,9 +97,9 @@ class StockMovementControllerTest {
 
         mockMvc.perform(post("/api/inventario/movimientos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idArticulo\":1,\"tipoMovimiento\":\"ENTRADA\",\"cantidad\":10,\"motivo\":\"Compra inicial\"}"))
+                        .content("{\"itemId\":1,\"movementType\":\"ENTRADA\",\"quantity\":10,\"reason\":\"Compra inicial\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.tipoMovimiento").value("ENTRADA"));
+                .andExpect(jsonPath("$.movementType").value("ENTRADA"));
 
         verify(movimientoStockService).register(any(StockMovementRequest.class), eq("recepcion@sged.test"));
     }
@@ -111,7 +111,7 @@ class StockMovementControllerTest {
 
         mockMvc.perform(post("/api/inventario/movimientos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idArticulo\":1,\"tipoMovimiento\":\"ENTRADA\",\"cantidad\":0}"))
+                        .content("{\"itemId\":1,\"movementType\":\"ENTRADA\",\"quantity\":0}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 }

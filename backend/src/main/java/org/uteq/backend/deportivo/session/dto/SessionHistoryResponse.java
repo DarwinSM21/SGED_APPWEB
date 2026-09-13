@@ -5,35 +5,35 @@ import java.time.LocalTime;
 import java.util.List;
 
 public record SessionHistoryResponse(
-        Long idSesion,
-        String categoria,
-        String entrenador,
-        LocalDate fecha,
-        LocalTime horaInicio,
-        LocalTime horaFin,
-        String campo,
-        String estado,
-        boolean tieneEvaluacion,
-        String estadoEvaluacion,
-        Summary resumen,
-        List<AttendanceRow> asistencias
+        Long sessionId,
+        String category,
+        String coach,
+        LocalDate date,
+        LocalTime startTime,
+        LocalTime endTime,
+        String field,
+        String status,
+        boolean hasEvaluation,
+        String evaluationStatus,
+        Summary summary,
+        List<AttendanceRow> attendances
 ) {
     public record Summary(
-            int convocados,
-            int presentes,
-            int tarde,
-            int ausentes,
-            int justificados,
-            int sinRegistro
+            int calledUp,
+            int present,
+            int late,
+            int absentees,
+            int excused,
+            int withoutRecord
     ) {}
 
     public record AttendanceRow(
-            Long idEstudiante,
-            String nombreCompleto,
-            String posicion,
-            String estado,
-            LocalTime horaEntrada,
-            String metodo,
-            String observacion
+            Long studentId,
+            String fullName,
+            String position,
+            String status,
+            LocalTime checkInTime,
+            String method,
+            String note
     ) {}
 }

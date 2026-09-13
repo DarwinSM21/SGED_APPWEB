@@ -66,8 +66,8 @@ class MyTeamControllerTest {
 
         mockMvc.perform(get("/api/estudiante/mi-informe"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombreCompleto").value("Juan Perez"))
-                .andExpect(jsonPath("$.porcentajeAsistencia").value(90.00));
+                .andExpect(jsonPath("$.fullName").value("Juan Perez"))
+                .andExpect(jsonPath("$.attendancePercentage").value(90.00));
     }
 
     @Test
@@ -92,10 +92,10 @@ class MyTeamControllerTest {
 
         mockMvc.perform(get("/api/estudiante/mi-equipo"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.categoria.nombre").value("SUB-12"))
-                .andExpect(jsonPath("$.posicion.nombre").value("Delantero"))
-                .andExpect(jsonPath("$.entrenador.nombre").value("Pedro Gomez"))
-                .andExpect(jsonPath("$.companeros", org.hamcrest.Matchers.hasSize(1)));
+                .andExpect(jsonPath("$.category.name").value("SUB-12"))
+                .andExpect(jsonPath("$.position.name").value("Delantero"))
+                .andExpect(jsonPath("$.coach.name").value("Pedro Gomez"))
+                .andExpect(jsonPath("$.teammates", org.hamcrest.Matchers.hasSize(1)));
     }
 
     @Test

@@ -4,16 +4,16 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 public record UserAccountResponse(
-        Long idUsuario,
-        Long idPersona,
-        String nombrePersona,
-        String apellidoPersona,
-        String correoPersona,
-        Long idEstadoGeneral,
-        String estadoGeneralNombre,
+        Long userId,
+        Long personId,
+        String personName,
+        String personLastName,
+        String personEmail,
+        Long generalStatusId,
+        String generalStatusName,
         String username,
         List<String> roles,
-        OffsetDateTime ultimoAcceso,
-        Boolean activo,
+        OffsetDateTime lastAccess,
+        Boolean active,
         OffsetDateTime createdAt
 ) {}

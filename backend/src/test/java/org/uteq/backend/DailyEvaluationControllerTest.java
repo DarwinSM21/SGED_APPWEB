@@ -52,7 +52,7 @@ class DailyEvaluationControllerTest {
 
         mockMvc.perform(get("/api/evaluaciones/sesion/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.categoria").value("SUB-12"));
+                .andExpect(jsonPath("$.category").value("SUB-12"));
     }
 
     @Test
@@ -71,7 +71,7 @@ class DailyEvaluationControllerTest {
 
         mockMvc.perform(put("/api/evaluaciones/sesion/1/jugadores")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":5,\"puntajes\":[{\"idCriterio\":1,\"puntaje\":8.5}]}"))
+                        .content("{\"studentId\":5,\"scores\":[{\"criterionId\":1,\"score\":8.5}]}"))
                 .andExpect(status().isNoContent());
 
         verify(evaluacionService).savePlayer(eq(1L), any(SavePlayerRequest.class));
@@ -82,7 +82,7 @@ class DailyEvaluationControllerTest {
     void guardarJugador_sin_idEstudiante_da_422() throws Exception {
         mockMvc.perform(put("/api/evaluaciones/sesion/1/jugadores")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"puntajes\":[{\"idCriterio\":1,\"puntaje\":8.5}]}"))
+                        .content("{\"scores\":[{\"criterionId\":1,\"score\":8.5}]}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 

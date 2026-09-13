@@ -4,12 +4,12 @@ import java.time.OffsetDateTime;
 
 public record AuditLogResponse(
         Long id,
-        OffsetDateTime fecha,
-        String usuario,
-        String rol,
-        String accion,
-        String entidad,
-        Long entidadId,
-        String descripcion
+        OffsetDateTime date,
+        String user,
+        String role,
+        String action,
+        String entity,
+        Long entityId,
+        String description
 ) {
 }

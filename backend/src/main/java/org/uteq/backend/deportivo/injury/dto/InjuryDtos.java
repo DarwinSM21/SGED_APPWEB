@@ -10,23 +10,23 @@ public final class InjuryDtos {
     private InjuryDtos() {}
 
     public record RegisterInjuryRequest(
-            @NotNull Long idEstudiante,
-            Long idEntrenador,
-            @NotBlank @Size(max = 1000) String descripcion,
-            LocalDate fechaLesion,
-            LocalDate fechaEstimadaRetorno
+            @NotNull Long studentId,
+            Long coachId,
+            @NotBlank @Size(max = 1000) String description,
+            LocalDate injuryDate,
+            LocalDate estimatedReturnDate
     ) {}
 
-    public record DischargeRequest(LocalDate fechaAlta) {}
+    public record DischargeRequest(LocalDate dischargeDate) {}
 
     public record InjuryResponse(
-            Long idLesion,
-            Long idEstudiante,
-            String estudiante,
-            String descripcion,
-            LocalDate fechaLesion,
-            LocalDate fechaEstimadaRetorno,
-            LocalDate fechaAlta,
-            boolean activa
+            Long injuryId,
+            Long studentId,
+            String student,
+            String description,
+            LocalDate injuryDate,
+            LocalDate estimatedReturnDate,
+            LocalDate dischargeDate,
+            boolean active
     ) {}
 }

@@ -72,10 +72,10 @@ class PaymentServiceTest {
 
         var response = service.currentMonthIncome();
 
-        assertThat(response.anio()).isEqualTo(hoy.getYear());
-        assertThat(response.mes()).isEqualTo(hoy.getMonthValue());
+        assertThat(response.year()).isEqualTo(hoy.getYear());
+        assertThat(response.month()).isEqualTo(hoy.getMonthValue());
         assertThat(response.total()).isEqualByComparingTo("150.00");
-        assertThat(response.cantidadPagos()).isEqualTo(3L);
+        assertThat(response.paymentCount()).isEqualTo(3L);
     }
 
     @Test
@@ -87,7 +87,7 @@ class PaymentServiceTest {
         var response = service.currentMonthIncome();
 
         assertThat(response.total()).isEqualByComparingTo(BigDecimal.ZERO);
-        assertThat(response.cantidadPagos()).isZero();
+        assertThat(response.paymentCount()).isZero();
     }
 
     @Test

@@ -34,7 +34,7 @@ class CategoryServiceTest {
 
     private Category categoriaSub12() {
         return Category.builder()
-                .idCategoria(1L)
+                .categoryId(1L)
                 .nombre("Sub-12")
                 .edadMin((short) 10)
                 .edadMax((short) 12)
@@ -52,7 +52,7 @@ class CategoryServiceTest {
         Page<CategoryResponse> resultado = categoryService.findPaged(PageRequest.of(0, 10));
 
         assertThat(resultado.getTotalElements()).isEqualTo(1);
-        assertThat(resultado.getContent().get(0).nombre()).isEqualTo("Sub-12");
+        assertThat(resultado.getContent().get(0).name()).isEqualTo("Sub-12");
     }
 
     @Test
@@ -63,7 +63,7 @@ class CategoryServiceTest {
         List<CategoryResponse> resultado = categoryService.findAllActive();
 
         assertThat(resultado).hasSize(1);
-        assertThat(resultado.get(0).edadMin()).isEqualTo((short) 10);
+        assertThat(resultado.get(0).minAge()).isEqualTo((short) 10);
     }
 
     @Test
@@ -73,8 +73,8 @@ class CategoryServiceTest {
 
         CategoryResponse resultado = categoryService.findById(1L);
 
-        assertThat(resultado.idCategoria()).isEqualTo(1L);
-        assertThat(resultado.nombre()).isEqualTo("Sub-12");
+        assertThat(resultado.categoryId()).isEqualTo(1L);
+        assertThat(resultado.name()).isEqualTo("Sub-12");
     }
 
     @Test
@@ -92,15 +92,15 @@ class CategoryServiceTest {
         CategoryRequest request = new CategoryRequest("Sub-15", (short) 13, (short) 15, "Formativa");
         when(categoryRepository.save(any(Category.class))).thenAnswer(inv -> {
             Category c = inv.getArgument(0);
-            c.setIdCategoria(2L);
+            c.setCategoryId(2L);
             return c;
         });
 
         CategoryResponse resultado = categoryService.create(request);
 
-        assertThat(resultado.idCategoria()).isEqualTo(2L);
+        assertThat(resultado.categoryId()).isEqualTo(2L);
 
-        assertThat(resultado.nombre()).isEqualTo("SUB-15");
+        assertThat(resultado.name()).isEqualTo("SUB-15");
         verify(categoryRepository).save(any(Category.class));
     }
 
@@ -126,8 +126,8 @@ class CategoryServiceTest {
         CategoryRequest request = new CategoryRequest("Sub-13", (short) 10, (short) 13, "actualizada");
         CategoryResponse resultado = categoryService.update(1L, request);
 
-        assertThat(resultado.nombre()).isEqualTo("SUB-13");
-        assertThat(resultado.descripcion()).isEqualTo("actualizada");
+        assertThat(resultado.name()).isEqualTo("SUB-13");
+        assertThat(resultado.description()).isEqualTo("actualizada");
     }
 
     @Test
@@ -167,7 +167,7 @@ class CategoryServiceTest {
         CategoryResponse r = categoryService.update(
                 1L, new CategoryRequest("Sub-12", (short) 10, (short) 13, "ajuste"));
 
-        assertThat(r.edadMax()).isEqualTo((short) 13);
+        assertThat(r.maxAge()).isEqualTo((short) 13);
     }
 
     @Test
@@ -194,6 +194,6 @@ class CategoryServiceTest {
 
         CategoryResponse r = categoryService.reactivate(1L);
 
-        assertThat(r.activo()).isTrue();
+        assertThat(r.active()).isTrue();
     }
 }

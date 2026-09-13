@@ -67,18 +67,18 @@ public class StockMovementService {
             descriptionSpel = "'registró ' + #result.tipoMovimiento + ' de ' + #result.cantidad + ' (' + #result.articulo + ')'")
     @Transactional
     public StockMovementResponse register(StockMovementRequest request, String usernameRegistrador) {
-        Item articulo = findItem(request.idArticulo());
+        Item articulo = findItem(request.itemId());
         UserAccount registrador = findUser(usernameRegistrador);
 
-        int delta = request.tipoMovimiento() == MovementType.SALIDA
-                ? -request.cantidad()
-                : request.cantidad();
+        int delta = request.movementType() == MovementType.SALIDA
+                ? -request.quantity()
+                : request.quantity();
         int nuevoStock = articulo.getCurrentStock() + delta;
 
         if (nuevoStock < 0) {
             throw new IllegalArgumentException(
                     "Stock insuficiente: hay " + articulo.getCurrentStock() + " unidades de \""
-                            + articulo.getName() + "\" y se intentan retirar " + request.cantidad());
+                            + articulo.getName() + "\" y se intentan retirar " + request.quantity());
         }
 
         articulo.setCurrentStock(nuevoStock);
@@ -86,9 +86,9 @@ public class StockMovementService {
 
         StockMovement movimiento = StockMovement.builder()
                 .item(articulo)
-                .movementType(request.tipoMovimiento())
-                .quantity(request.cantidad())
-                .reason(request.motivo())
+                .movementType(request.movementType())
+                .quantity(request.quantity())
+                .reason(request.reason())
                 .registeredBy(registrador)
                 .build();
 

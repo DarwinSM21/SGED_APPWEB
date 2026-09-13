@@ -65,7 +65,7 @@ class CoachServiceTest {
 
     private Coach entrenador() {
         return Coach.builder()
-                .idEntrenador(1L)
+                .coachId(1L)
                 .persona(persona())
                 .usuario(usuario())
                 .especialidad(especialidad())
@@ -83,7 +83,7 @@ class CoachServiceTest {
         CoachPageResponse<CoachResponse> resultado = coachService.list(PageRequest.of(0, 10));
 
         assertThat(resultado.totalElements()).isEqualTo(1);
-        assertThat(resultado.content().get(0).nombre()).isEqualTo("Carlos");
+        assertThat(resultado.content().get(0).name()).isEqualTo("Carlos");
         assertThat(resultado.content().get(0).username()).isEqualTo("carlos.mora");
     }
 
@@ -132,14 +132,14 @@ class CoachServiceTest {
         when(specialtyRepository.findById(1L)).thenReturn(Optional.of(especialidad()));
         when(coachRepository.save(any(Coach.class))).thenAnswer(inv -> {
             Coach e = inv.getArgument(0);
-            e.setIdEntrenador(5L);
+            e.setCoachId(5L);
             return e;
         });
 
         CoachResponse resultado = coachService.create(request);
 
-        assertThat(resultado.idEntrenador()).isEqualTo(5L);
-        assertThat(resultado.nombreEspecialidad()).isEqualTo("Preparador físico");
+        assertThat(resultado.coachId()).isEqualTo(5L);
+        assertThat(resultado.specialtyName()).isEqualTo("Preparador físico");
     }
 
     @Test

@@ -8,38 +8,38 @@ public final class ReportDtos {
     private ReportDtos() {}
 
     public record StudentSummaryResponse(
-            Long idEstudiante,
-            String nombreCompleto,
-            String categoria
+            Long studentId,
+            String fullName,
+            String category
     ) {}
 
     /**
      * @param criterio nombre del criterio de evaluación
      * @param promedio promedio de ese criterio en el período del reporte, o {@code null} sin evaluaciones
      */
-    public record CriterionAverageResponse(String criterio, Double promedio) {}
+    public record CriterionAverageResponse(String criterion, Double average) {}
 
     public record InjurySummaryResponse(
-            Long idLesion,
-            String descripcion,
-            LocalDate fechaLesion,
-            LocalDate fechaEstimadaRetorno,
-            LocalDate fechaAlta,
-            boolean activa
+            Long injuryId,
+            String description,
+            LocalDate injuryDate,
+            LocalDate estimatedReturnDate,
+            LocalDate dischargeDate,
+            boolean active
     ) {}
 
     public record StudentReportResponse(
-            Long idEstudiante,
-            String nombreCompleto,
-            String categoria,
-            List<CriterionAverageResponse> promediosPorCriterio,
-            List<InjurySummaryResponse> historialLesiones,
-            BigDecimal porcentajeAsistencia
+            Long studentId,
+            String fullName,
+            String category,
+            List<CriterionAverageResponse> averagesByCriterion,
+            List<InjurySummaryResponse> injuryHistory,
+            BigDecimal attendancePercentage
     ) {}
 
     public record ReportCommentResponse(
-            String comentario,
-            boolean disponible,
-            String motivo
+            String comment,
+            boolean available,
+            String reason
     ) {}
 }

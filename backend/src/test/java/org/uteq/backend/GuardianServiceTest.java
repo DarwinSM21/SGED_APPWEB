@@ -75,7 +75,7 @@ class GuardianServiceTest {
         return Student.builder()
                 .id(id)
                 .person(Person.builder().name(nombre).lastName("Hijo").build())
-                .category(Category.builder().idCategoria(1L).nombre("SUB-12").build())
+                .category(Category.builder().categoryId(1L).nombre("SUB-12").build())
                 .build();
     }
 
@@ -89,7 +89,7 @@ class GuardianServiceTest {
         GuardianPageResponse<GuardianResponse> resultado = representanteService.list(PageRequest.of(0, 10));
 
         assertThat(resultado.totalElements()).isEqualTo(1);
-        assertThat(resultado.content().get(0).nombre()).isEqualTo("Ana");
+        assertThat(resultado.content().get(0).name()).isEqualTo("Ana");
         assertThat(resultado.content().get(0).username()).isEqualTo("ana.vera@sged.test");
     }
 
@@ -167,7 +167,7 @@ class GuardianServiceTest {
 
         GuardianResponse resultado = representanteService.create(request);
 
-        assertThat(resultado.idRepresentante()).isEqualTo(5L);
+        assertThat(resultado.guardianId()).isEqualTo(5L);
         verify(vinculoRepository, times(2)).save(any(GuardianStudent.class));
     }
 
@@ -280,8 +280,8 @@ class GuardianServiceTest {
         GuardianRequest request = new GuardianRequest(1L, 1L, "Padre", "0999999999", null);
         GuardianResponse resultado = representanteService.update(1L, request);
 
-        assertThat(resultado.parentesco()).isEqualTo("Padre");
-        assertThat(resultado.telefonoContacto()).isEqualTo("0999999999");
+        assertThat(resultado.relationship()).isEqualTo("Padre");
+        assertThat(resultado.contactPhone()).isEqualTo("0999999999");
     }
 
     @Test
@@ -306,7 +306,7 @@ class GuardianServiceTest {
 
         GuardianResponse resultado = representanteService.reactivate(1L);
 
-        assertThat(resultado.activo()).isTrue();
+        assertThat(resultado.active()).isTrue();
     }
 
     @Test

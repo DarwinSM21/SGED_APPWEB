@@ -7,10 +7,10 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 public record ScheduleRequest(
-        @NotNull Long idCategoria,
-        @NotNull @Min(1) @Max(7) Integer diaSemana,
-        @NotNull LocalTime horaInicio,
-        @NotNull LocalTime horaFin,
-        String campo,
-        String descripcion
+        @NotNull Long categoryId,
+        @NotNull @Min(1) @Max(7) Integer dayOfWeek,
+        @NotNull LocalTime startTime,
+        @NotNull LocalTime endTime,
+        String field,
+        String description
 ) {}

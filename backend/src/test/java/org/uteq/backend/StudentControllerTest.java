@@ -99,8 +99,8 @@ class StudentControllerTest {
 
         mockMvc.perform(get("/api/estudiantes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombrePersona").value("Juan"))
-                .andExpect(jsonPath("$.content[0].nombreCategoria").value("SUB-12"))
+                .andExpect(jsonPath("$.content[0].personName").value("Juan"))
+                .andExpect(jsonPath("$.content[0].categoryName").value("SUB-12"))
                 .andExpect(jsonPath("$.totalElements").value(1));
     }
 
@@ -111,9 +111,9 @@ class StudentControllerTest {
 
         mockMvc.perform(get("/api/estudiantes/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idEstudiante").value(1))
-                .andExpect(jsonPath("$.nombreCategoria").value("SUB-12"))
-                .andExpect(jsonPath("$.codigoEstudiante").value("EST-001"));
+                .andExpect(jsonPath("$.studentId").value(1))
+                .andExpect(jsonPath("$.categoryName").value("SUB-12"))
+                .andExpect(jsonPath("$.studentCode").value("EST-001"));
     }
 
     @Test
@@ -125,16 +125,16 @@ class StudentControllerTest {
                 "coach", "x", java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_ENTRENADOR")));
         mockMvc.perform(get("/api/estudiantes/1").principal(entrenador))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.peso").value(60.50))
-                .andExpect(jsonPath("$.altura").value(1.70));
+                .andExpect(jsonPath("$.weight").value(60.50))
+                .andExpect(jsonPath("$.height").value(1.70));
 
         var recepcion = new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(
                 "front", "x", java.util.List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_RECEPCIONISTA")));
         mockMvc.perform(get("/api/estudiantes/1").principal(recepcion))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.codigoEstudiante").value("EST-001"))
-                .andExpect(jsonPath("$.peso").value(org.hamcrest.Matchers.nullValue()))
-                .andExpect(jsonPath("$.altura").value(org.hamcrest.Matchers.nullValue()));
+                .andExpect(jsonPath("$.studentCode").value("EST-001"))
+                .andExpect(jsonPath("$.weight").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.height").value(org.hamcrest.Matchers.nullValue()));
     }
 
     @Test
@@ -157,8 +157,8 @@ class StudentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombrePersona").value("Juan"))
-                .andExpect(jsonPath("$.codigoEstudiante").value("EST-001"));
+                .andExpect(jsonPath("$.personName").value("Juan"))
+                .andExpect(jsonPath("$.studentCode").value("EST-001"));
     }
 
     @Test
@@ -184,7 +184,7 @@ class StudentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idEstudiante").value(1));
+                .andExpect(jsonPath("$.studentId").value(1));
     }
 
     @Test

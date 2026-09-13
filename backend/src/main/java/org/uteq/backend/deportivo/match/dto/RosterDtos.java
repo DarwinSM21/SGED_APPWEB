@@ -6,49 +6,49 @@ import java.util.List;
 
 public class RosterDtos {
     public record CalledUpPlayer(
-            Long idEstudiante,
-            String nombreCompleto,
-            String posicion,
-            Long idPosicion,
-            boolean titular,
-            BigDecimal promedio,
-            long presencias,
-            long entrenamientos
+            Long studentId,
+            String fullName,
+            String position,
+            Long positionId,
+            boolean starter,
+            BigDecimal average,
+            long attendanceRecords,
+            long trainingSessions
     ) {}
 
     public record UnavailablePlayer(
-            Long idEstudiante,
-            String nombreCompleto,
-            String motivo
+            Long studentId,
+            String fullName,
+            String reason
     ) {}
 
     public record PerformanceWindow(
-            int semanas,
-            LocalDate desde,
-            LocalDate hasta,
-            long entrenamientos
+            int weeks,
+            LocalDate from,
+            LocalDate to,
+            long trainingSessions
     ) {}
 
     public record LineupResponse(
-            Long idPartido,
-            Long idCategoria,
-            String categoria,
-            LocalDate fecha,
-            boolean guardada,
-            Short valoracion,
-            String observacion,
-            PerformanceWindow ventana,
-            List<CalledUpPlayer> titulares,
-            List<CalledUpPlayer> suplentes,
-            List<CalledUpPlayer> disponibles,
-            List<UnavailablePlayer> noConvocables,
-            int cupoTitulares,
-            boolean cerrado
+            Long matchId,
+            Long categoryId,
+            String category,
+            LocalDate date,
+            boolean saved,
+            Short rating,
+            String note,
+            PerformanceWindow window,
+            List<CalledUpPlayer> starters,
+            List<CalledUpPlayer> substitutes,
+            List<CalledUpPlayer> available,
+            List<UnavailablePlayer> notCallable,
+            int starterSlots,
+            boolean closed
     ) {}
 
     public record LineupFeedbackResponse(
-            String comentario,
-            boolean disponible,
-            String motivo
+            String comment,
+            boolean available,
+            String reason
     ) {}
 }

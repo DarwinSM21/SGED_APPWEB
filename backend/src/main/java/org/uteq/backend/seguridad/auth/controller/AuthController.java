@@ -127,10 +127,10 @@ public class AuthController {
             @Valid @RequestBody ForgotPasswordRequest request,
             HttpServletRequest httpRequest) {
         String ip = httpRequest.getRemoteAddr();
-        resetRequestLimitService.check(request.identificador(), ip);
-        passwordResetService.request(request.identificador());
-        resetRequestLimitService.record(request.identificador(), ip);
-        return ResponseEntity.accepted().body(Map.of("mensaje",
+        resetRequestLimitService.check(request.identifier(), ip);
+        passwordResetService.request(request.identifier());
+        resetRequestLimitService.record(request.identifier(), ip);
+        return ResponseEntity.accepted().body(Map.of("message",
                 "Si existe una cuenta asociada, se enviaron instrucciones al correo registrado."));
     }
 
@@ -147,7 +147,7 @@ public class AuthController {
      */
     @PostMapping("/reset")
     public ResponseEntity<Void> reset(@Valid @RequestBody ResetPasswordRequest request) {
-        passwordResetService.reset(request.token(), request.nuevaPassword());
+        passwordResetService.reset(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
     }
 

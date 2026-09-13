@@ -16,7 +16,7 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
 
     @Query("""
            SELECT s FROM TrainingSession s
-            WHERE s.entrenador.idEntrenador = :idEntrenador
+            WHERE s.entrenador.coachId = :idEntrenador
             ORDER BY CASE WHEN s.fecha >= CURRENT_DATE THEN 0 ELSE 1 END ASC,
                      CASE WHEN s.fecha >= CURRENT_DATE THEN s.fecha END ASC,
                      s.fecha DESC,
@@ -25,7 +25,7 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
     Page<TrainingSession> sessionsByCoach(@Param("idEntrenador") Long idEntrenador,
                                                     Pageable pageable);
 
-    @Query("SELECT s FROM TrainingSession s WHERE s.categoria.idCategoria = :idCategoria AND s.fecha < :fecha ORDER BY s.fecha DESC")
+    @Query("SELECT s FROM TrainingSession s WHERE s.categoria.categoryId = :idCategoria AND s.fecha < :fecha ORDER BY s.fecha DESC")
     List<TrainingSession> findByCategoryAndDateBeforeOrderByDateDesc(
             @Param("idCategoria") Long idCategoria, @Param("fecha") LocalDate fecha, Pageable pageable);
 
@@ -35,7 +35,7 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
     @Query("SELECT s FROM TrainingSession s WHERE s.horario.idHorario = :idHorario AND s.fecha >= :desde")
     List<TrainingSession> findBySchedule_IdAndDateGreaterThanEqual(@Param("idHorario") Long idHorario, @Param("desde") LocalDate desde);
 
-    @Query("SELECT s FROM TrainingSession s WHERE s.categoria.idCategoria = :idCategoria AND s.fecha >= :fecha ORDER BY s.fecha ASC, s.horaInicio ASC")
+    @Query("SELECT s FROM TrainingSession s WHERE s.categoria.categoryId = :idCategoria AND s.fecha >= :fecha ORDER BY s.fecha ASC, s.horaInicio ASC")
     List<TrainingSession> findByCategoryAndDateGreaterThanEqualOrderByDateAscStartTimeAsc(
             @Param("idCategoria") Long idCategoria, @Param("fecha") LocalDate fecha, Pageable pageable);
 
@@ -54,7 +54,7 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
 
     @Query("""
            SELECT COUNT(s) > 0 FROM TrainingSession s
-            WHERE s.categoria.idCategoria = :idCategoria
+            WHERE s.categoria.categoryId = :idCategoria
               AND s.fecha = :fecha
               AND s.horaInicio < :horaFin
               AND s.horaFin > :horaInicio
@@ -64,6 +64,6 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
                          @Param("horaInicio") java.time.LocalTime horaInicio,
                          @Param("horaFin") java.time.LocalTime horaFin);
 
-    @Query("SELECT COUNT(s) FROM TrainingSession s WHERE s.categoria.idCategoria = :idCategoria AND s.fecha BETWEEN :desde AND :hasta")
+    @Query("SELECT COUNT(s) FROM TrainingSession s WHERE s.categoria.categoryId = :idCategoria AND s.fecha BETWEEN :desde AND :hasta")
     long countByCategoryAndDateBetween(@Param("idCategoria") Long idCategoria, @Param("desde") LocalDate desde, @Param("hasta") LocalDate hasta);
 }

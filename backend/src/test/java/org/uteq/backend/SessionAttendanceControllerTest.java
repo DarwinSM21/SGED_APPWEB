@@ -54,8 +54,8 @@ class SessionAttendanceControllerTest {
 
         mockMvc.perform(get("/api/asistencias/sesion/7"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idSesion").value(7))
-                .andExpect(jsonPath("$.categoria").value("SUB-12"))
+                .andExpect(jsonPath("$.sessionId").value(7))
+                .andExpect(jsonPath("$.category").value("SUB-12"))
                 .andExpect(jsonPath("$.editable").value(true));
     }
 
@@ -75,9 +75,9 @@ class SessionAttendanceControllerTest {
 
         mockMvc.perform(put("/api/asistencias/sesion/7")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"marcas\":[{\"idEstudiante\":1,\"estado\":\"PRESENTE\"}]}"))
+                        .content("{\"marks\":[{\"studentId\":1,\"status\":\"PRESENTE\"}]}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idSesion").value(7));
+                .andExpect(jsonPath("$.sessionId").value(7));
     }
 
     @Test
@@ -85,7 +85,7 @@ class SessionAttendanceControllerTest {
     void pasarLista_sin_marcas_da_422() throws Exception {
         mockMvc.perform(put("/api/asistencias/sesion/7")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"marcas\":[]}"))
+                        .content("{\"marks\":[]}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 }

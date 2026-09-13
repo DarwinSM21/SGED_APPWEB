@@ -61,7 +61,7 @@ class GuardianControllerTest {
 
         mockMvc.perform(get("/api/representantes"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombre").value("Ana"));
+                .andExpect(jsonPath("$.content[0].name").value("Ana"));
     }
 
     @Test
@@ -80,9 +80,9 @@ class GuardianControllerTest {
 
         mockMvc.perform(post("/api/representantes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":1,\"idUsuario\":1,\"parentesco\":\"Madre\"}"))
+                        .content("{\"personId\":1,\"userId\":1,\"relationship\":\"Madre\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Ana"));
+                .andExpect(jsonPath("$.name").value("Ana"));
     }
 
     @Test
@@ -90,7 +90,7 @@ class GuardianControllerTest {
     void crear_con_datos_invalidos_da_422() throws Exception {
         mockMvc.perform(post("/api/representantes")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":null,\"idUsuario\":null}"))
+                        .content("{\"personId\":null,\"userId\":null}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -110,7 +110,7 @@ class GuardianControllerTest {
 
         mockMvc.perform(post("/api/representantes/1/estudiantes/10")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"relacion\":\"Madre\",\"contactoPrincipal\":true}"))
+                        .content("{\"relationship\":\"Madre\",\"primaryContact\":true}"))
                 .andExpect(status().isOk());
     }
 

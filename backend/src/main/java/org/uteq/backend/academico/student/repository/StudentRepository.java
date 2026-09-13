@@ -38,8 +38,8 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * @param idCategoria identificador de la categoría
      * @return la cantidad de estudiantes activos de esa categoría
      */
-    @Query("SELECT COUNT(s) FROM Student s WHERE s.category.idCategoria = :idCategoria AND s.active = true")
-    long countByCategory_IdCategoriaAndActiveTrue(@Param("idCategoria") Long idCategoria);
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.category.categoryId = :idCategoria AND s.active = true")
+    long countByCategory_CategoryIdAndActiveTrue(@Param("idCategoria") Long idCategoria);
 
     /**
      * @param idEstudiante identificador del estudiante
@@ -106,15 +106,15 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      * @param idEstudiante identificador del estudiante que se excluye del resultado
      * @return estudiantes activos de esa categoría, sin incluir al indicado
      */
-    @Query("SELECT s FROM Student s WHERE s.category.idCategoria = :idCategoria AND s.active = true AND s.id <> :idEstudiante")
-    List<Student> findByCategory_IdCategoriaAndActiveTrueAndIdNot(@Param("idCategoria") Long idCategoria, @Param("idEstudiante") Long idEstudiante);
+    @Query("SELECT s FROM Student s WHERE s.category.categoryId = :idCategoria AND s.active = true AND s.id <> :idEstudiante")
+    List<Student> findByCategory_CategoryIdAndActiveTrueAndIdNot(@Param("idCategoria") Long idCategoria, @Param("idEstudiante") Long idEstudiante);
 
     /**
      * @param idCategoria identificador de la categoría
      * @return estudiantes activos de esa categoría, ordenados por apellido
      */
-    @Query("SELECT s FROM Student s WHERE s.category.idCategoria = :idCategoria AND s.active = true ORDER BY s.person.lastName ASC")
-    List<Student> findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(@Param("idCategoria") Long idCategoria);
+    @Query("SELECT s FROM Student s WHERE s.category.categoryId = :idCategoria AND s.active = true ORDER BY s.person.lastName ASC")
+    List<Student> findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(@Param("idCategoria") Long idCategoria);
 
     /**
      * @param idUsuario identificador de la cuenta de usuario
@@ -168,7 +168,7 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
      */
     @Query("""
            SELECT e FROM Student e
-           WHERE (:idCategoria IS NULL OR e.category.idCategoria = :idCategoria)
+           WHERE (:idCategoria IS NULL OR e.category.categoryId = :idCategoria)
              AND (:activo IS NULL OR e.active = :activo)
            ORDER BY e.person.lastName, e.person.name
            """)

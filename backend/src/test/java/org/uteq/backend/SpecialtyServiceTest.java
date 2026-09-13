@@ -46,7 +46,7 @@ class SpecialtyServiceTest {
         Page<SpecialtyResponse> resultado = specialtyService.findPaged(PageRequest.of(0, 10));
 
         assertThat(resultado.getTotalElements()).isEqualTo(1);
-        assertThat(resultado.getContent().get(0).nombre()).isEqualTo("Técnico");
+        assertThat(resultado.getContent().get(0).name()).isEqualTo("Técnico");
     }
 
     @Test
@@ -57,7 +57,7 @@ class SpecialtyServiceTest {
         List<SpecialtyResponse> resultado = specialtyService.findAllActive();
 
         assertThat(resultado).hasSize(1);
-        assertThat(resultado.get(0).idEspecialidad()).isEqualTo(1L);
+        assertThat(resultado.get(0).specialtyId()).isEqualTo(1L);
     }
 
     @Test
@@ -82,8 +82,8 @@ class SpecialtyServiceTest {
 
         SpecialtyResponse resultado = specialtyService.create(request);
 
-        assertThat(resultado.idEspecialidad()).isEqualTo(2L);
-        assertThat(resultado.nombre()).isEqualTo("Porteros");
+        assertThat(resultado.specialtyId()).isEqualTo(2L);
+        assertThat(resultado.name()).isEqualTo("Porteros");
     }
 
     @Test
@@ -109,7 +109,7 @@ class SpecialtyServiceTest {
         SpecialtyRequest request = new SpecialtyRequest("Técnico avanzado");
         SpecialtyResponse resultado = specialtyService.update(1L, request);
 
-        assertThat(resultado.nombre()).isEqualTo("Técnico avanzado");
+        assertThat(resultado.name()).isEqualTo("Técnico avanzado");
     }
 
     @Test

@@ -44,7 +44,7 @@ class AlertControllerTest {
 
         mockMvc.perform(get("/api/alertas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.anio").value(2026))
-                .andExpect(jsonPath("$.totalEnRiesgo").value(4));
+                .andExpect(jsonPath("$.year").value(2026))
+                .andExpect(jsonPath("$.totalAtRisk").value(4));
     }
 }

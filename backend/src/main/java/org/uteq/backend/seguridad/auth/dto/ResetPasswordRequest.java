@@ -14,5 +14,5 @@ import jakarta.validation.constraints.NotBlank;
  */
 public record ResetPasswordRequest(
         @NotBlank String token,
-        @NotBlank String nuevaPassword
+        @NotBlank String newPassword
 ) {}

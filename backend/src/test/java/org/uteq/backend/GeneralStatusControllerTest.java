@@ -46,7 +46,7 @@ class GeneralStatusControllerTest {
 
         mockMvc.perform(get("/api/estados_generales"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].nombre").value("ACTIVO"))
-                .andExpect(jsonPath("$[1].nombre").value("INACTIVO"));
+                .andExpect(jsonPath("$[0].name").value("ACTIVO"))
+                .andExpect(jsonPath("$[1].name").value("INACTIVO"));
     }
 }

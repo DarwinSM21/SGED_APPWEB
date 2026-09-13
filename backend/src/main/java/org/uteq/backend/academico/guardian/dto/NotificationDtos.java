@@ -9,17 +9,17 @@ public final class NotificationDtos {
     private NotificationDtos() {}
 
     public record NotificationResponse(
-            Long idNotificacion,
-            Long idEstudiante,
-            String estudiante,
-            Type tipo,
-            String mensaje,
-            boolean leida,
-            Instant creadaEn
+            Long notificationId,
+            Long studentId,
+            String student,
+            Type type,
+            String message,
+            boolean read,
+            Instant createdAt
     ) {}
 
     /**
      * @param noLeidas cantidad de notificaciones sin leer del representante
      */
-    public record UnreadCountResponse(long noLeidas) {}
+    public record UnreadCountResponse(long unread) {}
 }

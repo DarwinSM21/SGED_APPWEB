@@ -72,7 +72,7 @@ class GuardianReportControllerTest {
         mockMvc.perform(get("/api/representante/estudiantes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].nombreCompleto").value("Andres Rivas"));
+                .andExpect(jsonPath("$[0].fullName").value("Andres Rivas"));
     }
 
     @Test
@@ -83,7 +83,7 @@ class GuardianReportControllerTest {
 
         mockMvc.perform(get("/api/representante/estudiantes/6/informe"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.nombreCompleto").value("Andres Rivas"));
+                .andExpect(jsonPath("$.fullName").value("Andres Rivas"));
     }
 
     @Test
@@ -106,8 +106,8 @@ class GuardianReportControllerTest {
         mockMvc.perform(get("/api/representante/notificaciones"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].tipo").value("ASISTENCIA"))
-                .andExpect(jsonPath("$[0].leida").value(false));
+                .andExpect(jsonPath("$[0].type").value("ASISTENCIA"))
+                .andExpect(jsonPath("$[0].read").value(false));
     }
 
     @Test

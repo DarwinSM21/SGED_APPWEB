@@ -64,7 +64,7 @@ class PersonServiceTest {
         Page<PersonResponse> resultado = personaService.list(PageRequest.of(0, 10));
 
         assertThat(resultado.getTotalElements()).isEqualTo(1);
-        assertThat(resultado.getContent().get(0).nombre()).isEqualTo("Maria");
+        assertThat(resultado.getContent().get(0).name()).isEqualTo("Maria");
     }
 
     @Test
@@ -83,7 +83,7 @@ class PersonServiceTest {
 
         PersonResponse resultado = personaService.findByNationalId("1234567890");
 
-        assertThat(resultado.cedula()).isEqualTo("1234567890");
+        assertThat(resultado.nationalId()).isEqualTo("1234567890");
     }
 
     @Test
@@ -122,8 +122,8 @@ class PersonServiceTest {
 
         PersonResponse resultado = personaService.create(requestValido("0000000000", "nueva@sged.test"));
 
-        assertThat(resultado.idPersona()).isEqualTo(5L);
-        assertThat(resultado.correo()).isEqualTo("nueva@sged.test");
+        assertThat(resultado.personId()).isEqualTo(5L);
+        assertThat(resultado.email()).isEqualTo("nueva@sged.test");
     }
 
     @Test
@@ -138,7 +138,7 @@ class PersonServiceTest {
 
         PersonResponse resultado = personaService.create(requestValido(null, "sincedula@sged.test"));
 
-        assertThat(resultado.idPersona()).isEqualTo(9L);
+        assertThat(resultado.personId()).isEqualTo(9L);
         verify(personaRepository, never()).existsByNationalIdAndActiveTrue(any());
     }
 
@@ -153,7 +153,7 @@ class PersonServiceTest {
 
         PersonResponse resultado = personaService.update(1L, requestValido("1234567890", "maria2@sged.test"));
 
-        assertThat(resultado.correo()).isEqualTo("maria2@sged.test");
+        assertThat(resultado.email()).isEqualTo("maria2@sged.test");
     }
 
     @Test

@@ -11,18 +11,18 @@ import java.util.List;
 
 public class LineupDtos {
     public record PlayerOnField(
-            @NotNull Long idEstudiante,
-            Long idPosicion,
-            @NotNull Boolean titular
+            @NotNull Long studentId,
+            Long positionId,
+            @NotNull Boolean starter
     ) {}
 
     public record SaveLineupRequest(
             @NotEmpty(message = "La alineación necesita al menos un jugador")
-            @Valid List<PlayerOnField> jugadores,
+            @Valid List<PlayerOnField> players,
             @Min(value = 1, message = "La valoración va de 1 a 5")
             @Max(value = 5, message = "La valoración va de 1 a 5")
-            Short valoracion,
+            Short rating,
             @Size(max = 500, message = "La observación no puede superar los 500 caracteres")
-            String observacion
+            String note
     ) {}
 }

@@ -51,11 +51,11 @@ public class MyTeamService {
         PositionResponse posicionResponse = posicion == null ? null
                 : new PositionResponse(posicion.getNombre(), posicion.getAbreviatura());
 
-        AssignedCoachResponse entrenadorResponse = nextCoachOf(categoria.getIdCategoria());
+        AssignedCoachResponse entrenadorResponse = nextCoachOf(categoria.getCategoryId());
 
         List<TeammateResponse> companeros = estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueAndIdNot(
-                        categoria.getIdCategoria(), estudiante.getId())
+                .findByCategory_CategoryIdAndActiveTrueAndIdNot(
+                        categoria.getCategoryId(), estudiante.getId())
                 .stream()
                 .map(this::toTeammate)
                 .toList();

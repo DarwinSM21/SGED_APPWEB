@@ -84,18 +84,18 @@ public class CoachService {
     @CacheEvict(value = RedisCacheConfig.CACHE_COACHES, allEntries = true)
     @Transactional
     public CoachResponse create(CoachRequest request) {
-        if (coachRepository.existsByPerson_Id(request.idPersona())) {
+        if (coachRepository.existsByPerson_Id(request.personId())) {
             throw new IllegalArgumentException("La persona ya está registrada como entrenador");
         }
-        if (coachRepository.existsByUserAccount_Id(request.idUsuario())) {
+        if (coachRepository.existsByUserAccount_Id(request.userId())) {
             throw new IllegalArgumentException("El usuario ya está asignado a otro entrenador");
         }
 
-        Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.personId())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.personId()));
 
-        UserAccount usuario = usuarioRepository.findById(request.idUsuario())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
+        UserAccount usuario = usuarioRepository.findById(request.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.userId()));
 
         boolean tieneRolEntrenador = usuario.getRoles().stream()
                 .anyMatch(r -> "ENTRENADOR".equals(r.getName()));
@@ -107,9 +107,9 @@ public class CoachService {
         Coach entrenador = Coach.builder()
                 .persona(persona)
                 .usuario(usuario)
-                .especialidad(resolveSpecialty(request.idEspecialidad()))
-                .experienciaAnios(request.experienciaAnios())
-                .certificacion(request.certificacion())
+                .especialidad(resolveSpecialty(request.specialtyId()))
+                .experienciaAnios(request.yearsOfExperience())
+                .certificacion(request.certification())
                 .activo(true)
                 .build();
 
@@ -132,9 +132,9 @@ public class CoachService {
         Coach entrenador = coachRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Coach no encontrado con id: " + id));
 
-        entrenador.setEspecialidad(resolveSpecialty(request.idEspecialidad()));
-        entrenador.setExperienciaAnios(request.experienciaAnios());
-        entrenador.setCertificacion(request.certificacion());
+        entrenador.setEspecialidad(resolveSpecialty(request.specialtyId()));
+        entrenador.setExperienciaAnios(request.yearsOfExperience());
+        entrenador.setCertificacion(request.certification());
 
         entrenador = coachRepository.save(entrenador);
         return toResponse(entrenador);
@@ -189,7 +189,7 @@ public class CoachService {
 
     private CoachResponse toResponse(Coach e) {
         return new CoachResponse(
-                e.getIdEntrenador(),
+                e.getCoachId(),
                 e.getPersona().getId(),
                 e.getPersona().getName(),
                 e.getPersona().getLastName(),

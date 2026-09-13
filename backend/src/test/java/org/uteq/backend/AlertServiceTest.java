@@ -71,9 +71,9 @@ class AlertServiceTest {
 
         AlertsPanelResponse panel = service.panel();
 
-        assertEquals(1, panel.estudiantesActivos());
-        assertEquals(0, panel.totalEnRiesgo());
-        assertTrue(panel.estudiantes().isEmpty());
+        assertEquals(1, panel.activeStudents());
+        assertEquals(0, panel.totalAtRisk());
+        assertTrue(panel.students().isEmpty());
     }
 
     @Test
@@ -92,18 +92,18 @@ class AlertServiceTest {
 
         AlertsPanelResponse panel = service.panel();
 
-        assertEquals(1, panel.totalEnRiesgo());
-        assertEquals(1, panel.conMensualidadPendiente());
-        assertEquals(1, panel.conAsistenciaBaja());
-        assertEquals(1, panel.conLesionActiva());
+        assertEquals(1, panel.totalAtRisk());
+        assertEquals(1, panel.withPendingMembership());
+        assertEquals(1, panel.withLowAttendance());
+        assertEquals(1, panel.withActiveInjury());
 
-        StudentAtRiskResponse r = panel.estudiantes().get(0);
-        assertEquals("Luis Gomez", r.nombreCompleto());
-        assertEquals("SUB-15", r.categoria());
-        assertTrue(r.mensualidadPendiente());
-        assertTrue(r.asistenciaBaja());
-        assertTrue(r.lesionActiva());
-        assertEquals(3, r.totalAlertas());
+        StudentAtRiskResponse r = panel.students().get(0);
+        assertEquals("Luis Gomez", r.fullName());
+        assertEquals("SUB-15", r.category());
+        assertTrue(r.pendingMembershipFee());
+        assertTrue(r.lowAttendance());
+        assertTrue(r.activeInjury());
+        assertEquals(3, r.totalAlerts());
     }
 
     @Test
@@ -121,11 +121,11 @@ class AlertServiceTest {
 
         AlertsPanelResponse panel = service.panel();
 
-        StudentAtRiskResponse r = panel.estudiantes().get(0);
-        assertEquals("(sin persona)", r.nombreCompleto());
-        assertNull(r.categoria());
-        assertTrue(r.mensualidadPendiente());
-        assertFalse(r.asistenciaBaja(), "Sin fila de asistencia, el porcentaje es null y no cuenta como baja");
+        StudentAtRiskResponse r = panel.students().get(0);
+        assertEquals("(sin persona)", r.fullName());
+        assertNull(r.category());
+        assertTrue(r.pendingMembershipFee());
+        assertFalse(r.lowAttendance(), "Sin fila de asistencia, el porcentaje es null y no cuenta como baja");
     }
 
     @Test
@@ -145,7 +145,7 @@ class AlertServiceTest {
 
         AlertsPanelResponse panel = assertDoesNotThrow(() -> service.panel());
 
-        assertEquals(0, panel.totalEnRiesgo(), "Sin dato de asistencia valido, no se marca como en riesgo");
+        assertEquals(0, panel.totalAtRisk(), "Sin dato de asistencia valido, no se marca como en riesgo");
     }
 
     @Test
@@ -166,7 +166,7 @@ class AlertServiceTest {
 
         AlertsPanelResponse panel = service.panel();
 
-        assertEquals(2, panel.totalEnRiesgo(), "El conteo agregado no se trunca");
-        assertEquals(1, panel.estudiantes().size(), "El detalle si se trunca al tope");
+        assertEquals(2, panel.totalAtRisk(), "El conteo agregado no se trunca");
+        assertEquals(1, panel.students().size(), "El detalle si se trunca al tope");
     }
 }

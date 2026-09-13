@@ -42,10 +42,10 @@ class PositionControllerTest {
         mockMvc.perform(get("/api/posiciones/activas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(2)))
-                .andExpect(jsonPath("$[0].idPosicion").value(1))
-                .andExpect(jsonPath("$[0].nombre").value("Portero"))
-                .andExpect(jsonPath("$[0].abreviatura").value("POR"))
-                .andExpect(jsonPath("$[1].abreviatura").value("DFC"));
+                .andExpect(jsonPath("$[0].positionId").value(1))
+                .andExpect(jsonPath("$[0].name").value("Portero"))
+                .andExpect(jsonPath("$[0].abbreviation").value("POR"))
+                .andExpect(jsonPath("$[1].abbreviation").value("DFC"));
     }
 
     @Test

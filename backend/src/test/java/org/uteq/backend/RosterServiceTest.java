@@ -49,7 +49,7 @@ class RosterServiceTest {
     private static final LocalDate FECHA = LocalDate.of(2026, 8, 29);
 
     private final Category categoria = Category.builder()
-            .idCategoria(ID_CATEGORIA).nombre("SUB-14").activo(true).build();
+            .categoryId(ID_CATEGORIA).nombre("SUB-14").activo(true).build();
 
     @BeforeEach
     void configurar() {
@@ -76,7 +76,7 @@ class RosterServiceTest {
     private void plantel(List<Student> estudiantes) {
         when(matchRepository.findWithCategoryById(ID_PARTIDO)).thenReturn(Optional.of(partido()));
         when(estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(estudiantes);
         when(sesionRepository.countByCategoryAndDateBetween(eq(ID_CATEGORIA), any(), any()))
                 .thenReturn(8L);
@@ -97,11 +97,11 @@ class RosterServiceTest {
 
         var convocatoria = servicio.calculate(ID_PARTIDO);
 
-        assertEquals(2, convocatoria.titulares().size(), "un portero y un defensa");
+        assertEquals(2, convocatoria.starters().size(), "un portero y un defensa");
         assertEquals(List.of(1L, 3L),
-                convocatoria.titulares().stream().map(j -> j.idEstudiante()).toList());
-        assertEquals(1, convocatoria.suplentes().size());
-        assertEquals(2L, convocatoria.suplentes().get(0).idEstudiante(), "el segundo portero al banco");
+                convocatoria.starters().stream().map(j -> j.studentId()).toList());
+        assertEquals(1, convocatoria.substitutes().size());
+        assertEquals(2L, convocatoria.substitutes().get(0).studentId(), "el segundo portero al banco");
     }
 
     @Test
@@ -116,11 +116,11 @@ class RosterServiceTest {
 
         var convocatoria = servicio.calculate(ID_PARTIDO);
 
-        assertEquals(1, convocatoria.titulares().size());
-        assertEquals(2L, convocatoria.titulares().get(0).idEstudiante());
-        assertEquals(1, convocatoria.noConvocables().size());
-        assertEquals(1L, convocatoria.noConvocables().get(0).idEstudiante());
-        assertEquals("Lesión activa", convocatoria.noConvocables().get(0).motivo());
+        assertEquals(1, convocatoria.starters().size());
+        assertEquals(2L, convocatoria.starters().get(0).studentId());
+        assertEquals(1, convocatoria.notCallable().size());
+        assertEquals(1L, convocatoria.notCallable().get(0).studentId());
+        assertEquals("Lesión activa", convocatoria.notCallable().get(0).reason());
     }
 
     @Test
@@ -136,9 +136,9 @@ class RosterServiceTest {
 
         var convocatoria = servicio.calculate(ID_PARTIDO);
 
-        assertEquals(1, convocatoria.titulares().size());
-        assertEquals(1, convocatoria.noConvocables().size());
-        assertTrue(convocatoria.noConvocables().get(0).motivo().contains("No entrenó"),
+        assertEquals(1, convocatoria.starters().size());
+        assertEquals(1, convocatoria.notCallable().size());
+        assertTrue(convocatoria.notCallable().get(0).reason().contains("No entrenó"),
                 "el motivo tiene que ser legible, no un codigo");
     }
 
@@ -147,7 +147,7 @@ class RosterServiceTest {
     void sinEntrenamientosNadieQuedaFuera() {
         when(matchRepository.findWithCategoryById(ID_PARTIDO)).thenReturn(Optional.of(partido()));
         when(estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+                .findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(jugador(1L, "Alfa", 1L, "POR")));
         when(sesionRepository.countByCategoryAndDateBetween(eq(ID_CATEGORIA), any(), any()))
                 .thenReturn(0L);
@@ -157,9 +157,9 @@ class RosterServiceTest {
 
         var convocatoria = servicio.calculate(ID_PARTIDO);
 
-        assertTrue(convocatoria.noConvocables().isEmpty(),
+        assertTrue(convocatoria.notCallable().isEmpty(),
                 "nadie pudo asistir a entrenamientos que no existieron");
-        assertEquals(1, convocatoria.titulares().size());
+        assertEquals(1, convocatoria.starters().size());
     }
 
     @Test
@@ -173,8 +173,8 @@ class RosterServiceTest {
 
         var convocatoria = servicio.calculate(ID_PARTIDO);
 
-        assertNull(convocatoria.titulares().get(0).promedio());
-        assertEquals(5L, convocatoria.titulares().get(0).presencias());
+        assertNull(convocatoria.starters().get(0).average());
+        assertEquals(5L, convocatoria.starters().get(0).attendanceRecords());
     }
 
     @Test
@@ -192,9 +192,9 @@ class RosterServiceTest {
 
         var convocatoria = servicio.calculate(ID_PARTIDO);
 
-        assertEquals(2L, convocatoria.titulares().get(0).idEstudiante());
+        assertEquals(2L, convocatoria.starters().get(0).studentId());
         assertEquals(List.of(3L, 1L),
-                convocatoria.suplentes().stream().map(j -> j.idEstudiante()).toList());
+                convocatoria.substitutes().stream().map(j -> j.studentId()).toList());
     }
 
     @Test

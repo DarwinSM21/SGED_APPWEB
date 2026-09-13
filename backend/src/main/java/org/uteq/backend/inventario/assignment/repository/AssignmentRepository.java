@@ -33,6 +33,6 @@ public interface AssignmentRepository extends JpaRepository<Assignment, Long> {
      * @param pageable página y tamaño solicitados
      * @return las asignaciones de ese entrenador, de la más reciente a la más antigua
      */
-    @Query("SELECT a FROM Assignment a WHERE a.coach.idEntrenador = :idEntrenador ORDER BY a.assignmentDate DESC")
-    Page<Assignment> findByCoach_IdEntrenadorOrderByAssignmentDateDesc(@Param("idEntrenador") Long idEntrenador, Pageable pageable);
+    @Query("SELECT a FROM Assignment a WHERE a.coach.coachId = :idEntrenador ORDER BY a.assignmentDate DESC")
+    Page<Assignment> findByCoach_CoachIdOrderByAssignmentDateDesc(@Param("idEntrenador") Long idEntrenador, Pageable pageable);
 }

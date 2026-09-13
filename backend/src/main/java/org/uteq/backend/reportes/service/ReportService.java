@@ -111,7 +111,7 @@ public class ReportService {
     @Transactional(readOnly = true)
     public byte[] attendances(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<Attendance> spec = Specification.<Attendance>where(equalTo("estudiante.id", idEstudiante))
-                .and(this.<Attendance>equalTo("estudiante.category.idCategoria", idCategoria))
+                .and(this.<Attendance>equalTo("estudiante.category.categoryId", idCategoria))
                 .and(this.<Attendance>fromDate("sesion.fecha", desde))
                 .and(this.<Attendance>toDate("sesion.fecha", hasta));
         var filas = nonEmpty(attendanceRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "sesion.fecha"))).getContent()).stream()
@@ -135,7 +135,7 @@ public class ReportService {
     @Transactional(readOnly = true)
     public byte[] evaluations(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<StudentEvaluation> spec = Specification.<StudentEvaluation>where(equalTo("estudiante.id", idEstudiante))
-                .and(this.<StudentEvaluation>equalTo("categoriaDia.idCategoria", idCategoria))
+                .and(this.<StudentEvaluation>equalTo("categoriaDia.categoryId", idCategoria))
                 .and(this.<StudentEvaluation>fromDate("evaluacion.fecha", desde))
                 .and(this.<StudentEvaluation>toDate("evaluacion.fecha", hasta));
         var filas = nonEmpty(studentEvaluationRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "evaluacion.fecha"))).getContent()).stream()
@@ -158,7 +158,7 @@ public class ReportService {
     @Transactional(readOnly = true)
     public byte[] injuries(Long idEstudiante, Long idCategoria, LocalDate desde, LocalDate hasta) {
         Specification<Injury> spec = Specification.<Injury>where(equalTo("estudiante.id", idEstudiante))
-                .and(this.<Injury>equalTo("estudiante.category.idCategoria", idCategoria))
+                .and(this.<Injury>equalTo("estudiante.category.categoryId", idCategoria))
                 .and(this.<Injury>fromDate("fechaLesion", desde))
                 .and(this.<Injury>toDate("fechaLesion", hasta));
         var filas = nonEmpty(injuryRepository.findAll(spec, PageRequest.of(0, TOPE_FILAS + 1, Sort.by(Sort.Direction.DESC, "fechaLesion"))).getContent()).stream()

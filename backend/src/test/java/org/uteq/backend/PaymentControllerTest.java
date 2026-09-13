@@ -95,12 +95,12 @@ class PaymentControllerTest {
 
         mockMvc.perform(post("/api/pagos/membresia")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"anio\":2026,\"meses\":[8],\"monto\":30.00}"))
+                        .content("{\"studentId\":1,\"year\":2026,\"months\":[8],\"amount\":30.00}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$[0].estudiante").value("Juan Perez"))
-                .andExpect(jsonPath("$[0].registradoPor").value("Ana Admin"))
-                .andExpect(jsonPath("$[0].tipo").value("MEMBRESIA"))
-                .andExpect(jsonPath("$[0].mes").value(8));
+                .andExpect(jsonPath("$[0].student").value("Juan Perez"))
+                .andExpect(jsonPath("$[0].registeredBy").value("Ana Admin"))
+                .andExpect(jsonPath("$[0].type").value("MEMBRESIA"))
+                .andExpect(jsonPath("$[0].month").value(8));
     }
 
     @Test
@@ -112,7 +112,7 @@ class PaymentControllerTest {
 
         mockMvc.perform(post("/api/pagos/membresia")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"anio\":2026,\"meses\":[8],\"monto\":30.00}"))
+                        .content("{\"studentId\":1,\"year\":2026,\"months\":[8],\"amount\":30.00}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -121,7 +121,7 @@ class PaymentControllerTest {
     void registrarMembresia_datos_invalidos_da_422() throws Exception {
         mockMvc.perform(post("/api/pagos/membresia")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":null,\"anio\":2026,\"meses\":[],\"monto\":30.00}"))
+                        .content("{\"studentId\":null,\"year\":2026,\"months\":[],\"amount\":30.00}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -134,11 +134,11 @@ class PaymentControllerTest {
 
         mockMvc.perform(post("/api/pagos/diario")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"monto\":5.00}"))
+                        .content("{\"studentId\":1,\"amount\":5.00}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.tipo").value("DIARIO"))
-                .andExpect(jsonPath("$.anio").isEmpty())
-                .andExpect(jsonPath("$.mes").isEmpty());
+                .andExpect(jsonPath("$.type").value("DIARIO"))
+                .andExpect(jsonPath("$.year").isEmpty())
+                .andExpect(jsonPath("$.month").isEmpty());
     }
 
     @Test
@@ -169,6 +169,6 @@ class PaymentControllerTest {
         mockMvc.perform(get("/api/pagos/ingresos-mes"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(150.00))
-                .andExpect(jsonPath("$.cantidadPagos").value(3));
+                .andExpect(jsonPath("$.paymentCount").value(3));
     }
 }

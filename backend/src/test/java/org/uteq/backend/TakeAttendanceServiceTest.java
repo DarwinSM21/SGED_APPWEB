@@ -47,7 +47,7 @@ class TakeAttendanceServiceTest {
     private static final Long ID_SESION = 77L;
 
     private Category categoria(Long id, String nombre) {
-        return Category.builder().idCategoria(id).nombre(nombre).build();
+        return Category.builder().categoryId(id).nombre(nombre).build();
     }
 
     private Student estudiante(Long id, Long idCategoria) {
@@ -79,7 +79,7 @@ class TakeAttendanceServiceTest {
         when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
         when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE));
@@ -98,7 +98,7 @@ class TakeAttendanceServiceTest {
         when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
         when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE));
@@ -125,7 +125,7 @@ class TakeAttendanceServiceTest {
         when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of(yaMarcada));
         when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_TARDE));
@@ -152,7 +152,7 @@ class TakeAttendanceServiceTest {
         when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of(yaMarcada));
         when(estudianteRepository.findByIdAndActiveTrue(6L))
                 .thenReturn(Optional.of(estudiante(6L, ID_CATEGORIA)));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_AUSENTE));
@@ -204,17 +204,17 @@ class TakeAttendanceServiceTest {
 
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(hoy)));
         when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of(conMarca));
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA), estudiante(7L, ID_CATEGORIA)));
 
         var nomina = attendanceService.roster(ID_SESION);
 
-        assertThat(nomina.filas()).hasSize(2);
+        assertThat(nomina.rows()).hasSize(2);
         assertThat(nomina.editable()).isTrue();
 
-        assertThat(nomina.filas())
-                .anySatisfy(f -> assertThat(f.estado()).isEqualTo(Attendance.ESTADO_PRESENTE))
-                .anySatisfy(f -> assertThat(f.estado()).isNull());
+        assertThat(nomina.rows())
+                .anySatisfy(f -> assertThat(f.status()).isEqualTo(Attendance.ESTADO_PRESENTE))
+                .anySatisfy(f -> assertThat(f.status()).isNull());
     }
 
     @Test
@@ -223,12 +223,12 @@ class TakeAttendanceServiceTest {
         var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
         when(attendanceRepository.findBySession_Id(ID_SESION)).thenReturn(List.of());
-        when(estudianteRepository.findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
+        when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
         var nomina = attendanceService.roster(ID_SESION);
 
         assertThat(nomina.editable()).isFalse();
-        assertThat(nomina.motivoNoEditable()).contains("todavía no ocurre");
+        assertThat(nomina.nonEditableReason()).contains("todavía no ocurre");
     }
 }

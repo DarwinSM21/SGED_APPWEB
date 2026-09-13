@@ -64,8 +64,8 @@ class MyAttendanceControllerTest {
 
         mockMvc.perform(get("/api/estudiante/mi-asistencia"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.asistencias", hasSize(1)))
-                .andExpect(jsonPath("$.asistencias[0].categoria").value("SUB-12"))
-                .andExpect(jsonPath("$.porcentajeUltimos30Dias").value(80.00));
+                .andExpect(jsonPath("$.attendances", hasSize(1)))
+                .andExpect(jsonPath("$.attendances[0].category").value("SUB-12"))
+                .andExpect(jsonPath("$.percentageLast30Days").value(80.00));
     }
 }

@@ -7,25 +7,25 @@ public final class AlertDtos {
     private AlertDtos() {}
 
     public record StudentAtRiskResponse(
-            Long idEstudiante,
-            String nombreCompleto,
-            String categoria,
-            boolean mensualidadPendiente,
-            boolean asistenciaBaja,
-            BigDecimal porcentajeAsistencia,
-            boolean lesionActiva,
-            int totalAlertas
+            Long studentId,
+            String fullName,
+            String category,
+            boolean pendingMembershipFee,
+            boolean lowAttendance,
+            BigDecimal attendancePercentage,
+            boolean activeInjury,
+            int totalAlerts
     ) {}
 
     public record AlertsPanelResponse(
-            int anio,
-            int mes,
-            int umbralAsistencia,
-            long estudiantesActivos,
-            long conMensualidadPendiente,
-            long conAsistenciaBaja,
-            long conLesionActiva,
-            long totalEnRiesgo,
-            List<StudentAtRiskResponse> estudiantes
+            int year,
+            int month,
+            int attendanceThreshold,
+            long activeStudents,
+            long withPendingMembership,
+            long withLowAttendance,
+            long withActiveInjury,
+            long totalAtRisk,
+            List<StudentAtRiskResponse> students
     ) {}
 }

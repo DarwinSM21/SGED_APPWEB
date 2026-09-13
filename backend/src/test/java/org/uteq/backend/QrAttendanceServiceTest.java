@@ -39,7 +39,7 @@ class QrAttendanceServiceTest {
         var resultado = servicio.issue(42L);
 
         assertNotNull(resultado.token());
-        assertEquals(60, resultado.expiraEnSegundos());
+        assertEquals(60, resultado.expiresInSeconds());
         verify(ops).set(startsWith("qr:asistencia:"), eq("42"), eq(Duration.ofSeconds(60)));
     }
 

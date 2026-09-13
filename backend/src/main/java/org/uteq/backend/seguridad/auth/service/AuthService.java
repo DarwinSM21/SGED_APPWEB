@@ -84,7 +84,7 @@ public class AuthService {
      *         (el controlador lo traduce a {@code 409 Conflict})
      * @throws org.uteq.backend.common.exception.ApiException {@code 422} si la
      *                                  contraseña no cumple la política (RNF-14)
-     * @throws IllegalArgumentException si {@code request.rol()} no existe en
+     * @throws IllegalArgumentException si {@code request.role()} no existe en
      *                                  el catálogo de roles
      * @throws IllegalStateException    si falta el catálogo
      *                                  {@code seguridad.estados_general}
@@ -94,23 +94,23 @@ public class AuthService {
         passwordPolicy.validate(request.password(), request.username());
 
         // RF-49 / H-01: la cédula es opcional; solo cuenta como colisión si viene.
-        boolean cedulaDuplicada = request.cedula() != null && !request.cedula().isBlank()
-                && personaRepository.existsByNationalIdAndActiveTrue(request.cedula());
+        boolean cedulaDuplicada = request.nationalId() != null && !request.nationalId().isBlank()
+                && personaRepository.existsByNationalIdAndActiveTrue(request.nationalId());
         if (usuarioRepository.existsByUsernameIgnoreCase(request.username())
                 || cedulaDuplicada
-                || personaRepository.existsByEmail(request.correo())) {
+                || personaRepository.existsByEmail(request.email())) {
             return Optional.empty();
         }
 
-        Role rol = rolRepository.findByName(request.rol())
-                .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.rol()));
+        Role rol = rolRepository.findByName(request.role())
+                .orElseThrow(() -> new IllegalArgumentException("Rol inexistente: " + request.role()));
 
         Person persona = Person.builder()
-                .name(request.nombre())
-                .lastName(request.apellido())
-                .nationalId(request.cedula())
-                .email(request.correo())
-                .birthDate(request.fechaNacimiento())
+                .name(request.name())
+                .lastName(request.lastName())
+                .nationalId(request.nationalId())
+                .email(request.email())
+                .birthDate(request.birthDate())
                 .active(true)
                 .emailVerified(false)
                 .build();
@@ -137,10 +137,10 @@ public class AuthService {
         String nombreCompleto = persona.getName() + " " + persona.getLastName();
         return Optional.of(SessionResponse.builder()
                 .username(usuario.getUsername())
-                .nombre(nombreCompleto)
-                .rol(rol.getName())
-                .idPersona(persona.getId())
-                .idUsuario(usuario.getId())
+                .name(nombreCompleto)
+                .role(rol.getName())
+                .personId(persona.getId())
+                .userId(usuario.getId())
                 .build());
     }
 
@@ -193,8 +193,8 @@ public class AuthService {
 
         SessionResponse session = SessionResponse.builder()
                 .username(userDetails.getUsername())
-                .nombre(nombre)
-                .rol(rol)
+                .name(nombre)
+                .role(rol)
                 .build();
 
         return new LoginResult(accessToken, refreshToken, session);
@@ -266,8 +266,8 @@ public class AuthService {
 
         return Optional.of(SessionResponse.builder()
                 .username(userDetails.getUsername())
-                .nombre(nombre)
-                .rol(rol)
+                .name(nombre)
+                .role(rol)
                 .build());
     }
 }

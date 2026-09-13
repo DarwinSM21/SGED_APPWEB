@@ -87,10 +87,10 @@ public class AlertService {
 
         List<StudentAtRiskResponse> enRiesgo = activos.stream()
                 .map(e -> evaluate(e, alDia, lesionados, porcentajes, umbral))
-                .filter(r -> r.totalAlertas() > 0)
+                .filter(r -> r.totalAlerts() > 0)
                 .sorted(Comparator
-                        .comparingInt(StudentAtRiskResponse::totalAlertas).reversed()
-                        .thenComparing(StudentAtRiskResponse::nombreCompleto))
+                        .comparingInt(StudentAtRiskResponse::totalAlerts).reversed()
+                        .thenComparing(StudentAtRiskResponse::fullName))
                 .toList();
 
         List<StudentAtRiskResponse> detalle = enRiesgo.size() > topeDetalle
@@ -99,9 +99,9 @@ public class AlertService {
 
         return new AlertsPanelResponse(
                 anio, mes, umbralAsistencia, activos.size(),
-                enRiesgo.stream().filter(StudentAtRiskResponse::mensualidadPendiente).count(),
-                enRiesgo.stream().filter(StudentAtRiskResponse::asistenciaBaja).count(),
-                enRiesgo.stream().filter(StudentAtRiskResponse::lesionActiva).count(),
+                enRiesgo.stream().filter(StudentAtRiskResponse::pendingMembershipFee).count(),
+                enRiesgo.stream().filter(StudentAtRiskResponse::lowAttendance).count(),
+                enRiesgo.stream().filter(StudentAtRiskResponse::activeInjury).count(),
                 enRiesgo.size(),
                 detalle);
     }

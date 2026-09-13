@@ -66,8 +66,8 @@ class MatchControllerTest {
 
         mockMvc.perform(get("/api/partidos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.contenido[0].categoria").value("SUB-12"))
-                .andExpect(jsonPath("$.total").value(1));
+                .andExpect(jsonPath("$.content[0].category").value("SUB-12"))
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -89,8 +89,8 @@ class MatchControllerTest {
 
         mockMvc.perform(get("/api/partidos/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.idPartido").value(1))
-                .andExpect(jsonPath("$.resultado").value("PENDIENTE"));
+                .andExpect(jsonPath("$.matchId").value(1))
+                .andExpect(jsonPath("$.result").value("PENDIENTE"));
     }
 
     @Test
@@ -109,9 +109,9 @@ class MatchControllerTest {
 
         mockMvc.perform(post("/api/partidos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idCategoria\":3,\"fecha\":\"2026-04-12\",\"observacion\":\"Amistoso\"}"))
+                        .content("{\"categoryId\":3,\"date\":\"2026-04-12\",\"note\":\"Amistoso\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.idPartido").value(1));
+                .andExpect(jsonPath("$.matchId").value(1));
     }
 
     @Test
@@ -130,7 +130,7 @@ class MatchControllerTest {
 
         mockMvc.perform(put("/api/partidos/1/resultado")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"golesFavor\":2,\"golesContra\":1}"))
+                        .content("{\"goalsFor\":2,\"goalsAgainst\":1}"))
                 .andExpect(status().isOk());
 
         verify(matchService).registerResult(eq(1L), any());
@@ -161,8 +161,8 @@ class MatchControllerTest {
 
         mockMvc.perform(get("/api/partidos/1/alineacion"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.guardada").value(true))
-                .andExpect(jsonPath("$.cupoTitulares").value(11));
+                .andExpect(jsonPath("$.saved").value(true))
+                .andExpect(jsonPath("$.starterSlots").value(11));
     }
 
     @Test
@@ -172,9 +172,9 @@ class MatchControllerTest {
 
         mockMvc.perform(put("/api/partidos/1/alineacion")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"jugadores\":[{\"idEstudiante\":5,\"titular\":true}]}"))
+                        .content("{\"players\":[{\"studentId\":5,\"starter\":true}]}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.guardada").value(true));
+                .andExpect(jsonPath("$.saved").value(true));
     }
 
     @Test
@@ -184,7 +184,7 @@ class MatchControllerTest {
 
         mockMvc.perform(delete("/api/partidos/1/alineacion"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.guardada").value(false));
+                .andExpect(jsonPath("$.saved").value(false));
     }
 
     @Test
@@ -195,7 +195,7 @@ class MatchControllerTest {
 
         mockMvc.perform(post("/api/partidos/1/alineacion/feedback"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.disponible").value(true))
-                .andExpect(jsonPath("$.comentario").value("Buen equilibrio en el mediocampo"));
+                .andExpect(jsonPath("$.available").value(true))
+                .andExpect(jsonPath("$.comment").value("Buen equilibrio en el mediocampo"));
     }
 }

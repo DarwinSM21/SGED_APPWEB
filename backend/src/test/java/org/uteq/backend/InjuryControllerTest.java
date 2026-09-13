@@ -92,8 +92,8 @@ class InjuryControllerTest {
 
         mockMvc.perform(get("/api/lesiones"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].activa").value(true))
-                .andExpect(jsonPath("$.content[0].estudiante").value("Juan Perez"));
+                .andExpect(jsonPath("$.content[0].active").value(true))
+                .andExpect(jsonPath("$.content[0].student").value("Juan Perez"));
     }
 
     @Test
@@ -103,8 +103,8 @@ class InjuryControllerTest {
 
         mockMvc.perform(get("/api/lesiones/estudiante/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].activa").value(false))
-                .andExpect(jsonPath("$.content[0].estudiante").value("Juan Perez"));
+                .andExpect(jsonPath("$.content[0].active").value(false))
+                .andExpect(jsonPath("$.content[0].student").value("Juan Perez"));
     }
 
     @Test
@@ -116,10 +116,10 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"idEntrenador\":2,\"descripcion\":\"Esguince de tobillo\"}"))
+                        .content("{\"studentId\":1,\"coachId\":2,\"description\":\"Esguince de tobillo\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.activa").value(true))
-                .andExpect(jsonPath("$.estudiante").value("Juan Perez"));
+                .andExpect(jsonPath("$.active").value(true))
+                .andExpect(jsonPath("$.student").value("Juan Perez"));
     }
 
     @Test
@@ -132,7 +132,7 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"idEntrenador\":2,\"descripcion\":\"Otra lesion\"}"))
+                        .content("{\"studentId\":1,\"coachId\":2,\"description\":\"Otra lesion\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -141,7 +141,7 @@ class InjuryControllerTest {
     void registrar_descripcion_vacia_da_422() throws Exception {
         mockMvc.perform(post("/api/lesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"idEntrenador\":2,\"descripcion\":\"\"}"))
+                        .content("{\"studentId\":1,\"coachId\":2,\"description\":\"\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -150,13 +150,13 @@ class InjuryControllerTest {
     void registrar_entrenador_ignora_idEntrenador_del_body() throws Exception {
         autenticarComo("carlos@sged.test", "ENTRENADOR");
         when(coachRepository.findByUserAccount_Username("carlos@sged.test"))
-                .thenReturn(Optional.of(Coach.builder().idEntrenador(5L).build()));
+                .thenReturn(Optional.of(Coach.builder().coachId(5L).build()));
         when(injuryService.register(eq(1L), eq(5L), eq("Esguince de tobillo"), any(), any()))
                 .thenReturn(lesion(10L, true));
 
         mockMvc.perform(post("/api/lesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"idEntrenador\":999,\"descripcion\":\"Esguince de tobillo\"}"))
+                        .content("{\"studentId\":1,\"coachId\":999,\"description\":\"Esguince de tobillo\"}"))
                 .andExpect(status().isCreated());
     }
 
@@ -168,7 +168,7 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"descripcion\":\"Esguince de tobillo\"}"))
+                        .content("{\"studentId\":1,\"description\":\"Esguince de tobillo\"}"))
                 .andExpect(status().isNotFound());
     }
 
@@ -179,7 +179,7 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idEstudiante\":1,\"descripcion\":\"Esguince de tobillo\"}"))
+                        .content("{\"studentId\":1,\"description\":\"Esguince de tobillo\"}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -191,9 +191,9 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones/10/alta")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"fechaAlta\":\"2026-08-15\"}"))
+                        .content("{\"dischargeDate\":\"2026-08-15\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.activa").value(false));
+                .andExpect(jsonPath("$.active").value(false));
     }
 
     @Test
@@ -203,7 +203,7 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones/10/alta"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.activa").value(false));
+                .andExpect(jsonPath("$.active").value(false));
     }
 
     @Test
@@ -214,7 +214,7 @@ class InjuryControllerTest {
 
         mockMvc.perform(post("/api/lesiones/10/alta")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"fechaAlta\":\"2026-08-15\"}"))
+                        .content("{\"dischargeDate\":\"2026-08-15\"}"))
                 .andExpect(status().isBadRequest());
     }
 }

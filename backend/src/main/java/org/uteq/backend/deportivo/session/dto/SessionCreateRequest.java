@@ -6,9 +6,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public record SessionCreateRequest(
-        @NotNull Long idCategoria,
-        @NotNull LocalDate fecha,
-        @NotNull LocalTime horaInicio,
-        @NotNull LocalTime horaFin,
-        String campo
+        @NotNull Long categoryId,
+        @NotNull LocalDate date,
+        @NotNull LocalTime startTime,
+        @NotNull LocalTime endTime,
+        String field
 ) {}

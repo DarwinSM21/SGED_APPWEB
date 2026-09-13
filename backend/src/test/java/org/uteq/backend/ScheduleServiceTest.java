@@ -47,7 +47,7 @@ class ScheduleServiceTest {
     @InjectMocks private ScheduleService service;
 
     private Coach entrenador(long id) {
-        return Coach.builder().idEntrenador(id)
+        return Coach.builder().coachId(id)
                 .persona(Person.builder().name("Carlos").lastName("Apellido").build())
                 .build();
     }
@@ -80,7 +80,7 @@ class ScheduleServiceTest {
     @DisplayName("crear persiste el horario a nombre del entrenador autenticado")
     void crear_persiste_horario() {
         var yo = entrenador(1L);
-        var categoria = Category.builder().idCategoria(5L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(5L).nombre("SUB-12").build();
         when(coachRepository.findByUserAccount_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
         when(categoryRepository.findById(5L)).thenReturn(Optional.of(categoria));
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> {
@@ -92,9 +92,9 @@ class ScheduleServiceTest {
         var request = new ScheduleRequest(5L, 1, LocalTime.of(16, 0), LocalTime.of(18, 0), "Cancha 1", null);
         var response = service.create("carlos@sged.test", request);
 
-        assertThat(response.idHorario()).isEqualTo(10L);
-        assertThat(response.categoria()).isEqualTo("SUB-12");
-        assertThat(response.diaSemana()).isEqualTo(1);
+        assertThat(response.scheduleId()).isEqualTo(10L);
+        assertThat(response.category()).isEqualTo("SUB-12");
+        assertThat(response.dayOfWeek()).isEqualTo(1);
     }
 
     @Test
@@ -119,7 +119,7 @@ class ScheduleServiceTest {
     @DisplayName("generarSesionesProgramadas solo crea la sesion de los horarios que todavia no la tienen hoy")
     void generarSesionesProgramadas_crea_solo_las_que_faltan() {
         var yo = entrenador(1L);
-        var categoria = Category.builder().idCategoria(5L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(5L).nombre("SUB-12").build();
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         short diaDeHoy = (short) hoy.getDayOfWeek().getValue();
         var horarioSinSesionHoy = Schedule.builder().idHorario(1L).entrenador(yo).categoria(categoria)
@@ -143,7 +143,7 @@ class ScheduleServiceTest {
         ReflectionTestUtils.setField(service, "diasProgramados", 7);
 
         var yo = entrenador(1L);
-        var categoria = Category.builder().idCategoria(5L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(5L).nombre("SUB-12").build();
 
         for (short dia = 1; dia <= 5; dia++) {
             var horario = Schedule.builder().idHorario((long) dia).entrenador(yo).categoria(categoria)
@@ -174,7 +174,7 @@ class ScheduleServiceTest {
         ReflectionTestUtils.setField(service, "diasProgramados", 7);
 
         var yo = entrenador(1L);
-        var categoria = Category.builder().idCategoria(5L).nombre("SUB-12").build();
+        var categoria = Category.builder().categoryId(5L).nombre("SUB-12").build();
         for (short dia = 1; dia <= 7; dia++) {
             var horario = Schedule.builder().idHorario((long) dia).entrenador(yo).categoria(categoria)
                     .diaSemana(dia).horaInicio(LocalTime.of(16, 0)).horaFin(LocalTime.of(18, 0)).build();
@@ -193,7 +193,7 @@ class ScheduleServiceTest {
 
     private Schedule horarioDe(Coach duenio) {
         return Schedule.builder().idHorario(9L).entrenador(duenio)
-                .categoria(Category.builder().idCategoria(5L).nombre("SUB-12").build())
+                .categoria(Category.builder().categoryId(5L).nombre("SUB-12").build())
                 .diaSemana((short) 1).horaInicio(LocalTime.of(15, 0)).horaFin(LocalTime.of(17, 0))
                 .activo(true).build();
     }
@@ -291,7 +291,7 @@ class ScheduleServiceTest {
     private Schedule horarioDe(long id, String categoria, LocalTime inicio, LocalTime fin) {
         return Schedule.builder()
                 .idHorario(id)
-                .categoria(Category.builder().idCategoria(id).nombre(categoria).build())
+                .categoria(Category.builder().categoryId(id).nombre(categoria).build())
                 .diaSemana((short) 2)
                 .horaInicio(inicio).horaFin(fin)
                 .activo(true)
@@ -304,7 +304,7 @@ class ScheduleServiceTest {
         when(coachRepository.findByUserAccount_Username("carlos@sged.test"))
                 .thenReturn(Optional.of(entrenador(1L)));
         when(categoryRepository.findById(5L))
-                .thenReturn(Optional.of(Category.builder().idCategoria(5L).nombre("SUB-16").build()));
+                .thenReturn(Optional.of(Category.builder().categoryId(5L).nombre("SUB-16").build()));
         when(scheduleRepository.overlapsWith(eq(1L), eq((short) 2), any(), any(), any()))
                 .thenReturn(List.of(horarioDe(9L, "SUB-14", LocalTime.of(16, 0), LocalTime.of(18, 0))));
 
@@ -323,7 +323,7 @@ class ScheduleServiceTest {
         var yo = entrenador(1L);
         when(coachRepository.findByUserAccount_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
         when(categoryRepository.findById(5L))
-                .thenReturn(Optional.of(Category.builder().idCategoria(5L).nombre("SUB-16").build()));
+                .thenReturn(Optional.of(Category.builder().categoryId(5L).nombre("SUB-16").build()));
 
         when(scheduleRepository.overlapsWith(eq(1L), eq((short) 2), any(), any(), any()))
                 .thenReturn(List.of());
@@ -336,7 +336,7 @@ class ScheduleServiceTest {
         var request = new ScheduleRequest(5L, 2, LocalTime.of(18, 0), LocalTime.of(20, 0), null, null);
         var respuesta = service.create("carlos@sged.test", request);
 
-        assertThat(respuesta.idHorario()).isEqualTo(7L);
+        assertThat(respuesta.scheduleId()).isEqualTo(7L);
         verify(scheduleRepository).save(any(Schedule.class));
     }
 
@@ -346,7 +346,7 @@ class ScheduleServiceTest {
         var yo = entrenador(1L);
         when(coachRepository.findByUserAccount_Username("carlos@sged.test")).thenReturn(Optional.of(yo));
         when(categoryRepository.findById(5L))
-                .thenReturn(Optional.of(Category.builder().idCategoria(5L).nombre("SUB-16").build()));
+                .thenReturn(Optional.of(Category.builder().categoryId(5L).nombre("SUB-16").build()));
         when(scheduleRepository.overlapsWith(eq(1L), eq((short) 2), any(), any(), any()))
                 .thenReturn(List.of());
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -367,7 +367,7 @@ class ScheduleServiceTest {
         when(scheduleRepository.findByIdAndCoachId(7L, 1L))
                 .thenReturn(Optional.of(existente));
         when(categoryRepository.findById(5L))
-                .thenReturn(Optional.of(Category.builder().idCategoria(5L).nombre("SUB-16").build()));
+                .thenReturn(Optional.of(Category.builder().categoryId(5L).nombre("SUB-16").build()));
         when(scheduleRepository.overlapsWith(eq(1L), eq((short) 2), any(), any(), eq(7L)))
                 .thenReturn(List.of());
         when(scheduleRepository.save(any(Schedule.class))).thenAnswer(inv -> inv.getArgument(0));
@@ -392,9 +392,9 @@ class ScheduleServiceTest {
 
         var lista = service.mySchedules("carlos@sged.test");
 
-        assertThat(lista.get(0).chocaCon()).contains("SUB-14");
-        assertThat(lista.get(1).chocaCon()).contains("SUB-12");
+        assertThat(lista.get(0).conflictsWith()).contains("SUB-14");
+        assertThat(lista.get(1).conflictsWith()).contains("SUB-12");
 
-        assertThat(lista.get(2).chocaCon()).isNull();
+        assertThat(lista.get(2).conflictsWith()).isNull();
     }
 }

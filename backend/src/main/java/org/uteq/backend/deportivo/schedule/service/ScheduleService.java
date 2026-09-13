@@ -66,25 +66,25 @@ public class ScheduleService {
     public ScheduleResponse create(String username, ScheduleRequest request) {
         Coach entrenador = authenticatedCoach(username);
 
-        if (!request.horaFin().isAfter(request.horaInicio())) {
+        if (!request.endTime().isAfter(request.startTime())) {
             throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
         }
 
-        Category categoria = categoryRepository.findById(request.idCategoria())
+        Category categoria = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Category no encontrada con id: " + request.idCategoria()));
+                        "Category no encontrada con id: " + request.categoryId()));
 
         // SIN_ID_TODAVIA porque el horario aún no existe: no hay nada que excluir.
-        validateNoOverlap(entrenador.getIdEntrenador(), request, SIN_ID_TODAVIA);
+        validateNoOverlap(entrenador.getCoachId(), request, SIN_ID_TODAVIA);
 
         Schedule horario = Schedule.builder()
                 .entrenador(entrenador)
                 .categoria(categoria)
-                .diaSemana(request.diaSemana().shortValue())
-                .horaInicio(request.horaInicio())
-                .horaFin(request.horaFin())
-                .campo(request.campo())
-                .descripcion(request.descripcion())
+                .diaSemana(request.dayOfWeek().shortValue())
+                .horaInicio(request.startTime())
+                .horaFin(request.endTime())
+                .campo(request.field())
+                .descripcion(request.description())
                 .activo(true)
                 .build();
 
@@ -105,8 +105,8 @@ public class ScheduleService {
      */
     private void validateNoOverlap(Long idEntrenador, ScheduleRequest request, Long idExcluir) {
         List<Schedule> choques = scheduleRepository.overlapsWith(
-                idEntrenador, request.diaSemana().shortValue(),
-                request.horaInicio(), request.horaFin(), idExcluir);
+                idEntrenador, request.dayOfWeek().shortValue(),
+                request.startTime(), request.endTime(), idExcluir);
         if (choques.isEmpty()) {
             return;
         }
@@ -130,7 +130,7 @@ public class ScheduleService {
                 .map(entrenador -> {
                     List<Schedule> horarios = scheduleRepository
                             .findActiveByCoachOrderByDayAndStartTime(
-                                    entrenador.getIdEntrenador());
+                                    entrenador.getCoachId());
 
                     // Se comparan en memoria y no con una consulta por fila: la
                     // semana de un entrenador son unos pocos horarios.
@@ -166,7 +166,7 @@ public class ScheduleService {
     public void deactivate(String username, Long idHorario) {
         Coach entrenador = authenticatedCoach(username);
         Schedule horario = scheduleRepository
-                .findByIdAndCoachId(idHorario, entrenador.getIdEntrenador())
+                .findByIdAndCoachId(idHorario, entrenador.getCoachId())
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule no encontrado con id: " + idHorario));
         horario.setActivo(false);
         scheduleRepository.save(horario);
@@ -189,26 +189,26 @@ public class ScheduleService {
     public ScheduleResponse update(String username, Long idHorario, ScheduleRequest request) {
         Coach entrenador = authenticatedCoach(username);
         Schedule horario = scheduleRepository
-                .findByIdAndCoachId(idHorario, entrenador.getIdEntrenador())
+                .findByIdAndCoachId(idHorario, entrenador.getCoachId())
                 .orElseThrow(() -> new ResourceNotFoundException("Schedule no encontrado con id: " + idHorario));
 
-        if (!request.horaFin().isAfter(request.horaInicio())) {
+        if (!request.endTime().isAfter(request.startTime())) {
             throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
         }
 
-        Category categoria = categoryRepository.findById(request.idCategoria())
+        Category categoria = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Category no encontrada con id: " + request.idCategoria()));
+                        "Category no encontrada con id: " + request.categoryId()));
 
         // Se excluye a sí mismo: mover un horario media hora no es chocar consigo.
-        validateNoOverlap(entrenador.getIdEntrenador(), request, idHorario);
+        validateNoOverlap(entrenador.getCoachId(), request, idHorario);
 
         horario.setCategoria(categoria);
-        horario.setDiaSemana(request.diaSemana().shortValue());
-        horario.setHoraInicio(request.horaInicio());
-        horario.setHoraFin(request.horaFin());
-        horario.setCampo(request.campo());
-        horario.setDescripcion(request.descripcion());
+        horario.setDiaSemana(request.dayOfWeek().shortValue());
+        horario.setHoraInicio(request.startTime());
+        horario.setHoraFin(request.endTime());
+        horario.setCampo(request.field());
+        horario.setDescripcion(request.description());
         scheduleRepository.save(horario);
 
         rebuildFutureSessions(horario);
@@ -281,7 +281,7 @@ public class ScheduleService {
 
     private ScheduleResponse toResponse(Schedule h, String chocaCon) {
         return new ScheduleResponse(
-                h.getIdHorario(), h.getCategoria().getIdCategoria(), h.getCategoria().getNombre(),
+                h.getIdHorario(), h.getCategoria().getCategoryId(), h.getCategoria().getNombre(),
                 h.getDiaSemana().intValue(),
                 h.getHoraInicio(), h.getHoraFin(), h.getCampo(), h.getDescripcion(), h.getActivo(),
                 chocaCon);

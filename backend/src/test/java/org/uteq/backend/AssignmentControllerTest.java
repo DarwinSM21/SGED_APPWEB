@@ -78,7 +78,7 @@ class AssignmentControllerTest {
 
         mockMvc.perform(get("/api/inventario/asignaciones"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].articulo").value("Balón N5"));
+                .andExpect(jsonPath("$.content[0].item").value("Balón N5"));
     }
 
     @Test
@@ -111,9 +111,9 @@ class AssignmentControllerTest {
 
         mockMvc.perform(post("/api/inventario/asignaciones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idArticulo\":1,\"cantidad\":1,\"tipoDestinatario\":\"ESTUDIANTE\",\"idEstudiante\":5}"))
+                        .content("{\"itemId\":1,\"quantity\":1,\"recipientType\":\"ESTUDIANTE\",\"studentId\":5}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.articulo").value("Balón N5"));
+                .andExpect(jsonPath("$.item").value("Balón N5"));
 
         verify(asignacionService).create(any(AssignmentRequest.class), eq("recepcion@sged.test"));
     }
@@ -125,7 +125,7 @@ class AssignmentControllerTest {
 
         mockMvc.perform(post("/api/inventario/asignaciones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idArticulo\":1,\"cantidad\":0,\"tipoDestinatario\":\"ESTUDIANTE\",\"idEstudiante\":5}"))
+                        .content("{\"itemId\":1,\"quantity\":0,\"recipientType\":\"ESTUDIANTE\",\"studentId\":5}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -136,7 +136,7 @@ class AssignmentControllerTest {
 
         mockMvc.perform(patch("/api/inventario/asignaciones/1/devolver")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"estado\":\"DEVUELTO\"}"))
+                        .content("{\"status\":\"DEVUELTO\"}"))
                 .andExpect(status().isOk());
     }
 }

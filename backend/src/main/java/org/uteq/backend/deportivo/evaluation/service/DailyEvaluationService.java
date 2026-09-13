@@ -86,7 +86,7 @@ public class DailyEvaluationService {
         }
 
         List<Student> estudiantesCategoria = estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(sesion.getCategoria().getIdCategoria());
+                .findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(sesion.getCategoria().getCategoryId());
 
         List<EvaluablePlayerResponse> jugadores = new ArrayList<>();
         for (Student estudiante : estudiantesCategoria) {
@@ -94,7 +94,7 @@ public class DailyEvaluationService {
                     estudiante, asistenciaPorEstudiante.get(estudiante.getId()),
                     evaluacion, idEvaluacionPrevia, lesionActivaPorEstudiante));
         }
-        jugadores.sort(Comparator.comparing(EvaluablePlayerResponse::nombreCompleto));
+        jugadores.sort(Comparator.comparing(EvaluablePlayerResponse::fullName));
 
         return new SessionEvaluationResponse(
                 evaluacion.getIdEvaluacion(),
@@ -159,7 +159,7 @@ public class DailyEvaluationService {
 
     private Long findPreviousEvaluation(TrainingSession sesion) {
         var previas = sesionRepository.findByCategoryAndDateBeforeOrderByDateDesc(
-                sesion.getCategoria().getIdCategoria(), sesion.getFecha(),
+                sesion.getCategoria().getCategoryId(), sesion.getFecha(),
                 org.springframework.data.domain.PageRequest.of(0, 1));
         if (previas.isEmpty()) {
             return null;
@@ -199,7 +199,7 @@ public class DailyEvaluationService {
         }
 
         Attendance asistencia = attendanceRepository
-                .findBySession_IdAndStudent_Id(idSesion, request.idEstudiante())
+                .findBySession_IdAndStudent_Id(idSesion, request.studentId())
                 .orElseThrow(() -> new IllegalArgumentException(
                         "El estudiante no tiene asistencia registrada en esta sesion"));
 
@@ -213,7 +213,7 @@ public class DailyEvaluationService {
 
         StudentEvaluation ee = studentEvaluationRepository
                 .findByEvaluation_IdAndStudent_Id(
-                        evaluacion.getIdEvaluacion(), request.idEstudiante())
+                        evaluacion.getIdEvaluacion(), request.studentId())
                 .orElseGet(() -> StudentEvaluation.builder()
                         .evaluacion(evaluacion)
                         .estudiante(estudiante)
@@ -224,15 +224,15 @@ public class DailyEvaluationService {
 
         // El frontend siempre manda este campo: null es una instrucción
         // explícita de "quitar la posición", no "no tocar nada".
-        if (request.idPosicionJugada() != null) {
-            ee.setPosicionJugada(positionRepository.findById(request.idPosicionJugada())
+        if (request.lineupPositionId() != null) {
+            ee.setPosicionJugada(positionRepository.findById(request.lineupPositionId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "No existe la posicion " + request.idPosicionJugada())));
+                            "No existe la posicion " + request.lineupPositionId())));
         } else {
             ee.setPosicionJugada(null);
         }
 
-        injuryRepository.findActiveByStudent(request.idEstudiante())
+        injuryRepository.findActiveByStudent(request.studentId())
                 .ifPresent(ee::setLesion);
 
         applyScores(ee, request);
@@ -247,28 +247,28 @@ public class DailyEvaluationService {
         Map<Long, EvaluationDetail> existentes = new HashMap<>();
         ee.getDetalles().forEach(d -> existentes.put(d.getCriterio().getIdCriterio(), d));
 
-        for (CriterionScoreRequest p : request.puntajes()) {
-            EvaluationCriterion criterio = criterios.get(p.idCriterio());
+        for (CriterionScoreRequest p : request.scores()) {
+            EvaluationCriterion criterio = criterios.get(p.criterionId());
             if (criterio == null) {
                 throw new IllegalArgumentException(
-                        "El criterio " + p.idCriterio() + " no existe o esta desactivado");
+                        "El criterio " + p.criterionId() + " no existe o esta desactivado");
             }
-            if (p.puntaje().compareTo(BigDecimal.valueOf(criterio.getPuntajeMaximo())) > 0) {
+            if (p.score().compareTo(BigDecimal.valueOf(criterio.getPuntajeMaximo())) > 0) {
                 throw new IllegalArgumentException(
                         "El puntaje de " + criterio.getNombre() + " supera su maximo de "
                                 + criterio.getPuntajeMaximo());
             }
 
-            EvaluationDetail detalle = existentes.get(p.idCriterio());
+            EvaluationDetail detalle = existentes.get(p.criterionId());
             if (detalle == null) {
                 detalle = EvaluationDetail.builder()
                         .evaluacionEstudiante(ee)
                         .criterio(criterio)
-                        .puntaje(p.puntaje())
+                        .puntaje(p.score())
                         .build();
                 ee.getDetalles().add(detalle);
             } else {
-                detalle.setPuntaje(p.puntaje());
+                detalle.setPuntaje(p.score());
             }
         }
     }

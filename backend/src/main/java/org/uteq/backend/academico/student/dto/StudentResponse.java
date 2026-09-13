@@ -5,22 +5,22 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 public record StudentResponse(
-        Long idEstudiante,
-        Long idPersona,
-        Long idCategoria,
-        Long idEstadoGeneral,
-        String nombrePersona,
-        String apellidoPersona,
-        String nombreCategoria,
-        String nombreEstadoGeneral,
-        String codigoEstudiante,
-        LocalDate fechaIngreso,
-        BigDecimal peso,
-        BigDecimal altura,
-        Long idPosicion,
-        String nombrePosicion,
-        String abreviaturaPosicion,
-        Boolean activo,
+        Long studentId,
+        Long personId,
+        Long categoryId,
+        Long generalStatusId,
+        String personName,
+        String personLastName,
+        String categoryName,
+        String generalStatusName,
+        String studentCode,
+        LocalDate enrollmentDate,
+        BigDecimal weight,
+        BigDecimal height,
+        Long positionId,
+        String positionName,
+        String positionAbbreviation,
+        Boolean active,
         Instant createdAt
 ) {
     /**
@@ -32,9 +32,9 @@ public record StudentResponse(
      * @return una copia de esta respuesta con {@code peso} y {@code altura} en {@code null}
      */
     public StudentResponse withoutPhysicalData() {
-        return new StudentResponse(idEstudiante, idPersona, idCategoria, idEstadoGeneral,
-                nombrePersona, apellidoPersona, nombreCategoria, nombreEstadoGeneral,
-                codigoEstudiante, fechaIngreso, null, null, idPosicion, nombrePosicion,
-                abreviaturaPosicion, activo, createdAt);
+        return new StudentResponse(studentId, personId, categoryId, generalStatusId,
+                personName, personLastName, categoryName, generalStatusName,
+                studentCode, enrollmentDate, null, null, positionId, positionName,
+                positionAbbreviation, active, createdAt);
     }
 }

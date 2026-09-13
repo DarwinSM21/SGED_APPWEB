@@ -43,7 +43,7 @@ class InjuryServiceTest {
         when(estudianteRepository.findById(ID_EST))
                 .thenReturn(Optional.of(Student.builder().id(ID_EST).build()));
         when(coachRepository.findById(ID_ENT))
-                .thenReturn(Optional.of(Coach.builder().idEntrenador(ID_ENT).build()));
+                .thenReturn(Optional.of(Coach.builder().coachId(ID_ENT).build()));
     }
 
     @Test

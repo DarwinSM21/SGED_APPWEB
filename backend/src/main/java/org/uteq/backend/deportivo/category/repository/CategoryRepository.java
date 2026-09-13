@@ -19,6 +19,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     @Query("SELECT COUNT(c) > 0 FROM Category c WHERE LOWER(c.nombre) = LOWER(:nombre)")
     boolean existsByNameIgnoreCase(@Param("nombre") String nombre);
 
-    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE LOWER(c.nombre) = LOWER(:nombre) AND c.idCategoria <> :idCategoria")
+    @Query("SELECT COUNT(c) > 0 FROM Category c WHERE LOWER(c.nombre) = LOWER(:nombre) AND c.categoryId <> :idCategoria")
     boolean existsByNameIgnoreCaseAndIdNot(@Param("nombre") String nombre, @Param("idCategoria") Long idCategoria);
 }

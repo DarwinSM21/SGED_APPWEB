@@ -123,8 +123,8 @@ public class AttendanceService {
 
         List<RosterRow> filas = new ArrayList<>();
         for (Student e : estudianteRepository
-                .findByCategory_IdCategoriaAndActiveTrueOrderByPerson_LastNameAsc(
-                        sesion.getCategoria().getIdCategoria())) {
+                .findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(
+                        sesion.getCategoria().getCategoryId())) {
             Attendance a = yaRegistradas.get(e.getId());
             filas.add(new RosterRow(
                     e.getId(),
@@ -169,32 +169,32 @@ public class AttendanceService {
             existentes.put(a.getEstudiante().getId(), a);
         }
 
-        for (AttendanceMark marca : request.marcas()) {
+        for (AttendanceMark marca : request.marks()) {
             Student estudiante = estudianteRepository
-                    .findByIdAndActiveTrue(marca.idEstudiante())
+                    .findByIdAndActiveTrue(marca.studentId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Estudiante no encontrado o inactivo: " + marca.idEstudiante()));
+                            "Estudiante no encontrado o inactivo: " + marca.studentId()));
 
             // Un estudiante de otra categoría ensuciaría el porcentaje de
             // asistencia de ambas. Se resuelve en Java (no con el procedimiento
             // que usa el QR): pasar lista valida a los veinticinco de una
             // categoría, y el procedimiento sería un N+1.
-            if (!estudiante.getCategory().getIdCategoria()
-                    .equals(sesion.getCategoria().getIdCategoria())) {
+            if (!estudiante.getCategory().getCategoryId()
+                    .equals(sesion.getCategoria().getCategoryId())) {
                 throw new IllegalArgumentException(estudiante.getPerson().getName() + " "
                         + estudiante.getPerson().getLastName() + " no pertenece a "
                         + sesion.getCategoria().getNombre());
             }
 
-            boolean estuvo = Attendance.ESTADO_PRESENTE.equals(marca.estado())
-                    || Attendance.ESTADO_TARDE.equals(marca.estado());
+            boolean estuvo = Attendance.ESTADO_PRESENTE.equals(marca.status())
+                    || Attendance.ESTADO_TARDE.equals(marca.status());
 
-            Attendance a = existentes.get(marca.idEstudiante());
+            Attendance a = existentes.get(marca.studentId());
             if (a == null) {
                 a = Attendance.builder().sesion(sesion).estudiante(estudiante).build();
             }
-            a.setEstado(marca.estado());
-            a.setObservacion(marca.observacion());
+            a.setEstado(marca.status());
+            a.setObservacion(marca.note());
 
             // La lista manual NO inventa una hora de llegada: el entrenador
             // afirma que el chico estuvo, no a qué hora entró.
@@ -290,22 +290,22 @@ public class AttendanceService {
         List<AttendanceDayResponse> diasConEntrenamiento = new ArrayList<>(porDia.size());
         porDia.forEach((fecha, acumulado) -> diasConEntrenamiento.add(new AttendanceDayResponse(
                 fecha, acumulado[0], acumulado[1], percentage(acumulado[0], acumulado[1]))));
-        diasConEntrenamiento.sort(Comparator.comparing(AttendanceDayResponse::fecha));
+        diasConEntrenamiento.sort(Comparator.comparing(AttendanceDayResponse::date));
 
         List<AttendanceDayResponse> medibles = diasConEntrenamiento.stream()
-                .filter(d -> d.esperados() > 0)
+                .filter(d -> d.expected() > 0)
                 .toList();
 
         BigDecimal promedio = medibles.isEmpty() ? BigDecimal.ZERO
                 : medibles.stream()
-                        .map(AttendanceDayResponse::porcentaje)
+                        .map(AttendanceDayResponse::percentage)
                         .reduce(BigDecimal.ZERO, BigDecimal::add)
                         .divide(BigDecimal.valueOf(medibles.size()), 2, RoundingMode.HALF_UP);
 
         return new AttendanceMapResponse(
                 desde, hasta, diasConEntrenamiento, promedio,
-                medibles.stream().max(Comparator.comparing(AttendanceDayResponse::porcentaje)).orElse(null),
-                medibles.stream().min(Comparator.comparing(AttendanceDayResponse::porcentaje)).orElse(null));
+                medibles.stream().max(Comparator.comparing(AttendanceDayResponse::percentage)).orElse(null),
+                medibles.stream().min(Comparator.comparing(AttendanceDayResponse::percentage)).orElse(null));
     }
 
     private BigDecimal percentage(long presentes, long esperados) {

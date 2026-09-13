@@ -60,7 +60,7 @@ class CoachControllerTest {
 
         mockMvc.perform(get("/api/entrenadores"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombre").value("Carlos"));
+                .andExpect(jsonPath("$.content[0].name").value("Carlos"));
     }
 
     @Test
@@ -79,9 +79,9 @@ class CoachControllerTest {
 
         mockMvc.perform(post("/api/entrenadores")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":1,\"idUsuario\":1,\"idEspecialidad\":1,\"experienciaAnios\":5}"))
+                        .content("{\"personId\":1,\"userId\":1,\"specialtyId\":1,\"yearsOfExperience\":5}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Carlos"));
+                .andExpect(jsonPath("$.name").value("Carlos"));
     }
 
     @Test
@@ -89,7 +89,7 @@ class CoachControllerTest {
     void crear_con_datos_invalidos_da_422() throws Exception {
         mockMvc.perform(post("/api/entrenadores")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idPersona\":null,\"idUsuario\":null}"))
+                        .content("{\"personId\":null,\"userId\":null}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 

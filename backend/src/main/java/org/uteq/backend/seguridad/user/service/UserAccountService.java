@@ -120,11 +120,11 @@ public class UserAccountService {
             throw new IllegalArgumentException("El nombre de usuario ya se encuentra registrado");
         }
 
-        Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.personId())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.personId()));
 
-        GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
+        GeneralStatus estado = estadoGeneralRepository.findById(request.generalStatusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.generalStatusId()));
 
         UserAccount.UserAccountBuilder builder = UserAccount.builder()
                 .person(persona)
@@ -133,15 +133,15 @@ public class UserAccountService {
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .active(true);
 
-        if (request.rol() != null) {
-            validateRoleCoherent(request.idPersona(), request.rol());
-            builder.roles(Set.of(findRole(request.rol())));
+        if (request.role() != null) {
+            validateRoleCoherent(request.personId(), request.role());
+            builder.roles(Set.of(findRole(request.role())));
         }
 
         UserAccount usuario = usuarioRepository.save(builder.build());
 
-        if (request.rol() != null) {
-            linkExistingRecord(request.idPersona(), request.rol(), usuario);
+        if (request.role() != null) {
+            linkExistingRecord(request.personId(), request.role(), usuario);
         }
 
         return toResponse(usuario);
@@ -181,23 +181,23 @@ public class UserAccountService {
             throw new IllegalArgumentException("El nombre de usuario ya está ocupado");
         }
 
-        Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
+        Person persona = personaRepository.findById(request.personId())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.personId()));
 
-        GeneralStatus estado = estadoGeneralRepository.findById(request.idEstadoGeneral())
-                .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.idEstadoGeneral()));
+        GeneralStatus estado = estadoGeneralRepository.findById(request.generalStatusId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estado general no encontrado con id: " + request.generalStatusId()));
 
         usuario.setPerson(persona);
         usuario.setGeneralStatus(estado);
         usuario.setUsername(request.username());
 
         updatePasswordIfApplicable(usuario, request.password());
-        updateRoleIfChanged(usuario, persona, request.rol());
+        updateRoleIfChanged(usuario, persona, request.role());
 
         usuario = usuarioRepository.save(usuario);
 
-        if (request.rol() != null) {
-            linkExistingRecord(persona.getId(), request.rol(), usuario);
+        if (request.role() != null) {
+            linkExistingRecord(persona.getId(), request.role(), usuario);
         }
 
         return toResponse(usuario);

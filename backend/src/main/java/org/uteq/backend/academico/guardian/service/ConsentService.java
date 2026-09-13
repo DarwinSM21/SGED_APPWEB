@@ -44,15 +44,15 @@ public class ConsentService {
      */
     @Transactional
     public ConsentResponse grant(GrantConsentRequest request, String usernameAdmin) {
-        Guardian representante = representanteRepository.findById(request.idRepresentante())
+        Guardian representante = representanteRepository.findById(request.guardianId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Representante no encontrado con id: " + request.idRepresentante()));
-        Student estudiante = estudianteRepository.findById(request.idEstudiante())
+                        "Representante no encontrado con id: " + request.guardianId()));
+        Student estudiante = estudianteRepository.findById(request.studentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "Estudiante no encontrado con id: " + request.idEstudiante()));
+                        "Estudiante no encontrado con id: " + request.studentId()));
 
         consentimientoRepository.findByGuardian_IdAndStudent_IdAndScopeAndRevokedAtIsNull(
-                        request.idRepresentante(), request.idEstudiante(), request.alcance())
+                        request.guardianId(), request.studentId(), request.scope())
                 .ifPresent(c -> {
                     throw new IllegalArgumentException("Ya existe un consentimiento vigente con ese alcance");
                 });
@@ -62,7 +62,7 @@ public class ConsentService {
         Consent consentimiento = Consent.builder()
                 .guardian(representante)
                 .student(estudiante)
-                .scope(request.alcance())
+                .scope(request.scope())
                 .grantedAt(OffsetDateTime.now())
                 .registeredBy(admin)
                 .build();

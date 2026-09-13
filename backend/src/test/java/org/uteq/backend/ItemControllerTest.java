@@ -61,7 +61,7 @@ class ItemControllerTest {
 
         mockMvc.perform(get("/api/inventario/articulos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombre").value("Balón N5"));
+                .andExpect(jsonPath("$.content[0].name").value("Balón N5"));
     }
 
     @Test
@@ -71,7 +71,7 @@ class ItemControllerTest {
 
         mockMvc.perform(get("/api/inventario/articulos/activos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].tipo").value("BALON"));
+                .andExpect(jsonPath("$[0].type").value("BALON"));
     }
 
     @Test
@@ -81,7 +81,7 @@ class ItemControllerTest {
 
         mockMvc.perform(get("/api/inventario/articulos/stock-bajo"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.total").value(1));
+                .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test
@@ -100,9 +100,9 @@ class ItemControllerTest {
 
         mockMvc.perform(post("/api/inventario/articulos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Balón N5\",\"tipo\":\"BALON\",\"stockMinimo\":3}"))
+                        .content("{\"name\":\"Balón N5\",\"type\":\"BALON\",\"minimumStock\":3}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Balón N5"));
+                .andExpect(jsonPath("$.name").value("Balón N5"));
     }
 
     @Test
@@ -110,7 +110,7 @@ class ItemControllerTest {
     void crear_sin_tipo_da_422() throws Exception {
         mockMvc.perform(post("/api/inventario/articulos")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Balón N5\",\"stockMinimo\":3}"))
+                        .content("{\"name\":\"Balón N5\",\"minimumStock\":3}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -121,7 +121,7 @@ class ItemControllerTest {
 
         mockMvc.perform(put("/api/inventario/articulos/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Balón N5\",\"tipo\":\"BALON\",\"stockMinimo\":3}"))
+                        .content("{\"name\":\"Balón N5\",\"type\":\"BALON\",\"minimumStock\":3}"))
                 .andExpect(status().isOk());
     }
 

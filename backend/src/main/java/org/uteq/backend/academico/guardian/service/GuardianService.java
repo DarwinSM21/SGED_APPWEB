@@ -84,17 +84,17 @@ public class GuardianService {
      */
     @Transactional
     public GuardianResponse create(GuardianRequest request) {
-        if (representanteRepository.existsByPerson_Id(request.idPersona())) {
+        if (representanteRepository.existsByPerson_Id(request.personId())) {
             throw new IllegalArgumentException("La persona ya está registrada como representante");
         }
-        if (representanteRepository.existsByUserAccount_Id(request.idUsuario())) {
+        if (representanteRepository.existsByUserAccount_Id(request.userId())) {
             throw new IllegalArgumentException("El usuario ya está asignado a otro representante");
         }
 
-        Person persona = personaRepository.findById(request.idPersona())
-                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.idPersona()));
-        UserAccount usuario = usuarioRepository.findById(request.idUsuario())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.idUsuario()));
+        Person persona = personaRepository.findById(request.personId())
+                .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con id: " + request.personId()));
+        UserAccount usuario = usuarioRepository.findById(request.userId())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con id: " + request.userId()));
 
         boolean tieneRolRepresentante = usuario.getRoles().stream()
                 .anyMatch(r -> "REPRESENTANTE".equals(r.getName()));
@@ -106,13 +106,13 @@ public class GuardianService {
         Guardian representante = Guardian.builder()
                 .person(persona)
                 .userAccount(usuario)
-                .relationship(request.parentesco())
-                .contactPhone(request.telefonoContacto())
+                .relationship(request.relationship())
+                .contactPhone(request.contactPhone())
                 .active(true)
                 .build();
         representante = representanteRepository.save(representante);
 
-        List<Long> idsIniciales = request.idsEstudiantesIniciales();
+        List<Long> idsIniciales = request.initialStudentIds();
         if (idsIniciales != null) {
             for (Long idEstudiante : idsIniciales) {
                 link(representante, idEstudiante);
@@ -134,8 +134,8 @@ public class GuardianService {
     public GuardianResponse update(Long id, GuardianRequest request) {
         Guardian representante = representanteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + id));
-        representante.setRelationship(request.parentesco());
-        representante.setContactPhone(request.telefonoContacto());
+        representante.setRelationship(request.relationship());
+        representante.setContactPhone(request.contactPhone());
         representante = representanteRepository.save(representante);
         return toResponse(representante);
     }
@@ -195,8 +195,8 @@ public class GuardianService {
     public GuardianResponse linkStudent(Long idRepresentante, Long idEstudiante, LinkRequest request) {
         Guardian representante = representanteRepository.findById(idRepresentante)
                 .orElseThrow(() -> new ResourceNotFoundException("Representante no encontrado con id: " + idRepresentante));
-        String relacion = request == null ? null : request.relacion();
-        boolean contactoPrincipal = request != null && Boolean.TRUE.equals(request.contactoPrincipal());
+        String relacion = request == null ? null : request.relationship();
+        boolean contactoPrincipal = request != null && Boolean.TRUE.equals(request.primaryContact());
         link(representante, idEstudiante, relacion, contactoPrincipal);
         return toResponse(representante);
     }

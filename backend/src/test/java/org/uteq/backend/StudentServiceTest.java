@@ -64,7 +64,7 @@ class StudentServiceTest {
                 .build();
 
         categoriaDummy = Category.builder()
-                .idCategoria(1L)
+                .categoryId(1L)
                 .nombre("SUB-12")
                 .edadMin((short) 10)
                 .edadMax((short) 12)
@@ -113,7 +113,7 @@ class StudentServiceTest {
         assertNotNull(page);
         assertEquals(1, page.totalElements());
         assertEquals(1, page.content().size());
-        assertEquals("Ana", page.content().get(0).nombrePersona());
+        assertEquals("Ana", page.content().get(0).personName());
     }
 
     @Test
@@ -124,8 +124,8 @@ class StudentServiceTest {
         StudentResponse resp = service.findById(1L);
 
         assertNotNull(resp);
-        assertEquals(1L, resp.idEstudiante());
-        assertEquals("EST-001", resp.codigoEstudiante());
+        assertEquals(1L, resp.studentId());
+        assertEquals("EST-001", resp.studentCode());
     }
 
     @Test
@@ -151,10 +151,10 @@ class StudentServiceTest {
         StudentResponse resp = service.create(request);
 
         assertNotNull(resp);
-        assertEquals("Ana", resp.nombrePersona());
-        assertEquals("SUB-12", resp.nombreCategoria());
-        assertEquals("EST-001", resp.codigoEstudiante());
-        assertTrue(resp.activo());
+        assertEquals("Ana", resp.personName());
+        assertEquals("SUB-12", resp.categoryName());
+        assertEquals("EST-001", resp.studentCode());
+        assertTrue(resp.active());
     }
 
     @Test
@@ -226,7 +226,7 @@ class StudentServiceTest {
         StudentResponse resp = service.update(1L, request);
 
         assertNotNull(resp);
-        assertEquals("EST-001", resp.codigoEstudiante());
+        assertEquals("EST-001", resp.studentCode());
         verify(estudianteRepository).save(any(Student.class));
     }
 

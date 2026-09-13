@@ -16,7 +16,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     Page<Match> findAllOrderByDateDescTimeDesc(Pageable pageable);
 
     @EntityGraph(attributePaths = "categoria")
-    @Query("SELECT p FROM Match p WHERE p.categoria.idCategoria = :idCategoria ORDER BY p.fecha DESC, p.hora DESC")
+    @Query("SELECT p FROM Match p WHERE p.categoria.categoryId = :idCategoria ORDER BY p.fecha DESC, p.hora DESC")
     Page<Match> findByCategoryOrderByDateDescTimeDesc(@Param("idCategoria") Long idCategoria, Pageable pageable);
 
     @EntityGraph(attributePaths = "categoria")

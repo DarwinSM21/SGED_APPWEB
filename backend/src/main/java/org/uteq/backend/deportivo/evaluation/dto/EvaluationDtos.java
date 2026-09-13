@@ -13,56 +13,56 @@ public final class EvaluationDtos {
     private EvaluationDtos() {}
 
     public record EvaluablePlayerResponse(
-            Long idEstudiante,
-            String nombreCompleto,
-            String categoria,
-            Long idPosicion,
-            String posicion,
-            String estadoAsistencia,
-            Map<String, BigDecimal> puntajes,
-            boolean precargado,
-            boolean lesionado,
-            Long idLesion,
-            boolean puedeEvaluarse,
-            String motivoBloqueo
+            Long studentId,
+            String fullName,
+            String category,
+            Long positionId,
+            String position,
+            String attendanceStatus,
+            Map<String, BigDecimal> scores,
+            boolean preloaded,
+            boolean injured,
+            Long injuryId,
+            boolean canBeEvaluated,
+            String blockReason
     ) {}
 
     public record SessionEvaluationResponse(
-            Long idEvaluacion,
-            Long idSesion,
-            LocalDate fecha,
-            String categoria,
-            String estado,
-            List<CriterionResponse> criterios,
-            List<EvaluablePlayerResponse> jugadores,
-            String observacionGeneral
+            Long evaluationId,
+            Long sessionId,
+            LocalDate date,
+            String category,
+            String status,
+            List<CriterionResponse> criteria,
+            List<EvaluablePlayerResponse> players,
+            String generalNote
     ) {}
 
     public record CriterionResponse(
-            Long idCriterio,
-            String nombre,
-            String descripcion,
-            Short puntajeMaximo
+            Long criterionId,
+            String name,
+            String description,
+            Short maxScore
     ) {}
 
     public record SavePlayerRequest(
-            @NotNull Long idEstudiante,
-            Long idPosicionJugada,
-            @NotNull List<CriterionScoreRequest> puntajes
+            @NotNull Long studentId,
+            Long lineupPositionId,
+            @NotNull List<CriterionScoreRequest> scores
     ) {}
 
     public record CriterionScoreRequest(
-            @NotNull Long idCriterio,
+            @NotNull Long criterionId,
             @NotNull
             @DecimalMin(value = "0.0", message = "El puntaje no puede ser negativo")
             @DecimalMax(value = "10.0", message = "El puntaje no puede superar 10")
-            BigDecimal puntaje
+            BigDecimal score
     ) {}
 
     public record FeedbackResponse(
-            Long idEstudiante,
-            String texto,
-            boolean generadoPorIa,
-            String motivoNoDisponible
+            Long studentId,
+            String text,
+            boolean aiGenerated,
+            String unavailableReason
     ) {}
 }

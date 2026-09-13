@@ -54,9 +54,9 @@ class AuditControllerTest {
 
         mockMvc.perform(get("/api/admin/auditorias"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].usuario").value("ana.torres"))
-                .andExpect(jsonPath("$.content[0].accion").value("EDITAR"))
-                .andExpect(jsonPath("$.content[0].entidad").value("Injury"));
+                .andExpect(jsonPath("$.content[0].user").value("ana.torres"))
+                .andExpect(jsonPath("$.content[0].action").value("EDITAR"))
+                .andExpect(jsonPath("$.content[0].entity").value("Injury"));
     }
 
     @Test
@@ -72,6 +72,6 @@ class AuditControllerTest {
                         .param("fechaDesde", "2026-08-01")
                         .param("fechaHasta", "2026-08-14"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].descripcion").value("editó Injury #45"));
+                .andExpect(jsonPath("$.content[0].description").value("editó Injury #45"));
     }
 }

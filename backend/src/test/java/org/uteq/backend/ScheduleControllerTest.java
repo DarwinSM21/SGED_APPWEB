@@ -71,9 +71,9 @@ class ScheduleControllerTest {
 
         mockMvc.perform(post("/api/horarios")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"idCategoria\":5,\"diaSemana\":1,\"horaInicio\":\"16:00:00\",\"horaFin\":\"18:00:00\",\"campo\":\"Cancha 1\"}"))
+                        .content("{\"categoryId\":5,\"dayOfWeek\":1,\"startTime\":\"16:00:00\",\"endTime\":\"18:00:00\",\"field\":\"Cancha 1\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.categoria").value("SUB-12"));
+                .andExpect(jsonPath("$.category").value("SUB-12"));
     }
 
     @Test

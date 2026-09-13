@@ -87,9 +87,9 @@ public class MatchService {
             descriptionSpel = "'agendó un partido de ' + #result.categoria + ' para el ' + #result.fecha")
     @Transactional
     public MatchResponse create(CreateMatchRequest request) {
-        Category categoria = categoryRepository.findById(request.idCategoria())
+        Category categoria = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        "No existe la categoría " + request.idCategoria()));
+                        "No existe la categoría " + request.categoryId()));
         if (!Boolean.TRUE.equals(categoria.getActivo())) {
             throw new IllegalArgumentException(
                     "La categoría " + categoria.getNombre() + " está inactiva");
@@ -97,9 +97,9 @@ public class MatchService {
 
         Match guardado = matchRepository.save(Match.builder()
                 .categoria(categoria)
-                .fecha(request.fecha())
-                .hora(request.hora())
-                .observacion(request.observacion())
+                .fecha(request.date())
+                .hora(request.time())
+                .observacion(request.note())
                 .cerrado(false)
                 .build());
         return toResponse(guardado, false, 0);
@@ -124,10 +124,10 @@ public class MatchService {
 
         requireOpen(p);
 
-        p.setGolesFavor(request.golesFavor());
-        p.setGolesContra(request.golesContra());
-        if (request.observacion() != null) {
-            p.setObservacion(request.observacion());
+        p.setGolesFavor(request.goalsFor());
+        p.setGolesContra(request.goalsAgainst());
+        if (request.note() != null) {
+            p.setObservacion(request.note());
         }
         p.setCerrado(true);
         p.setCerradoEn(Instant.now());
@@ -228,7 +228,7 @@ public class MatchService {
     private MatchResponse toResponse(Match p, boolean tieneAlineacion, int titulares) {
         return new MatchResponse(
                 p.getIdPartido(),
-                p.getCategoria().getIdCategoria(),
+                p.getCategoria().getCategoryId(),
                 p.getCategoria().getNombre(),
                 p.getFecha(), p.getHora(),
                 p.getGolesFavor(), p.getGolesContra(), p.getObservacion(),

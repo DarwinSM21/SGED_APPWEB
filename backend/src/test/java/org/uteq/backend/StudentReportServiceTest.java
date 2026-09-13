@@ -65,7 +65,7 @@ class StudentReportServiceTest {
         return Student.builder()
                 .id(id)
                 .person(Person.builder().name(nombre).lastName("Hijo").build())
-                .category(Category.builder().idCategoria(1L).nombre("SUB-12").build())
+                .category(Category.builder().categoryId(1L).nombre("SUB-12").build())
                 .build();
     }
 
@@ -91,7 +91,7 @@ class StudentReportServiceTest {
         List<StudentSummaryResponse> resultado = informeService.myStudents("ana.vera@sged.test");
 
         assertThat(resultado).hasSize(1);
-        assertThat(resultado.get(0).nombreCompleto()).isEqualTo("Juan Hijo");
+        assertThat(resultado.get(0).fullName()).isEqualTo("Juan Hijo");
     }
 
     @Test
@@ -144,13 +144,13 @@ class StudentReportServiceTest {
 
         StudentReportResponse informe = informeService.reportFor("ana.vera@sged.test", 10L);
 
-        assertThat(informe.nombreCompleto()).isEqualTo("Juan Hijo");
-        assertThat(informe.promediosPorCriterio()).hasSize(1);
-        assertThat(informe.promediosPorCriterio().get(0).criterio()).isEqualTo("Tecnica");
-        assertThat(informe.promediosPorCriterio().get(0).promedio()).isEqualTo(7.5);
-        assertThat(informe.historialLesiones()).hasSize(1);
-        assertThat(informe.historialLesiones().get(0).activa()).isTrue();
-        assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
+        assertThat(informe.fullName()).isEqualTo("Juan Hijo");
+        assertThat(informe.averagesByCriterion()).hasSize(1);
+        assertThat(informe.averagesByCriterion().get(0).criterion()).isEqualTo("Tecnica");
+        assertThat(informe.averagesByCriterion().get(0).average()).isEqualTo(7.5);
+        assertThat(informe.injuryHistory()).hasSize(1);
+        assertThat(informe.injuryHistory().get(0).active()).isTrue();
+        assertThat(informe.attendancePercentage()).isEqualByComparingTo("85.71");
     }
 
     @Test
@@ -180,10 +180,10 @@ class StudentReportServiceTest {
 
         StudentReportResponse informe = informeService.myReport("juan.hijo@sged.test");
 
-        assertThat(informe.nombreCompleto()).isEqualTo("Juan Hijo");
-        assertThat(informe.promediosPorCriterio()).hasSize(1);
-        assertThat(informe.historialLesiones()).hasSize(1);
-        assertThat(informe.porcentajeAsistencia()).isEqualByComparingTo("85.71");
+        assertThat(informe.fullName()).isEqualTo("Juan Hijo");
+        assertThat(informe.averagesByCriterion()).hasSize(1);
+        assertThat(informe.injuryHistory()).hasSize(1);
+        assertThat(informe.attendancePercentage()).isEqualByComparingTo("85.71");
     }
 
     @Test
@@ -219,8 +219,8 @@ class StudentReportServiceTest {
 
         var respuesta = informeService.commentFor("ana.vera@sged.test", 10L);
 
-        assertThat(respuesta.disponible()).isFalse();
-        assertThat(respuesta.motivo()).contains("evaluaciones");
+        assertThat(respuesta.available()).isFalse();
+        assertThat(respuesta.reason()).contains("evaluaciones");
         verifyNoInteractions(generadorFeedback);
     }
 
@@ -247,8 +247,8 @@ class StudentReportServiceTest {
 
         var respuesta = informeService.commentFor("ana.vera@sged.test", 10L);
 
-        assertThat(respuesta.disponible()).isTrue();
-        assertThat(respuesta.comentario()).isEqualTo("Viene creciendo en actitud.");
+        assertThat(respuesta.available()).isTrue();
+        assertThat(respuesta.comment()).isEqualTo("Viene creciendo en actitud.");
 
         ArgumentCaptor<AnonymousPlayerProfile> captor = ArgumentCaptor.forClass(AnonymousPlayerProfile.class);
         verify(generadorFeedback).generatePlayerComment(captor.capture());
@@ -282,8 +282,8 @@ class StudentReportServiceTest {
 
         var respuesta = informeService.commentFor("ana.vera@sged.test", 10L);
 
-        assertThat(respuesta.disponible()).isFalse();
-        assertThat(respuesta.comentario()).isNull();
-        assertThat(respuesta.motivo()).isEqualTo("El servicio no respondio");
+        assertThat(respuesta.available()).isFalse();
+        assertThat(respuesta.comment()).isNull();
+        assertThat(respuesta.reason()).isEqualTo("El servicio no respondio");
     }
 }

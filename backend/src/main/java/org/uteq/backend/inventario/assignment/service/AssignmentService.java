@@ -71,7 +71,7 @@ public class AssignmentService {
      */
     @Transactional(readOnly = true)
     public Page<AssignmentResponse> listByCoach(Long idEntrenador, Pageable pageable) {
-        return asignacionRepository.findByCoach_IdEntrenadorOrderByAssignmentDateDesc(idEntrenador, pageable)
+        return asignacionRepository.findByCoach_CoachIdOrderByAssignmentDateDesc(idEntrenador, pageable)
                 .map(this::toResponse);
     }
 
@@ -93,14 +93,14 @@ public class AssignmentService {
             descriptionSpel = "'asignó ' + #result.cantidad + ' de ' + #result.articulo + ' a ' + (#result.estudiante != null ? #result.estudiante : #result.entrenador)")
     @Transactional
     public AssignmentResponse create(AssignmentRequest request, String usernameRegistrador) {
-        validateRecipient(request.tipoDestinatario(), request.idEstudiante(), request.idEntrenador());
+        validateRecipient(request.recipientType(), request.studentId(), request.coachId());
 
-        Item articulo = findItem(request.idArticulo());
-        int nuevoStock = articulo.getCurrentStock() - request.cantidad();
+        Item articulo = findItem(request.itemId());
+        int nuevoStock = articulo.getCurrentStock() - request.quantity();
         if (nuevoStock < 0) {
             throw new IllegalArgumentException(
                     "Stock insuficiente: hay " + articulo.getCurrentStock() + " unidades de \""
-                            + articulo.getName() + "\" y se intentan asignar " + request.cantidad());
+                            + articulo.getName() + "\" y se intentan asignar " + request.quantity());
         }
         articulo.setCurrentStock(nuevoStock);
         articuloRepository.save(articulo);
@@ -109,18 +109,18 @@ public class AssignmentService {
 
         Assignment.AssignmentBuilder builder = Assignment.builder()
                 .item(articulo)
-                .quantity(request.cantidad())
-                .recipientType(request.tipoDestinatario())
+                .quantity(request.quantity())
+                .recipientType(request.recipientType())
                 .assignmentDate(LocalDate.now(Zones.ECUADOR))
-                .expectedReturnDate(request.fechaDevolucionEsperada())
+                .expectedReturnDate(request.expectedReturnDate())
                 .status(AssignmentStatus.ASIGNADO)
                 .registeredBy(registrador)
-                .notes(request.observaciones());
+                .notes(request.notes());
 
-        if (request.tipoDestinatario() == RecipientType.ESTUDIANTE) {
-            builder.student(findStudent(request.idEstudiante()));
+        if (request.recipientType() == RecipientType.ESTUDIANTE) {
+            builder.student(findStudent(request.studentId()));
         } else {
-            builder.coach(findCoach(request.idEntrenador()));
+            builder.coach(findCoach(request.coachId()));
         }
 
         return toResponse(asignacionRepository.save(builder.build()));
@@ -141,7 +141,7 @@ public class AssignmentService {
             descriptionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
     @Transactional
     public AssignmentResponse registerReturn(Long id, ReturnRequest request) {
-        if (request.estado() == AssignmentStatus.ASIGNADO) {
+        if (request.status() == AssignmentStatus.ASIGNADO) {
             throw new IllegalArgumentException("El estado de devolución debe ser DEVUELTO o PERDIDO");
         }
 
@@ -153,16 +153,16 @@ public class AssignmentService {
                     "La asignación #" + id + " ya fue resuelta como " + asignacion.getStatus());
         }
 
-        if (request.estado() == AssignmentStatus.DEVUELTO) {
+        if (request.status() == AssignmentStatus.DEVUELTO) {
             Item articulo = asignacion.getItem();
             articulo.setCurrentStock(articulo.getCurrentStock() + asignacion.getQuantity());
             articuloRepository.save(articulo);
         }
 
-        asignacion.setStatus(request.estado());
+        asignacion.setStatus(request.status());
         asignacion.setActualReturnDate(LocalDate.now(Zones.ECUADOR));
-        if (request.observaciones() != null && !request.observaciones().isBlank()) {
-            asignacion.setNotes(request.observaciones());
+        if (request.notes() != null && !request.notes().isBlank()) {
+            asignacion.setNotes(request.notes());
         }
 
         return toResponse(asignacionRepository.save(asignacion));
@@ -212,7 +212,7 @@ public class AssignmentService {
         String nombreEntrenador = null;
         Long idEntrenador = null;
         if (a.getCoach() != null) {
-            idEntrenador = a.getCoach().getIdEntrenador();
+            idEntrenador = a.getCoach().getCoachId();
             var p = a.getCoach().getPersona();
             nombreEntrenador = p.getName() + " " + p.getLastName();
         }

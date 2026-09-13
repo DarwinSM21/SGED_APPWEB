@@ -12,22 +12,22 @@ import java.time.LocalDate;
 
 public record StudentRequest(
         @NotNull(message = "El ID de la persona es obligatorio")
-        Long idPersona,
+        Long personId,
         @NotNull(message = "El ID de la categoría es obligatorio")
-        Long idCategoria,
+        Long categoryId,
         @NotNull(message = "El ID del estado general es obligatorio")
-        Long idEstadoGeneral,
+        Long generalStatusId,
         @NotBlank(message = "El código de estudiante es obligatorio")
         @Size(max = 30, message = "El código de estudiante no debe superar los 30 caracteres")
-        String codigoEstudiante,
+        String studentCode,
         @NotNull(message = "La fecha de ingreso es obligatoria")
         @PastOrPresent(message = "La fecha de ingreso no puede ser una fecha futura")
-        LocalDate fechaIngreso,
+        LocalDate enrollmentDate,
         @DecimalMin(value = "0.01", message = "El peso debe ser mayor a 0")
         @Digits(integer = 3, fraction = 2, message = "El peso debe tener máximo 3 enteros y 2 decimales")
-        BigDecimal peso,
+        BigDecimal weight,
         @DecimalMin(value = "0.01", message = "La altura debe ser mayor a 0")
         @Digits(integer = 3, fraction = 2, message = "La altura debe tener máximo 3 enteros y 2 decimales")
-        BigDecimal altura,
-        Long idPosicion
+        BigDecimal height,
+        Long positionId
 ) {}

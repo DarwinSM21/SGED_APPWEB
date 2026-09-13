@@ -73,18 +73,18 @@ public class CategoryService {
      */
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
-        String nombre = normalizeName(request.nombre());
+        String nombre = normalizeName(request.name());
         if (categoryRepository.existsByNameIgnoreCase(nombre)) {
             throw new IllegalArgumentException(
                     "Ya existe una categoría llamada \"" + nombre + "\"");
         }
-        validateAges(request.edadMin(), request.edadMax());
+        validateAges(request.minAge(), request.maxAge());
 
         Category categoria = Category.builder()
                 .nombre(nombre)
-                .edadMin(request.edadMin())
-                .edadMax(request.edadMax())
-                .descripcion(request.descripcion())
+                .edadMin(request.minAge())
+                .edadMax(request.maxAge())
+                .descripcion(request.description())
                 .activo(true)
                 .build();
 
@@ -103,20 +103,20 @@ public class CategoryService {
      */
     @Transactional
     public CategoryResponse update(Long id, CategoryRequest request) {
-        String nombre = normalizeName(request.nombre());
+        String nombre = normalizeName(request.name());
         if (categoryRepository.existsByNameIgnoreCaseAndIdNot(nombre, id)) {
             throw new IllegalArgumentException(
                     "Ya existe otra categoría llamada \"" + nombre + "\"");
         }
-        validateAges(request.edadMin(), request.edadMax());
+        validateAges(request.minAge(), request.maxAge());
 
         Category categoria = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Categoría no encontrada con ID: " + id));
 
         categoria.setNombre(nombre);
-        categoria.setEdadMin(request.edadMin());
-        categoria.setEdadMax(request.edadMax());
-        categoria.setDescripcion(request.descripcion());
+        categoria.setEdadMin(request.minAge());
+        categoria.setEdadMax(request.maxAge());
+        categoria.setDescripcion(request.description());
 
         return toResponse(categoryRepository.save(categoria));
     }
@@ -175,7 +175,7 @@ public class CategoryService {
 
     private CategoryResponse toResponse(Category c) {
         return new CategoryResponse(
-                c.getIdCategoria(),
+                c.getCategoryId(),
                 c.getNombre(),
                 c.getEdadMin(),
                 c.getEdadMax(),

@@ -156,26 +156,26 @@ public class StudentReportService {
     // nacimiento: solo salen del sistema promedios, categoría y cuántos
     // entrenamientos asistió. El titular de estos datos es un menor.
     private ReportCommentResponse commentOn(StudentReportResponse informe) {
-        if (informe.promediosPorCriterio().isEmpty()) {
+        if (informe.averagesByCriterion().isEmpty()) {
             return new ReportCommentResponse(null, false,
                     "Todavía no hay evaluaciones registradas para comentar");
         }
 
         Map<String, Double> promedios = new HashMap<>();
-        for (CriterionAverageResponse c : informe.promediosPorCriterio()) {
-            promedios.put(c.criterio(), c.promedio());
+        for (CriterionAverageResponse c : informe.averagesByCriterion()) {
+            promedios.put(c.criterion(), c.average());
         }
 
-        boolean lesionado = informe.historialLesiones().stream()
-                .anyMatch(InjurySummaryResponse::activa);
+        boolean lesionado = informe.injuryHistory().stream()
+                .anyMatch(InjurySummaryResponse::active);
 
         LocalDate hoy = LocalDate.now(Zones.ECUADOR);
         long asistencias = attendanceRepository
-                .countSince(informe.idEstudiante(), hoy.minusDays(30));
+                .countSince(informe.studentId(), hoy.minusDays(30));
 
         var perfil = new AnonymousPlayerProfile(
                 "Jugador",
-                informe.categoria(),
+                informe.category(),
                 null,
                 promedios,
                 Map.of(),

@@ -79,16 +79,16 @@ public class PersonService {
             descriptionSpel = "'creó la persona ' + #result.nombre + ' ' + #result.apellido")
     @Transactional
     public PersonResponse create(PersonRequest request) {
-        validateUniqueNationalIdAndEmail(request.cedula(), request.correo(), null);
+        validateUniqueNationalIdAndEmail(request.nationalId(), request.email(), null);
 
         Person persona = Person.builder()
-                .name(request.nombre())
-                .lastName(request.apellido())
-                .nationalId(request.cedula())
-                .email(request.correo())
-                .phone(request.telefono())
-                .photo(request.foto())
-                .birthDate(request.fechaNacimiento())
+                .name(request.name())
+                .lastName(request.lastName())
+                .nationalId(request.nationalId())
+                .email(request.email())
+                .phone(request.phone())
+                .photo(request.photo())
+                .birthDate(request.birthDate())
                 .active(true)
                 .emailVerified(false)
                 .build();
@@ -117,17 +117,17 @@ public class PersonService {
         Person persona = personaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Persona no encontrada con ID: " + id));
 
-        validateUniqueNationalIdAndEmail(request.cedula(), request.correo(), id);
+        validateUniqueNationalIdAndEmail(request.nationalId(), request.email(), id);
 
-        boolean correoCambio = !java.util.Objects.equals(persona.getEmail(), request.correo());
+        boolean correoCambio = !java.util.Objects.equals(persona.getEmail(), request.email());
 
-        persona.setName(request.nombre());
-        persona.setLastName(request.apellido());
-        persona.setNationalId(request.cedula());
-        persona.setEmail(request.correo());
-        persona.setPhone(request.telefono());
-        persona.setPhoto(request.foto());
-        persona.setBirthDate(request.fechaNacimiento());
+        persona.setName(request.name());
+        persona.setLastName(request.lastName());
+        persona.setNationalId(request.nationalId());
+        persona.setEmail(request.email());
+        persona.setPhone(request.phone());
+        persona.setPhoto(request.photo());
+        persona.setBirthDate(request.birthDate());
 
         // RNF-26 / H-09: cambiar el correo lo deja sin verificar y dispara un
         // enlace de confirmación nuevo para la dirección nueva.

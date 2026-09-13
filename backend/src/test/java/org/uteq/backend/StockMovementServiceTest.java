@@ -68,7 +68,7 @@ class StockMovementServiceTest {
         StockMovementResponse resultado = movimientoStockService.register(request, "recepcion");
 
         assertThat(articulo.getCurrentStock()).isEqualTo(15);
-        assertThat(resultado.cantidad()).isEqualTo(5);
+        assertThat(resultado.quantity()).isEqualTo(5);
         verify(articuloRepository).save(articulo);
     }
 

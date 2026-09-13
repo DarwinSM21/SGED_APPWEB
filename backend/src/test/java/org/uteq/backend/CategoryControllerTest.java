@@ -62,7 +62,7 @@ class CategoryControllerTest {
 
         mockMvc.perform(get("/api/categorias"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombre").value("Sub-12"));
+                .andExpect(jsonPath("$.content[0].name").value("Sub-12"));
     }
 
     @Test
@@ -72,7 +72,7 @@ class CategoryControllerTest {
 
         mockMvc.perform(get("/api/categorias/activas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].nombre").value("Sub-12"));
+                .andExpect(jsonPath("$[0].name").value("Sub-12"));
     }
 
     @Test
@@ -91,9 +91,9 @@ class CategoryControllerTest {
 
         mockMvc.perform(post("/api/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Sub-12\",\"edadMin\":10,\"edadMax\":12,\"descripcion\":\"Formativa\"}"))
+                        .content("{\"name\":\"Sub-12\",\"minAge\":10,\"maxAge\":12,\"description\":\"Formativa\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Sub-12"));
+                .andExpect(jsonPath("$.name").value("Sub-12"));
     }
 
     @Test
@@ -101,7 +101,7 @@ class CategoryControllerTest {
     void crear_con_datos_invalidos_da_422() throws Exception {
         mockMvc.perform(post("/api/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"\",\"edadMin\":null,\"edadMax\":12}"))
+                        .content("{\"name\":\"\",\"minAge\":null,\"maxAge\":12}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -113,7 +113,7 @@ class CategoryControllerTest {
 
         mockMvc.perform(post("/api/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"SUB-12\",\"edadMin\":15,\"edadMax\":10}"))
+                        .content("{\"name\":\"SUB-12\",\"minAge\":15,\"maxAge\":10}"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -124,7 +124,7 @@ class CategoryControllerTest {
 
         mockMvc.perform(put("/api/categorias/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Sub-12\",\"edadMin\":10,\"edadMax\":12,\"descripcion\":\"Formativa\"}"))
+                        .content("{\"name\":\"Sub-12\",\"minAge\":10,\"maxAge\":12,\"description\":\"Formativa\"}"))
                 .andExpect(status().isOk());
     }
 

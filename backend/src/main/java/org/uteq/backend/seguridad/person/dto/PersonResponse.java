@@ -4,14 +4,14 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 public record PersonResponse(
-        Long idPersona,
-        String nombre,
-        String apellido,
-        String cedula,
-        String correo,
-        String telefono,
-        String foto,
-        LocalDate fechaNacimiento,
-        Boolean activo,
+        Long personId,
+        String name,
+        String lastName,
+        String nationalId,
+        String email,
+        String phone,
+        String photo,
+        LocalDate birthDate,
+        Boolean active,
         Instant createdAt
 ) {}

@@ -62,7 +62,7 @@ class PersonControllerTest {
 
         mockMvc.perform(get("/api/personas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].nombre").value("Maria"));
+                .andExpect(jsonPath("$.content[0].name").value("Maria"));
     }
 
     @Test
@@ -81,7 +81,7 @@ class PersonControllerTest {
 
         mockMvc.perform(get("/api/personas/cedula/0912345675"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.cedula").value("0912345675"));
+                .andExpect(jsonPath("$.nationalId").value("0912345675"));
     }
 
     @Test
@@ -91,9 +91,9 @@ class PersonControllerTest {
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"0912345675\",\"correo\":\"maria@sged.test\",\"telefono\":\"0999999999\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"name\":\"Maria\",\"lastName\":\"Lopez\",\"nationalId\":\"0912345675\",\"email\":\"maria@sged.test\",\"phone\":\"0999999999\",\"birthDate\":\"2012-05-10\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.nombre").value("Maria"));
+                .andExpect(jsonPath("$.name").value("Maria"));
     }
 
     @Test
@@ -101,7 +101,7 @@ class PersonControllerTest {
     void crear_con_cedula_invalida_da_422() throws Exception {
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"abc\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"name\":\"Maria\",\"lastName\":\"Lopez\",\"nationalId\":\"abc\",\"email\":\"maria@sged.test\",\"birthDate\":\"2012-05-10\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -110,7 +110,7 @@ class PersonControllerTest {
     void crear_con_digito_verificador_invalido_da_422() throws Exception {
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"0912345678\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"name\":\"Maria\",\"lastName\":\"Lopez\",\"nationalId\":\"0912345678\",\"email\":\"maria@sged.test\",\"birthDate\":\"2012-05-10\"}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -121,7 +121,7 @@ class PersonControllerTest {
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"name\":\"Maria\",\"lastName\":\"Lopez\",\"email\":\"maria@sged.test\",\"birthDate\":\"2012-05-10\"}"))
                 .andExpect(status().isCreated());
     }
 
@@ -133,7 +133,7 @@ class PersonControllerTest {
 
         mockMvc.perform(post("/api/personas")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"nombre\":\"Maria\",\"apellido\":\"Lopez\",\"cedula\":\"0912345675\",\"correo\":\"maria@sged.test\",\"fechaNacimiento\":\"2012-05-10\"}"))
+                        .content("{\"name\":\"Maria\",\"lastName\":\"Lopez\",\"nationalId\":\"0912345675\",\"email\":\"maria@sged.test\",\"birthDate\":\"2012-05-10\"}"))
                 .andExpect(status().isBadRequest());
     }
 

@@ -36,8 +36,8 @@ class GeneralStatusServiceTest {
         List<GeneralStatusResponse> resultado = estadoGeneralService.findAll();
 
         assertThat(resultado).hasSize(2);
-        assertThat(resultado.get(0).nombre()).isEqualTo("ACTIVO");
-        assertThat(resultado.get(1).nombre()).isEqualTo("INACTIVO");
+        assertThat(resultado.get(0).name()).isEqualTo("ACTIVO");
+        assertThat(resultado.get(1).name()).isEqualTo("INACTIVO");
     }
 
     @Test
