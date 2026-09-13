@@ -25,7 +25,7 @@ import java.util.*;
  * evidentes desde el esquema:
  * <ol>
  *   <li><b>Sin asistencia no hay calificación.</b> Solo se puede evaluar a
- *       quien marcó {@code PRESENTE} o {@code TARDE}: evita registros de
+ *       quien marcó {@code PRESENT} o {@code LATE}: evita registros de
  *       desempeño de alguien que no fue.</li>
  *   <li><b>Cada día arranca con los valores del anterior.</b> El entrenador
  *       ajusta lo que cambió en vez de recalificar desde cero. Los valores

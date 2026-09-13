@@ -50,7 +50,7 @@ BEGIN
       FROM deportivo.asistencias a
       JOIN deportivo.sesiones_entrenamiento se ON se.id_sesion = a.id_sesion
      WHERE a.id_estudiante = p_estudiante
-       AND a.estado IN ('PRESENTE', 'TARDE')
+       AND a.estado IN ('PRESENT', 'LATE')
        AND se.fecha BETWEEN p_desde AND v_corte;
 
     IF v_total_sesiones = 0 THEN

@@ -216,7 +216,7 @@ BEGIN
       FROM deportivo.asistencias a
       JOIN deportivo.sesiones_entrenamiento se ON se.id_sesion = a.id_sesion
      WHERE a.id_estudiante = p_estudiante
-       AND a.estado IN ('PRESENTE', 'TARDE')
+       AND a.estado IN ('PRESENT', 'LATE')
        AND se.fecha BETWEEN p_desde AND v_corte;
 
     IF v_total_sesiones = 0 THEN
@@ -1261,7 +1261,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_estudiantes_rfid ON academico.estudiantes 
 
 CREATE INDEX IF NOT EXISTS idx_notificaciones_representante ON academico.notificaciones USING btree (id_representante, created_at DESC);
 
-CREATE UNIQUE INDEX IF NOT EXISTS idx_pago_membresia_unico ON academico.pagos USING btree (id_estudiante, anio, mes) WHERE (((tipo)::text = 'MEMBRESIA'::text) AND (anulado_en IS NULL));
+CREATE UNIQUE INDEX IF NOT EXISTS idx_pago_membresia_unico ON academico.pagos USING btree (id_estudiante, anio, mes) WHERE (((tipo)::text = 'MEMBERSHIP'::text) AND (anulado_en IS NULL));
 
 CREATE INDEX IF NOT EXISTS idx_pagos_estudiante ON academico.pagos USING btree (id_estudiante, fecha_pago DESC);
 

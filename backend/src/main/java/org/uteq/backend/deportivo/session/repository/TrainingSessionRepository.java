@@ -88,7 +88,7 @@ public interface TrainingSessionRepository extends JpaRepository<TrainingSession
      */
     @Query("""
            SELECT s.fecha,
-                  SUM(CASE WHEN a.estado IN ('PRESENTE', 'TARDE') THEN 1L ELSE 0L END),
+                  SUM(CASE WHEN a.estado IN ('PRESENT', 'LATE') THEN 1L ELSE 0L END),
                   (SELECT COUNT(e) FROM Student e
                      WHERE e.category = s.categoria AND e.active = true)
            FROM TrainingSession s
