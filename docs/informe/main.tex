@@ -2820,7 +2820,12 @@ estimación ya era estable; lo que faltaba era precisión.
 
 \begin{table}[htbp]
 \centering
-\caption{Estadísticos agregados de la encuesta SUS.}
+\caption{Estadísticos agregados de la encuesta SUS. El IC 95\,\% se
+calcula con la $t$ de Student ($t_{0{,}975,\,14} = 2{,}145$, no la
+normal $z=1{,}96$: con $n=15$ la diferencia entre ambas ensancharía el
+intervalo declarado menos de lo que corresponde), reproducible con
+\ruta{scripts/sus-analysis.py} y detallado en
+\ruta{docs/mediciones/sus/REPORT.md}.}
 \label{tab:sus-agregado}
 \begin{tabular}{@{}lr@{}}
 \toprule
@@ -2828,7 +2833,7 @@ estimación ya era estable; lo que faltaba era precisión.
 \midrule
 Media SUS & 69,33 \\
 Desviación típica & 18,89 \\
-IC 95\,\% & 69,33 $\pm$ 10,46 \quad (58,87 -- 79,79) \\
+IC 95\,\% ($t$ de Student, $gl=14$) & 69,33 $\pm$ 10,46 \quad (58,87 -- 79,79) \\
 Mediana & 70,00 \\
 Grado & C --- Aceptable \\
 \bottomrule

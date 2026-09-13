@@ -120,7 +120,10 @@ def main():
     media = sum(puntuaciones) / n
     varianza = sum((x - media) ** 2 for x in puntuaciones) / (n - 1)
     dt = math.sqrt(varianza)
-    ic95 = t_critico(n - 1) * dt / math.sqrt(n)
+    gl = n - 1
+    t_valor = t_critico(gl)
+    ic95 = t_valor * dt / math.sqrt(n)
+    metodo_ic = f"t de Student, gl={gl}, t={t_valor:.3f}" if gl <= 30 else "normal, z=1.960 (gl>30)"
 
     ordenadas = sorted(puntuaciones)
     if n % 2:
@@ -159,6 +162,7 @@ def main():
     add(f"| Media SUS | **{media:.2f}** |")
     add(f"| Desviacion tipica | {dt:.2f} |")
     add(f"| IC 95 % | {media:.2f} ± {ic95:.2f}  ({media - ic95:.2f} – {media + ic95:.2f}) |")
+    add(f"| Metodo del IC | {metodo_ic} |")
     add(f"| Mediana | {mediana:.2f} |")
     add(f"| Minimo | {min(puntuaciones):.2f} |")
     add(f"| Maximo | {max(puntuaciones):.2f} |")
@@ -194,7 +198,8 @@ def main():
 
     add("## Interpretacion\n")
     add(f"Con {n} participantes externos, el sistema obtiene una media SUS de "
-        f"{media:.2f} (IC 95 % {media - ic95:.2f}–{media + ic95:.2f}), lo que "
+        f"{media:.2f} (IC 95 % {media - ic95:.2f}–{media + ic95:.2f}, calculado "
+        f"con {metodo_ic}), lo que "
         f"corresponde al grado **{letra} ({adjetivo})** en la escala adjetival de "
         f"Bangor, Kortum y Miller (2009).\n")
 

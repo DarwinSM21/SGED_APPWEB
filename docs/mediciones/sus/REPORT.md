@@ -1,7 +1,7 @@
 # Reporte de usabilidad — SUS (Bloque C.3)
 
-- Fecha del analisis: 2026-09-02T14:39:09.849899+00:00
-- Commit: 8224f73
+- Fecha del analisis: 2026-09-13T04:47:45.643108+00:00
+- Commit: 37f757d
 - Instrumento: System Usability Scale (Brooke, 1996), 10 items, escala 1-5
 - Participantes: **15** (minimo exigido: 10)
 
@@ -12,6 +12,7 @@
 | Media SUS | **69.33** |
 | Desviacion tipica | 18.89 |
 | IC 95 % | 69.33 ± 10.46  (58.87 – 79.79) |
+| Metodo del IC | t de Student, gl=14, t=2.145 |
 | Mediana | 70.00 |
 | Minimo | 37.50 |
 | Maximo | 90.00 |
@@ -51,7 +52,7 @@ Umbral objetivo del proyecto: SUS >= 68 (media de la industria). Resultado: **CU
 
 ## Interpretacion
 
-Con 15 participantes externos, el sistema obtiene una media SUS de 69.33 (IC 95 % 58.87–79.79), lo que corresponde al grado **C (Aceptable)** en la escala adjetival de Bangor, Kortum y Miller (2009).
+Con 15 participantes externos, el sistema obtiene una media SUS de 69.33 (IC 95 % 58.87–79.79, calculado con t de Student, gl=14, t=2.145), lo que corresponde al grado **C (Aceptable)** en la escala adjetival de Bangor, Kortum y Miller (2009).
 
 El analisis por perfil y las amenazas a la validez estan en [INTERPRETACION.md](INTERPRETACION.md), que este script NO sobrescribe: al agregar participantes hay que actualizarlo a mano.
 
