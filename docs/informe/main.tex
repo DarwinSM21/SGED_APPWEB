@@ -3167,17 +3167,17 @@ cobertura como líneas de autoría inflaría la medida sin reflejar trabajo
 
 \begin{table}[htbp]
 \centering
-\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log} sobre \texttt{main}, medido el 2026-09-12, commit \texttt{3594767}). La misma medición está en \ruta{CONTRIBUTORS.md}. Arcalle Grefa suma los commits de sus dos correos vinculados a la misma cuenta de GitHub (\texttt{darcalleg@uteq.edu.ec} y \texttt{darwinarcalle@gmail.com}).}
+\caption{Evidencia cuantitativa de autoría por integrante (\texttt{git log} sobre \texttt{main}, medido el 2026-09-12, commit \texttt{6fd0581}). La misma medición está en \ruta{CONTRIBUTORS.md}, y cambia con cada commit nuevo por diseño: la cifra que cuenta es la que resulte de correr el comando de esa tabla sobre el commit que finalmente se defienda. Arcalle Grefa suma los commits de sus dos correos vinculados a la misma cuenta de GitHub (\texttt{darcalleg@uteq.edu.ec} y \texttt{darwinarcalle@gmail.com}).}
 \label{tab:credit-cifras}
 \begin{tabular}{@{}lrrr@{}}
 \toprule
 \textbf{Integrante} & \textbf{\emph{Commits}} & \textbf{Líneas escritas} & \textbf{Archivos} \\
 \midrule
-Pallo Pinto Alejandro Daniel & 233 & 81\,207 & 791 \\
-Arcalle Grefa Darwin Orlando & 127 & 66\,876 & 777 \\
-Velez Lopez Ricardo Elias & 55 & 9\,532 & 134 \\
+Pallo Pinto Alejandro Daniel & 233 & 82\,050 & 792 \\
+Arcalle Grefa Darwin Orlando & 136 & 60\,993 & 776 \\
+Velez Lopez Ricardo Elias & 55 & 11\,912 & 153 \\
 \midrule
-\textbf{Total en \texttt{main}} & \textbf{415} & \textbf{157\,615} & \textbf{1\,702} \\
+\textbf{Total en \texttt{main}} & \textbf{424} & \textbf{154\,955} & \textbf{1\,721} \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -3241,31 +3241,36 @@ con el código (\emph{Redacción: revisión y edición}).
 La taxonomía CRediT define catorce roles. Trece quedan cubiertos por el
 equipo; \emph{Adquisición de fondos} no aplica a un Proyecto Fin de Curso
 sin financiamiento externo (Tabla~\ref{tab:credit-cobertura}). La misma
-tabla está en \ruta{CONTRIBUTORS.md}.
+tabla está en \ruta{CONTRIBUTORS.md}. El número junto a cada integrante
+es su total real de \emph{commits} en \texttt{main} (Tabla~\ref{tab:credit-cifras}
+de la sección anterior); CRediT clasifica tipos de contribución
+intelectual, no un archivo por rol —un mismo \emph{commit} puede sostener
+varios roles a la vez—, así que el conteo es el total verificable de la
+persona, no una partición exclusiva por rol.
 
 \begin{table}[htbp]
 \centering
 \scriptsize
 \caption{Cobertura de los catorce roles de la taxonomía CRediT.}
 \label{tab:credit-cobertura}
-\begin{tabular}{@{}p{3.2cm}p{2.6cm}p{8.0cm}@{}}
+\begin{tabular}{@{}p{3.2cm}p{3.4cm}p{7.2cm}@{}}
 \toprule
 \textbf{Rol CRediT} & \textbf{Integrante(s)} & \textbf{Cobertura} \\
 \midrule
-Conceptualización & Ricardo, Darwin & Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. \\
-Curación de datos & Alejandro & Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. \\
-Análisis formal & Alejandro & Análisis estadístico de los datos de rendimiento y usabilidad (intervalos de confianza, distribución \emph{t}). \\
+Conceptualización & Ricardo (55), Darwin (136) & Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. \\
+Curación de datos & Alejandro (233) & Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. \\
+Análisis formal & Alejandro (233) & Análisis estadístico de los datos de rendimiento y usabilidad (intervalos de confianza, distribución \emph{t}). \\
 Adquisición de fondos & --- & No aplica (proyecto académico sin financiación externa). \\
-Investigación & Darwin & Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. \\
-Metodología & Ricardo & Proceso de investigación (DSR) y protocolo de medición. \\
-Administración del proyecto & Darwin & Administración del proyecto, calendario y gestión de entregas. \\
-Recursos & Ricardo & Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. \\
-Software & Alejandro, Ricardo, Darwin & Implementación de backend (Spring~Boot), \emph{frontend} (Angular) y procedimientos almacenados. \\
-Supervisión & Darwin & Coordinación del equipo y seguimiento del repositorio. \\
-Validación & Alejandro, Ricardo & Cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. \\
-Visualización & Alejandro & Diagramas C4 y de arquitectura del sistema. \\
-Redacción (borrador original) & Alejandro & Redacción del informe, del SRS y de la documentación técnica. \\
-Redacción (revisión y edición) & Ricardo & Revisión y corrección de la documentación y su consistencia con el código. \\
+Investigación & Darwin (136) & Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. \\
+Metodología & Ricardo (55) & Proceso de investigación (DSR) y protocolo de medición. \\
+Administración del proyecto & Darwin (136) & Administración del proyecto, calendario y gestión de entregas. \\
+Recursos & Ricardo (55) & Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. \\
+Software & Alejandro (233), Ricardo (55), Darwin (136) & Implementación de backend (Spring~Boot), \emph{frontend} (Angular) y procedimientos almacenados. \\
+Supervisión & Darwin (136) & Coordinación del equipo y seguimiento del repositorio. \\
+Validación & Alejandro (233), Ricardo (55) & Cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. \\
+Visualización & Alejandro (233) & Diagramas C4 y de arquitectura del sistema. \\
+Redacción (borrador original) & Alejandro (233) & Redacción del informe, del SRS y de la documentación técnica. \\
+Redacción (revisión y edición) & Ricardo (55) & Revisión y corrección de la documentación y su consistencia con el código. \\
 \bottomrule
 \end{tabular}
 \end{table}

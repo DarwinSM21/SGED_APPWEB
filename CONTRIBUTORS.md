@@ -11,24 +11,31 @@ del historial de `git log` (no auto-declarados).
 | Arcalle Grefa Darwin Orlando | darcalleg@uteq.edu.ec | Conceptualization, Software, Investigation, Project administration, Supervision |
 
 La taxonomía CRediT completa define catorce roles; en este proyecto todos
-quedan cubiertos por el equipo de la siguiente manera:
+quedan cubiertos por el equipo de la siguiente manera. El conteo junto a
+cada integrante es su **número real de commits en `main`** (el mismo de
+la tabla cuantitativa de abajo, reproducible con
+`git log --pretty="AUTOR:%ae" main | sort | uniq -c`): CRediT clasifica
+*tipos* de contribución intelectual, no un archivo por rol, así que un
+mismo commit puede sostener varios roles a la vez (una prueba de carga
+es a la vez `Software` y `Validation`) — por eso el conteo es el total
+verificable de la persona, no una partición exclusiva por rol.
 
 | Rol CRediT | Integrante(s) | Cobertura |
 |---|---|---|
-| Conceptualization | Ricardo, Darwin | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
-| Data curation | Alejandro | Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. |
-| Formal analysis | Alejandro | Análisis estadístico de los datos de rendimiento y usabilidad (intervalos, distribución t). |
+| Conceptualization | Ricardo (55), Darwin (136) | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
+| Data curation | Alejandro (233) | Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. |
+| Formal analysis | Alejandro (233) | Análisis estadístico de los datos de rendimiento y usabilidad (intervalos, distribución t). |
 | Funding acquisition | — | No aplica (proyecto académico sin financiación externa). |
-| Investigation | Darwin | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. |
-| Methodology | Ricardo | Proceso de investigación (DSR) y protocolo de medición. |
-| Project administration | Darwin | Administración del proyecto, calendario y gestión de entregas. |
-| Resources | Ricardo | Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. |
-| Software | Alejandro, Ricardo, Darwin | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
-| Supervision | Darwin | Coordinación del equipo y seguimiento del repositorio. |
-| Validation | Alejandro, Ricardo | Pruebas de cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. |
-| Visualization | Alejandro | Diagramas C4 y de arquitectura del sistema. |
-| Writing – original draft | Alejandro | Redacción del informe, del documento de requisitos (SRS) y de la documentación técnica. |
-| Writing – review & editing | Ricardo | Revisión y corrección de la documentación y su consistencia con el código. |
+| Investigation | Darwin (136) | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. |
+| Methodology | Ricardo (55) | Proceso de investigación (DSR) y protocolo de medición. |
+| Project administration | Darwin (136) | Administración del proyecto, calendario y gestión de entregas. |
+| Resources | Ricardo (55) | Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. |
+| Software | Alejandro (233), Ricardo (55), Darwin (136) | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
+| Supervision | Darwin (136) | Coordinación del equipo y seguimiento del repositorio. |
+| Validation | Alejandro (233), Ricardo (55) | Pruebas de cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. |
+| Visualization | Alejandro (233) | Diagramas C4 y de arquitectura del sistema. |
+| Writing – original draft | Alejandro (233) | Redacción del informe, del documento de requisitos (SRS) y de la documentación técnica. |
+| Writing – review & editing | Ricardo (55) | Revisión y corrección de la documentación y su consistencia con el código. |
 
 ## Evidencia cuantitativa (derivada de `git log`, no autodeclarada)
 
@@ -39,17 +46,19 @@ reflejar trabajo real.
 
 | Integrante | Commits | Líneas escritas | Archivos escritos |
 |---|---:|---:|---:|
-| Pallo Pinto Alejandro Daniel | 233 | 81 207 | 791 |
-| Arcalle Grefa Darwin Orlando | 127 | 66 876 | 777 |
-| Velez Lopez Ricardo Elias | 55 | 9 532 | 134 |
-| **Total** | **415** | **157 615** | **1 702** |
+| Pallo Pinto Alejandro Daniel | 233 | 82 050 | 792 |
+| Arcalle Grefa Darwin Orlando | 136 | 60 993 | 776 |
+| Velez Lopez Ricardo Elias | 55 | 11 912 | 153 |
+| **Total** | **424** | **154 955** | **1 721** |
 
-_Medido 2026-09-12 sobre `main` (commit `3594767`). "Archivos escritos" cuenta
+_Medido 2026-09-12 sobre `main` (commit `6fd0581`). "Archivos escritos" cuenta
 rutas distintas tocadas por cada integrante (no eventos de cambio repetidos).
 El conteo de Arcalle Grefa
 Darwin Orlando suma los commits de sus dos correos vinculados a la misma
 cuenta de GitHub (`darcalleg@uteq.edu.ec` y `darwinarcalle@gmail.com`; ver
-nota más abajo)._
+nota más abajo). Estas cifras cambian con cada commit nuevo por diseño —
+la cifra que cuenta es la que resulte de correr el comando de abajo sobre
+el commit que finalmente se defienda, no la congelada aquí._
 
 Reproducible con:
 
