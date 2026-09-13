@@ -231,13 +231,13 @@ classDiagram
 
 ## Notas de fidelidad
 
-- **Enumeraciones.** `Payment.type` (`MEMBRESIA`/`DIARIO`), `Item.type`
-  (`UNIFORME`/`BALON`/`IMPLEMENTO`/`OTRO`),
-  `StockMovement.movementType` (`ENTRADA`/`SALIDA`/`AJUSTE`),
-  `Assignment.recipientType` (`ESTUDIANTE`/`ENTRENADOR`) y
-  `Assignment.status` (`ASIGNADO`/`DEVUELTO`/`PERDIDO`) son enums Java
-  (`@Enumerated(EnumType.STRING)`), no texto libre. Los valores del enum
-  no se tradujeron junto con el resto del código.
+- **Enumeraciones.** `Payment.type` (`MEMBERSHIP`/`DAILY`),
+  `Assignment.recipientType` (`STUDENT`/`COACH`) y `Assignment.status`
+  (`ASSIGNED`/`RETURNED`/`LOST`) son enums Java
+  (`@Enumerated(EnumType.STRING)`), no texto libre; sus valores ya están
+  en inglés. `Item.type` (`UNIFORME`/`BALON`/`IMPLEMENTO`/`OTRO`) y
+  `StockMovement.movementType` (`ENTRADA`/`SALIDA`/`AJUSTE`) son las dos
+  enumeraciones de negocio que todavía quedan pendientes de traducir.
 - **`Person`–`UserAccount` y `Person`–`Student` son `0..1` por regla de
   negocio, no por restricción de base de datos.** El código JPA declara
   ambas relaciones como `@ManyToOne` simple, sin `unique = true`; es

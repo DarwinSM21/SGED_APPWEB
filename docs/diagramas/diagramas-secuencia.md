@@ -99,10 +99,13 @@ administrador (`FichaEstudianteComponent` da de alta la ficha;
 `CuentaUsuarioComponent`/el botón de acceso crean la cuenta después,
 solo si se pide).
 
-> `ESTUDIANTE` en el diagrama es el valor literal del enum Java
-> `RecipientType` (`@Enumerated(EnumType.STRING)`), no texto libre del
-> diagrama — ver la nota sobre enums sin traducir en
-> [`diagrama-clases.md`](diagrama-clases.md).
+> `ESTUDIANTE` en este diagrama es el valor literal del **rol** de
+> `UserAccount` (el catálogo de roles de seguridad, ej.
+> `hasRole('ESTUDIANTE')`), no el `RecipientType` de `Assignment` — son
+> dos vocabularios distintos que comparten la misma palabra en español
+> por coincidencia. Los roles no se traducen (quedan fuera del alcance
+> del Punto E3): están anclados a `@PreAuthorize`/`hasRole(...)` en
+> ~40 archivos del backend y a los guards de rutas del frontend.
 
 ```mermaid
 sequenceDiagram
@@ -180,10 +183,6 @@ propia sesión autenticada. El QR nunca contiene datos personales, solo
 un identificador opaco con vencimiento corto en Redis (ver
 `QrAsistenciaService`).
 
-> `PRESENTE` / `TARDE` son los valores literales del enum Java de estado
-> de asistencia, igual que `ESTUDIANTE` en el diagrama anterior — ver la
-> nota sobre enums sin traducir en [`diagrama-clases.md`](diagrama-clases.md).
-
 ```mermaid
 sequenceDiagram
     actor R as Receptionist
@@ -237,7 +236,7 @@ sequenceDiagram
         else valid
             AS->>SR: findById(sessionId)
             SR-->>AS: TrainingSession
-            AS->>AS: calculateStatus(startTime, now) → PRESENTE | TARDE
+            AS->>AS: calculateStatus(startTime, now) → PRESENT | LATE
             AS->>AS: save(Attendance)
             AS->>NS: notifyAttendance(student, status)
             NS-->>AS: (catches its own errors: if notifying fails, attendance was already saved)
