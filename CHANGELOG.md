@@ -122,7 +122,7 @@ docente (M1–M3).
   aparece **con el motivo**, no desaparece de la lista.
 - **Historial de asistencia por sesión** (`GET /api/sesiones/{id}/historial`,
   botón «Quiénes fueron»): parte del plantel y no de las marcas, así que
-  distingue `SIN_REGISTRO` de `AUSENTE` — «nadie pasó lista» no es «no vino
+  distingue `SIN_REGISTRO` de `ABSENT` — «nadie pasó lista» no es «no vino
   nadie».
 
 ### Cambiado

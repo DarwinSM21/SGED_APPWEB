@@ -1,11 +1,12 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.10 (Entrega Final, etiqueta `v1.0.0` — el
+**Versión del documento:** 1.11 (Entrega Final, etiqueta `v1.0.0` — el
 docente-director firmó electrónicamente el acta de aprobación de la v1.8
 el 2026-09-12 (`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`); §7
 actualizado con esa firma y con la observación de sincronización del
-acta sobre **RF-11c** (ver §7). El commit defendido es el que apunta la
+acta sobre **RF-11c** y sobre el vocabulario de estado traducido a
+inglés en 1.11 (ver §7). El commit defendido es el que apunta la
 etiqueta (`git rev-parse v1.0.0^{commit}`)).
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
@@ -699,8 +700,8 @@ si es una jornada extra).
 **RF-19a — Registro de asistencia por QR o manual**
 *El sistema deberá registrar la asistencia de cada estudiante a cada sesión
 mediante código QR (marcado por el propio estudiante) o lista manual
-(marcada por el entrenador), con estado PRESENTE, TARDE, AUSENTE o
-JUSTIFICADO, y deberá impedir que se registre más de una asistencia del
+(marcada por el entrenador), con estado PRESENT, LATE, ABSENT o
+EXCUSED, y deberá impedir que se registre más de una asistencia del
 mismo estudiante en la misma sesión.*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must — precondición de notificaciones (RF-22) e historial (RF-35).
@@ -858,7 +859,7 @@ quiénes no.*
 y no de las filas de asistencia: si nadie pasó lista, la tabla está vacía y
 una consulta que solo lea de ahí diría «no había nadie convocado», que es
 distinto de «no se registró la asistencia de nadie». Por eso existe el estado
-`SIN_REGISTRO`, separado de `AUSENTE`.
+`SIN_REGISTRO`, separado de `ABSENT`.
 
 ---
 
@@ -1015,8 +1016,8 @@ de cero.*
 **RF-29 — Asignación y devolución de artículos**
 *El sistema deberá permitir asignar artículos a un estudiante o a un
 entrenador (nunca a ambos en la misma asignación), descontando el stock
-disponible, y deberá permitir marcar la devolución como DEVUELTO
-(repone el stock) o PERDIDO (no lo repone).*
+disponible, y deberá permitir marcar la devolución como RETURNED
+(repone el stock) o LOST (no lo repone).*
 
 - **Prioridad:** Alta · **Estado:** ✅ Implementado · **MoSCoW:** Must
 - **Método de verificación:** Test
@@ -1028,7 +1029,7 @@ disponible, y deberá permitir marcar la devolución como DEVUELTO
 - **Verificación:** `AssignmentServiceTest` (9 pruebas: asignación a
   estudiante y a entrenador, stock insuficiente, destinatario faltante,
   devolución que repone stock, pérdida que no lo repone, doble
-  resolución, transición inválida a ASIGNADO, asignación inexistente).
+  resolución, transición inválida a ASSIGNED, asignación inexistente).
 
 ---
 
@@ -1890,7 +1891,7 @@ Origen: `docker-compose.yml` (digests reales aplicados por
 | Entidad | Estados | Transiciones válidas | Disparador | Comentario |
 |---|---|---|---|---|
 | `deportivo.sesiones_entrenamiento.estado` | `PROGRAMADA` → `EN_CURSO` → `FINALIZADA` / `CANCELADA` | `PROGRAMADA`→`EN_CURSO` (inicio real), `EN_CURSO`→`FINALIZADA` (cierre), `PROGRAMADA`/`EN_CURSO`→`CANCELADA` (anulación) | `TrainingSessionService.create`/`todaysSessions` (las crean en `PROGRAMADA`); inicio y anulación sin endpoint aún — el cierre del flujo diario pasa por `DailyEvaluationController.finish` | `EN_CURSO`→`CANCELADA` no permitido; `FINALIZADA` es terminal; hoy la sesión queda en `PROGRAMADA` |
-| `deportivo.asistencias.estado` | `PRESENTE`, `TARDE`, `AUSENTE`, `JUSTIFICADO`, `SIN_REGISTRO` | `SIN_REGISTRO`→cualquier otro (upsert idempotente); `PRESENTE`/`TARDE`/`JUSTIFICADO`↔️`AUSENTE` (corrección entrenador) | `AttendanceQrController` (`POST /api/asistencias/qr/marcar`), `SessionAttendanceController.takeAttendance` (`PUT /api/asistencias/sesion/{id}`) | `SIN_REGISTRO` es estado inicial implícito (no almacenado); `hora_entrada` solo en QR |
+| `deportivo.asistencias.estado` | `PRESENT`, `LATE`, `ABSENT`, `EXCUSED`, `SIN_REGISTRO` | `SIN_REGISTRO`→cualquier otro (upsert idempotente); `PRESENT`/`LATE`/`EXCUSED`↔️`ABSENT` (corrección entrenador) | `AttendanceQrController` (`POST /api/asistencias/qr/marcar`), `SessionAttendanceController.takeAttendance` (`PUT /api/asistencias/sesion/{id}`) | `SIN_REGISTRO` es estado inicial implícito (no almacenado); `hora_entrada` solo en QR |
 | `deportivo.partidos.estado` (calculado) | `PENDIENTE` (sin marcador) / `GANADO` / `EMPATADO` / `PERDIDO` | Automático según `marcador_local` / `marcador_visitante` al `PUT` | `MatchController.registerResult` | No se almacena: se deriva de los goles; `NULL` = no jugado |
 | `deportivo.alineaciones.estado` | `SUGERIDA` / `CONFIRMADA` | `SUGERIDA`→`CONFIRMADA` (entrenador guarda) | `MatchController` (`PUT /api/partidos/{id}/alineacion`) | Si ya existe `CONFIRMADA`, la sugerencia no sobrescribe |
 | `academico.estudiantes.activo` | `TRUE` (activo) / `FALSE` (baja lógica) | `TRUE`→`FALSE` (DELETE lógico); `FALSE`→`TRUE` (reactivación admin) | `StudentController.delete` (`DELETE /api/estudiantes/{id}`), `StudentController.reactivate` (`POST /api/estudiantes/{id}/reactivar`) | Baja lógica preserva historial (FKs) |
@@ -2031,6 +2032,7 @@ previas se mantiene en `docs/observaciones/`.
 | 1.8 | 2026-09-11 | Entrega Final (`v1.0.0`) | Revisión contra `Rubrica_ExamenFinal_SGED.pdf` (18 puntos, criterios de piso). **Punto 6** — la etiqueta que el docente revisa según esa rúbrica es `v1.0.0` (no `v1.0.3`); estaba 403 commits detrás de `main`, se movió al commit de cierre real. **E1** — se completa el renombrado a inglés de los ~40 métodos en español que quedaban fuera de `deportivo` (`seguridad.auth`, `academico`, `reportes`, `seguridad.audit`/`user`); `deportivo` queda para el resto del equipo por acuerdo explícito de reparto. **E2** — se corrige `{@link PasswordResetService#solicitar}` en `EmailVerificationService`, que citaba el nombre anterior al rename y rompía `mvn javadoc:javadoc`; el comando vuelve a compilar sin errores. **Punto 2** — la cifra de cobertura citada en §1.3 no coincidía con `docs/mediciones/jacoco/jacoco.csv` (84,66 %/71,24 % citado vs. 87,47 %/72,10 % en el CSV committeado); se regeneran ambos desde la misma corrida (665 pruebas, 0 fallos, 216 clases) y quedan sincronizados en 88,38 % líneas / 74,20 % ramas. |
 | 1.9 | 2026-09-12 | Entrega Final (`v1.0.0`) | **M2** de la revisión del docente sobre el SRS v1.6 (commit `358eace`, 2026-09-10): la nota de RF-11b que dejaba "como endurecimiento posterior" el no forzar el consentimiento de alcance `DATOS_FISICO_DEPORTIVOS` como precondición del alta se convierte en requisito propio, **RF-11c**, con **Estado** (⬜ Planificado — deuda declarada, no obligación de esta entrega) y **Condición de cierre** explícita (que `StudentService` rechace o degrade el alta de `peso`/`altura` sin `Consent` vigente de ese alcance, con prueba de integración para ambos casos). No cambia la decisión de fondo ni reabre H-06 (sigue Resuelto): solo dejar de vivir como comentario suelto. Matriz de trazabilidad: 80 filas; recuento del corpus en §1.3 actualizado a 75 Implementado / 3 Modelado / 2 Planificado. |
 | 1.10 | 2026-09-12 | Entrega Final (`v1.0.0`) | **Firma del docente-director recibida.** El Ing. Gleiston Cicerón Guerrero Ulloa, Ph.D. suscribió electrónicamente el **acta de aprobación del SRS v1.8** (`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`, firma digital fechada 2026-09-12); §7 actualizado con la fila real. El acta aprueba el documento como especificación válida, deja constancia de mérito por el cierre de los hallazgos éticos con código/migraciones/pruebas, y registra una única observación de sincronización, sin efecto sobre la coherencia interna: el ejemplar firmado es la v1.8; el repositorio incorporó **RF-11c** después de generarse ese PDF, así que la aprobación alcanza a la v1.8 tal como fue presentada — si se quiere que la firma cubra también RF-11c, el acta indica que el documento debe regenerarse y someterse de nuevo. Las otras dos recomendaciones del acta (explicitar el criterio Implementado/Verificado; convertir la nota de RF-11b en requisito con estado y condición de cierre) ya estaban resueltas en el repositorio antes de recibir la firma — en §1.3 desde la v1.7 y como RF-11c desde la v1.9 — por el mismo desfase entre el corte del PDF revisado y el estado en vivo del repositorio. |
+| 1.11 | 2026-09-13 | Entrega Final (`v1.0.0`) | Sincroniza con el código el vocabulario de estado de dos requisitos y de la tabla §4.6, después de traducir a inglés cuatro enums de negocio que habían quedado en español (Punto E3 de una reevaluación de rúbrica): **RF-19a** (asistencia: `PRESENTE`/`TARDE`/`AUSENTE`/`JUSTIFICADO` → `PRESENT`/`LATE`/`ABSENT`/`EXCUSED`), **RF-29** (asignación: `ASIGNADO`/`DEVUELTO`/`PERDIDO` → `ASSIGNED`/`RETURNED`/`LOST`) y `docs/basedatos/DATA-DICTIONARY.md` (mismos valores, más `tipo_destinatario`: `ESTUDIANTE`/`ENTRENADOR` → `STUDENT`/`COACH`). Ningún requisito cambia de significado, comportamiento ni prioridad MoSCoW — es una sincronización de nomenclatura sobre requisitos ya `✅ Implementado`, del mismo tipo que la ya aceptada sin reabrir la firma para RF-11c (ver la nota de alcance de la firma más abajo). |
 
 ## 7. Aprobación
 
@@ -2064,3 +2066,20 @@ apunta al mismo commit).
 > como **RF-11c** desde la v1.9 — antes de que llegara la firma; el
 > desfase es solo de cuándo se generó el PDF que el docente revisó frente
 > al estado en vivo del repositorio.
+>
+> **Segunda divergencia, añadida en 1.11 (2026-09-13), del mismo tipo.**
+> Después de recibida la firma se tradujeron a inglés cuatro enums de
+> negocio que habían quedado en español (`RecipientType`, `AssignmentStatus`,
+> el estado de asistencia y `PaymentType`), y con ellos el vocabulario
+> citado en **RF-19a**, **RF-29** y la tabla §4.6 de este documento. El
+> acta firmada tampoco cubre este cambio de nomenclatura, por la misma
+> razón que no cubre RF-11c: se generó antes de que existiera. La
+> diferencia con RF-11c es que aquí no hay un requisito nuevo ni una
+> decisión de negocio distinta — ningún RF cambia de significado,
+> comportamiento o prioridad MoSCoW, solo el literal con el que el
+> sistema representa un valor que ya existía. El equipo aplica el mismo
+> criterio que el docente-director ya estableció para RF-11c: una
+> sincronización de nomenclatura sobre requisitos `✅ Implementado` no
+> amerita reabrir el ciclo de firma. Si se prefiere una firma que cubra
+> también esta versión, el acta debe regenerarse y someterse de nuevo,
+> igual que para RF-11c.

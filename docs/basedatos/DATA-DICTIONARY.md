@@ -320,7 +320,7 @@ Asistencia de un estudiante a una sesión. **FK actualizada** a
 | `id_estudiante` | BIGINT | No | FK → **`academico.estudiantes`**, índice `idx_asistencias_estudiante` | Deportista. |
 | `hora_entrada` | TIME | Sí | — | Hora de marcaje. |
 | `metodo` | VARCHAR(10) | No | **CHECK IN (RFID, MANUAL)**, DEFAULT MANUAL | Medio de registro. |
-| `estado` | VARCHAR(15) | No | **CHECK IN (PRESENTE, TARDE, AUSENTE, JUSTIFICADO)** | Resultado. |
+| `estado` | VARCHAR(15) | No | **CHECK IN (PRESENT, LATE, ABSENT, EXCUSED)** | Resultado. |
 | `observacion` | VARCHAR(255) | Sí | — | Nota puntual. |
 | `creado_en` / `actualizado_en` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |
 
@@ -408,13 +408,13 @@ Entrega/devolución de un artículo a un estudiante o entrenador.
 | `id_asignacion` | BIGSERIAL | No | PK | Identificador. |
 | `id_articulo` | BIGINT | No | FK → `articulos` | Artículo asignado. |
 | `cantidad` | INTEGER | No | CHECK `> 0` | Cantidad entregada; resta de `stock_actual` al crear. |
-| `tipo_destinatario` | VARCHAR(15) | No | CHECK IN (ESTUDIANTE, ENTRENADOR) | Define cuál de las dos FK de destinatario debe estar llena. |
-| `id_estudiante` | BIGINT | Sí | FK → `academico.estudiantes` | Lleno solo si `tipo_destinatario = ESTUDIANTE`. |
-| `id_entrenador` | BIGINT | Sí | FK → `deportivo.entrenadores` | Lleno solo si `tipo_destinatario = ENTRENADOR`. |
+| `tipo_destinatario` | VARCHAR(15) | No | CHECK IN (STUDENT, COACH) | Define cuál de las dos FK de destinatario debe estar llena. |
+| `id_estudiante` | BIGINT | Sí | FK → `academico.estudiantes` | Lleno solo si `tipo_destinatario = STUDENT`. |
+| `id_entrenador` | BIGINT | Sí | FK → `deportivo.entrenadores` | Lleno solo si `tipo_destinatario = COACH`. |
 | `fecha_asignacion` | DATE | No | DEFAULT CURRENT_DATE | Fecha de entrega. |
 | `fecha_devolucion_esperada` | DATE | Sí | — | Fecha planeada de devolución. |
-| `fecha_devolucion_real` | DATE | Sí | — | Se llena al marcar DEVUELTO o PERDIDO. |
-| `estado` | VARCHAR(15) | No | DEFAULT 'ASIGNADO', CHECK IN (ASIGNADO, DEVUELTO, PERDIDO) | DEVUELTO repone `stock_actual`; PERDIDO no. |
+| `fecha_devolucion_real` | DATE | Sí | — | Se llena al marcar RETURNED o LOST. |
+| `estado` | VARCHAR(15) | No | DEFAULT 'ASSIGNED', CHECK IN (ASSIGNED, RETURNED, LOST) | RETURNED repone `stock_actual`; LOST no. |
 | `registrado_por_id_usuario` | BIGINT | No | FK → `seguridad.usuarios` | Quién la registró. |
 | `observaciones` | VARCHAR(255) | Sí | — | Observaciones libres. |
 | `created_at` / `updated_at` | TIMESTAMPTZ | No | DEFAULT NOW() | Auditoría de fila. |

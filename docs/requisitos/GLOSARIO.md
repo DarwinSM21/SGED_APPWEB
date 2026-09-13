@@ -49,9 +49,9 @@ Entidad `EvaluacionEstudiante`.
 
 ### Membresía
 
-Uno de los dos tipos de [pago](#pago) (`Pago.TipoPago.MEMBRESIA`): cubre
+Uno de los dos tipos de [pago](#pago) (`Payment.PaymentType.MEMBERSHIP`): cubre
 un mes calendario completo (año y mes obligatorios) y no puede repetirse
-para el mismo estudiante y periodo. Se distingue del pago `DIARIO`, que es
+para el mismo estudiante y periodo. Se distingue del pago `DAILY`, que es
 puntual y no lleva periodo asociado.
 
 ### Movimiento de inventario
@@ -64,7 +64,7 @@ existentes a una persona.
 ### Pago
 
 Cobro registrado a un estudiante. Ver [membresía](#membresía) para el
-tipo periódico; el tipo `DIARIO` es puntual. Entidad `Pago`, gestionada
+tipo periódico; el tipo `DAILY` es puntual. Entidad `Pago`, gestionada
 por `PagoService`.
 
 ### Plantilla
