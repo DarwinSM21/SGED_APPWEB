@@ -52,7 +52,7 @@ public class AttendanceQrController {
      * @param request cuerpo con el {@code token} del QR; validado con
      *                {@code @Valid}
      * @return {@code 201 Created} con el estado marcado
-     *         ({@code PRESENTE} / {@code TARDE}), o {@code 410 Gone} si el
+     *         ({@code PRESENT} / {@code LATE}), o {@code 410 Gone} si el
      *         token no es válido o ya se usó
      * @throws org.uteq.backend.common.exception.ResourceNotFoundException
      *         si la cuenta no tiene ficha de estudiante ({@code 404})
@@ -80,8 +80,8 @@ public class AttendanceQrController {
     /**
      * Respuesta de {@link #markAttendance}.
      *
-     * @param status estado de asistencia resuelto ({@code PRESENTE} /
-     *               {@code TARDE})
+     * @param status estado de asistencia resuelto ({@code PRESENT} /
+     *               {@code LATE})
      */
     public record MarkQrResponse(String status) {}
 }

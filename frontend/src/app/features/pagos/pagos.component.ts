@@ -65,11 +65,11 @@ const NOMBRES_MES = [
 
             <span class="field__label">Tipo de cobro</span>
             <div class="segmentado">
-              <button type="button" class="segmento" [class.segmento--activo]="tipo() === 'MEMBRESIA'" (click)="tipo.set('MEMBRESIA')">Membresía mensual</button>
-              <button type="button" class="segmento" [class.segmento--activo]="tipo() === 'DIARIO'" (click)="tipo.set('DIARIO')">Diario / eventual</button>
+              <button type="button" class="segmento" [class.segmento--activo]="tipo() === 'MEMBERSHIP'" (click)="tipo.set('MEMBERSHIP')">Membresía mensual</button>
+              <button type="button" class="segmento" [class.segmento--activo]="tipo() === 'DAILY'" (click)="tipo.set('DAILY')">Diario / eventual</button>
             </div>
 
-            @if (tipo() === 'MEMBRESIA') {
+            @if (tipo() === 'MEMBERSHIP') {
               <div class="fila-2">
                 <label class="field" for="anio">
                   <span class="field__label">Año</span>
@@ -183,10 +183,10 @@ const NOMBRES_MES = [
                 @for (p of historial(); track p.paymentId) {
                   <div class="fila-pago" [class.fila-pago--anulada]="p.voidedAt">
                     <span class="badge"
-                          [class.badge--info]="p.type === 'MEMBRESIA' && !p.voidedAt"
-                          [class.badge--success]="p.type === 'DIARIO' && !p.voidedAt"
+                          [class.badge--info]="p.type === 'MEMBERSHIP' && !p.voidedAt"
+                          [class.badge--success]="p.type === 'DAILY' && !p.voidedAt"
                           [class.badge--neutral]="!!p.voidedAt">
-                      {{ p.type === 'MEMBRESIA' ? (nombreMes(p.month!) + ' ' + p.year) : 'Diario' }}
+                      {{ p.type === 'MEMBERSHIP' ? (nombreMes(p.month!) + ' ' + p.year) : 'Diario' }}
                     </span>
                     <span class="monto-pago">{{ p.amount | number: '1.2-2' }}</span>
                     <span class="fecha-pago">{{ p.paymentDate }}</span>
@@ -326,7 +326,7 @@ export class PagosComponent implements OnInit {
     this.students().find((e) => e.studentId === this.studentId()) ?? null,
   );
 
-  readonly tipo = signal<'MEMBRESIA' | 'DIARIO'>('MEMBRESIA');
+  readonly tipo = signal<'MEMBERSHIP' | 'DAILY'>('MEMBERSHIP');
   readonly months = Array.from({ length: 12 }, (_, i) => i + 1);
   readonly mesesSeleccionados = signal<Set<number>>(new Set());
   readonly todosLosMesesSeleccionados = computed(() => {
@@ -412,7 +412,7 @@ export class PagosComponent implements OnInit {
   readonly mesesPagados = computed(() => {
     const pagados = new Set<number>();
     for (const p of this.historial()) {
-      if (p.type === 'MEMBRESIA' && p.year === this.year && p.month) pagados.add(p.month);
+      if (p.type === 'MEMBERSHIP' && p.year === this.year && p.month) pagados.add(p.month);
     }
     return pagados;
   });
@@ -420,7 +420,7 @@ export class PagosComponent implements OnInit {
   readonly tieneMembresiaVigente = computed(() => {
     const hoy = new Date();
     return this.historial().some((p) =>
-      p.type === 'MEMBRESIA' && p.year === hoy.getFullYear() && p.month === hoy.getMonth() + 1);
+      p.type === 'MEMBERSHIP' && p.year === hoy.getFullYear() && p.month === hoy.getMonth() + 1);
   });
 
   alternarMes(mes: number): void {

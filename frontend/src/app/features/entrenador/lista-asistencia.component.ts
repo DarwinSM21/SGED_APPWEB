@@ -9,10 +9,10 @@ import { EstadoAsistencia, Nomina } from './asistencia.models';
 import { horaCorta } from '../../core/formato-texto';
 
 const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; corta: string }[] = [
-  { valor: 'PRESENTE', etiqueta: 'Presente', plural: 'presentes', corta: 'P' },
-  { valor: 'TARDE', etiqueta: 'Tarde', plural: 'tarde', corta: 'T' },
-  { valor: 'AUSENTE', etiqueta: 'Ausente', plural: 'ausentes', corta: 'A' },
-  { valor: 'JUSTIFICADO', etiqueta: 'Justificado', plural: 'justificados', corta: 'J' },
+  { valor: 'PRESENT', etiqueta: 'Presente', plural: 'presentes', corta: 'P' },
+  { valor: 'LATE', etiqueta: 'Tarde', plural: 'tarde', corta: 'T' },
+  { valor: 'ABSENT', etiqueta: 'Ausente', plural: 'ausentes', corta: 'A' },
+  { valor: 'EXCUSED', etiqueta: 'Justificado', plural: 'justificados', corta: 'J' },
 ];
 
 @Component({
@@ -93,7 +93,7 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; plural: string; cort
                        [disabled]="!n.editable"
                        [ngModel]="notas()[f.studentId] ?? ''"
                        (ngModelChange)="anotar(f.studentId, $event)"
-                       [placeholder]="marks()[f.studentId] === 'JUSTIFICADO'
+                       [placeholder]="marks()[f.studentId] === 'EXCUSED'
                           ? 'Motivo de la justificación' : 'Observación (opcional)'" />
               }
             </li>
@@ -195,7 +195,7 @@ export class ListaAsistenciaComponent {
   private notasOriginales: Record<number, string> = {};
 
   readonly presentes = computed(() =>
-    Object.values(this.marks()).filter((e) => e === 'PRESENTE' || e === 'TARDE').length);
+    Object.values(this.marks()).filter((e) => e === 'PRESENT' || e === 'LATE').length);
 
   readonly hayCambios = computed(() => {
     const m = this.marks();
@@ -263,7 +263,7 @@ export class ListaAsistenciaComponent {
 
   necesitaNota(idEstudiante: number): boolean {
     const e = this.marks()[idEstudiante];
-    return e === 'AUSENTE' || e === 'JUSTIFICADO' || e === 'TARDE';
+    return e === 'ABSENT' || e === 'EXCUSED' || e === 'LATE';
   }
 
   guardar(): void {

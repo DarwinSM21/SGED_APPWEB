@@ -211,11 +211,11 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
             </label>
           </div>
           <div class="tabs tabs--secundario">
-            <button type="button" class="tab" [class.tab--activo]="formAsignacion.recipientType === 'ESTUDIANTE'" (click)="cambiarTipoDestinatario('ESTUDIANTE')">Estudiante</button>
-            <button type="button" class="tab" [class.tab--activo]="formAsignacion.recipientType === 'ENTRENADOR'" (click)="cambiarTipoDestinatario('ENTRENADOR')">Entrenador</button>
+            <button type="button" class="tab" [class.tab--activo]="formAsignacion.recipientType === 'STUDENT'" (click)="cambiarTipoDestinatario('STUDENT')">Estudiante</button>
+            <button type="button" class="tab" [class.tab--activo]="formAsignacion.recipientType === 'COACH'" (click)="cambiarTipoDestinatario('COACH')">Entrenador</button>
           </div>
           <label class="field" for="asf-destinatario">
-            <span class="field__label">{{ formAsignacion.recipientType === 'ESTUDIANTE' ? 'Estudiante' : 'Entrenador' }}</span>
+            <span class="field__label">{{ formAsignacion.recipientType === 'STUDENT' ? 'Estudiante' : 'Entrenador' }}</span>
             <span class="field__control">
               <select id="asf-destinatario" [(ngModel)]="formAsignacion.idDestinatario" name="asf-destinatario">
                 <option [ngValue]="null" disabled>Selecciona…</option>
@@ -246,15 +246,15 @@ const ETIQUETA_TIPO_ARTICULO: Record<TipoArticulo, string> = {
           } @else {
             @for (a of asignaciones(); track a.assignmentId) {
               <div class="fila-asignacion">
-                <span class="badge" [class.badge--info]="a.status === 'ASIGNADO'" [class.badge--success]="a.status === 'DEVUELTO'" [class.badge--danger]="a.status === 'PERDIDO'">
+                <span class="badge" [class.badge--info]="a.status === 'ASSIGNED'" [class.badge--success]="a.status === 'RETURNED'" [class.badge--danger]="a.status === 'LOST'">
                   {{ a.status }}
                 </span>
                 <span class="nombre-articulo">{{ a.item }} × {{ a.quantity }}</span>
                 <span class="destinatario-asignacion">{{ a.student ?? a.coach }}</span>
                 <span class="meta-movimiento">{{ a.assignmentDate }}</span>
-                @if (a.status === 'ASIGNADO') {
-                  <button class="btn btn--ghost btn--pequeno" type="button" (click)="devolver(a, 'DEVUELTO')">Devuelto</button>
-                  <button class="btn btn--ghost btn--pequeno" type="button" (click)="devolver(a, 'PERDIDO')">Perdido</button>
+                @if (a.status === 'ASSIGNED') {
+                  <button class="btn btn--ghost btn--pequeno" type="button" (click)="devolver(a, 'RETURNED')">Devuelto</button>
+                  <button class="btn btn--ghost btn--pequeno" type="button" (click)="devolver(a, 'LOST')">Perdido</button>
                 }
               </div>
             }
@@ -330,9 +330,9 @@ export class InventarioComponent implements OnInit {
   readonly estudiantesOpcion = signal<PersonaOpcion[]>([]);
   readonly entrenadoresOpcion = signal<PersonaOpcion[]>([]);
   readonly opcionesDestinatario = computed(() =>
-    this.formAsignacion.recipientType === 'ESTUDIANTE' ? this.estudiantesOpcion() : this.entrenadoresOpcion());
+    this.formAsignacion.recipientType === 'STUDENT' ? this.estudiantesOpcion() : this.entrenadoresOpcion());
   formAsignacion: { itemId: number | null; quantity: number | null; recipientType: TipoDestinatario; idDestinatario: number | null; notes: string } =
-    { itemId: null, quantity: 1, recipientType: 'ESTUDIANTE', idDestinatario: null, notes: '' };
+    { itemId: null, quantity: 1, recipientType: 'STUDENT', idDestinatario: null, notes: '' };
   readonly guardandoAsignacion = signal(false);
   readonly errorAsignacion = signal('');
 
@@ -477,8 +477,8 @@ export class InventarioComponent implements OnInit {
 
     this.servicio.crearAsignacion({
       itemId, quantity, recipientType,
-      studentId: recipientType === 'ESTUDIANTE' ? idDestinatario : null,
-      coachId: recipientType === 'ENTRENADOR' ? idDestinatario : null,
+      studentId: recipientType === 'STUDENT' ? idDestinatario : null,
+      coachId: recipientType === 'COACH' ? idDestinatario : null,
       expectedReturnDate: null,
       notes: notes || null,
     }).subscribe({
@@ -492,12 +492,12 @@ export class InventarioComponent implements OnInit {
     });
   }
 
-  devolver(a: AsignacionResponse, status: EstadoAsignacion & ('DEVUELTO' | 'PERDIDO')): void {
+  devolver(a: AsignacionResponse, status: EstadoAsignacion & ('RETURNED' | 'LOST')): void {
     this.errorAsignacion.set('');
     this.servicio.devolverAsignacion(a.assignmentId, { status, notes: null }).subscribe({
       next: (actualizada) => {
         this.asignaciones.set(this.asignaciones().map((x) => x.assignmentId === actualizada.assignmentId ? actualizada : x));
-        if (status === 'DEVUELTO') this.actualizarStockLocal(a.itemId, a.quantity);
+        if (status === 'RETURNED') this.actualizarStockLocal(a.itemId, a.quantity);
       },
       error: (err) => this.errorAsignacion.set(this.mensajeDeError(err)),
     });

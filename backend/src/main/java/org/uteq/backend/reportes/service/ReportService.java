@@ -201,7 +201,7 @@ public class ReportService {
     }
 
     private List<String> paymentRow(Payment p) {
-        String periodo = p.getType() == Payment.PaymentType.MEMBRESIA ? p.getMonth() + "/" + p.getYear() : "-";
+        String periodo = p.getType() == Payment.PaymentType.MEMBERSHIP ? p.getMonth() + "/" + p.getYear() : "-";
         var registrador = p.getRegisteredBy().getPerson();
         return List.of(
                 p.getStudent().getPerson().getName() + " " + p.getStudent().getPerson().getLastName(),

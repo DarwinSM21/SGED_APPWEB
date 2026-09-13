@@ -91,7 +91,7 @@ class PaymentControllerTest {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
         when(pagoService.registerMembership(eq(1L), eq(2026), eq(List.of(8)),
                 eq(new BigDecimal("30.00")), isNull(), eq("recepcion@sged.test")))
-                .thenReturn(List.of(pago(1L, PaymentType.MEMBRESIA, 2026, 8)));
+                .thenReturn(List.of(pago(1L, PaymentType.MEMBERSHIP, 2026, 8)));
 
         mockMvc.perform(post("/api/pagos/membresia")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -99,7 +99,7 @@ class PaymentControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$[0].student").value("Juan Perez"))
                 .andExpect(jsonPath("$[0].registeredBy").value("Ana Admin"))
-                .andExpect(jsonPath("$[0].type").value("MEMBRESIA"))
+                .andExpect(jsonPath("$[0].type").value("MEMBERSHIP"))
                 .andExpect(jsonPath("$[0].month").value(8));
     }
 
@@ -130,13 +130,13 @@ class PaymentControllerTest {
     void registrarDiario_devuelve_201() throws Exception {
         autenticarComo("recepcion@sged.test", "RECEPCIONISTA");
         when(pagoService.registerDaily(eq(1L), eq(new BigDecimal("5.00")), isNull(), eq("recepcion@sged.test")))
-                .thenReturn(pago(2L, PaymentType.DIARIO, null, null));
+                .thenReturn(pago(2L, PaymentType.DAILY, null, null));
 
         mockMvc.perform(post("/api/pagos/diario")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"studentId\":1,\"amount\":5.00}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.type").value("DIARIO"))
+                .andExpect(jsonPath("$.type").value("DAILY"))
                 .andExpect(jsonPath("$.year").isEmpty())
                 .andExpect(jsonPath("$.month").isEmpty());
     }
@@ -144,7 +144,7 @@ class PaymentControllerTest {
     @Test
     @DisplayName("historial devuelve la lista de pagos del estudiante")
     void historial_devuelve_lista() throws Exception {
-        when(pagoService.historyFor(1L)).thenReturn(List.of(pago(3L, PaymentType.DIARIO, null, null)));
+        when(pagoService.historyFor(1L)).thenReturn(List.of(pago(3L, PaymentType.DAILY, null, null)));
 
         mockMvc.perform(get("/api/pagos/estudiante/1"))
                 .andExpect(status().isOk())

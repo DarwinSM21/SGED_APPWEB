@@ -14,12 +14,12 @@ import java.time.LocalTime;
 @Table(name = "asistencias", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class Attendance {
-    public static final String METODO_QR = "QR";
-    public static final String METODO_MANUAL = "MANUAL";
-    public static final String ESTADO_PRESENTE = "PRESENTE";
-    public static final String ESTADO_TARDE = "TARDE";
-    public static final String ESTADO_AUSENTE = "AUSENTE";
-    public static final String ESTADO_JUSTIFICADO = "JUSTIFICADO";
+    public static final String METHOD_QR = "QR";
+    public static final String METHOD_MANUAL = "MANUAL";
+    public static final String STATUS_PRESENT = "PRESENT";
+    public static final String STATUS_LATE = "LATE";
+    public static final String STATUS_ABSENT = "ABSENT";
+    public static final String STATUS_EXCUSED = "EXCUSED";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,7 +39,7 @@ public class Attendance {
 
     @Column(nullable = false, length = 10)
     @Builder.Default
-    private String metodo = METODO_MANUAL;
+    private String metodo = METHOD_MANUAL;
 
     @Column(nullable = false, length = 15)
     private String estado;
@@ -64,6 +64,6 @@ public class Attendance {
      */
     @Transient
     public boolean enablesEvaluation() {
-        return ESTADO_PRESENTE.equals(estado) || ESTADO_TARDE.equals(estado);
+        return STATUS_PRESENT.equals(estado) || STATUS_LATE.equals(estado);
     }
 }

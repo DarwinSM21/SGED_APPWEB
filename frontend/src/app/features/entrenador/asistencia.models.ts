@@ -1,5 +1,5 @@
 
-export type EstadoAsistencia = 'PRESENTE' | 'TARDE' | 'AUSENTE' | 'JUSTIFICADO';
+export type EstadoAsistencia = 'PRESENT' | 'LATE' | 'ABSENT' | 'EXCUSED';
 
 export interface FilaNomina {
   studentId: number;

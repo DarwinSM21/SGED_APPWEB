@@ -35,8 +35,8 @@ import { horaCorta } from '../../core/formato-texto';
           } @else {
             @for (a of h.attendances; track a.attendanceId) {
               <div class="fila">
-                <span class="fila__icono" [class.fila__icono--tarde]="a.status === 'TARDE'">
-                  @if (a.status === 'PRESENTE') {
+                <span class="fila__icono" [class.fila__icono--tarde]="a.status === 'LATE'">
+                  @if (a.status === 'PRESENT') {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
                   } @else {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
@@ -46,8 +46,8 @@ import { horaCorta } from '../../core/formato-texto';
                   <span class="fila__categoria">{{ a.category }}</span>
                   <span class="fila__fecha">{{ a.date }}{{ a.checkInTime ? ' · ' + horaCorta(a.checkInTime) : '' }}</span>
                 </div>
-                <span class="badge" [class.badge--success]="a.status === 'PRESENTE'" [class.badge--warning]="a.status === 'TARDE'">
-                  {{ a.status === 'PRESENTE' ? 'Presente' : 'Tarde' }}
+                <span class="badge" [class.badge--success]="a.status === 'PRESENT'" [class.badge--warning]="a.status === 'LATE'">
+                  {{ a.status === 'PRESENT' ? 'Presente' : 'Tarde' }}
                 </span>
               </div>
             }

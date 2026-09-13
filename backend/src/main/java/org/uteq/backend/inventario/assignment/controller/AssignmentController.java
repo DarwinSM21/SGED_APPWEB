@@ -87,8 +87,8 @@ public class AssignmentController {
     }
 
     /**
-     * Resuelve una asignación como {@code DEVUELTO} (repone stock) o
-     * {@code PERDIDO} (no repone).
+     * Resuelve una asignación como {@code RETURNED} (repone stock) o
+     * {@code LOST} (no repone).
      *
      * @param id      identificador de la asignación
      * @param request estado de la devolución y observaciones; validado con

@@ -65,9 +65,9 @@ class AssignmentControllerTest {
     }
 
     private AssignmentResponse response() {
-        return new AssignmentResponse(1L, 1L, "Balón N5", 1, RecipientType.ESTUDIANTE,
+        return new AssignmentResponse(1L, 1L, "Balón N5", 1, RecipientType.STUDENT,
                 5L, "Andres Vera", null, null, LocalDate.now(), null, null,
-                AssignmentStatus.ASIGNADO, "recepcion@sged.test", null, Instant.now());
+                AssignmentStatus.ASSIGNED, "recepcion@sged.test", null, Instant.now());
     }
 
     @Test
@@ -111,7 +111,7 @@ class AssignmentControllerTest {
 
         mockMvc.perform(post("/api/inventario/asignaciones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"itemId\":1,\"quantity\":1,\"recipientType\":\"ESTUDIANTE\",\"studentId\":5}"))
+                        .content("{\"itemId\":1,\"quantity\":1,\"recipientType\":\"STUDENT\",\"studentId\":5}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.item").value("Balón N5"));
 
@@ -125,7 +125,7 @@ class AssignmentControllerTest {
 
         mockMvc.perform(post("/api/inventario/asignaciones")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"itemId\":1,\"quantity\":0,\"recipientType\":\"ESTUDIANTE\",\"studentId\":5}"))
+                        .content("{\"itemId\":1,\"quantity\":0,\"recipientType\":\"STUDENT\",\"studentId\":5}"))
                 .andExpect(status().isUnprocessableEntity());
     }
 
@@ -136,7 +136,7 @@ class AssignmentControllerTest {
 
         mockMvc.perform(patch("/api/inventario/asignaciones/1/devolver")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"status\":\"DEVUELTO\"}"))
+                        .content("{\"status\":\"RETURNED\"}"))
                 .andExpect(status().isOk());
     }
 }

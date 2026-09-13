@@ -9,18 +9,18 @@ import { SesionesService } from './sesiones.service';
 import { HistorialSesion, FilaAsistenciaHistorial } from './sesiones.models';
 
 const ETIQUETA_ESTADO: Record<string, string> = {
-  PRESENTE: 'Presente',
-  TARDE: 'Llegó tarde',
-  AUSENTE: 'Ausente',
-  JUSTIFICADO: 'Justificado',
+  PRESENT: 'Presente',
+  LATE: 'Llegó tarde',
+  ABSENT: 'Ausente',
+  EXCUSED: 'Justificado',
   SIN_REGISTRO: 'Sin registro',
 };
 
 const COLOR_ESTADO: Record<string, string> = {
-  PRESENTE: 'success',
-  TARDE: 'warning',
-  AUSENTE: 'danger',
-  JUSTIFICADO: 'info',
+  PRESENT: 'success',
+  LATE: 'warning',
+  ABSENT: 'danger',
+  EXCUSED: 'info',
   SIN_REGISTRO: 'info',
 };
 
@@ -226,10 +226,10 @@ export class HistorialSesionComponent implements OnInit {
     switch (this.filtro()) {
       case 'ENTRENARON':
         return h.attendances.filter((f) => porNombre(f)
-          && (f.status === 'PRESENTE' || f.status === 'TARDE'));
+          && (f.status === 'PRESENT' || f.status === 'LATE'));
       case 'FALTARON':
         return h.attendances.filter((f) => porNombre(f)
-          && (f.status === 'AUSENTE' || f.status === 'JUSTIFICADO'));
+          && (f.status === 'ABSENT' || f.status === 'EXCUSED'));
       case 'SIN_REGISTRO':
         return h.attendances.filter((f) => porNombre(f) && f.status === 'SIN_REGISTRO');
       default:

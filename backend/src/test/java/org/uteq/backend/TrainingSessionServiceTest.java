@@ -285,11 +285,11 @@ class TrainingSessionServiceTest {
                 .thenReturn(List.of(presente, tarde, ausente, justificado, sinRegistro));
 
         when(attendanceRepository.sessionHistory(500L)).thenReturn(List.of(
-                Attendance.builder().estudiante(presente).estado(Attendance.ESTADO_PRESENTE)
+                Attendance.builder().estudiante(presente).estado(Attendance.STATUS_PRESENT)
                         .horaEntrada(LocalTime.of(16, 1)).metodo("QR").build(),
-                Attendance.builder().estudiante(tarde).estado(Attendance.ESTADO_TARDE).build(),
-                Attendance.builder().estudiante(ausente).estado(Attendance.ESTADO_AUSENTE).build(),
-                Attendance.builder().estudiante(justificado).estado(Attendance.ESTADO_JUSTIFICADO)
+                Attendance.builder().estudiante(tarde).estado(Attendance.STATUS_LATE).build(),
+                Attendance.builder().estudiante(ausente).estado(Attendance.STATUS_ABSENT).build(),
+                Attendance.builder().estudiante(justificado).estado(Attendance.STATUS_EXCUSED)
                         .observacion("Cita medica").build()
                 // 'sinRegistro' no tiene fila de asistencia -> cae en el caso por defecto
         ));
@@ -333,7 +333,7 @@ class TrainingSessionServiceTest {
 
         Student deBaja = estudianteDe(9L, "Fabio", null);
         when(attendanceRepository.sessionHistory(501L)).thenReturn(List.of(
-                Attendance.builder().estudiante(deBaja).estado(Attendance.ESTADO_PRESENTE).build()));
+                Attendance.builder().estudiante(deBaja).estado(Attendance.STATUS_PRESENT).build()));
         when(evaluacionRepository.findBySession_Id(501L))
                 .thenReturn(Optional.of(DailyEvaluation.builder().estado("CERRADA").build()));
 

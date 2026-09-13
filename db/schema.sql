@@ -361,10 +361,10 @@ CREATE TABLE IF NOT EXISTS academico.pagos (
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT chk_pago_anulacion_completa CHECK ((((anulado_en IS NULL) AND (anulado_por_id_usuario IS NULL) AND (motivo_anulacion IS NULL)) OR ((anulado_en IS NOT NULL) AND (anulado_por_id_usuario IS NOT NULL) AND (motivo_anulacion IS NOT NULL)))),
-    CONSTRAINT chk_pago_periodo_segun_tipo CHECK (((((tipo)::text = 'MEMBRESIA'::text) AND (anio IS NOT NULL) AND (mes IS NOT NULL)) OR (((tipo)::text = 'DIARIO'::text) AND (anio IS NULL) AND (mes IS NULL)))),
+    CONSTRAINT chk_pago_periodo_segun_tipo CHECK (((((tipo)::text = 'MEMBERSHIP'::text) AND (anio IS NOT NULL) AND (mes IS NOT NULL)) OR (((tipo)::text = 'DAILY'::text) AND (anio IS NULL) AND (mes IS NULL)))),
     CONSTRAINT pagos_mes_check CHECK (((mes >= 1) AND (mes <= 12))),
     CONSTRAINT pagos_monto_check CHECK ((monto > (0)::numeric)),
-    CONSTRAINT pagos_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['MEMBRESIA'::character varying, 'DIARIO'::character varying])::text[])))
+    CONSTRAINT pagos_tipo_check CHECK (((tipo)::text = ANY ((ARRAY['MEMBERSHIP'::character varying, 'DAILY'::character varying])::text[])))
 );
 
 CREATE SEQUENCE IF NOT EXISTS academico.pagos_id_pago_seq
@@ -463,7 +463,7 @@ CREATE TABLE IF NOT EXISTS deportivo.asistencias (
     observacion character varying(255),
     creado_en timestamp with time zone DEFAULT now() NOT NULL,
     actualizado_en timestamp with time zone DEFAULT now() NOT NULL,
-    CONSTRAINT asistencias_estado_check CHECK (((estado)::text = ANY ((ARRAY['PRESENTE'::character varying, 'TARDE'::character varying, 'AUSENTE'::character varying, 'JUSTIFICADO'::character varying])::text[]))),
+    CONSTRAINT asistencias_estado_check CHECK (((estado)::text = ANY ((ARRAY['PRESENT'::character varying, 'LATE'::character varying, 'ABSENT'::character varying, 'EXCUSED'::character varying])::text[]))),
     CONSTRAINT asistencias_metodo_check CHECK (((metodo)::text = ANY ((ARRAY['QR'::character varying, 'RFID'::character varying, 'MANUAL'::character varying])::text[])))
 );
 
@@ -875,15 +875,15 @@ CREATE TABLE IF NOT EXISTS inventario.asignaciones (
     fecha_asignacion date DEFAULT CURRENT_DATE NOT NULL,
     fecha_devolucion_esperada date,
     fecha_devolucion_real date,
-    estado character varying(15) DEFAULT 'ASIGNADO'::character varying NOT NULL,
+    estado character varying(15) DEFAULT 'ASSIGNED'::character varying NOT NULL,
     registrado_por_id_usuario bigint NOT NULL,
     observaciones character varying(255),
     created_at timestamp with time zone DEFAULT now() NOT NULL,
     updated_at timestamp with time zone DEFAULT now() NOT NULL,
     CONSTRAINT asignaciones_cantidad_check CHECK ((cantidad > 0)),
-    CONSTRAINT asignaciones_estado_check CHECK (((estado)::text = ANY ((ARRAY['ASIGNADO'::character varying, 'DEVUELTO'::character varying, 'PERDIDO'::character varying])::text[]))),
-    CONSTRAINT asignaciones_tipo_destinatario_check CHECK (((tipo_destinatario)::text = ANY ((ARRAY['ESTUDIANTE'::character varying, 'ENTRENADOR'::character varying])::text[]))),
-    CONSTRAINT chk_asignacion_destinatario CHECK (((((tipo_destinatario)::text = 'ESTUDIANTE'::text) AND (id_estudiante IS NOT NULL) AND (id_entrenador IS NULL)) OR (((tipo_destinatario)::text = 'ENTRENADOR'::text) AND (id_entrenador IS NOT NULL) AND (id_estudiante IS NULL))))
+    CONSTRAINT asignaciones_estado_check CHECK (((estado)::text = ANY ((ARRAY['ASSIGNED'::character varying, 'RETURNED'::character varying, 'LOST'::character varying])::text[]))),
+    CONSTRAINT asignaciones_tipo_destinatario_check CHECK (((tipo_destinatario)::text = ANY ((ARRAY['STUDENT'::character varying, 'COACH'::character varying])::text[]))),
+    CONSTRAINT chk_asignacion_destinatario CHECK (((((tipo_destinatario)::text = 'STUDENT'::text) AND (id_estudiante IS NOT NULL) AND (id_entrenador IS NULL)) OR (((tipo_destinatario)::text = 'COACH'::text) AND (id_entrenador IS NOT NULL) AND (id_estudiante IS NULL))))
 );
 
 CREATE SEQUENCE IF NOT EXISTS inventario.asignaciones_id_asignacion_seq

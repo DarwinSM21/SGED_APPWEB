@@ -18,7 +18,7 @@ function formatearFechaEs(fechaIso: string): string {
 }
 
 const ESTADO_ETIQUETA: Partial<Record<string, string>> = {
-  PRESENTE: 'PRESENTE', TARDE: 'TARDE', AUSENTE: 'AUSENTE', JUSTIFICADO: 'JUSTIFICADO',
+  PRESENT: 'PRESENT', LATE: 'LATE', ABSENT: 'ABSENT', EXCUSED: 'EXCUSED',
 };
 
 @Component({

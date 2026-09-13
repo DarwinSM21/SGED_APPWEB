@@ -1,3 +1,3 @@
 export interface MarcarAsistenciaResponse {
-  status: 'PRESENTE' | 'TARDE';
+  status: 'PRESENT' | 'LATE';
 }

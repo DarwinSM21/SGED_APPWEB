@@ -22,12 +22,12 @@ describe('EvaluacionDiariaComponent', () => {
 
   const jugadorHabilitado: JugadorEvaluable = {
     studentId: 1, fullName: 'Ana Vera', category: 'SUB-12', positionId: null, position: null,
-    attendanceStatus: 'PRESENTE', scores: { Actitud: 5 }, preloaded: false, injured: false,
+    attendanceStatus: 'PRESENT', scores: { Actitud: 5 }, preloaded: false, injured: false,
     injuryId: null, canBeEvaluated: true, blockReason: null,
   };
   const jugadorBloqueado: JugadorEvaluable = {
     studentId: 2, fullName: 'Luis Mora', category: 'SUB-12', positionId: null, position: null,
-    attendanceStatus: 'AUSENTE', scores: {}, preloaded: false, injured: false,
+    attendanceStatus: 'ABSENT', scores: {}, preloaded: false, injured: false,
     injuryId: null, canBeEvaluated: false, blockReason: 'No marcó asistencia',
   };
   const sesionBase: EvaluacionSesion = {

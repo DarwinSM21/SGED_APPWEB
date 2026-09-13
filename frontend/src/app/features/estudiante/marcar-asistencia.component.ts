@@ -13,15 +13,15 @@ import { MarcarAsistenciaResponse } from './marcar-asistencia.models';
       <h1 class="titulo-pantalla">Marcar asistencia</h1>
 
       @if (result(); as r) {
-        <div class="card resultado" [class.result--tarde]="r.status === 'TARDE'">
+        <div class="card resultado" [class.result--tarde]="r.status === 'LATE'">
           <span class="resultado__icono">
-            @if (r.status === 'PRESENTE') {
+            @if (r.status === 'PRESENT') {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
             } @else {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             }
           </span>
-          <p class="resultado__estado">{{ r.status === 'PRESENTE' ? '¡Presente!' : 'Marcado como tarde' }}</p>
+          <p class="resultado__estado">{{ r.status === 'PRESENT' ? '¡Presente!' : 'Marcado como tarde' }}</p>
           <p class="resultado__detalle">Tu asistencia quedó registrada.</p>
           <button class="btn btn--secondary" (click)="reiniciar()">Escanear otro código</button>
         </div>

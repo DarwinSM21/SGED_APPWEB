@@ -76,7 +76,7 @@ public class AlertService {
         List<Student> activos = estudianteRepository.findByActiveTrueOrderByPerson_LastNameAsc();
 
         Set<Long> alDia = new HashSet<>(
-                pagoRepository.idsWithMembershipCovered(PaymentType.MEMBRESIA, anio, mes));
+                pagoRepository.idsWithMembershipCovered(PaymentType.MEMBERSHIP, anio, mes));
         Set<Long> lesionados = new HashSet<>(injuryRepository.injuredStudentIds());
 
         LocalDate corte = hoy.minusDays(1);

@@ -50,7 +50,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
     @Query("""
            SELECT a FROM Attendance a
            WHERE a.sesion.idSesion = :idSesion
-             AND a.estado IN ('PRESENTE', 'TARDE')
+             AND a.estado IN ('PRESENT', 'LATE')
            """)
     List<Attendance> findEligibleForEvaluation(@Param("idSesion") Long idSesion);
 
@@ -62,7 +62,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
     @Query("""
            SELECT COUNT(a) FROM Attendance a
            WHERE a.estudiante.id = :idEstudiante
-             AND a.estado IN ('PRESENTE', 'TARDE')
+             AND a.estado IN ('PRESENT', 'LATE')
              AND a.sesion.fecha >= :desde
            """)
     long countSince(@Param("idEstudiante") Long idEstudiante, @Param("desde") LocalDate desde);
@@ -115,7 +115,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
                SELECT a.id_estudiante, COUNT(*) AS n
                  FROM deportivo.asistencias a
                  JOIN deportivo.sesiones_entrenamiento se ON se.id_sesion = a.id_sesion
-                WHERE a.estado IN ('PRESENTE', 'TARDE')
+                WHERE a.estado IN ('PRESENT', 'LATE')
                   AND se.fecha BETWEEN :desde AND :corte
                 GROUP BY a.id_estudiante
            )
@@ -138,7 +138,7 @@ public interface AttendanceRepository extends JpaRepository<Attendance, Long>, J
            SELECT a.estudiante.id, COUNT(a)
            FROM Attendance a
            WHERE a.estudiante.id IN :ids
-             AND a.estado IN ('PRESENTE', 'TARDE')
+             AND a.estado IN ('PRESENT', 'LATE')
              AND a.sesion.fecha BETWEEN :desde AND :hasta
            GROUP BY a.estudiante.id
            """)

@@ -21,8 +21,8 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Assignment {
-    public enum RecipientType { ESTUDIANTE, ENTRENADOR }
-    public enum AssignmentStatus { ASIGNADO, DEVUELTO, PERDIDO }
+    public enum RecipientType { STUDENT, COACH }
+    public enum AssignmentStatus { ASSIGNED, RETURNED, LOST }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -61,7 +61,7 @@ public class Assignment {
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 15)
     @Builder.Default
-    private AssignmentStatus status = AssignmentStatus.ASIGNADO;
+    private AssignmentStatus status = AssignmentStatus.ASSIGNED;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "registrado_por_id_usuario", nullable = false)

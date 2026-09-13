@@ -82,12 +82,12 @@ class TakeAttendanceServiceTest {
         when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
-        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE));
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.STATUS_PRESENT));
 
         ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
         verify(attendanceRepository).save(capturada.capture());
-        assertThat(capturada.getValue().getEstado()).isEqualTo(Attendance.ESTADO_PRESENTE);
-        assertThat(capturada.getValue().getMetodo()).isEqualTo(Attendance.METODO_MANUAL);
+        assertThat(capturada.getValue().getEstado()).isEqualTo(Attendance.STATUS_PRESENT);
+        assertThat(capturada.getValue().getMetodo()).isEqualTo(Attendance.METHOD_MANUAL);
     }
 
     @Test
@@ -101,7 +101,7 @@ class TakeAttendanceServiceTest {
         when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
-        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE));
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.STATUS_PRESENT));
 
         ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
         verify(attendanceRepository).save(capturada.capture());
@@ -116,8 +116,8 @@ class TakeAttendanceServiceTest {
         var horaReal = LocalTime.of(18, 3, 12);
         var yaMarcada = Attendance.builder()
                 .estudiante(estudiante(6L, ID_CATEGORIA))
-                .estado(Attendance.ESTADO_PRESENTE)
-                .metodo(Attendance.METODO_QR)
+                .estado(Attendance.STATUS_PRESENT)
+                .metodo(Attendance.METHOD_QR)
                 .horaEntrada(horaReal)
                 .build();
 
@@ -128,13 +128,13 @@ class TakeAttendanceServiceTest {
         when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
-        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_TARDE));
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.STATUS_LATE));
 
         ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
         verify(attendanceRepository).save(capturada.capture());
-        assertThat(capturada.getValue().getEstado()).isEqualTo(Attendance.ESTADO_TARDE);
+        assertThat(capturada.getValue().getEstado()).isEqualTo(Attendance.STATUS_LATE);
         assertThat(capturada.getValue().getHoraEntrada()).isEqualTo(horaReal);
-        assertThat(capturada.getValue().getMetodo()).isEqualTo(Attendance.METODO_QR);
+        assertThat(capturada.getValue().getMetodo()).isEqualTo(Attendance.METHOD_QR);
     }
 
     @Test
@@ -143,8 +143,8 @@ class TakeAttendanceServiceTest {
         var hoy = LocalDate.now(Zones.ECUADOR);
         var yaMarcada = Attendance.builder()
                 .estudiante(estudiante(6L, ID_CATEGORIA))
-                .estado(Attendance.ESTADO_PRESENTE)
-                .metodo(Attendance.METODO_QR)
+                .estado(Attendance.STATUS_PRESENT)
+                .metodo(Attendance.METHOD_QR)
                 .horaEntrada(LocalTime.of(18, 3))
                 .build();
 
@@ -155,7 +155,7 @@ class TakeAttendanceServiceTest {
         when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(ID_CATEGORIA))
                 .thenReturn(List.of(estudiante(6L, ID_CATEGORIA)));
 
-        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_AUSENTE));
+        attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.STATUS_ABSENT));
 
         ArgumentCaptor<Attendance> capturada = ArgumentCaptor.forClass(Attendance.class);
         verify(attendanceRepository).save(capturada.capture());
@@ -168,7 +168,7 @@ class TakeAttendanceServiceTest {
         var manana = LocalDate.now(Zones.ECUADOR).plusDays(1);
         when(sesionRepository.findById(ID_SESION)).thenReturn(Optional.of(sesion(manana)));
 
-        assertThatThrownBy(() -> attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.ESTADO_PRESENTE)))
+        assertThatThrownBy(() -> attendanceService.takeAttendance(ID_SESION, lista(6L, Attendance.STATUS_PRESENT)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("todavía no ocurre");
 
@@ -184,7 +184,7 @@ class TakeAttendanceServiceTest {
         when(estudianteRepository.findByIdAndActiveTrue(9L))
                 .thenReturn(Optional.of(estudiante(9L, 99L)));
 
-        assertThatThrownBy(() -> attendanceService.takeAttendance(ID_SESION, lista(9L, Attendance.ESTADO_PRESENTE)))
+        assertThatThrownBy(() -> attendanceService.takeAttendance(ID_SESION, lista(9L, Attendance.STATUS_PRESENT)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("no pertenece a");
 
@@ -197,8 +197,8 @@ class TakeAttendanceServiceTest {
         var hoy = LocalDate.now(Zones.ECUADOR);
         var conMarca = Attendance.builder()
                 .estudiante(estudiante(6L, ID_CATEGORIA))
-                .estado(Attendance.ESTADO_PRESENTE)
-                .metodo(Attendance.METODO_QR)
+                .estado(Attendance.STATUS_PRESENT)
+                .metodo(Attendance.METHOD_QR)
                 .horaEntrada(LocalTime.of(18, 1))
                 .build();
 
@@ -213,7 +213,7 @@ class TakeAttendanceServiceTest {
         assertThat(nomina.editable()).isTrue();
 
         assertThat(nomina.rows())
-                .anySatisfy(f -> assertThat(f.status()).isEqualTo(Attendance.ESTADO_PRESENTE))
+                .anySatisfy(f -> assertThat(f.status()).isEqualTo(Attendance.STATUS_PRESENT))
                 .anySatisfy(f -> assertThat(f.status()).isNull());
     }
 

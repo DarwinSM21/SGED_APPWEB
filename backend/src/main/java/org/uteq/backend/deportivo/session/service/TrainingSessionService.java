@@ -190,10 +190,10 @@ public class TrainingSessionService {
             Attendance a = porEstudiante.remove(e.getId());
             String estado = a == null ? "SIN_REGISTRO" : a.getEstado();
             switch (estado) {
-                case Attendance.ESTADO_PRESENTE -> presentes++;
-                case Attendance.ESTADO_TARDE -> tarde++;
-                case Attendance.ESTADO_AUSENTE -> ausentes++;
-                case Attendance.ESTADO_JUSTIFICADO -> justificados++;
+                case Attendance.STATUS_PRESENT -> presentes++;
+                case Attendance.STATUS_LATE -> tarde++;
+                case Attendance.STATUS_ABSENT -> ausentes++;
+                case Attendance.STATUS_EXCUSED -> justificados++;
                 default -> sinRegistro++;
             }
             filas.add(new SessionHistoryResponse.AttendanceRow(
@@ -209,10 +209,10 @@ public class TrainingSessionService {
         for (Attendance a : porEstudiante.values()) {
             Student e = a.getEstudiante();
             switch (a.getEstado()) {
-                case Attendance.ESTADO_PRESENTE -> presentes++;
-                case Attendance.ESTADO_TARDE -> tarde++;
-                case Attendance.ESTADO_AUSENTE -> ausentes++;
-                case Attendance.ESTADO_JUSTIFICADO -> justificados++;
+                case Attendance.STATUS_PRESENT -> presentes++;
+                case Attendance.STATUS_LATE -> tarde++;
+                case Attendance.STATUS_ABSENT -> ausentes++;
+                case Attendance.STATUS_EXCUSED -> justificados++;
                 default -> { }
             }
             filas.add(new SessionHistoryResponse.AttendanceRow(

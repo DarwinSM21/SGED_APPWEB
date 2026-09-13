@@ -75,7 +75,7 @@ class SessionAttendanceControllerTest {
 
         mockMvc.perform(put("/api/asistencias/sesion/7")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"marks\":[{\"studentId\":1,\"status\":\"PRESENTE\"}]}"))
+                        .content("{\"marks\":[{\"studentId\":1,\"status\":\"PRESENT\"}]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.sessionId").value(7));
     }

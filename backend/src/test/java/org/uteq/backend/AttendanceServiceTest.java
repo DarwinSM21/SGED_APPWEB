@@ -93,8 +93,8 @@ class AttendanceServiceTest {
 
         Attendance resultado = attendanceService.markByQr("andres@sged.test", 1L);
 
-        assertThat(resultado.getEstado()).isEqualTo(Attendance.ESTADO_PRESENTE);
-        assertThat(resultado.getMetodo()).isEqualTo(Attendance.METODO_QR);
+        assertThat(resultado.getEstado()).isEqualTo(Attendance.STATUS_PRESENT);
+        assertThat(resultado.getMetodo()).isEqualTo(Attendance.METHOD_QR);
         assertThat(resultado.getEstudiante()).isSameAs(e);
     }
 
@@ -116,7 +116,7 @@ class AttendanceServiceTest {
 
         Attendance resultado = attendanceService.markByQr("andres@sged.test", 1L);
 
-        assertThat(resultado.getEstado()).isEqualTo(Attendance.ESTADO_TARDE);
+        assertThat(resultado.getEstado()).isEqualTo(Attendance.STATUS_LATE);
     }
 
     @Test
@@ -134,7 +134,7 @@ class AttendanceServiceTest {
 
         Attendance resultado = attendanceService.markByQr("andres@sged.test", 1L);
 
-        assertThat(resultado.getEstado()).isEqualTo(Attendance.ESTADO_PRESENTE);
+        assertThat(resultado.getEstado()).isEqualTo(Attendance.STATUS_PRESENT);
     }
 
     @Test
@@ -157,7 +157,7 @@ class AttendanceServiceTest {
 
         Attendance resultado = attendanceService.markByQr("andres@sged.test", 1L);
 
-        assertThat(resultado.getEstado()).isEqualTo(Attendance.ESTADO_TARDE);
+        assertThat(resultado.getEstado()).isEqualTo(Attendance.STATUS_LATE);
     }
 
     @Test
@@ -210,7 +210,7 @@ class AttendanceServiceTest {
                 .build();
         Attendance asistencia = Attendance.builder()
                 .idAsistencia(50L).sesion(sesion).estudiante(e)
-                .horaEntrada(LocalTime.of(16, 5)).estado(Attendance.ESTADO_PRESENTE)
+                .horaEntrada(LocalTime.of(16, 5)).estado(Attendance.STATUS_PRESENT)
                 .build();
 
         when(estudianteRepository.findByUserAccount_Username("andres@sged.test")).thenReturn(Optional.of(e));
@@ -223,7 +223,7 @@ class AttendanceServiceTest {
 
         assertThat(respuesta.attendances()).hasSize(1);
         assertThat(respuesta.attendances().get(0).category()).isEqualTo("SUB-12");
-        assertThat(respuesta.attendances().get(0).status()).isEqualTo(Attendance.ESTADO_PRESENTE);
+        assertThat(respuesta.attendances().get(0).status()).isEqualTo(Attendance.STATUS_PRESENT);
         assertThat(respuesta.percentageLast30Days()).isEqualByComparingTo("80.00");
     }
 

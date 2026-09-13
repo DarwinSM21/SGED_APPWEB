@@ -48,8 +48,8 @@ export interface MovimientoResponse {
   movementDate: string;
 }
 
-export type TipoDestinatario = 'ESTUDIANTE' | 'ENTRENADOR';
-export type EstadoAsignacion = 'ASIGNADO' | 'DEVUELTO' | 'PERDIDO';
+export type TipoDestinatario = 'STUDENT' | 'COACH';
+export type EstadoAsignacion = 'ASSIGNED' | 'RETURNED' | 'LOST';
 
 export interface AsignacionRequest {
   itemId: number;
@@ -62,7 +62,7 @@ export interface AsignacionRequest {
 }
 
 export interface DevolucionRequest {
-  status: 'DEVUELTO' | 'PERDIDO';
+  status: 'RETURNED' | 'LOST';
   notes: string | null;
 }
 

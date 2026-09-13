@@ -56,16 +56,16 @@ class EntidadLogicaTest {
     void asistencia_habilitaEvaluacion() {
         Attendance a = new Attendance();
 
-        a.setEstado(Attendance.ESTADO_PRESENTE);
+        a.setEstado(Attendance.STATUS_PRESENT);
         assertThat(a.enablesEvaluation()).isTrue();
 
-        a.setEstado(Attendance.ESTADO_TARDE);
+        a.setEstado(Attendance.STATUS_LATE);
         assertThat(a.enablesEvaluation()).isTrue();
 
-        a.setEstado(Attendance.ESTADO_AUSENTE);
+        a.setEstado(Attendance.STATUS_ABSENT);
         assertThat(a.enablesEvaluation()).isFalse();
 
-        a.setEstado(Attendance.ESTADO_JUSTIFICADO);
+        a.setEstado(Attendance.STATUS_EXCUSED);
         assertThat(a.enablesEvaluation()).isFalse();
     }
 

@@ -20,7 +20,7 @@ export interface RegistrarDiarioRequest {
   paymentDate: string | null;
 }
 
-export type TipoPago = 'MEMBRESIA' | 'DIARIO';
+export type TipoPago = 'MEMBERSHIP' | 'DAILY';
 
 export interface PagoResponse {
   paymentId: number;

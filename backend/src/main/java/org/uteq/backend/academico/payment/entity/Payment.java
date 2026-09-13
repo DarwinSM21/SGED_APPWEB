@@ -19,7 +19,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class Payment {
-    public enum PaymentType { MEMBRESIA, DIARIO }
+    public enum PaymentType { MEMBERSHIP, DAILY }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

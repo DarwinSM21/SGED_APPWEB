@@ -88,11 +88,11 @@ class AssignmentServiceTest {
         when(estudianteRepository.findById(5L)).thenReturn(Optional.of(estudiante()));
         stubGuardarAsignacion();
 
-        AssignmentRequest request = new AssignmentRequest(1L, 1, RecipientType.ESTUDIANTE, 5L, null, null, null);
+        AssignmentRequest request = new AssignmentRequest(1L, 1, RecipientType.STUDENT, 5L, null, null, null);
         AssignmentResponse resultado = asignacionService.create(request, "recepcion");
 
         assertThat(articulo.getCurrentStock()).isEqualTo(9);
-        assertThat(resultado.status()).isEqualTo(AssignmentStatus.ASIGNADO);
+        assertThat(resultado.status()).isEqualTo(AssignmentStatus.ASSIGNED);
         assertThat(resultado.student()).isEqualTo("Juan Perez");
     }
 
@@ -102,7 +102,7 @@ class AssignmentServiceTest {
         Item articulo = uniformeConStock(1);
         when(articuloRepository.findById(1L)).thenReturn(Optional.of(articulo));
 
-        AssignmentRequest request = new AssignmentRequest(1L, 3, RecipientType.ESTUDIANTE, 5L, null, null, null);
+        AssignmentRequest request = new AssignmentRequest(1L, 3, RecipientType.STUDENT, 5L, null, null, null);
 
         assertThatThrownBy(() -> asignacionService.create(request, "recepcion"))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -115,7 +115,7 @@ class AssignmentServiceTest {
     @Test
     @DisplayName("crear rechaza ESTUDIANTE sin idEstudiante, sin tocar el stock")
     void crear_estudiante_sin_id_lanza_excepcion() {
-        AssignmentRequest request = new AssignmentRequest(1L, 1, RecipientType.ESTUDIANTE, null, null, null, null);
+        AssignmentRequest request = new AssignmentRequest(1L, 1, RecipientType.STUDENT, null, null, null, null);
 
         assertThatThrownBy(() -> asignacionService.create(request, "recepcion"))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -131,7 +131,7 @@ class AssignmentServiceTest {
         when(coachRepository.findById(7L)).thenReturn(Optional.of(entrenador()));
         stubGuardarAsignacion();
 
-        AssignmentRequest request = new AssignmentRequest(1L, 2, RecipientType.ENTRENADOR, null, 7L, null, null);
+        AssignmentRequest request = new AssignmentRequest(1L, 2, RecipientType.COACH, null, 7L, null, null);
         AssignmentResponse resultado = asignacionService.create(request, "recepcion");
 
         assertThat(resultado.coach()).isEqualTo("Carlos Ruiz");
@@ -144,39 +144,39 @@ class AssignmentServiceTest {
                 .id(100L)
                 .item(uniformeConStock(9))
                 .quantity(1)
-                .recipientType(RecipientType.ESTUDIANTE)
+                .recipientType(RecipientType.STUDENT)
                 .student(estudiante())
-                .status(AssignmentStatus.ASIGNADO)
+                .status(AssignmentStatus.ASSIGNED)
                 .registeredBy(registrador())
                 .build();
     }
 
     @Test
-    @DisplayName("devolver con estado DEVUELTO repone el stock_actual del articulo")
+    @DisplayName("devolver con estado RETURNED repone el stock_actual del articulo")
     void devolver_con_devuelto_repone_stock() {
         Assignment asignacion = asignacionActiva();
         when(asignacionRepository.findById(100L)).thenReturn(Optional.of(asignacion));
         when(asignacionRepository.save(any(Assignment.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ReturnRequest request = new ReturnRequest(AssignmentStatus.DEVUELTO, "en buen estado");
+        ReturnRequest request = new ReturnRequest(AssignmentStatus.RETURNED, "en buen estado");
         AssignmentResponse resultado = asignacionService.registerReturn(100L, request);
 
-        assertThat(resultado.status()).isEqualTo(AssignmentStatus.DEVUELTO);
+        assertThat(resultado.status()).isEqualTo(AssignmentStatus.RETURNED);
         assertThat(asignacion.getItem().getCurrentStock()).isEqualTo(10);
         assertThat(resultado.actualReturnDate()).isNotNull();
     }
 
     @Test
-    @DisplayName("devolver con estado PERDIDO no repone el stock_actual del articulo")
+    @DisplayName("devolver con estado LOST no repone el stock_actual del articulo")
     void devolver_con_perdido_no_repone_stock() {
         Assignment asignacion = asignacionActiva();
         when(asignacionRepository.findById(100L)).thenReturn(Optional.of(asignacion));
         when(asignacionRepository.save(any(Assignment.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        ReturnRequest request = new ReturnRequest(AssignmentStatus.PERDIDO, "no se recupero");
+        ReturnRequest request = new ReturnRequest(AssignmentStatus.LOST, "no se recupero");
         AssignmentResponse resultado = asignacionService.registerReturn(100L, request);
 
-        assertThat(resultado.status()).isEqualTo(AssignmentStatus.PERDIDO);
+        assertThat(resultado.status()).isEqualTo(AssignmentStatus.LOST);
         assertThat(asignacion.getItem().getCurrentStock()).isEqualTo(9);
     }
 
@@ -184,10 +184,10 @@ class AssignmentServiceTest {
     @DisplayName("devolver una asignacion ya resuelta lanza excepcion")
     void devolver_asignacion_ya_resuelta_lanza_excepcion() {
         Assignment asignacion = asignacionActiva();
-        asignacion.setStatus(AssignmentStatus.DEVUELTO);
+        asignacion.setStatus(AssignmentStatus.RETURNED);
         when(asignacionRepository.findById(100L)).thenReturn(Optional.of(asignacion));
 
-        ReturnRequest request = new ReturnRequest(AssignmentStatus.PERDIDO, null);
+        ReturnRequest request = new ReturnRequest(AssignmentStatus.LOST, null);
 
         assertThatThrownBy(() -> asignacionService.registerReturn(100L, request))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -197,9 +197,9 @@ class AssignmentServiceTest {
     }
 
     @Test
-    @DisplayName("devolver con estado ASIGNADO es invalido: no es una transicion de devolucion")
+    @DisplayName("devolver con estado ASSIGNED es invalido: no es una transicion de devolucion")
     void devolver_con_estado_asignado_lanza_excepcion() {
-        ReturnRequest request = new ReturnRequest(AssignmentStatus.ASIGNADO, null);
+        ReturnRequest request = new ReturnRequest(AssignmentStatus.ASSIGNED, null);
 
         assertThatThrownBy(() -> asignacionService.registerReturn(100L, request))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -212,7 +212,7 @@ class AssignmentServiceTest {
     void devolver_asignacion_inexistente_lanza_excepcion() {
         when(asignacionRepository.findById(404L)).thenReturn(Optional.empty());
 
-        ReturnRequest request = new ReturnRequest(AssignmentStatus.DEVUELTO, null);
+        ReturnRequest request = new ReturnRequest(AssignmentStatus.RETURNED, null);
 
         assertThatThrownBy(() -> asignacionService.registerReturn(404L, request))
                 .isInstanceOf(ResourceNotFoundException.class);

@@ -4,7 +4,7 @@ export interface Asistencia {
   date: string;
   category: string;
   checkInTime: string | null;
-  status: 'PRESENTE' | 'TARDE';
+  status: 'PRESENT' | 'LATE';
 }
 
 export interface MiHistorial {

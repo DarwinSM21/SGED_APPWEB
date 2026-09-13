@@ -130,10 +130,10 @@ SELECT
          ELSE NULL END,
     CASE WHEN (e.id_estudiante + s.id_sesion) % 4 = 0 THEN 'QR' ELSE 'MANUAL' END,
     CASE
-      WHEN sorteo.v < umbral.v - 8 THEN 'PRESENTE'
-      WHEN sorteo.v < umbral.v     THEN 'TARDE'
-      WHEN sorteo.v < umbral.v + 5 THEN 'JUSTIFICADO'
-      ELSE 'AUSENTE'
+      WHEN sorteo.v < umbral.v - 8 THEN 'PRESENT'
+      WHEN sorteo.v < umbral.v     THEN 'LATE'
+      WHEN sorteo.v < umbral.v + 5 THEN 'EXCUSED'
+      ELSE 'ABSENT'
     END,
     NOW(), NOW()
 FROM deportivo.sesiones_entrenamiento s

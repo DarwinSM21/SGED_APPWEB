@@ -104,7 +104,7 @@ class ReportServiceTest {
         UserAccount registrador = UserAccount.builder().person(persona("Luis", "Gómez")).build();
         Payment pago = Payment.builder()
                 .student(estudiante(1L, "SUB-12"))
-                .type(Payment.PaymentType.DIARIO)
+                .type(Payment.PaymentType.DAILY)
                 .amount(BigDecimal.TEN)
                 .paymentDate(LocalDate.of(2026, 8, 1))
                 .registeredBy(registrador)
@@ -210,7 +210,7 @@ class ReportServiceTest {
         UserAccount registrador = UserAccount.builder().person(persona("Luis", "Gómez")).build();
         Payment pago = Payment.builder()
                 .student(estudiante(1L, "SUB-12"))
-                .type(Payment.PaymentType.MEMBRESIA)
+                .type(Payment.PaymentType.MEMBERSHIP)
                 .amount(BigDecimal.valueOf(50))
                 .month((short) 7)
                 .year((short) 2026)

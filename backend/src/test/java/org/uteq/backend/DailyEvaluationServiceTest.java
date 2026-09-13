@@ -110,7 +110,7 @@ class DailyEvaluationServiceTest {
         when(evaluacionRepository.findBySession_Id(ID_SESION))
                 .thenReturn(Optional.of(evaluacionBorrador()));
         when(attendanceRepository.findBySession_IdAndStudent_Id(ID_SESION, ID_ESTUDIANTE))
-                .thenReturn(Optional.of(asistenciaCon(Attendance.ESTADO_TARDE)));
+                .thenReturn(Optional.of(asistenciaCon(Attendance.STATUS_LATE)));
         when(studentEvaluationRepository.findByEvaluation_IdAndStudent_Id(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
         when(criterioRepository.findActiveOrderByIdAsc()).thenReturn(
@@ -129,7 +129,7 @@ class DailyEvaluationServiceTest {
         when(evaluacionRepository.findBySession_Id(ID_SESION))
                 .thenReturn(Optional.of(evaluacionBorrador()));
         when(attendanceRepository.findBySession_IdAndStudent_Id(ID_SESION, ID_ESTUDIANTE))
-                .thenReturn(Optional.of(asistenciaCon(Attendance.ESTADO_PRESENTE)));
+                .thenReturn(Optional.of(asistenciaCon(Attendance.STATUS_PRESENT)));
         when(studentEvaluationRepository.findByEvaluation_IdAndStudent_Id(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
         when(criterioRepository.findActiveOrderByIdAsc()).thenReturn(
@@ -150,7 +150,7 @@ class DailyEvaluationServiceTest {
         when(evaluacionRepository.findBySession_Id(ID_SESION))
                 .thenReturn(Optional.of(evaluacionBorrador()));
         when(attendanceRepository.findBySession_IdAndStudent_Id(ID_SESION, ID_ESTUDIANTE))
-                .thenReturn(Optional.of(asistenciaCon(Attendance.ESTADO_PRESENTE)));
+                .thenReturn(Optional.of(asistenciaCon(Attendance.STATUS_PRESENT)));
         when(studentEvaluationRepository.findByEvaluation_IdAndStudent_Id(anyLong(), anyLong()))
                 .thenReturn(Optional.empty());
         when(criterioRepository.findActiveOrderByIdAsc()).thenReturn(
@@ -226,7 +226,7 @@ class DailyEvaluationServiceTest {
         when(sesionRepository.findByCategoryAndDateBeforeOrderByDateDesc(eq(3L), any(), any()))
                 .thenReturn(List.of());
         when(attendanceRepository.findBySession_Id(ID_SESION))
-                .thenReturn(List.of(asistenciaCon(Attendance.ESTADO_PRESENTE)));
+                .thenReturn(List.of(asistenciaCon(Attendance.STATUS_PRESENT)));
         when(estudianteRepository.findByCategory_CategoryIdAndActiveTrueOrderByPerson_LastNameAsc(3L))
                 .thenReturn(List.of(estudiante()));
         when(studentEvaluationRepository.findByEvaluation_IdAndStudent_Id(anyLong(), anyLong()))

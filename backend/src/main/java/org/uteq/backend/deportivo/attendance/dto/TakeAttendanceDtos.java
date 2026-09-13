@@ -14,8 +14,8 @@ public class TakeAttendanceDtos {
             @NotNull(message = "El estudiante es obligatorio")
             Long studentId,
             @NotNull(message = "El estado es obligatorio")
-            @Pattern(regexp = "PRESENTE|TARDE|AUSENTE|JUSTIFICADO",
-                     message = "Estado no válido: use PRESENTE, TARDE, AUSENTE o JUSTIFICADO")
+            @Pattern(regexp = "PRESENT|LATE|ABSENT|EXCUSED",
+                     message = "Estado no válido: use PRESENT, LATE, ABSENT o EXCUSED")
             String status,
             @Size(max = 255, message = "La observación no puede superar los 255 caracteres")
             String note

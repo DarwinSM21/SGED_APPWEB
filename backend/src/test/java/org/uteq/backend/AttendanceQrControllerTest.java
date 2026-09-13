@@ -72,13 +72,13 @@ class AttendanceQrControllerTest {
     void marcar_token_valido_devuelve_201_con_estado() throws Exception {
         when(qrService.redeem("token-bueno")).thenReturn(Optional.of(1L));
         when(attendanceService.markByQr(eq("andres.estudiante@sged.test"), eq(1L)))
-                .thenReturn(Attendance.builder().idAsistencia(1L).estado(Attendance.ESTADO_PRESENTE).build());
+                .thenReturn(Attendance.builder().idAsistencia(1L).estado(Attendance.STATUS_PRESENT).build());
 
         mockMvc.perform(post("/api/asistencias/qr/marcar")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"token\":\"token-bueno\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("PRESENTE"));
+                .andExpect(jsonPath("$.status").value("PRESENT"));
     }
 
     @Test

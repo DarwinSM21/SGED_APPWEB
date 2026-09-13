@@ -27,7 +27,7 @@ import java.time.LocalDate;
 /**
  * Entrega y devolución de artículos a estudiantes o entrenadores. Crear
  * resta stock (mismo chequeo de no-negativo que un movimiento de salida);
- * devolver con estado {@code DEVUELTO} lo repone, {@code PERDIDO} no.
+ * devolver con estado {@code RETURNED} lo repone, {@code LOST} no.
  */
 @Service
 @RequiredArgsConstructor
@@ -113,11 +113,11 @@ public class AssignmentService {
                 .recipientType(request.recipientType())
                 .assignmentDate(LocalDate.now(Zones.ECUADOR))
                 .expectedReturnDate(request.expectedReturnDate())
-                .status(AssignmentStatus.ASIGNADO)
+                .status(AssignmentStatus.ASSIGNED)
                 .registeredBy(registrador)
                 .notes(request.notes());
 
-        if (request.recipientType() == RecipientType.ESTUDIANTE) {
+        if (request.recipientType() == RecipientType.STUDENT) {
             builder.student(findStudent(request.studentId()));
         } else {
             builder.coach(findCoach(request.coachId()));
@@ -127,33 +127,33 @@ public class AssignmentService {
     }
 
     /**
-     * Resuelve una asignación como {@code DEVUELTO} (repone stock) o
-     * {@code PERDIDO} (no repone).
+     * Resuelve una asignación como {@code RETURNED} (repone stock) o
+     * {@code LOST} (no repone).
      *
      * @param id      identificador de la asignación
      * @param request estado de la devolución y observaciones
      * @return la asignación actualizada
      * @throws ResourceNotFoundException si la asignación no existe
-     * @throws IllegalArgumentException     si el estado es {@code ASIGNADO} o
+     * @throws IllegalArgumentException     si el estado es {@code ASSIGNED} o
      *                                      la asignación ya estaba resuelta
      */
     @Audited(action = "EDITAR", entity = "Asignacion", idSpel = "#result.idAsignacion",
             descriptionSpel = "'registró ' + #result.estado + ' de ' + #result.articulo + ' (asignación #' + #result.idAsignacion + ')'")
     @Transactional
     public AssignmentResponse registerReturn(Long id, ReturnRequest request) {
-        if (request.status() == AssignmentStatus.ASIGNADO) {
-            throw new IllegalArgumentException("El estado de devolución debe ser DEVUELTO o PERDIDO");
+        if (request.status() == AssignmentStatus.ASSIGNED) {
+            throw new IllegalArgumentException("El estado de devolución debe ser RETURNED o LOST");
         }
 
         Assignment asignacion = asignacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asignación no encontrada con ID: " + id));
 
-        if (asignacion.getStatus() != AssignmentStatus.ASIGNADO) {
+        if (asignacion.getStatus() != AssignmentStatus.ASSIGNED) {
             throw new IllegalArgumentException(
                     "La asignación #" + id + " ya fue resuelta como " + asignacion.getStatus());
         }
 
-        if (request.status() == AssignmentStatus.DEVUELTO) {
+        if (request.status() == AssignmentStatus.RETURNED) {
             Item articulo = asignacion.getItem();
             articulo.setCurrentStock(articulo.getCurrentStock() + asignacion.getQuantity());
             articuloRepository.save(articulo);
@@ -169,14 +169,14 @@ public class AssignmentService {
     }
 
     private void validateRecipient(RecipientType tipo, Long idEstudiante, Long idEntrenador) {
-        boolean esEstudiante = tipo == RecipientType.ESTUDIANTE;
+        boolean esEstudiante = tipo == RecipientType.STUDENT;
         if (esEstudiante && (idEstudiante == null || idEntrenador != null)) {
             throw new IllegalArgumentException(
-                    "Para tipoDestinatario ESTUDIANTE se requiere idEstudiante y no idEntrenador");
+                    "Para tipoDestinatario STUDENT se requiere idEstudiante y no idEntrenador");
         }
         if (!esEstudiante && (idEntrenador == null || idEstudiante != null)) {
             throw new IllegalArgumentException(
-                    "Para tipoDestinatario ENTRENADOR se requiere idEntrenador y no idEstudiante");
+                    "Para tipoDestinatario COACH se requiere idEntrenador y no idEstudiante");
         }
     }
 

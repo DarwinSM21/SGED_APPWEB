@@ -103,7 +103,7 @@ class PaymentServiceTest {
 
         assertThat(pagos).extracting(p -> p.getMonth().intValue()).containsExactly(1, 2, 3);
         assertThat(pagos).allSatisfy(p -> {
-            assertThat(p.getType()).isEqualTo(PaymentType.MEMBRESIA);
+            assertThat(p.getType()).isEqualTo(PaymentType.MEMBERSHIP);
             assertThat(p.getYear()).isEqualTo((short) 2026);
             assertThat(p.getPaymentDate()).isEqualTo(LocalDate.now(Zones.ECUADOR));
         });
@@ -128,9 +128,9 @@ class PaymentServiceTest {
     void registrarMembresia_rechaza_mes_ya_cubierto() {
         existenEstudianteYUsuario();
         when(pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
-                ID_EST, PaymentType.MEMBRESIA, (short) 2026, (short) 1)).thenReturn(false);
+                ID_EST, PaymentType.MEMBERSHIP, (short) 2026, (short) 1)).thenReturn(false);
         when(pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
-                ID_EST, PaymentType.MEMBRESIA, (short) 2026, (short) 2)).thenReturn(true);
+                ID_EST, PaymentType.MEMBERSHIP, (short) 2026, (short) 2)).thenReturn(true);
 
         var e = assertThrows(IllegalArgumentException.class, () ->
                 service.registerMembership(ID_EST, 2026, List.of(1, 2), new BigDecimal("30.00"), null, USERNAME));
@@ -163,7 +163,7 @@ class PaymentServiceTest {
     }
 
     @Test
-    @DisplayName("registrarDiario guarda un pago DIARIO con la fecha dada")
+    @DisplayName("registrarDiario guarda un pago DAILY con la fecha dada")
     void registrarDiario_usa_la_fecha_dada() {
         existenEstudianteYUsuario();
         when(pagoRepository.save(any(Payment.class))).thenAnswer(i -> i.getArgument(0));
@@ -171,7 +171,7 @@ class PaymentServiceTest {
         var fechaFija = LocalDate.of(2026, 3, 10);
         var pago = service.registerDaily(ID_EST, new BigDecimal("5.00"), fechaFija, USERNAME);
 
-        assertThat(pago.getType()).isEqualTo(PaymentType.DIARIO);
+        assertThat(pago.getType()).isEqualTo(PaymentType.DAILY);
         assertThat(pago.getPaymentDate()).isEqualTo(fechaFija);
         assertThat(pago.getYear()).isNull();
         assertThat(pago.getMonth()).isNull();
@@ -202,7 +202,7 @@ class PaymentServiceTest {
     @DisplayName("historialDe devuelve los pagos del estudiante ordenados por fecha descendente")
     void historialDe_devuelve_pagos_del_estudiante() {
         when(estudianteRepository.existsById(ID_EST)).thenReturn(true);
-        var esperado = List.of(Payment.builder().id(1L).type(PaymentType.DIARIO).build());
+        var esperado = List.of(Payment.builder().id(1L).type(PaymentType.DAILY).build());
         when(pagoRepository.findByStudent_IdOrderByPaymentDateDesc(ID_EST)).thenReturn(esperado);
 
         var pagos = service.historyFor(ID_EST);
@@ -214,7 +214,7 @@ class PaymentServiceTest {
     @DisplayName("anular deja constancia de quien, cuando y por que")
     void anular_registra_la_trazabilidad() {
         Payment pago = Payment.builder()
-                .id(9L).type(Payment.PaymentType.DIARIO)
+                .id(9L).type(Payment.PaymentType.DAILY)
                 .amount(new BigDecimal("250.00")).paymentDate(LocalDate.now())
                 .build();
         when(pagoRepository.findById(9L)).thenReturn(Optional.of(pago));
@@ -234,7 +234,7 @@ class PaymentServiceTest {
     @DisplayName("anular dos veces se rechaza en vez de pasar en silencio")
     void anular_dos_veces_falla() {
         Payment yaAnulado = Payment.builder()
-                .id(9L).type(Payment.PaymentType.DIARIO)
+                .id(9L).type(Payment.PaymentType.DAILY)
                 .amount(new BigDecimal("25.00")).paymentDate(LocalDate.now())
                 .canceledAt(java.time.OffsetDateTime.now())
                 .cancellationReason("ya estaba")

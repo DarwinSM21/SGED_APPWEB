@@ -26,21 +26,21 @@ describe('MarcarAsistenciaComponent', () => {
     fixture.detectChanges();
   });
 
-  it('un token valido dentro de tolerancia marca PRESENTE', () => {
-    servicioMock.marcar.mockReturnValue(of({ status: 'PRESENTE' }));
+  it('un token valido dentro de tolerancia marca PRESENT', () => {
+    servicioMock.marcar.mockReturnValue(of({ status: 'PRESENT' }));
 
     (component as any).enviarToken('token-valido');
 
-    expect(component.resultado()).toEqual({ status: 'PRESENTE' });
+    expect(component.resultado()).toEqual({ status: 'PRESENT' });
     expect(component.enviando()).toBe(false);
   });
 
-  it('un token valido fuera de tolerancia marca TARDE', () => {
-    servicioMock.marcar.mockReturnValue(of({ status: 'TARDE' }));
+  it('un token valido fuera de tolerancia marca LATE', () => {
+    servicioMock.marcar.mockReturnValue(of({ status: 'LATE' }));
 
     (component as any).enviarToken('token-tarde');
 
-    expect(component.resultado()?.status).toBe('TARDE');
+    expect(component.resultado()?.status).toBe('LATE');
   });
 
   it('token expirado o ya usado (410) muestra el mensaje de reintentar en recepción', () => {
@@ -79,7 +79,7 @@ describe('MarcarAsistenciaComponent', () => {
   });
 
   it('reiniciar limpia el resultado anterior para poder escanear otro código', () => {
-    servicioMock.marcar.mockReturnValue(of({ status: 'PRESENTE' }));
+    servicioMock.marcar.mockReturnValue(of({ status: 'PRESENT' }));
     (component as any).enviarToken('token-valido');
     expect(component.resultado()).not.toBeNull();
 

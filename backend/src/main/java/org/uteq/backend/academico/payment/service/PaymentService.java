@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Registro de pagos. {@code MEMBRESIA} valida, antes de guardar nada, que
+ * Registro de pagos. {@code MEMBERSHIP} valida, antes de guardar nada, que
  * ningún mes solicitado esté ya cubierto (todo o nada: si uno falla no se
- * cobra a medias). {@code DIARIO} no tiene esa validación porque no cubre
+ * cobra a medias). {@code DAILY} no tiene esa validación porque no cubre
  * período. Las anulaciones no borran ni editan: dejan el pago con quién,
  * cuándo y por qué se anuló, y el correcto se registra aparte.
  */
@@ -66,7 +66,7 @@ public class PaymentService {
         List<Integer> mesesUnicos = meses.stream().distinct().sorted().toList();
         for (Integer mes : mesesUnicos) {
             if (pagoRepository.existsByStudent_IdAndTypeAndYearAndMonthAndCanceledAtIsNull(
-                    idEstudiante, PaymentType.MEMBRESIA, (short) anio, mes.shortValue())) {
+                    idEstudiante, PaymentType.MEMBERSHIP, (short) anio, mes.shortValue())) {
                 throw new IllegalArgumentException(
                         "El mes " + mes + "/" + anio + " ya está cubierto para este estudiante");
             }
@@ -76,7 +76,7 @@ public class PaymentService {
         List<Payment> pagos = mesesUnicos.stream()
                 .map(mes -> Payment.builder()
                         .student(estudiante)
-                        .type(PaymentType.MEMBRESIA)
+                        .type(PaymentType.MEMBERSHIP)
                         .year((short) anio)
                         .month(mes.shortValue())
                         .amount(monto)
@@ -106,7 +106,7 @@ public class PaymentService {
 
         return pagoRepository.save(Payment.builder()
                 .student(estudiante)
-                .type(PaymentType.DIARIO)
+                .type(PaymentType.DAILY)
                 .amount(monto)
                 .paymentDate(fechaPago != null ? fechaPago : LocalDate.now(Zones.ECUADOR))
                 .registeredBy(registrador)

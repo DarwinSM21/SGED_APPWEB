@@ -56,7 +56,7 @@ public class AttendanceService {
     /**
      * Registra la asistencia del estudiante autenticado tras un canjeo de QR
      * ya validado en el controlador. Resuelve quién es el estudiante, decide
-     * {@code PRESENTE} vs {@code TARDE}, persiste y notifica a los
+     * {@code PRESENT} vs {@code LATE}, persiste y notifica a los
      * representantes.
      *
      * @param username nombre de usuario del estudiante
@@ -92,7 +92,7 @@ public class AttendanceService {
                 .sesion(sesion)
                 .estudiante(estudiante)
                 .horaEntrada(ahora)
-                .metodo(Attendance.METODO_QR)
+                .metodo(Attendance.METHOD_QR)
                 .estado(calculateStatus(sesion.getHoraInicio(), ahora))
                 .build();
 
@@ -186,8 +186,8 @@ public class AttendanceService {
                         + sesion.getCategoria().getNombre());
             }
 
-            boolean estuvo = Attendance.ESTADO_PRESENTE.equals(marca.status())
-                    || Attendance.ESTADO_TARDE.equals(marca.status());
+            boolean estuvo = Attendance.STATUS_PRESENT.equals(marca.status())
+                    || Attendance.STATUS_LATE.equals(marca.status());
 
             Attendance a = existentes.get(marca.studentId());
             if (a == null) {
@@ -200,9 +200,9 @@ public class AttendanceService {
             // afirma que el chico estuvo, no a qué hora entró.
             if (!estuvo) {
                 a.setHoraEntrada(null);
-                a.setMetodo(Attendance.METODO_MANUAL);
+                a.setMetodo(Attendance.METHOD_MANUAL);
             } else if (a.getHoraEntrada() == null) {
-                a.setMetodo(Attendance.METODO_MANUAL);
+                a.setMetodo(Attendance.METHOD_MANUAL);
             }
             attendanceRepository.save(a);
         }
@@ -218,13 +218,13 @@ public class AttendanceService {
         return null;
     }
 
-    // Sin hora_inicio programada no hay contra qué medir la tardanza: PRESENTE.
+    // Sin hora_inicio programada no hay contra qué medir la tardanza: PRESENT.
     private String calculateStatus(LocalTime horaInicio, LocalTime ahora) {
         if (horaInicio == null) {
-            return Attendance.ESTADO_PRESENTE;
+            return Attendance.STATUS_PRESENT;
         }
         LocalTime limite = horaInicio.plusMinutes(toleranciaTardeMinutos);
-        return ahora.isAfter(limite) ? Attendance.ESTADO_TARDE : Attendance.ESTADO_PRESENTE;
+        return ahora.isAfter(limite) ? Attendance.STATUS_LATE : Attendance.STATUS_PRESENT;
     }
 
     /**
