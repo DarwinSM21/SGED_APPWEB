@@ -76,13 +76,19 @@ audit:
 ## TeX Live instalado en el host, igual que `diagrams` usa contenedores para
 ## structurizr/plantuml). Copia el resultado a docs/informe-final.pdf, la
 ## ruta que exige la Guia de la Entrega Final (Bloque B / Entregable 3).
+## Monta todo docs/ (no solo docs/informe): main.tex referencia los PNG del
+## C4 con ../arquitectura/*.png -- con un mount de un solo directorio ese
+## ../ se sale del contenedor y pdflatex fallaba con "File not found"
+## (2026-09-14, detectado al correr `make docs` por primera vez con Docker
+## disponible).
 ## TODO cuando se reestructure el informe a los 18 apartados del Bloque B:
 ## renombrar docs/informe/main.tex -> docs/informe-final.tex y actualizar
 ## este objetivo para compilar directo ahi, en vez de copiar al final.
 docs:
-	docker run --rm -v "$(CURDIR)/docs/informe:/work" -w /work texlive/texlive \
+	docker run --rm -v "$(CURDIR)/docs:/work" -w /work/informe texlive/texlive \
 	  sh -c "pdflatex -interaction=nonstopmode main.tex && \
 	         bibtex main && \
+	         pdflatex -interaction=nonstopmode main.tex && \
 	         pdflatex -interaction=nonstopmode main.tex && \
 	         pdflatex -interaction=nonstopmode main.tex"
 	cp docs/informe/main.pdf docs/informe-final.pdf

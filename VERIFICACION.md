@@ -404,20 +404,47 @@ fallan (P7, P8×2, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida
 el 2026-09-14 sobre el commit vigente tras el ajuste de P10/P11/P14).
 Código de salida: 1 (correcto: P7/P8/P13 son pendientes reales).
 
-**Nota sobre la regeneración del PDF (Piso 2).** `docs/informe/main.tex`
-tiene su propia copia de la tabla CRediT (sección "Declaración de
-contribuciones"), separada de `CONTRIBUTORS.md`. Al corregir P10 ahí
-también (2026-09-14) se encontró que esa copia tenía el mismo defecto
-—y un párrafo que lo defendía explícitamente—; ya está sincronizada.
-**No se pudo recompilar el PDF en este entorno** (sin LaTeX ni Docker
-disponibles): los PDF ya versionados (`docs/informe-final.pdf`,
-`docs/informe/main.pdf`, `docs/informe/caratula-standalone.pdf`,
-`informe-final.pdf`) quedan desactualizados frente a la fuente `.tex`
-hasta que alguien corra `make docs` (o el equivalente sin Docker) y
-vuelva a comprobar `make verify` sobre el resultado. Esto hay que
-hacerlo **antes** de crear la etiqueta `v1.1.0` (P8) — el Piso 2 es
-explícito: "si el PDF no sale, la calificación es CERO", y eso se
-comprueba regenerando, no leyendo el PDF ya commiteado.
+**Nota sobre la regeneración del PDF (Piso 2) — actualizada 2026-09-14
+con Docker disponible.** `docs/informe/main.tex` tenía su propia copia de
+la tabla CRediT, con el mismo defecto de P10 y un párrafo que lo
+defendía explícitamente; ya está sincronizada con `CONTRIBUTORS.md`
+(commit `cf00727`).
+
+Al correr `make docs` por primera vez con Docker activo se encontró un
+**defecto real y preexistente del propio `Makefile`** (no introducido en
+esta sesión): el objetivo montaba solo `docs/informe:/work`, pero
+`main.tex` referencia los tres PNG del modelo C4 con
+`../arquitectura/*.png` — con ese mount, el `../` se sale del
+contenedor y `pdflatex` fallaba con `File not found` (error fatal, no
+advertencia). Esto llevaba el examen suspenso a **CERO por Piso 2** de
+haberse detectado en la entrega y no antes.
+
+Corregido montando todo `docs/:/work` con `-w /work/informe` (mismo
+layout relativo que en el host). Verificado end-to-end en Docker:
+
+```bash
+docker run --rm -v "$(pwd)/docs:/work" -w /work/informe texlive/texlive \
+  sh -c "pdflatex -interaction=nonstopmode main.tex && bibtex main && \
+         pdflatex -interaction=nonstopmode main.tex && \
+         pdflatex -interaction=nonstopmode main.tex && \
+         pdflatex -interaction=nonstopmode main.tex"
+```
+
+Salida relevante (4ª y última pasada, cero advertencias):
+```
+Output written on main.pdf (72 pages, 1365470 bytes).
+```
+Sin errores fatales (`grep -c "^!" ` → 0), sin citas ni referencias sin
+resolver en la pasada final (`grep -c "undefined"` sobre la 4ª pasada →
+0). Con 3 pasadas (la cantidad que tenía el `Makefile` antes de este
+commit) el documento ya resolvía todas las citas pero quedaba una
+advertencia de `Label(s) may have changed. Rerun` — se agregó una 4ª
+pasada de `pdflatex` al objetivo `docs` para eliminarla del todo.
+
+`docs/informe-final.pdf`, `docs/informe/main.pdf`,
+`docs/informe/caratula-standalone.pdf` e `informe-final.pdf` (copia raíz,
+antes idéntica byte a byte a la de `docs/`) quedan regenerados y
+comprometidos junto con este expediente.
 
 **Nota sobre P13.** Las constancias de consentimiento firmado no se
 pueden generar de forma automática ni por IA: exigen que cada uno de los
