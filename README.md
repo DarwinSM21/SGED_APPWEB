@@ -7,7 +7,7 @@
 Aplicación web para la gestión administrativa y deportiva de la escuela
 ProFútbol: estudiantes, entrenadores, asistencias, evaluaciones y reportes.
 
-**Versión de esta entrega:** `v1.0.0` (Entrega Final, PFC Aplicaciones Web, UTEQ)
+**Versión de esta entrega:** `v1.1.0` (Examen suspenso, PFC Aplicaciones Web, UTEQ)
 
 ## Despliegue público
 
@@ -47,7 +47,7 @@ Requisitos: Docker + Docker Compose + GNU Make.
 ```bash
 git clone https://github.com/gleiston-guerrero/SGED_APPWEB.git
 cd SGED_APPWEB
-git checkout v1.0.0
+git checkout v1.1.0
 cp .env.example .env
 make up
 ```
@@ -134,10 +134,11 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 ## Evidencia y reproducibilidad
 
 * **Informe de la Entrega Final (PDF):**
-  [`docs/informe/main.pdf`](docs/informe/main.pdf) — 54 páginas,
-  cerrado en la etiqueta `v1.0.0`.
+  [`docs/informe/main.pdf`](docs/informe/main.pdf) — 72 páginas,
+  cerrado en la etiqueta `v1.1.0`.
 * Fuente del informe: [`docs/informe/main.tex`](docs/informe/main.tex),
-  compilable con `pdflatex→bibtex→pdflatex→pdflatex`. El PDF de arriba se
+  compilable con `pdflatex→bibtex→pdflatex→pdflatex→pdflatex` (`make docs`).
+  El PDF de arriba se
   genera de aquí: existe fuente versionada y es reproducible, a diferencia
   de un PDF suelto sin `.tex`/`.docx`, que no sería evidencia verificable
   (Bloque 0 / P4).

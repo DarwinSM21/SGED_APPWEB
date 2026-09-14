@@ -12,22 +12,36 @@ corresponde cada entrega del Proyecto Fin de Curso:
 | `v1.0.1` | Entrega Final — matriz de trazabilidad tras el rename a inglés; corte con DOI de Zenodo | ✅ Publicado (2026-09-06) |
 | `v1.0.2` | Entrega Final — recuperación de contraseña (RF-37) + revisión del SRS contra ISO/IEC/IEEE 29148 (M1–M9, A1–A4) | ✅ Publicado (2026-09-07) |
 | `v1.0.3` | Entrega Final — revisión M1–M3 del SRS v1.6 (vocabulario de estados, RNF-26 para H-09) | ✅ Publicado (2026-09-10) |
+| `v1.1.0` | Examen suspenso (Guía del examen suspenso, UTEQ) — corte que revisa el docente tras la corrección de los 14 pendientes de esa guía | 🔄 En progreso (creado 2026-09-14) |
 
-**Excepción declarada:** `v1.0.0` es el único tag de esta familia que **se
-mueve**, a propósito. La rúbrica del examen final evalúa literalmente el
-commit al que apunte `v1.0.0` en el momento del cierre (Rúbrica_ExamenFinal,
-Punto 6), así que esa etiqueta se reasigna cada vez que se corrige algo
-crítico después de un corte anterior — incluidas correcciones posteriores
-a `v1.0.3` (ej. el fix de arranque en los repositorios JPA tras el rename
-a inglés, 2026-09-11). `v1.0.1`, `v1.0.2` y `v1.0.3` sí conservan el corte
-que se entregó en su fecha y no se mueven, para que el estado declarado en
-cada uno siga siendo verificable contra lo que ese tag realmente contiene;
-son puntos de referencia históricos, no el corte vigente. El DOI de Zenodo
-del software está anclado a `v1.0.0` (`10.5281/zenodo.22739944`, corte
-2026-09-14 — nueva versión republicando el *release* de `v1.0.0` sobre el
-corte final defendido; supera a `10.5281/zenodo.22730565` (corte
-2026-09-12, firma del docente-director) y a `10.5281/zenodo.22714477`
-(corte 2026-09-11), de la misma serie).
+**Excepción declarada:** dentro de cada revisión del curso hay **un único
+tag que se mueve**, a propósito. `v1.0.0` fue ese tag para el examen final
+original: la rúbrica de esa entrega evaluaba literalmente el commit al que
+apuntara `v1.0.0` en el momento del cierre (Rúbrica_ExamenFinal, Punto 6),
+así que se reasignó cada vez que se corrigió algo crítico después de un
+corte anterior — incluidas correcciones posteriores a `v1.0.3` (ej. el fix
+de arranque en los repositorios JPA tras el rename a inglés, 2026-09-11).
+Para el **examen suspenso** (Guía del examen suspenso, UTEQ, cierre
+2026-09-18) el docente pidió explícitamente una etiqueta nueva y distinta,
+`v1.1.0` ("Lo que no esté dentro de la etiqueta no existe. Muevan v1.1.0
+al último commit que quieren que revise"): es la que se mueve ahora,
+siguiendo el mismo criterio que `v1.0.0` tuvo antes. `v1.0.0` deja de
+moverse desde que se crea `v1.1.0` y pasa a ser, igual que `v1.0.1`–
+`v1.0.3`, un punto de referencia histórico (el corte que se defendió en el
+examen final original, antes del suspenso).
+
+`v1.0.1`, `v1.0.2` y `v1.0.3` conservan el corte que se entregó en su
+fecha y no se mueven, para que el estado declarado en cada uno siga siendo
+verificable contra lo que ese tag realmente contiene; son puntos de
+referencia históricos, no el corte vigente. El DOI de Zenodo del software
+sigue anclado al *release* de `v1.0.0` (`10.5281/zenodo.22739944`, corte
+2026-09-14 — supera a `10.5281/zenodo.22730565` (corte 2026-09-12, firma
+del docente-director) y a `10.5281/zenodo.22714477` (corte 2026-09-11), de
+la misma serie); republicarlo sobre `v1.1.0` es trabajo pendiente de este
+mismo examen suspenso (ver `VERIFICACION.md`, P3/P8) y requiere confirmar
+antes que la integración GitHub↔Zenodo siga habilitada para
+`gleiston-guerrero/SGED_APPWEB` tras la transferencia de propiedad del
+2026-09-14.
 
 ## Criterios verificados antes de crear `v0.9.0-rc`
 

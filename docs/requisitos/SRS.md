@@ -1,13 +1,17 @@
 # Especificación de Requisitos de Software (SRS)
 
 **Sistema:** SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
-**Versión del documento:** 1.11 (Entrega Final, etiqueta `v1.0.0` — el
+**Versión del documento:** 1.11 (examen suspenso, etiqueta `v1.1.0` — el
 docente-director firmó electrónicamente el acta de aprobación de la v1.8
-el 2026-09-12 (`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`); §7
-actualizado con esa firma y con la observación de sincronización del
-acta sobre **RF-11c** y sobre el vocabulario de estado traducido a
-inglés en 1.11 (ver §7). El commit defendido es el que apunta la
-etiqueta (`git rev-parse v1.0.0^{commit}`)).
+el 2026-09-12 (`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`), cuando la
+etiqueta vigente era `v1.0.0`; §7 actualizado con esa firma y con la
+observación de sincronización del acta sobre **RF-11c** y sobre el
+vocabulario de estado traducido a inglés en 1.11 (ver §7). El
+2026-09-14 la etiqueta que revisa el docente pasó a ser `v1.1.0`, para
+la corrección de los pendientes de la Guía del examen suspenso (ver
+`VERSIONING.md`); el contenido del documento no cambió por eso, solo la
+etiqueta de git que lo acompaña. El commit defendido es el que apunta la
+etiqueta (`git rev-parse v1.1.0^{commit}`)).
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
 **Repositorio:** https://github.com/gleiston-guerrero/SGED_APPWEB
 
@@ -2037,13 +2041,17 @@ previas se mantiene en `docs/observaciones/`.
 ## 7. Aprobación
 
 Este documento constituye la especificación de requisitos acordada para la
-Entrega Final del proyecto SGED, cerrada en la etiqueta `v1.0.0` del
-repositorio — la que revisa el docente según `Rubrica_ExamenFinal_SGED.pdf`
-(`git rev-parse v1.0.0^{commit}` resuelve el commit defendido). `v1.0.1`,
-`v1.0.2` y `v1.0.3` son puntos de referencia históricos que ya no
-coinciden con `v1.0.0` — este último es, por diseño (ver
-[`VERSIONING.md`](../../VERSIONING.md)), el único tag que se reasigna
-cada vez que se corrige algo crítico después de un corte anterior.
+Entrega Final del proyecto SGED. El corte que se defendió en el examen
+final original quedó cerrado en la etiqueta `v1.0.0` del repositorio,
+sobre la que el docente-director firmó el acta de aprobación de la
+sección anterior. Tras el examen suspenso (Guía del examen suspenso,
+UTEQ, cierre 2026-09-18), el docente pidió una etiqueta nueva para el
+corte que revisa: **`v1.1.0`** (`git rev-parse v1.1.0^{commit}` resuelve
+el commit defendido vigente). `v1.0.0`, `v1.0.1`, `v1.0.2` y `v1.0.3` son
+ahora puntos de referencia históricos que ya no se mueven; `v1.1.0` es,
+por diseño (ver [`VERSIONING.md`](../../VERSIONING.md)), el único tag que
+se reasigna cada vez que se corrige algo crítico después de un corte
+anterior, siguiendo el mismo criterio que `v1.0.0` tuvo antes de él.
 
 | Rol | Nombre | Firma | Fecha |
 |---|---|---|---|
