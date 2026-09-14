@@ -3284,11 +3284,18 @@ La taxonomía CRediT define catorce roles. Trece quedan cubiertos por el
 equipo; \emph{Adquisición de fondos} no aplica a un Proyecto Fin de Curso
 sin financiamiento externo (Tabla~\ref{tab:credit-cobertura}). La misma
 tabla está en \ruta{CONTRIBUTORS.md}. El número junto a cada integrante
-es su total real de \emph{commits} en \texttt{main} (Tabla~\ref{tab:credit-cifras}
-de la sección anterior); CRediT clasifica tipos de contribución
-intelectual, no un archivo por rol —un mismo \emph{commit} puede sostener
-varios roles a la vez—, así que el conteo es el total verificable de la
-persona, no una partición exclusiva por rol.
+ya no es su total de \emph{commits} repetido en cada fila (así estaba
+hasta el 2026-09-13, y no distinguía nada específico de cada rol): es el
+número de \emph{commits} de esa persona que tocaron al menos un archivo
+de las rutas asociadas a ese rol, con el mapeo rol\,\textrightarrow\,rutas
+declarado y reproducible en \texttt{scripts/credit-counts.py}. CRediT
+clasifica tipos de contribución intelectual, no una partición exclusiva
+de archivos —un mismo \emph{commit} puede sostener varios roles a la
+vez—. Cuatro roles (\emph{Investigación}, \emph{Metodología},
+\emph{Administración del proyecto} y \emph{Supervisión}) incluyen trabajo
+real que no deja huella en el árbol de archivos —reuniones con la
+escuela ProFútbol, coordinación del equipo, decisiones de calendario— y
+se declaran así en vez de asignarles un número inventado.
 
 \begin{table}[htbp]
 \centering
@@ -3299,23 +3306,30 @@ persona, no una partición exclusiva por rol.
 \toprule
 \textbf{Rol CRediT} & \textbf{Integrante(s)} & \textbf{Cobertura} \\
 \midrule
-Conceptualización & Ricardo (55), Darwin (136) & Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. \\
-Curación de datos & Alejandro (233) & Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. \\
-Análisis formal & Alejandro (233) & Análisis estadístico de los datos de rendimiento y usabilidad (intervalos de confianza, distribución \emph{t}). \\
+Conceptualización & Darwin (40), Alejandro (26), Ricardo (6) & Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. \\
+Curación de datos & Alejandro (49), Darwin (27), Ricardo (6) & Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. \\
+Análisis formal & Alejandro (11), Darwin (4), Ricardo (3) & Análisis estadístico de los datos de rendimiento y usabilidad (intervalos de confianza, distribución \emph{t}). \\
 Adquisición de fondos & --- & No aplica (proyecto académico sin financiación externa). \\
-Investigación & Darwin (136) & Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. \\
-Metodología & Ricardo (55) & Proceso de investigación (DSR) y protocolo de medición. \\
-Administración del proyecto & Darwin (136) & Administración del proyecto, calendario y gestión de entregas. \\
-Recursos & Ricardo (55) & Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. \\
-Software & Alejandro (233), Ricardo (55), Darwin (136) & Implementación de backend (Spring~Boot), \emph{frontend} (Angular) y procedimientos almacenados. \\
-Supervisión & Darwin (136) & Coordinación del equipo y seguimiento del repositorio. \\
-Validación & Alejandro (233), Ricardo (55) & Cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. \\
-Visualización & Alejandro (233) & Diagramas C4 y de arquitectura del sistema. \\
-Redacción (borrador original) & Alejandro (233) & Redacción del informe, del SRS y de la documentación técnica. \\
-Redacción (revisión y edición) & Ricardo (55) & Revisión y corrección de la documentación y su consistencia con el código. \\
+Investigación & Darwin (2)* & Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. \\
+Metodología & Ricardo (2)* & Proceso de investigación (DSR) y protocolo de medición. \\
+Administración del proyecto & Darwin* & Administración del proyecto, calendario y gestión de entregas. \\
+Recursos & Ricardo (7), Darwin (14) & Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. \\
+Software & Alejandro (128), Darwin (50), Ricardo (11) & Implementación de backend (Spring~Boot), \emph{frontend} (Angular) y procedimientos almacenados. \\
+Supervisión & Darwin* & Coordinación del equipo y seguimiento del repositorio. \\
+Validación & Alejandro (72), Darwin (41), Ricardo (9) & Cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. \\
+Visualización & Darwin (6), Alejandro (4), Ricardo (3) & Diagramas C4 y de arquitectura del sistema. \\
+Redacción (borrador original) & Darwin (55), Alejandro (60), Ricardo (14) & Redacción del informe, del SRS y de la documentación técnica. \\
+Redacción (revisión y edición) & Alejandro (87), Darwin (87), Ricardo (24) & Revisión y corrección de la documentación y su consistencia con el código. \\
 \bottomrule
 \end{tabular}
 \end{table}
+
+\noindent\small(*) Investigación, Metodología, Administración del proyecto
+y Supervisión incluyen trabajo real que no deja huella en el árbol de
+archivos (reuniones con la escuela ProFútbol, coordinación del equipo,
+decisiones de calendario); el número que sí aparece es solo la parte que
+además dejó un \emph{commit} sobre un archivo relacionado, no el total del
+trabajo.\normalsize
 
 \subsection{Dos advertencias sobre la medida}
 
