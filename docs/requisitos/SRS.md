@@ -9,7 +9,7 @@ acta sobre **RF-11c** y sobre el vocabulario de estado traducido a
 inglés en 1.11 (ver §7). El commit defendido es el que apunta la
 etiqueta (`git rev-parse v1.0.0^{commit}`)).
 **Estructura:** basada en ISO/IEC/IEEE 29148:2018
-**Repositorio:** https://github.com/DarwinSM21/SGED_APPWEB
+**Repositorio:** https://github.com/gleiston-guerrero/SGED_APPWEB
 
 > **Nota de redacción (resuelve OBS-01, Entrega 1A).** El docente observó que
 > los requisitos funcionales estaban redactados como títulos ("Registro de

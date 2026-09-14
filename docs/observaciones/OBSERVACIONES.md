@@ -112,6 +112,21 @@ Verificación de las diez tareas del Capítulo 3 de la Guía de desarrollo contr
 
 **Nota sobre los hashes.** En sept-2026 se reescribió el historial para pasar todos los *commits* a cuentas institucionales `@uteq.edu.ec`. El 2026-09-06/07 el trabajo se mudó de `DarwinSM21/SGED_APPWEB` a `darcalleg/SGED_APPWEB` y **después se revirtió**: el repositorio canónico vigente vuelve a ser `github.com/DarwinSM21/SGED_APPWEB`. La reescritura re-hasheó **todos** los commits. **Todas las filas OBS-01…OBS-19 y esta sección están actualizadas** a los hashes vigentes en `main` (verificados con `git merge-base --is-ancestor`), independientemente del repositorio donde se aloje el historial. La tabla de equivalencias pre → post está [al final de esta sección](#equivalencias-de-hashes-pre--post).
 
+**Nota sobre la propiedad del repositorio (2026-09-14).** El repositorio se
+transfirió de `DarwinSM21/SGED_APPWEB` a `gleiston-guerrero/SGED_APPWEB`
+(el docente-director, para la revisión del examen suspenso). Sigue siendo
+público y el equipo conserva permiso de escritura. GitHub redirige
+automáticamente peticiones `git`/HTTP de la URL anterior a la nueva, así
+que los commits e historial de CI capturados antes de esta fecha (incluida
+la evidencia de `docs/mediciones/ci/runs-verdes.json` y las filas
+OBS-01…OBS-19 de esta sección, todas anteriores al 2026-09-14) siguen
+citando `DarwinSM21/SGED_APPWEB` **a propósito**: esa era la URL real en el
+momento en que se capturó cada evidencia, y no se reescribe — mismo
+criterio que con la migración a `darcalleg` de arriba. Las referencias
+"vivas" (README, CITATION.cff, SRS.md, RUNBOOK.md, portada e
+instrucciones de clonado del informe) sí se actualizaron a la URL
+canónica vigente.
+
 | Tarea | Criterio de aceptación (resumen) | Estado | Evidencia verificada · commits en `main` |
 | :--- | :--- | :--- | :--- |
 | **3.1** Afirmación del hallazgo de seguridad | El conteo por severidad del documento coincide con los tres archivos del escaneo y cada hallazgo tiene decisión escrita. | ✅ **Cumple** | `docs/mediciones/sec/zap/` (JSON/XML/HTML) → **0 alertas**, re-escaneo del 2026-09-02. El informe (§ZAP/SpotBugs) narra el hallazgo **alto** previo (`Vulnerable JS Library`, DOMPurify 3.0.6 en Swagger UI, dependencia de terceros) y la decisión escrita: apagar la interfaz Swagger en el ambiente público (`SPRINGDOC_ENABLED=false` en `render.yaml`) y repetir el escaneo. · `d293731`, `93a0d72`, `30cfdde` |

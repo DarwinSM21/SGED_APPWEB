@@ -1,6 +1,6 @@
 # SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
 
-[![CI](https://github.com/DarwinSM21/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinSM21/SGED_APPWEB/actions)
+[![CI](https://github.com/gleiston-guerrero/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/gleiston-guerrero/SGED_APPWEB/actions)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22739944.svg)](https://doi.org/10.5281/zenodo.22739944)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -45,7 +45,7 @@ tarda ~1 min en responder mientras arranca en frío. Pasos de despliegue en
 Requisitos: Docker + Docker Compose + GNU Make.
 
 ```bash
-git clone https://github.com/DarwinSM21/SGED_APPWEB.git
+git clone https://github.com/gleiston-guerrero/SGED_APPWEB.git
 cd SGED_APPWEB
 git checkout v1.0.0
 cp .env.example .env
