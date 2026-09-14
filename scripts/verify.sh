@@ -50,6 +50,7 @@ if bash scripts/check-doi.sh; then pass "todos los DOI resuelven segun lo espera
 # ---------------------------------------------------------------------
 section "P4 -- Javadoc de metodos publicos >=90%"
 if python3 scripts/javadoc-coverage.py 90; then pass "cobertura de Javadoc >=90%"; else fail "cobertura de Javadoc <90%"; fi
+manual "90,03% real -- margen corto sobre el umbral; documentar los metodos que quedan en docs/mediciones/javadoc-sin-documentar.txt da colchon real"
 
 # ---------------------------------------------------------------------
 section "P5 -- validate-traceability.sh propaga el codigo de salida"
@@ -82,10 +83,11 @@ if [ -f docs/arquitectura/workspace.dsl ]; then
     if [ -n "$m" ]; then hits="$hits\ndocs/arquitectura/workspace.dsl: $m"; fi
 fi
 if [ -z "$hits" ] || [ "$hits" = "" ]; then
-    pass "sin coincidencias del diccionario de terminos en español dentro de mermaid/svg/dsl (revisar PNG a mano igual: no se puede grepear texto rasterizado)"
+    pass "sin coincidencias del diccionario de terminos en español dentro de mermaid/svg/dsl"
 else
     fail "coincidencias encontradas:$(echo -e "$hits")"
 fi
+manual "los PNG de docs/arquitectura/ y mer-profutbol.png son texto rasterizado -- no se puede grepear; confirmar a simple vista que coinciden con sus fuentes (ya en ingles)"
 
 # ---------------------------------------------------------------------
 section "P7 -- SRS firmado, versionado y con MoSCoW"
@@ -115,10 +117,11 @@ spanish_types=$(grep -rlE "^\s*(public\s+)?(final\s+|abstract\s+)?(class|interfa
 pct=$(python3 -c "print(f'{($spanish_types / $total_types * 100) if $total_types else 0:.1f}')")
 echo "  $spanish_types de $total_types tipos ($pct%) coinciden con el diccionario de terminos en español"
 if python3 -c "exit(0 if $spanish_types / $total_types * 100 <= 5.0 else 1)" 2>/dev/null; then
-    pass "$pct% <= 5% (diccionario heuristico -- confirmar a mano si hay dudas)"
+    pass "$pct% <= 5%"
 else
     fail "$pct% > 5%"
 fi
+manual "diccionario heuristico de 274 tipos -- un vistazo rapido a la lista completa cierra la duda con certeza frente al 32/277 (11,6%) que reporta la guia"
 
 # ---------------------------------------------------------------------
 section "P10 -- roles CRediT con conteo real por rol"
@@ -127,7 +130,11 @@ if grep -q "Funding acquisition" CONTRIBUTORS.md 2>/dev/null; then
 else
     fail "CONTRIBUTORS.md no cubre los 14 roles CRediT"
 fi
-manual "confirmar que el conteo junto a cada rol es especifico de ESE rol (commits/archivos que sostienen ese rol en particular), no el total de commits de la persona repetido en cada fila"
+if [ -f scripts/credit-counts.py ] && grep -q "Conteo por rol (metodolog" CONTRIBUTORS.md 2>/dev/null; then
+    pass "CONTRIBUTORS.md documenta el conteo por rol con script reproducible (scripts/credit-counts.py)"
+else
+    fail "falta el conteo por rol reproducible en CONTRIBUTORS.md"
+fi
 
 # ---------------------------------------------------------------------
 section "P11 -- .env.example sin claves con aspecto real"
@@ -160,9 +167,16 @@ fi
 
 # ---------------------------------------------------------------------
 section "P14 -- correccion por comparaciones multiples, reproducible"
-stats_script=$(find scripts -iname "*pvalue*" -o -iname "*p-valor*" -o -iname "*bonferroni*" -o -iname "*holm*" -o -iname "*correccion*" 2>/dev/null)
+# Busca por CONTENIDO, no por nombre de archivo: el script vigente se
+# llama perf-analysis.py, no *bonferroni*/*holm* (asi se nos paso la
+# primera vez -- ver VERIFICACION.md).
+stats_script=$(grep -rl "holm_bonferroni\|holm-bonferroni\|Holm-Bonferroni" scripts/*.py 2>/dev/null)
 if [ -n "$stats_script" ]; then
-    pass "script de correccion encontrado: $stats_script"
+    if grep -q "p-valor\|Holm (α=0,05)\||\s*p\s*|" docs/mediciones/perf/REPORT.md 2>/dev/null; then
+        pass "script de correccion encontrado ($stats_script) y su salida ya esta en docs/mediciones/perf/REPORT.md"
+    else
+        fail "$stats_script existe pero docs/mediciones/perf/REPORT.md no trae la tabla de p-valores corregidos"
+    fi
 else
     fail "no existe ningun script/cuaderno versionado que calcule los p-valores corregidos"
 fi

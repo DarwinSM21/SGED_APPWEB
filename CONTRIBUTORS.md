@@ -11,31 +11,68 @@ del historial de `git log` (no auto-declarados).
 | Arcalle Grefa Darwin Orlando | darcalleg@uteq.edu.ec | Conceptualization, Software, Investigation, Project administration, Supervision |
 
 La taxonomía CRediT completa define catorce roles; en este proyecto todos
-quedan cubiertos por el equipo de la siguiente manera. El conteo junto a
-cada integrante es su **número real de commits en `main`** (el mismo de
-la tabla cuantitativa de abajo, reproducible con
-`git log --pretty="AUTOR:%ae" main | sort | uniq -c`): CRediT clasifica
-*tipos* de contribución intelectual, no un archivo por rol, así que un
-mismo commit puede sostener varios roles a la vez (una prueba de carga
-es a la vez `Software` y `Validation`) — por eso el conteo es el total
-verificable de la persona, no una partición exclusiva por rol.
+quedan cubiertos por el equipo de la siguiente manera. **El conteo junto a
+cada integrante ya no es su total de commits repetido en cada fila** (así
+estaba hasta el 2026-09-13, y no distinguía nada específico de cada rol).
+Es el número de commits de esa persona que tocaron al menos un archivo de
+las rutas declaradas para ese rol — ver metodología y tabla completa en
+"Conteo por rol" más abajo. CRediT clasifica *tipos* de contribución
+intelectual, no una partición exclusiva de archivos, así que un mismo
+commit puede sostener varios roles a la vez (una prueba de carga es a la
+vez `Software` y `Validation`).
 
 | Rol CRediT | Integrante(s) | Cobertura |
 |---|---|---|
-| Conceptualization | Ricardo (55), Darwin (144) | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
-| Data curation | Alejandro (233) | Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. |
-| Formal analysis | Alejandro (233) | Análisis estadístico de los datos de rendimiento y usabilidad (intervalos, distribución t). |
+| Conceptualization | Darwin (40), Alejandro (26), Ricardo (6) | Diseño de los cuatro dominios (académico, deportivo, inventario, seguridad) y de la estrategia híbrida de acceso a datos. |
+| Data curation | Alejandro (49), Darwin (27), Ricardo (6) | Diseño del esquema, procedimientos almacenados y limpieza de los datos crudos de medición. |
+| Formal analysis | Alejandro (11), Darwin (4), Ricardo (3) | Análisis estadístico de los datos de rendimiento y usabilidad (intervalos, distribución t). |
 | Funding acquisition | — | No aplica (proyecto académico sin financiación externa). |
-| Investigation | Darwin (144) | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica. |
-| Methodology | Ricardo (55) | Proceso de investigación (DSR) y protocolo de medición. |
-| Project administration | Darwin (144) | Administración del proyecto, calendario y gestión de entregas. |
-| Resources | Ricardo (55) | Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. |
-| Software | Alejandro (233), Ricardo (55), Darwin (144) | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
-| Supervision | Darwin (144) | Coordinación del equipo y seguimiento del repositorio. |
-| Validation | Alejandro (233), Ricardo (55) | Pruebas de cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. |
-| Visualization | Alejandro (233) | Diagramas C4 y de arquitectura del sistema. |
-| Writing – original draft | Alejandro (233) | Redacción del informe, del documento de requisitos (SRS) y de la documentación técnica. |
-| Writing – review & editing | Ricardo (55) | Revisión y corrección de la documentación y su consistencia con el código. |
+| Investigation | Darwin (2)¹ | Relevamiento de requisitos con la escuela ProFútbol y recolección de evidencia empírica — trabajo de campo, no solo edición de archivos; ver nota ¹. |
+| Methodology | Ricardo (2)¹ | Proceso de investigación (DSR) y protocolo de medición; ver nota ¹. |
+| Project administration | Darwin¹ | Administración del proyecto, calendario y gestión de entregas — no se refleja en rutas de archivo; ver nota ¹. |
+| Resources | Ricardo (7), Darwin (14) | Configuración del entorno de despliegue (Render), contenedores Docker y base de datos. |
+| Software | Alejandro (128), Darwin (50), Ricardo (11) | Implementación de backend (Spring Boot), frontend (Angular) y procedimientos almacenados. |
+| Supervision | Darwin¹ | Coordinación del equipo y seguimiento del repositorio — no se refleja en rutas de archivo; ver nota ¹. |
+| Validation | Alejandro (72), Darwin (41), Ricardo (9) | Pruebas de cobertura (JaCoCo), pruebas de carga (k6), estudio de usabilidad (SUS) y auditoría de seguridad. |
+| Visualization | Darwin (6), Alejandro (4), Ricardo (3) | Diagramas C4 y de arquitectura del sistema. |
+| Writing – original draft | Darwin (55), Alejandro (60), Ricardo (14) | Redacción del informe, del documento de requisitos (SRS) y de la documentación técnica. |
+| Writing – review & editing | Alejandro (87), Darwin (87), Ricardo (24) | Revisión y corrección de la documentación y su consistencia con el código (commits que modifican, no crean por primera vez, un archivo de `docs/`). |
+
+¹ Investigation, Methodology, Project administration y Supervision incluyen
+trabajo real que no deja huella en el árbol de archivos (reuniones con la
+escuela ProFútbol, coordinación del equipo, decisiones de calendario). El
+conteo por rutas de `scripts/credit-counts.py` no los cubre bien — se
+mantiene el criterio cualitativo del equipo para estos cuatro, y el número
+que sí aparece (Investigation, Methodology) es solo la parte que además
+dejó un commit sobre un archivo relacionado, no el total del trabajo.
+
+## Conteo por rol (metodología y tabla completa)
+
+`scripts/credit-counts.py` recorre cada commit de `main`, mira qué
+archivos tocó, y lo suma al rol cuyo prefijo de ruta coincide (mapeo
+declarado dentro del script, editable). Para "Writing – review & editing"
+cuenta commits que **modifican** un archivo de `docs/` que ya existía
+(no lo crean por primera vez). No sustituye el juicio del equipo sobre
+quién hizo cada tipo de trabajo — es una señal objetiva y reproducible
+que respalda la tabla de arriba, igual que exige P10 ("con el criterio
+declarado y coherente con los archivos que cada uno escribió").
+
+| Rol | Pallo Pinto Alejandro | Vélez López Ricardo | Arcalle Grefa Darwin |
+|---|---:|---:|---:|
+| Conceptualization | 26 | 6 | 40 |
+| Data curation | 49 | 6 | 27 |
+| Formal analysis | 11 | 3 | 4 |
+| Investigation | 3 | 0 | 2 |
+| Methodology | 4 | 2 | 2 |
+| Resources | 12 | 7 | 14 |
+| Software | 128 | 11 | 50 |
+| Validation | 72 | 9 | 41 |
+| Visualization | 4 | 3 | 6 |
+| Writing – original draft | 60 | 14 | 55 |
+| Writing – review & editing | 87 | 24 | 87 |
+
+_Medido 2026-09-14 sobre `main`. Reproducible con
+`python3 scripts/credit-counts.py`._
 
 ## Evidencia cuantitativa (derivada de `git log`, no autodeclarada)
 

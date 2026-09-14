@@ -236,22 +236,39 @@ cierra la duda con certeza, a diferencia de fiarse de un grep).
 
 ## P10 — Roles CRediT con conteo real (peso 0,5)
 
-**Orden:** `grep "Funding acquisition" CONTRIBUTORS.md`
+**Orden:** `python3 scripts/credit-counts.py`
 
 **Salida:**
 ```
-| Funding acquisition | — | No aplica (proyecto académico sin financiación externa). |
+Rol                            Pallo Pinto Alejandro          Velez Lopez Ricardo             Arcalle Grefa Darwin
+Conceptualization              26                              6                               40
+Data curation                  49                              6                               27
+Formal analysis                11                              3                               4
+Investigation                  3                                0                               2
+Methodology                    4                                2                               2
+Resources                      12                              7                               14
+Software                       128                             11                              50
+Validation                     72                              9                               41
+Visualization                  4                                3                               6
+Writing – original draft       60                              14                              55
+Writing – review & editing     87                              24                              87
+
+No cuantificables por ruta de archivo (declarar aparte, criterio cualitativo):
+  - Project administration
+  - Supervision
+  - Funding acquisition
 ```
 
-**Respalda:** [`CONTRIBUTORS.md`](CONTRIBUTORS.md)
+**Respalda:** [`CONTRIBUTORS.md`](CONTRIBUTORS.md), [`scripts/credit-counts.py`](scripts/credit-counts.py)
 
-**Estado — revisión manual pendiente.** Los 14 roles están cubiertos y
-justificados, pero el número junto a cada persona en la tabla de roles es
-su **total de commits**, repetido en cada fila donde aparece — no un
-conteo específico de ese rol. Eso es probablemente lo que la guía objeta
-con "sin conteos reales". Se soluciona reescribiendo esa columna con una
-cifra propia de cada rol (p. ej. archivos o commits que sostienen
-específicamente ese tipo de contribución), no repitiendo el total.
+**Estado:** hecho. El defecto real (el número junto a cada persona era su
+total de commits, repetido en cada fila) queda corregido: ahora es el
+conteo de commits de esa persona que tocaron al menos un archivo de las
+rutas declaradas para ese rol, con el mapeo rol→rutas explícito y
+editable en el script. Cuatro roles (Investigation, Methodology, Project
+administration, Supervision) incluyen trabajo real que no deja huella en
+archivos (reuniones con la escuela, coordinación) — se declaran así en
+vez de inventarles un número.
 
 ---
 
@@ -261,13 +278,15 @@ específicamente ese tipo de contribución), no repitiendo el total.
 
 **Salida:**
 ```
-JWT_SECRET=SGED_2026_SECRET_KEY_MUY_LARGA_Y_SEGURA_123456789
+JWT_SECRET=CAMBIAR_EN_PRODUCCION_min_32_caracteres_aleatorios
 ```
 
 **Respalda:** [`.env.example`](.env.example)
 
-**Estado — FALTA.** No tiene ningún marcador evidente (`CAMBIAR_EN_...`,
-`<reemplazar>`, etc.). Cambio de una línea.
+**Estado:** hecho. Se reemplazó el valor con aspecto real por un
+marcador evidente (`CAMBIAR_EN_PRODUCCION_...`). No hay ninguna otra
+referencia al valor anterior en el repositorio (comprobado con
+`grep -rn "SGED_2026_SECRET_KEY_MUY_LARGA"`, sin resultados).
 
 ---
 
@@ -319,21 +338,32 @@ guía.
 
 ## P14 — Estadística con trazabilidad (peso 0,5)
 
-**Orden:**
-```bash
-find scripts -iname "*pvalue*" -o -iname "*p-valor*" -o -iname "*bonferroni*" -o -iname "*holm*"
-```
+**Orden:** `grep -n "holm_bonferroni" scripts/perf-analysis.py`
 
 **Salida:**
 ```
-(sin resultados)
+193:def holm_bonferroni(log10p_vals, alfa=0.05):
+289:    rechasos, p_aj = holm_bonferroni(pvals)
 ```
 
-**Respalda:** —
+Tabla ya generada en [`docs/mediciones/perf/REPORT.md`](docs/mediciones/perf/REPORT.md):
 
-**Estado — FALTA.** No existe ningún script o cuaderno versionado que
-calcule p-valores corregidos por comparaciones múltiples a partir de los
-datos crudos. Hay que construirlo desde cero.
+```
+| Comparación | U | z | p | δ Cliff | A12 | Holm (α=0,05) |
+|---|---|---|---|---|---|---|
+| corrida-2 | 121675593 | 17.4 | 6.93e-68 | -0.117 | 0.441 | **rechaza** |
+| corrida-3 | 155061192 | 49.9 | 2.25e-543 | -0.330 | 0.335 | **rechaza** |
+| corrida-4 | 174960074 | 75.1 | 1.42e-1227 | -0.496 | 0.252 | **rechaza** |
+| corrida-5 | 171094482 | 73.3 | 3.90e-1168 | -0.486 | 0.257 | **rechaza** |
+```
+
+**Respalda:** [`scripts/perf-analysis.py`](scripts/perf-analysis.py) (calcula Mann-Whitney + delta de Cliff + A12 + Holm-Bonferroni desde `docs/mediciones/perf/*.samples.json`, datos crudos de k6), [`docs/mediciones/perf/REPORT.md`](docs/mediciones/perf/REPORT.md)
+
+**Estado:** hecho — esto también estaba resuelto y mi primer barrido no
+lo encontró porque busqué por *nombre de archivo* (`*bonferroni*`,
+`*holm*`) y el script se llama `perf-analysis.py`. Reproducible corriendo
+`make bench` (que termina llamando a este script) desde un clon limpio
+con el sistema en marcha.
 
 ---
 
@@ -357,19 +387,27 @@ cierran los pendientes.
 | P1 | Hecho — bloqueado por P13 |
 | P2 | Hecho |
 | P3 | Hecho |
-| P4 | Pasa (90,03%, margen corto) |
+| P4 | Pasa (90,03%, margen corto — revisión manual recomendada) |
 | P5 | Hecho |
-| P6 | Pasa en fuentes — falta revisión visual de los PNG |
-| P7 | Falta el PDF renombrado v1.1.0 |
-| P8 | Falta crear la etiqueta |
-| P9 | Pasa con el diccionario usado — confirmar a mano |
-| P10 | Falta corregir los conteos por rol |
-| P11 | Falta el marcador en `.env.example` |
+| P6 | Pasa en fuentes — falta revisión visual de los PNG (manual) |
+| P7 | **Falta** el PDF renombrado v1.1.0 (depende de P8) |
+| P8 | **Falta** crear la etiqueta |
+| P9 | Pasa con el diccionario usado — confirmar a mano (manual) |
+| P10 | Hecho |
+| P11 | Hecho |
 | P12 | Consistente |
-| P13 | Falta — constancias de consentimiento |
-| P14 | Falta — script de corrección estadística |
+| P13 | **Falta** — constancias de consentimiento (no fabricable por IA, ver nota) |
+| P14 | Hecho |
 
-`bash scripts/verify.sh` / `make verify`: **18 comprobaciones pasan, 6
-fallan, 1 requiere revisión manual** (corrida el 2026-09-14 sobre
-`b18ed4680f1c71792535ce02d672a8d292350d75`). Código de salida: 1 (correcto:
-todavía hay pendientes reales).
+`bash scripts/verify.sh` / `make verify`: **21 comprobaciones pasan, 4
+fallan (P7, P8×2, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida
+el 2026-09-14 sobre el commit vigente tras el ajuste de P10/P11/P14).
+Código de salida: 1 (correcto: P7/P8/P13 son pendientes reales).
+
+**Nota sobre P13.** Las constancias de consentimiento firmado no se
+pueden generar de forma automática ni por IA: exigen que cada uno de los
+15 participantes reales de la encuesta SUS acepte y firme. Inventar esa
+aceptación sería fabricar evidencia (Piso 3 = cero directo). Lo único que
+se puede automatizar es el mecanismo (la plantilla ya existe en
+`docs/etica/consentimiento/plantilla.md`); recolectar las 15 constancias
+es trabajo humano del equipo, no de esta herramienta.
