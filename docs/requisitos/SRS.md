@@ -2039,8 +2039,11 @@ previas se mantiene en `docs/observaciones/`.
 Este documento constituye la especificación de requisitos acordada para la
 Entrega Final del proyecto SGED, cerrada en la etiqueta `v1.0.0` del
 repositorio — la que revisa el docente según `Rubrica_ExamenFinal_SGED.pdf`
-(`git rev-parse v1.0.0^{commit}` resuelve el commit defendido; `v1.0.3`
-apunta al mismo commit).
+(`git rev-parse v1.0.0^{commit}` resuelve el commit defendido). `v1.0.1`,
+`v1.0.2` y `v1.0.3` son puntos de referencia históricos que ya no
+coinciden con `v1.0.0` — este último es, por diseño (ver
+[`VERSIONING.md`](../../VERSIONING.md)), el único tag que se reasigna
+cada vez que se corrige algo crítico después de un corte anterior.
 
 | Rol | Nombre | Firma | Fecha |
 |---|---|---|---|
