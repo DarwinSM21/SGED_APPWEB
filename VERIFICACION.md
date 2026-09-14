@@ -179,11 +179,26 @@ ls: cannot access 'docs/requisitos/SRS-v1.1.0.pdf': No such file or directory
 
 **Respalda:** [`docs/requisitos/SRS.md`](docs/requisitos/SRS.md), [`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`](docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf)
 
-**Estado — FALTA:** el MoSCoW ya está explícito en 80 requisitos y la firma
-del docente-director ya existe (acta v1.8, 2026-09-12). Lo que falta es
-puramente de nomenclatura: regenerar/copiar el PDF como
-`docs/requisitos/SRS-v1.1.0.pdf` una vez exista el commit final y la
-etiqueta `v1.1.0` (P8).
+**Estado — FALTA solo la PDF, y necesita que alguien del equipo la
+genere.** El MoSCoW ya está explícito en 80 requisitos, la firma del
+docente-director ya existe (acta v1.8, 2026-09-12), y el encabezado y
+§7 de `SRS.md` ya se actualizaron a la etiqueta `v1.1.0` (commit
+`ebd4b69`). Lo único que falta es exportar `SRS.md` a
+`SRS-v1.1.0.pdf`.
+
+**Por qué no lo generé yo:** intenté un `pandoc`+`xelatex` en Docker
+(similar al de `make docs`) y el resultado no es confiable: (a) los
+tres emoji de estado (✅/⬜) usados en toda la tabla de requisitos no
+tienen glifo en la fuente por defecto y salen en blanco, y (b) las tres
+firmas embebidas con `<img src="firmas/...">` (HTML crudo) no se
+trasladan al PDF con un `pandoc` genérico apuntado a LaTeX — el archivo
+de prueba salió de 204&nbsp;KB contra el 1,98&nbsp;MB del `SRS.pdf`
+actual, señal de que las firmas no entraron. No sé qué herramienta
+generó `SRS.pdf`/`SRS-v1.0.0.pdf` originalmente (no hay target de
+Makefile ni script versionado para esto, a diferencia del informe
+LaTeX) — hace falta que alguien del equipo la identifique o regenere
+con su proceso habitual, y entonces sí puedo ayudar a copiarla/versionarla
+como `SRS-v1.1.0.pdf`.
 
 ---
 
@@ -192,22 +207,35 @@ etiqueta `v1.1.0` (P8).
 **Orden:**
 ```bash
 git rev-parse -q --verify refs/tags/v1.1.0
-grep v1.1.0 CITATION.cff
+grep -E "^version:\s*1\.1\.0" CITATION.cff
 ```
 
 **Salida:**
 ```
-(sin salida: la etiqueta no existe)
-(sin coincidencias en CITATION.cff)
+4ac4104...  (git rev-parse --short v1.1.0 -> 4ac4104)
+version: 1.1.0
 ```
 
-**Respalda:** `git tag -l` (hoy: `v1.0.0`, `v1.0.1`, `v1.0.2`, `v1.0.3`, más las de entregas previas)
+**Respalda:** [`VERSIONING.md`](VERSIONING.md), [`CITATION.cff`](CITATION.cff), portada de [`docs/informe/main.tex`](docs/informe/main.tex) y [`docs/informe/caratula-standalone.tex`](docs/informe/caratula-standalone.tex)
 
-**Estado — FALTA.** Esta es la última acción antes de entregar, no la
-primera: hay que crear `v1.1.0` sobre el commit final que se va a
-defender, actualizar `CITATION.cff` y la portada, y **entonces** regenerar
-`SRS-v1.1.0.pdf` (P7) y el DOI de Zenodo sobre ese mismo commit (P3, que ya
-tiene el mecanismo probado con `b18ed46`).
+**Estado:** hecho, con una advertencia importante. `v1.1.0` (etiqueta
+anotada) existe sobre el commit `ebd4b69`, siguiendo el mismo criterio
+que `VERSIONING.md` ya documentaba para `v1.0.0` (el único tag de esta
+familia que se reasigna a propósito): `v1.1.0` es ahora ese tag para el
+examen suspenso, y `v1.0.0` queda fijo como punto histórico. La
+portada, `CITATION.cff`, el README y el encabezado/§7 del SRS ya citan
+`v1.1.0`.
+
+**Pero esto NO es el commit final** — se creó ahora, en paralelo a que
+el equipo gestiona P13, para poder avanzar. **Hay que moverla de nuevo**
+(`git tag -f -a v1.1.0 -m "..." <commit final>` + `git push -f origin
+v1.1.0`) cuando: (a) cierre P13, (b) se genere `SRS-v1.1.0.pdf` (P7), y
+(c) se regenere el PDF del informe una última vez con `make docs` sobre
+el commit realmente final. El DOI de Zenodo (P3) sigue anclado a
+`v1.0.0` — republicarlo sobre el `v1.1.0` definitivo es la última
+acción, después de mover la etiqueta, y antes hay que confirmar que la
+integración GitHub↔Zenodo sigue habilitada para
+`gleiston-guerrero/SGED_APPWEB` tras la transferencia de propiedad.
 
 ---
 
@@ -407,8 +435,8 @@ cierran los pendientes.
 | P4 | Pasa (90,03%, margen corto — revisión manual recomendada) |
 | P5 | Hecho |
 | P6 | Pasa en fuentes — falta revisión visual de los PNG (manual) |
-| P7 | **Falta** el PDF renombrado v1.1.0 (depende de P8) |
-| P8 | **Falta** crear la etiqueta |
+| P7 | **Falta solo la PDF** — necesita que el equipo la genere con su herramienta habitual (ver nota) |
+| P8 | Hecho — etiqueta `v1.1.0` creada, **se moverá de nuevo** al commit final |
 | P9 | Pasa con el diccionario usado — confirmar a mano (manual) |
 | P10 | Hecho |
 | P11 | Hecho |
@@ -416,10 +444,10 @@ cierran los pendientes.
 | P13 | **Falta** — constancias de consentimiento (no fabricable por IA, ver nota) |
 | P14 | Hecho |
 
-`bash scripts/verify.sh` / `make verify`: **21 comprobaciones pasan, 4
-fallan (P7, P8×2, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida
-el 2026-09-14 sobre el commit vigente tras el ajuste de P10/P11/P14).
-Código de salida: 1 (correcto: P7/P8/P13 son pendientes reales).
+`bash scripts/verify.sh` / `make verify`: **23 comprobaciones pasan, 2
+fallan (P7, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida el
+2026-09-14 sobre el commit `4ac4104`, etiqueta `v1.1.0`). Código de
+salida: 1 (correcto: P7 y P13 son pendientes reales).
 
 **Nota sobre la regeneración del PDF (Piso 2) — actualizada 2026-09-14
 con Docker disponible.** `docs/informe/main.tex` tenía su propia copia de

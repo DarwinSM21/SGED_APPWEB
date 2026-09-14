@@ -107,7 +107,7 @@ if git rev-parse -q --verify "refs/tags/v1.1.0" >/dev/null; then
 else
     fail "la etiqueta v1.1.0 no existe todavia"
 fi
-if grep -q "v1.1.0" CITATION.cff 2>/dev/null; then pass "CITATION.cff referencia v1.1.0"; else fail "CITATION.cff no referencia v1.1.0"; fi
+if grep -qE "^version:\s*1\.1\.0" CITATION.cff 2>/dev/null; then pass "CITATION.cff declara version: 1.1.0"; else fail "CITATION.cff no declara version: 1.1.0"; fi
 
 # ---------------------------------------------------------------------
 section "P9 -- nombres de tipos en espanol <=5%"
