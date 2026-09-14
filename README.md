@@ -1,7 +1,7 @@
 # SGED — Sistema de Gestión para la Escuela Deportiva ProFútbol
 
 [![CI](https://github.com/DarwinSM21/SGED_APPWEB/actions/workflows/ci.yml/badge.svg)](https://github.com/DarwinSM21/SGED_APPWEB/actions)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22730565.svg)](https://doi.org/10.5281/zenodo.22730565)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22739944.svg)](https://doi.org/10.5281/zenodo.22739944)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Aplicación web para la gestión administrativa y deportiva de la escuela
@@ -144,7 +144,7 @@ mediciones, trazabilidad, ética), `k6/`, `scripts/`, `.github/workflows/`.
 * Mediciones crudas: `docs/mediciones/` (perf, sec, sus, lighthouse, jacoco)
 * Matriz de trazabilidad: `docs/trazabilidad/matriz.csv`
 * Catálogo de procedimientos: `docs/basedatos/CATALOGO-SP.md`
-* DOI Zenodo del software: [`10.5281/zenodo.22730565`](https://doi.org/10.5281/zenodo.22730565) — nueva versión publicada el 2026-09-12 sobre el concept DOI `10.5281/zenodo.21713239` (que resuelve a esta), tras republicar el *release* de `v1.0.0` sobre el commit del corte firmado por el docente; supera a la versión anterior de esta misma serie (`10.5281/zenodo.22714477`, commit `455927c`). El DOI `10.5281/zenodo.22635766` quedó retirado/tombstone en Zenodo por haberse publicado como depósito separado en vez de nueva versión de la misma serie; no debe citarse
+* DOI Zenodo del software: [`10.5281/zenodo.22739944`](https://doi.org/10.5281/zenodo.22739944) — nueva versión publicada el 2026-09-14 sobre el concept DOI `10.5281/zenodo.21713239` (que resuelve a esta), tras republicar el *release* de `v1.0.0` sobre el corte final defendido. Supera a las versiones anteriores de esta misma serie (`10.5281/zenodo.22730565`, commit `cead25d`, corte del 2026-09-12 con la firma del docente-director; y `10.5281/zenodo.22714477`, commit `455927c`). El DOI `10.5281/zenodo.22635766` quedó retirado/tombstone en Zenodo por haberse publicado como depósito separado en vez de nueva versión de la misma serie; no debe citarse
 * DOI Zenodo del *dataset*: [`10.5281/zenodo.22422305`](https://doi.org/10.5281/zenodo.22422305) — publicado, versión 1.0.0, CC BY 4.0
 * Lighthouse SEO: 63 (intencional, ver REPORT.md §3 — privacidad de datos de menores)
 

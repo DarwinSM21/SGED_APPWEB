@@ -20,6 +20,19 @@ A continuación se presenta la tabla de seguimiento para el control y resolució
 > pero ya no es el corte final — `v1.0.0` lo supera al incluir la firma del
 > acta de aprobación del SRS.
 
+> **Segunda actualización, 2026-09-14 — corte defendido vigente.** Tras una
+> reevaluación de la rúbrica que encontró 6 puntos sin cerrar del todo
+> (validador de trazabilidad sin ejecutar en un entorno real, narrativa del
+> tag desalineada, conteos de `CONTRIBUTORS.md` desactualizados, tabla de
+> `fair.md` sin sincronizar, un listado huérfano en el informe, y cuatro
+> enums de negocio que habían quedado en español), se corrigieron los seis
+> y se aplicó la migración correspondiente en Supabase (producción). Con
+> todo corregido, `v1.0.0` se reasignó de nuevo al commit final
+> (`ddd03ab`), se republicó el *release* de GitHub y Zenodo emitió una
+> nueva versión: DOI `10.5281/zenodo.22739944` (supera a `22730565`, que
+> queda como punto de referencia histórico de la misma serie — ver
+> `CITATION.cff`).
+
 > **Revisión del SRS v1.6 del docente (M1–M3), 2026-09-10 — cerrada.** Ver la sección [Revisión SRS v1.6 — M1/M2/M3](#revisión-srs-v16--m1m2m3-2026-09-10) al final. M1: etiqueta movida al cierre real (`v1.0.3`). M2: §1.3 del SRS explica el vocabulario de estados. M3: `RNF-26` convierte el hallazgo **H-09** en requisito **e implementado** (doble opt-in del correo: `V28`, token de un solo uso, `POST /api/auth/confirmar-correo`, compuerta en `/forgot`); RF-48 gana "Condición de cierre"; `ETHICS.md` v1.9 — **H-01…H-09 cerrados**.
 >
 > **Corrección de despliegue, 2026-09-11.** `render.yaml` traía grabados dos sufijos de Render huérfanos: (a) `sged-backend-5nh7` (un servicio sin desplegar desde antes de RF-37) en la regla de reescritura `/api/*` del sitio estático — el frontend público real, `sged-frontend-r2rs.onrender.com`, llevaba semanas proxiando la API a ese backend desactualizado, así que ninguna funcionalidad de RF-37 en adelante (RF-37, RF-49, RF-50, RNF-26…) era alcanzable desde el frontend público aunque el backend real, `sged-backend-2p05.onrender.com`, sí las tuviera desplegadas; (b) `sged-frontend-jofa` (otro sitio huérfano) en `CORS_ALLOWED_ORIGIN_PATTERNS`, `MAIL_RESET_URL_BASE` y `MAIL_VERIFY_URL_BASE` del backend. Corregidos (`29e6bfc`, `7efd7ca`) y verificados: `sged-backend-2p05.onrender.com/api/auth/forgot` → `202`; `.../confirmar-correo` con token inválido → `400`; el proxy `sged-frontend-r2rs.onrender.com/api/auth/forgot` → `202`. URLs actualizadas en `README.md`, `render.md`, `RUNBOOK.md`, `ETHICS.md`, `SRS.md`, carátula e informe — **excepto** `DATA-PROVENANCE.md` y `lighthouse/REPORT.md`, que citan `-jofa` como procedencia real de las 12 corridas archivadas (`requestedUrl`/`finalUrl` de los LHR) y no se tocan por ser evidencia, no declaración vigente.
