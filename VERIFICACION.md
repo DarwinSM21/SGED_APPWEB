@@ -404,6 +404,21 @@ fallan (P7, P8×2, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida
 el 2026-09-14 sobre el commit vigente tras el ajuste de P10/P11/P14).
 Código de salida: 1 (correcto: P7/P8/P13 son pendientes reales).
 
+**Nota sobre la regeneración del PDF (Piso 2).** `docs/informe/main.tex`
+tiene su propia copia de la tabla CRediT (sección "Declaración de
+contribuciones"), separada de `CONTRIBUTORS.md`. Al corregir P10 ahí
+también (2026-09-14) se encontró que esa copia tenía el mismo defecto
+—y un párrafo que lo defendía explícitamente—; ya está sincronizada.
+**No se pudo recompilar el PDF en este entorno** (sin LaTeX ni Docker
+disponibles): los PDF ya versionados (`docs/informe-final.pdf`,
+`docs/informe/main.pdf`, `docs/informe/caratula-standalone.pdf`,
+`informe-final.pdf`) quedan desactualizados frente a la fuente `.tex`
+hasta que alguien corra `make docs` (o el equivalente sin Docker) y
+vuelva a comprobar `make verify` sobre el resultado. Esto hay que
+hacerlo **antes** de crear la etiqueta `v1.1.0` (P8) — el Piso 2 es
+explícito: "si el PDF no sale, la calificación es CERO", y eso se
+comprueba regenerando, no leyendo el PDF ya commiteado.
+
 **Nota sobre P13.** Las constancias de consentimiento firmado no se
 pueden generar de forma automática ni por IA: exigen que cada uno de los
 15 participantes reales de la encuesta SUS acepte y firme. Inventar esa
