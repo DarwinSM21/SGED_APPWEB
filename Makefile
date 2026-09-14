@@ -3,7 +3,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := up
 
-.PHONY: up down test bench reports audit clean schema logs diagrams docs all carga limpiar-carga
+.PHONY: up down test bench reports audit clean schema logs diagrams docs all carga limpiar-carga verify
 
 ## Reproduccion end-to-end en un solo comando desde clonacion limpia (Bloque D.1).
 ## clean va primero a proposito: garantiza volumen de Postgres nuevo en cada
@@ -135,3 +135,12 @@ limpiar-carga:
 
 logs:
 	docker compose logs -f backend
+
+## EV-2 (Guia del examen suspenso): comprobacion automatica de los 14
+## pendientes de la guia + regresion sobre los 12 puntos ya dados por
+## resueltos. Rapido y sin Docker (no reemplaza a `make test`/`make bench`/
+## `make audit`, que ya cubren cobertura JaCoCo, k6 y ZAP por su cuenta;
+## `make all` los encadena a todos). Codigo de salida distinto de cero si
+## algo falla, tal como exige EV-2.
+verify:
+	bash scripts/verify.sh
