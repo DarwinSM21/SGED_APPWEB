@@ -2,6 +2,14 @@ package org.uteq.backend.deportivo.category.dto;
 
 import jakarta.validation.constraints.*;
 
+/**
+ * Datos para crear o editar una categoría deportiva.
+ *
+ * @param name         nombre de la categoría, formato "SUB-NN"
+ * @param minAge       edad mínima permitida
+ * @param maxAge       edad máxima permitida
+ * @param description  descripción de la categoría
+ */
 public record CategoryRequest(
         @NotBlank(message = "El nombre de la categoría es obligatorio")
         @Size(max = 100, message = "El nombre no puede superar los 100 caracteres")

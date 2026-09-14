@@ -9,6 +9,17 @@ import org.uteq.backend.common.validation.NationalId;
 
 import java.time.LocalDate;
 
+/**
+ * Datos para crear o editar una persona.
+ *
+ * @param name        nombres
+ * @param lastName    apellidos
+ * @param nationalId  cédula, opcional
+ * @param email       correo de contacto
+ * @param phone       teléfono de contacto, opcional
+ * @param photo       foto de perfil, opcional
+ * @param birthDate   fecha de nacimiento
+ */
 public record PersonRequest(
 
         @NotBlank(message = "El nombre es obligatorio")

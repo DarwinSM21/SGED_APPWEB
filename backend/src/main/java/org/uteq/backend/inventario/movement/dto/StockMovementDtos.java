@@ -7,10 +7,19 @@ import org.uteq.backend.inventario.movement.entity.StockMovement.MovementType;
 
 import java.time.Instant;
 
+/** Contenedor de los DTO de movimientos de stock. */
 public final class StockMovementDtos {
 
     private StockMovementDtos() {}
 
+    /**
+     * Datos para registrar un movimiento de stock (entrada o salida).
+     *
+     * @param itemId        identificador del artículo
+     * @param movementType  tipo de movimiento (entrada o salida)
+     * @param quantity      cantidad movida
+     * @param reason        motivo del movimiento, opcional
+     */
     public record StockMovementRequest(
             @NotNull(message = "El artículo es obligatorio")
             Long itemId,
@@ -26,6 +35,18 @@ public final class StockMovementDtos {
             String reason
     ) {}
 
+    /**
+     * Vista de un movimiento de stock para el cliente.
+     *
+     * @param movementId    identificador del movimiento
+     * @param itemId        identificador del artículo
+     * @param item          nombre del artículo
+     * @param movementType  tipo de movimiento
+     * @param quantity      cantidad movida
+     * @param reason        motivo del movimiento
+     * @param registeredBy  usuario que registró el movimiento
+     * @param movementDate  fecha y hora del movimiento
+     */
     public record StockMovementResponse(
             Long movementId,
             Long itemId,

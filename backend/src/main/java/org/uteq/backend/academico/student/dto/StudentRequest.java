@@ -10,6 +10,18 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * Datos para crear o editar la ficha de un estudiante.
+ *
+ * @param personId          identificador de la persona vinculada
+ * @param categoryId        identificador de la categoría deportiva
+ * @param generalStatusId   identificador del estado general (activo/inactivo/etc.)
+ * @param studentCode       código interno del estudiante
+ * @param enrollmentDate    fecha de ingreso a la escuela
+ * @param weight            peso del estudiante, opcional
+ * @param height            altura del estudiante, opcional
+ * @param positionId        identificador de la posición de juego, opcional
+ */
 public record StudentRequest(
         @NotNull(message = "El ID de la persona es obligatorio")
         Long personId,

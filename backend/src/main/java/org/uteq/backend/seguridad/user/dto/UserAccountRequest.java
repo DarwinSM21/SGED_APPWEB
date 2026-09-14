@@ -4,6 +4,15 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * Datos para crear o editar una cuenta de usuario.
+ *
+ * @param personId         identificador de la persona vinculada
+ * @param generalStatusId  identificador del estado general de la cuenta
+ * @param username         nombre de usuario
+ * @param password         contraseña nueva, opcional en edición (vacío = no cambiarla)
+ * @param role             rol asignado, opcional
+ */
 public record UserAccountRequest(
         @NotNull(message = "El ID de persona es obligatorio") Long personId,
         @NotNull(message = "El ID de estado general es obligatorio") Long generalStatusId,

@@ -4,6 +4,27 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 
+/**
+ * Vista de la ficha de un estudiante para el cliente.
+ *
+ * @param studentId              identificador del estudiante
+ * @param personId               identificador de la persona vinculada
+ * @param categoryId             identificador de la categoría deportiva
+ * @param generalStatusId        identificador del estado general
+ * @param personName             nombres de la persona
+ * @param personLastName         apellidos de la persona
+ * @param categoryName           nombre de la categoría deportiva
+ * @param generalStatusName      nombre del estado general
+ * @param studentCode            código interno del estudiante
+ * @param enrollmentDate         fecha de ingreso
+ * @param weight                 peso del estudiante (dato restringido, ver {@link #withoutPhysicalData()})
+ * @param height                 altura del estudiante (dato restringido, ver {@link #withoutPhysicalData()})
+ * @param positionId             identificador de la posición de juego
+ * @param positionName           nombre de la posición
+ * @param positionAbbreviation   abreviatura de la posición
+ * @param active                 {@code true} si la ficha está activa
+ * @param createdAt              fecha de creación de la ficha
+ */
 public record StudentResponse(
         Long studentId,
         Long personId,

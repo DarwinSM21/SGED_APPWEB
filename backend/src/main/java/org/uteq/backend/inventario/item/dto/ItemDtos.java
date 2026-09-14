@@ -6,10 +6,21 @@ import org.uteq.backend.inventario.item.entity.Item.ItemType;
 import java.time.Instant;
 import java.util.List;
 
+/** Contenedor de los DTO de artículos del inventario. */
 public final class ItemDtos {
 
     private ItemDtos() {}
 
+    /**
+     * Datos para crear o editar un artículo del inventario.
+     *
+     * @param name           nombre del artículo
+     * @param type           tipo de artículo
+     * @param size           talla, opcional
+     * @param description    descripción, opcional
+     * @param minimumStock   stock mínimo antes de generar alerta
+     * @param unitOfMeasure  unidad de medida, opcional
+     */
     public record ItemRequest(
             @NotBlank(message = "El nombre del artículo es obligatorio")
             @Size(max = 150, message = "El nombre no puede superar los 150 caracteres")
@@ -32,6 +43,20 @@ public final class ItemDtos {
             String unitOfMeasure
     ) {}
 
+    /**
+     * Vista de un artículo del inventario para el cliente.
+     *
+     * @param itemId          identificador del artículo
+     * @param name            nombre del artículo
+     * @param type            tipo de artículo
+     * @param size            talla
+     * @param description     descripción
+     * @param currentStock    stock disponible actual
+     * @param minimumStock    stock mínimo configurado
+     * @param unitOfMeasure   unidad de medida
+     * @param active          {@code true} si el artículo está activo
+     * @param createdAt       fecha de creación
+     */
     public record ItemResponse(
             Long itemId,
             String name,
@@ -45,6 +70,12 @@ public final class ItemDtos {
             Instant createdAt
     ) {}
 
+    /**
+     * Listado de artículos con stock por debajo del mínimo configurado.
+     *
+     * @param totalElements  cantidad de artículos en bajo stock
+     * @param items          detalle de cada artículo
+     */
     public record LowStockResponse(
             long totalElements,
             List<ItemResponse> items

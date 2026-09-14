@@ -2,9 +2,18 @@ package org.uteq.backend.academico.student.dto;
 
 import java.util.List;
 
+/** Contenedor de los DTO de la autoconsulta de "mi equipo" del estudiante. */
 public final class MyTeamDtos {
     private MyTeamDtos() {}
 
+    /**
+     * Detalle de la categoría deportiva del estudiante.
+     *
+     * @param name        nombre de la categoría
+     * @param minAge      edad mínima permitida
+     * @param maxAge      edad máxima permitida
+     * @param description descripción de la categoría
+     */
     public record CategoryDetailResponse(
             String name,
             Integer minAge,
@@ -31,6 +40,14 @@ public final class MyTeamDtos {
      */
     public record TeammateResponse(Long studentId, String name, String position) {}
 
+    /**
+     * Vista de "mi equipo" para la autoconsulta del estudiante.
+     *
+     * @param category   categoría deportiva del estudiante
+     * @param position   posición del estudiante, o {@code null} si no tiene una asignada
+     * @param coach      entrenador asignado, o {@code null} si no tiene
+     * @param teammates  compañeros de la misma categoría
+     */
     public record MyTeamResponse(
             CategoryDetailResponse category,
             PositionResponse position,

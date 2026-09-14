@@ -13,6 +13,18 @@ import org.uteq.backend.common.validation.NationalId;
 
 import java.time.LocalDate;
 
+/**
+ * Datos de autorregistro de una persona nueva con su cuenta de acceso.
+ *
+ * @param name        nombres de la persona
+ * @param lastName    apellidos de la persona
+ * @param nationalId  cédula de la persona, opcional
+ * @param email       correo de contacto
+ * @param birthDate   fecha de nacimiento
+ * @param username    nombre de usuario a crear
+ * @param password    contraseña elegida; la complejidad la valida {@code PasswordPolicy} (RNF-14)
+ * @param role        rol solicitado para la cuenta
+ */
 public record RegisterRequest(
         @NotBlank @Size(min = 2, max = 100) String name,
         @NotBlank @Size(min = 2, max = 100) String lastName,

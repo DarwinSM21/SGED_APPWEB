@@ -13,9 +13,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/** Contenedor de los DTO de pagos y membresías. */
 public final class PaymentDtos {
     private PaymentDtos() {}
 
+    /**
+     * Registro de un pago de membresía, que puede cubrir varios meses a la vez.
+     *
+     * @param studentId    identificador del estudiante que paga
+     * @param year         año calendario que cubre el pago
+     * @param months       meses del año cubiertos (1-12)
+     * @param amount       monto total pagado
+     * @param paymentDate  fecha del pago, o {@code null} para usar la fecha actual
+     */
     public record RegisterMembershipRequest(
             @NotNull Long studentId,
             @NotNull @Min(2020) @Max(2100) Integer year,
@@ -24,12 +34,35 @@ public final class PaymentDtos {
             LocalDate paymentDate
     ) {}
 
+    /**
+     * Registro de un pago diario/eventual, sin periodo de membresía asociado.
+     *
+     * @param studentId    identificador del estudiante que paga
+     * @param amount       monto pagado
+     * @param paymentDate  fecha del pago, o {@code null} para usar la fecha actual
+     */
     public record RegisterDailyRequest(
             @NotNull Long studentId,
             @NotNull @DecimalMin(value = "0.01") BigDecimal amount,
             LocalDate paymentDate
     ) {}
 
+    /**
+     * Vista de un pago para el cliente.
+     *
+     * @param paymentId     identificador del pago
+     * @param studentId     identificador del estudiante
+     * @param student       nombre del estudiante
+     * @param type          tipo de pago (membresía o diario)
+     * @param year          año que cubre, si es de membresía
+     * @param month         mes que cubre, si es de membresía
+     * @param amount        monto pagado
+     * @param paymentDate   fecha del pago
+     * @param registeredBy  usuario que registró el pago
+     * @param voidedAt      fecha y hora de anulación, o {@code null} si sigue vigente
+     * @param voidedBy      usuario que anuló el pago, si aplica
+     * @param voidReason    motivo de la anulación, si aplica
+     */
     public record PaymentResponse(
             Long paymentId,
             Long studentId,
@@ -52,12 +85,25 @@ public final class PaymentDtos {
         }
     }
 
+    /**
+     * Motivo de anulación de un pago.
+     *
+     * @param reason explicación de por qué se anula
+     */
     public record CancelPaymentRequest(
             @NotBlank(message = "Indica por qué se anula el pago")
             @Size(max = 255, message = "El motivo no puede superar los 255 caracteres")
             String reason
     ) {}
 
+    /**
+     * Ingresos totales de un mes calendario.
+     *
+     * @param year          año
+     * @param month         mes (1-12)
+     * @param total         suma de montos pagados en el mes, sin anulados
+     * @param paymentCount  cantidad de pagos vigentes en el mes
+     */
     public record MonthlyIncomeResponse(
             Integer year,
             Integer month,
@@ -65,6 +111,14 @@ public final class PaymentDtos {
             Long paymentCount
     ) {}
 
+    /**
+     * Historial de ingresos mensuales de un rango de tiempo.
+     *
+     * @param months          ingresos mes a mes
+     * @param total           suma de todos los meses del rango
+     * @param monthlyAverage  promedio mensual del rango
+     * @param bestMonth       el mes con mayor ingreso del rango, o {@code null} si no hay datos
+     */
     public record IncomeHistoryResponse(
             List<MonthlyIncomeResponse> months,
             BigDecimal total,
