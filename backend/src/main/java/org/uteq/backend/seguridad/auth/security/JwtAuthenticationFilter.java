@@ -16,6 +16,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+/**
+ * Filtro que valida el JWT recibido en la cookie {@code HttpOnly} en cada
+ * solicitud y, si es válido, pobla el contexto de seguridad de Spring.
+ */
 @Component
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {

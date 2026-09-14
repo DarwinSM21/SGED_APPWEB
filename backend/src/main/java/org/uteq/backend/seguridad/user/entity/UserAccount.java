@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 import java.util.Locale;
 import java.util.Set;
 
+/** Cuenta de acceso de una persona, con su contraseña, rol y estado. */
 @Entity
 @Table(name = "usuarios", schema = "seguridad")
 @Getter

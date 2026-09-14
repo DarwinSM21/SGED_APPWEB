@@ -15,7 +15,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/** Movimiento de stock de un artículo del inventario. */
 public class StockMovement {
+    /** Tipo de movimiento: entrada, salida o ajuste. */
     public enum MovementType { ENTRADA, SALIDA, AJUSTE }
 
     @Id

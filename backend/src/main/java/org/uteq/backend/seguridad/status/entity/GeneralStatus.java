@@ -3,6 +3,7 @@ package org.uteq.backend.seguridad.status.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/** Estado general del catálogo administrativo (p. ej. activo, inactivo). */
 @Entity
 @Table(name = "estados_general", schema = "seguridad")
 @Getter

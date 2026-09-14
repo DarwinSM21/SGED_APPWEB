@@ -6,6 +6,7 @@ import lombok.*;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
+/** Datos personales base, compartidos por estudiantes, entrenadores, representantes y administradores. */
 @Entity
 @Table(name = "personas", schema = "seguridad")
 @Getter

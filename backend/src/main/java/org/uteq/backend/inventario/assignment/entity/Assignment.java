@@ -20,8 +20,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/** Asignación de un artículo del inventario a un estudiante o entrenador. */
 public class Assignment {
+    /** Tipo de destinatario de la asignación. */
     public enum RecipientType { STUDENT, COACH }
+    /** Estado de la asignación: entregada, devuelta o perdida. */
     public enum AssignmentStatus { ASSIGNED, RETURNED, LOST }
 
     @Id

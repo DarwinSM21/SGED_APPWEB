@@ -3,6 +3,7 @@ package org.uteq.backend.seguridad.role.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/** Rol del sistema de permisos (p. ej. ADMINISTRADOR, ENTRENADOR). */
 @Entity
 @Table(name = "roles", schema = "seguridad")
 @Getter

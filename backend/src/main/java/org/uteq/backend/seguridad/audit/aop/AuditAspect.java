@@ -13,6 +13,10 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Component;
 import org.uteq.backend.seguridad.audit.service.AuditService;
 
+/**
+ * Intercepta los métodos anotados con {@code @Audited} y registra el evento
+ * en {@link AuditService}, resolviendo la descripción por SpEL.
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor

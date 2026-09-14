@@ -14,8 +14,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/** Artículo del inventario deportivo, con su stock actual y mínimo. */
 public class Item {
 
+    /** Tipo de artículo del catálogo de inventario. */
     public enum ItemType { UNIFORME, BALON, IMPLEMENTO, OTRO }
 
     @Id

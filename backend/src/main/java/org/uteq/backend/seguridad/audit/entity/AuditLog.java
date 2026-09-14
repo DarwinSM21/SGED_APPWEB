@@ -6,6 +6,7 @@ import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.OffsetDateTime;
 
+/** Entrada de auditoría de una acción realizada por un usuario. */
 @Entity
 @Table(name = "auditoria", schema = "seguridad")
 @Getter

@@ -13,6 +13,7 @@ import org.uteq.backend.seguridad.user.repository.UserAccountRepository;
 
 import java.util.List;
 
+/** Carga el usuario y sus roles desde {@code UserAccount} para Spring Security. */
 @Service
 @RequiredArgsConstructor
 public class UserDetailsServiceImpl implements UserDetailsService {
