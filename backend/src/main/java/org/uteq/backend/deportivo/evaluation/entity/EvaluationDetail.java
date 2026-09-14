@@ -8,6 +8,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.Instant;
 
+/** Puntaje de un estudiante en un criterio dentro de una evaluación diaria. */
 @Entity
 @Table(name = "detalle_evaluacion", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

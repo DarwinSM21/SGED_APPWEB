@@ -13,6 +13,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Vista consolidada de la evaluación de un estudiante dentro de una sesión:
+ * sus puntajes por criterio y si estaba disponible para evaluarse.
+ */
 @Entity
 @Table(name = "evaluacion_estudiante", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

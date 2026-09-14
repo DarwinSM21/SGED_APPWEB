@@ -15,6 +15,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Vínculo entre un representante y un estudiante a su cargo, con su
+ * relación de parentesco y si es el contacto principal.
+ */
 public class GuardianStudent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

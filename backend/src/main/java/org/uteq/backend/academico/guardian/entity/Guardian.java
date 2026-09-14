@@ -16,6 +16,10 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Representante (padre, madre o tutor) de uno o más estudiantes, con su
+ * propia persona y cuenta de usuario asociadas.
+ */
 public class Guardian {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

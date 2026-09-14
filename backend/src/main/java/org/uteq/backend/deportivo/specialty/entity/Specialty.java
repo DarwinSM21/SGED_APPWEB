@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+/** Especialidad del catálogo de entrenadores. */
 @Entity
 @Table(name = "especialidades", schema = "deportivo")
 @Getter

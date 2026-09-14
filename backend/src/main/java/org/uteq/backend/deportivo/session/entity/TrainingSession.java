@@ -12,6 +12,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/**
+ * Sesión concreta de entrenamiento de una categoría en una fecha, generada
+ * desde su horario recurrente o creada puntualmente.
+ */
 @Entity
 @Table(name = "sesiones_entrenamiento", schema = "deportivo")
 @Getter

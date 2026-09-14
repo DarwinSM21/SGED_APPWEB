@@ -12,6 +12,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Evaluación diaria de una sesión de entrenamiento, con las calificaciones
+ * de cada jugador por criterio.
+ */
 @Entity
 @Table(name = "evaluaciones_diarias", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

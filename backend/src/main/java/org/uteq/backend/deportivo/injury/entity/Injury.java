@@ -10,6 +10,7 @@ import org.uteq.backend.deportivo.coach.entity.Coach;
 import java.time.Instant;
 import java.time.LocalDate;
 
+/** Lesión registrada de un estudiante, activa hasta que se le da de alta. */
 @Entity
 @Table(name = "lesiones", schema = "deportivo")
 @Getter

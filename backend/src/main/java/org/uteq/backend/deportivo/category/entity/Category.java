@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+/** Categoría deportiva por rango de edad (p. ej. SUB-12). */
 @Entity
 @Table(name = "categorias", schema = "deportivo")
 @Getter

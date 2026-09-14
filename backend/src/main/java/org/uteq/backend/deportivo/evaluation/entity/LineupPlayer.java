@@ -7,6 +7,7 @@ import org.uteq.backend.deportivo.position.entity.Position;
 
 import java.time.Instant;
 
+/** Un jugador dentro de una alineación, con su posición y condición de titular. */
 @Entity
 @Table(name = "alineacion_jugador", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

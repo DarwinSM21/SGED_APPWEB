@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+/** Partido programado o jugado de una categoría, con su resultado si ya se jugó. */
 @Entity
 @Table(name = "partidos", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

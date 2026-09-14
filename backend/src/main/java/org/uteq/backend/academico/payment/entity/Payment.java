@@ -18,7 +18,12 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Pago registrado a nombre de un estudiante, de membresía mensual o diario,
+ * anulable con motivo y trazabilidad de quién lo anuló.
+ */
 public class Payment {
+    /** Tipo de pago: membresía mensual o pago diario/eventual. */
     public enum PaymentType { MEMBERSHIP, DAILY }
 
     @Id

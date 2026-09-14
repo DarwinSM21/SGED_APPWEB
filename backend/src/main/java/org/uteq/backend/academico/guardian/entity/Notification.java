@@ -14,7 +14,12 @@ import java.time.Instant;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Notificación enviada a un representante sobre un evento de su estudiante
+ * (asistencia o lesión), sujeta al consentimiento correspondiente.
+ */
 public class Notification {
+    /** Tipo de evento que origina la notificación. */
     public enum Type { ASISTENCIA, LESION }
 
     @Id

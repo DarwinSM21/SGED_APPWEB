@@ -3,6 +3,7 @@ package org.uteq.backend.deportivo.position.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+/** Posición de juego del catálogo (p. ej. portero, defensa). */
 @Entity
 @Table(name = "posiciones", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

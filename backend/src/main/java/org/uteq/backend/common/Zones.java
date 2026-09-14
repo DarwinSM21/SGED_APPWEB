@@ -2,6 +2,7 @@ package org.uteq.backend.common;
 
 import java.time.ZoneId;
 
+/** Zonas horarias usadas en el backend. */
 public final class Zones {
     public static final ZoneId ECUADOR = ZoneId.of("America/Guayaquil");
 

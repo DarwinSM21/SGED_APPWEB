@@ -14,6 +14,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Instant;
 
+/**
+ * Estudiante de la escuela, vinculado a su persona, categoría, posición y
+ * cuenta de usuario de autoconsulta.
+ */
 @Entity
 @Table(name = "estudiantes", schema = "academico")
 @Getter

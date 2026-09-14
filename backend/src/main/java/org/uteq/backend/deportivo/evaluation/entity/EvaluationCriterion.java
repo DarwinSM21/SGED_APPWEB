@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
 
+/** Criterio del catálogo de evaluación diaria, con su puntaje máximo. */
 @Entity
 @Table(name = "criterios_evaluacion", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

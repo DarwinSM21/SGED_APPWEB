@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Alineación de un partido: los jugadores convocados y su condición de titular. */
 @Entity
 @Table(name = "alineaciones", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder

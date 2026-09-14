@@ -10,6 +10,7 @@ import org.uteq.backend.deportivo.coach.entity.Coach;
 import java.time.Instant;
 import java.time.LocalTime;
 
+/** Horario recurrente semanal de entrenamiento de una categoría. */
 @Entity
 @Table(name = "horarios_entrenamiento", schema = "deportivo")
 @Getter

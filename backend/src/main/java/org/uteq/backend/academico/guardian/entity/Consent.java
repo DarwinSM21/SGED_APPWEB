@@ -14,6 +14,10 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+/**
+ * Consentimiento de un representante sobre un alcance de tratamiento de
+ * datos de un estudiante (RF-39), revocable en cualquier momento.
+ */
 public class Consent {
     public static final String ALCANCE_INFORMES = "INFORMES";
     public static final String ALCANCE_NOTIFICACIONES = "NOTIFICACIONES";

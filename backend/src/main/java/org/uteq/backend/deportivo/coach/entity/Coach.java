@@ -8,6 +8,10 @@ import org.uteq.backend.seguridad.user.entity.UserAccount;
 
 import java.time.OffsetDateTime;
 
+/**
+ * Entrenador de la escuela, vinculado a su persona, especialidad y cuenta
+ * de usuario.
+ */
 @Entity
 @Table(name = "entrenadores", schema = "deportivo")
 @Getter

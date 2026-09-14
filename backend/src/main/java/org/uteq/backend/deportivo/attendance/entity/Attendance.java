@@ -10,6 +10,9 @@ import org.uteq.backend.deportivo.session.entity.TrainingSession;
 import java.time.Instant;
 import java.time.LocalTime;
 
+/**
+ * Registro de asistencia de un estudiante a una sesión de entrenamiento.
+ */
 @Entity
 @Table(name = "asistencias", schema = "deportivo")
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
