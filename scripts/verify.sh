@@ -103,7 +103,7 @@ fi
 # ---------------------------------------------------------------------
 section "P8 -- una sola etiqueta v1.1.0 sobre el commit a defender"
 if git rev-parse -q --verify "refs/tags/v1.1.0" >/dev/null; then
-    pass "la etiqueta v1.1.0 existe ($(git rev-parse --short v1.1.0))"
+    pass "la etiqueta v1.1.0 existe, apunta al commit $(git rev-parse --short 'v1.1.0^{commit}')"
 else
     fail "la etiqueta v1.1.0 no existe todavia"
 fi

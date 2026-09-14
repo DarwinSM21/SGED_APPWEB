@@ -212,7 +212,9 @@ grep -E "^version:\s*1\.1\.0" CITATION.cff
 
 **Salida:**
 ```
-4ac4104...  (git rev-parse --short v1.1.0 -> 4ac4104)
+ebd4b69  (git rev-parse --short 'v1.1.0^{commit}' -> ebd4b69; el objeto de la
+          etiqueta anotada en sí es 4ac4104, pero el commit al que apunta
+          -- lo que importa para EV-3 -- es ebd4b69)
 version: 1.1.0
 ```
 
@@ -446,7 +448,9 @@ cierran los pendientes.
 
 `bash scripts/verify.sh` / `make verify`: **23 comprobaciones pasan, 2
 fallan (P7, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida el
-2026-09-14 sobre el commit `4ac4104`, etiqueta `v1.1.0`). Código de
+2026-09-14 sobre el commit `ebd4b69`, al que apuntaba `v1.1.0` en ese
+momento -- ver nota de P8 sobre por qué esto va a moverse de nuevo).
+Código de
 salida: 1 (correcto: P7 y P13 son pendientes reales).
 
 **Nota sobre la regeneración del PDF (Piso 2) — actualizada 2026-09-14
