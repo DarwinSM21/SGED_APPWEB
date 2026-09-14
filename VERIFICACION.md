@@ -174,31 +174,36 @@ ls docs/requisitos/SRS-v1.1.0.pdf
 ```
 80
 docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf
-ls: cannot access 'docs/requisitos/SRS-v1.1.0.pdf': No such file or directory
+docs/requisitos/SRS-v1.1.0.pdf
 ```
 
 **Respalda:** [`docs/requisitos/SRS.md`](docs/requisitos/SRS.md), [`docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf`](docs/requisitos/ACTA-APROBACION-SRS-v1.8.pdf)
 
-**Estado — FALTA solo la PDF, y necesita que alguien del equipo la
-genere.** El MoSCoW ya está explícito en 80 requisitos, la firma del
-docente-director ya existe (acta v1.8, 2026-09-12), y el encabezado y
-§7 de `SRS.md` ya se actualizaron a la etiqueta `v1.1.0` (commit
-`ebd4b69`). Lo único que falta es exportar `SRS.md` a
-`SRS-v1.1.0.pdf`.
+**Estado:** hecho. `docs/requisitos/SRS-v1.1.0.pdf` existe (64 páginas),
+generado con un pipeline nuevo y reproducible:
+[`scripts/build-srs-pdf.sh`](scripts/build-srs-pdf.sh) / `make srs` —
+Markdown → HTML autocontenido (`pandoc --embed-resources`, incrusta las
+firmas como *data URI*) → PDF (`WeasyPrint`, motor de render HTML/CSS
+real, con `fonts-noto-color-emoji` instalado).
 
-**Por qué no lo generé yo:** intenté un `pandoc`+`xelatex` en Docker
-(similar al de `make docs`) y el resultado no es confiable: (a) los
-tres emoji de estado (✅/⬜) usados en toda la tabla de requisitos no
-tienen glifo en la fuente por defecto y salen en blanco, y (b) las tres
-firmas embebidas con `<img src="firmas/...">` (HTML crudo) no se
-trasladan al PDF con un `pandoc` genérico apuntado a LaTeX — el archivo
-de prueba salió de 204&nbsp;KB contra el 1,98&nbsp;MB del `SRS.pdf`
-actual, señal de que las firmas no entraron. No sé qué herramienta
-generó `SRS.pdf`/`SRS-v1.0.0.pdf` originalmente (no hay target de
-Makefile ni script versionado para esto, a diferencia del informe
-LaTeX) — hace falta que alguien del equipo la identifique o regenere
-con su proceso habitual, y entonces sí puedo ayudar a copiarla/versionarla
-como `SRS-v1.1.0.pdf`.
+**Por qué no el mismo pipeline que el informe (`pdflatex`):** el primer
+intento (`pandoc` apuntado directo a LaTeX/`xelatex`, como `make docs`)
+no era confiable: (a) los emoji de estado ✅/⬜ no tienen glifo en las
+fuentes de LaTeX por defecto y salían en blanco, y (b) las tres firmas
+embebidas con `<img src="firmas/...">` (HTML crudo) se pierden al
+renderizar a LaTeX — el archivo de prueba salió de 204&nbsp;KB contra
+1,98&nbsp;MB del `SRS.pdf` original, señal de que las firmas no
+entraron. Verificado visualmente rindiendo páginas del PDF final a PNG
+(`pdftoppm`): las tres firmas se ven completas y el ✅ sale con su
+glifo real, en color.
+
+No hay evidencia de qué herramienta generó el `SRS.pdf`/`SRS-v1.0.0.pdf`
+originales (sin target de Makefile ni script versionado antes de esto);
+`scripts/build-srs-pdf.sh` deja ese proceso reproducible de ahora en
+adelante. `docs/requisitos/SRS.pdf` (la copia "viva", sin versión en el
+nombre) también se regeneró con el mismo comando, porque estaba
+desactualizada desde el 2026-09-12 (le faltaban los cambios de URL del
+repositorio y de etiqueta de los commits de esta sesión).
 
 ---
 
@@ -437,7 +442,7 @@ cierran los pendientes.
 | P4 | Pasa (90,03%, margen corto — revisión manual recomendada) |
 | P5 | Hecho |
 | P6 | Pasa en fuentes — falta revisión visual de los PNG (manual) |
-| P7 | **Falta solo la PDF** — necesita que el equipo la genere con su herramienta habitual (ver nota) |
+| P7 | Hecho |
 | P8 | Hecho — etiqueta `v1.1.0` creada, **se moverá de nuevo** al commit final |
 | P9 | Pasa con el diccionario usado — confirmar a mano (manual) |
 | P10 | Hecho |
@@ -446,11 +451,11 @@ cierran los pendientes.
 | P13 | **Falta** — constancias de consentimiento (no fabricable por IA, ver nota) |
 | P14 | Hecho |
 
-`bash scripts/verify.sh` / `make verify`: **23 comprobaciones pasan, 2
-fallan (P7, P13), 3 requieren revisión manual (P4, P6, P9)** (corrida el
-2026-09-14 sobre el commit `ebd4b69`, al que apuntaba `v1.1.0` en ese
-momento -- ver nota de P8 sobre por qué esto va a moverse de nuevo).
-Código de
+`bash scripts/verify.sh` / `make verify`: **24 comprobaciones pasan, 1
+falla (P13), 3 requieren revisión manual (P4, P6, P9)** (corrida el
+2026-09-14 sobre el commit vigente tras generar `SRS-v1.1.0.pdf`; la
+etiqueta `v1.1.0` seguía apuntando a `ebd4b69` en ese momento -- ver
+nota de P8 sobre por qué esto va a moverse de nuevo). Código de
 salida: 1 (correcto: P7 y P13 son pendientes reales).
 
 **Nota sobre la regeneración del PDF (Piso 2) — actualizada 2026-09-14

@@ -3,7 +3,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := up
 
-.PHONY: up down test bench reports audit clean schema logs diagrams docs all carga limpiar-carga verify
+.PHONY: up down test bench reports audit clean schema logs diagrams docs srs all carga limpiar-carga verify
 
 ## Reproduccion end-to-end en un solo comando desde clonacion limpia (Bloque D.1).
 ## clean va primero a proposito: garantiza volumen de Postgres nuevo en cada
@@ -93,6 +93,15 @@ docs:
 	         pdflatex -interaction=nonstopmode main.tex"
 	cp docs/informe/main.pdf docs/informe-final.pdf
 	@echo "PDF: docs/informe/main.pdf (copiado a docs/informe-final.pdf)"
+
+## Regenera docs/requisitos/SRS.pdf desde SRS.md (Punto P7, examen suspenso).
+## Pipeline distinto del informe: el SRS trae firmas <img> HTML y emoji de
+## estado que pdflatex no reproduce de forma confiable (ver
+## scripts/build-srs-pdf.sh). Para publicar el corte versionado que pide
+## la guia, copiar el resultado a SRS-vX.Y.Z.pdf a mano tras revisarlo.
+srs:
+	bash scripts/build-srs-pdf.sh docs/requisitos/SRS.pdf
+	@echo "PDF: docs/requisitos/SRS.pdf"
 
 ## Limpia contenedores, volúmenes y artefactos de build
 clean:
