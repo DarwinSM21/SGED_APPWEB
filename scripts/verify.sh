@@ -158,11 +158,22 @@ fi
 
 # ---------------------------------------------------------------------
 section "P13 -- consentimientos informados del SUS, uno por participante"
-consent_files=$(find docs/etica/consentimiento -type f \( -iname "*ENC-*" -o -iname "*firmado*" -o -iname "*constancia*" \) 2>/dev/null | wc -l)
-if [ "$consent_files" -ge "$n_resp" ]; then
-    pass "$consent_files constancias de consentimiento para $n_resp participantes"
+REGISTRO=docs/etica/consentimiento/registro.md
+if [ ! -f "$REGISTRO" ]; then
+    fail "no existe $REGISTRO"
 else
-    fail "$consent_files constancias de consentimiento para $n_resp participantes (falta una por participante; solo existe la plantilla)"
+    filas=$(grep -cE '^\| ENC-' "$REGISTRO")
+    pendientes=$(grep -cE '^\| ENC-[0-9]+ \|[^|]*\|[^|]*\| PENDIENTE \|' "$REGISTRO")
+    obtenidos=$(grep -cE '^\| ENC-[0-9]+ \|[^|]*\|[^|]*\| OBTENIDO \|' "$REGISTRO")
+    if [ "$filas" -ne "$n_resp" ]; then
+        fail "$REGISTRO tiene $filas filas, deberian ser $n_resp (una por participante de respuestas.csv)"
+    elif [ "$pendientes" -gt 0 ]; then
+        fail "$pendientes de $filas participantes siguen en PENDIENTE en $REGISTRO"
+    elif [ "$obtenidos" -eq "$filas" ]; then
+        pass "las $filas constancias de consentimiento estan marcadas OBTENIDO en $REGISTRO"
+    else
+        fail "$REGISTRO tiene filas en un estado distinto de OBTENIDO/PENDIENTE (revisar a mano)"
+    fi
 fi
 
 # ---------------------------------------------------------------------

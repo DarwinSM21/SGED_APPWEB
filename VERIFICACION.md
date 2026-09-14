@@ -317,22 +317,39 @@ grep -n "umbral" docs/informe/main.tex | grep -i cobertura
 
 **Orden:**
 ```bash
-find docs/etica/consentimiento -type f
+grep -cE '^\| ENC-' docs/etica/consentimiento/registro.md
+grep -cE '^\| ENC-[0-9]+ \|[^|]*\|[^|]*\| PENDIENTE \|' docs/etica/consentimiento/registro.md
 ```
 
 **Salida:**
 ```
-docs/etica/consentimiento/plantilla.md
-docs/etica/consentimiento/representante.md
+15
+15
 ```
 
-**Respalda:** [`docs/etica/consentimiento/`](docs/etica/consentimiento/)
+**Respalda:** [`docs/etica/consentimiento/registro.md`](docs/etica/consentimiento/registro.md), [`docs/etica/consentimiento/plantilla.md`](docs/etica/consentimiento/plantilla.md)
 
-**Estado — FALTA.** Existe el modelo de consentimiento (plantilla), pero
-no hay constancia de aceptación individual para ninguno de los 15
-participantes de `respuestas.csv`. Esto bloquea también a P1: sin
-consentimiento, la medición SUS no se puede dar por válida según la propia
-guía.
+**Estado — FALTA, y es trabajo humano, no automatizable.** El modelo de
+consentimiento (`plantilla.md`) ya existía. Se agregó
+`docs/etica/consentimiento/registro.md`: una fila por cada uno de los 15
+participantes reales (mismos identificadores anónimos que
+`respuestas.csv`), con columnas para marcar cuándo se obtuvo la
+constancia y dónde queda archivado el original — sin exponer nombres ni
+firmas en el repositorio público, igual que exige el propio diseño de
+`plantilla.md`.
+
+Las 15 filas están en `PENDIENTE` a propósito: **no se pueden marcar
+`OBTENIDO` sin que cada uno de los 15 participantes reales acepte y
+firme.** Inventar esa aceptación sería fabricar una respuesta de
+encuesta — Piso 3 = cero directo, sin segunda oportunidad. Las encuestas
+ya se administraron (2026-07-30 y 2026-08-18); si en su momento no se
+archivó la constancia firmada, `registro.md` explica las dos opciones
+reales: volver a contactar a cada participante para formalizar el
+consentimiento ya otorgado verbalmente, o declararle al docente-director
+que algún participante no está disponible — nunca forzar o inventar la
+fila. Esto también bloquea a P1: sin consentimiento, la guía no da por
+válida la medición SUS aunque el resto (15 respuestas, Brooke, IC t de
+Student) ya esté hecho.
 
 ---
 
