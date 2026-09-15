@@ -2,15 +2,15 @@
 
 Guía del examen suspenso, UTEQ — Aplicaciones Web, PPA 2026-2027.
 Por cada uno de los 14 pendientes: identificador, orden exacta, salida
-pegada tal cual (corrida el 2026-09-14 sobre el commit indicado abajo) y
-ruta del archivo que la respalda.
+pegada tal cual (corrida el 2026-09-14/15 sobre el commit indicado abajo)
+y ruta del archivo que la respalda.
 
 **Cómo reproducir todo de una vez:** `make verify` (equivalente a
 `bash scripts/verify.sh`). Ese objetivo es EV-2: se puede correr entero
 desde un clon limpio y su código de salida es 0 solo si todo pasa.
 
 Commit sobre el que se corrió esta versión del expediente:
-`b18ed4680f1c71792535ce02d672a8d292350d75`.
+`7f6f4241e2081e182f4ac25ad2d2bca3f56311ed` (cierre de P13).
 
 > **Nota de método.** Varios de los 14 pendientes que describe la guía ya
 > tenían trabajo sustantivo hecho en el repositorio al momento de escribir
