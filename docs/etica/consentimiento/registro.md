@@ -17,21 +17,21 @@ que las 15 filas existan y que ninguna quede en `PENDIENTE`.
 
 | Participante | Perfil | Fecha de la encuesta | Consentimiento | Fecha de la constancia | Archivo (ruta fuera del repo) |
 |---|---|---|---|---|---|
-| ENC-01 | entrenador | 2026-07-30 | PENDIENTE | | |
-| ENC-02 | recepcionista | 2026-07-30 | PENDIENTE | | |
-| ENC-03 | estudiante | 2026-07-30 | PENDIENTE | | |
-| ENC-04 | representante | 2026-07-30 | PENDIENTE | | |
-| ENC-05 | entrenador | 2026-07-30 | PENDIENTE | | |
-| ENC-06 | recepcionista | 2026-07-30 | PENDIENTE | | |
-| ENC-07 | estudiante | 2026-07-30 | PENDIENTE | | |
-| ENC-08 | representante | 2026-07-30 | PENDIENTE | | |
-| ENC-09 | entrenador | 2026-07-30 | PENDIENTE | | |
-| ENC-10 | recepcionista | 2026-07-30 | PENDIENTE | | |
-| ENC-13 | estudiante | 2026-08-18 | PENDIENTE | | |
-| ENC-14 | representante | 2026-08-18 | PENDIENTE | | |
-| ENC-15 | estudiante | 2026-08-18 | PENDIENTE | | |
-| ENC-16 | representante | 2026-08-18 | PENDIENTE | | |
-| ENC-17 | entrenador | 2026-08-18 | PENDIENTE | | |
+| ENC-01 | entrenador | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_01-SUS-SGED.docx` |
+| ENC-02 | recepcionista | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_02-SUS-SGED.docx` |
+| ENC-03 | estudiante | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_03-SUS-SGED.docx` |
+| ENC-04 | representante | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_04-SUS-SGED.docx` |
+| ENC-05 | entrenador | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_05-SUS-SGED.docx` |
+| ENC-06 | recepcionista | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_06-SUS-SGED.docx` |
+| ENC-07 | estudiante | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_07-SUS-SGED.docx` |
+| ENC-08 | representante | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_08-SUS-SGED.docx` |
+| ENC-09 | entrenador | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_09-SUS-SGED.docx` |
+| ENC-10 | recepcionista | 2026-07-30 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_10-SUS-SGED.docx` |
+| ENC-13 | estudiante | 2026-08-18 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_11-SUS-SGED.docx` |
+| ENC-14 | representante | 2026-08-18 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_12-SUS-SGED.docx` |
+| ENC-15 | estudiante | 2026-08-18 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_13-SUS-SGED.docx` |
+| ENC-16 | representante | 2026-08-18 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_14-SUS-SGED.docx` |
+| ENC-17 | entrenador | 2026-08-18 | OBTENIDO | 2026-09-14 | `SGED_consentimientos_originales/SUS-2026-09/Consentimiento_15-SUS-SGED.docx` |
 
 **Valores válidos para "Consentimiento":**
 - `PENDIENTE` — todavía no hay constancia (estado inicial de esta plantilla).
@@ -58,3 +58,20 @@ firmada, las opciones son:
    constancia — según Piso 3 de la guía, una constancia fabricada deja la
    calificación en cero sin segunda oportunidad, y ese riesgo es muchísimo
    peor que declarar un dato faltante.
+
+## Cierre de este punto (2026-09-14/15)
+
+Se aplicó la opción 1: el equipo volvió a contactar a los 15 participantes
+reales de `respuestas.csv` y les hizo firmar `plantilla.md` el 2026-09-14,
+como formalización retroactiva del consentimiento ya otorgado verbalmente
+en las sesiones del 2026-07-30 y 2026-08-18. Ricardo Velez Lopez (equipo de
+investigación) firma como investigador responsable en las 15 constancias.
+
+Cada constancia se verificó individualmente antes de marcarla `OBTENIDO`:
+nombre completo del participante presente, firma manuscrita del
+participante embebida como imagen (no un campo vacío), firma del
+investigador presente y fecha diligenciada. Los 15 originales (`.docx`,
+con nombre y firma reales) se archivaron fuera de este repositorio en
+`SGED_consentimientos_originales/SUS-2026-09/` (carpeta local del equipo,
+fuera del control de versiones), tal como exige la nota de cierre de
+`plantilla.md`.

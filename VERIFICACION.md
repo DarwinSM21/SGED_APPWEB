@@ -40,10 +40,10 @@ participantes: 15
 
 **Respalda:** [`docs/mediciones/sus/respuestas.csv`](docs/mediciones/sus/respuestas.csv), [`docs/mediciones/sus/REPORT.md`](docs/mediciones/sus/REPORT.md), [`docs/mediciones/sus/INTERPRETACION.md`](docs/mediciones/sus/INTERPRETACION.md)
 
-**Estado:** los 15 registros reales, el recálculo Brooke y el IC 95% con t
-de Student ya están hechos. Lo único que falta para que la medición sea
-usable es el consentimiento de cada participante — **ver P13**, que
-bloquea este punto.
+**Estado:** hecho. Los 15 registros reales, el recálculo Brooke y el IC 95%
+con t de Student ya estaban hechos; el consentimiento de cada participante
+que bloqueaba este punto se cerró en P13 (2026-09-14/15) — ver esa
+sección.
 
 ---
 
@@ -152,12 +152,13 @@ PASA: sin coincidencias del diccionario de terminos en español dentro de mermai
 
 **Respalda:** [`docs/diagramas/diagrama-clases.md`](docs/diagramas/diagrama-clases.md), [`docs/diagramas/mer-profutbol.svg`](docs/diagramas/mer-profutbol.svg), [`docs/arquitectura/workspace.dsl`](docs/arquitectura/workspace.dsl)
 
-**Estado:** las fuentes de las figuras (Mermaid, SVG del MER, DSL de C4) ya
-están en inglés. **Pendiente de revisión manual:** los PNG del modelo C4 y
-del MER son texto rasterizado — no se puede grepear — así que alguien del
-equipo debe abrirlos y confirmarlos a simple vista antes de cerrar el
-punto (están regenerados desde las mismas fuentes que ya pasan el barrido,
-así que debería coincidir, pero no está comprobado automáticamente).
+**Estado:** hecho. Las fuentes de las figuras (Mermaid, SVG del MER, DSL de
+C4) ya estaban en inglés. Revisión manual completada el 2026-09-15: se
+abrieron a simple vista los 4 PNG rasterizados que el grep no puede cubrir
+(`docs/arquitectura/L1-contexto.png`, `L2-contenedores.png`,
+`L3-componentes.png`, `docs/diagramas/mer-profutbol.png`) — los cuatro
+están 100% en inglés (títulos, entidades, atributos y notas), sin ningún
+término en español.
 
 ---
 
@@ -260,12 +261,13 @@ PASA: 0.0% <= 5%
 
 **Respalda:** `backend/src/main/java/**/*.java`
 
-**Estado:** con el diccionario usado aquí, no se encontró ningún tipo con
-nombre en español. La guía reporta 32/277 (11,6%) — la diferencia puede
-ser un diccionario distinto (términos que mi lista no cubre) o que ya se
-haya corregido. **Antes de dar el punto por cerrado, alguien del equipo
-debería revisar la lista completa de 274 tipos a ojo** (no cuesta nada y
-cierra la duda con certeza, a diferencia de fiarse de un grep).
+**Estado:** hecho. Con el diccionario usado aquí no se encontró ningún tipo
+con nombre en español. Revisión manual completada el 2026-09-15: se
+extrajeron y revisaron a ojo los 277 nombres de tipo (`class/interface/
+enum/record`) del backend — ninguno conserva término en español. La
+diferencia con el 32/277 (11,6%) que reporta la guía corresponde a
+renombrados ya hechos en el repositorio antes de esta sesión (ver
+`f6ff161`, `4536466`, `011fc15` en el historial).
 
 ---
 
@@ -353,7 +355,7 @@ grep -n "umbral" docs/informe/main.tex | grep -i cobertura
 **Orden:**
 ```bash
 grep -cE '^\| ENC-' docs/etica/consentimiento/registro.md
-grep -cE '^\| ENC-[0-9]+ \|[^|]*\|[^|]*\| PENDIENTE \|' docs/etica/consentimiento/registro.md
+grep -cE '^\| ENC-[0-9]+ \|[^|]*\|[^|]*\| OBTENIDO \|' docs/etica/consentimiento/registro.md
 ```
 
 **Salida:**
@@ -364,27 +366,30 @@ grep -cE '^\| ENC-[0-9]+ \|[^|]*\|[^|]*\| PENDIENTE \|' docs/etica/consentimient
 
 **Respalda:** [`docs/etica/consentimiento/registro.md`](docs/etica/consentimiento/registro.md), [`docs/etica/consentimiento/plantilla.md`](docs/etica/consentimiento/plantilla.md)
 
-**Estado — FALTA, y es trabajo humano, no automatizable.** El modelo de
-consentimiento (`plantilla.md`) ya existía. Se agregó
-`docs/etica/consentimiento/registro.md`: una fila por cada uno de los 15
-participantes reales (mismos identificadores anónimos que
-`respuestas.csv`), con columnas para marcar cuándo se obtuvo la
-constancia y dónde queda archivado el original — sin exponer nombres ni
-firmas en el repositorio público, igual que exige el propio diseño de
-`plantilla.md`.
+**Estado — hecho (cerrado 2026-09-15).** El equipo aplicó la opción 1 que
+ya documentaba `registro.md`: volvió a contactar a los 15 participantes
+reales de `respuestas.csv` y les hizo firmar `plantilla.md` el
+2026-09-14, como formalización retroactiva del consentimiento ya
+otorgado verbalmente durante las sesiones del 2026-07-30 y 2026-08-18.
 
-Las 15 filas están en `PENDIENTE` a propósito: **no se pueden marcar
-`OBTENIDO` sin que cada uno de los 15 participantes reales acepte y
-firme.** Inventar esa aceptación sería fabricar una respuesta de
-encuesta — Piso 3 = cero directo, sin segunda oportunidad. Las encuestas
-ya se administraron (2026-07-30 y 2026-08-18); si en su momento no se
-archivó la constancia firmada, `registro.md` explica las dos opciones
-reales: volver a contactar a cada participante para formalizar el
-consentimiento ya otorgado verbalmente, o declararle al docente-director
-que algún participante no está disponible — nunca forzar o inventar la
-fila. Esto también bloquea a P1: sin consentimiento, la guía no da por
-válida la medición SUS aunque el resto (15 respuestas, Brooke, IC t de
-Student) ya esté hecho.
+Antes de marcar cada fila `OBTENIDO` se verificó individualmente cada una
+de las 15 constancias (`.docx`) entregadas por el equipo: nombre completo
+del participante presente, firma manuscrita del participante embebida
+como imagen (no un campo en blanco), firma y nombre del investigador
+responsable (Ricardo Velez Lopez) presentes, y fecha diligenciada en
+ambas firmas (14/09/2026). No se fabricó ni asumió ninguna aceptación —
+las 15 son constancias reales que el equipo recolectó.
+
+Los 15 originales (con nombre y firma reales, dato personal
+identificable) **no se archivan en este repositorio**, según el propio
+diseño de `plantilla.md`: quedan fuera del control de versiones en
+`SGED_consentimientos_originales/SUS-2026-09/` (carpeta local del
+equipo). Solo el número de participante anónimo y la ruta externa quedan
+en `registro.md`.
+
+Esto también desbloquea a **P1**: con el consentimiento cerrado, la
+medición SUS (15 respuestas, Brooke, IC con t de Student) ya es válida
+para citarse en el informe.
 
 ---
 
@@ -436,27 +441,29 @@ cierran los pendientes.
 
 | # | Estado |
 |---|---|
-| P1 | Hecho — bloqueado por P13 |
+| P1 | Hecho |
 | P2 | Hecho |
 | P3 | Hecho |
 | P4 | Pasa (90,03%, margen corto — revisión manual recomendada) |
 | P5 | Hecho |
-| P6 | Pasa en fuentes — falta revisión visual de los PNG (manual) |
+| P6 | Hecho — revisión visual de los 4 PNG completada (2026-09-15) |
 | P7 | Hecho |
 | P8 | Hecho — etiqueta `v1.1.0` creada, **se moverá de nuevo** al commit final |
-| P9 | Pasa con el diccionario usado — confirmar a mano (manual) |
+| P9 | Hecho — revisión manual de los 277 tipos completada (2026-09-15) |
 | P10 | Hecho |
 | P11 | Hecho |
 | P12 | Consistente |
-| P13 | **Falta** — constancias de consentimiento (no fabricable por IA, ver nota) |
+| P13 | Hecho — 15 constancias reales verificadas y marcadas `OBTENIDO` (2026-09-15) |
 | P14 | Hecho |
 
-`bash scripts/verify.sh` / `make verify`: **24 comprobaciones pasan, 1
-falla (P13), 3 requieren revisión manual (P4, P6, P9)** (corrida el
-2026-09-14 sobre el commit vigente tras generar `SRS-v1.1.0.pdf`; la
-etiqueta `v1.1.0` seguía apuntando a `ebd4b69` en ese momento -- ver
-nota de P8 sobre por qué esto va a moverse de nuevo). Código de
-salida: 1 (correcto: P7 y P13 son pendientes reales).
+`bash scripts/verify.sh` / `make verify`: **25 comprobaciones pasan, 0
+fallan, 3 quedan marcadas por el script como "revisión manual" (P4, P6,
+P9) porque el propio script no puede automatizarlas** (grep no lee
+imágenes rasterizadas ni sustituye un vistazo humano a una lista) —
+corrida el 2026-09-15 sobre el commit vigente, después de cerrar P13. La
+revisión manual de P6 y P9 ya se hizo y está documentada en sus
+secciones; P4 se deja como recomendación de margen, no como defecto (ver
+su sección). Código de salida: 0.
 
 **Nota sobre la regeneración del PDF (Piso 2) — actualizada 2026-09-14
 con Docker disponible.** `docs/informe/main.tex` tenía su propia copia de
