@@ -19,6 +19,13 @@ public record AnonymousPlayerProfile(
         Map<String, Double> scores, Map<String, Double> previousScores,
         Integer lastMonthAttendances, boolean injured
 ) {
+    /**
+     * Valida que la referencia anónima esté presente y normaliza los mapas
+     * de puntajes a copias inmutables no nulas ({@link Map#of()} si vienen
+     * nulos), para que el resto del código no tenga que comprobar null.
+     *
+     * @throws IllegalArgumentException si {@code reference} es nulo o está en blanco
+     */
     public AnonymousPlayerProfile {
         if (reference == null || reference.isBlank()) {
             throw new IllegalArgumentException("La referencia anonima es obligatoria");

@@ -10,14 +10,15 @@ Cubre dos casos:
      explicitamente (metodos privados de interfaz, Java 9+).
 
 Un metodo cuenta como documentado si, subiendo desde su firma y saltando
-lineas en blanco y anotaciones (que pueden ocupar varias lineas), la
-primera linea de codigo termina en "*/".
+lineas en blanco, anotaciones (que pueden ocupar varias lineas, ej.
+@Audited con descriptionSpel partido) y comentarios de una sola linea
+("//", ej. la nota que justifica un @CacheEvict puntual), la primera
+linea de codigo real termina en "*/".
 
 Es una heuristica basada en texto, no en un parser de Java real: firmas con
-generics complejos, comentarios de bloque a mitad de una firma, o lambdas
-declaradas como campo pueden confundirla. Ante la duda revisar
-docs/mediciones/javadoc-sin-documentar.txt a mano antes de fiarse del
-numero solo.
+generics complejos o lambdas declaradas como campo pueden confundirla.
+Ante la duda revisar docs/mediciones/javadoc-sin-documentar.txt a mano
+antes de fiarse del numero solo.
 
 Uso:
     python3 scripts/javadoc-coverage.py [umbral_porcentaje]
@@ -41,18 +42,44 @@ def brace_delta(line: str) -> int:
     return line.count("{") - line.count("}")
 
 
-def is_documented(lines, idx):
-    j = idx - 1
-    while j >= 0:
-        s = lines[j].strip()
+def is_documented(lines, idx, lookback=40):
+    """Sube desde `idx` saltando blancos, comentarios de una linea y
+    anotaciones -- incluidas las que se parten en varias lineas (ej.
+    @Audited con descriptionSpel largo). Una anotacion multilinea solo se
+    puede reconocer leyendola hacia ADELANTE (para saber donde abre sus
+    parentesis); por eso primero se clasifica el bloque de arriba hacia
+    abajo y despues se recorre esa clasificacion hacia atras.
+    """
+    start = max(0, idx - lookback)
+    kinds = [None] * idx
+    paren_balance = 0
+    in_annotation = False
+    for i in range(start, idx):
+        s = lines[i].strip()
+        if in_annotation:
+            kinds[i] = "annotation"
+            paren_balance += s.count("(") - s.count(")")
+            if paren_balance <= 0:
+                in_annotation = False
+            continue
         if s == "":
-            j -= 1
-            continue
-        if s.startswith("@"):
-            j -= 1
-            continue
-        return s.endswith("*/")
-    return False
+            kinds[i] = "blank"
+        elif s.startswith("//"):
+            kinds[i] = "linecomment"
+        elif s.startswith("@"):
+            kinds[i] = "annotation"
+            paren_balance = s.count("(") - s.count(")")
+            if paren_balance > 0:
+                in_annotation = True
+        else:
+            kinds[i] = "other"
+
+    j = idx - 1
+    while j >= start and kinds[j] in ("blank", "annotation", "linecomment"):
+        j -= 1
+    if j < start:
+        return False
+    return lines[j].strip().endswith("*/")
 
 
 def join_signature(lines, idx, max_extra=4):

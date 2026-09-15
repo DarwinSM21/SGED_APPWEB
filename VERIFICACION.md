@@ -93,26 +93,64 @@ tombstone y que no debe citarse.
 
 ## P4 — Javadoc (peso 1,5)
 
-**Orden:** `python3 scripts/javadoc-coverage.py 90`
+**Orden:**
+```bash
+python3 scripts/javadoc-coverage.py 90
+cd backend && ./mvnw -q javadoc:javadoc; echo "exit=$?"
+```
 
 **Salida:**
 ```
 Metodos/constructores publicos encontrados: 612
-Con Javadoc inmediatamente encima: 551
-Cobertura: 90.0%  (umbral exigido: 90%)
-Lista de 61 metodos sin Javadoc: docs/mediciones/javadoc-sin-documentar.txt
+Con Javadoc inmediatamente encima: 612
+Cobertura: 100.0%  (umbral exigido: 90%)
 RESULTADO: PASA
+
+exit=0
 ```
 
-**Respalda:** [`scripts/javadoc-coverage.py`](scripts/javadoc-coverage.py), [`docs/mediciones/javadoc-sin-documentar.txt`](docs/mediciones/javadoc-sin-documentar.txt)
+**Respalda:** [`scripts/javadoc-coverage.py`](scripts/javadoc-coverage.py)
 
-**Estado:** cruza el umbral (90,03% real), pero por muy poco margen — el
-contador de este script (612 métodos públicos) no coincide con el de la
-guía (463). Antes de dar el punto por cerrado, el equipo debería:
-(a) confirmar `mvn javadoc:javadoc` sin error también, y
-(b) documentar los 61 métodos que quedan en la lista para tener margen real
-y no depender de una heurística de conteo que puede diferir de la del
-docente.
+**Estado:** hecho, con margen real (100 %, no un 90,03 % al límite).
+
+El 90,03% que reportaba la corrida anterior (551/612) era un defecto del
+propio script de conteo, no del código: `is_documented()` subía desde la
+firma del método saltando líneas en blanco y anotaciones de una sola
+línea, pero **no sabía seguir una anotación partida en varias líneas**
+(ej. `@Audited(..., descriptionSpel = "...")` con el segundo argumento en
+su propia línea) ni saltar un comentario `//` suelto entre el Javadoc y
+las anotaciones (ej. la nota que justifica un `@CacheEvict` puntual). En
+ambos casos la línea de continuación no empieza con `@` ni es un
+comentario de bloque, así que el script paraba ahí y daba el método por
+no documentado aunque el Javadoc real estuviera dos o tres líneas más
+arriba.
+
+Antes de tocar el script comprobé, método por método, los 61 casos que
+reportaba `docs/mediciones/javadoc-sin-documentar.txt` (revisando el
+código fuente directamente, no fiándome del conteo): 60 de los 61 **ya
+tenían Javadoc real y completo** (con `@param`/`@return`/`@throws`), solo
+oculto por alguno de los dos patrones de arriba. Un caso también apareció
+duplicado dos veces de forma idéntica en
+[`ConsentRepository.java`](backend/src/main/java/org/uteq/backend/academico/guardian/repository/ConsentRepository.java)
+(defecto real, no de conteo) — se eliminó la copia sobrante. El único
+método genuinamente sin documentar era el constructor compacto del record
+[`AnonymousPlayerProfile`](backend/src/main/java/org/uteq/backend/common/ia/AnonymousPlayerProfile.java) (el propio record ya tenía Javadoc con
+`@param` por campo, pero el constructor compacto que valida y normaliza
+esos campos no tenía el suyo) — se le agregó.
+
+Corregido `is_documented()` en `scripts/javadoc-coverage.py` para que
+reconozca ambos patrones (clasifica el bloque de líneas de arriba hacia
+abajo primero, para saber dónde abre y cierra una anotación multilínea, y
+después lo recorre hacia atrás) y se re-corrió: **612/612 métodos
+públicos documentados, 100,0%**. `docs/mediciones/javadoc-sin-documentar.txt`
+se eliminó porque ya no hay ningún método sin Javadoc que listar.
+
+El conteo de 463 métodos que cita la guía sigue sin coincidir con los 612
+que encuentra este script — puede ser un criterio de "método público" más
+estricto del docente (ej. excluir getters/setters de Lombok, DTO record,
+o métodos de repositorios Spring Data) — pero con 100% no hay margen que
+perder aunque el criterio del docente cuente menos métodos: si su lista
+es un subconjunto de estos 612, sigue estando al 100% documentada.
 
 ---
 
@@ -444,7 +482,7 @@ cierran los pendientes.
 | P1 | Hecho |
 | P2 | Hecho |
 | P3 | Hecho |
-| P4 | Pasa (90,03%, margen corto — revisión manual recomendada) |
+| P4 | Hecho — 100% real (612/612), tras corregir un defecto del script de conteo |
 | P5 | Hecho |
 | P6 | Hecho — revisión visual de los 4 PNG completada (2026-09-15) |
 | P7 | Hecho |
@@ -457,13 +495,12 @@ cierran los pendientes.
 | P14 | Hecho |
 
 `bash scripts/verify.sh` / `make verify`: **25 comprobaciones pasan, 0
-fallan, 3 quedan marcadas por el script como "revisión manual" (P4, P6,
-P9) porque el propio script no puede automatizarlas** (grep no lee
-imágenes rasterizadas ni sustituye un vistazo humano a una lista) —
-corrida el 2026-09-15 sobre el commit vigente, después de cerrar P13. La
+fallan, 2 quedan marcadas por el script como "revisión manual" (P6, P9)
+porque el propio script no puede automatizarlas** (grep no lee imágenes
+rasterizadas ni sustituye un vistazo humano a una lista) — corrida el
+2026-09-15 sobre el commit vigente, después de cerrar P13 y P4. La
 revisión manual de P6 y P9 ya se hizo y está documentada en sus
-secciones; P4 se deja como recomendación de margen, no como defecto (ver
-su sección). Código de salida: 0.
+secciones. Código de salida: 0.
 
 **Nota sobre la regeneración del PDF (Piso 2) — actualizada 2026-09-14
 con Docker disponible.** `docs/informe/main.tex` tenía su propia copia de

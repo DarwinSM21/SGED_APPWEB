@@ -50,7 +50,6 @@ if bash scripts/check-doi.sh; then pass "todos los DOI resuelven segun lo espera
 # ---------------------------------------------------------------------
 section "P4 -- Javadoc de metodos publicos >=90%"
 if python3 scripts/javadoc-coverage.py 90; then pass "cobertura de Javadoc >=90%"; else fail "cobertura de Javadoc <90%"; fi
-manual "90,03% real -- margen corto sobre el umbral; documentar los metodos que quedan en docs/mediciones/javadoc-sin-documentar.txt da colchon real"
 
 # ---------------------------------------------------------------------
 section "P5 -- validate-traceability.sh propaga el codigo de salida"
